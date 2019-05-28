@@ -23,12 +23,12 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
     dt = mat_contents['dt_ultimate'][0][0];
     print("dT=%s" % dt)
     windDirections = mat_contents['wind_directions'];
-    numDirections = len(windDirections);
+    numDirections = windDirections.size;
     for dirn in range(0, numDirections):
         # get forces
         xForcesUltimate = mat_contents['full_scale_force_x_ultimate'][dirn];
         yForcesUltimate = mat_contents['full_scale_force_y_ultimate'][dirn];
-        numFloor = len(xForcesUltimate);
+        numFloor = xForcesUltimate.shape[0];
         windFileOutName = windFileOut + "." + str(windDirections[dirn][0]) + ".json";
         file = open(windFileOutName,"w");
         file.write("{\n");
@@ -44,7 +44,7 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
             file.write("\"dT\":" + str(dt) + ",\n");      
             file.write("\"numSteps\":" + str(10) + ",\n");
             file.write("\"data\":[\n");
-            numForces = len(floorForces);
+            numForces = floorForces.size;
             numForces=10;
             for i in range(0, numForces-1):
                 file.write(str(floorForces[i]) + ",")
@@ -56,7 +56,7 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
             file.write("\"type\":\"Value\",\n");            
             file.write("\"dT\":" + str(dt) + ",\n");            
             file.write("\"data\":[\n");
-            numForces = len(floorForces);
+            numForces = floorForces.size;
             numForces=10;
             for i in range(0, numForces-1):
                 file.write(str(floorForces[i]) + ",")
@@ -95,8 +95,8 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
         
         # create a json object for the event
                
-    print dt
-    print windDirections
+    print (dt)
+    print (windDirections)
 
 
 if "--getRV" in inputArgs:
