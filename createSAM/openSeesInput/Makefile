@@ -1,7 +1,7 @@
 RM=rm -f
 CFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -I ../../common
 LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a
+LDLIBS=/usr/lib/x86_64-linux-gnu/libjansson.a
 
 SRCS=OpenSeesInput.c 
 OBJS=OpenSeesInput.o 
