@@ -1,7 +1,7 @@
 RM=rm -f
 CPPFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -I ../../common -std=c++11
 LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a -lcurl
+LDLIBS=/usr/lib/x86_64-linux-gnu/libjansson.a -lcurl
 
 OBJS = dedmCall.o
 

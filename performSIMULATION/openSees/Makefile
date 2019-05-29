@@ -1,6 +1,6 @@
 CPPFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -I ../../common -std=c++11 
 LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a
+LDLIBS=/usr/lib/x86_64-linux-gnu/libjansson.a
 
 SRCS=OpenSeesPreprocessor.cpp OpenSeesPostprocessor.cpp
 
