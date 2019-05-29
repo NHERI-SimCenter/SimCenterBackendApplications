@@ -1,7 +1,4 @@
-RM=rm -f
-CPPFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -I ../../common -std=c++11
-LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a
+include ../../Makefile.inc
 
 SRCS=MDOF_BuildingModelToSAM.cpp
 OBJS=MDOF_BuildingModelToSAM.o

@@ -1,7 +1,4 @@
-RM=rm -f
-CFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -I ../../common
-LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a
+include ../../Makefile.inc
 
 SRCS=OpenSeesInput.c 
 OBJS=OpenSeesInput.o 

@@ -1,7 +1,4 @@
-RM=rm -f
-CPPFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include 
-LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a
+include ../../Makefile.inc
 
 SRCS=extractEDP.cpp postprocessDakota.cpp
 OBJS=extractEDP.o  postprocessDakota.o
