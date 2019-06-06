@@ -3,15 +3,16 @@ from __future__ import division, print_function
 import sys
 if sys.version.startswith('2'): 
     range=xrange
-
-#else:
-#    from past.builtins import basestring
+    string_types = basestring
+else:
+    string_types = str
 
 import os
 import platform
 import shutil
 import subprocess
 import stat
+import argparse
 from preprocessJSON import preProcessDakota
 
 #First we need to set the path and environment
@@ -28,15 +29,30 @@ elif platform.system() == 'Linux':
 else:
     print("PLATFORM {} NOT RECOGNIZED".format(platform.system))
 
-#Reading input arguments
-bimName = sys.argv[2]
-samName = sys.argv[4]
-evtName = sys.argv[6]
-edpName = sys.argv[8]
-simName = sys.argv[10]
-driverFile = sys.argv[12]
+parser = argparse.ArgumentParser()
 
-runDakota = sys.argv[13]
+parser.add_argument('--filenameBIM')
+parser.add_argument('--filenameSAM')
+parser.add_argument('--filenameEVENT')
+parser.add_argument('--filenameEDP')
+parser.add_argument('--filenameSIM')
+parser.add_argument('--driverFile')
+parser.add_argument('--method')
+parser.add_argument('--samples')
+parser.add_argument('--seed')
+parser.add_argument('--type')
+parser.add_argument('--runType')
+args = parser.parse_args()
+
+#Reading input arguments
+bimName = args.filenameBIM
+samName = args.filenameSAM
+evtName = args.filenameEVENT
+edpName = args.filenameEDP
+simName = args.filenameSIM
+driverFile = args.driverFile
+
+runDakota = args.runType
 
 #Run Preprocess for Dakota
 scriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -78,7 +94,7 @@ os.chdir("../")
 if runDakota == "run":
 
     dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
-    subprocess.Popen(dakotaCommand, shell=True).wait()
+    subprocess.Popen(dakotaCommand, stderr=subprocess.STDOUT, shell=True).wait()
 
     #Postprocess Dakota results
     #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(
