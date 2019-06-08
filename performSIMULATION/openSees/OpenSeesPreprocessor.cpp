@@ -740,7 +740,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	json_t *data = json_object_get(timeSeries,"data");
 
 	s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor " << seriesFactor;
-	s << " -values \{ ";	
+	s << " -values { ";	
 
 	json_t *dataV;
 	int dataIndex;
