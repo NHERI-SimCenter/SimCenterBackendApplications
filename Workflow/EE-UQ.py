@@ -278,7 +278,7 @@ def main(run_type, inputFile, applicationsRegistry):
         for key in eventAppData.keys():
             eventAppDataList.append(u"--" + key)
             value = eventAppData.get(key)
-            eventAppDataList.append(u"" + value)
+            eventAppDataList.append(u"" + str(value))
             
         for item in eventAppDataList:
             driverFILE.write('%s ' % item)
