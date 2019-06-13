@@ -59,6 +59,11 @@
         "ApplicationSpecificInputs":[]
       },
       {
+        "Name": "StochasticWindInput-WittigSinha",
+        "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
+        "ApplicationSpecificInputs":["modelName", "seed"]
+      },		
+      {
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
         "ApplicationSpecificInputs":["modelName", "seed"]
