@@ -86,10 +86,15 @@ int main(int argc, char **argv)
     
     json_array_foreach(eventsArray, index, value) {
       
-      // check earthquake
+      // check for wind
       json_t *type = json_object_get(value,"type");  
+      if (type == NULL) {
+	printf("WARNING no event type in event object %d\n", index);
+      }
       const char *eventType = json_string_value(type);
-      
+      if (eventType == NULL) {
+	printf("WARNING event type is not a string for event %d\n", index);
+      }      
       //      fprintf(stderr, "EventType: %s\n", eventType);
 
       if (strcmp(eventType,"Wind") != 0) {
