@@ -16,7 +16,7 @@ STOCHASTIC_INC = -I ./include \
 	-I ../../external/stochastic_loading/include $(CPPFLAGS)
 
 STOCHASTIC_LIBS = -L${MKLROOT}/lib/intel64 -L${IPPLIB}/lib/intel64 \
-../../../Stochastic-Loading-Module/build/liblstoc.a \
+../../../Stochastic-Loading-Module/build/libsmelt.a \
 -lmkl_rt -lippcore -lippvm -lipps 
 
 

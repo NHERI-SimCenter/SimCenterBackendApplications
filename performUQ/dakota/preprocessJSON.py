@@ -392,7 +392,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
         f.write('"{}'.format(scriptDir) + '/extractEDP" ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
 
     else:
-        extractEDPCommand = posixpath.join(remoteDir, 'applications/performUQ/extractEDP')
+        extractEDPCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/extractEDP')
         f.write(extractEDPCommand + ' ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
 
     # Run 

@@ -1,0 +1,75 @@
+# Prerequisites
+*.d
+
+# old text editor files
+*~
+
+# Qt created files
+moc*
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.pyc
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# QT
+*.pro.user
+qcustomplot.h
+qcustomplot.cpp
+*.stash
+qrc_images.cpp
+qrc_images1.cpp
+qrc_styles.cpp
+
+# OTHER
+Makefile
+Makefile.*
+StandardGMT_EDP
+StandardWindEDP
+UserDefinedEDP
+DEDM_HRP
+NOWS1
+SiteResponse
+MDOF_BuildingModel
+ExtractPGA
+StochasticWind
+StochasticGroundMotion
+StandardEarthquakeEDP
+OpenSeesInput
+OpenSeesPostprocessor
+OpenSeesPreprocessor
+extractEDP
+MultipleSimCenterEvents
+MultiplePEER_Events
+postprocessDAKOTA
+*.pyc
+*.autosave
+debug.log
+*.json
+MDOF_BuildingModelToSAM
