@@ -378,6 +378,7 @@ def main(run_type, inputFile, applicationsRegistry):
             uqAppDataList.insert(0, 'python')
             uqAppDataList[1] = uqAppExeLocal
 
+        uqAppDataList.append('--runType')
         uqAppDataList.append(run_type)
 
         for key in uqAppData.keys():
