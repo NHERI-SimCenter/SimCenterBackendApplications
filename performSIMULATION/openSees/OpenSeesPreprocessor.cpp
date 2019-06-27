@@ -222,6 +222,12 @@ OpenSeesPreprocessor::processMaterials(ofstream &s){
 
       s << "uniaxialMaterial Steel01 " << tag << " " << Fy << " " << K
         << " " << beta << "\n";
+    } else if (strcmp(type,"elastic") == 0) {
+
+      int tag = json_integer_value(json_object_get(material,"name"));
+      double K = json_number_value(json_object_get(material,"K"));
+
+      s << "uniaxialMaterial Elastic " << tag << " " << K << "\n";
     }
   }
   return 0;
@@ -271,7 +277,10 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
       s << "-mass ";
       double massV = json_number_value(mass);
       for (int i=0; i<NDF; i++)
-	s << massV << " " ;
+	if (i != 2)
+	  s << massV << " " ;
+	else
+	  s << " 0.0 ";
     }
 
     s << "\n";
