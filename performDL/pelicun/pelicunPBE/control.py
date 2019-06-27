@@ -284,7 +284,7 @@ class Assessment(object):
         if ((self.beta_tot is not None) and
             (GI['response']['EDP_distribution'] != 'empirical')):
             # determine the covariance matrix with added uncertainty
-            if demand_RV.COV.shape is not ():
+            if demand_RV.COV.shape != ():
                 sig_mod = np.sqrt(demand_RV.sig ** 2. + self.beta_tot ** 2.)
                 COV_mod = np.outer(sig_mod, sig_mod) * demand_RV.corr
             else:
@@ -460,7 +460,7 @@ class FEMA_P58_Assessment(Assessment):
 
         # demands 200
         GR = self._AIM_in['general']['response']
-        if GR['EDP_dist_basis'] is 'non-collapse results':
+        if GR['EDP_dist_basis'] == 'non-collapse results':
             discard_limits = self._AIM_in['general']['collapse_limits']
         else:
             discard_limits = None
