@@ -116,9 +116,15 @@ def create_command(command_list):
         Explain...
     """
     if command_list[0] == 'python':
-        command = 'python "{}" '.format(command_list[1]) + ' '.join(command_list[2:])
+        command = 'python "{}" '.format(command_list[1])# + ' '.join(command_list[2:])
+
+        for command_arg in command_list[2:]:
+            command += '"{}" '.format(command_arg)
     else:
-        command = '"{}" '.format(command_list[0]) + ' '.join(command_list[1:])
+        command = '"{}" '.format(command_list[0])# + ' '.join(command_list[1:])
+
+        for command_arg in command_list[1:]:
+            command += '"{}" '.format(command_arg)
 
     return command
 
