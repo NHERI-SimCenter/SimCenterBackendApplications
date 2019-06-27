@@ -151,7 +151,9 @@ def run_command(command):
     if returncode != 0:
         log_error('return code: {}'.format(returncode))
         
-    return result.decode(sys.stdout.encoding), returncode
+#    return result.decode(sys.stdout.encoding), returncode
+    print(result, returncode)
+    return result, returncode
 
 class WorkFlowInputError(Exception):
     def __init__(self, value):
