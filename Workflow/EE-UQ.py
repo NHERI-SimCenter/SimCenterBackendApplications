@@ -405,7 +405,7 @@ def main(run_type, inputFile, applicationsRegistry):
 
     # unhandled exceptions are handled here
     except Exception as e:
-        print('workflow error: %s' % e.value)
+        print('workflow error: ',sys.exc_info()[0])
         workflow_log('unhandled exception... exiting')
         raise
 
