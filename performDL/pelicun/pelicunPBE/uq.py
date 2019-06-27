@@ -807,12 +807,12 @@ class RandomVariable(object):
 
             # replace None values with infinite limits
             if self._ndim > 1:
-                limits[0][limits[0] == None] = -np.inf
-                limits[1][limits[1] == None] = np.inf
+                limits[0][[l is None for l in limits[0]]] = -np.inf
+                limits[1][[l is None for l in limits[1]]] = np.inf
             else:
-                if limits[0] == None:
+                if limits[0] is None:
                     limits[0] = -np.inf
-                if limits[1] == None:
+                if limits[1] is None:
                     limits[1] = np.inf
 
             limits = limits.astype(np.float64)

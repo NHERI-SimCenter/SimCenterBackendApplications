@@ -128,7 +128,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         }
 
     # if not, use the default location
-    if path_CMP_data is "":
+    if path_CMP_data == "":
         warnings.warn(UserWarning(
             "The component database is not specified; using the default "
             "{} data.".format(default_data_name[assessment_type])
@@ -140,7 +140,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             path_CMP_data += '/resources/HAZUS MH 2.1/DL json/'
     data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
-    if path_POP_data is "":
+    if path_POP_data == "":
         warnings.warn(UserWarning(
             "The population distribution is not specified; using the default "
             "{} data.".format(default_data_name[assessment_type])
@@ -223,7 +223,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     if AT == 'P58':
         for target_att, source_att, f_conv, unit_kind, dv_req in [
             ['plan_area', 'planArea', float, 'area', 'injuries'],
-            ['stories', 'stories', int, '', ''],
+            ['stories', 'stories', int, '', 'all'],
             # The following lines are commented out for now, because we do not
             # use these pieces of data anyway.
             #['building_type', 'type', str, ''],
@@ -231,19 +231,21 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             #['year_built', 'year', int, ''],
         ]:
             if (GI is not None) and (source_att in GI.keys()):
-                if unit_kind is not '':
+                if unit_kind != '':
                     f_unit = data['units'][unit_kind]
                 else:
                     f_unit = 1
                 att_value = f_conv(GI[source_att]) * f_unit
                 data['general'].update({target_att: att_value})
             else:
-                if (dv_req!='') and DV[dv_req]:
-                    warnings.warn(UserWarning(
-                        "{} is not in the DL input file.".format(source_att)))
+                if (dv_req != '') and ((dv_req == 'all') or DV[dv_req]):
+                    raise ValueError(
+                        "{} has to be specified in the DL input file to "
+                        "estimate {} decision variable(s).".format(source_att,
+                                                                   dv_req))
 
     # is this a coupled assessment?
-    data['general'].update({'coupled_ass':
+    data['general'].update({'coupled_assessment':
                             LM.get('CoupledDLAssessment', False)})
 
     # components
@@ -325,7 +327,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                                       coll_mode['affected_area'].split(',')],
                 }
                 if len(cm_data['affected_area']) == 1:
-                    cm_data['affected_area'] = np.ones(data['general']['stories'])*cm_data['affected_area']
+                    cm_data['affected_area'] = (np.ones(data['general']['stories'])*cm_data['affected_area']).tolist()
+                if len(cm_data['injuries']) == 1:
+                    cm_data['injuries'] = (np.ones(data['general']['stories'])*cm_data['injuries']).tolist()
                 data['collapse_modes'].update({coll_mode['name']: cm_data})
         else:
             warnings.warn(UserWarning(
@@ -471,8 +475,10 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         if AT == 'P58':
             warnings.warn(UserWarning(
                 "Building response characteristics were not defined in the "
-                "input file. Assuming no detection limits and a yield drift "
-                "ratio of 0.01 radian."))
+                "input file. Assuming no detection limits, a yield drift "
+                "ratio of 0.01 radian. Collapse probability is estimated "
+                "using raw EDP samples and all EDP samples are used to "
+                "define a multivariate lognormal EDP distribution."))
             data['general'].update({
                 'detection_limits': dict([(key, None) for key in ['PFA', 'PID']]),
                 'yield_drift': 0.01
@@ -480,12 +486,17 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         elif AT == 'HAZUS':
             warnings.warn(UserWarning(
                 "Building response characteristics were not defined in the "
-                "input file. Assuming no detection limits."))
+                "input file. Assuming no detection limits. All EDP samples are "
+                "used to define a multivariate lognormal EDP distribution"))
             data['general'].update({
                 'detection_limits': dict(
                     [(key, None) for key in ['PFA', 'PID']])
             })
-
+        data['general'].update({'response': {
+            'EDP_distribution': 'lognormal',
+            'coll_prob'       : 'estimated',
+            'CP_est_basis'    : 'raw EDP',
+            'EDP_dist_basis'  : 'all results'}})
 
     if 'AdditionalUncertainty' in LM['UncertaintyQuantification'].keys():
         data['general'].update({
@@ -561,6 +572,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         'btw. Performance Groups': 'PG',
         'btw. Floors'            : 'LOC',
         'btw. Directions'        : 'DIR',
+        'btw. Component Groups'  : 'CSG',
         'btw. Damage States'     : 'DS',
         'Independent'            : 'IND',
         'per ATC recommendation' : 'ATC',
@@ -584,7 +596,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 data['dependencies'].update({
                     target_att:dependency_to_acronym[DEP[source_att]]})
             elif dv_req == '' or DV[dv_req]:
-                if target_att is not 'fragilities':
+                if target_att != 'fragilities':
                     data['dependencies'].update({target_att: 'IND'})
                 else:
                     data['dependencies'].update({target_att: 'ATC'})
