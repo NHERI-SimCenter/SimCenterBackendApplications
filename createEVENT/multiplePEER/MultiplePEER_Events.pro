@@ -1,10 +1,10 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console
 CONFIG -= debug_and_release
 
 OBJECTS_DIR = $${OUT_PWD}/obj
 
-SOURCES += postprocessDAKOTA.cpp
+SOURCES += MultiplePEER_Events.cpp
 
 macx{
     CONFIG-=app_bundle
@@ -14,8 +14,8 @@ macx{
 
 #Assuming jansson library share the same parent folder with the app and is built with the same compiler
 win32{
-    INCLUDEPATH+="../../../jansson/build/include"
-    LIBS+="../../../jansson/build/x64/Release/jansson.lib"
+    INCLUDEPATH+="$$PWD/../../../jansson/build/include"
+    LIBS+="$$PWD/../../../jansson/build/x64/Release/jansson.lib"
 }
 
 unix:!macx{

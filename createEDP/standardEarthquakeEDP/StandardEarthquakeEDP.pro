@@ -1,10 +1,13 @@
 TEMPLATE = app
 CONFIG += console c++11
+CONFIG -= debug_and_release
 
-DESTDIR  = $$PWD
+OBJECTS_DIR = $${OUT_PWD}/obj
+
 SOURCES += StandardEarthquakeEDP.cpp
 
 macx{
+    CONFIG-=app_bundle
     INCLUDEPATH+="/usr/local/jansson/include"
     LIBS+="/usr/local/jansson/lib/libjansson.a"
 }

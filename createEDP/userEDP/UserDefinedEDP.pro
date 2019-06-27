@@ -4,7 +4,7 @@ CONFIG -= debug_and_release
 
 OBJECTS_DIR = $${OUT_PWD}/obj
 
-SOURCES += postprocessDAKOTA.cpp
+SOURCES += UserDefinedEDP.cpp
 
 macx{
     CONFIG-=app_bundle
