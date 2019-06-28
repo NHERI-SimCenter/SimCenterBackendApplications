@@ -1,10 +1,13 @@
 TEMPLATE = app
 CONFIG += console
+CONFIG -= debug_and_release
 
-DESTDIR  = $$PWD
+OBJECTS_DIR = $${OUT_PWD}/obj
+
 SOURCES += OpenSeesInput.c
 
 macx{
+    CONFIG-=app_bundle
     INCLUDEPATH+="/usr/local/jansson/include"
     LIBS+="/usr/local/jansson/lib/libjansson.a"
 }
