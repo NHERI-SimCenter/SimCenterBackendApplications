@@ -10,6 +10,7 @@ SUBDIRS =   createEDP/standardEarthquakeEDP/StandardEarthquakeEDP.pro \
             createEVENT/multiplePEER/MultiplePEER_Events.pro \
             createEVENT/siteResponse/SiteResponse.pro\
             createEVENT/stochasticGroundMotion/StochasticGroundMotion.pro\
+            createEVENT/stochasticWind/StochasticWind.pro\
             performSIMULATION/openSees/OpenSeesPreprocessor.pro \
             performSIMULATION/openSees/OpenSeesPostprocessor.pro \
             performUQ/dakota/extractEDP.pro \
