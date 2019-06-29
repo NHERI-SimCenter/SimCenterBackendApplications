@@ -59,6 +59,11 @@
         "ApplicationSpecificInputs":[]
       },
       {
+        "Name": "StochasticWindInput-WittigSinha",
+        "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
+        "ApplicationSpecificInputs":["modelName", "seed"]
+      },		
+      {
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
         "ApplicationSpecificInputs":["modelName", "seed"]
@@ -93,7 +98,7 @@
     "Applications": [
       {
         "Name": "MDOF-LU",
-        "ExecutablePath": "applications/createSAM/MDOF-LU",
+        "ExecutablePath": "applications/createSAM/MDOF-LU/MDOF-LU",
         "ApplicationSpecificInputs": []
       },
       {
@@ -190,6 +195,12 @@
           "type": "string",
           "description": "name of EDP file to be added to",
           "default": "EDP.json"
+      },
+      {
+          "id": "filenameSIM",
+          "type": "string",
+          "description": "name of SIM file to be added to",
+          "default": "SIM.json"
       }
       ]
     },
@@ -226,22 +237,22 @@
           "default": "EVENT.json"
       },
       {
-          "id": "filenameSIM",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
-      },
-      {
           "id": "filenameEDP",
           "type": "string",
           "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "default": "EDP.json"
       },
       {
-          "id": "filenameDRIVER",
+          "id": "filenameSIM",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "SIM.json"
+      },
+      {
+          "id": "driverFile",
           "type": "string",
           "description": "name of file containing the simulation driver",
-          "default": "EVENT.json"
+          "default": "driver"
       }
       ],
       "Outputs": [
@@ -257,6 +268,44 @@
       {
         "Name": "Dakota-UQ",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py"
+      }
+    ]
+  },
+  "DLApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameDL",
+          "type": "string",
+          "description": "name of file containing the DL model information",
+          "default": "dakota.json"
+      },
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of file containing the EDP data",
+          "default": "dakotaTab.out"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameDM",
+          "type": "string",
+          "description": "name of file to store damage estimates",
+          "default": "DM.json"
+      },
+      {
+          "id": "filenameDV",
+          "type": "string",
+          "description": "name of DV file to store decision variable estimates",
+          "default": "DV.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "pelicun",
+        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py"
       }
     ]
   }

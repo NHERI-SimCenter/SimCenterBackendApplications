@@ -4,6 +4,7 @@ all:
 	(cd multipleSimCenter; make all)
 	(cd multiplePEER; make all)
 	(cd stochasticGroundMotion; make all)
+	(cd stochasticWind; make all)
 	(cd siteResponse; make all)
 
 
@@ -14,6 +15,7 @@ clean:
 	(cd multipleSimCenter; make clean)
 	(cd multiplePEER; make clean)
 	(cd stochasticGroundMotion; make clean)
+	(cd stochasticWind; make clean)
 	(cd siteResponse; make clean)
 
 
@@ -23,6 +25,7 @@ distclean:
 	(cd multipleSimCenter; make distclean)
 	(cd multiplePEER; make distclean)
 	(cd stochasticGroundMotion; make distclean)
+	(cd stochasticWind; make distclean)
 	(cd siteResponse; make distclean)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.

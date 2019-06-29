@@ -1,14 +1,17 @@
 TEMPLATE = app
 CONFIG += console c++11
+CONFIG -= debug_and_release
 
-DESTDIR  = $$PWD
+OBJECTS_DIR = $${OUT_PWD}/obj
+
 SOURCES += MDOF_BuildingModelToSAM.cpp \
-           $$PWD/../common/Units.cpp
+           $$PWD/../../common/Units.cpp
 
-INCLUDEPATH += $$PWD/../common
+INCLUDEPATH += $$PWD/../../common
 
 
 macx{
+    CONFIG-=app_bundle
     INCLUDEPATH+="/usr/local/jansson/include"
     LIBS+="/usr/local/jansson/lib/libjansson.a"
 }
