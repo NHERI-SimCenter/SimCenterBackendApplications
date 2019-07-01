@@ -59,7 +59,7 @@
         "ApplicationSpecificInputs":[]
       },
       {
-        "Name": "StochasticWindInput-WittigSinha",
+        "Name": "StochasticWindInput-WittigSinha1975",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
         "ApplicationSpecificInputs":["modelName", "seed"]
       },		
