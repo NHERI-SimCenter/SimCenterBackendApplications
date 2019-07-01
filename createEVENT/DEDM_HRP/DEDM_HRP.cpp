@@ -218,13 +218,21 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
       // add object to timeSeries array
       json_array_append(timeSeriesArray,timeSeries);
       
-      json_t *pattern = json_object();
-      json_object_set(pattern,"name",json_string(name));        
-      json_object_set(pattern,"timeSeries",json_string(name));        
-      json_object_set(pattern,"type",json_string("WindFloorLoad"));        
-      json_object_set(pattern,"floor",json_string(name));        
-      json_object_set(pattern,"dof",json_integer(1));        
-      json_array_append(patternArray,pattern);
+      json_t *patternX = json_object();
+      json_object_set(patternX,"name",json_string(name));        
+      json_object_set(patternX,"timeSeries",json_string(name));        
+      json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+      json_object_set(patternX,"floor",json_string(name));        
+      json_object_set(patternX,"dof",json_integer(1));        
+      json_array_append(patternArray,patternX);
+
+      json_t *patternY = json_object();
+      json_object_set(patternY,"name",json_string(name));        
+      json_object_set(patternY,"timeSeries",json_string(name));        
+      json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+      json_object_set(patternY,"floor",json_string(name));        
+      json_object_set(patternY,"dof",json_integer(2));        
+      json_array_append(patternArray,patternY);
     }
 
     json_t *units = json_object();
