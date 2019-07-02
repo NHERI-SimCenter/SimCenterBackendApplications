@@ -28,36 +28,46 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
         # get forces
         xForcesUltimate = mat_contents['full_scale_force_x_ultimate'][dirn];
         yForcesUltimate = mat_contents['full_scale_force_y_ultimate'][dirn];
-        numFloor = xForcesUltimate.shape[0];
+        # Set number of floors
+        numFloor = 1
+        numSteps = 0
+        if xForcesUltimate.ndim != 1:
+            numFloor = xForcesUltimate.shape[0]
+            numSteps = xForcesUltimate[0].size
+        else:
+            numSteps = xForcesUltimate.size
+
         windFileOutName = windFileOut + "." + str(windDirections[dirn][0]) + ".json";
         file = open(windFileOutName,"w");
         file.write("{\n");
         file.write("\"type\":\"Wind\",\n");
         file.write("\"name\":\"" + windFileOutName + "\",\n");
         file.write("\"dT\":" + str(dt) + ",\n");
-        file.write("\"numSteps\":" + str(10) + ",\n");
+        file.write("\"numSteps\":" + str(numSteps) + ",\n");
         file.write("\"timeSeries\":[\n");
         for floor in range(1, numFloor+1):
-            floorForces = xForcesUltimate[floor-1]
+            floorForces = xForcesUltimate if numFloor is 1 else xForcesUltimate[floor-1]
+            
             file.write("{\"name\":\"" + str(floor) + "_X\",\n");            
             file.write("\"type\":\"Value\",\n");            
             file.write("\"dT\":" + str(dt) + ",\n");      
-            file.write("\"numSteps\":" + str(10) + ",\n");
+            file.write("\"numSteps\":" + str(floorForces.size) + ",\n");
             file.write("\"data\":[\n");
             numForces = floorForces.size;
-            numForces=10;
+            
             for i in range(0, numForces-1):
                 file.write(str(floorForces[i]) + ",")
             file.write(str(floorForces[numForces-1]))
             file.write("]\n},\n");
 
-            floorForces = yForcesUltimate[floor-1]
+            floorForces = yForcesUltimate if numFloor is 1 else yForcesUltimate[floor-1]            
+            # floorForces = yForcesUltimate[floor-1]
             file.write("{\"name\":\"" + str(floor) + "_Y\",\n");            
             file.write("\"type\":\"Value\",\n");            
             file.write("\"dT\":" + str(dt) + ",\n");            
             file.write("\"data\":[\n");
             numForces = floorForces.size;
-            numForces=10;
+
             for i in range(0, numForces-1):
                 file.write(str(floorForces[i]) + ",")
             file.write(str(floorForces[numForces-1]))
