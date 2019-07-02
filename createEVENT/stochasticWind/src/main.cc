@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
         // Random variable flag has NOT been passed
         if (!inputs.get_rv_flag()) {
           drag_coeff = it->at("dragCoefficient");
-          gust_wind_speed = it->at("windSpeed");
+          gust_wind_speed = it->at("gustSpeed");
 
 	  if (drag_coeff <= 0.0 || gust_wind_speed <= 0.0) {
             throw std::runtime_error(
@@ -96,7 +96,30 @@ int main(int argc, char** argv) {
           }
         }
 
-	// Generate wind loading based on parameters provided inputs
+        // Generate wind loading based on parameters provided
+        // Calculate number of nanoseconds in time to use as seed
+        std::chrono::time_point<std::chrono::system_clock> now =
+            std::chrono::system_clock::now();
+        auto duration = now.time_since_epoch();
+        Days days = std::chrono::duration_cast<Days>(duration);
+        duration -= days;
+        auto hours = std::chrono::duration_cast<std::chrono::hours>(duration);
+        duration -= hours;
+        auto minutes =
+            std::chrono::duration_cast<std::chrono::minutes>(duration);
+        duration -= minutes;
+        auto seconds =
+            std::chrono::duration_cast<std::chrono::seconds>(duration);
+        duration -= seconds;
+        auto milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+        duration -= milliseconds;
+        auto microseconds =
+            std::chrono::duration_cast<std::chrono::microseconds>(duration);
+        duration -= microseconds;
+        auto nanoseconds =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+
         auto wind_forces =
             inputs.seed_provided()
                 ? Dispatcher<std::tuple<std::vector<double>, json>, std::string,
@@ -108,10 +131,11 @@ int main(int argc, char** argv) {
                                  inputs.get_seed())
                 : Dispatcher<std::tuple<std::vector<double>, json>, std::string,
                              double, double, double, double, unsigned int,
-                             double, double>::instance()
+                             double, double, int>::instance()
                       ->dispatch("WittigSinha1975", exposure_category,
                                  gust_wind_speed, drag_coeff, width, height,
-                                 num_floors, total_time, force_conversion);
+                                 num_floors, total_time, force_conversion,
+                                 nanoseconds.count());
 
         auto static_forces = std::get<0>(wind_forces);
 	auto dynamic_forces = std::get<1>(wind_forces);
@@ -131,10 +155,16 @@ int main(int argc, char** argv) {
 	}
 	
 	// Add pattern and time series to current event
-	current_event.emplace("pattern", pattern);
-	current_event.emplace("timeSeries", dynamic_forces["Events"][0]["timeSeries"]);
+        current_event.emplace("pattern", pattern);
+        current_event.emplace("timeSeries",
+                              dynamic_forces["Events"][0]["timeSeries"]);
+        current_event.emplace(
+            "dT", dynamic_forces["Events"][0]["timeSeries"][0]["dT"]);
+        current_event.emplace(
+            "numSteps",
+            dynamic_forces["Events"][0]["timeSeries"][0]["data"].size());
 
-	// Add event to current events array
+        // Add event to current events array
 	events_array.push_back(current_event);
 
       } else {

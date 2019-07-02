@@ -3,8 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <smelt/include/json_object.h>
-#include <smelt/include/stochastic_model.h>
+#include <json_object.h>
+#include <stochastic_model.h>
 
 /**
  * Class for generating time histories for wind events
