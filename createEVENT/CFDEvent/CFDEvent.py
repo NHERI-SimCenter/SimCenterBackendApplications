@@ -87,11 +87,9 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--filenameBIM', help="BIM File", required=True)
     parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
     parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
-    parser.add_argument('--OpenFOAMCase', help= "getRV", required=False)
-    parser.add_argument('--OpenFOAMSolver', help= "getRV", required=False)
 
     #parsing arguments
-    arguments = parser.parse_args()
+    arguments, unknowns = parser.parse_known_args()
 
     if arguments.getRV == True:
         #Read the number of floors
