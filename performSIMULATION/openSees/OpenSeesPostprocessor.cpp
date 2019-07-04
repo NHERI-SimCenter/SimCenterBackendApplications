@@ -273,7 +273,24 @@ OpenSeesPostprocessor::processEDPs(){
 	  json_array_append(scalarValues,json_real(num));
 	*/
       } 
-      
+      else if (strcmp(type,"max_pressure") == 0)
+      {
+          json_t *data = json_array();
+
+          //json_t* floor2Json = json_object_get(response, "floor2");
+          json_t* dofsArrayJson = json_object_get(response, "dofs");
+          json_t* dofJson;
+          size_t index;
+          json_array_foreach(dofsArrayJson, index, dofJson)
+          {
+              //TODO: we need to read the pressure values from the event file, if they exist
+              //For now we are adding 0 for each degree of freedom
+              json_array_append(data, json_real(0.0));
+          }
+
+          json_object_set(response,"scalar_data",data);
+
+      }
       else {
 	fprintf(stderr, "%s\n",type);
 	double valueResults = 0;

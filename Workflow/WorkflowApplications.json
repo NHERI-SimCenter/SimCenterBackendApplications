@@ -67,6 +67,11 @@
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
         "ApplicationSpecificInputs":["modelName", "seed"]
+      },		
+      {
+        "Name": "CFDEvent",
+        "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
+        "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
       }
     ]
   },
