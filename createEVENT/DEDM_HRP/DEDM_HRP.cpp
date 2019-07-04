@@ -7,12 +7,13 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
-using namespace std;
 
 #include <jansson.h>  // for Json
 #include <Units.h>
 
-int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getRV);
+int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
+             bool getRV, int incidenceAngle);
+
 int 
 callDEDM_HRP(double shpValue,   // Cross-sectional shape (model):  1.00, 0.50, 0.33
 	     double hValue,     // Model height (1,2,3,4,5): 0.1,0.2,0.3,0.4,0.5
@@ -98,11 +99,25 @@ main(int argc, char **argv) {
     } else {
 
       // check subtype when have more stochastic models
+      int planShape = json_integer_value(json_object_get(inputEvent,"checkedPlan"));
+      json_t * angle = json_object_get(inputEvent, "incidenceAngle");
+      int incidenceAngle = json_integer_value(angle);
+      std::string dataBaseFile;
+
+      // If plan shape factor is 1, need to mirror for incidence angle greater
+      // than 45 degrees
+      if (planShape == 1 && incidenceAngle > 45) {
+        dataBaseFile =
+            "EVENT.json." + std::to_string(90 - incidenceAngle) + ".json";
+      } else {
+        dataBaseFile = "EVENT.json." + std::to_string(incidenceAngle) + ".json";
+      }
+
       json_t *outputEvent = json_object();
       json_object_set(outputEvent,"type", json_string("Wind"));
-      json_object_set(outputEvent,"subtype", json_string("DEDM_HRP"));
-      json_object_set(outputEvent,"eventFile", json_string("EVENT.json.0.json"));
-      addEvent(input, inputEvent, outputEvent, doRV);
+      json_object_set(outputEvent, "subtype", json_string("DEDM_HRP"));
+      json_object_set(outputEvent, "eventFile", json_string(dataBaseFile.c_str()));
+      addEvent(input, inputEvent, outputEvent, doRV, incidenceAngle);
 
       json_array_append(outputEventsArray, outputEvent);
     }
@@ -120,8 +135,10 @@ main(int argc, char **argv) {
   return 0;
 }
 
+int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
+             bool getRV, int incidenceAngle) {
 
-int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getRV) {
+  int planShape = json_integer_value(json_object_get(currentEvent,"checkedPlan"));
 
   if (getRV == false) {
 
@@ -130,8 +147,36 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
     //
 
     json_error_t error;
-    const char *eventFile = "EVENT.json.0.json";
-    json_t *event = json_load_file(eventFile, 0, &error);
+    std::string eventFile;
+
+    // If plan shape factor is 1, need to mirror for incidence angle greater
+    // than 45 degrees
+    if (planShape == 1 && incidenceAngle > 45) {
+      eventFile = "EVENT.json." + std::to_string(90 - incidenceAngle) + ".json";
+    } else {
+      eventFile = "EVENT.json." + std::to_string(incidenceAngle) + ".json";
+    }
+   
+    json_t *event = json_load_file(eventFile.c_str(), 0, &error);
+    
+    if (planShape == 1 && incidenceAngle > 45) {
+
+      int index;
+      json_t *forceX;
+      json_t *forceY;
+      json_t *timeSeriesArray = json_object_get(event, "timeSeries");
+      json_t *xComponent = json_array_get(timeSeriesArray, 0);
+      json_t *yComponent = json_array_get(timeSeriesArray, 1);      
+      forceX = json_object_get(xComponent, "data");
+      forceY = json_object_get(yComponent, "data");
+      json_t *tempX = json_copy(forceX);
+      forceX = forceY;
+      forceY = tempX;
+      json_object_set(xComponent, "data", forceX);
+      json_object_set(yComponent, "data", forceY);
+      
+    }
+    
     if (event == NULL) {
       std::cerr << "FATAL ERROR - event file " << eventFile << " does not exist\n";
       exit(-1);
@@ -246,7 +291,6 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
     json_object_set(outputEvent,"pressure",pressureArray);
     json_object_set(outputEvent,"dT",json_real(0.01));
     json_object_set(outputEvent,"numSteps",json_integer(0));
-  
     
     // get info from event
     
@@ -278,10 +322,10 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
     }
     
     int selection= json_integer_value(modelPlanJO);
-    double shpValue =1.;  
+    double shpValue = 1.0;  
     if (selection == 2)
       shpValue = 0.5;
-    else if (selection == 2)
+    else if (selection == 3)
       shpValue = 0.33;
     
     selection= json_integer_value(modelHeightJO);      
