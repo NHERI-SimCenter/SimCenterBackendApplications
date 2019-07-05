@@ -69,10 +69,25 @@ import os
 import shutil
 from copy import deepcopy
 import subprocess
+import warnings
+import pandas as pd
 
 pp = pprint.PrettyPrinter(indent=4)
 
 log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
+
+# get the absolute path of the whale directory
+whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Monkeypatch warnings to get prettier messages
+def _warning(message, category, filename, lineno, file=None, line=None):
+    if '\\' in filename:
+        file_path = filename.split('\\')
+    elif '/' in filename:
+        file_path = filename.split('/')
+    python_file = '/'.join(file_path[-3:])
+    print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+warnings.showwarning = _warning
 
 def log_msg(msg):
     """
@@ -155,13 +170,15 @@ def run_command(command):
     print(result, returncode)
     return result, returncode
 
+def show_warning(warning_msg):
+    warnings.warn(UserWarning(warning_msg))
+
 class WorkFlowInputError(Exception):
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
         return repr(self.value)
-
 
 class WorkflowApplication(object):
     """
