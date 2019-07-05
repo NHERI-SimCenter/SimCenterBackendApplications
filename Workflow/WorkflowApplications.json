@@ -112,6 +112,22 @@
         "Name": "CFDEvent",
         "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
         "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
+      },
+      {
+        "Name": "NNGM",
+        "ExecutablePath": "applications/createEVENT/NNGM/NNGM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "groundMotions",
+            "type": "path",
+            "description": "Configuration file with information about the ground motions to use"
+          },
+          {
+            "id": "recordsFolder",
+            "type": "path",
+            "description": "Folder containing records"
+          }
+        ]
       }
     ]
   },
@@ -196,6 +212,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "StandardEarthquakeEDP2",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP2/StandardEarthquakeEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "StandardWindEDP",
         "ExecutablePath": "applications/createEDP/standardWindEDP/StandardWindEDP",
         "ApplicationSpecificInputs": []
@@ -257,6 +278,10 @@
       {
         "Name": "ExtractPGA",
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
+      },
+      {
+        "Name": "OpenSees",
+        "ExecutablePath": "applications/performSIMULATION/openSees2/OpenSeesSimulation.py"
       }
     ]
   },
@@ -313,6 +338,10 @@
       {
         "Name": "Dakota-UQ",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py"
+      },
+      {
+        "Name": "Dakota-FEM",
+        "ExecutablePath": "applications/performUQ/DakotaFEM/DakotaFEM.py"
       }
     ]
   },
