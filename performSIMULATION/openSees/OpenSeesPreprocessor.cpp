@@ -703,35 +703,41 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   json_t *timeSeriesArray = json_object_get(event,"timeSeries");
   int numSeriesArray = json_array_size(timeSeriesArray);
 
-  for (int i=0; i<numSeriesArray; i++) {
-    timeSeries = json_array_get(timeSeriesArray, i);
-    
-    //We need to check units for conversion
-    double unitConversionFactor = 1.0;
-    
-    json_t* evtUnitsJson = json_object_get(event, "units");
-    Units::UnitSystem eventUnits;
-    
-    if(NULL != evtUnitsJson)
-      {
-	json_t* evtLengthJson = json_object_get(evtUnitsJson, "length");
-	if(NULL != evtLengthJson)
+
+  //We need to check units for conversion
+  double unitConversionFactorAcceleration = 1.0;
+  double unitConversionFactorForce = 1.0;
+  double unitConversionFactorLength = 1.0;
+  
+  json_t* evtUnitsJson = json_object_get(event, "units");
+  Units::UnitSystem eventUnits;
+  
+  if(NULL != evtUnitsJson)
+    {
+      json_t* evtLengthJson = json_object_get(evtUnitsJson, "length");
+      if(NULL != evtLengthJson)
 	  eventUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(evtLengthJson));
       
-	json_t* evtTimeJson = json_object_get(evtUnitsJson, "time");
-	if(NULL != evtTimeJson)
-	  eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
-	
-	unitConversionFactor = Units::GetAccelerationFactor(eventUnits, bimUnits);
-      }
-    else
-      {
-	std::cerr << "Warning! Event file has no units!, assuming acceleration and units in g units" << std::endl;
-	eventUnits.lengthUnit = Units::LengthUnit::Meter;
-	eventUnits.timeUnit = Units::TimeUnit::Second;
-	
-	unitConversionFactor = 9.81 * Units::GetAccelerationFactor(eventUnits, bimUnits);
-      }
+      json_t* evtTimeJson = json_object_get(evtUnitsJson, "time");
+      if(NULL != evtTimeJson)
+	eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
+      
+      unitConversionFactorForce = Units::GetForceFactor(eventUnits, bimUnits);
+      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, bimUnits);
+      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, bimUnits);
+    }
+  else
+    {
+      std::cerr << "Warning! Event file has no units!, assuming acceleration and units in g units" << std::endl;
+      eventUnits.lengthUnit = Units::LengthUnit::Meter;
+      eventUnits.timeUnit = Units::TimeUnit::Second;
+      
+      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, bimUnits);
+    }
+  
+  
+  for (int i=0; i<numSeriesArray; i++) {
+    timeSeries = json_array_get(timeSeriesArray, i);
     
     const char *subType = json_string_value(json_object_get(timeSeries,"type"));        
     std::cerr << "subType: " << subType << "\n";
@@ -755,11 +761,12 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	int dataIndex;
 
 	//
-	// write data to file, multiply it by conversion fcator and eventFactor
+	// write data to file, multiply it by conversion factor and eventFactor
 	//
 
 	json_array_foreach(data, dataIndex, dataV) {
-	  s << json_number_value(dataV) * unitConversionFactor * eventFactor << " " ;
+	  //	  s << json_number_value(dataV) * unitConversionFactorAcceleration * eventFactor << " " ;
+	  s << json_number_value(dataV) << " " ;
 	}
 
 	s << " }\n";
@@ -797,6 +804,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       
       int seriesTag = timeSeriesList[name];
       s << "pattern UniformExcitation " << numPattern << " " << dirn;
+      s << " -fact " << unitConversionFactorAcceleration * eventFactor;
       s << " -accel " << series << "\n";
       
       s << "set numStep " << numSteps << "\n";
@@ -807,7 +815,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
 
     else if (strcmp(patternType,"WindFloorLoad") == 0) {
-      std::cerr << "WINDFLOORLOAD\n";
+
       int dof = json_integer_value(json_object_get(pattern,"dof"));
       string floor = json_string_value(json_object_get(pattern,"floor"));
 
@@ -822,16 +830,17 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       }
 
       int nodeTag = this->getNode("1",floor.c_str());	          
-
       int seriesTag = timeSeriesList[name];
-      s << "pattern Plain " << numPattern << " " << series << " {\n";
+      s << "pattern Plain " << numPattern << " " << 
+	series << " -fact " << unitConversionFactorForce * eventFactor <<  " {\n";
       s << "   load " << nodeTag << " ";
       for (int i=0; i<NDF; i++) {
-	if (dof == (i+1)) //i+1 as OpenSees starts with 0 indexing
-	  s << " 1.0 ";
-	else
-	  s << " 0.0 ";
+        if (dof == (i+1)) //i+1 as OpenSees starts with 0 indexing                                        
+          s << " 1.0 ";
+        else
+          s << " 0.0 ";
       }
+
 	  
       s << "\n}\n";
 
