@@ -682,8 +682,101 @@ class Workflow(object):
         print(result)
 
         log_msg('Damage and loss assessment finished successfully.')
+        log_msg(log_div)
 
+    def aggregate_dmg_and_loss(self, bldg_data):
+        """
+        Short description
 
+        Longer description
+
+        Parameters
+        ----------
+        """
+
+        log_msg('Collecting damage and loss results')
+
+        os.chdir(self.run_dir)
+
+        # start with the damage data
+        DM_agg = pd.DataFrame()
+
+        min_id = int(bldg_data[0]['id'])
+        max_id = int(bldg_data[0]['id'])
+        for bldg in bldg_data:
+            bldg_id = bldg['id']
+            min_id = min(int(bldg_id), min_id)
+            max_id = max(int(bldg_id), max_id)
+            
+            with open(bldg_id+'/DM.json') as f:
+                DM = json.load(f)            
+                
+            for FG in DM.keys():
+
+                if FG == 'aggregate':
+                    PG = ''
+                    DS_list = list(DM[FG].keys())
+                else:
+                    PG = next(iter(DM[FG]))
+                    DS_list = list(DM[FG][PG].keys())
+                
+                if ((DM_agg.size == 0) or 
+                    (FG not in DM_agg.columns.get_level_values('FG'))):
+                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
+                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                    
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_add.loc[bldg_id, (FG, DS)] = val
+                        
+                    DM_agg = pd.concat([DM_agg, DM_add], axis=1)
+                
+                else:        
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_agg.loc[bldg_id, (FG, DS)] = val
+
+        # then collect the decision variables
+        DV_agg = pd.DataFrame()
+
+        for bldg in bldg_data:
+            bldg_id = bldg['id']
+            
+            with open(bldg_id+'/DV.json') as f:
+                DV = json.load(f)
+                
+            for DV_type in DV.keys():
+                
+                stat_list = list(DV[DV_type]['total'].keys())
+                
+                if ((DV_agg.size == 0) or 
+                    (DV_type not in DV_agg.columns.get_level_values('DV'))): 
+                
+                    MI = pd.MultiIndex.from_product(
+                        [[DV_type,],stat_list],names=['DV','stat'])
+                
+                    DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                    
+                    for stat in stat_list:
+                        DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                        
+                    DV_agg = pd.concat([DV_agg, DV_add], axis=1)
+                else:                     
+                    for stat in stat_list:
+                        DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+
+        # save the collected DataFrames as csv files
+        DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
+        DV_agg.to_csv('DV_{}-{}.csv'.format(min_id, max_id))
+
+        log_msg('Damage and loss results collected successfully.')
+        log_msg(log_div)
 
 
         
