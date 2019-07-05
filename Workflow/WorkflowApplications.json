@@ -1,4 +1,44 @@
 {
+  "BuildingApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+        {
+          "id": "buildingFile",
+          "type": "string",
+          "description": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildingsFile.json"
+        }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "GenericBimDatabase",
+        "ExecutablePath": "applications/createBIM/genericBimDatabase/GenericBimDatabase",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "string",
+            "description": "path to buildings file",
+            "default": ""
+          }
+        ]
+      }
+    ]
+  },
   "EventApplications": {
     "API": {
       "Inputs": [
