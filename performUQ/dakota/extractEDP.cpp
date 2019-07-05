@@ -8,6 +8,10 @@
 //using namespace std
 
 #include <jansson.h>  // for Json
+#ifdef WIN32
+#include <direct.h>
+#endif
+
 #ifndef _WIN32
 #include <sys/stat.h>
 #endif

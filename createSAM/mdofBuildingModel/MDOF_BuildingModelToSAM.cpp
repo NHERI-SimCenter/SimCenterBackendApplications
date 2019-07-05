@@ -109,19 +109,6 @@ main(int argc, char **argv) {
     int matTag = 1;
     double *zeta = new double[numStory];
 
-    //
-    // add node at the ground
-    //
-    json_t *node = json_object();
-    json_object_set(node, "name", json_integer(1)); // +2 as we need node at 1 
-    json_t *nodePosn = json_array();      
-    json_array_append(nodePosn,json_real(0.0));
-    json_array_append(nodePosn,json_real(0.0));
-    json_object_set(node, "crd", nodePosn);
-    json_object_set(node, "ndf", json_integer(ndf));
-    json_array_append(nodes,node);
-
-
     // add nodes, elements and materials for each floor and story to roof
     int index = 0;
     json_t *floorData;
@@ -134,7 +121,9 @@ main(int argc, char **argv) {
       double by = json_number_value(json_object_get(floorData, "by"));
       double height = json_number_value(json_object_get(floorData, "height"));
       double weight = json_number_value(json_object_get(floorData, "weight"));
-      zeta[index]= json_number_value(json_object_get(floorData, "zeta"));
+      double ktheta = json_number_value(json_object_get(floorData, "Ktheta"));
+      if (ktheta != 0.)
+	ndf = 3;
 
       floorHeight += height;
       double floorMass = weight/G;
@@ -144,6 +133,7 @@ main(int argc, char **argv) {
       json_t *element = json_object();
       json_t *material1 = json_object();
       json_t *material2 = json_object();
+      json_t *material3 = json_object();
 
       json_object_set(node, "name", json_integer(index+2)); // +2 as we need node at 1 
       json_object_set(node, "mass", json_real(floorMass));
@@ -158,6 +148,8 @@ main(int argc, char **argv) {
       json_t *eleMats = json_array();      
       json_array_append(eleMats,json_integer(matTag));
       json_array_append(eleMats,json_integer(matTag+1));
+      if (ndf == 3)
+	json_array_append(eleMats,json_integer(matTag+2));
       json_object_set(element, "uniaxial_material", eleMats);
       json_t *eleNodes = json_array();      
       json_array_append(eleNodes,json_integer(index+1));
@@ -176,18 +168,41 @@ main(int argc, char **argv) {
       json_object_set(material2,"Fy",json_real(Fyy));
       json_object_set(material2,"beta",json_real(by));
 
+      if (ndf == 3) {
+	json_object_set(material3,"name",json_integer(matTag+2));
+	json_object_set(material3,"type",json_string("elastic"));
+	json_object_set(material3,"K",json_real(ktheta));
+      }
+
       json_array_append(nodes,node);
       json_array_append(materials,material1);
       json_array_append(materials,material2);
+
+      if (ndf == 3) 
+	json_array_append(materials,material3);
+
       json_array_append(elements, element);
 
       // increment node, ele and mat tags
       nodeTag++;
-      matTag+=2;
+      matTag+=3;
       eleTag++;
     }
 
-    json_object_set(properties,"dampingRatio",json_real(zeta[0]));
+    //
+    // add node at the ground
+    //
+
+    json_t *node = json_object();
+    json_object_set(node, "name", json_integer(1)); // +2 as we need node at 1 
+    json_t *nodePosn = json_array();      
+    json_array_append(nodePosn,json_real(0.0));
+    json_array_append(nodePosn,json_real(0.0));
+    json_object_set(node, "crd", nodePosn);
+    json_object_set(node, "ndf", json_integer(ndf));
+    json_array_append(nodes,node);
+
+    json_object_set(properties,"dampingRatio",json_real(0.02));
   }
   
   //
@@ -228,7 +243,6 @@ main(int argc, char **argv) {
     json_array_append(rvArray, rvObj);
   }
 
-
   json_object_set(rootSAM,"type",json_string("generic"));
   json_object_set(properties,"uniaxialMaterials",materials);
   
@@ -245,7 +259,6 @@ main(int argc, char **argv) {
   //
   
   json_dump_file(rootSAM,filenameSAM,0);
-
 
   return 0;
 }
