@@ -2232,7 +2232,7 @@ class HAZUS_Assessment(Assessment):
 
             SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
                 self._DV_dict['rec_cost'].sum(axis=1)
-            SUMMARY.loc[:, ('reconstruction', 'cost')] *= repl_cost
+            #SUMMARY.loc[:, ('reconstruction', 'cost')] *= repl_cost
 
         # reconstruction time
         if DVs['rec_time']:
@@ -2316,6 +2316,10 @@ class HAZUS_Assessment(Assessment):
         RVd = self._RV_dict
         DVs = self._AIM_in['decision_variables']
 
+        # use the building replacement cost to calculate the absolute
+        # reconstruction cost for component groups
+        repl_cost = self._AIM_in['general']['replacement_cost']
+
         # create a list for the fragility groups
         FG_dict = dict()
 
@@ -2365,7 +2369,7 @@ class HAZUS_Assessment(Assessment):
 
                             if DVs['rec_cost']:
                                 data = DS['repair_cost']
-                                f_median = prep_constant_median_DV(data)
+                                f_median = prep_constant_median_DV(data*repl_cost)
                                 CF_cost = ConsequenceFunction(
                                     DV_median=f_median,
                                     DV_distribution=None)
