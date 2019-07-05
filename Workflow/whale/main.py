@@ -516,16 +516,27 @@ class Workflow(object):
         log_msg('Creating files with random variables')
 
         os.chdir(self.run_dir)
-        os.chdir('templatedir')
+        if 'Building' not in self.app_type_list:
+            os.chdir('templatedir')
 
-        # Make a copy of the input file and rename it to BIM.json
-        # This is a temporary fix, will be removed eventually.
-        shutil.copy(
-            src = self.input_file,
-            dst = posixpath.join(self.run_dir,'templatedir/BIM.json')) 
+            # Make a copy of the input file and rename it to BIM.json
+            # This is a temporary fix, will be removed eventually.
+            shutil.copy(
+                src = self.input_file,
+                dst = posixpath.join(self.run_dir,
+                                     'templatedir/{}'.format(BIM_file))) 
 
         for app_type in app_sequence:
-            command_list = self.workflow_apps[app_type].get_command_list(
+
+            workflow_app = self.workflow_apps[app_type]
+
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameBIM':
+                        input_var['default'] = BIM_file
+
+            command_list = workflow_app.get_command_list(
                 app_path = self.app_dir_local)
 
             command_list.append(u'--getRV')
@@ -565,7 +576,8 @@ class Workflow(object):
             driver_script += create_command(command_list) + u'\n'
 
         os.chdir(self.run_dir)
-        os.chdir('templatedir')
+        if 'Building' not in self.app_type_list:
+            os.chdir('templatedir')
 
         log_msg('Workflow driver script:')
         print('\n{}\n'.format(driver_script))
@@ -576,7 +588,7 @@ class Workflow(object):
         log_msg('Workflow driver file successfully created.')
         log_msg(log_div)
 
-    def simulate_response(self):
+    def simulate_response(self, BIM_file = 'BIM.json'):
         """
         Short description
 
@@ -589,9 +601,19 @@ class Workflow(object):
         log_msg('Running response simulation')
 
         os.chdir(self.run_dir)
-        os.chdir('templatedir')
 
-        command_list = self.workflow_apps['UQ'].get_command_list(
+        if 'Building' not in self.app_type_list:
+            os.chdir('templatedir')
+
+        workflow_app = self.workflow_apps['UQ']
+
+        # TODO: not elegant code, fix later
+        if BIM_file is not None:
+            for input_var in workflow_app.inputs:
+                if input_var['id'] == 'filenameBIM':
+                    input_var['default'] = BIM_file
+
+        command_list = workflow_app.get_command_list(
             app_path=self.app_dir_local)
 
         # add the run type to the uq command list
@@ -611,7 +633,7 @@ class Workflow(object):
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
-    def estimate_losses(self):
+    def estimate_losses(self, BIM_file = 'dakota.json', bldg_id = None):
         """
         Short description
 
@@ -625,11 +647,27 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        # Copy the dakota.json file from the templatedir to the run_dir so that
-        # all the required inputs are in one place.
-        shutil.copy(
-            src = posixpath.join(self.run_dir,'templatedir/dakota.json'),
-            dst = posixpath.join(self.run_dir,'dakota.json'))
+        if 'Building' not in self.app_type_list:
+            # Copy the dakota.json file from the templatedir to the run_dir so that
+            # all the required inputs are in one place.
+            shutil.copy(
+                src = posixpath.join(self.run_dir,'templatedir/dakota.json'),
+                dst = posixpath.join(self.run_dir,BIM_file))
+        else:            
+            # copy the BIM file from the main dir to the building dir
+            shutil.copy(
+                src = posixpath.join(self.run_dir, BIM_file),
+                dst = posixpath.join(self.run_dir, 
+                                     '{}/{}'.format(bldg_id, BIM_file)))
+            os.chdir(str(bldg_id))
+
+        workflow_app = self.workflow_apps['DL']
+
+        # TODO: not elegant code, fix later
+        if BIM_file is not None:
+            for input_var in workflow_app.inputs:
+                if input_var['id'] == 'filenameDL':
+                    input_var['default'] = BIM_file        
 
         command_list = self.workflow_apps['DL'].get_command_list(
             app_path=self.app_dir_local)
