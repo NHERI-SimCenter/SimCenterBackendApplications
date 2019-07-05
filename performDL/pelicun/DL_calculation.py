@@ -49,6 +49,9 @@ else:
 
 import sys, os, json, ntpath, posixpath, argparse
 import numpy as np
+import pandas as pd
+
+idx = pd.IndexSlice
 
 import pelicunPBE
 from pelicunPBE.control import FEMA_P58_Assessment, HAZUS_Assessment
@@ -62,7 +65,183 @@ def replace_FG_IDs_with_FG_names(assessment, df):
 
 	return df.rename(columns=new_col_names)
 
-def run_pelicun(DL_input_path, EDP_input_path, output_path=None):
+ap_DesignLevel = {
+	1950: 'Pre-Code',
+	1970: 'Low-Code',
+	1990: 'Moderate-Code',
+	2100: 'High-Code'
+}
+
+ap_Occupancy = {
+	'Residential': "RES1",
+	'Retail': "COM1"
+}
+
+convert_design_level = {
+        'High-Code'    : 'HC',
+        'Moderate-Code': 'MC',
+        'Low-Code'     : 'LC',
+        'Pre-Code'     : 'PC'
+    }
+
+convert_dv_name = {
+	'DV_rec_cost': 'Reconstruction Cost',
+	'DV_rec_time': 'Reconstruction Time',
+	'DV_injuries_0': 'Injuries lvl. 1',
+	'DV_injuries_1': 'Injuries lvl. 2',
+	'DV_injuries_2': 'Injuries lvl. 3',
+	'DV_injuries_3': 'Injuries lvl. 4',
+	'DV_red_tag': 'Red Tag ',
+}
+
+def auto_populate(DL_input_path):
+
+	with open(DL_input_path, 'r') as f:
+		DL_input = json.load(f)
+
+	bt = DL_input['GI']['structType']
+	ot = ap_Occupancy[DL_input['GI']['occupancy']]
+
+	loss_dict = {
+		'DLMethod': 'HAZUS MH',
+		'BuildingDamage': {
+			'ReplacementCost': DL_input['GI']['replacementCost'],
+			'ReplacementTime': DL_input['GI']['replacementTime'],
+			'StructureType': bt,
+		},
+		'UncertaintyQuantification': {
+			'Realizations': "10000"
+		},
+		'Inhabitants': {
+			'PeakPopulation': "1",
+			'OccupancyType': ot
+		},
+		'Components': []
+	}
+
+	year_built = DL_input['GI']['yearBuilt']
+	for year in sorted(ap_DesignLevel.keys()):
+		if year_built <= year:
+			loss_dict['BuildingDamage'].update(
+				{'DesignLevel': ap_DesignLevel[year]})
+			break
+	dl = convert_design_level[loss_dict['BuildingDamage']['DesignLevel']]
+
+	components = [
+		{'ID': 'S-{}-{}-{}'.format(bt, dl ,ot), 'structural': True},
+		{'ID': 'NSA-{}-{}'.format(dl ,ot),      'structural': False},
+		{'ID': 'NSD-{}'.format(ot),             'structural': False}
+	]
+
+	loss_dict['Components'] = components
+
+	DL_input.update({'LossModel':loss_dict})
+
+	DL_ap_path = DL_input_path[:-5]+'_ap.json'
+
+	with open(DL_ap_path, 'w') as f:
+		json.dump(DL_input, f, indent = 2)
+
+	return DL_input, DL_ap_path
+
+def write_DM_output(DM_file_path, DMG_df):
+
+	# Start with the probability of being in a particular damage state.
+	# Here, the damage state of the building (asset) is defined as the highest 
+	# damage state among the building components/component groups. This works 
+	# well for a HAZUS assessment, but something more sophisticated is needed
+	# for a FEMA P58 assessment.
+
+	# Determine the probability of DS exceedance by collecting the DS from all 
+	# components and assigning ones to all lower damage states.
+	DMG_agg = DMG_df.T.groupby('DS').sum().T
+	DMG_agg[DMG_agg > 0.0] = DMG_agg[DMG_agg > 0.0] / DMG_agg[DMG_agg > 0.0]
+	
+	cols = DMG_agg.columns
+	for i in range(len(cols)):
+	    filter = np.where(DMG_agg.iloc[:,i].values > 0.0)[0]
+	    DMG_agg.iloc[filter,idx[0:i]] = 1.0
+
+	# The P(DS=ds) probability is determined by subtracting consecutive DS 
+	# exceedance probabilites. This will not work well for a FEMA P58 assessment
+	# with Damage State Groups that include multiple Damage States.	    
+	DMG_agg_mean = DMG_agg.describe().loc['mean',:]
+	DS_0 = 1.0 - DMG_agg_mean['1-1']
+	for i in range(len(DMG_agg_mean.index)-1):
+	    DMG_agg_mean.iloc[i] = DMG_agg_mean.iloc[i] - DMG_agg_mean.iloc[i+1]
+	    
+	# Add the probability of no damage for convenience.
+	DMG_agg_mean['0'] = DS_0
+	DMG_agg_mean = DMG_agg_mean.sort_index()
+
+	# Save the results in the output json file
+	DM = {'aggregate': {}}
+
+	for id in DMG_agg_mean.index:
+	    DM['aggregate'].update({str(id): DMG_agg_mean[id]})
+
+	# Now determine the probability of being in a damage state for individual 
+	# components / component assemblies...
+	DMG_mean = DMG_df.describe().loc['mean',:]
+
+	# and save the results in the output json file.
+	for FG in sorted(DMG_mean.index.get_level_values('FG').unique()):
+	    DM.update({str(FG):{}})
+
+	    for PG in sorted(
+	    	DMG_mean.loc[idx[FG],:].index.get_level_values('PG').unique()):
+	        DM[str(FG)].update({str(PG):{}})
+	        
+	        for DS in sorted(
+	        	DMG_mean.loc[idx[FG, PG],:].index.get_level_values('DS').unique()):
+	            DM[str(FG)][str(PG)].update({str(DS): DMG_mean.loc[(FG,PG,DS)]})            
+
+	with open(DM_file_path, 'w') as f:
+		json.dump(DM, f, indent = 2)
+
+def write_DV_output(DV_file_path, DV_df, DV_name):
+
+	DV_name = convert_dv_name[DV_name]
+
+	try:
+		with open(DV_file_path, 'r') as f:
+			DV = json.load(f)
+	except:
+		DV = {}
+
+	DV.update({DV_name: {}})
+
+	DV_i = DV[DV_name]
+
+	try:		
+		DV_tot = DV_df.sum(axis=1).describe([0.1,0.5,0.9]).drop('count')
+		DV_i.update({'total':{}})
+		for stat in DV_tot.index:
+			DV_i['total'].update({stat: DV_tot.loc[stat]})
+
+		DV_stats = DV_df.describe([0.1,0.5,0.9]).drop('count')
+		for FG in sorted(DV_stats.columns.get_level_values('FG').unique()):
+		    DV_i.update({str(FG):{}})
+
+		    for PG in sorted(
+		    	DV_stats.loc[:,idx[FG]].columns.get_level_values('PG').unique()):
+		        DV_i[str(FG)].update({str(PG):{}})
+		        
+		        for DS in sorted(
+		        	DV_stats.loc[:,idx[FG, PG]].columns.get_level_values('DS').unique()):
+		            DV_i[str(FG)][str(PG)].update({str(DS): {}}) 
+		            DV_stats_i = DV_stats.loc[:,(FG,PG,DS)]
+		            for stat in DV_stats_i.index:
+		            	DV_i[str(FG)][str(PG)][str(DS)].update({
+		            		stat: DV_stats_i.loc[stat]})
+	except:
+		pass
+
+	with open(DV_file_path, 'w') as f:
+		json.dump(DV, f, indent = 2)
+
+def run_pelicun(DL_input_path, EDP_input_path, output_path=None,
+	DM_file = 'DM.json', DV_file = 'DV.json'):
 
 	DL_input_path = os.path.abspath(DL_input_path)
 	EDP_input_path = os.path.abspath(EDP_input_path)
@@ -99,6 +278,16 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None):
 	with open(DL_input_path, 'r') as f:
 		DL_input = json.load(f)
 
+	# check if the DL input file has information about the loss model
+	if 'LossModel' in DL_input:
+		pass
+	else:
+		# if the loss model is not defined, give a warning
+		print('WARNING No loss model defined in the BIM file. Trying to auto-populate.')
+
+		# and try to auto-populate the loss model using the BIM information
+		DL_input, DL_input_path = auto_populate(DL_input_path)
+
 	DL_method = DL_input['LossModel']['DLMethod']
 
 	if DL_method == 'FEMA P58':
@@ -119,6 +308,7 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None):
 	A.aggregate_results()
 
 	try:
+	#if True:
 		write_SimCenter_DL_output(
 			posixpath.join(output_path, 'DL_summary.csv'), A._SUMMARY, 
 			index_name='#Num', collapse_columns=True)
@@ -137,6 +327,9 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None):
 		write_SimCenter_DL_output(
 			posixpath.join(output_path, 'DMG.csv'), DMG_mod,
 			index_name='#Num', collapse_columns=False)
+
+		# create the DM.json file
+		write_DM_output(posixpath.join(output_path, DM_file), DMG_mod)
 
 		write_SimCenter_DL_output(
 			posixpath.join(output_path, 'DMG_agg.csv'), 
@@ -158,6 +351,9 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None):
 			posixpath.join(output_path, DV_name+'.csv'), DV_mod, 
 			index_name='#Num', collapse_columns=False)
 
+			write_DV_output(posixpath.join(output_path, DV_file), 
+				DV_mod, DV_name)
+
 			write_SimCenter_DL_output(
 			posixpath.join(output_path, DV_name+'_agg.csv'), 
 			DV_mod.T.groupby(level=0).aggregate(np.sum).T,
@@ -173,13 +369,12 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--filenameDL')
 	parser.add_argument('--filenameEDP')
-	parser.add_argument('--filenameDM')
-	parser.add_argument('--filenameDV')
+	parser.add_argument('--filenameDM', default = 'DM.json')
+	parser.add_argument('--filenameDV', default = 'DV.json')
 	parser.add_argument('--dirnameOutput')
 	args = parser.parse_args()
 
 	#print(args.dirnameOutput)
 	sys.exit(run_pelicun(
 		args.filenameDL, args.filenameEDP,
-		args.dirnameOutput
-		))
+		args.dirnameOutput, args.filenameDM, args.filenameDV))
