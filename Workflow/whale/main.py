@@ -365,15 +365,19 @@ class Workflow(object):
             raise WorkFlowInputError('Need a runDir entry in the input file')
 
         # parse the location(s) of the applications directory
-        if 'remoteAppDir' in input_data:
-            self.app_dir_remote = input_data['remoteAppDir']
-        else:
-            raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
-
         if 'localAppDir' in input_data:
             self.app_dir_local = input_data['localAppDir']
         else:
             raise WorkFlowInputError('Need a localAppDir entry in the input file')
+
+        if 'remoteAppDir' in input_data:
+            self.app_dir_remote = input_data['remoteAppDir']
+        else:
+            self.app_dir_remote = self.app_dir_local
+            show_warning('remoteAppDir not specified. Using the value provided '
+                'for localAppDir instead. This will lead to problems if you '
+                'want to run a simulation remotely.')
+            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
 
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir'], 
