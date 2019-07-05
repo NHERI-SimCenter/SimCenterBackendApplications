@@ -384,6 +384,14 @@ class Workflow(object):
             [self.run_dir, self.app_dir_remote, self.app_dir_local]):
             log_msg('\t{} location: {}'.format(loc_name, loc_val))
 
+        if 'Building' in self.app_type_list:
+            if 'buildingFile' in input_data:
+                self.building_file_name = input_data['buildingFile']
+            else:
+                self.building_file_name = "buildings.json"
+            log_msg('\tbuilding file name: {}'.format(self.building_file_name))
+
+
         # get the list of requested applications
         if 'Applications' in input_data:
             requested_apps = input_data['Applications']
@@ -448,7 +456,53 @@ class Workflow(object):
         log_msg('Successfully parsed workflow inputs')
         log_msg(log_div)
 
-    def create_RV_files(self, app_sequence): # we will probably need to rename this one
+    def create_building_files(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Creating files for individual buildings')
+
+        building_file = posixpath.join(self.run_dir, self.building_file_name)
+
+        bldg_app = self.workflow_apps['Building']
+
+        # TODO: not elegant code, fix later
+        os.chdir(self.run_dir)
+
+        building_file = building_file.replace('.json', 
+            '{}-{}.json'.format(bldg_app.pref['Min'], bldg_app.pref['Max'])) 
+        self.building_file_path = building_file
+
+        for output in bldg_app.outputs:
+            if output['id'] == 'buildingFile':
+                output['default'] = building_file
+
+        bldg_command_list = bldg_app.get_command_list(
+            app_path = self.app_dir_local)
+
+        bldg_command_list.append(u'--getRV')
+
+        command = create_command(bldg_command_list)        
+
+        log_msg('Creating initial building files...')
+        print('\n{}\n'.format(command))
+        
+        result, returncode = run_command(command)
+
+        log_msg('\tOutput: ')
+        print('\n{}\n'.format(result))
+
+        log_msg('Building files successfully created.')
+        log_msg(log_div)
+
+    def create_RV_files(self, app_sequence, BIM_file = 'BIM.json'): # we will probably need to rename this one
         """
         Short description
 
