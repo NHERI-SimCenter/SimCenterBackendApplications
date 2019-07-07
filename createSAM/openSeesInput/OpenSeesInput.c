@@ -79,7 +79,7 @@ main(int argc, char **argv) {
     char floorString[10];
     
     json_array_foreach(theNodes, index, intObj) {
-      json_t *nodeEntry = json_object();
+      json_t *nodeEntry =json_object();
       int tag = json_integer_value(intObj);
       json_object_set(nodeEntry,"node",json_integer(tag));
       json_object_set(nodeEntry,"cline",json_string("1"));
@@ -93,12 +93,15 @@ main(int argc, char **argv) {
     json_object_set(rootSAM,"NodeMapping",mappingArray);
 
     // add #story and ndm
-    int nStory = floor -2;
+    int nStory = floor -1;
     json_object_set(rootSAM,"numStory",json_integer(nStory));
 
     json_t *ndm = json_object_get(theSIM, "ndm");
     json_object_set(rootSAM,"ndm", ndm);
 
+    json_t *ndf = json_object_get(theSIM, "ndf");
+    if (ndf != NULL)
+      json_object_set(rootSAM,"ndf", ndf);
 
     json_t *theRVs = json_object_get(theSIM,"randomVar");
 
