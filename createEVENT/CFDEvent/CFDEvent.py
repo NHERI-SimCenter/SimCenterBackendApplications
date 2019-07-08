@@ -66,7 +66,6 @@ def writeEVENT(forces, eventFilePath):
         floor = forces.index(floorForces) + 1
         addFloorForceToEvent(patternsArray, floorForces.X, "X", floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, "Y", floor)
-        addFloorForceToEvent(patternsArray, floorForces.Z, "Z", floor)
 
     with open(eventFilePath, "w") as eventsFile:
         json.dump(eventDict, eventsFile)
