@@ -366,7 +366,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     # Write the workflow driver
     #
 
-    f = open(workflowDriverName, 'w')
+    f = open(workflowDriverName, 'w', newline='\n')
 
     # want to dprepro the files with the random variables
     if bimExists == True: f.write('perl dpreproSimCenter params.in bim.j ' + bimName + '\n')

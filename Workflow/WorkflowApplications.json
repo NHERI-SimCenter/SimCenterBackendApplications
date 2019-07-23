@@ -59,7 +59,7 @@
         "ApplicationSpecificInputs":[]
       },
       {
-        "Name": "StochasticWindInput-WittigSinha",
+        "Name": "StochasticWindInput-WittigSinha1975",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
         "ApplicationSpecificInputs":["modelName", "seed"]
       },		
@@ -67,6 +67,11 @@
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
         "ApplicationSpecificInputs":["modelName", "seed"]
+      },		
+      {
+        "Name": "CFDEvent",
+        "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
+        "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
       }
     ]
   },
