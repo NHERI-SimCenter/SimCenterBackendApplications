@@ -48,6 +48,8 @@ qrc_images1.cpp
 qrc_styles.cpp
 
 # OTHER
+applications
+build
 Makefile
 Makefile.*
 StandardGMT_EDP
