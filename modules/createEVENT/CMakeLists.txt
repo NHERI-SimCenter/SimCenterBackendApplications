@@ -1,2 +1,7 @@
+add_subdirectory(CFDEvent)
+add_subdirectory(DEDM_HRP)
+add_subdirectory(hazardBasedEvent)
 add_subdirectory(multiplePEER)
 add_subdirectory(multipleSimCenter)
+add_subdirectory(NOWS1)
+add_subdirectory(siteResponse)
