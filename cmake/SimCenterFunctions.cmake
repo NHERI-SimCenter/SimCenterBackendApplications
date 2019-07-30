@@ -205,3 +205,31 @@ function(simcenter_link_files_to_builddir globExpression )
     endforeach()
 
 endfunction(simcenter_link_files_to_builddir)
+
+#######################################################################################################################
+#
+# Subtracts list2 from list 2
+# 
+# Keywords:
+#     LIST1   first list
+#     LIST2   second list
+# Example:
+#     list_minus ( result LIST1 "entry1" "entry2" "entry3" LIST2 "entry1" "entry3" )
+#      -> result has a single entry: "entry2"
+#     
+#######################################################################################################################
+function(list_minus resultOut)
+    set(option)
+    set(oneValueArgs)
+    set(multiValueArgs LIST1 LIST2)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+   
+    set(result ${ARG_LIST1})
+    foreach(secondEntry ${ARG_LIST2})
+        list(REMOVE_ITEM result ${secondEntry})
+    endforeach()
+    
+    set(${resultOut} ${result} PARENT_SCOPE)
+    
+endfunction(list_minus)    
+#######################################################################################################################
