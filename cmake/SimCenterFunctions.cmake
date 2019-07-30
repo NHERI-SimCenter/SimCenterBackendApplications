@@ -99,12 +99,12 @@ function(simcenter_add_module)
     set_property(TARGET ${moduleName} PROPERTY CXX_STANDARD 14)
 
     # Install rule for library
-    get_target_property(module_type ${moduleLibraryName} TYPE)
-    if (${module_type} MATCHES LIBRARY)
-       install(TARGETS ${moduleLibraryName} RUNTIME DESTINATION bin
-                                            LIBRARY DESTINATION lib
-                                            ARCHIVE DESTINATION lib)
-    endif()
+    # get_target_property(module_type ${moduleLibraryName} TYPE)
+    # if (${module_type} MATCHES LIBRARY)
+    #    install(TARGETS ${moduleLibraryName} RUNTIME DESTINATION bin
+    #                                         LIBRARY DESTINATION lib
+    #                                         ARCHIVE DESTINATION lib)
+    # endif()
 
 endfunction(simcenter_add_module)
 #######################################################################################################################

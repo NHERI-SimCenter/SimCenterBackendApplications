@@ -1,5 +1,6 @@
 [requires]
 jansson/2.11@simcenter/stable
+libcurl/7.64.1@bincrafters/stable
 
 [generators]
 cmake
