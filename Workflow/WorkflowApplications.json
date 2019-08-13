@@ -168,6 +168,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "OpenSeesPyInput",
+        "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "MDOF_BuildingModel",
         "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BuildingModel",
         "ApplicationSpecificInputs": []
@@ -276,6 +281,10 @@
         "ExecutablePath": "applications/performSIMULATION/openSees/OpenSeesSimulation.py"
       },
       {
+        "Name": "OpenSeesPy-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"        
+      },
+      {
         "Name": "ExtractPGA",
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
@@ -352,7 +361,7 @@
           "id": "filenameDL",
           "type": "string",
           "description": "name of file containing the DL model information",
-          "default": "dakota.json"
+          "default": "BIM.json"
       },
       {
           "id": "filenameEDP",
