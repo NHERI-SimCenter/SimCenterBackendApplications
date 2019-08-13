@@ -407,7 +407,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification == 'Earthquake':
+                    if eventClassification in ['Earthquake', 'Wind'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
@@ -421,7 +421,7 @@ class Workflow(object):
                       
                     else: 
                         raise WorkFlowInputError(
-                            ('Currently, only earthquake events are supported. '
+                            ('Currently, only earthquake and wind events are supported. '
                              'EventClassification must be Earthquake, not {}'
                              ).format(eventClassification))
                 else: 

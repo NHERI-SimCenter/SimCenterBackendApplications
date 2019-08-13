@@ -65,7 +65,7 @@ main(int argc, char **argv) {
   json_t *rvArray = json_array(); 
 
   //
-  // load INPUT file, loop over events and if Stochastic & Nows1 add the data
+  // load INPUT file, loop over events
   //
 
   json_error_t error;
@@ -117,6 +117,15 @@ main(int argc, char **argv) {
       json_object_set(outputEvent,"type", json_string("Wind"));
       json_object_set(outputEvent, "subtype", json_string("DEDM_HRP"));
       json_object_set(outputEvent, "eventFile", json_string(dataBaseFile.c_str()));
+
+      json_t *units = json_object();
+      json_object_set(units,"force",json_string("KN"));
+      json_object_set(units,"length",json_string("m"));
+      json_object_set(units,"time",json_string("sec"));
+      json_object_set(outputEvent,"units",units);
+
+      //      json_object_set(outputEvent, "units", units);      
+
       addEvent(input, inputEvent, outputEvent, doRV, incidenceAngle);
 
       json_array_append(outputEventsArray, outputEvent);
@@ -135,8 +144,8 @@ main(int argc, char **argv) {
   return 0;
 }
 
-int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
-             bool getRV, int incidenceAngle) {
+int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, 
+	     bool getRV, int incidenceAngle) {
 
   int planShape = json_integer_value(json_object_get(currentEvent,"checkedPlan"));
 
@@ -176,7 +185,8 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
       json_object_set(yComponent, "data", forceY);
       
     }
-    
+
+
     if (event == NULL) {
       std::cerr << "FATAL ERROR - event file " << eventFile << " does not exist\n";
       exit(-1);
@@ -281,7 +291,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
     }
 
     json_t *units = json_object();
-    json_object_set(units,"force",json_string("N"));
+    json_object_set(units,"force",json_string("KN"));
     json_object_set(units,"length",json_string("m"));
     json_object_set(units,"time",json_string("sec"));
     json_object_set(outputEvent,"units",units);
