@@ -1691,7 +1691,7 @@ class FEMA_P58_Assessment(Assessment):
             PG_set = FG._performance_groups
 
             DS_list = self._DMG.loc[:, idx[FG._ID, PG_set[0]._ID, :]].columns
-            DS_list = DS_list.levels[2][DS_list.labels[2]].values
+            DS_list = DS_list.levels[2][DS_list.codes[2]].values
 
             MI = pd.MultiIndex.from_product([[FG._ID, ],
                                              [pg._ID for pg in PG_set],
@@ -1819,7 +1819,7 @@ class FEMA_P58_Assessment(Assessment):
             PG_set = FG._performance_groups
 
             DS_list = self._DMG.loc[:, idx[FG._ID, PG_set[0]._ID, :]].columns
-            DS_list = DS_list.levels[2][DS_list.labels[2]].values
+            DS_list = DS_list.levels[2][DS_list.codes[2]].values
 
             for pg_i, PG in enumerate(PG_set):
 
@@ -1927,7 +1927,7 @@ class FEMA_P58_Assessment(Assessment):
             PG_set = FG._performance_groups
 
             DS_list = self._DMG.loc[:, idx[FG._ID, PG_set[0]._ID, :]].columns
-            DS_list = DS_list.levels[2][DS_list.labels[2]].values
+            DS_list = DS_list.levels[2][DS_list.codes[2]].values
 
             for pg_i, PG in enumerate(PG_set):
 
@@ -2655,7 +2655,7 @@ class HAZUS_Assessment(Assessment):
             PG_set = FG._performance_groups
 
             DS_list = self._DMG.loc[:, idx[FG._ID, PG_set[0]._ID, :]].columns
-            DS_list = DS_list.levels[2][DS_list.labels[2]].values
+            DS_list = DS_list.levels[2][DS_list.codes[2]].values
 
             for pg_i, PG in enumerate(PG_set):
 
@@ -2716,7 +2716,7 @@ class HAZUS_Assessment(Assessment):
             PG_set = FG._performance_groups
 
             DS_list = self._DMG.loc[:, idx[FG._ID, PG_set[0]._ID, :]].columns
-            DS_list = DS_list.levels[2][DS_list.labels[2]].values
+            DS_list = DS_list.levels[2][DS_list.codes[2]].values
 
             for pg_i, PG in enumerate(PG_set):
 
