@@ -87,7 +87,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     # get UQ method data
     #
 
-    with open('dakota.json') as data_file:    
+    with open(bimName) as data_file:
+    #with open('dakota.json') as data_file:    
         data = json.load(data_file)
         
     uqData = data["UQ_Method"];
