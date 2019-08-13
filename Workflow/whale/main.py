@@ -633,7 +633,7 @@ class Workflow(object):
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
-    def estimate_losses(self, BIM_file = 'dakota.json', bldg_id = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None):
         """
         Short description
 
@@ -651,7 +651,7 @@ class Workflow(object):
             # Copy the dakota.json file from the templatedir to the run_dir so that
             # all the required inputs are in one place.
             shutil.copy(
-                src = posixpath.join(self.run_dir,'templatedir/dakota.json'),
+                src = posixpath.join(self.run_dir,'templatedir/BIM.json'),
                 dst = posixpath.join(self.run_dir,BIM_file))
         else:            
             # copy the BIM file from the main dir to the building dir
