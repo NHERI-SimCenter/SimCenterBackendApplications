@@ -47,7 +47,7 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import sys, os, json, ntpath, posixpath, argparse
+import json, ntpath, posixpath, argparse
 import numpy as np
 import pandas as pd
 
@@ -240,17 +240,32 @@ def write_DV_output(DV_file_path, DV_df, DV_name):
 	with open(DV_file_path, 'w') as f:
 		json.dump(DV, f, indent = 2)
 
-def run_pelicun(DL_input_path, EDP_input_path, output_path=None,
-	DM_file = 'DM.json', DV_file = 'DV.json'):
+def run_pelicun(DL_input_path, EDP_input_path, EVENT_input_path=None, 
+	output_path=None, DM_file = 'DM.json', DV_file = 'DV.json'):
 
 	DL_input_path = os.path.abspath(DL_input_path)
 	EDP_input_path = os.path.abspath(EDP_input_path)
-	
+
 	# If the output dir was not specified, results are saved in the directory of
 	# the input file.
 	if output_path is None:
 		output_path = ntpath.dirname(DL_input_path)
 
+	# delete output files from previous runs
+	files = os.listdir(output_path)
+	for filename in files:
+		if (filename[-3:] == 'csv') and (
+			('DL_summary' in filename) or
+			('DMG' in filename) or 
+			('DV_' in filename) or
+			('EDP' in filename)
+			):
+			try:
+				os.remove(posixpath.join(output_path, filename))
+			except:
+				pass
+
+	"""
 	# delete output files from previous runs (if needed)
 	files_to_delete = [
 		'DL_summary.csv',
@@ -273,7 +288,42 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None,
 			os.remove(posixpath.join(output_path, file_name))
 		except:
 			pass
+	"""
+	
+	# If the event file is specified, we expect a multi-stripe analysis...
+	if EVENT_input_path is not None:
+		EVENT_input_path = os.path.abspath(EVENT_input_path)
 
+		# Collect stripe and rate information for every event
+		with open(EVENT_input_path, 'r') as f:
+			event_list = json.load(f)['Events'][0]['Events']
+
+		df_event = pd.DataFrame(columns=['name', 'stripe', 'rate'], 
+								index=np.arange(len(event_list)))
+
+		for evt_i, event in enumerate(event_list):
+			df_event.iloc[evt_i] = [event['name'], event['stripe'], event['rate']]
+
+		# Create a separate EDP input for each stripe
+		EDP_input_full = pd.read_csv(EDP_input_path, sep='\s+', header=0, 
+									 index_col=0)
+
+		EDP_input_full.to_csv(EDP_input_path[:-4]+'_1.out', sep=' ')
+
+		stripes = df_event['stripe'].unique()
+		EDP_files = []
+		for stripe in stripes:
+			events = df_event[df_event['stripe']==stripe]['name'].values
+
+			EDP_input = EDP_input_full[EDP_input_full['MultipleEvent'].isin(events)]
+
+			EDP_files.append(EDP_input_path[:-4]+'_{}.out'.format(stripe))
+
+			EDP_input.to_csv(EDP_files[-1], sep=' ')
+	else:
+		stripes = [1]
+		EDP_files = [EDP_input_path]	
+	
 	# read the type of assessment from the DL input file
 	with open(DL_input_path, 'r') as f:
 		DL_input = json.load(f)
@@ -290,77 +340,91 @@ def run_pelicun(DL_input_path, EDP_input_path, output_path=None,
 
 	DL_method = DL_input['LossModel']['DLMethod']
 
-	if DL_method == 'FEMA P58':
-		A = FEMA_P58_Assessment()
-	elif DL_method == 'HAZUS MH':
-		A = HAZUS_Assessment()
+	# run the analysis and save results separately for each stripe
+	#print(stripes, EDP_files)
 
-	A.read_inputs(DL_input_path, EDP_input_path, verbose=False)
+	for s_i, stripe in enumerate(stripes):
 
-	A.define_random_variables()
+		stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
 
-	A.define_loss_model()
+		if DL_method == 'FEMA P58':
+			A = FEMA_P58_Assessment()
+		elif DL_method == 'HAZUS MH':
+			A = HAZUS_Assessment()
 
-	A.calculate_damage()
+		A.read_inputs(DL_input_path, EDP_files[s_i], verbose=False)
 
-	A.calculate_losses()
+		A.define_random_variables()
 
-	A.aggregate_results()
+		A.define_loss_model()
 
-	try:
-	#if True:
-		write_SimCenter_DL_output(
-			posixpath.join(output_path, 'DL_summary.csv'), A._SUMMARY, 
-			index_name='#Num', collapse_columns=True)
+		A.calculate_damage()
 
-		write_SimCenter_DL_output(
-			posixpath.join(output_path, 'DL_summary_stats.csv'), A._SUMMARY, 
-			index_name='attribute', collapse_columns=True,  stats_only=True)
+		A.calculate_losses()
 
-		EDPs = sorted(A._EDP_dict.keys())
-		write_SimCenter_DL_output(
-			posixpath.join(output_path, 'EDP.csv'), 
-			A._EDP_dict[EDPs[0]]._RV.samples, 
-			index_name='#Num', collapse_columns=False)
-		
-		DMG_mod = replace_FG_IDs_with_FG_names(A, A._DMG)
-		write_SimCenter_DL_output(
-			posixpath.join(output_path, 'DMG.csv'), DMG_mod,
-			index_name='#Num', collapse_columns=False)
+		A.aggregate_results()
 
-		# create the DM.json file
-		write_DM_output(posixpath.join(output_path, DM_file), DMG_mod)
-
-		write_SimCenter_DL_output(
-			posixpath.join(output_path, 'DMG_agg.csv'), 
-			DMG_mod.T.groupby(level=0).aggregate(np.sum).T,
-			index_name='#Num', collapse_columns=False)
-
-		DV_mods, DV_names = [], []
-		for key in A._DV_dict.keys():
-			if key != 'injuries':
-				DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key]))
-				DV_names.append('DV_{}'.format(key))
-			else:
-				for i in range(2 if DL_method == 'FEMA P58' else 4):
-					DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key][i]))
-					DV_names.append('DV_{}_{}'.format(key, i))
-
-		for DV_mod, DV_name in zip(DV_mods, DV_names):
+		try:
+		#if True:
 			write_SimCenter_DL_output(
-			posixpath.join(output_path, DV_name+'.csv'), DV_mod, 
-			index_name='#Num', collapse_columns=False)
-
-			write_DV_output(posixpath.join(output_path, DV_file), 
-				DV_mod, DV_name)
+				posixpath.join(output_path, 
+				'{}DL_summary.csv'.format(stripe_str)), A._SUMMARY, 
+				index_name='#Num', collapse_columns=True)
 
 			write_SimCenter_DL_output(
-			posixpath.join(output_path, DV_name+'_agg.csv'), 
-			DV_mod.T.groupby(level=0).aggregate(np.sum).T,
-			index_name='#Num', collapse_columns=False)
+				posixpath.join(output_path, 
+				'{}DL_summary_stats.csv'.format(stripe_str)), A._SUMMARY, 
+				index_name='attribute', collapse_columns=True,  stats_only=True)
 
-	except:
-		print("ERROR when trying to create DL output files.")
+			EDPs = sorted(A._EDP_dict.keys())
+			write_SimCenter_DL_output(
+				posixpath.join(output_path, 
+				'{}EDP.csv'.format(stripe_str)), A._EDP_dict[EDPs[0]]._RV.samples, 
+				index_name='#Num', collapse_columns=False)
+			
+			DMG_mod = replace_FG_IDs_with_FG_names(A, A._DMG)
+			write_SimCenter_DL_output(
+				posixpath.join(output_path, 
+				'{}DMG.csv'.format(stripe_str)), DMG_mod,
+				index_name='#Num', collapse_columns=False)
+
+			# create the DM.json file
+			if DL_method == 'HAZUS MH':
+				write_DM_output(posixpath.join(output_path, stripe_str+DM_file), 
+					DMG_mod)
+
+			write_SimCenter_DL_output(
+				posixpath.join(output_path, 
+				'{}DMG_agg.csv'.format(stripe_str)), 
+				DMG_mod.T.groupby(level=0).aggregate(np.sum).T,
+				index_name='#Num', collapse_columns=False)
+
+			DV_mods, DV_names = [], []
+			for key in A._DV_dict.keys():
+				if key != 'injuries':
+					DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key]))
+					DV_names.append('{}DV_{}'.format(stripe_str, key))
+				else:
+					for i in range(2 if DL_method == 'FEMA P58' else 4):
+						DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key][i]))
+						DV_names.append('{}DV_{}_{}'.format(stripe_str, key, i))
+
+			for DV_mod, DV_name in zip(DV_mods, DV_names):
+				write_SimCenter_DL_output(
+				posixpath.join(output_path, DV_name+'.csv'), DV_mod, 
+				index_name='#Num', collapse_columns=False)
+
+				if DL_method == 'HAZUS MH':
+					write_DV_output(posixpath.join(output_path, stripe_str+DV_file), 
+						DV_mod, DV_name)
+
+				write_SimCenter_DL_output(
+				posixpath.join(output_path, DV_name+'_agg.csv'), 
+				DV_mod.T.groupby(level=0).aggregate(np.sum).T,
+				index_name='#Num', collapse_columns=False)
+
+		except:
+			print("ERROR when trying to create DL output files.")
 
 	return 0
 
@@ -369,6 +433,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--filenameDL')
 	parser.add_argument('--filenameEDP')
+	parser.add_argument('--filenameEVENT', default = None)
 	parser.add_argument('--filenameDM', default = 'DM.json')
 	parser.add_argument('--filenameDV', default = 'DV.json')
 	parser.add_argument('--dirnameOutput')
@@ -376,5 +441,5 @@ if __name__ == '__main__':
 
 	#print(args.dirnameOutput)
 	sys.exit(run_pelicun(
-		args.filenameDL, args.filenameEDP,
+		args.filenameDL, args.filenameEDP, args.filenameDL,
 		args.dirnameOutput, args.filenameDM, args.filenameDV))
