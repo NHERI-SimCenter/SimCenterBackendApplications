@@ -128,6 +128,11 @@
             "description": "Folder containing records"
           }
         ]
+      },
+      {
+        "Name": "ASCE7_WindSpeed",
+        "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
+        "ApplicationSpecificInputs":[]
       }
     ]
   },
@@ -235,6 +240,11 @@
         "Name": "UserDefinedEDP",
         "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SimpleEDP",
+        "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -291,6 +301,10 @@
       {
         "Name": "OpenSees",
         "ExecutablePath": "applications/performSIMULATION/openSees2/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "IMasEDP",
+        "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
       }
     ]
   },

@@ -121,6 +121,10 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     simExists = parseFileForRV(simName)
     edpExists = parseFileForRV(edpName)
 
+    # Add a dummy random variable if no other RV was defined
+    if numRandomVariables == 0:
+        add_dummy()
+
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
     remoteWorkflowDriverName = 'workflow_driver'
@@ -350,6 +354,10 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
                 edpAcronym = "PFD"
                 floor = edp["floor"]
                 known = True
+            elif(edp["type"] == "peak_wind_gust_speed"):
+                edpAcronym = "PWS"
+                floor = edp["floor"]
+                known = True
 
             else:
                 f.write("'{}' ".format(edp["type"]))
@@ -540,3 +548,17 @@ def parseFileForRV(fileName):
                 print(k)
 
     return True
+
+def add_dummy():
+
+    global numRandomVariables
+
+    global numDiscreteDesignSetString
+    global discreteDesignSetStringName
+    global discreteDesignSetStringValues
+
+    discreteDesignSetStringName.append("dummy")
+    elements =["1", "2"];
+    discreteDesignSetStringValues.append(elements)
+    numDiscreteDesignSetString += 1
+    numRandomVariables += 1

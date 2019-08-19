@@ -433,7 +433,6 @@ class Workflow(object):
             if app_type != 'Event':
                 if app_type in requested_apps:
 
-
                     app_object = deepcopy(
                         self.app_registry[app_type].get(
                             requested_apps[app_type]['Application']))
@@ -446,8 +445,15 @@ class Workflow(object):
                     self.workflow_apps[app_type] = app_object
               
                 else:
-                    raise WorkFlowInputError(
-                        'Need {} entry in Applications'.format(app_type))
+                    if app_type != "Modeling":
+                        raise WorkFlowInputError(
+                            'Need {} entry in Applications'.format(app_type))
+                    else:                        
+                        self.app_registry.pop("Modeling", None)
+                        log_msg('\tNo Modeling among requested applications.')
+
+        if "Modeling" not in self.app_registry:
+            self.app_type_list.remove("Modeling")
 
         log_msg('\tRequested workflow:')
         for app_type, app_object in self.workflow_apps.items():
@@ -526,6 +532,10 @@ class Workflow(object):
                 dst = posixpath.join(self.run_dir,
                                      'templatedir/{}'.format(BIM_file))) 
 
+        if (("Modeling" in app_sequence) and
+            ("Modeling" not in self.workflow_apps.keys())):
+            app_sequence.remove("Modeling")
+
         for app_type in app_sequence:
 
             workflow_app = self.workflow_apps[app_type]
@@ -568,6 +578,10 @@ class Workflow(object):
         log_msg('Creating the workflow driver file')
 
         driver_script = u''
+
+        if (("Modeling" in app_sequence) and
+            ("Modeling" not in self.workflow_apps.keys())):
+            app_sequence.remove("Modeling")
 
         for app_type in app_sequence:
             command_list = self.workflow_apps[app_type].get_command_list(
