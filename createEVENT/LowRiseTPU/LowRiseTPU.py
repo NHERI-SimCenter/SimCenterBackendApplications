@@ -25,7 +25,6 @@ dataDir = os.getcwd()
 scriptDir = os.path.dirname(os.path.realpath(__file__))
 
 def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
-    print("HELLO PROCESSING")
 
     file = open(windFileOutName,"w");
     file.write("{\n");
@@ -53,16 +52,46 @@ def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
     file.write("\"breadth\":%f," % breadth);
     file.write("\"pitch\":%f," % pitch);
     file.write("\"period\":%f," % period);
+    file.write("\"units\":{\"length\":\"m\",\"time\":\"sec\"},");
     file.write("\"frequency\":%f," % frequency);
     file.write("\"incidenceAngle\":%f," % angle);
     file.write("\"tapLocations\": [");
     locations = mat_contents['Location_of_measured_points'];
     numLocations = locations.shape[1];
+
+    # get xMax and yMax .. assuming first sensor is 1m from building edge
+    # location on faces cannot be obtained from the inputs, at least not with 
+    # current documentation, awaing email from TPU
+
+    xMax = max(locations[0])+1
+    yMax = max(locations[1])+1
+    
     for loc in range(0, numLocations):
         tag = locations[2][loc]
         xLoc = locations[0][loc]
         yLoc = locations[1][loc]
         face = locations[3][loc]
+
+        if (roofType == 'Flat'):
+
+            X = xLoc
+            Y = yLoc
+            if (face == 1):
+                xLoc = -(Y - breadth/2.0)
+                yLoc = X + xMax
+            elif (face == 2):
+                xLoc = X + depth/2.0
+                yLoc = Y + yMax
+            elif (face == 3):
+                xLoc = Y + breadth/2.0;
+                yLoc = -(X - xMax)
+            elif (face == 4):
+                xLoc = -(X - depth/2.0)
+                yLoc = -(Y - yMax)
+            else:
+                xLoc = X + depth/2
+                yLoc = Y + breadth/2
+
         
         if (loc == numLocations-1):
             file.write("{\"id\":%d,\"xLoc\":%f,\"yLoc\":%f,\"face\":%d}]" % (tag, xLoc, yLoc, face))

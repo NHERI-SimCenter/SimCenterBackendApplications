@@ -8,5 +8,5 @@ callLowRise_TPU(const char *shape,
 
 int main(int argc, char *argv[])
 {
-  return callLowRise_TPU("flat","2:4","2:2","0.0",15,"test.mat");
+  return callLowRise_TPU("Flat","2:4","2:2","0.0",15,"test.mat");
 }

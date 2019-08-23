@@ -33,7 +33,7 @@ callLowRise_TPU(const char *shape,
   slist1 = NULL;
   char url[128];
   
-  if ((strcmp(shape,"flat") == 0) || (strcmp(shape,"gable") == 0)) {
+  if ((strcmp(shape,"Flat") == 0) || (strcmp(shape,"Gable") == 0)) {
 
     // "http://www.wind.arch.t-kougei.ac.jp/info_center/windpressure/lowrise/Cp_ts_g12020500.mat"
     strcpy(url,"http://www.wind.arch.t-kougei.ac.jp/info_center/windpressure/lowrise/Cp_ts_g");    
@@ -149,6 +149,8 @@ callLowRise_TPU(const char *shape,
     std::cerr <<  "tpuCall FAILED" << str << "\n";
     return -1;
   }
+
+  fclose(pagefile);
 
   curl_easy_cleanup(hnd);
   hnd = NULL;
