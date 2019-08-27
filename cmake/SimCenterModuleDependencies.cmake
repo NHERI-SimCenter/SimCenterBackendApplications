@@ -68,6 +68,32 @@ endfunction(get_current_module_name)
 
 #######################################################################################################################
 #
+# Determine Module folder using the current folder. moduleFolderOut is the current source directory stripped of
+# the path
+#
+#######################################################################################################################
+function(get_current_module_dir moduleFolderOut)
+  
+  foreach(moduleDir ${ARGN} ${SIMCENTER_MODULE_DIRS})
+    get_filename_component(moduleFolderPath ${CMAKE_CURRENT_SOURCE_DIR} DIRECTORY)    
+    file(RELATIVE_PATH moduleFolder ${moduleDir} ${CMAKE_CURRENT_SOURCE_DIR})
+    if (NOT ${moduleFolder} MATCHES "\\.\\./.*")
+      get_filename_component(moduleFolderDir ${moduleFolderPath} NAME_WE)      
+      set (${moduleFolderOut} ${moduleFolderDir} PARENT_SCOPE)
+      return() 
+    endif()
+  endforeach()
+
+  message (WARNING "Called get_current_module_name, in a directory "
+           "that is not a subdirectory of SIMCENTER_MODULE_DIRS\n"
+           "Module Dirs: ${SIMCENTER_MODULE_DIRS} \n"
+           "Current Dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+      
+
+endfunction(get_current_module_dir)
+
+#######################################################################################################################
+#
 # Since slashes occur in module names, but slashes are not allowed in library names
 # the library name is the module name, where all slashes are replaced by dashes
 #

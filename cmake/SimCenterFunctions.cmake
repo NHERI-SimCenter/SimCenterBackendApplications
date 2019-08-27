@@ -164,11 +164,75 @@ function(simcenter_add_executable)
     target_link_libraries(${ARG_NAME} ${SIMCENTER_LINK_LIBRARIES_KEYWORD} ${SERVICE_LIBS})
     set_property(TARGET ${ARG_NAME} PROPERTY CXX_STANDARD 14)
     # Install rule for executable
+    get_current_module_dir(moduleDir)
+    get_current_module_name(moduleName)    
+    message("Module name: " ${moduleName})
     install(TARGETS ${ARG_NAME} DESTINATION "${PROJECT_SOURCE_DIR}/applications/${moduleName}")
 
 endfunction(simcenter_add_executable)
 
 #######################################################################################################################
+#
+# Copies python script and dependencies to applications directory
+#
+#######################################################################################################################
+
+function(simcenter_add_python_script)
+    set(options)
+    set(oneValueArgs SCRIPT)
+    set(multiValueArgs DEPENDS)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if( NOT ARG_SCRIPT )
+      message ( FATAL_ERROR "simcenter_add_python_script called without a NAME" )
+    endif()
+
+    get_current_module_name(moduleDir)    
+    foreach(f ${ARG_DEPENDS})
+      simcenter_add_python_dependency(DEPENDENCY ${f} COPY_LOCATION "${PROJECT_SOURCE_DIR}/applications/${moduleDir}")
+    endforeach()
+    
+    file(COPY ${ARG_SCRIPT} DESTINATION "${PROJECT_SOURCE_DIR}/applications/${moduleDir}")
+      
+endfunction(simcenter_add_python_script)
+
+#######################################################################################################################
+#
+# Copies python dependencies to applications directory
+#
+#######################################################################################################################
+
+function(simcenter_add_python_dependency)
+    set(options)
+    set(oneValueArgs DEPENDENCY COPY_LOCATION)
+    set(multiValueArgs)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    file(COPY ${ARG_DEPENDENCY} DESTINATION "${ARG_COPY_LOCATION}")
+    
+endfunction(simcenter_add_python_dependency)
+
+#######################################################################################################################
+#
+# Copies file to applications directory
+#
+#######################################################################################################################
+
+function(simcenter_add_file)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs DEPENDS)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if( NOT ARG_NAME )
+      message ( FATAL_ERROR "simcenter_add_file called without a NAME" )
+    endif()
+
+    get_current_module_name(moduleDir)   
+    file(COPY ${ARG_NAME} DESTINATION "${PROJECT_SOURCE_DIR}/applications/${moduleDir}")
+      
+endfunction(simcenter_add_file)
+
 
 #######################################################################################################################
 #
