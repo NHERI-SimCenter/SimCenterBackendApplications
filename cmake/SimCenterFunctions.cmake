@@ -166,7 +166,6 @@ function(simcenter_add_executable)
     # Install rule for executable
     get_current_module_dir(moduleDir)
     get_current_module_name(moduleName)    
-    message("Module name: " ${moduleName})
     install(TARGETS ${ARG_NAME} DESTINATION "${PROJECT_SOURCE_DIR}/applications/${moduleName}")
 
 endfunction(simcenter_add_executable)
