@@ -13,7 +13,7 @@ class simCenterBackendApps(ConanFile):
     default_options = {"shared": False}    
     generators = "cmake"
     build_policy = "missing"
-    requires = "jansson/2.11@simcenter/stable", \
+    requires = "jansson/2.11@bincrafters/stable", \
                "smelt/1.1.0@simcenter/stable", \
                "libcurl/7.64.1@bincrafters/stable", \
                "eigen/3.3.7@conan/stable", \
