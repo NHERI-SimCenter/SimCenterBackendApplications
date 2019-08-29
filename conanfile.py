@@ -13,7 +13,7 @@ class simCenterBackendApps(ConanFile):
     default_options = {"shared": False}    
     generators = "cmake"
     build_policy = "missing"
-    requires = "jansson/2.11@simcenter/stable", \
+    requires = "jansson/2.11@bincrafters/stable", \
                "smelt/1.1.0@simcenter/stable", \
                "libcurl/7.64.1@bincrafters/stable", \
                "eigen/3.3.7@conan/stable", \
@@ -28,11 +28,7 @@ class simCenterBackendApps(ConanFile):
 
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
-       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.0.0")
-
-    def configure(self):
-        self.options["jansson"].use_urandom = False
-        self.options["jansson"].use_windows_cryptoapi = False
+       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.0.0")        
             
     def configure_cmake(self):
         cmake = CMake(self)
