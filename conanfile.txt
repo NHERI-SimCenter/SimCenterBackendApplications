@@ -5,6 +5,9 @@ libcurl/7.64.1@bincrafters/stable
 eigen/3.3.7@conan/stable
 clara/1.1.5@bincrafters/stable
 jsonformoderncpp/3.7.0@vthiery/stable
+mkl-static/2019.4@simcenter/stable
+ipp-static/2019.4@simcenter/stable
+
 
 [generators]
 cmake

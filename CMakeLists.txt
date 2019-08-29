@@ -53,8 +53,45 @@ list(APPEND SIMCENTER_MODULE_DIRS "${PROJECT_SOURCE_DIR}/modules")
 list(REMOVE_DUPLICATES  SIMCENTER_MODULE_DIRS )
 set(SIMCENTER_MODULE_DIRS  ${SIMCENTER_MODULE_DIRS} CACHE INTERNAL "All folders that contain modules or tests" )
 
-# Bring in dependencies from Conan
+# Bring in dependencies from Conan, only getting required libs for Intel MKL and IPP
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
+set(mkl_libs)
+set(ipp_libs)
+set(needed_mkl_libs "mkl_intel_lp64" "mkl_sequential" "mkl_core")
+if (WIN32)
+  set(needed_ipp_libs "ippcoremt" "ippvmmt" "ippsmt")
+else()
+  set(needed_ipp_libs "ippcore" "ippvm" "ipps")  
+endif()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  list(APPEND mkl_libs "-Wl,--start-group")  
+endif()
+
+foreach( needed_lib ${needed_mkl_libs} )
+  foreach( _library ${CONAN_LIBS_MKL-STATIC} )
+    if(${_library} MATCHES ${needed_lib})
+      list(APPEND mkl_libs ${_library})
+    endif()
+  endforeach()
+endforeach()
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  list(APPEND mkl_libs "-Wl,--start-group")
+endif()
+
+foreach( needed_lib ${needed_ipp_libs} )
+  foreach( _library ${CONAN_LIBS_IPP-STATIC} )
+    if(${_library} MATCHES ${needed_lib})
+      list(APPEND ipp_libs ${_library})
+    endif()
+  endforeach()
+endforeach()
+
+set(CONAN_LIBS_MKL-STATIC ${mkl_libs})
+set(CONAN_LIBS_IPP-STATIC ${ipp_libs})
+
 conan_basic_setup(TARGETS)
 
 ############################################################################################################################
@@ -65,12 +102,9 @@ conan_basic_setup(TARGETS)
 
 # All include paths are specified relative to ./ directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
-include_directories(${CONAN_INCLUDE_DIRS_SMELT})
-message("This is the Smelt include:\n" ${CONAN_INCLUDE_DIRS_SMELT})
 
 # Sources
 add_subdirectory(modules)
-
 # Tests (CURRENT NO TESTS, SO COMMENTED OUT...)
 # if(BUILD_TESTING)
 #     add_subdirectory(tests)

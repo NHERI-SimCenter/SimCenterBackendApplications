@@ -3,7 +3,7 @@
 #include <string>
 #include <tuple>
 #include <json_object.h>
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "function_dispatcher.h"
 #include "floor_forces.h"
 #include "wind_generator.h"

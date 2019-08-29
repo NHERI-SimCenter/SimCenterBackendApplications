@@ -129,7 +129,7 @@ endfunction(simcenter_add_module)
 function(simcenter_add_executable)
     set(options)
     set(oneValueArgs NAME GROUP)
-    set(multiValueArgs FILES DEPENDS)
+    set(multiValueArgs FILES DEPENDS COMPILE_FLAGS EXE_LINKER_FLAGS)
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if( NOT ARG_NAME )
@@ -157,11 +157,24 @@ function(simcenter_add_executable)
     endif()
 
     set(generatedSourceFiles)
-    set(generatorSourceFiles)
+    set(generatorSourceFiles)       
     add_executable(${ARG_NAME} ${sourceFiles} ${generatedSourceFiles})
+
+    if (ARG_COMPILE_FLAGS)
+      message("Passed these:\n" ${ARG_COMPILE_FLAGS})
+      set_target_properties(${ARG_NAME} PROPERTIES COMPILE_OPTIONS ${ARG_COMPILE_FLAGS})
+    endif()
+   
     set_source_files_properties(${generatedSourceFiles} PROPERTIES GENERATED TRUE)
     target_link_modules(${ARG_NAME} ${ARG_DEPENDS})
+
+    if (ARG_EXE_LINKER_FLAGS)
+      message("Passed these:\n" ${ARG_EXE_LINKER_FLAGS})      
+      target_link_libraries(${ARG_NAME} ${ARG_EXE_LINKER_FLAGS})
+    endif()
+
     target_link_libraries(${ARG_NAME} ${SIMCENTER_LINK_LIBRARIES_KEYWORD} ${SERVICE_LIBS})
+    
     set_property(TARGET ${ARG_NAME} PROPERTY CXX_STANDARD 14)
     # Install rule for executable
     get_current_module_dir(moduleDir)

@@ -4,7 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <configure.h>
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "command_parser.h"
 #include "eq_generator.h"
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include <json_object.h>
 #include "function_dispatcher.h"
 #include "wind_generator.h"

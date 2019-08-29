@@ -4,9 +4,9 @@
 #include <memory>
 #include <stdexcept>
 #include <tuple>
-#include <Units.h>
+#include <common/Units.h>
 #include <configure.h>
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "command_parser.h"
 #include "function_dispatcher.h"
 #include "wind_generator.h"
