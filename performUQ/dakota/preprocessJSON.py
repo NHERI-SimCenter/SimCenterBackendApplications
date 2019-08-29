@@ -91,8 +91,9 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     #with open('dakota.json') as data_file:    
         data = json.load(data_file)
         
-    uqData = data["UQ_Method"];
-    samplingData = uqData["samplingMethodData"];
+    #uqData = data["UQ_Method"];
+    #samplingData = uqData["samplingMethodData"];
+    samplingData = uqData
     method = samplingData["method"];
     if (method == "Monte Carlo"):
         method = 'random'
@@ -295,16 +296,28 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
 
     # write out the interface data
     f.write('interface,\n')
-    runType = data["runType"];
-    remoteDir = data["remoteAppDir"];
-    localDir = data["localAppDir"];
+    
+    
+    runType = data.get("runType", "local");
+    remoteDir = data.get("remoteAppDir", None);
+    localDir = data.get("localAppDir", None);
 
     if (runType == "local"):
-        numCPUs = 4
-        f.write("fork asynchronous evaluation_concurrency = %d\n" % numCPUs)
+        uqData['concurrency'] = 4
+        #f.write("fork asynchronous evaluation_concurrency = %d\n" % numCPUs)
+        #f.write("analysis_driver = '{}'\n".format(workflowDriverName))
+    #else:
+        #f.write('fork asynchronous\n')
+        #f.write("analysis_driver = '{}'\n".format(remoteWorkflowDriverName))
+
+    if uqData['concurrency'] == None:
+        f.write('fork asynchronous\n')
+    elif uqData['concurrency'] > 1:
+        f.write(' asynch evaluation_concurrency = {}'.format(uqData['concurrency']))
+    
+    if runType == "local":    
         f.write("analysis_driver = '{}'\n".format(workflowDriverName))
     else:
-        f.write('fork asynchronous\n')
         f.write("analysis_driver = '{}'\n".format(remoteWorkflowDriverName))
     
     f.write('parameters_file = \'params.in\' \n')
@@ -387,9 +400,10 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
 
     with open(driverFile) as fp:
         for line in fp:
-            print(line)
-            print(localDir)
-            line = line.replace(localDir,remoteDir)
+            #print(line)
+            #print(localDir)
+            if remoteDir is not None:
+                line = line.replace(localDir,remoteDir)
             f.write(line)
             print(line)
 
@@ -397,12 +411,16 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
+
     if (runType == "local"):
         f.write('"{}'.format(scriptDir) + '/extractEDP" ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
 
-    else:
+    elif remoteDir is not None:
         extractEDPCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/extractEDP')
         f.write(extractEDPCommand + ' ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
+    else:
+        f.write('\n')
+        f.write('"'+os.path.join(scriptDir,'extractEDP')+'" ' + edpName + ' results.out \n')
 
     # Run 
     #f.write('rm -f *.com *.done *.dat *.log *.sta *.msg')
