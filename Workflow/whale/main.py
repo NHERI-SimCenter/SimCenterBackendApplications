@@ -508,7 +508,7 @@ class Workflow(object):
         log_msg('Building files successfully created.')
         log_msg(log_div)
 
-    def create_RV_files(self, app_sequence, BIM_file = 'BIM.json'): # we will probably need to rename this one
+    def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
         """
         Short description
 
@@ -522,15 +522,34 @@ class Workflow(object):
         log_msg('Creating files with random variables')
 
         os.chdir(self.run_dir)
-        if 'Building' not in self.app_type_list:
-            os.chdir('templatedir')
 
+        if bldg_id is not None:
+            if bldg_id not in os.listdir():
+                os.mkdir(bldg_id)
+            os.chdir(bldg_id)       
+
+        #if 'Building' not in self.app_type_list:
+        if 'templatedir' not in os.listdir():
+            os.mkdir('templatedir')
+        os.chdir('templatedir')
+
+        # For individual buildings...
+        if bldg_id is None:
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
             shutil.copy(
                 src = self.input_file,
-                dst = posixpath.join(self.run_dir,
-                                     'templatedir/{}'.format(BIM_file))) 
+                #dst = posixpath.join(self.run_dir,
+                #                     'templatedir/{}'.format(BIM_file))) 
+                dst = posixpath.join(os.getcwd(),BIM_file)) 
+
+        # for regional analysis
+        else:
+            # Make a copy of the BIM file
+            shutil.copy(
+                src = posixpath.join(self.run_dir, BIM_file),
+                dst = posixpath.join(self.run_dir, 
+                                     '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
         if (("Modeling" in app_sequence) and
             ("Modeling" not in self.workflow_apps.keys())):
@@ -565,7 +584,7 @@ class Workflow(object):
         log_msg(log_div)
 
 
-    def create_driver_file(self, app_sequence):
+    def create_driver_file(self, app_sequence, bldg_id=None):
         """
         Short description
 
@@ -576,6 +595,13 @@ class Workflow(object):
         """
 
         log_msg('Creating the workflow driver file')
+
+        os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+            os.chdir(bldg_id)       
+
+        os.chdir('templatedir')
 
         driver_script = u''
 
@@ -589,10 +615,6 @@ class Workflow(object):
 
             driver_script += create_command(command_list) + u'\n'
 
-        os.chdir(self.run_dir)
-        if 'Building' not in self.app_type_list:
-            os.chdir('templatedir')
-
         log_msg('Workflow driver script:')
         print('\n{}\n'.format(driver_script))
 
@@ -602,7 +624,7 @@ class Workflow(object):
         log_msg('Workflow driver file successfully created.')
         log_msg(log_div)
 
-    def simulate_response(self, BIM_file = 'BIM.json'):
+    def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
         Short description
 
@@ -616,8 +638,10 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        if 'Building' not in self.app_type_list:
-            os.chdir('templatedir')
+        if bldg_id is not None:
+            os.chdir(bldg_id)       
+
+        os.chdir('templatedir')
 
         workflow_app = self.workflow_apps['UQ']
 
@@ -746,7 +770,7 @@ class Workflow(object):
                             val = DM[FG][PG][DS]
                         DM_add.loc[bldg_id, (FG, DS)] = val
                         
-                    DM_agg = pd.concat([DM_agg, DM_add], axis=1)
+                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
                 
                 else:        
                     for DS in DS_list:
@@ -780,7 +804,7 @@ class Workflow(object):
                     for stat in stat_list:
                         DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
                         
-                    DV_agg = pd.concat([DV_agg, DV_add], axis=1)
+                    DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
                 else:                     
                     for stat in stat_list:
                         DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]

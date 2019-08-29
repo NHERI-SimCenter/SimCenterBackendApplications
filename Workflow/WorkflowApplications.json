@@ -36,6 +36,36 @@
             "default": ""
           }
         ]
+      },
+      {
+        "Name": "GeoJSON_to_BIM",
+        "ExecutablePath": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "string",
+            "description": "path to buildings database file",
+            "default": ""
+          },
+          {
+            "id": "configFile",
+            "type": "string",
+            "description": "path to workflow config file",
+            "default": ""
+          }
+        ]
       }
     ]
   },
@@ -402,7 +432,19 @@
     "Applications": [
       {
         "Name": "pelicun",
-        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py"
+        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "DL_Method",
+            "type": "string",
+            "description": "Defines the damage and loss assessment method."
+          },
+          {
+            "id": "Realizations",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate"
+          }
+        ]
       }
     ]
   }
