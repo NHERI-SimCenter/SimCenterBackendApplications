@@ -524,12 +524,12 @@ class Workflow(object):
         os.chdir(self.run_dir)
 
         if bldg_id is not None:
-            if bldg_id not in os.listdir():
+            if bldg_id not in os.listdir(self.run_dir):
                 os.mkdir(bldg_id)
             os.chdir(bldg_id)       
 
         #if 'Building' not in self.app_type_list:
-        if 'templatedir' not in os.listdir():
+        if 'templatedir' not in os.listdir(self.run_dir):
             os.mkdir('templatedir')
         os.chdir('templatedir')
 
