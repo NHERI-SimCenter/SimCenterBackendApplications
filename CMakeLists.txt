@@ -65,9 +65,13 @@ else()
   set(needed_ipp_libs "ippcore" "ippvm" "ipps")  
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if (UNIX AND NOT APPLE)
   list(APPEND mkl_libs "-Wl,--start-group")  
 endif()
+
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+#   list(APPEND mkl_libs "-Wl,--start-group")  
+# endif()
 
 foreach( needed_lib ${needed_mkl_libs} )
   foreach( _library ${CONAN_LIBS_MKL-STATIC} )
@@ -77,9 +81,12 @@ foreach( needed_lib ${needed_mkl_libs} )
   endforeach()
 endforeach()
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if (UNIX AND NOT APPLE)
   list(APPEND mkl_libs "-Wl,--start-group")
 endif()
+# if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+#   list(APPEND mkl_libs "-Wl,--start-group")
+# endif()
 
 foreach( needed_lib ${needed_ipp_libs} )
   foreach( _library ${CONAN_LIBS_IPP-STATIC} )
