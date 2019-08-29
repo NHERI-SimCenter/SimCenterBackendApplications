@@ -65,6 +65,8 @@ conan_basic_setup(TARGETS)
 
 # All include paths are specified relative to ./ directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/modules)
+include_directories(${CONAN_INCLUDE_DIRS_SMELT})
+message("This is the Smelt include:\n" ${CONAN_INCLUDE_DIRS_SMELT})
 
 # Sources
 add_subdirectory(modules)

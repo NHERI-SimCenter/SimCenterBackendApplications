@@ -4,7 +4,7 @@
 #include <cctype>
 #include <string>
 #include <vector>
-#include <Clara/include/clara.hpp>
+#include <clara.hpp>
 
 /**
  * Class for processing command line arguments
