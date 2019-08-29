@@ -55,8 +55,6 @@ Makefile.*
 StandardGMT_EDP
 StandardWindEDP
 UserDefinedEDP
-DEDM_HRP
-NOWS1
 SiteResponse
 MDOF_BuildingModel
 ExtractPGA
