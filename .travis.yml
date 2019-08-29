@@ -35,40 +35,11 @@ matrix:
     - <<: *osx
       osx_image: xcode10.2
       env: CONAN_APPLE_CLANG_VERSIONS=10.0
-    - os: linux
-      dist: xenial    
-      addons:
-        apt:
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-
-      env:
-      - BUILD_DOCS="YES"
 
 install:
-  - if [ "$BUILD_DOCS" != "YES" ]; then
-      chmod +x .travis/install.sh;
-      ./.travis/install.sh;
-    fi
+    - chmod +x .travis/install.sh;
+    - ./.travis/install.sh;
 
 script:
-  - if [ "$BUILD_DOCS" != "YES" ]; then
-      chmod +x .travis/run.sh;
-      ./.travis/run.sh;
-    fi
-  - if [ "$BUILD_DOCS" == "YES" ]; then
-      doxygen Doxyfile;
-    fi    
-
-deploy:
-  if: env(BUILD_DOCS)="YES"
-  provider: pages
-  skip_cleanup: true
-  local_dir: docs/html
-  github_token: $GH_REPO_TOKEN
-  on:
-    branch: master
+    - chmod +x .travis/run.sh;
+    - ./.travis/run.sh;
