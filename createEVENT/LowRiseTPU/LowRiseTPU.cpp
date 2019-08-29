@@ -8,9 +8,8 @@
 #include <iostream>
 #include <cmath>
 
-#include <jansson.h>  // for Json
+#include <jansson.h>
 #include <Units.h>
-
 
 #include <python2.7/Python.h>
 
@@ -21,6 +20,7 @@ typedef struct tapData {
   int id;
   double *forces;
   double *moments;
+  double *data;
 } TAP;
 
 
@@ -154,6 +154,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       //First let's read units from bim
       json_t* bimUnitsJson = json_object_get(generalInfo, "units");
       json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+
       if (bimUnitsJson == 0 || bimLengthJson == 0) {
 	std::cerr << "ERROR no Length Units in GeneralInformation\n";
 	return -1;
@@ -162,16 +163,14 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       Units::UnitSystem bimUnits;
       bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
 
-      /*
       Units::UnitSystem eventUnits;
       eventUnits.lengthUnit = Units::ParseLengthUnit("m");
-      double lengthUnitConversion = Units::GetLengthFactor(bimUnits, eventUnits);
-      */
 
-      double lengthUnitConversion = 1.0;
-      
-      // get info needed form general info
-      
+      //
+      // Read building information and scale to event units
+      // 
+
+      double lengthUnitConversion = Units::GetLengthFactor(bimUnits, eventUnits);
       json_t *heightJO = json_object_get(generalInfo,"height");
       json_t *widthJO = json_object_get(generalInfo,"width");
       json_t *depthJO = json_object_get(generalInfo,"depth");
@@ -185,15 +184,25 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	return -2;        
       }
       
-      // convert to metric as that is what TPU data is in
-      
-      int numFloors = json_integer_value(storiesJO);
+      int    numFloors = json_integer_value(storiesJO);
       double height = json_number_value(heightJO) * lengthUnitConversion;
       double breadth = json_number_value(widthJO) * lengthUnitConversion;
       double depth = json_number_value(depthJO)   * lengthUnitConversion;
-      
+
+
       //
-      // load the json file obtained from TPU with the --getRV flag
+      // get wind speed from event object
+      //
+
+      json_t *windSpeedJO = json_object_get(currentEvent,"windSpeed");      
+      if (windSpeedJO == NULL) {
+	std::cerr << "ERROR missing windSpeed from event)\n";
+	return -2;        
+      }
+      double windSpeed = json_number_value(windSpeedJO); // no unit conversion as m/sec
+
+      //
+      // load the json file containing experiment data
       //
       
       json_error_t error;
@@ -204,19 +213,27 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	return -3;
       }
 
-      //First let's read units from bim
+      //
+      // Read model data from experimental file
+      // 
+
       json_t* modelUnitsJson = json_object_get(tapData, "units");
       json_t* modelLengthJson = json_object_get(modelUnitsJson, "length");
 
       Units::UnitSystem modelUnits;
       modelUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
-      double lengthModelUnitConversion = Units::GetLengthFactor(modelUnits, bimUnits);
+      double lengthModelUnitConversion = Units::GetLengthFactor(modelUnits, eventUnits);
 
       json_t *roofTypeT = json_object_get(tapData,"roofType");
       json_t *modelHeightT = json_object_get(tapData,"height");
       json_t *modelDepthT = json_object_get(tapData,"depth");
       json_t *modelBreadthT = json_object_get(tapData,"breadth");
-      if (roofTypeT == NULL || modelHeightT == NULL || modelDepthT == NULL || modelBreadthT == NULL) {
+      json_t *windSpeedT = json_object_get(tapData,"windSpeed");
+      json_t *frequencyT = json_object_get(tapData,"frequency");
+      json_t *periodT = json_object_get(tapData,"period");
+
+      if (roofTypeT == NULL || modelHeightT == NULL || modelDepthT == NULL || modelBreadthT == NULL
+	  || periodT == NULL || frequencyT == NULL) {
 	std::cerr << "FATAL ERROR - json file does not contain roofType, height, depth or breadth data \n";
 	return -3;
       }
@@ -225,6 +242,18 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double modelHeight = json_number_value(modelHeightT) * lengthModelUnitConversion;
       double modelDepth = json_number_value(modelDepthT) * lengthModelUnitConversion;
       double modelBreadth = json_number_value(modelBreadthT) * lengthModelUnitConversion;
+      double modelWindSpeed = json_number_value(windSpeedT) * lengthModelUnitConversion;
+      double modelPeriod = json_number_value(periodT);
+      double modelFrequency = json_number_value(frequencyT);
+      int numSteps = round(modelPeriod*modelFrequency);
+
+      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
+      double lambdaL = modelHeight/height;
+      double lambdaU = modelWindSpeed/windSpeed;
+      double lambdaT = lambdaL/lambdaU;
+      double dT = 1.0/(modelFrequency*lambdaT);
+
+      double loadFactor = airDensity*0.5*windSpeed;
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -232,6 +261,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       // load tap data from the file
       json_t *tapLocations = json_object_get(tapData,"tapLocations");
+      json_t *tapCp = json_object_get(tapData,"pressureCoefficients");
 
       
       int numTaps = json_array_size(tapLocations);
@@ -267,15 +297,29 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
 	double *forces = new double[numFloors];
 	double *moments = new double[numFloors];
-	for (int i=0; i<numFloors; i++) {
-	  forces[i]=0.0;
-	  moments[i]=0.0;
+	double *data = new double[numSteps];
+	for (int j=0; j<numFloors; j++) {
+	  forces[j]=0.0;
+	  moments[j]=0.0;
+	  data[j]=0.0;
+	}
+
+	for (int j=0; j<numTaps; j++) {
+	  json_t *jsonCP = json_array_get(tapCp, j);
+	  int tapID = json_integer_value(json_object_get(jsonCP,"id"));
+	  if (theTAPS[i].id == tapID) {
+	    json_t *arrayData = json_object_get(jsonCP,"data");
+	    for (int k=0; k<numSteps; k++) {
+	      data[k] = json_real_value(json_array_get(arrayData, k));
+	    }	    
+	    j = numTaps;
+	  }
 	}
 	  
 	theTAPS[i].forces = forces;
 	theTAPS[i].moments = moments;
+	theTAPS[i].data = data;
       }
-
 
       //
       // for each tap determine factors fr moments and forces for the buiding asuming a mesh discretization
@@ -293,8 +337,132 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       // write out the forces to the event file
       //
 
-    } else {
 
+      // fill in a blank event for floor loads
+      json_t *timeSeriesArray = json_array();
+      json_t *patternArray = json_array();
+      json_t *pressureArray = json_array();
+      for (int i = 0; i < numFloors; i++) {
+	
+	// create and fill in a time series object
+	char floor[10];
+	char name[50];
+
+	sprintf(floor,"%d",i+1);
+
+	sprintf(name,"Fx_%d",i+1);
+	json_t *timeSeriesX = json_object();     
+	json_object_set(timeSeriesX,"name",json_string(name));    
+	json_object_set(timeSeriesX,"dT",json_real(dT));
+	json_object_set(timeSeriesX,"type",json_string("Value"));
+	json_t *dataFloorX = json_array();   
+	double maxPressureX = 0.0;
+	double minPressureX = 0.0;
+
+	for (int j=0; j<numSteps; j++) {
+	  double value = 0.0;
+	  for (int k=0; k<numTaps; k++) {
+	    if (theTAPS[k].face == 1 || theTAPS[k].face == 2)
+	      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
+	  }
+	  value = loadFactor * value;
+	  json_array_append(dataFloorX,json_real(value));
+	}
+	json_object_set(timeSeriesX,"data",dataFloorX);
+
+	json_t *patternX = json_object();
+	json_object_set(patternX,"name",json_string(name));        
+	json_object_set(patternX,"timeSeries",json_string(name));        
+	json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+
+	json_object_set(patternX,"floor",json_string(floor));        
+	json_object_set(patternX,"dof",json_integer(1));        
+	json_array_append(patternArray,patternX);
+
+	sprintf(name,"Fy_%d",i+1);
+	json_t *timeSeriesY = json_object();     
+	json_object_set(timeSeriesY,"name",json_string(name));    
+	json_object_set(timeSeriesY,"dT",json_real(dT));
+	json_object_set(timeSeriesY,"type",json_string("Value"));
+	json_t *dataFloorY = json_array();   
+	double maxPressureY = 0.0;
+	double minPressureY = 0.0;
+
+	for (int j=0; j<numSteps; j++) {
+	  double value = 0.0;
+	  for (int k=0; k<numTaps; k++) {
+	    if (theTAPS[k].face == 2 || theTAPS[k].face == 4)
+	      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
+	  }
+	  value = loadFactor * value;
+	  json_array_append(dataFloorY,json_real(value));
+	}
+
+	json_object_set(timeSeriesY,"data",dataFloorY);
+
+	json_t *patternY = json_object();
+	json_object_set(patternY,"name",json_string(name));        
+	json_object_set(patternY,"timeSeries",json_string(name));        
+	json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+	json_object_set(patternY,"floor",json_string(floor));        
+	json_object_set(patternY,"dof",json_integer(2));        
+	json_array_append(patternArray,patternY);
+
+	sprintf(name,"Mz_%d",i+1);
+	json_t *timeSeriesRZ = json_object();     
+	json_object_set(timeSeriesRZ,"name",json_string(name));    
+	json_object_set(timeSeriesRZ,"dT",json_real(dT));
+	json_object_set(timeSeriesRZ,"type",json_string("Value"));
+	json_t *dataFloorRZ = json_array();   
+
+	for (int j=0; j<numSteps; j++) {
+	  double value = 0.0;
+	  for (int k=0; k<numTaps; k++) {
+	    value = value + theTAPS[k].moments[i] * theTAPS[k].data[j];
+	  }
+	  value = loadFactor * value;
+	  json_array_append(dataFloorRZ,json_real(value));
+	}
+	json_object_set(timeSeriesRZ,"data",dataFloorRZ);
+
+	json_t *patternRZ = json_object();
+	json_object_set(patternRZ,"name",json_string(name));        
+	json_object_set(patternRZ,"timeSeries",json_string(name));        
+	json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
+	json_object_set(patternRZ,"floor",json_string(floor));        
+	json_object_set(patternRZ,"dof",json_integer(6));        
+	json_array_append(patternArray,patternRZ);
+	
+	json_t *pressureObject = json_object();
+	json_t *pressureStoryArray = json_array();
+	
+	json_array_append(pressureStoryArray, json_real(minPressureX));
+	json_array_append(pressureStoryArray, json_real(maxPressureX));
+	json_object_set(pressureObject,"pressure",pressureStoryArray);
+	json_object_set(pressureObject,"story",json_string(name));
+	
+	json_array_append(pressureArray, pressureObject);
+	
+	// add object to timeSeries array
+	json_array_append(timeSeriesArray,timeSeriesX);
+	json_array_append(timeSeriesArray,timeSeriesY);
+	json_array_append(timeSeriesArray,timeSeriesRZ);
+      }
+      
+      json_t *units = json_object();
+      json_object_set(units,"force",json_string("KN"));
+      json_object_set(units,"length",json_string("m"));
+      json_object_set(units,"time",json_string("sec"));
+      json_object_set(outputEvent,"units",units);
+      
+      json_object_set(outputEvent,"timeSeries",timeSeriesArray);
+      json_object_set(outputEvent,"pattern",patternArray);
+      json_object_set(outputEvent,"pressure",pressureArray);
+      json_object_set(outputEvent,"dT",json_real(0.01));
+      json_object_set(outputEvent,"numSteps",json_integer(0));
+
+    } else {
+      std::cerr << "HI";
       //
       // this is where we call the TPU Website to get the data & then process it into a json format
       // 
