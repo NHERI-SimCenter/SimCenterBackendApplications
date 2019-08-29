@@ -313,7 +313,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     if uqData['concurrency'] == None:
         f.write('fork asynchronous\n')
     elif uqData['concurrency'] > 1:
-        f.write(' asynch evaluation_concurrency = {}'.format(uqData['concurrency']))
+        f.write('fork asynchronous evaluation_concurrency = {}\n'.format(uqData['concurrency']))
     
     if runType == "local":    
         f.write("analysis_driver = '{}'\n".format(workflowDriverName))

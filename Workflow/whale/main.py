@@ -536,12 +536,15 @@ class Workflow(object):
         # For individual buildings...
         if bldg_id is None:
             # Make a copy of the input file and rename it to BIM.json
-            # This is a temporary fix, will be removed eventually.
-            shutil.copy(
-                src = self.input_file,
-                #dst = posixpath.join(self.run_dir,
-                #                     'templatedir/{}'.format(BIM_file))) 
-                dst = posixpath.join(os.getcwd(),BIM_file)) 
+            # This is a temporary fix, will be removed eventually.            
+            dst = posixpath.join(os.getcwd(),BIM_file)
+            print(dst)
+            if dst != self.input_file:
+                shutil.copy(
+                    src = self.input_file,
+                    #dst = posixpath.join(self.run_dir,
+                    #                     'templatedir/{}'.format(BIM_file))) 
+                    dst = dst) 
 
         # for regional analysis
         else:

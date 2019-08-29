@@ -357,7 +357,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 		if DL_method == 'FEMA P58':
 			A = FEMA_P58_Assessment()
-		elif DL_method == 'HAZUS MH EQ':
+		elif DL_method in ['HAZUS MH EQ', 'HAZUS MH']:
 			#if DL_input['Events'][0]['EventClassification'] == 'Earthquake':
 			A = HAZUS_Assessment(hazard = 'EQ')
 		elif DL_method == 'HAZUS MH HU':
