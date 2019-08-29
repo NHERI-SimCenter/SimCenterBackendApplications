@@ -41,6 +41,7 @@ parser.add_argument('--method')
 parser.add_argument('--samples')
 parser.add_argument('--seed')
 parser.add_argument('--type')
+parser.add_argument('--concurrency', default=None)
 parser.add_argument('--runType')
 args = parser.parse_args()
 
@@ -52,6 +53,13 @@ edpName = args.filenameEDP
 simName = args.filenameSIM
 driverFile = args.driverFile
 
+uqData = dict(
+    method = args.method,
+    samples = args.samples,
+    seed = args.seed,
+    concurrency = args.concurrency
+)
+
 runDakota = args.runType
 
 #Run Preprocess for Dakota
@@ -59,7 +67,7 @@ scriptDir = os.path.dirname(os.path.realpath(__file__))
 # preProcessArgs = ["python", "{}/preprocessJSON.py".format(scriptDir), bimName, evtName,\
 # samName, edpName, lossName, simName, driverFile, scriptDir, bldgName]
 # subprocess.call(preProcessArgs)
-numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile)
+numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData)
 
 #Setting Workflow Driver Name
 workflowDriverName = 'workflow_driver'

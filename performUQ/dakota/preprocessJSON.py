@@ -68,7 +68,7 @@ discreteDesignSetStringValues =[]
 numResultFiles = 0
 outputResultFiles = []
 
-def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
+def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData):
 
     global numRandomVariables
     global numNormalUncertain
