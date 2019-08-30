@@ -95,14 +95,15 @@ def main(run_type, input_file, app_registry,
         # prepare the input files for the simulation
         WF.create_RV_files(
             app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],
-            BIM_file = bldg['file'])
+            BIM_file = bldg['file'], bldg_id=bldg['id'])
 
         # create the workflow driver file
         WF.create_driver_file(
-            app_sequence = ['Building', 'Event', 'Modeling', 'EDP', 'Simulation'])        
+            app_sequence = ['Building', 'Event', 'Modeling', 'EDP', 'Simulation'],
+            bldg_id=bldg['id'])        
 
         # run uq engine to simulate response
-        WF.simulate_response(BIM_file = bldg['file'])
+        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
 
         # run dl engine to estimate losses
         WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])

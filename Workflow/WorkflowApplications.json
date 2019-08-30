@@ -36,6 +36,36 @@
             "default": ""
           }
         ]
+      },
+      {
+        "Name": "GeoJSON_to_BIM",
+        "ExecutablePath": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "string",
+            "description": "path to buildings database file",
+            "default": ""
+          },
+          {
+            "id": "configFile",
+            "type": "string",
+            "description": "path to workflow config file",
+            "default": ""
+          }
+        ]
       }
     ]
   },
@@ -128,6 +158,11 @@
             "description": "Folder containing records"
           }
         ]
+      },
+      {
+        "Name": "ASCE7_WindSpeed",
+        "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
+        "ApplicationSpecificInputs":[]
       }
     ]
   },
@@ -235,6 +270,11 @@
         "Name": "UserDefinedEDP",
         "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SimpleEDP",
+        "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -291,6 +331,10 @@
       {
         "Name": "OpenSees",
         "ExecutablePath": "applications/performSIMULATION/openSees2/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "IMasEDP",
+        "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
       }
     ]
   },
@@ -388,7 +432,19 @@
     "Applications": [
       {
         "Name": "pelicun",
-        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py"
+        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "DL_Method",
+            "type": "string",
+            "description": "Defines the damage and loss assessment method."
+          },
+          {
+            "id": "Realizations",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate"
+          }
+        ]
       }
     ]
   }
