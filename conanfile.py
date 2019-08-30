@@ -10,7 +10,7 @@ class simCenterBackendApps(ConanFile):
     url = "https://github.com/NHERI-SimCenter/SimCenterBackendApplications"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
-    default_options = {"shared": False}    
+    # default_options = {"shared": False}    
     generators = "cmake"
     build_policy = "missing"
     requires = "jansson/2.11@bincrafters/stable", \
@@ -29,7 +29,10 @@ class simCenterBackendApps(ConanFile):
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
        git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.0.0")        
-            
+
+    def configure(self):
+        self.options.shared = False
+       
     def configure_cmake(self):
         cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
