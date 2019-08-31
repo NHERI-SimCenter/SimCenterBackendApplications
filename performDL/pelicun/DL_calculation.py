@@ -108,10 +108,10 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 		BIM_in = DL_input['GI']
 
 	if DL_method == 'HAZUS MH EQ':
-	
+
 		bt = BIM_in['structType']
 		ot = ap_Occupancy[BIM_in['occupancy']]
-		
+
 		loss_dict = {
 			'DLMethod': DL_method,
 			'BuildingDamage': {
@@ -145,8 +145,8 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 
 		loss_dict['Components'] = components
 
-	elif DL_method == 'HAZUS MH HU':		
-		
+	elif DL_method == 'HAZUS MH HU':
+
 		loss_dict = {
 			'DLMethod': DL_method,
 			'BuildingDamage': {
@@ -166,7 +166,7 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 			'UncertaintyQuantification': {
 				'Realizations': realization_count
 			}
-		}		
+		}
 
 	DL_input.update({'LossModel':loss_dict})
 
@@ -215,7 +215,7 @@ def write_DM_output(DM_file_path, DMG_df):
 
 	# Now determine the probability of being in a damage state for individual
 	# components / component assemblies...
-	DMG_mean = DMG_df.describe().loc['mean',:]	
+	DMG_mean = DMG_df.describe().loc['mean',:]
 
 	# and save the results in the output json file.
 	for FG in sorted(DMG_mean.index.get_level_values('FG').unique()):
@@ -224,10 +224,10 @@ def write_DM_output(DM_file_path, DMG_df):
 	    for PG in sorted(
 	    	DMG_mean.loc[idx[FG],:].index.get_level_values('PG').unique()):
 	        DM[str(FG)].update({str(PG):{}})
-	        
-	        for DS in sorted(	        	
+
+	        for DS in sorted(
 	        	DMG_mean.loc[idx[FG],:].loc[idx[:,PG],:].index.get_level_values('DS').unique()):
-	            DM[str(FG)][str(PG)].update({str(DS): DMG_mean.loc[(FG,PG,DS)]})            
+	            DM[str(FG)][str(PG)].update({str(DS): DMG_mean.loc[(FG,PG,DS)]})
 
 	with open(DM_file_path, 'w') as f:
 		json.dump(DM, f, indent = 2)
@@ -298,7 +298,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 				os.remove(posixpath.join(output_path, filename))
 			except:
 				pass
-	
+
 	# If the event file is specified, we expect a multi-stripe analysis...
 	try:
 		# Collect stripe and rate information for every event
@@ -357,7 +357,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 			DL_input_stripe = update_collapsep(DL_input_path, stripes[i], theta, beta_adj, IM_list[i])
 			DL_files.append(DL_input_stripe)
 
-	else: # run analysis for single IM
+	except: # run analysis for single IM
 		stripes = [1]
 		EDP_files = [EDP_input_path]
 		DL_files = [DL_input_path]
@@ -433,7 +433,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 			# create the DM.json file
 			if DL_method.startswith('HAZUS'):
-				write_DM_output(posixpath.join(output_path, stripe_str+DM_file), 
+				write_DM_output(posixpath.join(output_path, stripe_str+DM_file),
 					DMG_mod)
 
 			write_SimCenter_DL_output(
@@ -458,7 +458,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 				index_name='#Num', collapse_columns=False)
 
 				if DL_method.startswith('HAZUS'):
-					write_DV_output(posixpath.join(output_path, stripe_str+DV_file), 
+					write_DV_output(posixpath.join(output_path, stripe_str+DV_file),
 						DV_mod, DV_name)
 
 				write_SimCenter_DL_output(
@@ -487,5 +487,5 @@ if __name__ == '__main__':
 	sys.exit(run_pelicun(
 		args.filenameDL, args.filenameEDP,
 		args.DL_Method, args.Realizations,
-		args.dirnameOutput, 
+		args.dirnameOutput,
 		args.filenameDM, args.filenameDV))
