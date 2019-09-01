@@ -46,7 +46,7 @@ def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
         roofType = 'Gable'    
 
     file.write("\"roofType\":\"" + roofType + "\",")
-    file.write("\"meanWindSpeed\":%f," % 22.0);
+    file.write("\"windSpeed\":%f," % 22.0);
     file.write("\"depth\":%f," % depth);
     file.write("\"height\":%f," % height);
     file.write("\"breadth\":%f," % breadth);

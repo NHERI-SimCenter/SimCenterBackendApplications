@@ -189,7 +189,6 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double breadth = json_number_value(widthJO) * lengthUnitConversion;
       double depth = json_number_value(depthJO)   * lengthUnitConversion;
 
-
       //
       // get wind speed from event object
       //
@@ -252,6 +251,11 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double lambdaU = modelWindSpeed/windSpeed;
       double lambdaT = lambdaL/lambdaU;
       double dT = 1.0/(modelFrequency*lambdaT);
+      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
+      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
+
+      std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
+      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
 
       double loadFactor = airDensity*0.5*windSpeed;
 
@@ -342,6 +346,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t *timeSeriesArray = json_array();
       json_t *patternArray = json_array();
       json_t *pressureArray = json_array();
+
       for (int i = 0; i < numFloors; i++) {
 	
 	// create and fill in a time series object
@@ -458,11 +463,11 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_object_set(outputEvent,"timeSeries",timeSeriesArray);
       json_object_set(outputEvent,"pattern",patternArray);
       json_object_set(outputEvent,"pressure",pressureArray);
-      json_object_set(outputEvent,"dT",json_real(0.01));
-      json_object_set(outputEvent,"numSteps",json_integer(0));
+      json_object_set(outputEvent,"dT",json_real(dT));
+      json_object_set(outputEvent,"numSteps",json_integer(numSteps));
 
     } else {
-      std::cerr << "HI";
+
       //
       // this is where we call the TPU Website to get the data & then process it into a json format
       // 
@@ -497,11 +502,104 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       PyRun_SimpleFile(file, pyArgv[0]);
       Py_Finalize();
 
-      /*
-      std::string str = "python3 LowRiseTPU.py tmpSimCenterLowRiseTPU.mat tmpSimCenterLowRiseTPU.json"; 
-      const char *command = str.c_str(); 
-      system(command); 
-      */
+      // need to write empty event for EDP
+
+      json_t *storiesJO = json_object_get(generalInfo,"stories");
+      if (storiesJO == NULL ) {
+	std::cerr << "ERROR missing Information from GeneralInformation (height, width, stories all neeed)\n";
+	return -2;        
+      }
+      
+      int    numFloors = json_integer_value(storiesJO);
+
+      // fill in a blank event for floor loads
+      json_t *timeSeriesArray = json_array();
+      json_t *patternArray = json_array();
+      json_t *pressureArray = json_array();
+      for (int i = 0; i < numFloors; i++) {
+	
+	// create and fill in a time series object
+	char floor[10];
+	char name[50];
+
+	sprintf(floor,"%d",i+1);
+
+	sprintf(name,"Fx_%d",i+1);
+	json_t *timeSeriesX = json_object();     
+	json_object_set(timeSeriesX,"name",json_string(name));    
+	json_object_set(timeSeriesX,"dT",json_real(0.01));
+	json_object_set(timeSeriesX,"type",json_string("Value"));
+	json_t *dataFloorX = json_array();   
+	json_object_set(timeSeriesX,"data",dataFloorX);
+
+	json_t *patternX = json_object();
+	json_object_set(patternX,"name",json_string(name));        
+	json_object_set(patternX,"timeSeries",json_string(name));        
+	json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+
+	json_object_set(patternX,"floor",json_string(floor));        
+	json_object_set(patternX,"dof",json_integer(1));        
+	json_array_append(patternArray,patternX);
+
+	sprintf(name,"Fy_%d",i+1);
+	json_t *timeSeriesY = json_object();     
+	json_object_set(timeSeriesY,"name",json_string(name));    
+	json_object_set(timeSeriesY,"dT",json_real(0.01));
+	json_object_set(timeSeriesY,"type",json_string("Value"));
+	json_t *dataFloorY = json_array();   
+	json_object_set(timeSeriesY,"data",dataFloorY);
+
+	json_t *patternY = json_object();
+	json_object_set(patternY,"name",json_string(name));        
+	json_object_set(patternY,"timeSeries",json_string(name));        
+	json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+	json_object_set(patternY,"floor",json_string(floor));        
+	json_object_set(patternY,"dof",json_integer(2));        
+	json_array_append(patternArray,patternY);
+
+	sprintf(name,"Mz_%d",i+1);
+	json_t *timeSeriesRZ = json_object();     
+	json_object_set(timeSeriesRZ,"name",json_string(name));    
+	json_object_set(timeSeriesRZ,"dT",json_real(0.01));
+	json_object_set(timeSeriesRZ,"type",json_string("Value"));
+	json_t *dataFloorRZ = json_array();   
+	json_object_set(timeSeriesRZ,"data",dataFloorRZ);
+
+	json_t *patternRZ = json_object();
+	json_object_set(patternRZ,"name",json_string(name));        
+	json_object_set(patternRZ,"timeSeries",json_string(name));        
+	json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
+	json_object_set(patternRZ,"floor",json_string(floor));        
+	json_object_set(patternRZ,"dof",json_integer(6));        
+	json_array_append(patternArray,patternRZ);
+	
+	json_t *pressureObject = json_object();
+	json_t *pressureStoryArray = json_array();
+
+	json_array_append(pressureStoryArray, json_real(0.0));
+	json_array_append(pressureStoryArray, json_real(0.0));
+	json_object_set(pressureObject,"pressure",pressureStoryArray);
+	json_object_set(pressureObject,"story",json_string(name));
+	
+	json_array_append(pressureArray, pressureObject);
+	
+	// add object to timeSeries array
+	json_array_append(timeSeriesArray,timeSeriesX);
+	json_array_append(timeSeriesArray,timeSeriesY);
+	json_array_append(timeSeriesArray,timeSeriesRZ);
+      }
+      
+      json_t *units = json_object();
+      json_object_set(units,"force",json_string("KN"));
+      json_object_set(units,"length",json_string("m"));
+      json_object_set(units,"time",json_string("sec"));
+      json_object_set(outputEvent,"units",units);
+      
+      json_object_set(outputEvent,"timeSeries",timeSeriesArray);
+      json_object_set(outputEvent,"pattern",patternArray);
+      json_object_set(outputEvent,"pressure",pressureArray);
+      json_object_set(outputEvent,"dT",json_real(0.01));
+      json_object_set(outputEvent,"numSteps",json_integer(0));
 
     }
     return 0;
