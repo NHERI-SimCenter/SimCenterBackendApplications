@@ -297,7 +297,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
   windsim_dk1_main_terminate();
 
   // done
-  delete floorHeights[];
+  delete [] floorHeights;
   return 0;    
 }
 
