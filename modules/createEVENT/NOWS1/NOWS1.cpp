@@ -179,7 +179,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
     exit(-1);
   }
 
-  double floorHeights[numFloors];
+  double* floorHeights = new double[numFloors];
   double dHeight = height/numFloors;
 
   for (int i=0; i<numFloors; i++) 
@@ -297,6 +297,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getR
   windsim_dk1_main_terminate();
 
   // done
+  delete floorHeights[];
   return 0;    
 }
 
