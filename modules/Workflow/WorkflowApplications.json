@@ -27,7 +27,7 @@
       },
       {
         "Name": "ExistingSimCenterEvents",
-        "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSimCenterEvents",
+        "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
         "ApplicationSpecificInputs": [
 	]
       },
@@ -65,7 +65,7 @@
       },		
       {
         "Name": "StochasticGroundMotion",
-        "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
+        "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
         "ApplicationSpecificInputs":["modelName", "seed"]
       },		
       {
@@ -152,7 +152,7 @@
     "Applications": [
       {
         "Name": "StandardEarthquakeEDP",
-        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP/StandardEarthquakeEDP",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP/StandardEQEDP",
         "ApplicationSpecificInputs": []
       },
       {
