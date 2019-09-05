@@ -471,7 +471,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 	return 0
 
-if __name__ == '__main__':
+def main(args):
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--filenameDL')
@@ -481,11 +481,15 @@ if __name__ == '__main__':
 	parser.add_argument('--filenameDM', default = 'DM.json')
 	parser.add_argument('--filenameDV', default = 'DV.json')
 	parser.add_argument('--dirnameOutput')
-	args = parser.parse_args()
+	args = parser.parse_args(args)
 
 	#print(args.dirnameOutput)
-	sys.exit(run_pelicun(
+	run_pelicun(
 		args.filenameDL, args.filenameEDP,
 		args.DL_Method, args.Realizations,
 		args.dirnameOutput,
-		args.filenameDM, args.filenameDV))
+		args.filenameDM, args.filenameDV)
+
+if __name__ == '__main__':
+
+	main(sys.argv[1:])
