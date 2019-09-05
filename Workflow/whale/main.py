@@ -67,6 +67,7 @@ import pprint
 import posixpath
 import os
 import shutil
+import importlib
 from copy import deepcopy
 import subprocess
 import warnings
@@ -119,7 +120,7 @@ def log_error(msg):
     log_msg(msg)
     log_msg(log_div)
 
-def create_command(command_list):
+def create_command(command_list, run_type):
     """
     Short description
 
@@ -131,7 +132,14 @@ def create_command(command_list):
         Explain...
     """
     if command_list[0] == 'python':
-        command = 'python "{}" '.format(command_list[1])# + ' '.join(command_list[2:])
+
+        if run_type != 'set_up':
+            # replace python with the full path to the python interpreter
+            python_exe = sys.executable
+        else:
+            python_exe = 'python'
+
+        command = '"{}" "{}" '.format(python_exe, command_list[1])# + ' '.join(command_list[2:])
 
         for command_arg in command_list[2:]:
             command += '"{}" '.format(command_arg)
@@ -156,19 +164,47 @@ def run_command(command):
 
     """
 
-    try:
-        result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-        returncode = 0
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        returncode = e.returncode
+    # If it is a python script, we do not run it, but rather import the main 
+    # function. This ensures that the script is run using the same python 
+    # interpreter that this script uses and it is also faster because we do not
+    # need to run multiple python interpreters simultaneously.
+    Frank_trusts_this_approach = False
+    if command[:6] == 'python' and Frank_trusts_this_approach:
+        command_list = command.split()[1:]
+        #py_args = command_list[1:]
 
-    if returncode != 0:
-        log_error('return code: {}'.format(returncode))
+        # get the dir and file name
+        py_script_dir, py_script_file = os.path.split(command_list[0][1:-1])
+
+        # add the dir to the path
+        sys.path.insert(0, py_script_dir)
+
+        # import the file
+        py_script = importlib.__import__(
+            py_script_file[:-3], globals(), locals(), ['main',], 0)
+
+        # remove the quotes from the arguments
+        arg_list = [c[1:-1] for c in command_list[1:]]
+
+        py_script.main(arg_list)
+
+        return "", ""
+
+    else:
+
+        try:
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            returncode = 0
+        except subprocess.CalledProcessError as e:
+            result = e.output
+            returncode = e.returncode
+
+        if returncode != 0:
+            log_error('return code: {}'.format(returncode))
         
-#    return result.decode(sys.stdout.encoding), returncode
-    print(result, returncode)
-    return result, returncode
+        #return result.decode(sys.stdout.encoding), returncode
+        print(result, returncode)
+        return result, returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
@@ -495,7 +531,7 @@ class Workflow(object):
 
         bldg_command_list.append(u'--getRV')
 
-        command = create_command(bldg_command_list)        
+        command = create_command(bldg_command_list, self.run_type)        
 
         log_msg('Creating initial building files...')
         print('\n{}\n'.format(command))
@@ -573,7 +609,7 @@ class Workflow(object):
 
             command_list.append(u'--getRV')
 
-            command = create_command(command_list)
+            command = create_command(command_list, self.run_type)
             
             log_msg('\tRunning {} app for RV...'.format(app_type))
             print('\n{}\n'.format(command))
@@ -616,7 +652,7 @@ class Workflow(object):
             command_list = self.workflow_apps[app_type].get_command_list(
                 app_path = self.app_dir_remote)
 
-            driver_script += create_command(command_list) + u'\n'
+            driver_script += create_command(command_list, self.run_type) + u'\n'
 
         log_msg('Workflow driver script:')
         print('\n{}\n'.format(driver_script))
@@ -661,7 +697,7 @@ class Workflow(object):
         command_list.append(u'--runType')
         command_list.append(u'{}'.format(self.run_type))
 
-        command = create_command(command_list)
+        command = create_command(command_list, self.run_type)
 
         log_msg('\tSimulation command:')
         print('\n{}\n'.format(command))
@@ -713,7 +749,7 @@ class Workflow(object):
         command_list = self.workflow_apps['DL'].get_command_list(
             app_path=self.app_dir_local)
 
-        command = create_command(command_list)
+        command = create_command(command_list, self.run_type)
 
         log_msg('\tDamage and loss assessment command:')
         print('\n{}\n'.format(command))
