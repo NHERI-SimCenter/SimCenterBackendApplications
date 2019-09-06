@@ -43,7 +43,7 @@
 
 # import functions for Python 2.X support
 from __future__ import division, print_function
-import sys
+import sys, os
 if sys.version.startswith('2'): 
     range=xrange
     string_types = basestring
@@ -52,6 +52,8 @@ else:
 
 import argparse
 import json
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_msg, log_div

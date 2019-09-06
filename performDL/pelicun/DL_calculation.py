@@ -53,11 +53,12 @@ import pandas as pd
 
 idx = pd.IndexSlice
 
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
 import pelicunPBE
 from pelicunPBE.control import FEMA_P58_Assessment, HAZUS_Assessment
 from pelicunPBE.file_io import write_SimCenter_DL_output
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from fragility_function_fitting import lognormal_MLE, update_collapsep
 
 def replace_FG_IDs_with_FG_names(assessment, df):
