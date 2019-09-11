@@ -355,6 +355,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
 	sprintf(floor,"%d",i+1);
 
+	//
+	// forces in x direction
+	//
+
 	sprintf(name,"Fx_%d",i+1);
 	json_t *timeSeriesX = json_object();     
 	json_object_set(timeSeriesX,"name",json_string(name));    
@@ -367,7 +371,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	for (int j=0; j<numSteps; j++) {
 	  double value = 0.0;
 	  for (int k=0; k<numTaps; k++) {
-	    if (theTAPS[k].face == 1 || theTAPS[k].face == 2)
+	    if (theTAPS[k].face == 1 || theTAPS[k].face == 3)
 	      value = value + theTAPS[k].forces[i] * theTAPS[k].data[j];
 	  }
 	  value = loadFactor * value;
@@ -383,6 +387,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	json_object_set(patternX,"floor",json_string(floor));        
 	json_object_set(patternX,"dof",json_integer(1));        
 	json_array_append(patternArray,patternX);
+
+	//
+	// forces y direction
+	//
 
 	sprintf(name,"Fy_%d",i+1);
 	json_t *timeSeriesY = json_object();     
@@ -412,6 +420,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	json_object_set(patternY,"floor",json_string(floor));        
 	json_object_set(patternY,"dof",json_integer(2));        
 	json_array_append(patternArray,patternY);
+
+	//
+	// moments about z
+	//
 
 	sprintf(name,"Mz_%d",i+1);
 	json_t *timeSeriesRZ = json_object();     
@@ -653,10 +665,19 @@ int addForcesFace(TAP *theTaps, int numTaps,
       // add force coefficients
       if (theTap != NULL) {
 	if (i != 0) { // don;t add to ground floor
-	  theTap->forces[i-1] += Rbelow;
+	  if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+	    theTap->forces[i-1] += Rbelow;
+	  else
+	    theTap->forces[i-1] -= Rbelow;
+
 	  theTap->moments[i-1] += Mbelow;
 	}
-	theTap->forces[i] += Rabove;
+	if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+
+	  theTap->forces[i] += Rabove;
+	else
+	  theTap->forces[i] -= Rabove;
+
 	theTap->moments[i] += Mabove;
       }	    
       locX += dX;
