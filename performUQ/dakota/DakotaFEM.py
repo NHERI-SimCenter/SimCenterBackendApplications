@@ -42,7 +42,8 @@ parser.add_argument('--samples')
 parser.add_argument('--seed')
 parser.add_argument('--type')
 parser.add_argument('--runType')
-args = parser.parse_args()
+
+args,unknowns = parser.parse_known_args()
 
 #Reading input arguments
 bimName = args.filenameBIM
