@@ -435,8 +435,16 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     const char *eventType = json_string_value(json_object_get(event,"type"));
 
     bool seismicEventType = true;
-    if (strcmp(eventType,"Wind") == 0)
+    bool windEventType = false;
+    if (strcmp(eventType,"Wind") == 0) {
       seismicEventType = false;
+      windEventType = true;
+    }
+
+    else if (strcmp(eventType,"Seismic") == 0) {
+      seismicEventType = true;
+      windEventType = false;
+    }
 
     // create recorder foreach EDP
     // loop through EDPs and find corresponding EDP
@@ -614,12 +622,28 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
    
     std::cerr << "\nDONE RECORDERS\n";
     // create analysis
-    if (analysisType == 1) {
+    if (analysisType == 1 || analysisType == 2) {
+
       s << "\n# Perform the analysis\n";
       json_t *fileScript = json_object_get(rootSIM,"fileName");
       if (fileScript != NULL) {
 	s << "source " << json_string_value(fileScript);
       } else {
+
+
+	// if wind we need to perform 1 static load step
+	if (analysisType == 2) {
+	  s << "numberer RCM\n";
+	  s << "system Umfpack\n";
+	  double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+	  s << "integrator LoadControl 0.0\n";
+	  s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	  s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
+	  s << "analysis Static \n";
+	  s << "analyze " << 1 << "\n";      	  
+	  s << "wipeAnalysis\n";      	  
+	}
+
 	s << "numberer RCM\n";
 	s << "system Umfpack\n";
 	double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
@@ -666,6 +690,10 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   if (strcmp(eventType,"Seismic") == 0 || strcmp(eventType,"Wind") == 0) {
     analysisType = 1;
+
+    if (strcmp(eventType,"Wind") == 0) 
+      analysisType = 2;
+
     json_t*numStepJO = json_object_get(event,"numSteps");
     json_t*dtJO = json_object_get(event,"dT");
     if (dtJO == NULL || numStepJO == NULL) {
