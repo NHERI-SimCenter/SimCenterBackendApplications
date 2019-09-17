@@ -125,16 +125,18 @@ int main(int argc, char **argv)
 	  json_t *thePattern = json_array_get(patternArray, ii);
 	  json_t *theDof = json_object_get(thePattern, "dof");
 	  int theDOF = json_integer_value(theDof);
-	  bool dofIncluded = false;
-	  for (int j=0; j<numDOF; j++) {
-	    if (tDOFs[j] == theDOF)
-	      dofIncluded = true;
+	  if (theDOF < 3) {
+	    bool dofIncluded = false;
+	    for (int j=0; j<numDOF; j++) {
+	      if (tDOFs[j] == theDOF)
+		dofIncluded = true;
+	    }
+	    if (!dofIncluded) {
+	      tDOFs[numDOF] = theDOF;
+	      json_array_append(theDOFs, theDof);
+	      numDOF++;
+	    } 
 	  }
-	  if (!dofIncluded) {
-	    tDOFs[numDOF] = theDOF;
-	    json_array_append(theDOFs, theDof);
-	    numDOF++;
-	  } 
 	}
       } else {
 	printf("ERROR no patterns with Wind event");
@@ -166,18 +168,21 @@ int main(int argc, char **argv)
 	int node = json_integer_value(json_object_get(value1,"node"));
 	
 	// floor abs acceleration
-	json_t *responseA = json_object();
-	json_object_set(responseA,"type",json_string("max_abs_acceleration"));      
-	json_object_set(responseA,"cline",json_string(cline));
-	json_object_set(responseA,"floor",json_string(floor));
-	json_object_set(responseA,"dofs",theDOFs);
-	json_t *dataArrayA = json_array(); 
-	json_object_set(responseA,"scalar_data",dataArrayA);
-	json_array_append(responsesArray,responseA);
-	numEDP += numDOF;
-
+	if (strcmp(floor,"0") != 0) {
+	  
+	  json_t *responseA = json_object();
+	  json_object_set(responseA,"type",json_string("max_abs_acceleration"));      
+	  json_object_set(responseA,"cline",json_string(cline));
+	  json_object_set(responseA,"floor",json_string(floor));
+	  json_object_set(responseA,"dofs",theDOFs);
+	  json_t *dataArrayA = json_array(); 
+	  json_object_set(responseA,"scalar_data",dataArrayA);
+	  json_array_append(responsesArray,responseA);
+	  numEDP += numDOF;
+	}
+	
 	if (count > 0) {
-
+	  
 	  // floor relative disp
 	  json_t *responseD = json_object();
 	  json_object_set(responseD,"type",json_string("max_rel_disp"));      
@@ -201,7 +206,7 @@ int main(int argc, char **argv)
 	  for (int i=0; i<numDOF; i++) {
 	    if (tDOFs[i] != ndm) {
 	      json_array_append(dofArray, json_integer(tDOFs[i]));
-	      numEDP+=2; // drift and pressure
+	      numEDP++; // numEDP+=2; // drift and pressure
 	    }
 	  }
 	  json_object_set(response,"dofs",dofArray);
@@ -211,15 +216,17 @@ int main(int argc, char **argv)
 	  json_array_append(responsesArray,response);
 
 	  // pressure
+	  /*************************************************
 	  json_t *responseP = json_object();
 	  json_object_set(responseP,"type",json_string("max_pressure"));      
 	  json_object_set(responseP,"floor1",json_string(floor1));
 	  json_object_set(responseP,"floor2",json_string(floor));
 	  json_object_set(responseP,"dofs",dofArray);
-
+          
 	  json_t *dataArrayP = json_array(); 
 	  json_object_set(response,"scalar_data",dataArrayP);
 	  json_array_append(responsesArray,responseP);
+          ************************************************ */
 	}
 
 	floor1 = floor;
