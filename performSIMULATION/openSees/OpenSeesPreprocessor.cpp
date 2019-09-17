@@ -176,6 +176,7 @@ OpenSeesPreprocessor::processMaterials(ofstream &s){
     const char *type = json_string_value(json_object_get(material,"type"));
     
     if (strcmp(type,"shear") == 0) {
+
       int tag = json_integer_value(json_object_get(material,"name"));
       double K0 = json_number_value(json_object_get(material,"K0"));
       double Sy = json_number_value(json_object_get(material,"Sy"));
@@ -249,6 +250,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
 
   NDM = 0;
   NDF = 0;
+  bool constraintsProvided = false;
 
   json_array_foreach(nodes, index, node) {
 
@@ -277,20 +279,44 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
       s << "-mass ";
       double massV = json_number_value(mass);
       for (int i=0; i<NDF; i++)
-	if (i != 2)
+	if (i < 2)
 	  s << massV << " " ;
 	else
 	  s << " 0.0 ";
     }
-
     s << "\n";
+
+    json_t *constrained = json_object_get(node,"constrainedToNode");
+    if (constrained != NULL) {
+      int retainedNode = json_integer_value(constrained);      
+      if (NDF == 2)
+	s << "equalDOF " << retainedNode << " " << tag << " 1 2\n";
+      else
+	s << "rigidDiaphragm 3 " << retainedNode << " " << tag << "\n";	
+    }
+
+    json_t *constraints = json_object_get(node,"constraints");
+    if (constraints != NULL) {s << "fix " << tag << " " ;
+      constraintsProvided = true;
+      json_t *fix;
+      int fixIndex;
+      json_array_foreach(constraints, fixIndex, fix) {
+	s << json_number_value(fix) << " " ;
+      }
+      s << "\n";
+      int retainedNode = json_integer_value(constrained);      
+    }
+
   }
 
-  int nodeTag = getNode("1","0"); // floor 0 column line 1
-  s << "fix " << nodeTag;
-  for (int i=0; i<NDF; i++)
-     s << " " << 1;
-  s << "\n";
+  if (constraintsProvided == false) {
+    // fix node floor 0 column ine 1
+    int nodeTag = getNode("1","0"); 
+    s << "fix " << nodeTag;
+    for (int i=0; i<NDF; i++)
+      s << " " << 1;
+    s << "\n";
+  }
 
   return 0;
 }
@@ -345,7 +371,7 @@ OpenSeesPreprocessor::processElements(ofstream &s){
 	  int matTag1 = json_integer_value(json_array_get(matObject,0));	  
 	  int matTag2 = json_integer_value(json_array_get(matObject,1));	  
 	  int matTag3 = json_integer_value(json_array_get(matObject,2));	  
-	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 3\n";
+	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 6\n";
 	}
     }
   }
