@@ -109,10 +109,44 @@ main(int argc, char **argv) {
     int matTag = 1;
     double *zeta = new double[numStory];
 
+    double massX = 0.;
+    double massY = 0.;
+    double responseX = 0.;
+    double responseY = 0.;
+    bool eMass = false;
+    bool eResponse = false;
+
+    json_t *massXobj = json_object_get(SIM,"massX");  
+    if (massXobj != NULL) {
+      std::cerr << "have massX\n";
+      massX = json_number_value(massXobj);
+    }
+    json_t *massYobj = json_object_get(SIM,"massY");  
+    if (massYobj != NULL) {
+      std::cerr << "have massY\n";
+      massY = json_number_value(massYobj);
+    }
+    json_t *resXobj = json_object_get(SIM,"responseX");  
+    if (resXobj != NULL) {
+      responseX = json_number_value(resXobj);
+    }
+    json_t *resYobj = json_object_get(SIM,"responseY");  
+    if (resYobj != NULL) {
+      responseX = json_number_value(resYobj);
+    }
+
+    if (massX != 0. || massY != 0.)
+	eMass = true;
+    if (responseX != 0. || responseY != 0.)
+	eResponse = true;
+
+    std::cerr << massX << " " << massY << " " << responseX << " " << responseY << " " << eMass << " " << eResponse << "\n";
+
     // add nodes, elements and materials for each floor and story to roof
     int index = 0;
     json_t *floorData;
     json_array_foreach(modelData, index, floorData) {
+
       double kx = json_number_value(json_object_get(floorData, "kx"));
       double ky = json_number_value(json_object_get(floorData, "ky"));
       double Fyx = json_number_value(json_object_get(floorData, "Fyx"));
@@ -123,7 +157,7 @@ main(int argc, char **argv) {
       double weight = json_number_value(json_object_get(floorData, "weight"));
       double ktheta = json_number_value(json_object_get(floorData, "Ktheta"));
       if (ktheta != 0.)
-	ndf = 3;
+	ndf = 6;
 
       floorHeight += height;
       double floorMass = weight/G;
@@ -136,19 +170,59 @@ main(int argc, char **argv) {
       json_t *material3 = json_object();
 
       json_object_set(node, "name", json_integer(index+2)); // +2 as we need node at 1 
-      json_object_set(node, "mass", json_real(floorMass));
       json_t *nodePosn = json_array();      
+      json_array_append(nodePosn,json_real(0));
       json_array_append(nodePosn,json_real(0));
       json_array_append(nodePosn,json_real(floorHeight));
       json_object_set(node, "crd", nodePosn);
       json_object_set(node, "ndf", json_integer(ndf));
+      if (eMass == false) 
+	json_object_set(node, "mass", json_real(floorMass));
+      if (ndf == 6) {
+	json_t *constraints = json_array();
+	json_array_append(constraints, json_integer(0));
+	json_array_append(constraints, json_integer(0));
+	json_array_append(constraints, json_integer(1));
+	json_array_append(constraints, json_integer(1));
+	json_array_append(constraints, json_integer(1));
+	json_array_append(constraints, json_integer(0));
+	json_object_set(node, "constraints", constraints);
+      }
+
+      json_array_append(nodes,node);
+
+      if (eMass == true) {
+	json_t *massNode = json_object();
+	json_object_set(massNode, "name", json_integer(index+2 + 2 * numStory)); // +2 as we need node at 1 
+	json_t *nodePosn = json_array();      
+	json_array_append(nodePosn,json_real(massX));
+	json_array_append(nodePosn,json_real(massY));
+	json_array_append(nodePosn,json_real(floorHeight));
+	json_object_set(massNode, "crd", nodePosn);
+	json_object_set(massNode, "ndf", json_integer(ndf));
+	json_object_set(massNode, "mass", json_real(floorMass));
+	json_object_set(massNode, "constrainedToNode", json_integer(index+2));
+
+	if (ndf == 6) {
+	  json_t *constraints = json_array();
+	  json_array_append(constraints, json_integer(0));
+	  json_array_append(constraints, json_integer(0));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(0));
+	  json_object_set(massNode, "constraints", constraints);
+	}
+
+	json_array_append(nodes,massNode);
+      }
 
       json_object_set(element, "name", json_integer(eleTag));
       json_object_set(element, "type", json_string("shear_beam2d"));
       json_t *eleMats = json_array();      
       json_array_append(eleMats,json_integer(matTag));
       json_array_append(eleMats,json_integer(matTag+1));
-      if (ndf == 3)
+      if (ndf == 3 || ndf == 6)
 	json_array_append(eleMats,json_integer(matTag+2));
       json_object_set(element, "uniaxial_material", eleMats);
       json_t *eleNodes = json_array();      
@@ -168,17 +242,16 @@ main(int argc, char **argv) {
       json_object_set(material2,"Fy",json_real(Fyy));
       json_object_set(material2,"beta",json_real(by));
 
-      if (ndf == 3) {
+      if (ndf == 6 || ndf == 3) {
 	json_object_set(material3,"name",json_integer(matTag+2));
 	json_object_set(material3,"type",json_string("elastic"));
 	json_object_set(material3,"K",json_real(ktheta));
       }
 
-      json_array_append(nodes,node);
       json_array_append(materials,material1);
       json_array_append(materials,material2);
 
-      if (ndf == 3) 
+      if (ndf == 3 || ndf == 6) 
 	json_array_append(materials,material3);
 
       json_array_append(elements, element);
@@ -198,8 +271,14 @@ main(int argc, char **argv) {
     json_t *nodePosn = json_array();      
     json_array_append(nodePosn,json_real(0.0));
     json_array_append(nodePosn,json_real(0.0));
+    json_array_append(nodePosn,json_real(0.0));
     json_object_set(node, "crd", nodePosn);
     json_object_set(node, "ndf", json_integer(ndf));
+    json_t *constraints = json_array();
+    for (int i=0; i<ndf; i++)
+      json_array_append(constraints, json_integer(1));
+    json_object_set(node, "constraints", constraints);
+
     json_array_append(nodes,node);
 
     json_object_set(properties,"dampingRatio",json_real(0.02));
