@@ -246,18 +246,21 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double modelFrequency = json_number_value(frequencyT);
       int numSteps = round(modelPeriod*modelFrequency);
 
-      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
+      //      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
+      double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
       double lambdaU = modelWindSpeed/windSpeed;
       double lambdaT = lambdaL/lambdaU;
       double dT = 1.0/(modelFrequency*lambdaT);
+
       std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
       std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
 
       std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
       std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
 
-      double loadFactor = airDensity*0.5*windSpeed;
+      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
+      std::cerr << "\n LOAD FCATOR: " << loadFactor << "\n";
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -493,13 +496,14 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       const char *pitch = json_string_value(json_object_get(currentEvent,"pitch"));
       const char *depthBreadth = json_string_value(json_object_get(currentEvent,"depthBreadth"));
       const char *heightBreadth = json_string_value(json_object_get(currentEvent,"heightBreadth"));
-
       
       callLowRise_TPU(roofType, heightBreadth, depthBreadth, pitch, incidenceAngle, "tmpSimCenterLowRiseTPU.mat");
       
       //
       // invoke python and LowRiseTPU.py script to process the .mat file into json file
       //
+      
+      std::cerr << "INVOKE PYTHON\n";
 
       int pyArgc = 3;
       char *pyArgv[3];
@@ -514,6 +518,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       PyRun_SimpleFile(file, pyArgv[0]);
       Py_Finalize();
 
+      std::cerr << "DONE PYTHON\n";
+
+      // so instead invoke a process
+
       // need to write empty event for EDP
 
       json_t *storiesJO = json_object_get(generalInfo,"stories");
@@ -522,12 +530,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	return -2;        
       }
       
-      int    numFloors = json_integer_value(storiesJO);
+      int numFloors = json_integer_value(storiesJO);
 
       // fill in a blank event for floor loads
       json_t *timeSeriesArray = json_array();
       json_t *patternArray = json_array();
       json_t *pressureArray = json_array();
+
       for (int i = 0; i < numFloors; i++) {
 	
 	// create and fill in a time series object

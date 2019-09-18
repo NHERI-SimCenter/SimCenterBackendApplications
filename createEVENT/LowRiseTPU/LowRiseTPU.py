@@ -36,8 +36,8 @@ def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
     height = mat_contents['Building_height'][0][0];
     breadth = mat_contents['Building_breadth'][0][0];
     pitch = mat_contents['Roof_pitch'][0][0];
-    period = mat_contents['Sample_frequency'][0][0];
-    frequency = mat_contents['Sample_period'][0][0];
+    period = mat_contents['Sample_period'][0][0];
+    frequency = mat_contents['Sample_frequency'][0][0];
     angle = mat_contents['Wind_direction_angle'][0][0];
     roofType = mat_contents['Roof_type'][0];
     if (roofType == 'flat roof'):
