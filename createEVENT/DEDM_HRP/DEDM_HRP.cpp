@@ -213,8 +213,7 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
 
       for (int i=0; i<3; i++) {
 	json_t *pattern = json_array_get(patternArray, index+i);
-	json_t *factorJO = json_object_get(pattern, "value");
-	res = json_object_set(pattern, "value", json_real(loadFactor));	
+	res = json_object_set(pattern, "factor", json_real(loadFactor));	
 
 	json_t *timeSeries = json_array_get(timeSeriesArray, index+i);
 	//	json_t *dtJO = json_object_get(timeSeries, "dT");
