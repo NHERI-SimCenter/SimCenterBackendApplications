@@ -38,8 +38,6 @@ parser.add_argument('--filenameEDP')
 parser.add_argument('--filenameSIM')
 parser.add_argument('--driverFile')
 parser.add_argument('--method')
-parser.add_argument('--samples')
-parser.add_argument('--seed')
 parser.add_argument('--type')
 parser.add_argument('--runType')
 
