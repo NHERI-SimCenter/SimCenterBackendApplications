@@ -883,10 +883,19 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	
       }
 
+      double factorPattern = 1.0;
+      json_t *patternFactorObj = json_object_get(pattern,"factor");
+      if (patternFactorObj != NULL) {
+	if (json_is_real(patternFactorObj))
+	  factorPattern = json_number_value(patternFactorObj);
+	std::cerr << "FACTOR: " << factorPattern;
+      }
+	std::cerr << "NOW FACTOR: " << factorPattern;
+
       int nodeTag = this->getNode("1",floor.c_str());	          
       int seriesTag = timeSeriesList[name];
       s << "pattern Plain " << numPattern << " " << 
-	series << " -fact " << unitConversionFactorForce * eventFactor <<  " {\n";
+	series << " -fact " << unitConversionFactorForce * eventFactor * factorPattern <<  " {\n";
       s << "   load " << nodeTag << " ";
       for (int i=0; i<NDF; i++) {
         if (dof == (i+1)) //i+1 as OpenSees starts with 0 indexing                                        
