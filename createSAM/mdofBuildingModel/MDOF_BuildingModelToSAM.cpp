@@ -77,12 +77,33 @@ main(int argc, char **argv) {
   int numStory = json_integer_value(numStoriesType);
   int numNodes = numStory + 1;
 
+
   //
-  // if no --getRV print out model, otherwise not needed 
+  // check for eccentricty in response location
   //
 
+  bool eResponse = false;
+  double responseX = 0.;
+  double responseY = 0.;
+
+  json_t *resXobj = json_object_get(SIM,"responseX");  
+  if (resXobj != NULL) {
+    responseX = json_number_value(resXobj);
+  }
+  json_t *resYobj = json_object_get(SIM,"responseY");  
+  if (resYobj != NULL) {
+    responseX = json_number_value(resYobj);
+  }
+  
+  if (responseX != 0. || responseY != 0.)
+    eResponse = true;
+
+
   if (strcmp("--getRV", argv[argc-1]) != 0) {
-    //  if (argc == 7) { NOT WORKING if WIndows Python file for linux
+
+    // 
+    // output the model
+    //
 
     // get ModelData
     json_t *modelData = json_object_get(SIM,"ModelData");  
@@ -107,14 +128,17 @@ main(int argc, char **argv) {
     int nodeTag = 2;
     int eleTag = 1;
     int matTag = 1;
+
     double *zeta = new double[numStory];
 
+
+    //
+    // check for eccentricty in mass location
+    //
+    
     double massX = 0.;
     double massY = 0.;
-    double responseX = 0.;
-    double responseY = 0.;
     bool eMass = false;
-    bool eResponse = false;
 
     json_t *massXobj = json_object_get(SIM,"massX");  
     if (massXobj != NULL) {
@@ -126,23 +150,14 @@ main(int argc, char **argv) {
       std::cerr << "have massY\n";
       massY = json_number_value(massYobj);
     }
-    json_t *resXobj = json_object_get(SIM,"responseX");  
-    if (resXobj != NULL) {
-      responseX = json_number_value(resXobj);
-    }
-    json_t *resYobj = json_object_get(SIM,"responseY");  
-    if (resYobj != NULL) {
-      responseX = json_number_value(resYobj);
-    }
 
     if (massX != 0. || massY != 0.)
 	eMass = true;
-    if (responseX != 0. || responseY != 0.)
-	eResponse = true;
-
-    std::cerr << massX << " " << massY << " " << responseX << " " << responseY << " " << eMass << " " << eResponse << "\n";
-
+    
+    //
     // add nodes, elements and materials for each floor and story to roof
+    //
+
     int index = 0;
     json_t *floorData;
     json_array_foreach(modelData, index, floorData) {
@@ -178,6 +193,7 @@ main(int argc, char **argv) {
       json_object_set(node, "ndf", json_integer(ndf));
       if (eMass == false) 
 	json_object_set(node, "mass", json_real(floorMass));
+
       if (ndf == 6) {
 	json_t *constraints = json_array();
 	json_array_append(constraints, json_integer(0));
@@ -193,7 +209,7 @@ main(int argc, char **argv) {
 
       if (eMass == true) {
 	json_t *massNode = json_object();
-	json_object_set(massNode, "name", json_integer(index+2 + 2 * numStory)); // +2 as we need node at 1 
+	json_object_set(massNode, "name", json_integer(index+2 + 2 * numStory)); // +2 as ground nodes start at 1 and these nodes are above ground
 	json_t *nodePosn = json_array();      
 	json_array_append(nodePosn,json_real(massX));
 	json_array_append(nodePosn,json_real(massY));
@@ -216,6 +232,32 @@ main(int argc, char **argv) {
 
 	json_array_append(nodes,massNode);
       }
+
+      if (eResponse == true) {
+	json_t *respNode = json_object();
+	json_object_set(respNode, "name", json_integer(index+2 + 4 * numStory)); // +2 as we need node at 1 
+	json_t *nodePosn = json_array();      
+	json_array_append(nodePosn,json_real(massX));
+	json_array_append(nodePosn,json_real(massY));
+	json_array_append(nodePosn,json_real(floorHeight));
+	json_object_set(respNode, "crd", nodePosn);
+	json_object_set(respNode, "ndf", json_integer(ndf));
+	json_object_set(respNode, "constrainedToNode", json_integer(index+2));
+
+	if (ndf == 6) {
+	  json_t *constraints = json_array();
+	  json_array_append(constraints, json_integer(0));
+	  json_array_append(constraints, json_integer(0));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(1));
+	  json_array_append(constraints, json_integer(0));
+	  json_object_set(respNode, "constraints", constraints);
+	}
+
+	json_array_append(nodes,respNode);
+      }
+
 
       json_object_set(element, "name", json_integer(eleTag));
       json_object_set(element, "type", json_string("shear_beam2d"));
@@ -293,8 +335,6 @@ main(int argc, char **argv) {
   int nodeTag = 1; // node tags start at 0
   char floorString[16];
 
-  fprintf(stderr, "NUM NODES: %d\n",numNodes);
-
   for (int i=0; i<numNodes; i++) {
       json_t *nodeEntry = json_object();
       json_object_set(nodeEntry,"node",json_integer(nodeTag));
@@ -304,6 +344,22 @@ main(int argc, char **argv) {
 
       //  itoa(floor, floorString, floor); NOT IN STANDARD
       json_object_set(nodeEntry,"floor",json_string(floorString));
+
+      if (eResponse == true) {
+	if (i != 0) {
+	  json_t *respNode = json_object();
+	  json_object_set(respNode, "node", json_integer(nodeTag + 4 * numStory));
+	  json_object_set(respNode,"cline",json_string("response"));
+	  json_object_set(respNode,"floor",json_string(floorString));
+	  json_array_append(mappingArray, respNode);
+	} else { // assign response nodes cline to node 1
+	  json_t *respNode = json_object();
+	  json_object_set(respNode, "node", json_integer(nodeTag));
+	  json_object_set(respNode,"cline",json_string("response"));
+	  json_object_set(respNode,"floor",json_string(floorString));
+	  json_array_append(mappingArray, respNode);
+	}
+      }
 
       json_array_append(mappingArray, nodeEntry);
       nodeTag++;

@@ -391,9 +391,18 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	<< "set KcommSwitch 0.0;\n"
 	<< "set nEigenI 1;\n";
       
-      json_t *geometry = json_object_get(rootSAM,"Geometry");
-      json_t *nodes = json_object_get(geometry,"nodes");
-      int nStory = json_array_size(nodes)-1;
+      json_t *theNodes = json_object_get(rootSAM,"NodeMapping");
+      json_t *theNode;
+      int index = 0;
+      int numStory = 0;
+      json_array_foreach(theNodes, index, theNode) {      
+	json_t *cline = json_object_get(theNode,"cline");
+	if ((cline!= NULL) && (strcmp("1",json_string_value(cline)) == 0))
+	  numStory++;
+      }
+
+      int nStory = numStory-1;
+
       int nEigenJ=0;
       if (nStory <= 0) {
 	nEigenJ = 2;
@@ -660,6 +669,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	// if wind we need to perform 1 static load step
 	if (analysisType == 2) {
 	  s << "numberer RCM\n";
+	  s << "constraints Transformation\n";
 	  s << "system Umfpack\n";
 	  double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
 	  s << "integrator LoadControl 0.0\n";
@@ -671,10 +681,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	}
 
 	s << "numberer RCM\n";
+	s << "constraints Transformation\n";
 	s << "system Umfpack\n";
 	double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
 	s << "integrator " << json_string_value(json_object_get(rootSIM,"integration")) << "\n";
-      s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
 	s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
 	s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
 	s << "analyze " << numSteps << " " << dT << "\n";      
