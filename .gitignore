@@ -50,8 +50,8 @@ qrc_styles.cpp
 # OTHER
 applications
 build
-Makefile
-Makefile.*
+#Makefile
+#Makefile.*
 StandardGMT_EDP
 StandardWindEDP
 UserDefinedEDP
@@ -72,11 +72,11 @@ postprocessDAKOTA
 *.autosave
 debug.log
 MDOF_BuildingModelToSAM
-EVENT.json*
-dakota.json
-testFile.json
-testInput.json
-evt.json
-SAM.json
-edp.json
-input.json
+#EVENT.json*
+#dakota.json
+#testFile.json
+#testInput.json
+#evt.json
+#SAM.json
+#edp.json
+#input.json
