@@ -11,7 +11,7 @@
 #include <jansson.h>
 #include <Units.h>
 
-#include <python2.7/Python.h>
+//#include <python2.7/Python.h>
 
 typedef struct tapData {
   double locX;
@@ -505,6 +505,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       
       std::cerr << "INVOKE PYTHON\n";
 
+      /********************************************* old involves including python library 
       int pyArgc = 3;
       char *pyArgv[3];
       pyArgv[0] = (char *)"LowRiseTPU.py";
@@ -517,10 +518,15 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       FILE *file = fopen(pyArgv[0],"r");
       PyRun_SimpleFile(file, pyArgv[0]);
       Py_Finalize();
+      /*************************************************************************************/
 
-      std::cerr << "DONE PYTHON\n";
 
       // so instead invoke a process
+      std::string pyArgs = "LowRiseTPU.py tmpSimCenterLowRiseTPU.mat tmpSimCenterLowRiseTPU.json";
+      std::string command = "python ";
+      command += pyArgs;
+      system(command.c_str());
+      std::cerr << "DONE PYTHON\n";
 
       // need to write empty event for EDP
 
