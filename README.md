@@ -21,7 +21,7 @@ Bintray](https://bintray.com/nheri-simcenter/simcenter)
 
 SimCenter packages are hosted on [Bintray](https://bintray.com) and
 contain Open-Source software which is licensed by the software's
-maintainers and NOT Bincrafters.  For each Open-Source package
+maintainers and NOT the SimCenter.  For each Open-Source package
 published by the SimCenter, the packaging process obtains the required
 license files along with the original source files from the
 maintainer, and includes these license files in the generated Conan
