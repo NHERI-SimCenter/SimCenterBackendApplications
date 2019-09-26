@@ -176,6 +176,7 @@ OpenSeesPreprocessor::processMaterials(ofstream &s){
     const char *type = json_string_value(json_object_get(material,"type"));
     
     if (strcmp(type,"shear") == 0) {
+
       int tag = json_integer_value(json_object_get(material,"name"));
       double K0 = json_number_value(json_object_get(material,"K0"));
       double Sy = json_number_value(json_object_get(material,"Sy"));
@@ -249,6 +250,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
 
   NDM = 0;
   NDF = 0;
+  bool constraintsProvided = false;
 
   json_array_foreach(nodes, index, node) {
 
@@ -277,20 +279,44 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
       s << "-mass ";
       double massV = json_number_value(mass);
       for (int i=0; i<NDF; i++)
-	if (i != 2)
+	if (i < 2)
 	  s << massV << " " ;
 	else
 	  s << " 0.0 ";
     }
-
     s << "\n";
+
+    json_t *constrained = json_object_get(node,"constrainedToNode");
+    if (constrained != NULL) {
+      int retainedNode = json_integer_value(constrained);      
+      if (NDF == 2)
+	s << "equalDOF " << retainedNode << " " << tag << " 1 2\n";
+      else
+	s << "rigidDiaphragm 3 " << retainedNode << " " << tag << "\n";	
+    }
+
+    json_t *constraints = json_object_get(node,"constraints");
+    if (constraints != NULL) {s << "fix " << tag << " " ;
+      constraintsProvided = true;
+      json_t *fix;
+      int fixIndex;
+      json_array_foreach(constraints, fixIndex, fix) {
+	s << json_number_value(fix) << " " ;
+      }
+      s << "\n";
+      int retainedNode = json_integer_value(constrained);      
+    }
+
   }
 
-  int nodeTag = getNode("1","0"); // floor 0 column line 1
-  s << "fix " << nodeTag;
-  for (int i=0; i<NDF; i++)
-     s << " " << 1;
-  s << "\n";
+  if (constraintsProvided == false) {
+    // fix node floor 0 column ine 1
+    int nodeTag = getNode("1","0"); 
+    s << "fix " << nodeTag;
+    for (int i=0; i<NDF; i++)
+      s << " " << 1;
+    s << "\n";
+  }
 
   return 0;
 }
@@ -345,7 +371,7 @@ OpenSeesPreprocessor::processElements(ofstream &s){
 	  int matTag1 = json_integer_value(json_array_get(matObject,0));	  
 	  int matTag2 = json_integer_value(json_array_get(matObject,1));	  
 	  int matTag3 = json_integer_value(json_array_get(matObject,2));	  
-	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 3\n";
+	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 6\n";
 	}
     }
   }
@@ -365,9 +391,18 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	<< "set KcommSwitch 0.0;\n"
 	<< "set nEigenI 1;\n";
       
-      json_t *geometry = json_object_get(rootSAM,"Geometry");
-      json_t *nodes = json_object_get(geometry,"nodes");
-      int nStory = json_array_size(nodes)-1;
+      json_t *theNodes = json_object_get(rootSAM,"NodeMapping");
+      json_t *theNode;
+      int index = 0;
+      int numStory = 0;
+      json_array_foreach(theNodes, index, theNode) {      
+	json_t *cline = json_object_get(theNode,"cline");
+	if ((cline!= NULL) && (strcmp("1",json_string_value(cline)) == 0))
+	  numStory++;
+      }
+
+      int nStory = numStory-1;
+
       int nEigenJ=0;
       if (nStory <= 0) {
 	nEigenJ = 2;
@@ -435,8 +470,16 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     const char *eventType = json_string_value(json_object_get(event,"type"));
 
     bool seismicEventType = true;
-    if (strcmp(eventType,"Wind") == 0)
+    bool windEventType = false;
+    if (strcmp(eventType,"Wind") == 0) {
       seismicEventType = false;
+      windEventType = true;
+    }
+
+    else if (strcmp(eventType,"Seismic") == 0) {
+      seismicEventType = true;
+      windEventType = false;
+    }
 
     // create recorder foreach EDP
     // loop through EDPs and find corresponding EDP
@@ -614,17 +657,35 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
    
     std::cerr << "\nDONE RECORDERS\n";
     // create analysis
-    if (analysisType == 1) {
+    if (analysisType == 1 || analysisType == 2) {
+
       s << "\n# Perform the analysis\n";
       json_t *fileScript = json_object_get(rootSIM,"fileName");
       if (fileScript != NULL) {
 	s << "source " << json_string_value(fileScript);
       } else {
+
+
+	// if wind we need to perform 1 static load step
+	if (analysisType == 2) {
+	  s << "numberer RCM\n";
+	  s << "constraints Transformation\n";
+	  s << "system Umfpack\n";
+	  double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+	  s << "integrator LoadControl 0.0\n";
+	  s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	  s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
+	  s << "analysis Static \n";
+	  s << "analyze " << 1 << "\n";      	  
+	  s << "wipeAnalysis\n";      	  
+	}
+
 	s << "numberer RCM\n";
+	s << "constraints Transformation\n";
 	s << "system Umfpack\n";
 	double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
 	s << "integrator " << json_string_value(json_object_get(rootSIM,"integration")) << "\n";
-      s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
 	s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
 	s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
 	s << "analyze " << numSteps << " " << dT << "\n";      
@@ -666,6 +727,10 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   if (strcmp(eventType,"Seismic") == 0 || strcmp(eventType,"Wind") == 0) {
     analysisType = 1;
+
+    if (strcmp(eventType,"Wind") == 0) 
+      analysisType = 2;
+
     json_t*numStepJO = json_object_get(event,"numSteps");
     json_t*dtJO = json_object_get(event,"dT");
     if (dtJO == NULL || numStepJO == NULL) {
@@ -829,10 +894,19 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	
       }
 
+      double factorPattern = 1.0;
+      json_t *patternFactorObj = json_object_get(pattern,"factor");
+      if (patternFactorObj != NULL) {
+	if (json_is_real(patternFactorObj))
+	  factorPattern = json_number_value(patternFactorObj);
+	std::cerr << "FACTOR: " << factorPattern;
+      }
+	std::cerr << "NOW FACTOR: " << factorPattern;
+
       int nodeTag = this->getNode("1",floor.c_str());	          
       int seriesTag = timeSeriesList[name];
       s << "pattern Plain " << numPattern << " " << 
-	series << " -fact " << unitConversionFactorForce * eventFactor <<  " {\n";
+	series << " -fact " << unitConversionFactorForce * eventFactor * factorPattern <<  " {\n";
       s << "   load " << nodeTag << " ";
       for (int i=0; i<NDF; i++) {
         if (dof == (i+1)) //i+1 as OpenSees starts with 0 indexing                                        

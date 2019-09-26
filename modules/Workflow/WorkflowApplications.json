@@ -59,6 +59,16 @@
         "ApplicationSpecificInputs":[]
       },
       {
+        "Name": "LowRiseTPU",
+        "ExecutablePath": "applications/createEVENT/LowRiseTPU/LowRiseTPU",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "WindTunnelExperiment",
+        "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
+        "ApplicationSpecificInputs":[]
+      },
+      {
         "Name": "StochasticWindInput-WittigSinha1975",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
         "ApplicationSpecificInputs":["modelName", "seed"]
