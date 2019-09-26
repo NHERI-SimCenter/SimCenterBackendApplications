@@ -49,11 +49,6 @@
         "ApplicationSpecificInputs":[]
       },
       {
-        "Name": "StochasticWindInput-KwonKareem2006",
-        "ExecutablePath": "applications/createEVENT/NOWS1/NOWS1",
-        "ApplicationSpecificInputs":[]
-      },
-      {
         "Name": "DEDM_HRP",
         "ExecutablePath": "applications/createEVENT/DEDM_HRP/DEDM_HRP.py",
         "ApplicationSpecificInputs":[]
