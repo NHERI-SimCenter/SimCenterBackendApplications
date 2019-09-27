@@ -1,4 +1,74 @@
 {
+  "BuildingApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+        {
+          "id": "buildingFile",
+          "type": "string",
+          "description": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildingsFile.json"
+        }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "GenericBimDatabase",
+        "ExecutablePath": "applications/createBIM/genericBimDatabase/GenericBimDatabase",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "string",
+            "description": "path to buildings file",
+            "default": ""
+          }
+        ]
+      },
+      {
+        "Name": "GeoJSON_to_BIM",
+        "ExecutablePath": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "string",
+            "description": "path to buildings database file",
+            "default": ""
+          },
+          {
+            "id": "configFile",
+            "type": "string",
+            "description": "path to workflow config file",
+            "default": ""
+          }
+        ]
+      }
+    ]
+  },
   "EventApplications": {
     "API": {
       "Inputs": [
@@ -82,6 +152,27 @@
         "Name": "CFDEvent",
         "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
         "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
+      },
+      {
+        "Name": "NNGM",
+        "ExecutablePath": "applications/createEVENT/NNGM/NNGM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "groundMotions",
+            "type": "path",
+            "description": "Configuration file with information about the ground motions to use"
+          },
+          {
+            "id": "recordsFolder",
+            "type": "path",
+            "description": "Folder containing records"
+          }
+        ]
+      },
+      {
+        "Name": "ASCE7_WindSpeed",
+        "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
+        "ApplicationSpecificInputs":[]
       }
     ]
   },
@@ -119,6 +210,11 @@
       {
         "Name": "OpenSeesInput",
         "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "OpenSeesPyInput",
+        "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
         "ApplicationSpecificInputs": []
       },
       {
@@ -166,6 +262,11 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "StandardEarthquakeEDP_R",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP_R/StandardEarthquakeEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
         "Name": "StandardWindEDP",
         "ExecutablePath": "applications/createEDP/standardWindEDP/StandardWindEDP",
         "ApplicationSpecificInputs": []
@@ -178,6 +279,11 @@
       {
         "Name": "UserDefinedEDP",
         "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SimpleEDP",
+        "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
         "ApplicationSpecificInputs": []
       }
     ]
@@ -225,8 +331,20 @@
         "ExecutablePath": "applications/performSIMULATION/openSees/OpenSeesSimulation.py"
       },
       {
+        "Name": "OpenSeesPy-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"        
+      },
+      {
         "Name": "ExtractPGA",
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
+      },
+      {
+        "Name": "OpenSees",
+        "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "IMasEDP",
+        "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
       }
     ]
   },
@@ -283,6 +401,10 @@
       {
         "Name": "Dakota-UQ",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py"
+      },
+      {
+        "Name": "Dakota-FEM",
+        "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
       }
     ]
   },
@@ -293,7 +415,7 @@
           "id": "filenameDL",
           "type": "string",
           "description": "name of file containing the DL model information",
-          "default": "dakota.json"
+          "default": "BIM.json"
       },
       {
           "id": "filenameEDP",

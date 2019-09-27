@@ -129,6 +129,16 @@
         "ApplicationSpecificInputs":[]
       },
       {
+        "Name": "LowRiseTPU",
+        "ExecutablePath": "applications/createEVENT/LowRiseTPU/LowRiseTPU",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "WindTunnelExperiment",
+        "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
+        "ApplicationSpecificInputs":[]
+      },
+      {
         "Name": "StochasticWindInput-WittigSinha1975",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
         "ApplicationSpecificInputs":["modelName", "seed"]
@@ -252,7 +262,7 @@
         "ApplicationSpecificInputs": []
       },
       {
-        "Name": "StandardEarthquakeEDP2",
+        "Name": "StandardEarthquakeEDP_R",
         "ExecutablePath": "applications/createEDP/standardEarthquakeEDP2/StandardEarthquakeEDP",
         "ApplicationSpecificInputs": []
       },
@@ -330,7 +340,7 @@
       },
       {
         "Name": "OpenSees",
-        "ExecutablePath": "applications/performSIMULATION/openSees2/OpenSeesSimulation.py"
+        "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
       },
       {
         "Name": "IMasEDP",
@@ -394,7 +404,7 @@
       },
       {
         "Name": "Dakota-FEM",
-        "ExecutablePath": "applications/performUQ/DakotaFEM/DakotaFEM.py"
+        "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
       }
     ]
   },
