@@ -76,19 +76,51 @@ int main(int argc, char** argv) {
     for (json::iterator it = input_data["Events"].begin();
          it != input_data["Events"].end(); ++it) {
       try {
+	std::string model_name = inputs.get_model_name();
+
         // Check seed provided
         if (inputs.seed_provided()) {
-          eq_generator = std::make_shared<EQGenerator>(
-              inputs.get_model_name(), it->at("momentMagnitude"),
-              it->at("ruptureDist"), it->at("vs30"), inputs.get_seed());
+          // Vlachos et al (2018) model
+          if (model_name == "VlachosSiteSpecificEQ") {
+            eq_generator = std::make_shared<EQGenerator>(
+                inputs.get_model_name(), it->at("momentMagnitude"),
+                it->at("ruptureDist"), it->at("vs30"), inputs.get_seed());
+          } else if (model_name == "DabaghiDerKiureghianNFGM") {
+            eq_generator = std::make_shared<EQGenerator>(
+                inputs.get_model_name(), it->at("faultType"),
+                it->at("simulationType"), it->at("momentMagnitude"),
+                it->at("depthToRupt"), it->at("ruptureDist"), it->at("vs30"),
+                it->at("sOrD"), it->at("thetaOrPhi"), it->at("truncate"),
+                inputs.get_seed());
+          } else {
+            throw std::runtime_error(
+                "ERROR: In main() of StochasticGroundMotion: Earthquake model "
+                "name either incorrect or not supported, please check "
+                "inputs\n");	    
+          }
         } else {
 	  const auto clock_time = std::chrono::time_point<std::chrono::system_clock>{};
 	  const auto current_time = std::chrono::system_clock::now();
 
 	  const auto time_diff = std::chrono::duration_cast<std::chrono::nanoseconds>(current_time - clock_time);
-          eq_generator = std::make_shared<EQGenerator>(
-              inputs.get_model_name(), it->at("momentMagnitude"),
-              it->at("ruptureDist"), it->at("vs30"), time_diff.count());
+
+          if (model_name == "VlachosSiteSpecificEQ") {
+            eq_generator = std::make_shared<EQGenerator>(
+                inputs.get_model_name(), it->at("momentMagnitude"),
+                it->at("ruptureDist"), it->at("vs30"), time_diff.count());
+          } else if (model_name == "DabaghiDerKiureghianNFGM") {
+            eq_generator = std::make_shared<EQGenerator>(
+                inputs.get_model_name(), it->at("faultType"),
+                it->at("simulationType"), it->at("momentMagnitude"),
+                it->at("depthToRupt"), it->at("ruptureDist"), it->at("vs30"),
+                it->at("sOrD"), it->at("thetaOrPhi"), it->at("truncate"),
+                time_diff.count());
+          } else {
+            throw std::runtime_error(
+                "ERROR: In main() of StochasticGroundMotion: Earthquake model "
+                "name either incorrect or not supported, please check "
+                "inputs\n");
+          }
         }
 
         auto time_history =

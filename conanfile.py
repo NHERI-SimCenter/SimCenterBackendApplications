@@ -3,7 +3,7 @@ import os
 
 class simCenterBackendApps(ConanFile):
     name = "SimCenterBackendApplications"
-    version = "1.0.0"
+    version = "1.1.0"
     description = "Backend applications for SimCenter software"
     license = "BSD 3-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
@@ -14,7 +14,7 @@ class simCenterBackendApps(ConanFile):
     generators = "cmake"
     build_policy = "missing"
     requires = "jansson/2.11@bincrafters/stable", \
-               "smelt/1.1.0@simcenter/stable", \
+               "smelt/1.2.0@simcenter/stable", \
                "libcurl/7.64.1@bincrafters/stable", \
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
@@ -28,7 +28,7 @@ class simCenterBackendApps(ConanFile):
 
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
-       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.0.0")        
+       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
 
     def configure(self):
         self.options.shared = False
