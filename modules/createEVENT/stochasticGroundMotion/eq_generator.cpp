@@ -29,7 +29,7 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
                          std::string simulation_type, double moment_magnitude,
                          double depth_to_rupt, double rupture_dist, double vs30,
                          double s_or_d, double theta_or_phi, bool truncate) {
-  std::string fault_type;
+  stochastic::FaultType fault_type;
   if (faulting == "StrikeSlip") {
     fault_type = stochastic::FaultType::StrikeSlip;
   } else if (faulting == "ReverseAndRevObliq") {
@@ -40,7 +40,7 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
         "or not supported, please check inputs\n");
   }
 
-  std::string sim_type;
+  stochastic::SimulationType sim_type;
   if (simulation_type == "PulseAndNoPulse") {
     sim_type = stochastic::SimulationType::PulseAndNoPulse;
   } else if (simulation_type == "Pulse") {
@@ -54,15 +54,14 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
   }
 
   eq_model_ =
-      Factory<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
-              stochastic::FaultType, stochastic::SimulationType, double, double,
-              double, double, double, double, unsigned int, unsigned int,
-              bool>::instance()
-          ->create(model_name, std::move(faulting), std::move(sim_type),
+      Factory<stochastic::StochasticModel, stochastic::FaultType,
+              stochastic::SimulationType, double, double, double, double,
+              double, double, unsigned int, unsigned int, bool>::instance()
+          ->create(model_name, std::move(fault_type), std::move(sim_type),
                    std::move(moment_magnitude), std::move(depth_to_rupt),
                    std::move(rupture_dist), std::move(vs30), std::move(s_or_d),
-                   std::move(theta_or_phi), std::move(1), std
-                   : move(1), std::move(truncate));
+                   std::move(theta_or_phi), std::move(1), std::move(1),
+                   std::move(truncate));
 }
 
 EQGenerator::EQGenerator(std::string model_name, std::string faulting,
@@ -70,7 +69,7 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
                          double depth_to_rupt, double rupture_dist, double vs30,
                          double s_or_d, double theta_or_phi, bool truncate,
                          int seed) {
-  std::string fault_type;
+  stochastic::FaultType fault_type;
   if (faulting == "StrikeSlip") {
     fault_type = stochastic::FaultType::StrikeSlip;
   } else if (faulting == "ReverseAndRevObliq") {
@@ -81,7 +80,7 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
         "or not supported, please check inputs\n");
   }
 
-  std::string sim_type;
+  stochastic::SimulationType sim_type;
   if (simulation_type == "PulseAndNoPulse") {
     sim_type = stochastic::SimulationType::PulseAndNoPulse;
   } else if (simulation_type == "Pulse") {
@@ -95,15 +94,14 @@ EQGenerator::EQGenerator(std::string model_name, std::string faulting,
   }
 
   eq_model_ =
-      Factory<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
-              stochastic::FaultType, stochastic::SimulationType, double, double,
-              double, double, double, double, unsigned int, unsigned int,
-              bool, int>::instance()
-          ->create(model_name, std::move(faulting), std::move(sim_type),
+      Factory<stochastic::StochasticModel, stochastic::FaultType,
+              stochastic::SimulationType, double, double, double, double,
+              double, double, unsigned int, unsigned int, bool, int>::instance()
+          ->create(model_name, std::move(fault_type), std::move(sim_type),
                    std::move(moment_magnitude), std::move(depth_to_rupt),
                    std::move(rupture_dist), std::move(vs30), std::move(s_or_d),
-                   std::move(theta_or_phi), std::move(1), std
-                   : move(1), std::move(truncate), std::move(seed));
+                   std::move(theta_or_phi), std::move(1), std::move(1),
+                   std::move(truncate), std::move(seed));
 }
 
 utilities::JsonObject EQGenerator::generate_time_history(
