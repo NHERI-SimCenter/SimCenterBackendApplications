@@ -1,0 +1,2 @@
+add_subdirectory(mdofBuildingModel)
+add_subdirectory(openSeesInput)

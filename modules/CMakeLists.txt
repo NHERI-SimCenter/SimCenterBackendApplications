@@ -1,0 +1,8 @@
+add_subdirectory(common)
+add_subdirectory(createEDP)
+add_subdirectory(createEVENT)
+add_subdirectory(createSAM)
+add_subdirectory(performDL)
+add_subdirectory(performSIMULATION)
+add_subdirectory(performUQ)
+add_subdirectory(Workflow)
