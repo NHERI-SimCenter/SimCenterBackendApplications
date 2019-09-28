@@ -93,13 +93,12 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     uqData = data["UQ_Method"];
     samplingData = uqData["samplingMethodData"];
     method = samplingData["method"];
-
-    #if (method == "Monte Carlo"):
-    #    method = 'random'
-    #else:
-    #    method = 'lhs'
-    #numSamples=samplingData["samples"];
-    #seed = samplingData["seed"];
+    if (method == "Monte Carlo"):
+        method = 'random'
+    else:
+        method = 'lhs'
+    numSamples=samplingData["samples"];
+    seed = samplingData["seed"];
 
     #
     # get result files
@@ -134,444 +133,183 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     # write out the method data
     f = open('dakota.in', 'w')
 
-    # write out the env data
-    dakota_input = ""
-    
-    dakota_input += (
-    """environment
-    tabular_data
-    tabular_data_file = 'dakotaTab.out'
-    
-    method,
-    """)
-    
-    if method == "Importance Sampling":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
-        imp_sams_arg = samplingData["ismethod"]
+    f.write("environment\n")
+    f.write("tabular_data\n")
+    f.write("tabular_data_file = \'dakotaTab.out\'\n\n")
 
-        dakota_input += (
-    """importance_sampling
-    {ismethod}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        ismethod = imp_sams_arg,
-        samples = numSamples,
-        seed = seed))
-    
-    elif method == "Monte Carlo":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
-
-        dakota_input += (
-    """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        sample_type = 'random',
-        samples = numSamples,
-        seed = seed))
-    
-    elif method == "LHS":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]        
-
-        dakota_input += (
-    """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        sample_type = 'lhs' ,
-        samples = numSamples,
-        seed = seed))
-    
-    elif method == "Gaussian Process Regression":
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
-        
-        train_samples2 = samplingData["samples2"]
-        gpr_seed2 = samplingData["seed2"]
-        train_method2 = samplingData["dataMethod2"]
-        
-        # write out the env data
-        dakota_input = ""
-        
-        dakota_input += (
-        """environment
-method_pointer = 'EvalSurrogate'
-tabular_data
-tabular_data_file = 'dakotaTab.out'
-custom_annotated header eval_id
-        
-method
-id_method = 'EvalSurrogate'
-model_pointer = 'SurrogateModel'
-        
-sampling
-samples = {no_surr_sams}
-seed = {surr_seed}
-sample_type {surr_sams_type}
-        
-model
-id_model = 'SurrogateModel'
-surrogate global
-dace_method_pointer = 'DesignMethod'
-gaussian_process surfpack
-export_model
-filename_prefix = 'dak_gp_model'
-formats
-text_archive
-        
-""").format(
-        no_surr_sams = train_samples2,
-        surr_seed = gpr_seed2,
-        surr_sams_type = train_method2)
+    f.write('method,\n')
+    f.write('sampling\n');
+    method = samplingData["method"];
+    if (method == "Monte Carlo"):
+        method = 'random'
+    else:
+        method = 'lhs'
+    numSamples=samplingData["samples"];
+    seed = samplingData["seed"];
+    f.write('sample_type = ' '{}'.format(method))
+    f.write('\n');
+    f.write('samples = ' '{}'.format(numSamples))
+    f.write('\n');
+    f.write('seed = ' '{}'.format(seed))
+    f.write('\n\n')
 
     # write out the variable data
-    #f.write('variables,\n')
-    #f.write('active uncertain \n')
-
-    dakota_input += ('variables,\n')
+    f.write('variables,\n')
+    f.write('active uncertain \n')
 
     if (numNormalUncertain > 0):
-        dakota_input += ('normal_uncertain = ' '{}'.format(numNormalUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('means = ')
+        f.write('normal_uncertain = ' '{}'.format(numNormalUncertain))
+        f.write('\n')
+        f.write('means = ')
         for i in range(numNormalUncertain):
-            dakota_input += ('{}'.format(normalUncertainMean[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
+            f.write('{}'.format(normalUncertainMean[i]))
+            f.write(' ')
+        f.write('\n')
 
-        dakota_input += ('std_deviations = ')
+        f.write('std_deviations = ')
         for i in range(numNormalUncertain):
-            dakota_input += ('{}'.format(normalUncertainStdDev[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+            f.write('{}'.format(normalUncertainStdDev[i]))
+            f.write(' ')
+        f.write('\n')
+
+        f.write('descriptors = ')    
         for i in range(numNormalUncertain):
-            dakota_input += ('\'')
-            dakota_input += (normalUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
+            f.write('\'')
+            f.write(normalUncertainName[i])
+            f.write('\' ')
+        f.write('\n')
 
     if (numLognormalUncertain > 0):
-        dakota_input += ('lognormal_uncertain = ' '{}'.format(numLognormalUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('means = ')
+        f.write('lognormal_uncertain = ' '{}'.format(numLognormalUncertain))
+        f.write('\n')
+        f.write('means = ')
         for i in range(numLognormalUncertain):
-            dakota_input += ('{}'.format(lognormalUncertainMean[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
+            f.write('{}'.format(lognormalUncertainMean[i]))
+            f.write(' ')
+        f.write('\n')
 
-        dakota_input += ('std_deviations = ')
+        f.write('std_deviations = ')
         for i in range(numLognormalUncertain):
-            dakota_input += ('{}'.format(lognormalUncertainStdDev[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-            
-        dakota_input += ('descriptors = ')    
+            f.write('{}'.format(lognormalUncertainStdDev[i]))
+            f.write(' ')
+        f.write('\n')
+    
+        f.write('descriptors = ')    
         for i in range(numLognormalUncertain):
-            dakota_input += ('\'')
-            dakota_input += (lognormalUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
+            f.write('\'')
+            f.write(lognormalUncertainName[i])
+            f.write('\' ')
+        f.write('\n')
 
     if (numUniformUncertain > 0):
-        dakota_input += ('uniform_uncertain = ' '{}'.format(numUniformUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('lower_bounds = ')
+        f.write('uniform_uncertain = ' '{}'.format(numUniformUncertain))
+        f.write('\n')
+        f.write('lower_bounds = ')
         for i in range(numUniformUncertain):
-            dakota_input += ('{}'.format(uniformUncertainLower[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('upper_bounds = ')
+            f.write('{}'.format(uniformUncertainLower[i]))
+            f.write(' ')
+        f.write('\n')
+                
+        f.write('upper_bounds = ')
         for i in range(numUniformUncertain):
-            dakota_input += ('{}'.format(uniformUncertainUpper[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
+            f.write('{}'.format(uniformUncertainUpper[i]))
+            f.write(' ')
+        f.write('\n')
     
-        dakota_input += ('descriptors = ')    
+        f.write('descriptors = ')    
         for i in range(numUniformUncertain):
-            dakota_input += ('\'')
-            dakota_input += (uniformUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
+            f.write('\'')
+            f.write(uniformUncertainName[i])
+            f.write('\' ')
+        f.write('\n')
 
 
     if (numContinuousDesign > 0):
-        dakota_input += ('continuous_design = ' '{}'.format(numContinuousDesign))
-        dakota_input += ('\n')
-
-        dakota_input += ('initial_point = ')
+        f.write('continuous_design = ' '{}'.format(numContinuousDesign))
+        f.write('\n')
+        
+        f.write('initial_point = ')
         for i in range(numContinuousDesign):
-            dakota_input += ('{}'.format(continuousDesignInitialPoint[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
+            f.write('{}'.format(continuousDesignInitialPoint[i]))
+            f.write(' ')
+        f.write('\n')
 
-        dakota_input += ('lower_bounds = ')
+        f.write('lower_bounds = ')
         for i in range(numContinuousDesign):
-            dakota_input += ('{}'.format(continuousDesignLower[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
+            f.write('{}'.format(continuousDesignLower[i]))
+            f.write(' ')
+        f.write('\n')
 
-        dakota_input += ('upper_bounds = ')
+        f.write('upper_bounds = ')
         for i in range(numContinuousDesign):
-            dakota_input += ('{}'.format(continuousDesignUpper[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-        
-        dakota_input += ('descriptors = ')    
+            f.write('{}'.format(continuousDesignUpper[i]))
+            f.write(' ')
+        f.write('\n')
+    
+        f.write('descriptors = ')    
         for i in range(numContinuousDesign):
-            dakota_input += ('\'')
-            dakota_input += (continuousDesignName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-            
-
-    numCState = 0
-    if (numCState > 0):
-        dakota_input += ('discrete_state_range = ' '{}'.format(numConstantState))
-        dakota_input += ('\n')
-        
-        dakota_input += ('initial_state = ')
-        for i in range(numConstantState):
-            dakota_input += ('{}'.format(constantStateValue[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('descriptors = ')    
-        for i in range(numConstantState):
-            dakota_input += ('\'')
-            dakota_input += (constantStateName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    if (numConstantState > 0):
-        dakota_input += ('discrete_design_set\nreal = ' '{}'.format(numConstantState))
-        dakota_input += ('\n')
-        
-        dakota_input += ('num_set_values = ')
-        for i in range(numConstantState):
-            dakota_input += ('{}'.format(1))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-        
-        dakota_input += ('set_values = ')
-        for i in range(numConstantState):
-            dakota_input += ('{}'.format(constantStateValue[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('descriptors = ')    
-        for i in range(numConstantState):
-            dakota_input += ('\'')
-            dakota_input += (constantStateName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    if (numBetaUncertain > 0):
-        dakota_input += ('beta_uncertain = ' '{}'.format(numBetaUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('alphas = ')
-        for i in range(numBetaUncertain):
-            dakota_input += ('{}'.format(betaUncertainAlphas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('betas = ')
-        for i in range(numBetaUncertain):
-            dakota_input += ('{}'.format(betaUncertainBetas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-        
-        dakota_input += ('lower_bounds = ')
-        for i in range(numBetaUncertain):
-            dakota_input += ('{}'.format(betaUncertainLower[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('upper_bounds = ')
-        for i in range(numBetaUncertain):
-            dakota_input += ('{}'.format(betaUncertainHigher[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
-        for i in range(numBetaUncertain):
-            dakota_input += ('\'')
-            dakota_input += (betaUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    if (numGammaUncertain > 0):
-        dakota_input += ('gamma_uncertain = ' '{}'.format(numGammaUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('alphas = ')
-        for i in range(numGammaUncertain):
-            dakota_input += ('{}'.format(gammaUncertainAlphas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('betas = ')
-        for i in range(numGammaUncertain):
-            dakota_input += ('{}'.format(gammaUncertainBetas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
-        for i in range(numGammaUncertain):
-            dakota_input += ('\'')
-            dakota_input += (gammaUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    if (numGumbellUncertain > 0):
-        dakota_input += ('gamma_uncertain = ' '{}'.format(numGumbellUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('alphas = ')
-        for i in range(numGumbellUncertain):
-            dakota_input += ('{}'.format(gumbellUncertainAlphas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-
-        dakota_input += ('betas = ')
-        for i in range(numGumbellUncertain):
-            dakota_input += ('{}'.format(gumbellUncertainBetas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
-        for i in range(numGumbellUncertain):
-            dakota_input += ('\'')
-            dakota_input += (gumbellUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    if (numWeibullUncertain > 0):
-        dakota_input += ('weibull_uncertain = ' '{}'.format(numWeibullUncertain))
-        dakota_input += ('\n')
-        dakota_input += ('alphas = ')
-        for i in range(numWeibullUncertain):
-            dakota_input += ('{}'.format(weibullUncertainAlphas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-            
-        dakota_input += ('betas = ')
-        for i in range(numWeibullUncertain):
-            dakota_input += ('{}'.format(weibullUncertainBetas[i]))
-            dakota_input += (' ')
-        dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
-        for i in range(numWeibullUncertain):
-            dakota_input += ('\'')
-            dakota_input += (weibullUncertainName[i])
-            dakota_input += ('\' ')
-        dakota_input += ('\n')
-
-    dakota_input += ('\n')
+            f.write('\'')
+            f.write(continuousDesignName[i])
+            f.write('\' ')
+        f.write('\n')
 
             
     if (numDiscreteDesignSetString > 0):
-        dakota_input += ('weibull_uncertain = ' '{}'.format(numWeibullUncertain))
-        dakota_input += ('string ' '{}'.format(numDiscreteDesignSetString))
-        dakota_input += ('\n')
+        f.write('discrete_uncertain_set\n')
+        f.write('string ' '{}'.format(numDiscreteDesignSetString))
+        f.write('\n')
 
-        dakota_input += ('num_set_values = ')    
+        f.write('num_set_values = ')    
         for i in range(numDiscreteDesignSetString):
+            #f.write('\'')
             numElements = len(discreteDesignSetStringValues[i])
-            dakota_input += (' ' '{}'.format(numElements))
+            f.write(' ' '{}'.format(numElements))
             #f.write(length(discreteDesignSetStringValues[i]))
             print(discreteDesignSetStringValues[i])
             print(numElements)
             #f.write('\' ')
 
-        dakota_input += ('\n')
-        dakota_input += ('set_values  ')    
+        f.write('\n')
+        f.write('set_values  ')    
         for i in range(numDiscreteDesignSetString):
             elements = discreteDesignSetStringValues[i]
             for j in elements:
-                dakota_input += ('\'' '{}'.format(j))
-                dakota_input += ('\' ')
-            dakota_input += ('\n')
+                f.write('\'' '{}'.format(j))
+                f.write('\' ')
+            f.write('\n')
 
-        dakota_input += ('descriptors = ')    
+        f.write('descriptors = ')    
         for i in range(numDiscreteDesignSetString):
-            dakota_input += ('\'')
-            dakota_input += (discreteDesignSetStringName[i])
-            dakota_input += ('\' ')
+            f.write('\'')
+            f.write(discreteDesignSetStringName[i])
+            f.write('\' ')
 
-        dakota_input += ('\n')
+        f.write('\n')
 
-    dakota_input += ('\n\n')
-
-    if method == "Gaussian Process Regression":
-        
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
-
-        dakota_input += (
-        """method
-id_method = 'DesignMethod'
-model_pointer = 'SimulationModel'
-sampling
-seed = {setseed}
-sample_type {settype}
-samples = {setsamples}
-        
-model
-id_model = 'SimulationModel'
-single
-interface_pointer = 'SimulationInterface'
-        
-""").format(
-    setseed = gpr_seed,
-    settype = train_method,
-    setsamples = train_samples
-    )
-
+    f.write('\n\n')
 
     # write out the interface data
-    dakota_input += ('interface,\n')
-
+    f.write('interface,\n')
     runType = data["runType"];
     remoteDir = data["remoteAppDir"];
     localDir = data["localAppDir"];
 
-    if method == "Gaussian Process Regression":
-        dakota_input += ('id_interface = \'SimulationInterface\',\n')
-
     if (runType == "local"):
         numCPUs = 4
-        dakota_input += ("fork asynchronous evaluation_concurrency = %d\n" % numCPUs)
-        dakota_input += ("analysis_driver = '{}'\n".format(workflowDriverName))
+        f.write("fork asynchronous evaluation_concurrency = %d\n" % numCPUs)
+        f.write("analysis_driver = '{}'\n".format(workflowDriverName))
     else:
-        dakota_input += ('fork asynchronous\n')
-        dakota_input += ("analysis_driver = '{}'\n".format(remoteWorkflowDriverName))
-
-    # dakota_input += ('\nanalysis_driver = \'python analysis_driver.py\' \n')
-    dakota_input += ('parameters_file = \'params.in\' \n')
-    dakota_input += ('results_file = \'results.out\' \n')
-    dakota_input += ('work_directory directory_tag directory_save\n')
-    dakota_input += ('copy_files = \'templatedir/*\' \n')
-    # dakota_input += ('named \'workdir\' file_save  directory_save \n')
-    dakota_input += ('named \'workdir\' \n')
-    dakota_input += ('aprepro \n')
-    dakota_input += ('\n')
-
-
-    f.write(dakota_input)
+        f.write('fork asynchronous\n')
+        f.write("analysis_driver = '{}'\n".format(remoteWorkflowDriverName))
     
+    f.write('parameters_file = \'params.in\' \n')
+    f.write('results_file = \'results.out\' \n')
+    f.write('work_directory directory_tag \n')
+    f.write('copy_files = \'templatedir/*\' \n')
+    f.write('named \'workdir\' file_save  directory_save \n')
+    f.write('aprepro \n')
+    f.write('\n')
+
     #
     # write out the responses
     #
@@ -580,7 +318,6 @@ interface_pointer = 'SimulationInterface'
         data = json.load(data_file)
 
     numResponses=data["total_number_edp"]
-
 
 
     f.write('responses, \n')
@@ -629,10 +366,7 @@ interface_pointer = 'SimulationInterface'
     # Write the workflow driver
     #
 
-    if platform.system() == 'Darwin':
-        f = open(workflowDriverName, 'w')
-    else:
-        f = open(workflowDriverName, 'w', newline='\n')
+    f = open(workflowDriverName, 'w', newline='\n')
 
     # want to dprepro the files with the random variables
     if bimExists == True: f.write('perl dpreproSimCenter params.in bim.j ' + bimName + '\n')
