@@ -1,0 +1,4 @@
+add_subdirectory(gmtEDP)
+add_subdirectory(standardEarthquakeEDP)
+add_subdirectory(standardWindEDP)
+add_subdirectory(userEDP)

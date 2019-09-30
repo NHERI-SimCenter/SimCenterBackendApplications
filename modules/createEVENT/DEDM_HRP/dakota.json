@@ -1,0 +1,122 @@
+{
+    "Applications": {
+        "EDP": {
+            "Application": "StandardWindEDP",
+            "ApplicationData": {
+            }
+        },
+        "Events": [
+            {
+                "Application": "DEDM_HRP",
+                "EventClassification": "Wind"
+            }
+        ],
+        "Modeling": {
+            "Application": "MDOF_BuildingModel",
+            "ApplicationData": {
+            }
+        },
+        "Simulation": {
+            "Application": "OpenSees-Simulation",
+            "ApplicationData": {
+            }
+        },
+        "UQ": {
+            "Application": "Dakota-UQ",
+            "ApplicationData": {
+                "method": "LHS",
+                "samples": 10,
+                "seed": 966,
+                "type": "UQ"
+            }
+        }
+    },
+    "EDP": {
+        "type": "StandardWindEDP"
+    },
+    "Events": [
+        {
+            "EventClassification": "Wind",
+            "checkedExposure": 1,
+            "checkedHeight": 1,
+            "checkedPlan": 1,
+            "incidenceAngle": 60,
+            "type": "DEDM_HRP",
+            "windSpeed": 100
+        }
+    ],
+    "GeneralInformation": {
+        "depth": 360,
+        "height": 144,
+        "location": {
+            "latitude": 37.8716,
+            "longitude": -127.2717
+        },
+        "name": "",
+        "planArea": 129600,
+        "stories": 1,
+        "units": {
+            "force": "kips",
+            "length": "in",
+            "temperature": "C",
+            "time": "sec"
+        },
+        "width": 360
+    },
+    "Simulation": {
+        "Application": "OpenSees-Simulation",
+        "algorithm": "Newton",
+        "convergenceTest": "NormUnbalance",
+        "dampingRatio": 0.02,
+        "integration": "Newmark 0.5 0.25",
+        "tolerance": 0.01
+    },
+    "StructuralInformation": {
+        "Kx": 100,
+        "Ky": 100,
+        "ModelData": [
+            {
+                "Fyx": 10,
+                "Fyy": 10,
+                "Ktheta": 1000000,
+                "bx": 0.1,
+                "by": 0.1,
+                "height": 144,
+                "kx": 100,
+                "ky": 100,
+                "weight": "RV.weigh"
+            }
+        ],
+        "height": 144,
+        "numStories": 1,
+        "randomVar": [
+        ],
+        "type": "MDOF_BuildingModel",
+        "weight": "RV.weigh"
+    },
+    "UQ_Method": {
+        "samplingMethodData": {
+            "evalID": "RV.DAKOTA_EVAL_ID",
+            "method": "LHS",
+            "samples": 10,
+            "seed": 966
+        }
+    },
+    "WorkflowType": "Building Simulation",
+    "localAppDir": "/home/michael/Dropbox/Research/NHERI/Code/SimCenterBackendApplications",
+    "randomVariables": [
+        {
+            "distribution": "Normal",
+            "mean": 144,
+            "name": "weigh",
+            "refCount": 1,
+            "stdDev": 20,
+            "value": "RV.weigh",
+            "variableClass": "Uncertain"
+        }
+    ],
+    "remoteAppDir": "/home/michael/Dropbox/Research/NHERI/Code/SimCenterBackendApplications",
+    "runDir": "/home/michael/Documents/WE-UQ/LocalWorkDir/tmp.SimCenter",
+    "runType": "local",
+    "workingDir": "/home/michael/Documents/WE-UQ/LocalWorkDir"
+}

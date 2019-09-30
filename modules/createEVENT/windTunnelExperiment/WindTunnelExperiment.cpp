@@ -9,7 +9,7 @@
 #include <cmath>
 
 #include <jansson.h>
-#include <Units.h>
+#include <common/Units.h>
 
 typedef struct tapData {
   double locX;
@@ -190,7 +190,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       }
       double windSpeed = json_number_value(windSpeedJO); // no unit conversion as m/sec
 
-      json_t *filenameJO = json_object_get(currentEvent,"inputFile");      
+      json_t *filenameJO = json_object_get(currentEvent,"filename");      
       if (filenameJO == NULL) {
 	std::cerr << "ERROR missing inputFile from event)\n";
 	return -2;        
@@ -228,8 +228,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t *frequencyT = json_object_get(tapData,"frequency");
       json_t *periodT = json_object_get(tapData,"period");
 
-      if (roofTypeT == NULL || modelHeightT == NULL || modelDepthT == NULL || modelBreadthT == NULL
-	  || periodT == NULL || frequencyT == NULL) {
+      if (roofTypeT == NULL     || 
+	  modelHeightT == NULL  || 
+	  modelDepthT == NULL   || 
+	  modelBreadthT == NULL || 
+	  periodT == NULL       || 
+	  frequencyT == NULL) {
+
 	std::cerr << "FATAL ERROR - json file does not contain roofType, height, depth or breadth data \n";
 	return -3;
       }
@@ -247,8 +252,11 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
       double lambdaU = modelWindSpeed/windSpeed;
+      std::cerr << "modelWs, wS: " << modelWindSpeed << " " << windSpeed << "\n";
       double lambdaT = lambdaL/lambdaU;
+      std::cerr << "lambdaL, lambdaU: " << lambdaL << " " << lambdaU << "\n";
       double dT = 1.0/(modelFrequency*lambdaT);
+      std::cerr << "dT, freq, lambdaT: " << dT << " " << modelFrequency << " " << lambdaT << "\n";
 
       double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.; // N to KN
 

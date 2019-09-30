@@ -97,7 +97,7 @@
       },
       {
         "Name": "ExistingSimCenterEvents",
-        "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSimCenterEvents",
+        "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
         "ApplicationSpecificInputs": [
 	]
       },
@@ -116,11 +116,6 @@
       {
         "Name": "HazardBasedEvent",
         "ExecutablePath": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
-        "ApplicationSpecificInputs":[]
-      },
-      {
-        "Name": "StochasticWindInput-KwonKareem2006",
-        "ExecutablePath": "applications/createEVENT/NOWS1/NOWS1",
         "ApplicationSpecificInputs":[]
       },
       {
@@ -145,7 +140,7 @@
       },		
       {
         "Name": "StochasticGroundMotion",
-        "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGroundMotion",
+        "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
         "ApplicationSpecificInputs":["modelName", "seed"]
       },		
       {
@@ -258,7 +253,7 @@
     "Applications": [
       {
         "Name": "StandardEarthquakeEDP",
-        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP/StandardEarthquakeEDP",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP/StandardEQEDP",
         "ApplicationSpecificInputs": []
       },
       {

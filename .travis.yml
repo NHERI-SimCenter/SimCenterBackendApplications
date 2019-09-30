@@ -1,0 +1,43 @@
+linux: &linux
+   os: linux
+   sudo: true   
+   dist: xenial
+   language: python
+   python: "3.7"
+   services:
+     - docker
+     
+osx: &osx
+   os: osx
+   language: generic
+
+branches:
+  only:
+    - master
+    - /^stable\/.*$/
+
+env:
+   global:
+     - CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages"
+
+matrix:
+   include:
+    - <<: *linux
+      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7
+    - <<: *linux
+      env: CONAN_GCC_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/gcc8
+    - <<: *linux
+      env: CONAN_CLANG_VERSIONS=7.0 CONAN_DOCKER_IMAGE=conanio/clang7
+    - <<: *linux
+      env: CONAN_CLANG_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/clang8
+    - <<: *osx
+      osx_image: xcode10.2
+      env: CONAN_APPLE_CLANG_VERSIONS=10.0
+
+install:
+    - chmod +x .travis/install.sh;
+    - ./.travis/install.sh;
+
+script:
+    - chmod +x .travis/run.sh;
+    - ./.travis/run.sh;
