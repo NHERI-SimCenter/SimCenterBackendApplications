@@ -27,6 +27,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT(SimCenterBackendApplications)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 include(SimCenterFunctions)
 include(CMakeParseArguments)
 
