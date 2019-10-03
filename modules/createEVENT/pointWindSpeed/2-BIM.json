@@ -1,0 +1,58 @@
+{
+  "RandomVariables": [],
+  "GeneralInformation": {
+    "BIM_id": "1",
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -74.442289,
+            39.368526
+          ],
+          [
+            -74.442222,
+            39.368428
+          ],
+          [
+            -74.442073,
+            39.368489
+          ],
+          [
+            -74.44214,
+            39.368587
+          ],
+          [
+            -74.442289,
+            39.368526
+          ]
+        ]
+      ]
+    },
+    "units": {
+      "force": "kips",
+      "length": "inch",
+      "speed": "mph",
+      "acceleration": "g",
+      "temperature": "C",
+      "time": "sec"
+    },
+    "city": "ATLANTIC CITY CITY",
+    "structureType": "Frame",
+    "roofType": "hipped",
+    "occupancy": "Residential",
+    "stories": 2.0,
+    "buildingDescription": "F2S",
+    "address": "1006 N MICHIGAN AVE, ATLANTIC CITY,NJ",
+    "location":{
+    "latitude": 41.3935,
+    "longitude": -74.6875
+    },
+   "location1":{
+    "latitude": 39.3684999,
+    "longitude": -74.44222289999999
+    },
+    "yearBuilt": 1915.0,
+    "id": "153090"
+  }
+}
