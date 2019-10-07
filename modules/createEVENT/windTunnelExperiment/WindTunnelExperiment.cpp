@@ -221,6 +221,9 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double lengthModelUnitConversion = Units::GetLengthFactor(modelUnits, eventUnits);
 
       json_t *roofTypeT = json_object_get(tapData,"roofType");
+      if (roofTypeT == NULL)
+	roofTypeT = json_object_get(tapData,"buildingShape");
+
       json_t *modelHeightT = json_object_get(tapData,"height");
       json_t *modelDepthT = json_object_get(tapData,"depth");
       json_t *modelBreadthT = json_object_get(tapData,"breadth");
@@ -248,6 +251,12 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double modelFrequency = json_number_value(frequencyT);
       int numSteps = round(modelPeriod*modelFrequency);
 
+
+      if ((strcmp(roofType,"Flat") != 0) && (strcmp(roofType,"Cuboid") != 0)) { 
+	std::cerr << "FATAL ERROR - WndTunnelExperiment - only Cuboid building shape currently supported\n";
+	return -4;
+      }
+
       //      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
       double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
@@ -268,7 +277,6 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       // load tap data from the file
       json_t *tapLocations = json_object_get(tapData,"tapLocations");
       json_t *tapCp = json_object_get(tapData,"pressureCoefficients");
-
       
       int numTaps = json_array_size(tapLocations);
       if (numTaps == 0) {
