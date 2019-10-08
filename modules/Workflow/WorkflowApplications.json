@@ -60,7 +60,7 @@
       },
       {
         "Name": "WindTunnelExperiment",
-        "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
+        "ExecutablePath": "applications/createEVENT/windTunnelExp/WindTunnelExp",
         "ApplicationSpecificInputs":[]
       },
       {
@@ -118,7 +118,7 @@
       },
       {
         "Name": "MDOF_BuildingModel",
-        "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BuildingModel",
+        "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BldgMdl",
         "ApplicationSpecificInputs": []
       }
     ]
