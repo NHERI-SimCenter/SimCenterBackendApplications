@@ -59,7 +59,64 @@ import pelicunPBE
 from pelicunPBE.control import FEMA_P58_Assessment, HAZUS_Assessment
 from pelicunPBE.file_io import write_SimCenter_DL_output
 
-from fragility_function_fitting import lognormal_MLE, update_collapsep
+# temporary functions ----
+
+# FUNCTION: neg_log_likelihood -------------------------------------------------
+# objective function for evaluating negative log likelihood of observing the given collapses
+# ------------------------------------------------------------------------------
+
+def neg_log_likelihood(params, IM, num_records, num_collapses):
+	theta = params[0]
+	beta = params[1]
+
+	log_IM = [log(m) for m in IM]
+	p = norm.cdf(log_IM, loc=theta, scale=beta)
+
+	# likelihood of observing num_collapse(i) collapses, given num_records observations, using the current parameter estimates
+	likelihood = np.maximum(binom.pmf(num_collapses, num_records, p),
+							np.nextafter(0,1))
+
+	neg_loglik = -np.sum(np.log(likelihood))
+
+	return neg_loglik
+
+# FUNCTION: lognormal_MLE ------------------------------------------------------
+# returns maximum likelihood estimation (MLE) of lognormal fragility function parameters
+# ------------------------------------------------------------------------------
+# algorithm obtained from Baker, J. W. (2015). “Efficient analytical fragility function fitting
+# using dynamic structural analysis.” Earthquake Spectra, 31(1), 579-599.
+
+def lognormal_MLE(IM,num_records,num_collapses):
+	# initial guess for parameters
+	params0 = [np.log(1.0), 0.4]
+	#params = minimize(neg_log_likelihood, params0, args=(IM, num_records, num_collapses), method='Nelder-Mead',
+    #					options={'maxfev': 400*2,
+	#						 'adaptive': True})
+
+	params = minimize(neg_log_likelihood, params0, args=(IM, num_records, num_collapses), bounds=((None, None), (1e-10, None)))
+	theta = np.exp(params.x[0])
+	beta = params.x[1]
+
+	return theta, beta
+
+# FUNCTION: update_collapsep ---------------------------------------------------
+# creates copy of BIM.json for each IM with updated collapse probability
+# ------------------------------------------------------------------------------
+
+def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
+	with open(BIMfile, 'r') as f:
+		BIM = json.load(f)
+		Pcol = norm.cdf(np.log(num_collapses/theta)/beta)
+		BIM['LossModel']['BuildingResponse']['CollapseProbability'] = Pcol
+	f.close()
+
+	outfilename = 'BIM_{}.json'.format(RPi)
+	with open(outfilename, 'w') as g:
+		json.dump(BIM,g,indent=4)
+
+	return outfilename
+
+# temporary functions ----
 
 def replace_FG_IDs_with_FG_names(assessment, df):
 	FG_list = sorted(assessment._FG_dict.keys())
@@ -79,6 +136,14 @@ ap_DesignLevel = {
 ap_Occupancy = {
 	'Residential': "RES1",
 	'Retail': "COM1"
+}
+
+ap_RoofType = {
+	'hip': 'hip',
+	'hipped': 'hip',
+	'gabled': 'gab',
+	'gable': 'gab',
+	'flat': 'hip'   # we need to change this later!
 }
 
 convert_design_level = {
@@ -108,6 +173,7 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 	elif 'GI' in DL_input.keys():
 		BIM_in = DL_input['GI']
 
+	# HAZUS Earthquake
 	if DL_method == 'HAZUS MH EQ':
 
 		bt = BIM_in['structType']
@@ -146,7 +212,83 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 
 		loss_dict['Components'] = components
 
+	# HAZUS Hurricane
 	elif DL_method == 'HAZUS MH HU':
+
+		# Building characteristics
+		year_built = int(BIM_in['yearBuilt'])
+		roof_type = ap_RoofType[BIM_in['roofType']]
+		occupancy = BIM_in['occupancy']
+		stories = int(BIM_in['stories'])
+		bldg_desc = BIM_in['buildingDescription']
+		struct_type = BIM_in['structureType']
+		V_ult = BIM_in['V_design']
+
+		# Meta-variables
+		V_asd = 0.6 * V_ult
+		
+		# Flood risk // need high water zone for this
+		FR = True 
+
+		# Hurricane-prone region
+		HPR = V_ult > 115.0
+
+		# Wind Borne Debris
+		WBD = ((HPR) and 
+			   ((V_ult > 140.0) or ((V_ult > 130.0) and (FR))))
+
+		# attributes for WSF 1-2
+
+		# Secondary water resistance
+		SWR = np.random.binomial(1, 0.6) == 1
+
+		# Roof deck attachment //need to add year condition later
+		if V_ult > 130.0:
+			RDA = '8s' # 8d @ 6"/6"
+		else:
+			RDA = '8d' # 8d @ 6"/12"
+		
+		# Roof-wall connection // need to add year condition later
+		if HPR:
+			RWC = 'strap' # Strap
+		else:
+			RWC = 'tnail' # Toe-nail
+
+		# Shutters // need to add year condition later
+		shutters = WBD
+
+		# Garage // need to add AG building descr later
+		if shutters:
+			if True:
+				garage = 'sup' # SFBC 1994
+			else:
+				garage = 'no'  # None
+		else:
+			if True:
+				if year_built > 1989:
+					garage = 'std' # Standard
+				else:
+					garage = 'wkd' # Weak
+			else:
+				garage = 'no' # None
+
+		# Terrain // need to add terrain checks later (perhaps to the BIM)
+		         #// assume suburban for now
+		terrain = 35
+
+		# temp fix
+		stories = min(stories, 2)
+
+		bldg_config = 'WSF{stories}_{roof_shape}_{SWR}_{RDA}_{RWC}_{garage}_{shutters}_{terrain}'.format(
+				stories = stories,
+				roof_shape = roof_type,
+				SWR = int(SWR),
+				RDA = RDA,
+				RWC = RWC,
+				garage = garage,
+				shutters=int(shutters),
+				terrain=terrain
+				)
 
 		loss_dict = {
 			'DLMethod': DL_method,
@@ -158,7 +300,7 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 	        },
 	        "Components": [
 	            {
-	                "ID": "WSF2_gab_1_6s_tnail_no_1_35"
+	                "ID": bldg_config #"WSF2_gab_1_6s_tnail_no_1_35"
 	            }
 	        ],
 	        "DecisionVariables": {
@@ -368,8 +510,10 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 	for s_i, stripe in enumerate(stripes):
 
+		DL_input_path = DL_files[s_i]
+
 		# read the type of assessment from the DL input file
-		with open(DL_files[s_i], 'r') as f:
+		with open(DL_input_path, 'r') as f:
 			DL_input = json.load(f)
 
 		# check if the DL input file has information about the loss model
@@ -380,7 +524,9 @@ def run_pelicun(DL_input_path, EDP_input_path,
 			print('WARNING No loss model defined in the BIM file. Trying to auto-populate.')
 
 			# and try to auto-populate the loss model using the BIM information
-			DL_input, DL_input_path = auto_populate(DL_input_path)
+			DL_input, DL_input_path = auto_populate(DL_input_path, 
+													DL_method, 
+													realization_count)
 
 
 		DL_method = DL_input['LossModel']['DLMethod']
@@ -396,7 +542,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 			#elif DL_input['Events'][0]['EventClassification'] == 'Wind':
 			A = HAZUS_Assessment(hazard = 'HU')
 
-		A.read_inputs(DL_files[s_i], EDP_files[s_i], verbose=False) # make DL inputs into array of all BIM files
+		A.read_inputs(DL_input_path, EDP_files[s_i], verbose=False) # make DL inputs into array of all BIM files
 
 		A.define_random_variables()
 
@@ -408,8 +554,20 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 		A.aggregate_results()
 
-		try:
-		#if True:
+		EDPs = sorted(A._EDP_dict.keys())
+		DMG_mod = replace_FG_IDs_with_FG_names(A, A._DMG)
+		DV_mods, DV_names = [], []
+		for key in A._DV_dict.keys():
+			if key != 'injuries':
+				DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key]))
+				DV_names.append('{}DV_{}'.format(stripe_str, key))
+			else:
+				for i in range(2 if DL_method == 'FEMA P58' else 4):
+					DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key][i]))
+					DV_names.append('{}DV_{}_{}'.format(stripe_str, key, i))
+
+		#try:
+		if False:
 			write_SimCenter_DL_output(
 				posixpath.join(output_path,
 				'{}DL_summary.csv'.format(stripe_str)), A._SUMMARY,
@@ -420,22 +578,15 @@ def run_pelicun(DL_input_path, EDP_input_path,
 				'{}DL_summary_stats.csv'.format(stripe_str)), A._SUMMARY,
 				index_name='attribute', collapse_columns=True,  stats_only=True)
 
-			EDPs = sorted(A._EDP_dict.keys())
 			write_SimCenter_DL_output(
 				posixpath.join(output_path,
 				'{}EDP.csv'.format(stripe_str)), A._EDP_dict[EDPs[0]]._RV.samples,
 				index_name='#Num', collapse_columns=False)
-
-			DMG_mod = replace_FG_IDs_with_FG_names(A, A._DMG)
+			
 			write_SimCenter_DL_output(
 				posixpath.join(output_path,
 				'{}DMG.csv'.format(stripe_str)), DMG_mod,
 				index_name='#Num', collapse_columns=False)
-
-			# create the DM.json file
-			if DL_method.startswith('HAZUS'):
-				write_DM_output(posixpath.join(output_path, stripe_str+DM_file),
-					DMG_mod)
 
 			write_SimCenter_DL_output(
 				posixpath.join(output_path,
@@ -443,32 +594,32 @@ def run_pelicun(DL_input_path, EDP_input_path,
 				DMG_mod.T.groupby(level=0).aggregate(np.sum).T,
 				index_name='#Num', collapse_columns=False)
 
-			DV_mods, DV_names = [], []
-			for key in A._DV_dict.keys():
-				if key != 'injuries':
-					DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key]))
-					DV_names.append('{}DV_{}'.format(stripe_str, key))
-				else:
-					for i in range(2 if DL_method == 'FEMA P58' else 4):
-						DV_mods.append(replace_FG_IDs_with_FG_names(A, A._DV_dict[key][i]))
-						DV_names.append('{}DV_{}_{}'.format(stripe_str, key, i))
-
 			for DV_mod, DV_name in zip(DV_mods, DV_names):
 				write_SimCenter_DL_output(
 				posixpath.join(output_path, DV_name+'.csv'), DV_mod,
-				index_name='#Num', collapse_columns=False)
-
-				if DL_method.startswith('HAZUS'):
-					write_DV_output(posixpath.join(output_path, stripe_str+DV_file),
-						DV_mod, DV_name)
+				index_name='#Num', collapse_columns=False)				
 
 				write_SimCenter_DL_output(
 				posixpath.join(output_path, DV_name+'_agg.csv'),
 				DV_mod.T.groupby(level=0).aggregate(np.sum).T,
 				index_name='#Num', collapse_columns=False)
 
-		except:
-			print("ERROR when trying to create DL output files.")
+		if True:
+			# create the DM.json file
+			if DL_method.startswith('HAZUS'):
+				write_DM_output(posixpath.join(output_path, stripe_str+DM_file),
+					DMG_mod)
+
+			# create the DV.json file
+			for DV_mod, DV_name in zip(DV_mods, DV_names):
+				if DL_method.startswith('HAZUS'):
+					write_DV_output(posixpath.join(output_path, stripe_str+DV_file),
+						DV_mod, DV_name)
+
+
+
+		#except:
+		#	print("ERROR when trying to create DL output files.")
 
 	return 0
 
