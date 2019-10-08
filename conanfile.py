@@ -29,7 +29,7 @@ class simCenterBackendApps(ConanFile):
 
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
-       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
+       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "master")
 
     def configure(self):
         self.options.shared = False
