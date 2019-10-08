@@ -12,8 +12,6 @@ environment:
 
 install:
   - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
-  - ps: Restart-Computer -Force -Verbose
-  - ps: Start-Sleep -s 10
 
 build_script:
   - set PATH=%PATH%;%PYTHON%/Scripts/
