@@ -11,6 +11,7 @@ environment:
           CONAN_BUILD_TYPES: Release	  
 
 install:
+  - Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
   - pip.exe install conan_package_tools bincrafters_package_tools
