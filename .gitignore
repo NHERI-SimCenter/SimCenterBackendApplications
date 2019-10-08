@@ -50,8 +50,8 @@ qrc_styles.cpp
 # OTHER
 applications
 build
-Makefile
-Makefile.*
+# Makefile
+# Makefile.*
 StandardGMT_EDP
 StandardWindEDP
 UserDefinedEDP
