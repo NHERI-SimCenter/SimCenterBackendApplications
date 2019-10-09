@@ -1,16 +1,16 @@
 include ../../Makefile.inc
 
-all: StandardEarthquakeEDP 
+all: StandardEQEDP 
 
 StandardEarthquakeEDP.o : StandardEarthquakeEDP.cpp
 
-StandardEarthquakeEDP: StandardEarthquakeEDP.o
-	$(CXX) $(LDFLAGS) -o StandardEarthquakeEDP StandardEarthquakeEDP.o $(LDLIBS)
+StandardEQEDP: StandardEarthquakeEDP.o
+	$(CXX) $(LDFLAGS) -o StandardEQEDP StandardEarthquakeEDP.o $(LDLIBS)
 
 clean:
 	$(RM) *.o *~
 
 distclean: clean
-	$(RM) StandardEarthquakeEDP
+	$(RM) StandardEQEDP
 
 
