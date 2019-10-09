@@ -15,13 +15,10 @@ variables:
     CONAN_BUILD_TYPES: Release
 
 steps:
-- install: |
+- script: |
     set PATH=%PATH%;%PYTHON%/Scripts/
     pip.exe install conan --upgrade
     pip.exe install conan_package_tools bincrafters_package_tools
     conan user # It creates the conan data directory
-  displayName: Installing conan
-
-- test_script: |
     python build.py
-  displayName: Building package
+  displayName: Installing conan and building package
