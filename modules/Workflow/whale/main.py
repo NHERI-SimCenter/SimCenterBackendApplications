@@ -67,12 +67,28 @@ import pprint
 import posixpath
 import os
 import shutil
+import importlib
 from copy import deepcopy
 import subprocess
+import warnings
+import pandas as pd
 
 pp = pprint.PrettyPrinter(indent=4)
 
 log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
+
+# get the absolute path of the whale directory
+whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Monkeypatch warnings to get prettier messages
+def _warning(message, category, filename, lineno, file=None, line=None):
+    if '\\' in filename:
+        file_path = filename.split('\\')
+    elif '/' in filename:
+        file_path = filename.split('/')
+    python_file = '/'.join(file_path[-3:])
+    print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+warnings.showwarning = _warning
 
 def log_msg(msg):
     """
@@ -104,7 +120,7 @@ def log_error(msg):
     log_msg(msg)
     log_msg(log_div)
 
-def create_command(command_list):
+def create_command(command_list, run_type):
     """
     Short description
 
@@ -116,7 +132,14 @@ def create_command(command_list):
         Explain...
     """
     if command_list[0] == 'python':
-        command = 'python "{}" '.format(command_list[1])# + ' '.join(command_list[2:])
+
+        if run_type != 'set_up':
+            # replace python with the full path to the python interpreter
+            python_exe = sys.executable
+        else:
+            python_exe = 'python'
+
+        command = '"{}" "{}" '.format(python_exe, command_list[1])# + ' '.join(command_list[2:])
 
         for command_arg in command_list[2:]:
             command += '"{}" '.format(command_arg)
@@ -141,19 +164,50 @@ def run_command(command):
 
     """
 
-    try:
-        result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-        returncode = 0
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        returncode = e.returncode
+    # If it is a python script, we do not run it, but rather import the main 
+    # function. This ensures that the script is run using the same python 
+    # interpreter that this script uses and it is also faster because we do not
+    # need to run multiple python interpreters simultaneously.
+    Frank_trusts_this_approach = False
+    if command[:6] == 'python' and Frank_trusts_this_approach:
+        command_list = command.split()[1:]
+        #py_args = command_list[1:]
 
-    if returncode != 0:
-        log_error('return code: {}'.format(returncode))
+        # get the dir and file name
+        py_script_dir, py_script_file = os.path.split(command_list[0][1:-1])
+
+        # add the dir to the path
+        sys.path.insert(0, py_script_dir)
+
+        # import the file
+        py_script = importlib.__import__(
+            py_script_file[:-3], globals(), locals(), ['main',], 0)
+
+        # remove the quotes from the arguments
+        arg_list = [c[1:-1] for c in command_list[1:]]
+
+        py_script.main(arg_list)
+
+        return "", ""
+
+    else:
+
+        try:
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            returncode = 0
+        except subprocess.CalledProcessError as e:
+            result = e.output
+            returncode = e.returncode
+
+        if returncode != 0:
+            log_error('return code: {}'.format(returncode))
         
-#    return result.decode(sys.stdout.encoding), returncode
-    print(result, returncode)
-    return result, returncode
+        #return result.decode(sys.stdout.encoding), returncode
+        print(result, returncode)
+        return result, returncode
+
+def show_warning(warning_msg):
+    warnings.warn(UserWarning(warning_msg))
 
 class WorkFlowInputError(Exception):
     def __init__(self, value):
@@ -161,7 +215,6 @@ class WorkFlowInputError(Exception):
 
     def __str__(self):
         return repr(self.value)
-
 
 class WorkflowApplication(object):
     """
@@ -348,20 +401,32 @@ class Workflow(object):
             raise WorkFlowInputError('Need a runDir entry in the input file')
 
         # parse the location(s) of the applications directory
-        if 'remoteAppDir' in input_data:
-            self.app_dir_remote = input_data['remoteAppDir']
-        else:
-            raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
-
         if 'localAppDir' in input_data:
             self.app_dir_local = input_data['localAppDir']
         else:
             raise WorkFlowInputError('Need a localAppDir entry in the input file')
 
+        if 'remoteAppDir' in input_data:
+            self.app_dir_remote = input_data['remoteAppDir']
+        else:
+            self.app_dir_remote = self.app_dir_local
+            show_warning('remoteAppDir not specified. Using the value provided '
+                'for localAppDir instead. This will lead to problems if you '
+                'want to run a simulation remotely.')
+            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
+
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir'], 
             [self.run_dir, self.app_dir_remote, self.app_dir_local]):
             log_msg('\t{} location: {}'.format(loc_name, loc_val))
+
+        if 'Building' in self.app_type_list:
+            if 'buildingFile' in input_data:
+                self.building_file_name = input_data['buildingFile']
+            else:
+                self.building_file_name = "buildings.json"
+            log_msg('\tbuilding file name: {}'.format(self.building_file_name))
+
 
         # get the list of requested applications
         if 'Applications' in input_data:
@@ -404,7 +469,6 @@ class Workflow(object):
             if app_type != 'Event':
                 if app_type in requested_apps:
 
-
                     app_object = deepcopy(
                         self.app_registry[app_type].get(
                             requested_apps[app_type]['Application']))
@@ -417,8 +481,15 @@ class Workflow(object):
                     self.workflow_apps[app_type] = app_object
               
                 else:
-                    raise WorkFlowInputError(
-                        'Need {} entry in Applications'.format(app_type))
+                    if app_type != "Modeling":
+                        raise WorkFlowInputError(
+                            'Need {} entry in Applications'.format(app_type))
+                    else:                        
+                        self.app_registry.pop("Modeling", None)
+                        log_msg('\tNo Modeling among requested applications.')
+
+        if "Modeling" not in self.app_registry:
+            self.app_type_list.remove("Modeling")
 
         log_msg('\tRequested workflow:')
         for app_type, app_object in self.workflow_apps.items():
@@ -427,7 +498,53 @@ class Workflow(object):
         log_msg('Successfully parsed workflow inputs')
         log_msg(log_div)
 
-    def create_RV_files(self, app_sequence): # we will probably need to rename this one
+    def create_building_files(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Creating files for individual buildings')
+
+        building_file = posixpath.join(self.run_dir, self.building_file_name)
+
+        bldg_app = self.workflow_apps['Building']
+
+        # TODO: not elegant code, fix later
+        os.chdir(self.run_dir)
+
+        building_file = building_file.replace('.json', 
+            '{}-{}.json'.format(bldg_app.pref['Min'], bldg_app.pref['Max'])) 
+        self.building_file_path = building_file
+
+        for output in bldg_app.outputs:
+            if output['id'] == 'buildingFile':
+                output['default'] = building_file
+
+        bldg_command_list = bldg_app.get_command_list(
+            app_path = self.app_dir_local)
+
+        bldg_command_list.append(u'--getRV')
+
+        command = create_command(bldg_command_list, self.run_type)        
+
+        log_msg('Creating initial building files...')
+        print('\n{}\n'.format(command))
+        
+        result, returncode = run_command(command)
+
+        log_msg('\tOutput: ')
+        print('\n{}\n'.format(result))
+
+        log_msg('Building files successfully created.')
+        log_msg(log_div)
+
+    def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
         """
         Short description
 
@@ -441,21 +558,58 @@ class Workflow(object):
         log_msg('Creating files with random variables')
 
         os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+            if bldg_id not in os.listdir(self.run_dir):
+                os.mkdir(bldg_id)
+            os.chdir(bldg_id)       
+
+        #if 'Building' not in self.app_type_list:
+        if 'templatedir' not in os.listdir(self.run_dir):
+            os.mkdir('templatedir')
         os.chdir('templatedir')
 
-        # Make a copy of the input file and rename it to BIM.json
-        # This is a temporary fix, will be removed eventually.
-        shutil.copy(
-            src = self.input_file,
-            dst = posixpath.join(self.run_dir,'templatedir/BIM.json')) 
+        # For individual buildings...
+        if bldg_id is None:
+            # Make a copy of the input file and rename it to BIM.json
+            # This is a temporary fix, will be removed eventually.            
+            dst = posixpath.join(os.getcwd(),BIM_file)
+            print(dst)
+            if dst != self.input_file:
+                shutil.copy(
+                    src = self.input_file,
+                    #dst = posixpath.join(self.run_dir,
+                    #                     'templatedir/{}'.format(BIM_file))) 
+                    dst = dst) 
+
+        # for regional analysis
+        else:
+            # Make a copy of the BIM file
+            shutil.copy(
+                src = posixpath.join(self.run_dir, BIM_file),
+                dst = posixpath.join(self.run_dir, 
+                                     '{}/templatedir/{}'.format(bldg_id, BIM_file)))
+
+        if (("Modeling" in app_sequence) and
+            ("Modeling" not in self.workflow_apps.keys())):
+            app_sequence.remove("Modeling")
 
         for app_type in app_sequence:
-            command_list = self.workflow_apps[app_type].get_command_list(
+
+            workflow_app = self.workflow_apps[app_type]
+
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameBIM':
+                        input_var['default'] = BIM_file
+
+            command_list = workflow_app.get_command_list(
                 app_path = self.app_dir_local)
 
             command_list.append(u'--getRV')
 
-            command = create_command(command_list)
+            command = create_command(command_list, self.run_type)
             
             log_msg('\tRunning {} app for RV...'.format(app_type))
             print('\n{}\n'.format(command))
@@ -469,7 +623,7 @@ class Workflow(object):
         log_msg(log_div)
 
 
-    def create_driver_file(self, app_sequence):
+    def create_driver_file(self, app_sequence, bldg_id=None):
         """
         Short description
 
@@ -481,16 +635,24 @@ class Workflow(object):
 
         log_msg('Creating the workflow driver file')
 
+        os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+            os.chdir(bldg_id)       
+
+        os.chdir('templatedir')
+
         driver_script = u''
+
+        if (("Modeling" in app_sequence) and
+            ("Modeling" not in self.workflow_apps.keys())):
+            app_sequence.remove("Modeling")
 
         for app_type in app_sequence:
             command_list = self.workflow_apps[app_type].get_command_list(
                 app_path = self.app_dir_remote)
 
-            driver_script += create_command(command_list) + u'\n'
-
-        os.chdir(self.run_dir)
-        os.chdir('templatedir')
+            driver_script += create_command(command_list, self.run_type) + u'\n'
 
         log_msg('Workflow driver script:')
         print('\n{}\n'.format(driver_script))
@@ -501,7 +663,7 @@ class Workflow(object):
         log_msg('Workflow driver file successfully created.')
         log_msg(log_div)
 
-    def simulate_response(self):
+    def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
         Short description
 
@@ -514,16 +676,28 @@ class Workflow(object):
         log_msg('Running response simulation')
 
         os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+            os.chdir(bldg_id)       
+
         os.chdir('templatedir')
 
-        command_list = self.workflow_apps['UQ'].get_command_list(
+        workflow_app = self.workflow_apps['UQ']
+
+        # TODO: not elegant code, fix later
+        if BIM_file is not None:
+            for input_var in workflow_app.inputs:
+                if input_var['id'] == 'filenameBIM':
+                    input_var['default'] = BIM_file
+
+        command_list = workflow_app.get_command_list(
             app_path=self.app_dir_local)
 
         # add the run type to the uq command list
         command_list.append(u'--runType')
         command_list.append(u'{}'.format(self.run_type))
 
-        command = create_command(command_list)
+        command = create_command(command_list, self.run_type)
 
         log_msg('\tSimulation command:')
         print('\n{}\n'.format(command))
@@ -536,7 +710,7 @@ class Workflow(object):
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
-    def estimate_losses(self):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None):
         """
         Short description
 
@@ -550,16 +724,32 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        # Copy the dakota.json file from the templatedir to the run_dir so that
-        # all the required inputs are in one place.
-        shutil.copy(
-            src = posixpath.join(self.run_dir,'templatedir/dakota.json'),
-            dst = posixpath.join(self.run_dir,'dakota.json'))
+        if 'Building' not in self.app_type_list:
+            # Copy the dakota.json file from the templatedir to the run_dir so that
+            # all the required inputs are in one place.
+            shutil.copy(
+                src = posixpath.join(self.run_dir,'templatedir/BIM.json'),
+                dst = posixpath.join(self.run_dir,BIM_file))
+        else:            
+            # copy the BIM file from the main dir to the building dir
+            shutil.copy(
+                src = posixpath.join(self.run_dir, BIM_file),
+                dst = posixpath.join(self.run_dir, 
+                                     '{}/{}'.format(bldg_id, BIM_file)))
+            os.chdir(str(bldg_id))
+
+        workflow_app = self.workflow_apps['DL']
+
+        # TODO: not elegant code, fix later
+        if BIM_file is not None:
+            for input_var in workflow_app.inputs:
+                if input_var['id'] == 'filenameDL':
+                    input_var['default'] = BIM_file        
 
         command_list = self.workflow_apps['DL'].get_command_list(
             app_path=self.app_dir_local)
 
-        command = create_command(command_list)
+        command = create_command(command_list, self.run_type)
 
         log_msg('\tDamage and loss assessment command:')
         print('\n{}\n'.format(command))
@@ -569,8 +759,101 @@ class Workflow(object):
         print(result)
 
         log_msg('Damage and loss assessment finished successfully.')
+        log_msg(log_div)
 
+    def aggregate_dmg_and_loss(self, bldg_data):
+        """
+        Short description
 
+        Longer description
+
+        Parameters
+        ----------
+        """
+
+        log_msg('Collecting damage and loss results')
+
+        os.chdir(self.run_dir)
+
+        # start with the damage data
+        DM_agg = pd.DataFrame()
+
+        min_id = int(bldg_data[0]['id'])
+        max_id = int(bldg_data[0]['id'])
+        for bldg in bldg_data:
+            bldg_id = bldg['id']
+            min_id = min(int(bldg_id), min_id)
+            max_id = max(int(bldg_id), max_id)
+            
+            with open(bldg_id+'/DM.json') as f:
+                DM = json.load(f)            
+                
+            for FG in DM.keys():
+
+                if FG == 'aggregate':
+                    PG = ''
+                    DS_list = list(DM[FG].keys())
+                else:
+                    PG = next(iter(DM[FG]))
+                    DS_list = list(DM[FG][PG].keys())
+                
+                if ((DM_agg.size == 0) or 
+                    (FG not in DM_agg.columns.get_level_values('FG'))):
+                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
+                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                    
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_add.loc[bldg_id, (FG, DS)] = val
+                        
+                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
+                
+                else:        
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_agg.loc[bldg_id, (FG, DS)] = val
+
+        # then collect the decision variables
+        DV_agg = pd.DataFrame()
+
+        for bldg in bldg_data:
+            bldg_id = bldg['id']
+            
+            with open(bldg_id+'/DV.json') as f:
+                DV = json.load(f)
+                
+            for DV_type in DV.keys():
+                
+                stat_list = list(DV[DV_type]['total'].keys())
+                
+                if ((DV_agg.size == 0) or 
+                    (DV_type not in DV_agg.columns.get_level_values('DV'))): 
+                
+                    MI = pd.MultiIndex.from_product(
+                        [[DV_type,],stat_list],names=['DV','stat'])
+                
+                    DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                    
+                    for stat in stat_list:
+                        DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                        
+                    DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
+                else:                     
+                    for stat in stat_list:
+                        DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+
+        # save the collected DataFrames as csv files
+        DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
+        DV_agg.to_csv('DV_{}-{}.csv'.format(min_id, max_id))
+
+        log_msg('Damage and loss results collected successfully.')
+        log_msg(log_div)
 
 
         

@@ -64,10 +64,10 @@ main(int argc, char **argv) {
     rootBIM = json_load_file(filenameBIM, 0, &error);
     json_t *theSIM = json_object_get(rootBIM,"StructuralInformation");
 
-    json_t *theResponseNodes = json_object_get(theSIM,"responseNodes");
+    json_t *theNodes = json_object_get(theSIM,"nodes");
 
     // check nodes exists
-    if (theSIM == NULL ||  theResponseNodes == NULL) {
+    if (theSIM == NULL ||  theNodes == NULL) {
       fprintf(stderr,"OpenSeesInput - no nodes section found ");    
       return -1;
     }
@@ -78,33 +78,16 @@ main(int argc, char **argv) {
     int floor = 0;  // ground floor floor 0
     char floorString[10];
     
-    json_array_foreach(theResponseNodes, index, intObj) {
+    json_array_foreach(theNodes, index, intObj) {
       json_t *nodeEntry =json_object();
       int tag = json_integer_value(intObj);
       json_object_set(nodeEntry,"node",json_integer(tag));
-      json_object_set(nodeEntry,"cline",json_string("response"));
+      json_object_set(nodeEntry,"cline",json_string("1"));
       sprintf(floorString,"%d",floor);
+      //  itoa(floor, floorString, floor); NOT IN STANDARD
       json_object_set(nodeEntry,"floor",json_string(floorString));
       floor++;
       json_array_append(mappingArray, nodeEntry);
-    }
-
-    // check for centroid nodes
-    json_t *theCentroidNodes = json_object_get(theSIM,"centroidNodes");
-    if (theCentroidNodes != NULL) {
-    
-      floor = 0;  // ground floor floor 0
-      
-      json_array_foreach(theCentroidNodes, index, intObj) {
-	json_t *nodeEntry =json_object();
-	int tag = json_integer_value(intObj);
-	json_object_set(nodeEntry,"node",json_integer(tag));
-	json_object_set(nodeEntry,"cline",json_string("1"));
-	sprintf(floorString,"%d",floor);
-	json_object_set(nodeEntry,"floor",json_string(floorString));
-	floor++;
-	json_array_append(mappingArray, nodeEntry);
-      }
     }
 
     json_object_set(rootSAM,"NodeMapping",mappingArray);
