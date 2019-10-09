@@ -15,6 +15,10 @@ variables:
     CONAN_BUILD_TYPES: Release
 
 steps:
+- powershell: |
+  Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+  Restart-Computer -Force -Verbose
+
 - script: |
     set PATH=%PATH%;%PYTHON%/Scripts/
     pip.exe install conan --upgrade

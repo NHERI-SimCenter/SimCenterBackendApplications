@@ -10,9 +10,6 @@ environment:
           CONAN_VISUAL_VERSIONS: 15
           CONAN_BUILD_TYPES: Release
 
-install:
-  - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
-
 build_script:
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
