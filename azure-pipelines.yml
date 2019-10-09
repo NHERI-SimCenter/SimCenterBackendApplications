@@ -16,8 +16,9 @@ variables:
 
 steps:
 - powershell: |
-  Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
-  Restart-Computer -Force -Verbose
+    Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+    Restart-Computer -Force -Verbose
+  displayName: Adding long path names    
 
 - script: |
     set PATH=%PATH%;%PYTHON%/Scripts/
