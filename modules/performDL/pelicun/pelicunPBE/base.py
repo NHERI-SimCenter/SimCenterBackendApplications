@@ -53,7 +53,7 @@ else:
     string_types = str
 
 # get the absolute path of the pelicun directory
-pelicun_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+pelicun_path = os.path.dirname(os.path.abspath(__file__))
 
 # Monkeypatch warnings to get prettier messages
 def _warning(message, category, filename, lineno, file=None, line=None):
@@ -103,8 +103,9 @@ m3 = m**3.
 
 ft3 = ft**3.
 
-# velocity
+# speed / velocity
 mps = m / sec
+mph = mile / h
 
 # acceleration
 mps2 = m / sec2

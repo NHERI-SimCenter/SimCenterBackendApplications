@@ -140,8 +140,6 @@ main(int argc, char **argv) {
   // dump the event file
   json_dump_file(rootEvent,filenameEVENT,0);
 
-  std::cerr << "JSON DUMP: " << filenameEVENT << "\n";
-
   // done
   return 0;
 }
@@ -167,104 +165,32 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
     } else {
       eventFile = "EVENT.json." + std::to_string(incidenceAngle) + ".json";
     }
-
+   
     json_t *event = json_load_file(eventFile.c_str(), 0, &error);
+    
+    if (planShape == 1 && incidenceAngle > 45) {
 
-    //
-    // get wind speed and number of floors
-    //
-
-    json_t *generalInfo = json_object_get(input, "GeneralInformation");      
-    if (generalInfo == NULL) {
-      std::cerr << "ERROR no GeneralInformation in input\n";
-      return -1;
+      int index;
+      json_t *forceX;
+      json_t *forceY;
+      json_t *timeSeriesArray = json_object_get(event, "timeSeries");
+      json_t *xComponent = json_array_get(timeSeriesArray, 0);
+      json_t *yComponent = json_array_get(timeSeriesArray, 1);      
+      forceX = json_object_get(xComponent, "data");
+      forceY = json_object_get(yComponent, "data");
+      json_t *tempX = json_copy(forceX);
+      forceX = forceY;
+      forceY = tempX;
+      json_object_set(xComponent, "data", forceX);
+      json_object_set(yComponent, "data", forceY);
+      
     }
 
-    json_t *storiesJO = json_object_get(generalInfo,"stories");
-    int numFloors = json_integer_value(storiesJO);
-
-    json_t *windSpeedJO = json_object_get(currentEvent,"windSpeed");
-    double windSpeed = json_number_value(windSpeedJO); 
-
-    //
-    // for each floor we need to modify the time step and load factor
-    // to reflect time step and forces .. data obtained for U=100m/s
-    // forces factor = windSpeed^2/100^2, time step factor = 100/windSpeed
-    //  and if shape == 1 (square), we need to get forces from other file and swicth as no angle > 45
-    //
-
-    json_t *dtJO = json_object_get(event, "dT");
-
-    double dT_100 = json_number_value(dtJO); 
-    double dT = dT_100 * 100.0/windSpeed;
-    double loadFactor = windSpeed * windSpeed / 1e4;
-    std::cerr << "loadFactor: " << loadFactor << " dT: " << dT << " dt_100: " << dT_100 << " windSpeed: " << windSpeed;
-
-    json_t *newDtJO = json_object();
-    int res = json_object_set(event, "dT", json_real(dT));
-
-    //    int res = json_object_update(dtJO, newDtJO);
-
-    json_t *timeSeriesArray = json_object_get(event, "timeSeries");
-    json_t *patternArray = json_object_get(event, "pattern");
-
-    int index = 0;
-    for (int i=0; i<numFloors; i++) {
-
-      for (int i=0; i<3; i++) {
-	json_t *pattern = json_array_get(patternArray, index+i);
-	res = json_object_set(pattern, "factor", json_real(loadFactor));	
-
-	json_t *timeSeries = json_array_get(timeSeriesArray, index+i);
-	//	json_t *dtJO = json_object_get(timeSeries, "dT");
-	//	json_object_update(dtJO, newDtJO);
-	res = json_object_set(timeSeries, "dT", json_real(dT));
-      }
-
-      // flip time series associated with a pettern
-      if (planShape == 1 && incidenceAngle > 45) {
-
-	json_t *FxPattern = json_array_get(patternArray, index);      
-	//json_t *MzPattern = json_array_get(patternArray, index+1);      
-	json_t *FyPattern = json_array_get(patternArray, index+2);            
-	
-	//json_t *FxSeries = json_array_get(timeSeriesArray, index);
-	//json_t *MzSeries = json_array_get(timeSeriesArray, index+1);      
-	//json_t *FySeries = json_array_get(timeSeriesArray, index+2);            
-	char nameX[50];	
-	char nameY[50];	
-	// flip translational forces
-	sprintf(nameX,"%d_Fx",i+1);
-	sprintf(nameY,"%d_Fy",i+1);
-	json_object_set(FxPattern, "timeSeries", json_string(nameY));
-	json_object_set(FyPattern, "timeSeries", json_string(nameX));
-	
-	/*
-	// flip translational forces
-	int index;
-	json_t *forceX;
-	json_t *forceY;
-
-	json_t *xComponent = json_array_get(timeSeriesArray, 0);
-	json_t *yComponent = json_array_get(timeSeriesArray, 1);      
-	forceX = json_object_get(xComponent, "data");
-	forceY = json_object_get(yComponent, "data");
-	json_t *tempX = json_copy(forceX);
-	forceX = forceY;
-	forceY = tempX;
-	json_object_set(xComponent, "data", forceX);
-	json_object_set(yComponent, "data", forceY);      
-	*/
-      }
-
-      index += 3;
-    }
 
     if (event == NULL) {
       std::cerr << "FATAL ERROR - event file " << eventFile << " does not exist\n";
       exit(-1);
     }
-
     json_object_update(outputEvent, event);
 
   } else {
@@ -320,78 +246,48 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
     json_t *timeSeriesArray = json_array();
     json_t *patternArray = json_array();
     json_t *pressureArray = json_array();
-
     for (int i = 0; i < numFloors; i++) {
       
       // create and fill in a time series object
-      char floor[10];
       char name[50];
-      
-      sprintf(floor,"%d",i+1);
-      
-      sprintf(name,"%d_Fx",i+1);
-      json_t *timeSeriesX = json_object();     
-      json_object_set(timeSeriesX,"name",json_string(name));    
-      json_object_set(timeSeriesX,"dT",json_real(0.01));
-      json_object_set(timeSeriesX,"type",json_string("Value"));
-      json_t *dataFloorX = json_array();   
-      json_object_set(timeSeriesX,"data",dataFloorX);
-      
-      json_t *patternX = json_object();
-      json_object_set(patternX,"name",json_string(name));        
-      json_object_set(patternX,"timeSeries",json_string(name));        
-      json_object_set(patternX,"type",json_string("WindFloorLoad"));        
-      
-      json_object_set(patternX,"floor",json_string(floor));        
-      json_object_set(patternX,"dof",json_integer(1));        
-      json_array_append(patternArray,patternX);
-      
-      sprintf(name,"%d_Fy",i+1);
-      json_t *timeSeriesY = json_object();     
-      json_object_set(timeSeriesY,"name",json_string(name));    
-      json_object_set(timeSeriesY,"dT",json_real(0.01));
-      json_object_set(timeSeriesY,"type",json_string("Value"));
-      json_t *dataFloorY = json_array();   
-      json_object_set(timeSeriesY,"data",dataFloorY);
-      
-      json_t *patternY = json_object();
-      json_object_set(patternY,"name",json_string(name));        
-      json_object_set(patternY,"timeSeries",json_string(name));        
-      json_object_set(patternY,"type",json_string("WindFloorLoad"));        
-      json_object_set(patternY,"floor",json_string(floor));        
-      json_object_set(patternY,"dof",json_integer(2));        
-      json_array_append(patternArray,patternY);
-      
-      sprintf(name,"%d_Mz",i+1);
-      json_t *timeSeriesRZ = json_object();     
-      json_object_set(timeSeriesRZ,"name",json_string(name));    
-      json_object_set(timeSeriesRZ,"dT",json_real(0.01));
-      json_object_set(timeSeriesRZ,"type",json_string("Value"));
-      json_t *dataFloorRZ = json_array();   
-      json_object_set(timeSeriesRZ,"data",dataFloorRZ);
-      
-      json_t *patternRZ = json_object();
-      json_object_set(patternRZ,"name",json_string(name));        
-      json_object_set(patternRZ,"timeSeries",json_string(name));        
-      json_object_set(patternRZ,"type",json_string("WindFloorLoad"));        
-      json_object_set(patternRZ,"floor",json_string(floor));        
-      json_object_set(patternRZ,"dof",json_integer(6));        
-      json_array_append(patternArray,patternRZ);
+      sprintf(name,"%d",i+1);
+      json_t *timeSeries = json_object();     
+      json_object_set(timeSeries,"name",json_string(name));    
+      json_object_set(timeSeries,"dT",json_real(0.01));
+      json_object_set(timeSeries,"type",json_string("Value"));
+      json_t *dataFloor = json_array();   
+      double maxPressure = 0.0;
+      double minPressure = 0.0;
       
       json_t *pressureObject = json_object();
+      json_object_set(timeSeries,"data",dataFloor);
       json_t *pressureStoryArray = json_array();
       
-      json_array_append(pressureStoryArray, json_real(0.0));
-      json_array_append(pressureStoryArray, json_real(0.0));
+      json_array_append(pressureStoryArray, json_real(minPressure));
+      json_array_append(pressureStoryArray, json_real(maxPressure));
       json_object_set(pressureObject,"pressure",pressureStoryArray);
       json_object_set(pressureObject,"story",json_string(name));
       
       json_array_append(pressureArray, pressureObject);
       
       // add object to timeSeries array
-      json_array_append(timeSeriesArray,timeSeriesX);
-      json_array_append(timeSeriesArray,timeSeriesY);
-      json_array_append(timeSeriesArray,timeSeriesRZ);
+      json_array_append(timeSeriesArray,timeSeries);
+      
+      json_t *patternX = json_object();
+      json_object_set(patternX,"name",json_string(name));        
+      json_object_set(patternX,"timeSeries",json_string(name));        
+      json_object_set(patternX,"type",json_string("WindFloorLoad"));        
+      json_object_set(patternX,"floor",json_string(name));        
+      json_object_set(patternX,"dof",json_integer(1));        
+      json_array_append(patternArray,patternX);
+
+      json_t *patternY = json_object();
+      json_object_set(patternY,"name",json_string(name));        
+      json_object_set(patternY,"timeSeries",json_string(name));        
+      json_object_set(patternY,"type",json_string("WindFloorLoad"));        
+      json_object_set(patternY,"floor",json_string(name));        
+      json_object_set(patternY,"dof",json_integer(2));        
+      json_array_append(patternArray,patternY);
     }
 
     json_t *units = json_object();
@@ -451,10 +347,9 @@ int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent,
       expCondition = 6;
     
     double timeValue = 3600;
-    // double windSpeed = json_number_value(windSpeedJO); // allowing windSpeed to be a random variable
-    double windSpeed = 100;
+    double windSpeed = json_number_value(windSpeedJO);
     
-    callDEDM_HRP(shpValue, hValue, expCondition, timeValue, windSpeed, windSpeed*.5, width, depth, height, numFloors, "tmpSimCenterDEDM.mat"); 
+    callDEDM_HRP(shpValue, hValue, expCondition, timeValue, windSpeed, windSpeed*.75, width, depth, height, numFloors, "tmpSimCenterDEDM.mat"); 
   }
   return 0;
 }
