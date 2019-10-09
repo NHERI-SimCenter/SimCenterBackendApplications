@@ -10,18 +10,6 @@ environment:
           CONAN_VISUAL_VERSIONS: 15
           CONAN_BUILD_TYPES: Release
 
-    # Avoid long paths on Windows
-    STACK_ROOT: "c:\\s"
-    STACK_WORK: ".w"
-    WORK_DIR: "c:\\w"
-
-before_test:
-  # Avoid long paths not to each MAX_PATH of 260 chars
-  - xcopy /q /s /e /r /k /i /v /h /y "%APPVEYOR_BUILD_FOLDER%" "%WORK_DIR%"
-  - cd "%WORK_DIR%"
-  # Restore cache
-  - Echo %APPVEYOR_BUILD_VERSION% > build-id
-
 build_script:
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
