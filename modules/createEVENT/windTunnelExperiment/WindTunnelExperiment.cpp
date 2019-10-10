@@ -11,6 +11,7 @@
 #include <jansson.h>
 #include <common/Units.h>
 
+
 typedef struct tapData {
   double locX;
   double locY;
@@ -29,6 +30,7 @@ typedef struct tapData {
 TAP *findNearestTAP(TAP *, int numTaps,  double locX, double locY, int face);
 int addForcesFace(TAP *theTAPS, int numTaps, double height, double length, int numDivisonX, int numDivisonY, int face, int numFloors);
 int addEvent(json_t *input, json_t *currentEvent, json_t *outputEvent, bool getRV);
+
 
 int
 main(int argc, char **argv) {
@@ -217,12 +219,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t* modelLengthJson = json_object_get(modelUnitsJson, "length");
 
       Units::UnitSystem modelUnits;
-      modelUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+      modelUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(modelLengthJson));
+
       double lengthModelUnitConversion = Units::GetLengthFactor(modelUnits, eventUnits);
 
       json_t *roofTypeT = json_object_get(tapData,"roofType");
       if (roofTypeT == NULL)
-	roofTypeT = json_object_get(tapData,"buildingShape");
+	roofTypeT = json_object_get(tapData,"modelShape");
 
       json_t *modelHeightT = json_object_get(tapData,"height");
       json_t *modelDepthT = json_object_get(tapData,"depth");
@@ -231,13 +234,8 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t *frequencyT = json_object_get(tapData,"frequency");
       json_t *periodT = json_object_get(tapData,"period");
 
-      if (roofTypeT == NULL     || 
-	  modelHeightT == NULL  || 
-	  modelDepthT == NULL   || 
-	  modelBreadthT == NULL || 
-	  periodT == NULL       || 
-	  frequencyT == NULL) {
-
+      if (roofTypeT == NULL || modelHeightT == NULL || modelDepthT == NULL || modelBreadthT == NULL
+	  || periodT == NULL || frequencyT == NULL) {
 	std::cerr << "FATAL ERROR - json file does not contain roofType, height, depth or breadth data \n";
 	return -3;
       }
@@ -261,14 +259,17 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
       double lambdaU = modelWindSpeed/windSpeed;
-      std::cerr << "modelWs, wS: " << modelWindSpeed << " " << windSpeed << "\n";
       double lambdaT = lambdaL/lambdaU;
-      std::cerr << "lambdaL, lambdaU: " << lambdaL << " " << lambdaU << "\n";
       double dT = 1.0/(modelFrequency*lambdaT);
-      std::cerr << "dT, freq, lambdaT: " << dT << " " << modelFrequency << " " << lambdaT << "\n";
 
-      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.; // N to KN
+      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
+      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
 
+      std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
+      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
+
+      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
+      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -277,6 +278,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       // load tap data from the file
       json_t *tapLocations = json_object_get(tapData,"tapLocations");
       json_t *tapCp = json_object_get(tapData,"pressureCoefficients");
+
       
       int numTaps = json_array_size(tapLocations);
       if (numTaps == 0) {
@@ -294,7 +296,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	double locY = json_number_value(json_object_get(jsonTap,"yLoc"));
 
 	// want to scale tap position to building(prototype) dimensions
-	if ((strcmp(roofType,"Flat") == 0) || (strcmp(roofType,"Gable") == 0)) { 
+	if ((strcmp(roofType,"Flat") == 0) || (strcmp(roofType,"Cuboid") == 0)) { 
 	  if (face == 1 || face == 3) {
 	    locX = locX*breadth/modelBreadth;
 	    locY = locY*height/modelHeight;
@@ -312,12 +314,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	double *forces = new double[numFloors];
 	double *moments = new double[numFloors];
 	double *data = new double[numSteps];
+
 	for (int j=0; j<numFloors; j++) {
 	  forces[j]=0.0;
 	  moments[j]=0.0;
-	  data[j]=0.0;
 	}
 
+	bool found = false;
 	for (int j=0; j<numTaps; j++) {
 	  json_t *jsonCP = json_array_get(tapCp, j);
 	  int tapID = json_integer_value(json_object_get(jsonCP,"id"));
@@ -327,9 +330,15 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	      data[k] = json_real_value(json_array_get(arrayData, k));
 	    }	    
 	    j = numTaps;
+	    found = true;
 	  }
 	}
-	  
+	if (found == false) {
+	  for (int j=0; j<numSteps; j++) {
+	    data[j]=0.0;
+	  }
+	}
+
 	theTAPS[i].forces = forces;
 	theTAPS[i].moments = moments;
 	theTAPS[i].data = data;
@@ -626,41 +635,58 @@ int addForcesFace(TAP *theTaps, int numTaps,
   double centerLine = length/2.0;
   double A = dY*dX;
   double locY = dY/2.0;
+
+  for (int i = 0; i <numFloors; i++) {
   
-  for (int i=0; i<numDivisionY; i++) {
-    double locX = dX/2.0;
-    double Rbelow = locY*A/heightStory;
-    double Rabove = (heightStory-locY)*A/heightStory;
-    
-    for (int i=0; i<numDivisionX; i++) {
-      double Mabove = Rabove*(locX-centerLine);
-      double Mbelow = Rbelow*(locX-centerLine);
+    for (int j=0; j<numDivisionY; j++) {
       
-      // find nearestTAP
-      TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
-
-      // add force coefficients
-      if (theTap != NULL) {
-	if (i != 0) { // don;t add to ground floor
+      double locX = dX/2.0;
+      double Rabove = locY*A/heightStory;
+      double Rbelow = (heightStory-locY)*A/heightStory;
+      
+      for (int k=0; k<numTaps; k++) {
+	TAP *theTap = &theTaps[k];
+	if (theTap->face == 1)
+	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
+      }
+            
+      for (int k=0; k<numDivisionX; k++) {
+	
+	double Mabove = Rabove*(locX-centerLine);
+	double Mbelow = Rbelow*(locX-centerLine);
+	
+	// find nearestTAP
+	TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
+	
+	// add force coefficients
+	if (theTap != NULL) {
+	  
+	  if (i != 0) { // don;t add to ground floor
+	    if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+	      theTap->forces[i-1] = theTap->forces[i-1] + Rbelow;
+	    else
+	      theTap->forces[i-1] = theTap->forces[i-1] - Rbelow;
+	    
+	    theTap->moments[i-1] = theTap->moments[i-1] + Mbelow;
+	  }
+	  
 	  if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-	    theTap->forces[i-1] += Rbelow;
+	    
+	    theTap->forces[i] = theTap->forces[i] + Rabove;
 	  else
-	    theTap->forces[i-1] -= Rbelow;
-
-	  theTap->moments[i-1] += Mbelow;
-	}
-	if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-
-	  theTap->forces[i] += Rabove;
-	else
-	  theTap->forces[i] -= Rabove;
-
-	theTap->moments[i] += Mabove;
-      }	    
-      locX += dX;
+	    theTap->forces[i] = theTap->forces[i] - Rabove;
+	  
+	  theTap->moments[i] = theTap->moments[i] + Mabove;
+	  
+	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
+	  
+	}	    
+	locX += dX;
+      }
+      locY += dY;
     }
-    locY += dY;
   }
+
   return 0;
 }
 

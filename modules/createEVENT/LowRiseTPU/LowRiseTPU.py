@@ -36,8 +36,8 @@ def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
     height = mat_contents['Building_height'][0][0];
     breadth = mat_contents['Building_breadth'][0][0];
     pitch = mat_contents['Roof_pitch'][0][0];
-    period = mat_contents['Sample_frequency'][0][0];
-    frequency = mat_contents['Sample_period'][0][0];
+    period = mat_contents['Sample_period'][0][0];
+    frequency = mat_contents['Sample_frequency'][0][0];
     angle = mat_contents['Wind_direction_angle'][0][0];
     roofType = mat_contents['Roof_type'][0];
     if (roofType == 'flat roof'):
@@ -46,7 +46,7 @@ def parseTPU_LowRise_MatFile(matFileIn, windFileOutName):
         roofType = 'Gable'    
 
     file.write("\"roofType\":\"" + roofType + "\",")
-    file.write("\"meanWindSpeed\":%f," % 22.0);
+    file.write("\"windSpeed\":%f," % 22.0);
     file.write("\"depth\":%f," % depth);
     file.write("\"height\":%f," % height);
     file.write("\"breadth\":%f," % breadth);
