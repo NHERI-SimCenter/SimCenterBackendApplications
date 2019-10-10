@@ -4,7 +4,7 @@
 
 | Bintray | Windows | Linux & macOS |
 |:--------:|:---------:|:-----------------:|
-|[ ![Download](https://api.bintray.com/packages/nheri-simcenter/simcenter/SimCenterBackendApplications%3Asimcenter/images/download.svg) ](https://bintray.com/nheri-simcenter/simcenter/SimCenterBackendApplications%3Asimcenter/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/3ra3stjkxvh5xy9i?svg=true)](https://ci.appveyor.com/project/shellshocked2003/simcenterbackendapplications)|[![Build Status](https://travis-ci.org/shellshocked2003/SimCenterBackendApplications.svg?branch=master)](https://travis-ci.org/shellshocked2003/SimCenterBackendApplications)|
+|[ ![Download](https://api.bintray.com/packages/nheri-simcenter/simcenter/SimCenterBackendApplications%3Asimcenter/images/download.svg) ](https://bintray.com/nheri-simcenter/simcenter/SimCenterBackendApplications%3Asimcenter/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/v69li2793qsq1omb?svg=true)](https://ci.appveyor.com/project/shellshocked2003/simcenterbackendapplications)|[![Build Status](https://travis-ci.org/shellshocked2003/SimCenterBackendApplications.svg?branch=master)](https://travis-ci.org/shellshocked2003/SimCenterBackendApplications)|
 
 ## Conan Information
 
