@@ -10,13 +10,17 @@ environment:
           CONAN_VISUAL_VERSIONS: 15
           CONAN_BUILD_TYPES: Release
 
-install:
-    - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
-    - ps: Restart-Computer -Force
-    - ps: Start-Sleep -s 10
-    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))    
+#install:
+#    - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+#    - ps: Restart-Computer -Force
+#    - ps: Start-Sleep -s 10
+#    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))    
 
 build_script:
+  - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+  - ps: Restart-Computer -Force
+  - ps: Start-Sleep -s 10
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))    
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
   - pip.exe install conan_package_tools bincrafters_package_tools
