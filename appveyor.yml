@@ -5,11 +5,11 @@ environment:
 
     CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages"
 
-    global:
-       # Avoid long paths on Windows
-       STACK_ROOT: "c:\\s"
-       STACK_WORK: ".w"
-       WORK_DIR: "c:\\w"
+#    global:
+#       # Avoid long paths on Windows
+#       STACK_ROOT: "c:\\s"
+#       STACK_WORK: ".w"
+#       WORK_DIR: "c:\\w"
 
     matrix:
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
@@ -19,6 +19,7 @@ environment:
 install:
     - set TEST_VAR=Hello, world!
     - echo before reboot
+    - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1    # Add long paths
     - ps: Restart-Computer -Force            # here the server goes restarting
     - echo Before sleep
     - ps: |
