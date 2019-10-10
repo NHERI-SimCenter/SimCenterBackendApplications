@@ -1,15 +1,15 @@
 build: false
 
-environment:
-  global:
-    # Avoid long paths on Windows
-    STACK_ROOT: "c:\\s"
-    STACK_WORK: ".w"
-    WORK_DIR: "c:\\w"
-    
+environment:   
     PYTHON_HOME: "C:\\Python37"
 
     CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages"
+
+    global:
+       # Avoid long paths on Windows
+       STACK_ROOT: "c:\\s"
+       STACK_WORK: ".w"
+       WORK_DIR: "c:\\w"
 
     matrix:
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
