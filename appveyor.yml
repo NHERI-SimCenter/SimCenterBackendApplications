@@ -5,29 +5,15 @@ environment:
 
     CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages"
 
-#    global:
-#       # Avoid long paths on Windows
-#       STACK_ROOT: "c:\\s"
-#       STACK_WORK: ".w"
-#       WORK_DIR: "c:\\w"
-
     matrix:
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
           CONAN_VISUAL_VERSIONS: 15
           CONAN_BUILD_TYPES: Release
 
 install:
-    - set TEST_VAR=Hello, world!
-    - echo before reboot
-    - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1    # Add long paths
-    - ps: Restart-Computer -Force            # here the server goes restarting
-    - echo Before sleep
-    - ps: |
-        Write-Host $env:TEST_VAR
-        Write-Host ([datetime]::Now)
-        Start-Sleep -s 10
-        Write-Host "After sleep"
-        Write-Host ([datetime]::Now)
+    - ps: Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1
+    - ps: Restart-Computer -Force
+    - ps: Start-Sleep -s 10
 
 build_script:
   - set PATH=%PATH%;%PYTHON%/Scripts/
