@@ -16,6 +16,18 @@ environment:
           CONAN_VISUAL_VERSIONS: 15
           CONAN_BUILD_TYPES: Release
 
+install:
+    - set TEST_VAR=Hello, world!
+    - echo before reboot
+    - ps: Restart-Computer -Force            # here the server goes restarting
+    - echo Before sleep
+    - ps: |
+        Write-Host $env:TEST_VAR
+        Write-Host ([datetime]::Now)
+        Start-Sleep -s 10
+        Write-Host "After sleep"
+        Write-Host ([datetime]::Now)
+
 build_script:
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan --upgrade
