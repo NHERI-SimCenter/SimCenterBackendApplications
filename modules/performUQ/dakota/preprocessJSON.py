@@ -603,6 +603,11 @@ interface_pointer = 'SimulationInterface'
                 floor = edp["floor2"]
                 known = True
 
+            elif(edp["type"] == "residual_disp"):
+                edpAcronym = "RD"
+                floor = edp["floor"]
+                known = True
+
             elif(edp["type"] == "max_pressure"):
                 edpAcronym = "PSP"
                 floor = edp["floor2"]
