@@ -57,6 +57,15 @@ from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry):
 
+    # initialize the log file
+    with open(input_file, 'r') as f:
+        inputs = json.load(f)
+    runDir = inputs['runDir']
+
+    whale.log_file = runDir + '/log.txt'
+    with open(whale.log_file, 'w') as f:
+        f.write('EE-UQ workflow\n')  
+
     # echo the inputs
     log_msg(log_div)
     log_msg('Started running the workflow script')
