@@ -270,17 +270,25 @@ class WorkflowApplication(object):
 
         for in_arg in self.inputs:
             arg_list.append(u'--{}'.format(in_arg['id']))
-            arg_list.append(u'{}'.format(in_arg['default']))
+            if in_arg['id'] in self.pref.keys():
+                arg_list.append(u'{}'.format(self.pref[in_arg['id']]))
+            else:
+                arg_list.append(u'{}'.format(in_arg['default']))
 
         for out_arg in self.outputs:
             out_id = u'--{}'.format(out_arg['id'])
             if out_id not in arg_list:
                 arg_list.append(out_id)
-                arg_list.append(u'{}'.format(out_arg['default']))
+                if out_arg['id'] in self.pref.keys():
+                    arg_list.append(u'{}'.format(self.pref[out_arg['id']]))
+                else:
+                    arg_list.append(u'{}'.format(out_arg['default']))
 
-        for in_name, in_value in self.pref.items():
-            arg_list.append(u'--{}'.format(in_name))
-            arg_list.append(u'{}'.format(in_value))
+        for pref_name, pref_value in self.pref.items():
+            pref_id = u'--{}'.format(pref_name)
+            if pref_id not in arg_list:
+                arg_list.append(pref_id)
+                arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
