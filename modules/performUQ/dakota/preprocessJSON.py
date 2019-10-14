@@ -617,7 +617,7 @@ interface_pointer = 'SimulationInterface'
                 f.write("'{}' ".format(edp["type"]))
 
             if (known == True):
-                for dof in edp["dofs"]:
+                for dof in edp.get("dofs",[1,]):
                     f.write("'{}-{}-{}-{}' ".format(eventIndex + 1, edpAcronym, floor, dof))
 
     f.write('\n')
