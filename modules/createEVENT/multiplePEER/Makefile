@@ -1,11 +1,11 @@
 include ../../Makefile.inc
 
-all: MultiplePEER_Events 
+all: MultiplePEER
 
 MultiplePEER_Events.o : MultiplePEER_Events.cpp
 
-MultiplePEER_Events: MultiplePEER_Events.o
-	$(CXX) $(LDFLAGS) -o MultiplePEER_Events MultiplePEER_Events.o $(LDLIBS)
+MultiplePEER: MultiplePEER_Events.o
+	$(CXX) $(LDFLAGS) -o MultiplePEER MultiplePEER_Events.o $(LDLIBS)
 
 clean:
 	$(RM) *.o *~
