@@ -218,7 +218,7 @@ def run_command(command):
         
         #return result.decode(sys.stdout.encoding), returncode
         print(result, returncode)
-        return result, returncode
+        return str(result), returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
