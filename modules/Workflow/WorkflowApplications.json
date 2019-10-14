@@ -103,7 +103,7 @@
       },
       {
         "Name": "ExistingPEER_Events",
-        "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER_Events",
+        "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
         "ApplicationSpecificInputs": [
 	]
       },
