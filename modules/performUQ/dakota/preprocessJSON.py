@@ -68,7 +68,7 @@ discreteDesignSetStringValues =[]
 numResultFiles = 0
 outputResultFiles = []
 
-def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
+def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData):
 
     global numRandomVariables
     global numNormalUncertain
@@ -120,6 +120,10 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile):
     samExists = parseFileForRV(samName)
     simExists = parseFileForRV(simName)
     edpExists = parseFileForRV(edpName)
+
+    # Add a dummy random variable if no other RV was defined
+    if numRandomVariables == 0:
+        add_dummy()
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
@@ -239,6 +243,7 @@ text_archive
     #f.write('active uncertain \n')
 
     dakota_input += ('variables,\n')
+    dakota_input += ('active uncertain \n')
 
     if (numNormalUncertain > 0):
         dakota_input += ('normal_uncertain = ' '{}'.format(numNormalUncertain))
@@ -482,35 +487,33 @@ text_archive
 
             
     if (numDiscreteDesignSetString > 0):
-        dakota_input += ('weibull_uncertain = ' '{}'.format(numWeibullUncertain))
-        dakota_input += ('string ' '{}'.format(numDiscreteDesignSetString))
-        dakota_input += ('\n')
+        dakota_input += 'discrete_uncertain_set\n'
+        dakota_input += 'string ' '{}'.format(numDiscreteDesignSetString)
+        dakota_input += '\n'
 
-        dakota_input += ('num_set_values = ')    
+        dakota_input += 'num_set_values = '  
         for i in range(numDiscreteDesignSetString):
             numElements = len(discreteDesignSetStringValues[i])
-            dakota_input += (' ' '{}'.format(numElements))
-            #f.write(length(discreteDesignSetStringValues[i]))
+            dakota_input += ' ' '{}'.format(numElements)
             print(discreteDesignSetStringValues[i])
             print(numElements)
-            #f.write('\' ')
 
-        dakota_input += ('\n')
-        dakota_input += ('set_values  ')    
+        dakota_input += '\n'
+        dakota_input += 'set_values  '   
         for i in range(numDiscreteDesignSetString):
             elements = discreteDesignSetStringValues[i]
             for j in elements:
-                dakota_input += ('\'' '{}'.format(j))
-                dakota_input += ('\' ')
-            dakota_input += ('\n')
+                dakota_input += '\'' '{}'.format(j)
+                dakota_input += '\' '
+            dakota_input += '\n'
 
-        dakota_input += ('descriptors = ')    
+        dakota_input += 'descriptors = '   
         for i in range(numDiscreteDesignSetString):
-            dakota_input += ('\'')
-            dakota_input += (discreteDesignSetStringName[i])
-            dakota_input += ('\' ')
+            dakota_input += '\''
+            dakota_input += discreteDesignSetStringName[i]
+            dakota_input += '\' '
 
-        dakota_input += ('\n')
+        dakota_input += '\n'
 
     dakota_input += ('\n\n')
 
@@ -544,20 +547,26 @@ interface_pointer = 'SimulationInterface'
     # write out the interface data
     dakota_input += ('interface,\n')
 
-    runType = data["runType"];
-    remoteDir = data["remoteAppDir"];
-    localDir = data["localAppDir"];
+    runType = data.get("runType", "local");
+    remoteDir = data.get("remoteAppDir", None);
+    localDir = data.get("localAppDir", None);
 
     if method == "Gaussian Process Regression":
         dakota_input += ('id_interface = \'SimulationInterface\',\n')
 
     if (runType == "local"):
-        numCPUs = 4
-        dakota_input += ("fork asynchronous evaluation_concurrency = %d\n" % numCPUs)
-        dakota_input += ("analysis_driver = '{}'\n".format(workflowDriverName))
+        uqData['concurrency'] = 4
+    
+    if uqData['concurrency'] == None:
+        dakota_input += "fork asynchronous\n"
+    elif uqData['concurrency'] > 1:
+        dakota_input += "fork asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
+    
+    if runType == "local":    
+        dakota_input += "analysis_driver = '{}'\n".format(workflowDriverName)
     else:
-        dakota_input += ('fork asynchronous\n')
-        dakota_input += ("analysis_driver = '{}'\n".format(remoteWorkflowDriverName))
+        dakota_input += "analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
+
 
     # dakota_input += ('\nanalysis_driver = \'python analysis_driver.py\' \n')
     dakota_input += ('parameters_file = \'params.in\' \n')
@@ -617,6 +626,10 @@ interface_pointer = 'SimulationInterface'
                 edpAcronym = "PFD"
                 floor = edp["floor"]
                 known = True
+            elif(edp["type"] == "peak_wind_gust_speed"):
+                edpAcronym = "PWS"
+                floor = edp["floor"]
+                known = True
 
             else:
                 f.write("'{}' ".format(edp["type"]))
@@ -649,9 +662,10 @@ interface_pointer = 'SimulationInterface'
 
     with open(driverFile) as fp:
         for line in fp:
-            print(line)
-            print(localDir)
-            line = line.replace(localDir,remoteDir)
+            #print(line)
+            #print(localDir)
+            if remoteDir is not None:
+                line = line.replace(localDir,remoteDir)
             f.write(line)
             print(line)
 
@@ -662,9 +676,12 @@ interface_pointer = 'SimulationInterface'
     if (runType == "local"):
         f.write('"{}'.format(scriptDir) + '/extractEDP" ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
 
-    else:
+    elif remoteDir is not None:
         extractEDPCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/extractEDP')
         f.write(extractEDPCommand + ' ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
+    else:
+        f.write('\n')
+        f.write('"'+os.path.join(scriptDir,'extractEDP')+'" ' + edpName + ' results.out \n')
 
     # Run 
     #f.write('rm -f *.com *.done *.dat *.log *.sta *.msg')
@@ -810,3 +827,17 @@ def parseFileForRV(fileName):
                 print(k)
 
     return True
+
+def add_dummy():
+
+    global numRandomVariables
+
+    global numDiscreteDesignSetString
+    global discreteDesignSetStringName
+    global discreteDesignSetStringValues
+
+    discreteDesignSetStringName.append("dummy")
+    elements =["1", "2"];
+    discreteDesignSetStringValues.append(elements)
+    numDiscreteDesignSetString += 1
+    numRandomVariables += 1

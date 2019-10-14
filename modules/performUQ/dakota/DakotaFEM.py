@@ -1,13 +1,14 @@
 # import functions for Python 2.X support
 from __future__ import division, print_function
-import sys
+import sys, os
 if sys.version.startswith('2'): 
     range=xrange
     string_types = basestring
 else:
     string_types = str
 
-import os
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
 import platform
 import shutil
 import subprocess
@@ -15,88 +16,112 @@ import stat
 import argparse
 from preprocessJSON import preProcessDakota
 
-#First we need to set the path and environment
-home = os.path.expanduser('~')
-env = os.environ
-if os.getenv("PEGASUS_WF_UUID") is not None:
-    print("Pegasus job detected - Pegasus will set up the env")
-elif platform.system() == 'Darwin':
-    env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
-    env["PATH"] = env["PATH"] + ':{}/dakota/bin'.format(home)
-elif platform.system() == 'Linux':
-    env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
-    env["PATH"] = env["PATH"] + ':{}/dakota/dakota-6.5/bin'.format(home)
-else:
-    print("PLATFORM {} NOT RECOGNIZED".format(platform.system))
+def main(args):
 
-parser = argparse.ArgumentParser()
+    #First we need to set the path and environment
+    home = os.path.expanduser('~')
+    env = os.environ
+    if os.getenv("PEGASUS_WF_UUID") is not None:
+        print("Pegasus job detected - Pegasus will set up the env")
+    elif platform.system() == 'Darwin':
+        env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
+        env["PATH"] = env["PATH"] + ':{}/dakota/bin'.format(home)
+    elif platform.system() == 'Linux':
+        env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
+        env["PATH"] = env["PATH"] + ':{}/dakota/dakota-6.5/bin'.format(home)
+    else:
+        print("PLATFORM {} NOT RECOGNIZED".format(platform.system))
 
-parser.add_argument('--filenameBIM')
-parser.add_argument('--filenameSAM')
-parser.add_argument('--filenameEVENT')
-parser.add_argument('--filenameEDP')
-parser.add_argument('--filenameSIM')
-parser.add_argument('--driverFile')
-parser.add_argument('--method')
-parser.add_argument('--type')
-parser.add_argument('--runType')
+    parser = argparse.ArgumentParser()
 
-args,unknowns = parser.parse_known_args()
+    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameSAM')
+    parser.add_argument('--filenameEVENT')
+    parser.add_argument('--filenameEDP')
+    parser.add_argument('--filenameSIM')
+    parser.add_argument('--driverFile')
+    parser.add_argument('--method', default="LHS")
+    parser.add_argument('--samples', default=None)
+    parser.add_argument('--seed', default=None)
+    parser.add_argument('--type')
+    parser.add_argument('--concurrency', default=None)
+    parser.add_argument('--runType')
+    parser.add_argument('--keepSamples', default=True)
+    args,unknowns = parser.parse_known_args()
 
-#Reading input arguments
-bimName = args.filenameBIM
-samName = args.filenameSAM
-evtName = args.filenameEVENT
-edpName = args.filenameEDP
-simName = args.filenameSIM
-driverFile = args.driverFile
+    #Reading input arguments
+    bimName = args.filenameBIM
+    samName = args.filenameSAM
+    evtName = args.filenameEVENT
+    edpName = args.filenameEDP
+    simName = args.filenameSIM
+    driverFile = args.driverFile
 
-runDakota = args.runType
+    uqData = dict(
+        method = args.method,
+        samples = args.samples,
+        seed = args.seed,
+        concurrency = args.concurrency
+    )
 
-#Run Preprocess for Dakota
-scriptDir = os.path.dirname(os.path.realpath(__file__))
-# preProcessArgs = ["python", "{}/preprocessJSON.py".format(scriptDir), bimName, evtName,\
-# samName, edpName, lossName, simName, driverFile, scriptDir, bldgName]
-# subprocess.call(preProcessArgs)
-numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile)
+    runDakota = args.runType
 
-#Setting Workflow Driver Name
-workflowDriverName = 'workflow_driver'
-if platform.system() == 'Windows':
-    workflowDriverName = 'workflow_driver.bat'
+    #Run Preprocess for Dakota
+    scriptDir = os.path.dirname(os.path.realpath(__file__))
+    # preProcessArgs = ["python", "{}/preprocessJSON.py".format(scriptDir), bimName, evtName,\
+    # samName, edpName, lossName, simName, driverFile, scriptDir, bldgName]
+    # subprocess.call(preProcessArgs)
+    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData)
 
-#Create Template Directory and copy files
-templateDir = "templatedir"
-#if os.path.exists(templateDir):
-#    shutil.rmtree(templateDir)
+    #Setting Workflow Driver Name
+    workflowDriverName = 'workflow_driver'
+    if platform.system() == 'Windows':
+        workflowDriverName = 'workflow_driver.bat'
 
-#os.mkdir(templateDir)
-st = os.stat(workflowDriverName)
-os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
-shutil.copy(workflowDriverName, templateDir)
-shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
-shutil.copy(bimName, "bim.j")
-shutil.copy(evtName, "evt.j")
-exists = os.path.isfile(samName)
-if exists:
-    shutil.copy(samName, "sam.j")
+    #Create Template Directory and copy files
+    templateDir = "templatedir"
+    #if os.path.exists(templateDir):
+    #    shutil.rmtree(templateDir)
 
-shutil.copy(edpName, "edp.j")
+    #os.mkdir(templateDir)
+    st = os.stat(workflowDriverName)
+    os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
+    shutil.copy(workflowDriverName, templateDir)
+    shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
+    shutil.copy(bimName, "bim.j")
+    shutil.copy(evtName, "evt.j")
+    exists = os.path.isfile(samName)
+    if exists:
+        shutil.copy(samName, "sam.j")
 
-exists = os.path.isfile(simName)
-if exists:
-    shutil.copy(simName, "sim.j")
+    shutil.copy(edpName, "edp.j")
 
-shutil.copy("dakota.in", "../")
-os.chdir("../")
+    exists = os.path.isfile(simName)
+    if exists:
+        shutil.copy(simName, "sim.j")
 
-if runDakota == "run":
+    shutil.copy("dakota.in", "../")
+    os.chdir("../")
 
-    dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
-    subprocess.Popen(dakotaCommand, stderr=subprocess.STDOUT, shell=True).wait()
+    if runDakota == "run":
 
-    #Postprocess Dakota results
-    #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(
-    #    scriptDir, numRVs, numSamples, bimName, edpName)
+        dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
+        print(dakotaCommand)
+        try:
+            result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
+            returncode = 0
+        except subprocess.CalledProcessError as e:
+            result = e.output
+            returncode = e.returncode
+        #result = result.decode(sys.stdout.encoding)
+        print(result, returncode)
 
-    #subprocess.Popen(postprocessCommand, shell=True).wait()
+        #Postprocess Dakota results
+        #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(
+        #    scriptDir, numRVs, numSamples, bimName, edpName)
+
+        #subprocess.Popen(postprocessCommand, shell=True).wait()
+
+if __name__ == '__main__':
+
+    main(sys.argv[1:])
