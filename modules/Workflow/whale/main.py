@@ -718,7 +718,7 @@ class Workflow(object):
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
         """
         Short description
 
@@ -732,11 +732,13 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
+        input_file = ntpath.basename(input_file)
+
         if 'Building' not in self.app_type_list:
             # Copy the dakota.json file from the templatedir to the run_dir so that
             # all the required inputs are in one place.
             shutil.copy(
-                src = posixpath.join(self.run_dir,'templatedir/BIM.json'),
+                src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
                 dst = posixpath.join(self.run_dir,BIM_file))
         else:            
             # copy the BIM file from the main dir to the building dir
@@ -752,19 +754,19 @@ class Workflow(object):
         if BIM_file is not None:
             for input_var in workflow_app.inputs:
                 if input_var['id'] == 'filenameDL':
-                    input_var['default'] = BIM_file        
+                    input_var['default'] = BIM_file     
 
         command_list = self.workflow_apps['DL'].get_command_list(
-            app_path=self.app_dir_local)
+            app_path=self.app_dir_local)     
 
         command = create_command(command_list, self.run_type)
 
         log_msg('\tDamage and loss assessment command:')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
         result, returncode = run_command(command)
 
-        print(result)
+        log_msg(result, prepend_timestamp=False)
 
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)
