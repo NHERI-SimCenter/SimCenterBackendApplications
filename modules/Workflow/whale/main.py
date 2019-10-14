@@ -65,6 +65,7 @@ from time import gmtime, strftime
 import json
 import pprint
 import posixpath
+import ntpath
 import os
 import shutil
 import importlib
@@ -74,6 +75,8 @@ import warnings
 import pandas as pd
 
 pp = pprint.PrettyPrinter(indent=4)
+
+log_file = None
 
 log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
 
@@ -88,9 +91,10 @@ def _warning(message, category, filename, lineno, file=None, line=None):
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+
 warnings.showwarning = _warning
 
-def log_msg(msg):
+def log_msg(msg, prepend_timestamp=True):
     """
     Print a message to the screen with the current time as prefix
 
@@ -102,8 +106,18 @@ def log_msg(msg):
        Message to print.
 
     """
- 
-    print('{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg))
+    if prepend_timestamp:
+        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+    else:
+        formatted_msg = msg
+
+    print(formatted_msg)
+
+    global log_file
+    if log_file is not None:
+        with open(globals()['log_file'], 'a') as f:
+            f.write('\n'+formatted_msg)
+
 
 def log_error(msg):
     """
@@ -542,12 +556,12 @@ class Workflow(object):
         command = create_command(bldg_command_list, self.run_type)        
 
         log_msg('Creating initial building files...')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
         
         result, returncode = run_command(command)
 
         log_msg('\tOutput: ')
-        print('\n{}\n'.format(result))
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
         log_msg('Building files successfully created.')
         log_msg(log_div)
@@ -582,7 +596,7 @@ class Workflow(object):
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.            
             dst = posixpath.join(os.getcwd(),BIM_file)
-            print(dst)
+            #print(dst)
             if dst != self.input_file:
                 shutil.copy(
                     src = self.input_file,
@@ -620,12 +634,12 @@ class Workflow(object):
             command = create_command(command_list, self.run_type)
             
             log_msg('\tRunning {} app for RV...'.format(app_type))
-            print('\n{}\n'.format(command))
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
             
             result, returncode = run_command(command)
 
             log_msg('\tOutput: ')
-            print('\n{}\n'.format(result))
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
         log_msg('Files with random variables successfully created.')
         log_msg(log_div)
@@ -663,7 +677,7 @@ class Workflow(object):
             driver_script += create_command(command_list, self.run_type) + u'\n'
 
         log_msg('Workflow driver script:')
-        print('\n{}\n'.format(driver_script))
+        log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
 
         with open('driver','w') as f:
             f.write(driver_script)
@@ -708,7 +722,7 @@ class Workflow(object):
         command = create_command(command_list, self.run_type)
 
         log_msg('\tSimulation command:')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
         result, returncode = run_command(command)
 
