@@ -90,7 +90,12 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     with open('dakota.json') as data_file:    
         data = json.load(data_file)
         
-    uqData = data["UQ_Method"];
+    uqData_in = data["UQ_Method"];
+    for key in uqData.keys():
+        if key not in uqData_in.keys():
+            uqData_in.update({key: uqData[key]})
+    uqData = uqData_in
+
     samplingData = uqData["samplingMethodData"];
     method = samplingData["method"];
 
