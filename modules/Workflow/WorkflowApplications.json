@@ -437,7 +437,19 @@
     "Applications": [
       {
         "Name": "pelicun",
-        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py"
+        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "DL_Method",
+            "type": "string",
+            "description": "Defines the damage and loss assessment method."
+          },
+          {
+            "id": "Realizations",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate"
+          }
+        ]
       }
     ]
   }
