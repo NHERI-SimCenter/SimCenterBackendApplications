@@ -204,10 +204,16 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
         train_samples = samplingData["samples"]
         gpr_seed = samplingData["seed"]
         train_method = samplingData["dataMethod"]
+
+        if train_method == "Monte Carlo":
+            train_method = "random"
         
         train_samples2 = samplingData["samples2"]
         gpr_seed2 = samplingData["seed2"]
         train_method2 = samplingData["dataMethod2"]
+
+        if train_method2 == "Monte Carlo":
+            train_method2 = "random"
         
         # write out the env data
         dakota_input = ""
@@ -527,6 +533,9 @@ text_archive
         train_samples = samplingData["samples"]
         gpr_seed = samplingData["seed"]
         train_method = samplingData["dataMethod"]
+
+        if train_method == "Monte Carlo":
+        	train_method = "random"
 
         dakota_input += (
         """method
