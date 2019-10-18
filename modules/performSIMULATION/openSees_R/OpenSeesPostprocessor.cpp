@@ -97,9 +97,14 @@ OpenSeesPostprocessor::processEDPs(){
 
 	  const char *fileName = fileString.c_str();
 	    
+	  //
+		// open file & process data into a json array called: data
+		//
+	    
 	  // openfile & process data
 	  ifstream myfile;
 	  myfile.open (fileName);
+
 	  double abs1Min, abs1Max, abs1Value;
 	  double abs2Min, abs2Max, abs2Value;
 
@@ -110,7 +115,12 @@ OpenSeesPostprocessor::processEDPs(){
 	  if (abs2Value > abs1Value)
 	    abs1Value = abs2Value;
 
-	  json_object_set(response,"scalar_data",json_real(abs2Value));
+	  //json_object_set(response,"scalar_data",json_real(abs2Value));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(abs2Value));
+	  json_object_set(response,"scalar_data",data);
+
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(abs2Value));
@@ -162,7 +172,11 @@ OpenSeesPostprocessor::processEDPs(){
 	  if (absMax > absValue)
 	    absValue = absMax;
 
-	  json_object_set(response,"scalar_data",json_real(absValue));
+	  //json_object_set(response,"scalar_data",json_real(absValue));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(absValue));
+	  json_object_set(response,"scalar_data",data);
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(absValue));
@@ -203,7 +217,11 @@ OpenSeesPostprocessor::processEDPs(){
 	    myfile.close();
 	  }
 	  
-	  json_object_set(response,"scalar_data",json_real(num));
+	  //json_object_set(response,"scalar_data",json_real(num));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(num));
+	  json_object_set(response,"scalar_data",data);
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(num));
