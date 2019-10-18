@@ -46,6 +46,7 @@ This module has classes and methods that auto-populate loss models.
 
 """
 
+from .base import *
 import json
 
 ap_DesignLevel = {
@@ -93,36 +94,43 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 
         loss_dict = {
             '_method': DL_method,
-            'BuildingDamage': {
+            'DamageModel': {
+                'StructureType': bt
+            },
+            'LossModel': {
+                'DecisionVariables': {
+                    'ReconstructionCost': True,
+                    'ReconstructionTime': True,
+                    'Injuries': True
+                },
+                'Inhabitants': {
+                    'OccupancyType': ot,
+                    'PeakPopulation': '1'
+                },
                 'ReplacementCost': BIM_in['replacementCost'],
-                'ReplacementTime': BIM_in['replacementTime'],
-                'StructureType': bt,
+                'ReplacementTime': BIM_in['replacementTime']
             },
-            'UncertaintyQuantification': {
-                'Realizations': realization_count
-            },
-            'Inhabitants': {
-                'PeakPopulation': "1",
-                'OccupancyType': ot
-            },
-            'Components': []
+            'ResponseModel': {
+                'ResponseDescription': {
+                    'Realizations': realization_count    
+                }
+            }
         }
 
         year_built = BIM_in['yearBuilt']
         for year in sorted(ap_DesignLevel.keys()):
             if year_built <= year:
-                loss_dict['BuildingDamage'].update(
+                loss_dict['DamageModel'].update(
                     {'DesignLevel': ap_DesignLevel[year]})
                 break
-        dl = convert_design_level[loss_dict['BuildingDamage']['DesignLevel']]
+        dl = convert_design_level[loss_dict['DamageModel']['DesignLevel']]
 
-        components = [
-            {'ID': 'S-{}-{}-{}'.format(bt, dl ,ot), 'structural': True},
-            {'ID': 'NSA-{}-{}'.format(dl ,ot),      'structural': False},
-            {'ID': 'NSD-{}'.format(ot),             'structural': False}
-        ]
-
-        loss_dict['Components'] = components
+        loss_dict.update({
+            'Components': {
+                'S-{}-{}-{}'.format(bt, dl ,ot) : [],
+                'NSA-{}-{}'.format(dl ,ot): [],
+                'NSD-{}'.format(ot): []
+            }})
 
     # HAZUS Hurricane
     elif DL_method == 'HAZUS MH HU':
@@ -204,22 +212,23 @@ def auto_populate(DL_input_path, DL_method, realization_count):
 
         loss_dict = {
             '_method': DL_method,
-            'BuildingDamage': {
-                'ReplacementCost': 100,
+            'DamageModel': {
+                'StructureType': struct_type
             },
-            "BuildingResponse": {
-                "EDP_Distribution": "empirical"
+            'LossModel': {
+                'DecisionVariables': {
+                    'ReconstructionCost': True
+                },
+                'ReplacementCost': 100
             },
-            "Components": [
-                {
-                    "ID": bldg_config #"WSF2_gab_1_6s_tnail_no_1_35"
+            'ResponseModel': {
+                'ResponseDescription': {
+                    'EDP_Distribution': 'empirical',
+                    'Realizations': realization_count    
                 }
-            ],
-            "DecisionVariables": {
-                "ReconstructionCost": True
             },
-            'UncertaintyQuantification': {
-                'Realizations': realization_count
+            'Components':{
+                bldg_config: []
             }
         }
 
