@@ -165,9 +165,30 @@
         ]
       },
       {
+        "Name": "LLNL-SW4",
+        "ExecutablePath": "applications/createEVENT/LLNL_SW4/LLNL_SW4",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "pathSW4results",
+            "type": "string",
+            "description": "Path to directory containig output point files"
+          },
+          {
+            "id": "filenameHFmeta",
+            "type": "string",
+            "description": "path to file containing loacation information on each ouput point file"
+          }
+        ]
+      },
+      {
         "Name": "ASCE7_WindSpeed",
         "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
         "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "pointWindSpeed",
+        "ExecutablePath": "applications/createEVENT/pointWindSpeed/pointWindSpeed",
+        "ApplicationSpecificInputs":["filenameWindSpeedCloudData"]
       }
     ]
   },
