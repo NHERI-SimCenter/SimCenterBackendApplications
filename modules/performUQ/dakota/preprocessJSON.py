@@ -123,7 +123,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     bimExists = parseFileForRV(bimName)
     evtExists = parseFileForRV(evtName)
     samExists = parseFileForRV(samName)
-    simExists = parseFileForRV(simName)
+    # Note that the SIM random vars are not used for now
+    # simExists = parseFileForRV(simName)
     edpExists = parseFileForRV(edpName)
 
     # Add a dummy random variable if no other RV was defined
