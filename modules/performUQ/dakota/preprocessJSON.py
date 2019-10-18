@@ -90,21 +90,21 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     with open(bimName) as data_file:    
         data = json.load(data_file)
         
-    uqData_in = data["UQ_Method"];
-    for key in uqData.keys():
-        if key not in uqData_in.keys():
-            uqData_in.update({key: uqData[key]})
-    uqData = uqData_in
+    #uqData_in = data["UQ_Method"];
+    #for key in uqData.keys():
+    #    if key not in uqData_in.keys():
+    #        uqData_in.update({key: uqData[key]})
+    #uqData = uqData_in
 
-    samplingData = uqData["samplingMethodData"];
-    method = samplingData["method"];
+    #uqData = uqData["samplingMethodData"];
+    method = uqData["method"];
 
     #if (method == "Monte Carlo"):
     #    method = 'random'
     #else:
     #    method = 'lhs'
-    #numSamples=samplingData["samples"];
-    #seed = samplingData["seed"];
+    #numSamples=uqData["samples"];
+    #seed = uqData["seed"];
 
     #
     # get result files
@@ -155,9 +155,9 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     """)
     
     if method == "Importance Sampling":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
-        imp_sams_arg = samplingData["ismethod"]
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]
+        imp_sams_arg = uqData["ismethod"]
 
         dakota_input += (
     """importance_sampling
@@ -171,8 +171,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
         seed = seed))
     
     elif method == "Monte Carlo":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]
 
         dakota_input += (
     """sampling
@@ -186,8 +186,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
         seed = seed))
     
     elif method == "LHS":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]        
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]        
 
         dakota_input += (
     """sampling
@@ -201,17 +201,15 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
         seed = seed))
     
     elif method == "Gaussian Process Regression":
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
-
+        train_samples = uqData["samples"]
+        gpr_seed = uqData["seed"]
+        train_method = uqData["dataMethod"]
         if train_method == "Monte Carlo":
             train_method = "random"
         
-        train_samples2 = samplingData["samples2"]
-        gpr_seed2 = samplingData["seed2"]
-        train_method2 = samplingData["dataMethod2"]
-
+        train_samples2 = uqData["samples2"]
+        gpr_seed2 = uqData["seed2"]
+        train_method2 = uqData["dataMethod2"]
         if train_method2 == "Monte Carlo":
             train_method2 = "random"
         
@@ -530,9 +528,9 @@ text_archive
 
     if method == "Gaussian Process Regression":
         
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
+        train_samples = uqData["samples"]
+        gpr_seed = uqData["seed"]
+        train_method = uqData["dataMethod"]
 
         if train_method == "Monte Carlo":
         	train_method = "random"
