@@ -7,9 +7,7 @@ if sys.version.startswith('2'):
 #else:
 #    from past.builtins import basestring
 
-import json
-import os
-import sys
+import os, sys, json
 import platform
 import posixpath
 
@@ -756,30 +754,38 @@ def parseFileForRV(fileName):
     global normalDiscreteDesignSetName
     global normalDiscreteSetValues
 
-
     global numResultFiles
     global outputResultFiles
 
-    exists = os.path.isfile(fileName)
-
-    print(exists)
-
-    if not exists:
+    if os.path.isfile(fileName):
+        print("Reading {} file to parse random variables...".format(fileName))
+    else:
+        print("ERROR: {} file not found.".format(fileName))
         return False
 
     with open(fileName,'r') as data_file:
         data = json.load(data_file)
-        if data.get("randomVariables"):
-            for k in data["randomVariables"]:
 
-                if (k["distribution"] == "Normal"):
+        # TODO: we need to decide if we prefer camelCase or CamelCase...
+        RVs = data.get("randomVariables", None)
+        if RVs is None:
+            RVs = data.get("RandomVariables", None)
+
+        if RVs is not None:
+            for k in RVs:
+
+                if (k["distribution"] in ["Normal", "normal"]):
                     normalUncertainName.append(k["name"])
                     normalUncertainMean.append(k["mean"])
                     normalUncertainStdDev.append(k["stdDev"])
                     numNormalUncertain += 1
                     numRandomVariables += 1
+                    print('\t{name} | normal mu={mean} sig={stdDev}'.format(
+                        name = normalUncertainName[-1],
+                        mean = normalUncertainMean[-1],
+                        stdDev = normalUncertainStdDev[-1]))
 
-                elif (k["distribution"] == "Lognormal"):
+                elif (k["distribution"] == ["Lognormal", "lognormal"]):
                     lognormalUncertainName.append(k["name"])
                     lognormalUncertainMean.append(k["mean"])
                     lognormalUncertainStdDev.append(k["stdDev"])
@@ -829,9 +835,11 @@ def parseFileForRV(fileName):
                         elements.append(l)
                     elements.sort()
                     discreteDesignSetStringValues.append(elements)
-                    print(elements)
                     numDiscreteDesignSetString += 1
                     numRandomVariables += 1
+                    print('\t{name} | discrete set={elements}'.format(
+                        name = discreteDesignSetStringName[-1], 
+                        elements = discreteDesignSetStringValues[-1]))
 
         if data.get("resultFiles"):
             for k in data["resultFiles"]:
