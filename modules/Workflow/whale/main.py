@@ -808,6 +808,7 @@ class Workflow(object):
             min_id = min(int(bldg_id), min_id)
             max_id = max(int(bldg_id), max_id)
             
+            try:
             with open(bldg_id+'/DM.json') as f:
                 DM = json.load(f)            
                 
@@ -841,12 +842,16 @@ class Workflow(object):
                         else:
                             val = DM[FG][PG][DS]
                         DM_agg.loc[bldg_id, (FG, DS)] = val
+            except:
+                log_msg('Error reading DM data for building {}'.format(bldg_id))
 
         # then collect the decision variables
         DV_agg = pd.DataFrame()
 
         for bldg in bldg_data:
             bldg_id = bldg['id']
+            
+            try:
             
             with open(bldg_id+'/DV.json') as f:
                 DV = json.load(f)
@@ -870,6 +875,9 @@ class Workflow(object):
                 else:                     
                     for stat in stat_list:
                         DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+
+            except:
+                log_msg('Error reading DM data for building {}'.format(bldg_id))
 
         # save the collected DataFrames as csv files
         DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
