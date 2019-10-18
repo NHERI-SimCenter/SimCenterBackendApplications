@@ -371,13 +371,17 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
     json_t *nodes = json_object_get(geometry,"nodes");
     int nStory = json_array_size(nodes)-1;
     int nEigenJ=0;
-    if(nStory<=2)
+
+    if (nStory <= 0) {
+      nEigenJ = 2;
+      nStory = 1;
+    } else if (nStory<=2)
         nEigenJ=nStory*2;   //first mode or second mode
     else
-        nEigenJ=3*2;          //third mode
+      nEigenJ=3*2;
 
      s << "set nEigenJ "<<nEigenJ<<";\n"
-       << "set lambdaN [eigen -fullGenLapack "<< nStory*2 <<"];\n"
+       << "set lambdaN [eigen -fullGenLapack "<< nEigenJ <<"];\n"
        << "set lambdaI [lindex $lambdaN [expr $nEigenI-1]];\n"
        << "set lambdaJ [lindex $lambdaN [expr $nEigenJ-1]];\n"
        << "set omegaI [expr pow($lambdaI,0.5)];\n"
