@@ -355,7 +355,7 @@
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
       {
-        "Name": "OpenSees",
+        "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
       },
       {
