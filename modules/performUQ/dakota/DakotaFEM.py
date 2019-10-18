@@ -91,41 +91,33 @@ def main(args):
         workflowDriverName = 'workflow_driver.bat'
 
     #Create Template Directory and copy files
-    templateDir = "templatedir"
-    #if os.path.exists(templateDir):
-    #    shutil.rmtree(templateDir)
-
-    #os.mkdir(templateDir)
     st = os.stat(workflowDriverName)
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
-    shutil.copy(workflowDriverName, templateDir)
+    shutil.copy(workflowDriverName, "templatedir")
     shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
     shutil.copy(bimName, "bim.j")
     shutil.copy(evtName, "evt.j")
-    exists = os.path.isfile(samName)
-    if exists:
-        shutil.copy(samName, "sam.j")
-
+    if os.path.isfile(samName): shutil.copy(samName, "sam.j")
     shutil.copy(edpName, "edp.j")
+    if os.path.isfile(simName): shutil.copy(simName, "sim.j")
 
-    exists = os.path.isfile(simName)
-    if exists:
-        shutil.copy(simName, "sim.j")
-
+    # copy the dakota input file to the main working dir for the structure
     shutil.copy("dakota.in", "../")
+
+    # change dir to the main working dir for the structure
     os.chdir("../")
 
     if runDakota == "run":
 
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
-        print(dakotaCommand)
+        print('running Dakota: ', dakotaCommand)
         try:
             result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
             returncode = e.returncode
-        #result = result.decode(sys.stdout.encoding)
+        result = result.decode(sys.stdout.encoding)
         print(result, returncode)
 
         #Postprocess Dakota results
