@@ -746,11 +746,10 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        input_file = ntpath.basename(input_file)
-
         if 'Building' not in self.app_type_list:
             # Copy the dakota.json file from the templatedir to the run_dir so that
             # all the required inputs are in one place.
+            input_file = ntpath.basename(input_file)
             shutil.copy(
                 src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
                 dst = posixpath.join(self.run_dir,BIM_file))
