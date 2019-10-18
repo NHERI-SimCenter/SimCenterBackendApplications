@@ -39,14 +39,22 @@ def main(args):
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')
     parser.add_argument('--filenameSIM')
+    
     parser.add_argument('--driverFile')
+    
     parser.add_argument('--method', default="LHS")
     parser.add_argument('--samples', default=None)
     parser.add_argument('--seed', default=None)
+    parser.add_argument('--samples2', default=None)
+    parser.add_argument('--seed2', default=None)
+    parser.add_argument('--ismethod', default=None)
+    parser.add_argument('--dataMethod', default=None)
+    parser.add_argument('--dataMethod2', default=None)
+    
     parser.add_argument('--type')
     parser.add_argument('--concurrency', default=None)
     parser.add_argument('--runType')
-    parser.add_argument('--keepSamples', default=True)
+    
     args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
@@ -59,8 +67,15 @@ def main(args):
 
     uqData = dict(
         method = args.method,
+        
         samples = args.samples,
+        samples2 = args.samples2,
         seed = args.seed,
+        seed2 = args.seed2,
+        ismethod = args.ismethod,
+        dataMethod = args.dataMethod,
+        dataMethod2 = args.dataMethod2,
+
         concurrency = args.concurrency
     )
 
@@ -68,9 +83,6 @@ def main(args):
 
     #Run Preprocess for Dakota
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    # preProcessArgs = ["python", "{}/preprocessJSON.py".format(scriptDir), bimName, evtName,\
-    # samName, edpName, lossName, simName, driverFile, scriptDir, bldgName]
-    # subprocess.call(preProcessArgs)
     numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData)
 
     #Setting Workflow Driver Name
