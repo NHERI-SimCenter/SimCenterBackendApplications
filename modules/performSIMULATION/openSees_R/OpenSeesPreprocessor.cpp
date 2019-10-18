@@ -306,7 +306,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
     s << "\n";
   }
 
-  int nodeTag = getNode(1,1);
+  int nodeTag = getNode(1,0);
   s << "fix " << nodeTag;
   for (int i=0; i<NDF; i++)
      s << " " << 1;
@@ -643,7 +643,7 @@ OpenSeesPreprocessor:: getNode(int cline, int floor){
     int c = json_integer_value(json_object_get(mapObject,"cline"));
     if (c == cline) {
       int f = json_integer_value(json_object_get(mapObject,"floor"));
-      if (f == floor)
+      if (f == floor+1)
 	return json_integer_value(json_object_get(mapObject,"node"));
     }
   }

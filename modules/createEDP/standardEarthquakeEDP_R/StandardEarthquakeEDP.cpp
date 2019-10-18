@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 	json_t *response = json_object();
 	json_object_set(response,"type",json_string("max_abs_acceleration"));      
 	json_object_set(response,"cline",json_integer(1));
-	json_object_set(response,"floor",json_integer(i+1));
+	json_object_set(response,"floor",json_integer(i));
 	json_t *dataArray = json_array(); 
 	json_object_set(response,"scalar_data",dataArray);
 	json_array_append(responsesArray,response);
@@ -175,8 +175,8 @@ int main(int argc, char **argv)
       json_t *response = json_object();
       json_object_set(response,"type",json_string("max_drift"));      
       json_object_set(response,"cline",json_integer(1));
-      json_object_set(response,"floor1",json_integer(i+1));
-      json_object_set(response,"floor2",json_integer(i+2));
+      json_object_set(response,"floor1",json_integer(i));
+      json_object_set(response,"floor2",json_integer(i+1));
       json_t *dataArray = json_array(); 
       json_object_set(response,"scalar_data",dataArray);
       json_array_append(responsesArray,response);
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     json_t *response = json_object();
     json_object_set(response,"type",json_string("residual_disp"));      
     json_object_set(response,"cline",json_integer(1));
-    json_object_set(response,"floor",json_integer(numStory+1));
+    json_object_set(response,"floor",json_integer(numStory));
     json_t *dataArray = json_array(); 
     json_object_set(response,"scalar_data",dataArray);
     json_array_append(responsesArray,response);
