@@ -65,6 +65,7 @@ from time import gmtime, strftime
 import json
 import pprint
 import posixpath
+import ntpath
 import os
 import shutil
 import importlib
@@ -74,6 +75,8 @@ import warnings
 import pandas as pd
 
 pp = pprint.PrettyPrinter(indent=4)
+
+log_file = None
 
 log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
 
@@ -88,9 +91,10 @@ def _warning(message, category, filename, lineno, file=None, line=None):
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+
 warnings.showwarning = _warning
 
-def log_msg(msg):
+def log_msg(msg, prepend_timestamp=True):
     """
     Print a message to the screen with the current time as prefix
 
@@ -102,8 +106,18 @@ def log_msg(msg):
        Message to print.
 
     """
- 
-    print('{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg))
+    if prepend_timestamp:
+        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+    else:
+        formatted_msg = msg
+
+    print(formatted_msg)
+
+    global log_file
+    if log_file is not None:
+        with open(globals()['log_file'], 'a') as f:
+            f.write('\n'+formatted_msg)
+
 
 def log_error(msg):
     """
@@ -204,7 +218,7 @@ def run_command(command):
         
         #return result.decode(sys.stdout.encoding), returncode
         print(result, returncode)
-        return result, returncode
+        return str(result), returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
@@ -270,17 +284,25 @@ class WorkflowApplication(object):
 
         for in_arg in self.inputs:
             arg_list.append(u'--{}'.format(in_arg['id']))
-            arg_list.append(u'{}'.format(in_arg['default']))
+            if in_arg['id'] in self.pref.keys():
+                arg_list.append(u'{}'.format(self.pref[in_arg['id']]))
+            else:
+                arg_list.append(u'{}'.format(in_arg['default']))
 
         for out_arg in self.outputs:
             out_id = u'--{}'.format(out_arg['id'])
             if out_id not in arg_list:
                 arg_list.append(out_id)
-                arg_list.append(u'{}'.format(out_arg['default']))
+                if out_arg['id'] in self.pref.keys():
+                    arg_list.append(u'{}'.format(self.pref[out_arg['id']]))
+                else:
+                    arg_list.append(u'{}'.format(out_arg['default']))
 
-        for in_name, in_value in self.pref.items():
-            arg_list.append(u'--{}'.format(in_name))
-            arg_list.append(u'{}'.format(in_value))
+        for pref_name, pref_value in self.pref.items():
+            pref_id = u'--{}'.format(pref_name)
+            if pref_id not in arg_list:
+                arg_list.append(pref_id)
+                arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
@@ -534,12 +556,12 @@ class Workflow(object):
         command = create_command(bldg_command_list, self.run_type)        
 
         log_msg('Creating initial building files...')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
         
         result, returncode = run_command(command)
 
         log_msg('\tOutput: ')
-        print('\n{}\n'.format(result))
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
         log_msg('Building files successfully created.')
         log_msg(log_div)
@@ -574,7 +596,7 @@ class Workflow(object):
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.            
             dst = posixpath.join(os.getcwd(),BIM_file)
-            print(dst)
+            #print(dst)
             if dst != self.input_file:
                 shutil.copy(
                     src = self.input_file,
@@ -612,12 +634,12 @@ class Workflow(object):
             command = create_command(command_list, self.run_type)
             
             log_msg('\tRunning {} app for RV...'.format(app_type))
-            print('\n{}\n'.format(command))
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
             
             result, returncode = run_command(command)
 
             log_msg('\tOutput: ')
-            print('\n{}\n'.format(result))
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
         log_msg('Files with random variables successfully created.')
         log_msg(log_div)
@@ -655,7 +677,7 @@ class Workflow(object):
             driver_script += create_command(command_list, self.run_type) + u'\n'
 
         log_msg('Workflow driver script:')
-        print('\n{}\n'.format(driver_script))
+        log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
 
         with open('driver','w') as f:
             f.write(driver_script)
@@ -700,7 +722,7 @@ class Workflow(object):
         command = create_command(command_list, self.run_type)
 
         log_msg('\tSimulation command:')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
         result, returncode = run_command(command)
 
@@ -710,7 +732,7 @@ class Workflow(object):
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
         """
         Short description
 
@@ -724,11 +746,13 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
+        input_file = ntpath.basename(input_file)
+
         if 'Building' not in self.app_type_list:
             # Copy the dakota.json file from the templatedir to the run_dir so that
             # all the required inputs are in one place.
             shutil.copy(
-                src = posixpath.join(self.run_dir,'templatedir/BIM.json'),
+                src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
                 dst = posixpath.join(self.run_dir,BIM_file))
         else:            
             # copy the BIM file from the main dir to the building dir
@@ -744,19 +768,19 @@ class Workflow(object):
         if BIM_file is not None:
             for input_var in workflow_app.inputs:
                 if input_var['id'] == 'filenameDL':
-                    input_var['default'] = BIM_file        
+                    input_var['default'] = BIM_file     
 
         command_list = self.workflow_apps['DL'].get_command_list(
-            app_path=self.app_dir_local)
+            app_path=self.app_dir_local)     
 
         command = create_command(command_list, self.run_type)
 
         log_msg('\tDamage and loss assessment command:')
-        print('\n{}\n'.format(command))
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
         result, returncode = run_command(command)
 
-        print(result)
+        log_msg(result, prepend_timestamp=False)
 
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)

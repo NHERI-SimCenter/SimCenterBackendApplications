@@ -43,7 +43,7 @@
 
 # import functions for Python 2.X support
 from __future__ import division, print_function
-import sys, os
+import sys, os, json
 if sys.version.startswith('2'): 
     range=xrange
     string_types = basestring
@@ -56,6 +56,15 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry):
+
+    # initialize the log file
+    with open(input_file, 'r') as f:
+        inputs = json.load(f)
+    runDir = inputs['runDir']
+
+    whale.log_file = runDir + '/log.txt'
+    with open(whale.log_file, 'w') as f:
+        f.write('EE-UQ workflow\n')  
 
     # echo the inputs
     log_msg(log_div)

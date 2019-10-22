@@ -37,4 +37,6 @@ to the Conan Cache root (`~/.conan` by default).
 
 ## Acknowledgments
 
+This material is based upon work supported by the National Science Foundation under Grant No. 1612843.
+
 This Conan packaging configuration is based on what is provided by [Bincrafters](https://github.com/bincrafters/templates).
