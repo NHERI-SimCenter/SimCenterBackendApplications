@@ -26,6 +26,8 @@ class simCenterBackendApps(ConanFile):
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
+    # Set short paths for Windows
+    short_paths = True    
 
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
