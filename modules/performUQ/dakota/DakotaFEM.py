@@ -40,13 +40,14 @@ def main(args):
     parser.add_argument('--filenameEDP')
     parser.add_argument('--filenameSIM')
     parser.add_argument('--driverFile')
-    parser.add_argument('--method')
-    parser.add_argument('--samples')
-    parser.add_argument('--seed')
+    parser.add_argument('--method', default="LHS")
+    parser.add_argument('--samples', default=None)
+    parser.add_argument('--seed', default=None)
     parser.add_argument('--type')
     parser.add_argument('--concurrency', default=None)
     parser.add_argument('--runType')
-    args = parser.parse_args(args)
+    parser.add_argument('--keepSamples', default=True)
+    args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
     bimName = args.filenameBIM
@@ -105,7 +106,15 @@ def main(args):
     if runDakota == "run":
 
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
-        subprocess.Popen(dakotaCommand, stderr=subprocess.STDOUT, shell=True).wait()
+        print(dakotaCommand)
+        try:
+            result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
+            returncode = 0
+        except subprocess.CalledProcessError as e:
+            result = e.output
+            returncode = e.returncode
+        #result = result.decode(sys.stdout.encoding)
+        print(result, returncode)
 
         #Postprocess Dakota results
         #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(

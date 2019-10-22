@@ -87,13 +87,16 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     # get UQ method data
     #
 
-    with open(bimName) as data_file:
-    #with open('dakota.json') as data_file:    
+    with open('dakota.json') as data_file:    
         data = json.load(data_file)
         
-    #uqData = data["UQ_Method"];
-    #samplingData = uqData["samplingMethodData"];
-    samplingData = uqData
+    uqData_in = data["UQ_Method"];
+    for key in uqData.keys():
+        if key not in uqData_in.keys():
+            uqData_in.update({key: uqData[key]})
+    uqData = uqData_in
+
+    samplingData = uqData["samplingMethodData"];
     method = samplingData["method"];
 
     #if (method == "Monte Carlo"):
@@ -201,10 +204,16 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
         train_samples = samplingData["samples"]
         gpr_seed = samplingData["seed"]
         train_method = samplingData["dataMethod"]
+
+        if train_method == "Monte Carlo":
+            train_method = "random"
         
         train_samples2 = samplingData["samples2"]
         gpr_seed2 = samplingData["seed2"]
         train_method2 = samplingData["dataMethod2"]
+
+        if train_method2 == "Monte Carlo":
+            train_method2 = "random"
         
         # write out the env data
         dakota_input = ""
@@ -241,6 +250,9 @@ text_archive
         surr_sams_type = train_method2)
 
     # write out the variable data
+    #f.write('variables,\n')
+    #f.write('active uncertain \n')
+
     dakota_input += ('variables,\n')
     dakota_input += ('active uncertain \n')
 
@@ -484,6 +496,7 @@ text_archive
 
     dakota_input += ('\n')
 
+            
     if (numDiscreteDesignSetString > 0):
         dakota_input += 'discrete_uncertain_set\n'
         dakota_input += 'string ' '{}'.format(numDiscreteDesignSetString)
@@ -521,6 +534,9 @@ text_archive
         gpr_seed = samplingData["seed"]
         train_method = samplingData["dataMethod"]
 
+        if train_method == "Monte Carlo":
+        	train_method = "random"
+
         dakota_input += (
         """method
 id_method = 'DesignMethod'
@@ -553,7 +569,7 @@ interface_pointer = 'SimulationInterface'
         dakota_input += ('id_interface = \'SimulationInterface\',\n')
 
     if (runType == "local"):
-        uqData['concurrency'] = 2
+        uqData['concurrency'] = 4
     
     if uqData['concurrency'] == None:
         dakota_input += "fork asynchronous\n"
@@ -610,6 +626,11 @@ interface_pointer = 'SimulationInterface'
                 floor = edp["floor2"]
                 known = True
 
+            elif(edp["type"] == "residual_disp"):
+                edpAcronym = "RD"
+                floor = edp["floor"]
+                known = True
+
             elif(edp["type"] == "max_pressure"):
                 edpAcronym = "PSP"
                 floor = edp["floor2"]
@@ -628,7 +649,7 @@ interface_pointer = 'SimulationInterface'
                 f.write("'{}' ".format(edp["type"]))
 
             if (known == True):
-                for dof in edp["dofs"]:
+                for dof in edp.get("dofs",[1,]):
                     f.write("'{}-{}-{}-{}' ".format(eventIndex + 1, edpAcronym, floor, dof))
 
     f.write('\n')
@@ -666,7 +687,6 @@ interface_pointer = 'SimulationInterface'
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
-
     if (runType == "local"):
         f.write('"{}'.format(scriptDir) + '/extractEDP" ' + edpName + ' results.out ' + bimName + ' ' + numR + ' ' + files + '\n')
 
