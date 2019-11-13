@@ -9,6 +9,7 @@ else:
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
+import numpy as np
 import platform
 import shutil
 import subprocess
@@ -44,7 +45,7 @@ def main(args):
     
     parser.add_argument('--method', default="LHS")
     parser.add_argument('--samples', default=None)
-    parser.add_argument('--seed', default=None)
+    parser.add_argument('--seed', default=np.random.randint(1,1000))
     parser.add_argument('--samples2', default=None)
     parser.add_argument('--seed2', default=None)
     parser.add_argument('--ismethod', default=None)
