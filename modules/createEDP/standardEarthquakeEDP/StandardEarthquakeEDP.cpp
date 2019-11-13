@@ -211,12 +211,13 @@ int main(int argc, char **argv)
       	  // we a=cannot just add dof's as before in case vertical
       	  json_t *dofArray = json_array();
       	  for (int i=0; i<numDOF; i++) {
-	    if (tDOFs[i] != ndm) {
-	      json_array_append(dofArray, json_integer(tDOFs[i]));
-	      numEDP++;
-	    }
-	  }
-	  json_object_set(response,"dofs",dofArray);
+            if ((numDOF < ndm) ||
+               ((numDOF == ndm) && (tDOFs[i] != ndm))) {
+      	      json_array_append(dofArray, json_integer(tDOFs[i]));
+      	      numEDP++;
+      	    }
+      	  }
+      	  json_object_set(response,"dofs",dofArray);
 
       	  json_t *dataArray = json_array(); 
       	  json_object_set(response,"scalar_data",dataArray);
