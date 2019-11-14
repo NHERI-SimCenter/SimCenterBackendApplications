@@ -1,9 +1,3 @@
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys
-if sys.version.startswith('2'): 
-    range=xrange
-
 import sys
 import os
 import subprocess
