@@ -86,7 +86,7 @@ int main(int argc, const char **argv)
 
     if (minRow == -1 || maxRow == -1 || buildingSourceFilename == 0)
     {
-        std::cerr << "INVALID INPUT\n";
+        std::cerr << minRow << maxRow << buildingSourceFilename << "INVALID INPUT \n";
         exit(-1);
     }
 
