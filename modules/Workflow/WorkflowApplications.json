@@ -34,6 +34,12 @@
             "type": "string",
             "description": "path to buildings file",
             "default": ""
+          },
+          {
+            "id": "config",
+            "type": "string",
+            "description": "path to buildings config file",
+            "default": ""
           }
         ]
       },
