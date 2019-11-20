@@ -582,7 +582,10 @@ interface_pointer = 'SimulationInterface'
     # dakota_input += ('\nanalysis_driver = \'python analysis_driver.py\' \n')
     dakota_input += ('parameters_file = \'params.in\' \n')
     dakota_input += ('results_file = \'results.out\' \n')
+    if uqData['keepSamples']:
     dakota_input += ('work_directory directory_tag directory_save\n')
+    else:
+        dakota_input += ('work_directory directory_tag\n')
     dakota_input += ('copy_files = \'templatedir/*\' \n')
     # dakota_input += ('named \'workdir\' file_save  directory_save \n')
     dakota_input += ('named \'workdir\' \n')
