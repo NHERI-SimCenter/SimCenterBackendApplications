@@ -611,7 +611,31 @@ class Workflow(object):
         log_msg('Simulation directory successfully initialized.')
         log_msg(log_div)
 
-                    dst = dst) 
+    def cleanup_simdir(self, bldg_id):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+        log_msg('Cleaning up the simulation directory.')
+
+        os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+            os.chdir(bldg_id) 
+
+        workdirs = os.listdir(os.getcwd())
+        for workdir in workdirs:
+            if 'workdir' in workdir:
+                shutil.rmtree(workdir, ignore_errors=True)
+
+        log_msg('Simulation directory successfully cleaned up.')
+        log_msg(log_div)
+
     def init_workdir(self):
         """
         Short description
@@ -630,6 +654,29 @@ class Workflow(object):
 
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
+
+    def cleanup_workdir(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+        log_msg('Cleaning up the working directory.')
+
+        os.chdir(self.run_dir)
+
+        workdir_contents = os.listdir(self.run_dir)
+        for file_or_dir in workdir_contents:
+            if os.path.isdir(os.path.join(self.run_dir, file_or_dir)):
+                shutil.rmtree(file_or_dir, ignore_errors=True)
+
+        log_msg('Working directory successfully cleaned up.')
+        log_msg(log_div)
+
 
     def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
         """

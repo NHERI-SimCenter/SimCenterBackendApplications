@@ -59,7 +59,8 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry, 
-         force_cleanup=False, bldg_id_range=[None, None]):
+         force_cleanup=False,
+         bldg_id_range=[None, None]):
 
     # initialize the log file
     with open(input_file, 'r') as f:
@@ -125,34 +126,41 @@ def main(run_type, input_file, app_registry,
         # run dl engine to estimate losses
         WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
 
+        if force_cleanup:
+            #clean up intermediate files from the simulation
+            WF.cleanup_simdir(bldg['id'])
+
     # aggregate damage and loss results
     WF.aggregate_dmg_and_loss(bldg_data = bldg_data)
+
+    if force_cleanup:
+        # clean up intermediate files from the working directory
+        WF.cleanup_workdir()
 
 if __name__ == '__main__':
 
     #Defining the command line arguments
-    workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter workflow for a set of buildings")
 
-    workflowArgParser.add_argument(
-        "configuration", 
+    workflowArgParser = argparse.ArgumentParser(
+        "Run the NHERI SimCenter workflow for a set of assets.")
+
+    workflowArgParser.add_argument("configuration", 
         help="Configuration file specifying the applications and data to be "
              "used")
-    workflowArgParser.add_argument(
-        "-Min", "--Min", type=int, default=None, 
+    workflowArgParser.add_argument("-Min", "--Min", 
+        type=int, default=None, 
         help="Override the index of the first building")
-    workflowArgParser.add_argument(
-        "-Max", "--Max", type=int, default=None, 
+    workflowArgParser.add_argument("-Max", "--Max", 
+        type=int, default=None, 
         help="Override the index of the last building")
-    workflowArgParser.add_argument(
-        "-c", "--check", 
+    workflowArgParser.add_argument("-c", "--check", 
         help="Check the configuration file")
-    workflowArgParser.add_argument(
-        "-r", "--registry", default="WorkflowApplications.json", 
+    workflowArgParser.add_argument("-r", "--registry", 
+        default="WorkflowApplications.json", 
         help="Path to file containing registered workflow applications")
-    workflowArgParser.add_argument(
-        "-f", "--forceCleanup",  action="store_true", 
-        help="Path to file containing registered workflow applications")
+    workflowArgParser.add_argument("-f", "--forceCleanup",  
+        action="store_true", 
+        help="Remove working directories after the simulation is completed.")
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args() 
