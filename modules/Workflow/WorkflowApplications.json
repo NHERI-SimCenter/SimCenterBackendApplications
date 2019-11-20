@@ -422,7 +422,69 @@
     "Applications": [
       {
         "Name": "Dakota-UQ",
-        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py"
+        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "method",
+            "type": "string",
+            "description": "Defines the UQ method to use."
+          },
+          {
+            "id": "samples",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model."
+          },
+          {
+            "id": "samples2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the number of realizations to generate from the trained model."
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "Specifies the random seed."
+          },
+          {
+            "id": "seed2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the random seed to generate samples from the models."
+          },
+          {
+            "id": "ismethod",
+            "type": "string",
+            "description": "Specifies the importance sampling method."
+          },
+          {
+            "id": "dataMethod",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "dataMethod2",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "type",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "concurrency",
+            "type": "int",
+            "description": "Specifies the number of processes to use for simulation."
+          },
+          {
+            "id": "keepSamples",
+            "type": "bool",
+            "description": "True if the intermediate results shall be kept for each sample."
+          },
+          {
+            "id": "runType",
+            "type": "string",
+            "description": "..."
+          }
+        ]
       },
       {
         "Name": "Dakota-FEM",

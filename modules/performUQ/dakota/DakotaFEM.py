@@ -44,16 +44,17 @@ def main(args):
     parser.add_argument('--driverFile')
     
     parser.add_argument('--method', default="LHS")
-    parser.add_argument('--samples', default=None)
-    parser.add_argument('--seed', default=np.random.randint(1,1000))
-    parser.add_argument('--samples2', default=None)
-    parser.add_argument('--seed2', default=None)
+    parser.add_argument('--samples', type=int, default=None)
+    parser.add_argument('--seed', type=int, default=np.random.randint(1,1000))
+    parser.add_argument('--samples2', type=int, default=None)
+    parser.add_argument('--seed2', type=int, default=None)
     parser.add_argument('--ismethod', default=None)
     parser.add_argument('--dataMethod', default=None)
     parser.add_argument('--dataMethod2', default=None)
     
     parser.add_argument('--type')
-    parser.add_argument('--concurrency', default=None)
+    parser.add_argument('--concurrency', type=int, default=None)
+    parser.add_argument('--keepSamples', default="True")
     parser.add_argument('--runType')
     
     args,unknowns = parser.parse_known_args()
@@ -77,7 +78,8 @@ def main(args):
         dataMethod = args.dataMethod,
         dataMethod2 = args.dataMethod2,
 
-        concurrency = args.concurrency
+        concurrency = args.concurrency,
+        keepSamples = args.keepSamples not in ["False", 'False', "false", 'false', False]
     )
 
     runDakota = args.runType
