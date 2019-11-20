@@ -93,6 +93,9 @@ def main(run_type, input_file, app_registry,
         WF.workflow_apps['Building'].pref['Min'] = bldg_min
         WF.workflow_apps['Building'].pref['Max'] = bldg_max
 
+    # initialize the working directory
+    WF.init_workdir()
+
     # prepare the basic inputs for individual buildings
     WF.create_building_files()
 
@@ -102,6 +105,9 @@ def main(run_type, input_file, app_registry,
 
     for bldg in bldg_data: #[:1]:
         log_msg(bldg)
+
+        # initialize the simulation directory
+        WF.init_simdir(bldg['id'], bldg['file'])
 
         # prepare the input files for the simulation
         WF.create_RV_files(

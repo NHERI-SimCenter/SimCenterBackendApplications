@@ -566,6 +566,71 @@ class Workflow(object):
         log_msg('Building files successfully created.')
         log_msg(log_div)
 
+    def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+        log_msg('Initializing the simulation directory')
+
+        os.chdir(self.run_dir)
+
+        if bldg_id is not None:
+
+            # if the directory already exists, remove its contents
+            if bldg_id in os.listdir(self.run_dir):
+                shutil.rmtree(bldg_id, ignore_errors=True)
+
+            # create the building_id dir and the template dir
+                os.mkdir(bldg_id)
+            os.chdir(bldg_id)       
+            os.mkdir('templatedir')
+        os.chdir('templatedir')
+
+            # Make a copy of the BIM file
+            shutil.copy(
+                src = posixpath.join(self.run_dir, BIM_file),
+                dst = posixpath.join(
+                    self.run_dir, 
+                    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
+
+        else:
+            os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
+
+            # Make a copy of the input file and rename it to BIM.json
+            # This is a temporary fix, will be removed eventually.            
+            dst = posixpath.join(os.getcwd(),BIM_file)
+            if BIM_file != self.input_file:
+                shutil.copy(src = self.input_file, dst = dst)
+
+        log_msg('Simulation directory successfully initialized.')
+        log_msg(log_div)
+
+                    dst = dst) 
+    def init_workdir(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+        log_msg('Initializing the working directory.')
+
+        shutil.rmtree(self.run_dir)
+
+        os.mkdir(self.run_dir)
+
+        log_msg('Working directory successfully initialized.')
+        log_msg(log_div)
+
     def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
         """
         Short description
@@ -581,36 +646,10 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            if bldg_id not in os.listdir(self.run_dir):
-                os.mkdir(bldg_id)
+        if bldg_id is not None:            
             os.chdir(bldg_id)       
 
-        #if 'Building' not in self.app_type_list:
-        if 'templatedir' not in os.listdir(self.run_dir):
-            os.mkdir('templatedir')
         os.chdir('templatedir')
-
-        # For individual buildings...
-        if bldg_id is None:
-            # Make a copy of the input file and rename it to BIM.json
-            # This is a temporary fix, will be removed eventually.            
-            dst = posixpath.join(os.getcwd(),BIM_file)
-            #print(dst)
-            if dst != self.input_file:
-                shutil.copy(
-                    src = self.input_file,
-                    #dst = posixpath.join(self.run_dir,
-                    #                     'templatedir/{}'.format(BIM_file))) 
-                    dst = dst) 
-
-        # for regional analysis
-        else:
-            # Make a copy of the BIM file
-            shutil.copy(
-                src = posixpath.join(self.run_dir, BIM_file),
-                dst = posixpath.join(self.run_dir, 
-                                     '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
         if (("Modeling" in app_sequence) and
             ("Modeling" not in self.workflow_apps.keys())):
