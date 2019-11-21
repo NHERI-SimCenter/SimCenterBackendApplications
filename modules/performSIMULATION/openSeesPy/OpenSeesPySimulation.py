@@ -94,7 +94,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
             loc = response['floor']
         else:
             loc = response['floor2']
-        response['scalar_data'] = EDP_res[EDP_kind][loc]
+        response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
