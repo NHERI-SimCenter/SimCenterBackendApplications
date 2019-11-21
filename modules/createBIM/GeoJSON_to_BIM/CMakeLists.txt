@@ -1,0 +1,1 @@
+simcenter_add_python_script(SCRIPT GeoJSON_to_BIM.py)
