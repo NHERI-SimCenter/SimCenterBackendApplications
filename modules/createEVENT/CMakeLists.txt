@@ -4,8 +4,13 @@ add_subdirectory(hazardBasedEvent)
 add_subdirectory(multiplePEER)
 add_subdirectory(multipleSimCenter)
 add_subdirectory(siteResponse)
-add_subdirectory(stochasticGroundMotion)
-add_subdirectory(stochasticWind)
+#add_subdirectory(stochasticGroundMotion)
+#add_subdirectory(stochasticWind)
 add_subdirectory(windTunnelExperiment)
 add_subdirectory(LowRiseTPU)
 add_subdirectory(pointWindSpeed)
+add_subdirectory(LLNL_SW4)
+add_subdirectory(ASCE7_WindSpeed)
+
+
+
