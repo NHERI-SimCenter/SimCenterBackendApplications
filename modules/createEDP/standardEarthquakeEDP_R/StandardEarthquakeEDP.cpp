@@ -74,9 +74,9 @@ int main(int argc, char **argv)
   // return no random variables
   //
 
-  if (getRV == false) {
-    return 0;
-  }
+  //if (getRV == false) {
+  //  return 0;
+  //}
 
   // create output JSON object
   json_t *rootEDP = json_object();
@@ -91,6 +91,7 @@ int main(int argc, char **argv)
   json_t *rootBIM = json_load_file(filenameBIM, 0, &error);
   json_t *giROOT = json_object_get(rootBIM,"GI");  
   int numStory =  json_integer_value(json_object_get(giROOT,"numStory"));
+  //printf("number of stories: %d\n", numStory);
 
   json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
   json_t *eventsArray = json_object_get(rootEVENT,"Events");  
@@ -137,66 +138,104 @@ int main(int argc, char **argv)
     int mapIndex1;
     json_t *value1;
     //    int numStory = -1;
+	/*
     if (mappingArray == 0) {
       for (int i=0; i<=numStory; i++) {
-	json_t *response = json_object();
-	json_object_set(response,"type",json_string("max_abs_acceleration"));      
-	json_object_set(response,"cline",json_integer(1));
-	json_object_set(response,"floor",json_integer(i));
-	json_t *dataArray = json_array(); 
-	json_object_set(response,"scalar_data",dataArray);
-	json_array_append(responsesArray,response);
-	numEDP++;
-      }
-    } else {
-      // NOTE THIS SHOULD REALLY FIND SMALLEST CLINE, CLINE 1 MAY NOT BE THERE
-      json_array_foreach(mappingArray, mapIndex1, value1) {
+		json_t *response = json_object();
+		json_object_set(response,"type",json_string("max_abs_acceleration"));      
+		json_object_set(response,"cline",json_integer(1));
+		json_object_set(response,"floor",json_integer(i));
+		json_t* dofArray = json_array();
+		json_array_append(dofArray, json_integer(1));
+		json_array_append(dofArray, json_integer(2));
+		json_object_set(response, "dofs", dofArray);
+		json_t *dataArray = json_array(); 
+		json_object_set(response,"scalar_data",dataArray);
+		json_array_append(responsesArray,response);
+		numEDP++;
+		numEDP++;
+	  }
+	} else {
+	  // NOTE THIS SHOULD REALLY FIND SMALLEST CLINE, CLINE 1 MAY NOT BE THERE
+	  json_array_foreach(mappingArray, mapIndex1, value1) {
 	
-	int cline = json_integer_value(json_object_get(value1,"cline"));
-	int floor = json_integer_value(json_object_get(value1,"floor"));
-	int node = json_integer_value(json_object_get(value1,"node"));
+		int cline = json_integer_value(json_object_get(value1,"cline"));
+		int floor = json_integer_value(json_object_get(value1,"floor"));
+		int node = json_integer_value(json_object_get(value1,"node"));
 	
-	//      printf("%d %d %d\n",cline,floor,node);
+		//      printf("%d %d %d\n",cline,floor,node);
 	
-	if (cline == 1) {
-	  //	numStory++;
-	  json_t *response = json_object();
-	  json_object_set(response,"type",json_string("max_abs_acceleration"));      
-	  json_object_set(response,"cline",json_integer(cline));
-	  json_object_set(response,"floor",json_integer(floor));
-	  json_t *dataArray = json_array(); 
-	  json_object_set(response,"scalar_data",dataArray);
-	  json_array_append(responsesArray,response);
-	  numEDP++;
+		if (cline == 1) {
+		  //	numStory++;
+		  json_t *response = json_object();
+		  json_object_set(response,"type",json_string("max_abs_acceleration"));      
+		  json_object_set(response,"cline",json_integer(cline));
+		  json_object_set(response,"floor",json_integer(floor));
+		  json_t* dofArray = json_array();
+		  json_array_append(dofArray, json_integer(1));
+		  json_array_append(dofArray, json_integer(2));
+		  json_object_set(response, "dofs", dofArray);
+		  json_t *dataArray = json_array(); 
+		  json_object_set(response,"scalar_data",dataArray);
+		  json_array_append(responsesArray,response);
+		  numEDP++;
+		  numEDP++;
+		}
+	  }
+	} 
+	*/
+	for (int i = 0; i <= numStory; i++) {
+		json_t* response = json_object();
+		json_object_set(response, "type", json_string("max_abs_acceleration"));
+		json_object_set(response, "cline", json_integer(1));
+		json_object_set(response, "floor", json_integer(i));
+		json_t* dofArray = json_array();
+		json_array_append(dofArray, json_integer(1));
+		json_array_append(dofArray, json_integer(2));
+		json_object_set(response, "dofs", dofArray);
+		json_t* dataArray = json_array();
+		json_object_set(response, "scalar_data", dataArray);
+		json_array_append(responsesArray, response);
+		numEDP++;
+		numEDP++;
 	}
-      }
-    }    
-    for (int i=0; i<numStory; i++) {
-      json_t *response = json_object();
-      json_object_set(response,"type",json_string("max_drift"));      
-      json_object_set(response,"cline",json_integer(1));
-      json_object_set(response,"floor1",json_integer(i));
-      json_object_set(response,"floor2",json_integer(i+1));
-      json_t *dataArray = json_array(); 
-      json_object_set(response,"scalar_data",dataArray);
-      json_array_append(responsesArray,response);
-      numEDP++;
-    }
+
+	for (int i=0; i<numStory; i++) {
+		json_t *response = json_object();
+		json_object_set(response,"type",json_string("max_drift"));      
+		json_object_set(response,"cline",json_integer(1));
+		json_object_set(response,"floor1",json_integer(i));
+		json_object_set(response,"floor2",json_integer(i+1));
+		json_t* dofArray = json_array();
+		json_array_append(dofArray, json_integer(1));
+		json_array_append(dofArray, json_integer(2));
+		json_object_set(response, "dofs", dofArray);
+		json_t *dataArray = json_array(); 
+		json_object_set(response,"scalar_data",dataArray);
+		json_array_append(responsesArray,response);
+		numEDP++;
+		numEDP++;
+	}
   
     json_t *response = json_object();
     json_object_set(response,"type",json_string("residual_disp"));      
     json_object_set(response,"cline",json_integer(1));
     json_object_set(response,"floor",json_integer(numStory));
+	json_t* dofArray = json_array();
+	json_array_append(dofArray, json_integer(1));
+	json_array_append(dofArray, json_integer(2));
+	json_object_set(response, "dofs", dofArray);
     json_t *dataArray = json_array(); 
     json_object_set(response,"scalar_data",dataArray);
     json_array_append(responsesArray,response);
     numEDP++;
+	numEDP++;
 
     json_object_set(eventObj,"responses",responsesArray);
       
     json_array_append(eventArray,eventObj);
   }
- json_object_set(rootEDP,"total_number_edp",json_integer(numEDP));  
+  json_object_set(rootEDP,"total_number_edp",json_integer(numEDP));  
   json_object_set(rootEDP,"EngineeringDemandParameters",eventArray);  
 
   //
