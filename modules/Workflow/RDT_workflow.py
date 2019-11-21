@@ -59,14 +59,15 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry, 
-         force_cleanup=False,
-         bldg_id_range=[None, None]):
+         force_cleanup, bldg_id_range, reference_dir):
 
     # initialize the log file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
     runDir = inputs['runDir']
 
+    if not os.path.exists(runDir):
+        os.mkdir(runDir)
     whale.log_file = runDir + '/log.txt'
     with open(whale.log_file, 'w') as f:
         f.write('RDT workflow\n') 
@@ -79,8 +80,9 @@ def main(run_type, input_file, app_registry,
         log_msg('Forced cleanup turned on.')
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Building', 'Event', 'Modeling', 'EDP', 'Simulation', 
-                         'UQ', 'DL'])
+        app_type_list = ['Building', 'RegionalEvent', 'Event', 'Modeling', 
+                         'EDP', 'Simulation', 'UQ', 'DL'],
+        reference_dir = reference_dir)
 
     if bldg_id_range[0] is not None:
         print(bldg_id_range)
@@ -98,7 +100,8 @@ def main(run_type, input_file, app_registry,
     WF.init_workdir()
 
     # prepare the basic inputs for individual buildings
-    WF.create_building_files()
+    building_file = WF.create_building_files()
+    WF.create_regional_event(building_file)
 
     # TODO: not elegant code, fix later
     with open(WF.building_file_path, 'r') as f:
@@ -161,6 +164,9 @@ if __name__ == '__main__':
     workflowArgParser.add_argument("-f", "--forceCleanup",  
         action="store_true", 
         help="Remove working directories after the simulation is completed.")
+    workflowArgParser.add_argument("-d", "--referenceDir",
+        default=os.getcwd(),
+        help="Relative paths in the config file are referenced to this directory.")
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args() 
@@ -175,4 +181,5 @@ if __name__ == '__main__':
          input_file = wfArgs.configuration,
          app_registry = wfArgs.registry,
          force_cleanup = wfArgs.forceCleanup,
-         bldg_id_range = [wfArgs.Min, wfArgs.Max])
+         bldg_id_range = [wfArgs.Min, wfArgs.Max],
+         reference_dir = wfArgs.referenceDir)

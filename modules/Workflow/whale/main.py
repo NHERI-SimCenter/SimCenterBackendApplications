@@ -72,6 +72,7 @@ import importlib
 from copy import deepcopy
 import subprocess
 import warnings
+import numpy as np
 import pandas as pd
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -252,7 +253,7 @@ class WorkflowApplication(object):
         self.inputs = api_info['Inputs']
         self.outputs = api_info['Outputs']
 
-    def set_pref(self, preferences):
+    def set_pref(self, preferences, ref_path):
         """
         Short description
 
@@ -262,6 +263,17 @@ class WorkflowApplication(object):
             Explain...
         """
         self.pref = preferences
+
+        # parse the relative paths (if any)
+        ASI = [inp['id'] for inp in self.app_spec_inputs]
+        for preference in list(self.pref.keys()):
+            if preference in ASI:
+                input_id = np.where([preference == asi for asi in ASI])[0][0]
+                input_type = self.app_spec_inputs[input_id]['type']
+
+                if input_type == 'path':
+                    self.pref[preference] = posixpath.join(ref_path, 
+                                                         self.pref[preference])
 
     def get_command_list(self, app_path):
         """
@@ -325,7 +337,8 @@ class Workflow(object):
     
     """
 
-    def __init__(self, run_type, input_file, app_registry, app_type_list):
+    def __init__(self, run_type, input_file, app_registry, app_type_list,
+        reference_dir=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -336,6 +349,7 @@ class Workflow(object):
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
+        self.reference_dir = reference_dir
         self.app_type_list = app_type_list
 
         # initialize app registry
@@ -437,10 +451,15 @@ class Workflow(object):
                 'want to run a simulation remotely.')
             #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
 
+        if 'referenceDir' in input_data:
+            self.reference_dir = input_data['referenceDir']
+
         for loc_name, loc_val in zip(
-            ['Run dir', 'Local applications dir','Remote applications dir'], 
-            [self.run_dir, self.app_dir_remote, self.app_dir_local]):
-            log_msg('\t{} location: {}'.format(loc_name, loc_val))
+            ['Run dir', 'Local applications dir','Remote applications dir',
+             'Reference dir'], 
+            [self.run_dir, self.app_dir_remote, self.app_dir_local,
+             self.reference_dir]):
+            log_msg('\t{} : {}'.format(loc_name, loc_val))
 
         if 'Building' in self.app_type_list:
             if 'buildingFile' in input_data:
@@ -474,7 +493,8 @@ class Workflow(object):
                             raise WorkFlowInputError(
                                 'Application entry missing for {}'.format('Events'))
 
-                        app_object.set_pref(event['ApplicationData'])
+                        app_object.set_pref(event['ApplicationData'], 
+                                            self.reference_dir)
                         self.workflow_apps['Event'] = app_object
                       
                     else: 
@@ -499,7 +519,8 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'])
+                    app_object.set_pref(requested_apps[app_type]['ApplicationData'], 
+                                        self.reference_dir)
                     self.workflow_apps[app_type] = app_object
               
                 else:
@@ -564,6 +585,43 @@ class Workflow(object):
         log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
         log_msg('Building files successfully created.')
+        log_msg(log_div)
+
+        return building_file
+
+    def create_regional_event(self, building_file):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Creating regional event...')
+
+        reg_event_app = self.workflow_apps['RegionalEvent']
+
+        # TODO: not elegant code, fix later
+        for input_ in reg_event_app.inputs:
+            if input_['id'] == 'buildingFile':
+                input_['default'] = building_file
+
+        reg_event_command_list = reg_event_app.get_command_list(
+            app_path = self.app_dir_local)
+
+        command = create_command(reg_event_command_list, self.run_type)
+
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+        
+        result, returncode = run_command(command)
+
+        log_msg('\tOutput: ')
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+
+        log_msg('Regional event successfully created.')
         log_msg(log_div)
 
     def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):
@@ -648,9 +706,14 @@ class Workflow(object):
         """
         log_msg('Initializing the working directory.')
 
-        shutil.rmtree(self.run_dir)
+        os.chdir(self.run_dir)
 
-        os.mkdir(self.run_dir)
+        for dir_or_file in os.listdir(os.getcwd()):
+            if dir_or_file != 'log.txt':
+                if os.path.isdir(dir_or_file):
+                    shutil.rmtree(dir_or_file)
+                else:
+                    os.remove(dir_or_file)
 
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
@@ -671,7 +734,7 @@ class Workflow(object):
 
         workdir_contents = os.listdir(self.run_dir)
         for file_or_dir in workdir_contents:
-            if os.path.isdir(os.path.join(self.run_dir, file_or_dir)):
+            if os.path.isdir(posixpath.join(self.run_dir, file_or_dir)):
                 shutil.rmtree(file_or_dir, ignore_errors=True)
 
         log_msg('Working directory successfully cleaned up.')
