@@ -147,11 +147,11 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     
     dakota_input += (
     """environment
-    tabular_data
-    tabular_data_file = 'dakotaTab.out'
+tabular_data
+tabular_data_file = 'dakotaTab.out'
     
-    method,
-    """)
+method,
+""")
     
     if method == "Importance Sampling":
         numSamples=uqData["samples"]
@@ -160,14 +160,14 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
 
         dakota_input += (
     """importance_sampling
-    {ismethod}
-    samples = {samples}
-    seed = {seed}
+{ismethod}
+samples = {samples}
+seed = {seed}
     
-    """.format(
-        ismethod = imp_sams_arg,
-        samples = numSamples,
-        seed = seed))
+""".format(
+    ismethod = imp_sams_arg,
+    samples = numSamples,
+    seed = seed))
     
     elif method == "Monte Carlo":
         numSamples=uqData["samples"]
@@ -175,14 +175,14 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
 
         dakota_input += (
     """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
+sample_type = {sample_type}
+samples = {samples}
+seed = {seed}
     
-    """.format(
-        sample_type = 'random',
-        samples = numSamples,
-        seed = seed))
+""".format(
+    sample_type = 'random',
+    samples = numSamples,
+    seed = seed))
     
     elif method == "LHS":
         numSamples=uqData["samples"]
@@ -190,14 +190,14 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
 
         dakota_input += (
     """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
+sample_type = {sample_type}
+samples = {samples}
+seed = {seed}
     
-    """.format(
-        sample_type = 'lhs' ,
-        samples = numSamples,
-        seed = seed))
+""".format(
+    sample_type = 'lhs' ,
+    samples = numSamples,
+    seed = seed))
     
     elif method == "Gaussian Process Regression":
         train_samples = uqData["samples"]
@@ -242,9 +242,9 @@ formats
 text_archive
         
 """).format(
-        no_surr_sams = train_samples2,
-        surr_seed = gpr_seed2,
-        surr_sams_type = train_method2)
+    no_surr_sams = train_samples2,
+    surr_seed = gpr_seed2,
+    surr_sams_type = train_method2)
 
     # write out the variable data
     #f.write('variables,\n')
@@ -532,7 +532,7 @@ text_archive
         train_method = uqData["dataMethod"]
 
         if train_method == "Monte Carlo":
-        	train_method = "random"
+            train_method = "random"
 
         dakota_input += (
         """method
@@ -583,7 +583,7 @@ interface_pointer = 'SimulationInterface'
     dakota_input += ('parameters_file = \'params.in\' \n')
     dakota_input += ('results_file = \'results.out\' \n')
     if uqData['keepSamples']:
-    dakota_input += ('work_directory directory_tag directory_save\n')
+        dakota_input += ('work_directory directory_tag directory_save\n')
     else:
         dakota_input += ('work_directory directory_tag\n')
     dakota_input += ('copy_files = \'templatedir/*\' \n')
