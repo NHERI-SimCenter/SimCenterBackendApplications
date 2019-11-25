@@ -645,10 +645,10 @@ class Workflow(object):
                 shutil.rmtree(bldg_id, ignore_errors=True)
 
             # create the building_id dir and the template dir
-                os.mkdir(bldg_id)
-            os.chdir(bldg_id)       
+            os.mkdir(bldg_id)
+            os.chdir(bldg_id)
             os.mkdir('templatedir')
-        os.chdir('templatedir')
+            os.chdir('templatedir')
 
             # Make a copy of the BIM file
             shutil.copy(
@@ -958,39 +958,39 @@ class Workflow(object):
             max_id = max(int(bldg_id), max_id)
             
             try:
-            with open(bldg_id+'/DM.json') as f:
-                DM = json.load(f)            
-                
-            for FG in DM.keys():
-
-                if FG == 'aggregate':
-                    PG = ''
-                    DS_list = list(DM[FG].keys())
-                else:
-                    PG = next(iter(DM[FG]))
-                    DS_list = list(DM[FG][PG].keys())
-                
-                if ((DM_agg.size == 0) or 
-                    (FG not in DM_agg.columns.get_level_values('FG'))):
-                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
-                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                with open(bldg_id+'/DM.json') as f:
+                    DM = json.load(f)            
                     
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_add.loc[bldg_id, (FG, DS)] = val
-                        
-                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
+                for FG in DM.keys():
+
+                    if FG == 'aggregate':
+                        PG = ''
+                        DS_list = list(DM[FG].keys())
+                    else:
+                        PG = next(iter(DM[FG]))
+                        DS_list = list(DM[FG][PG].keys())
                 
-                else:        
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_agg.loc[bldg_id, (FG, DS)] = val
+                    if ((DM_agg.size == 0) or 
+                        (FG not in DM_agg.columns.get_level_values('FG'))):
+                        MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
+                        DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                        
+                        for DS in DS_list:
+                            if PG == '':
+                                val = DM[FG][DS]
+                            else:
+                                val = DM[FG][PG][DS]
+                            DM_add.loc[bldg_id, (FG, DS)] = val
+                            
+                        DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
+                    
+                    else:        
+                        for DS in DS_list:
+                            if PG == '':
+                                val = DM[FG][DS]
+                            else:
+                                val = DM[FG][PG][DS]
+                            DM_agg.loc[bldg_id, (FG, DS)] = val
             except:
                 log_msg('Error reading DM data for building {}'.format(bldg_id))
 
@@ -1001,29 +1001,28 @@ class Workflow(object):
             bldg_id = bldg['id']
             
             try:
-            
-            with open(bldg_id+'/DV.json') as f:
-                DV = json.load(f)
-                
-            for DV_type in DV.keys():
-                
-                stat_list = list(DV[DV_type]['total'].keys())
-                
-                if ((DV_agg.size == 0) or 
-                    (DV_type not in DV_agg.columns.get_level_values('DV'))): 
-                
-                    MI = pd.MultiIndex.from_product(
-                        [[DV_type,],stat_list],names=['DV','stat'])
-                
-                    DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                with open(bldg_id+'/DV.json') as f:
+                    DV = json.load(f)
                     
-                    for stat in stat_list:
-                        DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                for DV_type in DV.keys():
+                    
+                    stat_list = list(DV[DV_type]['total'].keys())
+                    
+                    if ((DV_agg.size == 0) or 
+                        (DV_type not in DV_agg.columns.get_level_values('DV'))): 
+                    
+                        MI = pd.MultiIndex.from_product(
+                            [[DV_type,],stat_list],names=['DV','stat'])
+                    
+                        DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
                         
-                    DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
-                else:                     
-                    for stat in stat_list:
-                        DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                        for stat in stat_list:
+                            DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                            
+                        DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
+                    else:                     
+                        for stat in stat_list:
+                            DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
 
             except:
                 log_msg('Error reading DM data for building {}'.format(bldg_id))
