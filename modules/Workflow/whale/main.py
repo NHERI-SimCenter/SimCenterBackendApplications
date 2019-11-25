@@ -338,7 +338,7 @@ class Workflow(object):
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None):
+        reference_dir=None, working_dir=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -350,6 +350,7 @@ class Workflow(object):
         self.input_file = input_file
         self.app_registry_file = app_registry
         self.reference_dir = reference_dir
+        self.working_dir = working_dir
         self.app_type_list = app_type_list
 
         # initialize app registry
@@ -431,7 +432,9 @@ class Workflow(object):
         log_msg('\tOK')
 
         # parse the location of the run_dir
-        if 'runDir' in input_data:
+        if self.working_dir is not None:
+            self.run_dir = self.working_dir
+        elif 'runDir' in input_data:
             self.run_dir = input_data['runDir']
         else:
             raise WorkFlowInputError('Need a runDir entry in the input file')

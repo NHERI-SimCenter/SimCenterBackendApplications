@@ -59,12 +59,16 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry, 
-         force_cleanup, bldg_id_range, reference_dir):
+         force_cleanup, bldg_id_range, reference_dir,
+         working_dir):
 
     # initialize the log file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
-    runDir = inputs['runDir']
+    if working_dir is not None:
+        runDir = working_dir
+    else:
+        runDir = inputs['runDir']
 
     if not os.path.exists(runDir):
         os.mkdir(runDir)
@@ -82,7 +86,8 @@ def main(run_type, input_file, app_registry,
     WF = whale.Workflow(run_type, input_file, app_registry,
         app_type_list = ['Building', 'RegionalEvent', 'Event', 'Modeling', 
                          'EDP', 'Simulation', 'UQ', 'DL'],
-        reference_dir = reference_dir)
+        reference_dir = reference_dir,
+        working_dir = working_dir)
 
     if bldg_id_range[0] is not None:
         print(bldg_id_range)
@@ -167,6 +172,10 @@ if __name__ == '__main__':
     workflowArgParser.add_argument("-d", "--referenceDir",
         default=os.getcwd(),
         help="Relative paths in the config file are referenced to this directory.")
+    workflowArgParser.add_argument("-w", "--workDir",
+        default=os.getcwd(),
+        help="Absolute path to the working directory. Overwrite the rundir setting in the config file.")
+
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args() 
@@ -182,4 +191,5 @@ if __name__ == '__main__':
          app_registry = wfArgs.registry,
          force_cleanup = wfArgs.forceCleanup,
          bldg_id_range = [wfArgs.Min, wfArgs.Max],
-         reference_dir = wfArgs.referenceDir)
+         reference_dir = wfArgs.referenceDir,
+         working_dir = wfArgs.workDir)
