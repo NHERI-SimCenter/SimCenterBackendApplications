@@ -30,6 +30,8 @@ def main(args):
     elif platform.system() == 'Linux':
         env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
         env["PATH"] = env["PATH"] + ':{}/dakota/dakota-6.5/bin'.format(home)
+    elif platform.system() == 'Windows':
+        pass
     else:
         print("PLATFORM {} NOT RECOGNIZED".format(platform.system))
 
