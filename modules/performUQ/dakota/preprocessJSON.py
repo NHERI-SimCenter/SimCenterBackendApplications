@@ -66,7 +66,7 @@ discreteDesignSetStringValues =[]
 numResultFiles = 0
 outputResultFiles = []
 
-def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData):
+def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runType, uqData):
 
     global numRandomVariables
     global numNormalUncertain
@@ -132,7 +132,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
     remoteWorkflowDriverName = 'workflow_driver'
-    if platform.system() == 'Windows':
+    if ((platform.system() == 'Windows') and (runType == 'run')):
         workflowDriverName = 'workflow_driver.bat'
 
     #
