@@ -675,19 +675,19 @@ interface_pointer = 'SimulationInterface'
     if samExists == True: f.write('perl dpreproSimCenter params.in sam.j ' + samName + '\n')
     if evtExists == True: f.write('perl dpreproSimCenter params.in evt.j ' + evtName + '\n')
     if edpExists == True: f.write('perl dpreproSimCenter params.in edp.j ' + edpName + '\n')
+    #if simExists == True: f.write('perl dpreproSimCenter params.in sim.j ' + simName + '\n')
 
     scriptDir = os.path.dirname(os.path.realpath(__file__))
 
     with open(driverFile) as fp:
         for line in fp:
-            #print(line)
-            #print(localDir)
-            if remoteDir is not None:
-                line = line.replace(localDir,remoteDir)
+            #if remoteDir is not None:
+            #    line = line.replace(localDir,remoteDir)
             f.write(line)
-            print(line)
+            #print(line)
 
-    f.write('#comment to fix a bug\n')
+    os.remove(driverFile)
+
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
