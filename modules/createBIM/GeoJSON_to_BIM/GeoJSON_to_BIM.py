@@ -30,12 +30,16 @@ def create_building_files(output_file, building_source_file,
             ((max_id is not None) and (bldg_id > max_id))):
             continue
 
+        bldg_loc = bldg_src['geometry']['coordinates']
+
         BIM_i = {
             "RandomVariables": [],
-            "GeneralInformation": dict(
+            "GI": dict(
                 BIM_id = str(bldg_id),
-                geometry = bldg_src["geometry"],
-                units = units_data,
+                location = {
+                    'latitude': bldg_loc[1],
+                    'longitude': bldg_loc[0]
+                },
                 **bldg_src["properties"]
             )
         }
