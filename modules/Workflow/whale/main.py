@@ -431,6 +431,17 @@ class Workflow(object):
             input_data = json.load(f)
         log_msg('\tOK')
 
+        # store the specified units (if available)
+        if 'units' in input_data:
+            self.units = input_data['units']
+
+            log_msg('\tThe following units were specified: ')
+            for key, unit in self.units.items():
+                log_msg('\t\t{}: {}'.format(key, unit))
+        else:
+            self.units = None
+            log_msg('\tNo units specified; using Standard units.')
+
         # parse the location of the run_dir
         if self.working_dir is not None:
             self.run_dir = self.working_dir
@@ -659,6 +670,16 @@ class Workflow(object):
                 dst = posixpath.join(
                     self.run_dir, 
                     '{}/templatedir/{}'.format(bldg_id, BIM_file)))
+
+            # Open the BIM file and add the unit information to it
+            if self.units is not None:
+                with open(BIM_file, 'r') as f:
+                    BIM_data = json.load(f)
+
+                BIM_data.update({'units': self.units})
+                
+                with open(BIM_file, 'w') as f:
+                    json.dump(BIM_data, f, indent=2)
 
         else:
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
@@ -959,7 +980,7 @@ class Workflow(object):
             bldg_id = bldg['id']
             min_id = min(int(bldg_id), min_id)
             max_id = max(int(bldg_id), max_id)
-            
+
             try:
                 with open(bldg_id+'/DM.json') as f:
                     DM = json.load(f)            
@@ -972,7 +993,7 @@ class Workflow(object):
                     else:
                         PG = next(iter(DM[FG]))
                         DS_list = list(DM[FG][PG].keys())
-                
+                    
                     if ((DM_agg.size == 0) or 
                         (FG not in DM_agg.columns.get_level_values('FG'))):
                         MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
@@ -1002,8 +1023,9 @@ class Workflow(object):
 
         for bldg in bldg_data:
             bldg_id = bldg['id']
-            
+
             try:
+            
                 with open(bldg_id+'/DV.json') as f:
                     DV = json.load(f)
                     
@@ -1026,7 +1048,7 @@ class Workflow(object):
                     else:                     
                         for stat in stat_list:
                             DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-
+                            
             except:
                 log_msg('Error reading DM data for building {}'.format(bldg_id))
 
