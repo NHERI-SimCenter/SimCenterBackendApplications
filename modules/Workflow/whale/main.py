@@ -906,6 +906,9 @@ class Workflow(object):
 
         result, returncode = run_command(command)
 
+        log_msg('\tOutput: ')
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+
         if self.run_type == 'run':
             log_msg('Response simulation finished successfully.')
         elif self.run_type == 'set_up':
