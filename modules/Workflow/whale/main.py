@@ -684,6 +684,14 @@ class Workflow(object):
                     json.dump(BIM_data, f, indent=2)
 
         else:
+
+            for dir_or_file in os.listdir(os.getcwd()):
+                if dir_or_file not in ['log.txt', 'templatedir']:
+                    if os.path.isdir(dir_or_file):
+                        shutil.rmtree(dir_or_file)
+                    else:
+                        os.remove(dir_or_file)
+
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
 
             # Make a copy of the input file and rename it to BIM.json
