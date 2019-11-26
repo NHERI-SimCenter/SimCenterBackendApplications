@@ -88,11 +88,11 @@ def main(args):
 
     #Run Preprocess for Dakota
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData)
+    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
-    if platform.system() == 'Windows':
+    if ((platform.system() == 'Windows') and (runDakota == 'run')):
         workflowDriverName = 'workflow_driver.bat'
 
     #Create Template Directory and copy files
