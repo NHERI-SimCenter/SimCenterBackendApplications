@@ -148,11 +148,13 @@ def create_command(command_list, enforced_python=None):
     """
     if command_list[0] == 'python':
 
-        if run_type != 'set_up':
-            # replace python with the full path to the python interpreter
+        # replace python with...
+        if enforced_python is None:
+            # the full path to the python interpreter
             python_exe = sys.executable
         else:
-            python_exe = 'python'
+            # the prescribed path to the python interpreter
+            python_exe = enforced_python
 
         command = '"{}" "{}" '.format(python_exe, command_list[1])# + ' '.join(command_list[2:])
 
@@ -471,7 +473,7 @@ class Workflow(object):
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
              'Reference dir'], 
-            [self.run_dir, self.app_dir_remote, self.app_dir_local,
+            [self.run_dir, self.app_dir_local, self.app_dir_remote,
              self.reference_dir]):
             log_msg('\t{} : {}'.format(loc_name, loc_val))
 
