@@ -98,16 +98,16 @@ def main(args):
     #Create Template Directory and copy files
     st = os.stat(workflowDriverName)
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
-    shutil.copy(workflowDriverName, "templatedir")
+    #shutil.copy(workflowDriverName, "templatedir")
     shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
-    shutil.copy(bimName, "bim.j")
-    shutil.copy(evtName, "evt.j")
-    if os.path.isfile(samName): shutil.copy(samName, "sam.j")
-    shutil.copy(edpName, "edp.j")
-    if os.path.isfile(simName): shutil.copy(simName, "sim.j")
+    shutil.move(bimName, "bim.j")
+    shutil.move(evtName, "evt.j")
+    if os.path.isfile(samName): shutil.move(samName, "sam.j")
+    shutil.move(edpName, "edp.j")
+    #if os.path.isfile(simName): shutil.move(simName, "sim.j")
 
     # copy the dakota input file to the main working dir for the structure
-    shutil.copy("dakota.in", "../")
+    shutil.move("dakota.in", "../")
 
     # change dir to the main working dir for the structure
     os.chdir("../")
@@ -123,13 +123,8 @@ def main(args):
             result = e.output
             returncode = e.returncode
         result = result.decode(sys.stdout.encoding)
+
         print(result, returncode)
-
-        #Postprocess Dakota results
-        #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(
-        #    scriptDir, numRVs, numSamples, bimName, edpName)
-
-        #subprocess.Popen(postprocessCommand, shell=True).wait()
 
 if __name__ == '__main__':
 
