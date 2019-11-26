@@ -566,31 +566,34 @@ interface_pointer = 'SimulationInterface'
     if method == "Gaussian Process Regression":
         dakota_input += ('id_interface = \'SimulationInterface\',\n')
 
-    if (runType == "local"):
-        uqData['concurrency'] = 4
-    
-    if uqData['concurrency'] == None:
-        dakota_input += "fork asynchronous\n"
-    elif uqData['concurrency'] > 1:
-        dakota_input += "fork asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
-    
     if runType == "local":    
-        dakota_input += "analysis_driver = '{}'\n".format(workflowDriverName)
+        dakota_input += "  analysis_driver = '{}'\n".format(workflowDriverName)
     else:
-        dakota_input += "analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
+        dakota_input += "  analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
 
+    dakota_input += "    fork\n"
 
     # dakota_input += ('\nanalysis_driver = \'python analysis_driver.py\' \n')
-    dakota_input += ('parameters_file = \'params.in\' \n')
-    dakota_input += ('results_file = \'results.out\' \n')
+    dakota_input += ('      parameters_file = \'params.in\' \n')
+    dakota_input += ('      results_file = \'results.out\' \n')
+    dakota_input += ('      aprepro \n')
+    dakota_input += ('      work_directory\n')
+    dakota_input += ('        named \'workdir\' \n')
+    dakota_input += ('        directory_tag\n')    
     if uqData['keepSamples']:
-        dakota_input += ('work_directory directory_tag directory_save\n')
-    else:
-        dakota_input += ('work_directory directory_tag\n')
-    dakota_input += ('copy_files = \'templatedir/*\' \n')
+        dakota_input += ('        directory_save\n')    
+
+    dakota_input += ('      copy_files = \'templatedir/*\' \n')
     # dakota_input += ('named \'workdir\' file_save  directory_save \n')
-    dakota_input += ('named \'workdir\' \n')
-    dakota_input += ('aprepro \n')
+
+    if (runType == "local"):
+        uqData['concurrency'] = uqData.get('concurrency', 4)
+    
+    if uqData['concurrency'] == None:
+        dakota_input += "  asynchronous\n"
+    elif uqData['concurrency'] > 1:
+        dakota_input += "  asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
+
     dakota_input += ('\n')
 
 
