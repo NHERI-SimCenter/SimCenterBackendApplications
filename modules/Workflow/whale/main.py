@@ -135,7 +135,7 @@ def log_error(msg):
     log_msg(msg)
     log_msg(log_div)
 
-def create_command(command_list, run_type):
+def create_command(command_list, enforced_python=None):
     """
     Short description
 
@@ -588,7 +588,7 @@ class Workflow(object):
 
         bldg_command_list.append(u'--getRV')
 
-        command = create_command(bldg_command_list, self.run_type)        
+        command = create_command(bldg_command_list)        
 
         log_msg('Creating initial building files...')
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
@@ -626,7 +626,7 @@ class Workflow(object):
         reg_event_command_list = reg_event_app.get_command_list(
             app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list, self.run_type)
+        command = create_command(reg_event_command_list)
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
         
@@ -804,7 +804,7 @@ class Workflow(object):
 
             command_list.append(u'--getRV')
 
-            command = create_command(command_list, self.run_type)
+            command = create_command(command_list)
             
             log_msg('\tRunning {} app for RV...'.format(app_type))
             log_msg('\n{}\n'.format(command), prepend_timestamp=False)
@@ -844,10 +844,17 @@ class Workflow(object):
             app_sequence.remove("Modeling")
 
         for app_type in app_sequence:
-            command_list = self.workflow_apps[app_type].get_command_list(
-                app_path = self.app_dir_remote)
 
-            driver_script += create_command(command_list, self.run_type) + u'\n'
+            if self.run_type == 'set_up':
+                command_list = self.workflow_apps[app_type].get_command_list(
+                    app_path = self.app_dir_remote)
+
+                driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+            else:
+                command_list = self.workflow_apps[app_type].get_command_list(
+                    app_path = self.app_dir_local)
+
+                driver_script += create_command(command_list) + u'\n'
 
         log_msg('Workflow driver script:')
         log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
@@ -892,7 +899,7 @@ class Workflow(object):
         command_list.append(u'--runType')
         command_list.append(u'{}'.format(self.run_type))
 
-        command = create_command(command_list, self.run_type)
+        command = create_command(command_list)
 
         log_msg('\tSimulation command:')
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
@@ -945,7 +952,7 @@ class Workflow(object):
         command_list = self.workflow_apps['DL'].get_command_list(
             app_path=self.app_dir_local)     
 
-        command = create_command(command_list, self.run_type)
+        command = create_command(command_list)
 
         log_msg('\tDamage and loss assessment command:')
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
