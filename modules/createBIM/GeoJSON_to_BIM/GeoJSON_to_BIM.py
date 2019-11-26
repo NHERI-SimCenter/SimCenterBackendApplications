@@ -8,7 +8,7 @@ else:
 
 import argparse, posixpath, ntpath, json
 
-def create_building_files(output_file, building_source_file, config_file, 
+def create_building_files(output_file, building_source_file, 
     min_id, max_id):
 
     # check if the min and max values are provided in the right order
@@ -17,9 +17,6 @@ def create_building_files(output_file, building_source_file, config_file,
             tmp = min_id
             min_id = max_id
             max_id = tmp
-
-    with open(config_file, 'r') as f:
-        units_data = json.load(f)['units']
 
     with open(building_source_file, 'r') as f:
         building_source_list = json.load(f)["features"]
@@ -58,7 +55,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--buildingFile')
     parser.add_argument('--buildingSourceFile')
-    parser.add_argument('--configFile', default=None)
     parser.add_argument('--Min', default=None)
     parser.add_argument('--Max', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
@@ -66,6 +62,6 @@ if __name__ == '__main__':
 
     if args.getRV:
         sys.exit(create_building_files(args.buildingFile, args.buildingSourceFile,
-            args.configFile, int(args.Min), int(args.Max)))
+            int(args.Min), int(args.Max)))
     else:
         pass # not used
