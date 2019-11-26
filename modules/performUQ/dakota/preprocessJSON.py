@@ -118,6 +118,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     # parse the data
     #
 
+    print('\nParsing random variables...')
     bimExists = parseFileForRV(bimName)
     evtExists = parseFileForRV(evtName)
     samExists = parseFileForRV(samName)
@@ -163,7 +164,7 @@ method,
 {ismethod}
 samples = {samples}
 seed = {seed}
-    
+
 """.format(
     ismethod = imp_sams_arg,
     samples = numSamples,
@@ -178,7 +179,7 @@ seed = {seed}
 sample_type = {sample_type}
 samples = {samples}
 seed = {seed}
-    
+
 """.format(
     sample_type = 'random',
     samples = numSamples,
@@ -193,7 +194,7 @@ seed = {seed}
 sample_type = {sample_type}
 samples = {samples}
 seed = {seed}
-    
+
 """.format(
     sample_type = 'lhs' ,
     samples = numSamples,
@@ -532,7 +533,7 @@ text_archive
         train_method = uqData["dataMethod"]
 
         if train_method == "Monte Carlo":
-            train_method = "random"
+        	train_method = "random"
 
         dakota_input += (
         """method
@@ -761,7 +762,7 @@ def parseFileForRV(fileName):
     global outputResultFiles
 
     if os.path.isfile(fileName):
-        print("Reading {} file to parse random variables...".format(fileName))
+        print("{}:".format(fileName))
     else:
         print("ERROR: {} file not found.".format(fileName))
         return False
