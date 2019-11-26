@@ -24,7 +24,10 @@ def find_neighbors(building_file, event_metadata, samples, neighbors):
         with open(bldg['file'], 'r') as f:
             bldg_data = json.load(f)
 
-        bldg_loc = bldg_data['GI']['location']
+        if 'GI' in bldg_data:
+            bldg_loc = bldg_data['GI']['location']
+        else:
+            bldg_loc = bldg_data['GeneralInformation']['location']
         bim_df.iloc[i]['lon'] = bldg_loc['longitude']
         bim_df.iloc[i]['lat'] = bldg_loc['latitude']
         bim_df.iloc[i]['file'] = bldg['file']
