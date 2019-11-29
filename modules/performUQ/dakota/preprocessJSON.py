@@ -8,6 +8,7 @@ if sys.version.startswith('2'):
 #    from past.builtins import basestring
 
 import os, sys, json
+from io import open
 import platform
 import posixpath
 
