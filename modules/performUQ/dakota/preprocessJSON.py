@@ -8,7 +8,6 @@ if sys.version.startswith('2'):
 #    from past.builtins import basestring
 
 import os, sys, json
-from io import open
 import platform
 import posixpath
 
@@ -666,7 +665,7 @@ interface_pointer = 'SimulationInterface'
     # Write the workflow driver
     #
 
-    if platform.system() == 'Darwin':
+    if platform.system() != 'Windows':
         f = open(workflowDriverName, 'w')
     else:
         f = open(workflowDriverName, 'w', newline='\n')

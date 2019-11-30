@@ -122,9 +122,9 @@ def main(args):
         except subprocess.CalledProcessError as e:
             result = e.output
             returncode = e.returncode
-        result = result.decode(sys.stdout.encoding)
-
-        print(result, returncode)
+        
+        #result = result.decode(sys.stdout.encoding)
+        #print(result, returncode)
 
 if __name__ == '__main__':
 
