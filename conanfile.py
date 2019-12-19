@@ -9,7 +9,7 @@ class simCenterBackendApps(ConanFile):
     author = "Michael Gardner mhgardner@berkeley.edu"
     url = "https://github.com/NHERI-SimCenter/SimCenterBackendApplications"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
-    options = {"shared": [False]}
+    options = {"shared": [True, False]}
     # default_options = {"shared": False}    
     generators = "cmake"
     build_policy = "missing"
