@@ -28,17 +28,17 @@ class simCenterBackendApps(ConanFile):
     _build_subfolder = "build_subfolder"
     # Set short paths for Windows
     short_paths = True    
-    # scm = {
-    #     "type": "git",  # Use "type": "svn", if local repo is managed using SVN
-    #     "subfolder": _source_subfolder,
-    #     "url": "auto",
-    #     "revision": "auto"
-    # }
+    scm = {
+        "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+        "subfolder": _source_subfolder,
+        "url": "auto",
+        "revision": "auto"
+    }
 
     
-    def source(self):
-       git = tools.Git(folder=self._source_subfolder)
-       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
+    # def source(self):
+    #    git = tools.Git(folder=self._source_subfolder)
+    #    git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
 
     def configure(self):
         self.options.shared = False
