@@ -1,3 +1,3 @@
 simcenter_add_executable(NAME StochasticWind
-                         DEPENDS CONAN_PKG::mkl-static CONAN_PKG::ipp-static
-                         CONAN_PKG::smelt common)
+                         DEPENDS CONAN_PKG::smelt CONAN_PKG::ipp-static
+                         CONAN_PKG::mkl-static common)
