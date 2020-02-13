@@ -19,7 +19,7 @@ class simCenterBackendApps(ConanFile):
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
-               "mkl-static/2019.4@simcenter/stable", \
+               "mkl-static/2019.4@simcenter/testing", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.0@simcenter/stable"
 
