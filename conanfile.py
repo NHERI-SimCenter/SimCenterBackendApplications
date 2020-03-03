@@ -10,7 +10,7 @@ class simCenterBackendApps(ConanFile):
     url = "https://github.com/NHERI-SimCenter/SimCenterBackendApplications"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
-    # default_options = {"shared": False}    
+    default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True}    
     generators = "cmake"
     build_policy = "missing"
     requires = "jansson/2.11@bincrafters/stable", \
@@ -26,7 +26,16 @@ class simCenterBackendApps(ConanFile):
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
+    # Set short paths for Windows
+    short_paths = True    
+    # scm = {
+    #     "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+    #     "subfolder": _source_subfolder,
+    #     "url": "auto",
+    #     "revision": "auto"
+    # }
 
+    
     def source(self):
        git = tools.Git(folder=self._source_subfolder)
        git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
