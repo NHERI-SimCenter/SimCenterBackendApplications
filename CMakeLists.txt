@@ -57,43 +57,6 @@ set(SIMCENTER_MODULE_DIRS  ${SIMCENTER_MODULE_DIRS} CACHE INTERNAL "All folders 
 
 # Bring in dependencies from Conan, only getting required libs for Intel MKL and IPP
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-
-set(mkl_libs)
-set(ipp_libs)
-set(needed_mkl_libs "mkl_intel_lp64" "mkl_sequential" "mkl_core")
-if (WIN32)
-  set(needed_ipp_libs "ippcoremt" "ippvmmt" "ippsmt")
-else()
-  set(needed_ipp_libs "ippcore" "ippvm" "ipps")  
-endif()
-
-if (UNIX AND NOT APPLE)
-  list(APPEND mkl_libs "-Wl,--start-group")  
-endif()
-
-foreach( needed_lib ${needed_mkl_libs} )
-  foreach( _library ${CONAN_LIBS_MKL-STATIC} )
-    if(${_library} MATCHES ${needed_lib})
-      list(APPEND mkl_libs ${_library})
-    endif()
-  endforeach()
-endforeach()
-
-if (UNIX AND NOT APPLE)
-  list(APPEND mkl_libs "-Wl,--start-group")
-endif()
-
-foreach( needed_lib ${needed_ipp_libs} )
-  foreach( _library ${CONAN_LIBS_IPP-STATIC} )
-    if(${_library} MATCHES ${needed_lib})
-      list(APPEND ipp_libs ${_library})
-    endif()
-  endforeach()
-endforeach()
-
-set(CONAN_LIBS_MKL-STATIC ${mkl_libs})
-set(CONAN_LIBS_IPP-STATIC ${ipp_libs})
-
 conan_basic_setup(TARGETS)
 
 ############################################################################################################################
