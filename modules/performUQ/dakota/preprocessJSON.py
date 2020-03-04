@@ -122,8 +122,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     bimExists = parseFileForRV(bimName)
     evtExists = parseFileForRV(evtName)
     samExists = parseFileForRV(samName)
-    # Note that the SIM random vars are not used for now
-    # simExists = parseFileForRV(simName)
+    simExists = parseFileForRV(simName)
+    # Note that the EDP random vars are not used for now
     edpExists = parseFileForRV(edpName)
 
     # Add a dummy random variable if no other RV was defined
@@ -694,6 +694,7 @@ interface_pointer = 'SimulationInterface'
 
     os.remove(driverFile)
 
+    #f.write('#comment to fix a bug\n')
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
