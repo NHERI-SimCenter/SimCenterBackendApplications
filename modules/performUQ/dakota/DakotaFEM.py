@@ -9,6 +9,7 @@ else:
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
+import json
 import numpy as np
 import platform
 import shutil
@@ -83,6 +84,16 @@ def main(args):
         concurrency = args.concurrency,
         keepSamples = args.keepSamples not in ["False", 'False', "false", 'false', False]
     )
+
+    if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the BIM file
+        with open(bimName) as data_file:
+            uq_info = json.load(data_file)['UQ_Method']
+
+        if 'samplingMethodData' in uq_info.keys():
+            uq_info = uq_info['samplingMethodData']
+            for attribute in uqData.keys():
+                if attribute not in ['concurrency', 'keepSamples']:
+                    uqData[attribute] = uq_info.get(attribute, None)
 
     runDakota = args.runType
 
