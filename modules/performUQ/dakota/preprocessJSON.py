@@ -122,8 +122,8 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     bimExists = parseFileForRV(bimName)
     evtExists = parseFileForRV(evtName)
     samExists = parseFileForRV(samName)
-    # Note that the SIM random vars are not used for now
-    # simExists = parseFileForRV(simName)
+    simExists = parseFileForRV(simName)
+    # Note that the EDP random vars are not used for now
     edpExists = parseFileForRV(edpName)
 
     # Add a dummy random variable if no other RV was defined
@@ -670,14 +670,20 @@ interface_pointer = 'SimulationInterface'
     else:
         f = open(workflowDriverName, 'w', newline='\n')
 
-    # want to dprepro the files with the random variables
-    if bimExists == True: f.write('perl dpreproSimCenter params.in bim.j ' + bimName + '\n')
-    if samExists == True: f.write('perl dpreproSimCenter params.in sam.j ' + samName + '\n')
-    if evtExists == True: f.write('perl dpreproSimCenter params.in evt.j ' + evtName + '\n')
-    if edpExists == True: f.write('perl dpreproSimCenter params.in edp.j ' + edpName + '\n')
-    #if simExists == True: f.write('perl dpreproSimCenter params.in sim.j ' + simName + '\n')
-
     scriptDir = os.path.dirname(os.path.realpath(__file__))
+
+    # want to dprepro the files with the random variables
+    if (runType == "local"):
+        dpreproCommand = format(scriptDir) + '/simCenterDprepro'
+    elif remoteDir is not None:
+        dpreproCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/simCenterDprepro')
+
+    if bimExists == True: f.write(dpreproCommand + " params.in bim.j " + bimName + '\n')
+    if samExists == True: f.write(dpreproCommand + " params.in sam.j " + samName + '\n')
+    if evtExists == True: f.write(dpreproCommand + " params.in evt.j " + evtName + '\n')
+    if edpExists == True: f.write(dpreproCommand + " params.in edp.j " + edpName + '\n')
+
+
 
     with open(driverFile) as fp:
         for line in fp:
@@ -688,6 +694,7 @@ interface_pointer = 'SimulationInterface'
 
     os.remove(driverFile)
 
+    #f.write('#comment to fix a bug\n')
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
