@@ -64,6 +64,12 @@
             "type": "path",
             "description": "path to buildings database file",
             "default": ""
+          },
+          {
+            "id": "configFile",
+            "type": "path",
+            "description": "path to workflow config file",
+            "default": ""
           }
         ]
       }
