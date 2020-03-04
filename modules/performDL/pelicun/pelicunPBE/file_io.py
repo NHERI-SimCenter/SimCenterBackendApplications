@@ -59,7 +59,7 @@ This module has classes and methods that handle file input and output.
 
 from .base import *
 
-import json
+import json, csv, posixpath
 import xml.etree.ElementTree as ET
 from distutils.util import strtobool
 from copy import deepcopy
@@ -142,18 +142,21 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
 
     AT = assessment_type
 
+    log_msg('\t\tOpening the json file...')
     with open(input_path, 'r') as f:
         jd = json.load(f)
 
     # get the data required for DL
     data = dict([(label, dict()) for label in [
-        'general', 'units', 'components', 'collapse_modes',
+        'general', 'units', 'unit_names', 'components', 'collapse_modes',
         'decision_variables', 'dependencies', 'data_sources',
     ]])
 
     # create a few internal variables for convenience
     DL_input = jd['DamageAndLoss']
 
+    log_msg('\t\tLoading the Models:')
+    log_msg('\t\t\tResponse Model')
     response = DL_input.get('ResponseModel',None)
     if response is not None:
         res_description = response.get('ResponseDescription', None)
@@ -165,6 +168,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         det_lims = None
         uncertainty = None
 
+    log_msg('\t\t\tDamage Model')
     damage = DL_input.get('DamageModel',None)
     if damage is not None:
         irrep_res_drift = damage.get('IrrepairableResidualDrift', None)
@@ -180,6 +184,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         design_lvl = None
         struct_type = None
 
+    log_msg('\t\t\tLoss Model')
     loss = DL_input.get('LossModel', None)
     if loss is not None:
         repl_cost = loss.get('ReplacementCost', None)
@@ -193,8 +198,10 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         dec_vars = None
         inhabitants = None
 
-    depends = DL_input.get('Dependencies', None)
+    log_msg('\t\t\tPerformance Model')
     components = DL_input.get('Components', None)
+
+    depends = DL_input.get('Dependencies', None)
     coll_modes = DL_input.get('CollapseModes', None)
 
     # decision variables of interest
@@ -206,9 +213,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             val = bool(dec_vars.get(source_att, False))
             data['decision_variables'].update({target_att: val})
     else:
-        warnings.warn(UserWarning(
-            "No decision variables specified in the input file. Assuming that "
-            "only reconstruction cost and time needs to be calculated."))
+        show_warning("No decision variables specified in the input file.")
+        log_msg("Assuming that only reconstruction cost and time needs to be calculated.")
         data['decision_variables'].update({ 'injuries': False,
                                             'rec_cost': True,
                                             'rec_time': True,})
@@ -219,27 +225,17 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     dec_vars = data['decision_variables']
 
     # data sources
-    # check if the user specified custom data sources
-    path_CMP_data = DL_input.get("ComponentDataFolder", "")
-
-    if inhabitants is not None:
-        path_POP_data = inhabitants.get("PopulationDataFile", "")
-    else:
-        path_POP_data = ""
-
-
-    # if not, use the default location
+    # default data locations
     default_data_name = {
         'P58'     : 'FEMA P58 first edition',
         'HAZUS_EQ': 'HAZUS MH 2.1 earthquake',
         'HAZUS_HU': 'HAZUS MH 2.1 hurricane'
     }
 
+    # check if the user specified custom data sources
+    path_CMP_data = DL_input.get("ComponentDataFolder", "")
+
     if path_CMP_data == "":
-        warnings.warn(UserWarning(
-            "The component database is not specified; using the default "
-            "{} data.".format(default_data_name[AT])
-        ))
         path_CMP_data = pelicun_path
         if AT == 'P58':
             path_CMP_data += '/resources/FEMA P58 first edition/DL json/'
@@ -250,12 +246,13 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
     # The population data is only needed if we are interested in injuries
+    if inhabitants is not None:
+        path_POP_data = inhabitants.get("PopulationDataFile", "")
+    else:
+        path_POP_data = ""       
+
     if data['decision_variables']['injuries']:
         if path_POP_data == "":
-            warnings.warn(UserWarning(
-                "The population distribution is not specified; using the default "
-                "{} data.".format(default_data_name[AT])
-            ))
             path_POP_data = pelicun_path
             if AT == 'P58':
                 path_POP_data += '/resources/FEMA P58 first edition/population.json'
@@ -274,35 +271,40 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             if value == 'in':
                 value = 'inch'
             if value in globals().keys():
-                data['units'].update({key: globals()[value]})
+                data['unit_names'].update({key: value})
             else:
-                warnings.warn(UserWarning(
-                    "Unknown {} unit: {}".format(key, value)
-                ))
-        if 'length' in data['units'].keys():
-            data['units'].update({
-                'area': data['units']['length']**2.,
-                'volume': data['units']['length']**3.
-            })
-            if 'speed' not in data['units'].keys():
-                data['units'].update({
-                    'speed': data['units']['length']})
-            if 'acceleration' not in data['units'].keys():
-                data['units'].update({
+                show_warning("Unknown {} unit: {}".format(key, value))
+
+        if 'length' in data['unit_names'].keys():
+            if 'area' not in data['unit_names']:
+                data['unit_names'].update({
+                    'area': data['unit_names']['length']+'2'})
+
+            if 'volume' not in data['unit_names']:
+                data['unit_names'].update({
+                    'volume': data['unit_names']['length']+'3'})
+            
+            if 'speed' not in data['unit_names'].keys():
+                data['unit_names'].update({
+                    'speed': data['unit_names']['length']+'ps'})
+            
+            if 'acceleration' not in data['unit_names'].keys():
+                data['unit_names'].update({
                     #'acceleration': 1.0 })
-                    'acceleration': data['units']['length']})
+                    'acceleration': data['unit_names']['length']+'ps2'})
     else:
-        warnings.warn(UserWarning(
-            "No units were specified in the input file. Standard units are "
-            "assumed."))
-        data['units'].update({
-            'force': globals()['N'],
-            'length': globals()['m'],
-            'area': globals()['m2'],
-            'volume': globals()['m3'],
-            'speed': globals()['mps'],
-            'acceleration': globals()['mps2'],
+        show_warning("No units were specified in the input file.")
+        data['unit_names'].update({
+            'force':        'N',
+            'length':       'm',
+            'area':         'm2',
+            'volume':       'm3',
+            'speed':        'mps',
+            'acceleration': 'mps2',
         })
+
+    for unit_type, unit_name in data['unit_names'].items():
+        data['units'].update({unit_type: globals()[unit_name]})
 
     # other attributes that can be used by a P58 assessment
     if AT == 'P58':
@@ -338,7 +340,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     else:
         data['general'].update({'coupled_assessment': False})
 
-    # components
+    # Performance Model
     # Having components defined is not necessary, but if a component is defined
     # then all of its attributes need to be specified. Note that the required
     # set of attributes depends on the type of assessment.
@@ -401,6 +403,25 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                         "fragility group is defined using the same "
                         "unit.".format(fg_id))
                 comp_data['unit'] = comp_data['unit'][0]
+
+                # aggregate PGs that are in the same loc & dir
+                PG_loc_dir_list = list(zip(comp_data['locations'], comp_data['directions']))
+                to_aggregate = set([x for x in PG_loc_dir_list if PG_loc_dir_list.count(x) > 1])
+                for combo in to_aggregate:
+                    PG_loc_dir_list = list(zip(comp_data['locations'], comp_data['directions']))
+                    combo_ids = [i for i,e in enumerate(PG_loc_dir_list) if e==combo]                    
+
+                    c_base = combo_ids[0]
+                    comp_data['csg_weights'][c_base] = list(np.array(comp_data['csg_weights'][c_base]) * comp_data['quantities'][c_base])
+                    for ci in combo_ids[1:]:
+                        comp_data['quantities'][c_base] += comp_data['quantities'][ci]
+                        comp_data['csg_weights'][c_base] += list(np.array(comp_data['csg_weights'][ci]) * comp_data['quantities'][ci])
+                    comp_data['csg_weights'][c_base] = list(np.array(comp_data['csg_weights'][c_base]) / comp_data['quantities'][c_base])
+
+                    for ci in combo_ids[1:][::-1]:
+                        for key in ['locations', 'directions', 'quantities', 
+                        'csg_weights', 'distribution', 'cov']:
+                            del comp_data[key][ci]               
 
             elif AT.startswith('HAZUS'):
                 comp_data = {
@@ -494,9 +515,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 # store the component data
             data['components'].update({fg_id: comp_data})
     else:
-        warnings.warn(UserWarning(
-            "No components were defined in the input file."))
-
+        show_warning("No components were defined in the input file.")
 
     # collapse modes
     if AT == 'P58':
@@ -517,8 +536,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     cm_data['injuries'] = (np.ones(data['general']['stories'])*cm_data['injuries']).tolist()
                 data['collapse_modes'].update({coll_mode['name']: cm_data})
         else:
-            warnings.warn(UserWarning(
-                "No collapse modes were defined in the input file."))
+            show_warning("No collapse modes were defined in the input file.")
 
     # the number of realizations has to be specified in the file
     if res_description is not None:
@@ -530,20 +548,19 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             "Number of realizations is not specified in the input file.")
 
     EDP_units = dict(
-        # PID is not here because it is unitless
+        # PID, RID, and MID are not here because they are unitless
         PFA = 'acceleration',
         PWS = 'speed'
     )
     if AT in ['P58', 'HAZUS_EQ']:
-        EDP_keys = ['PID', 'PFA','PGV']
+        EDP_keys = ['PID', 'PFA', 'PGV', 'RID', 'PMD']
     elif AT in ['HAZUS_HU']:
         EDP_keys = ['PWS', ]
 
     # response model info ------------------------------------------------------
     if response is None:
-        warnings.warn(UserWarning(
-            "Response model characteristics were not defined in the input "
-            "file"))
+        show_warning("Response model characteristics were not defined in the input "
+            "file")
 
     # detection limits
     if ((response is not None) and (det_lims is not None)):
@@ -558,12 +575,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 f_EDP = data['units'][EDP_units[EDP_kind]]
                 DGDL[EDP_kind] = DGDL[EDP_kind] * f_EDP
     else:
-        warnings.warn(UserWarning(
-            "EDP detection limits were not defined in the input file. "
-            "Assuming no detection limits."))
-
         data['general'].update({'detection_limits':{}})
-    # make sure that PID and PFA detection limits are initialized
+    
+    # make sure that detection limits are initialized
     for key in EDP_keys:
         if key not in data['general']['detection_limits'].keys():
             data['general']['detection_limits'].update({key: None})
@@ -577,11 +591,6 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             'EDP_dist_basis':   res_description.get('BasisOfEDP_Distribution',
                                                     'all results')}})
     else:
-        warnings.warn(UserWarning(
-            "EDP estimation method was not defined in the input file. All EDP "
-            "samples are used to define a multivariate lognormal EDP "
-            "distribution."))
-
         data['general'].update({'response': {
             'EDP_distribution': 'lognormal',
             'EDP_dist_basis'  : 'all results'}})
@@ -593,23 +602,18 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 'beta_gm': float_or_None(uncertainty['GroundMotion']),
                 'beta_m' : float_or_None(uncertainty['Modeling'])}})
     else:
-        warnings.warn(UserWarning(
-            "No additional uncertainties were defined in the input file. "
-            "Assuming that EDPs already include all ground motion and model "
-            "uncertainty."))
         data['general'].update({
             'added_uncertainty': {
-                'beta_gm': 0.0001,
-                'beta_m': 0.0001
+                'beta_gm': None,
+                'beta_m': None
             }
         })
 
     # damage model info --------------------------------------------------------
     if damage is None:
         if AT == 'P58':
-            warnings.warn(UserWarning(
-                "Damage model characteristics were not defined in the "
-                "input file"))
+            show_warning("Damage model characteristics were not defined in the "
+                "input file")
         elif AT.startswith('HAZUS'):
             pass
 
@@ -630,13 +634,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     f_EDP = data['units'][EDP_units[EDP_kind]]
                     DGCL[EDP_kind] = DGCL[EDP_kind] * f_EDP
         else:
-            warnings.warn(UserWarning(
-                "Collapse EDP limits were not defined in the input file. "
-                "No EDP limits are assumed."))
-
             data['general'].update({'collapse_limits': {}})
 
-        # make sure that PID and PFA collapse limits are initialized
+        # make sure that collapse limits are initialized
         for key in EDP_keys:
             if key not in data['general']['collapse_limits'].keys():
                 data['general']['collapse_limits'].update({key: None})
@@ -654,17 +654,14 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     'yield_drift': float_or_None(yield_drift)})
             elif ((data['decision_variables']['rec_cost']) or
                   (data['decision_variables']['rec_time'])):
-                warnings.warn(UserWarning(
-                    "Yield drift ratio was not defined in the input file. "
-                    "Assuming a yield drift ratio of 0.01 radian."))
                 data['general'].update({'yield_drift': 0.01})
 
         elif ((data['decision_variables']['rec_cost']) or
               (data['decision_variables']['rec_time'])):
-            warnings.warn(UserWarning(
+            show_warning(
                 "Residual drift limits corresponding to irrepairable "
                 "damage were not defined in the input file. We assume that "
-                "damage is repairable regardless of the residual drift."))
+                "damage is repairable regardless of the residual drift.")
             # we might need to have a default yield drift here
 
         # collapse probability
@@ -680,18 +677,13 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 data['general']['response']['coll_prob'] = \
                     float_or_None(data['general']['response']['coll_prob'])
         else:
-            warnings.warn(UserWarning(
-                "Collapse probability estimation method was not defined in the "
-                "input file. Collapse probability is estimated using raw EDP "
-                "samples."))
             data['general']['response'].update({
                 'coll_prob'       : 'estimated',
-                'CP_est_basis'    : 'raw EDP'})
+                'CP_est_basis'    : 'raw EDP'}) 
 
     # loss model info ----------------------------------------------------------
     if loss is None:
-        warnings.warn(UserWarning(
-            "Loss model characteristics were not defined in the input file"))
+        show_warning("Loss model characteristics were not defined in the input file")
 
     # replacement cost
     if ((loss is not None) and (repl_cost is not None)):
@@ -699,9 +691,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             'replacement_cost': float_or_None(repl_cost)})
     elif data['decision_variables']['rec_cost']:
         if AT == 'P58':
-            warnings.warn(UserWarning(
-                "Building replacement cost was not defined in the "
-                "input file."))
+            show_warning("Building replacement cost was not defined in the "
+                "input file.")
         elif AT.startswith('HAZUS'):
             raise ValueError(
                 "Building replacement cost was not defined in the input "
@@ -713,9 +704,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             'replacement_time': float_or_None(repl_time)})
     elif data['decision_variables']['rec_time']:
         if AT == 'P58':
-            warnings.warn(UserWarning(
-                "Building replacement cost was not defined in the "
-                "input file."))
+            show_warning("Building replacement cost was not defined in the "
+                "input file.")
         elif AT.startswith('HAZUS'):
             raise ValueError(
                 "Building replacement cost was not defined in the input "
@@ -758,11 +748,11 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                             peak_pop.append(0)
 
                     if pop_in > 1 and pop_in != stories:
-                        warnings.warn(UserWarning(
+                        show_warning(
                             "Peak population was specified to some, but not all "
                             "stories. The remaining stories are assumed to have "
                             "zero population."
-                        ))
+                        )
 
                 data['general'].update({'population': peak_pop})
             else:
@@ -806,9 +796,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             else:
                 data['dependencies'].update({target_att: 'ATC'})
 
-            warnings.warn(UserWarning(
+            show_warning(
                 "Correlation between {} was not ".format(source_att)+
-                "defined in the input file. Using default values."))
+                "defined in the input file. Using default values.")
 
     if ((depends is not None) and ('CostAndTime' in depends.keys())):
         data['dependencies'].update({
@@ -816,18 +806,18 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     elif ((data['decision_variables']['rec_cost']) or
           (data['decision_variables']['rec_time'])):
         data['dependencies'].update({'cost_and_time': False})
-        warnings.warn(UserWarning(
+        show_warning(
             "Correlation between reconstruction cost and time was not "
-            "defined in the input file. Using default values."))
+            "defined in the input file. Using default values.")
 
     if ((depends is not None) and ('InjurySeverities' in depends.keys())):
         data['dependencies'].update({
             'injury_lvls': bool(depends['InjurySeverities'])})
     elif data['decision_variables']['injuries']:
         data['dependencies'].update({'injury_lvls': False})
-        warnings.warn(UserWarning(
+        show_warning(
             "Correlation between injury levels was not defined in the "
-            "input file. Using default values."))
+            "input file. Using default values.")
 
     if verbose: pp.pprint(data)
 
@@ -870,6 +860,7 @@ def read_SimCenter_EDP_input(input_path, EDP_kinds=('PID', 'PFA'),
     data = {}
 
     # read the collection of EDP inputs...
+    log_msg('\t\tOpening the input file...')
     # If the file name ends with csv, we assume a standard csv file
     if input_path[-3:] == 'csv':
         EDP_raw = pd.read_csv(input_path, header=0, index_col=0)
@@ -1134,6 +1125,10 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         elif EDP_type == 'Peak Ground Velocity':
             demand_type = 'PGV'
             demand_factor = cmps
+        elif EDP_type == 'Mega Drift Ratio':
+            demand_type = 'PMD'
+        elif EDP_type == 'Residual Drift Ratio':
+            demand_type = 'RID'
         elif EDP_type in [
             'Peak Floor Velocity',
             'Link Rotation Angle',
@@ -1512,6 +1507,12 @@ def convert_P58_data_to_json(data_dir, target_dir):
                 DS_list = DSG['DamageStates']
                 DSG['DamageStates'] = []
                 for DS in DS_list:
+
+                    # avoid having NaN as repair measures
+                    repair_measures = row['DS {}, Repair Description'.format(DS[-1])]
+                    if not isinstance(repair_measures, str):
+                        repair_measures = ""
+
                     DSG['DamageStates'].append({
                         'Weight'        :
                             float(row['DS {}, Probability'.format(DS[-1])]),
@@ -1521,10 +1522,9 @@ def convert_P58_data_to_json(data_dir, target_dir):
                         'Consequences'  : {},
                         'Description'   :
                             row['DS {}, Description'.format(DS[-1])],
-                        'RepairMeasures':
-                            row['DS {}, Repair Description'.format(DS[-1])],
+                        'RepairMeasures': repair_measures
                     })
-
+                    
                     IMG = row['DS{}, Illustrations'.format(DS[-1])]
                     if IMG not in ['none', np.nan]:
                         DSG['DamageStates'][-1].update({'DamageImageName': IMG})
@@ -2159,7 +2159,7 @@ def create_HAZUS_HU_json_files(data_dir, target_dir):
                   'w') as f:
             json.dump(json_output, f, indent=2)
 
-def write_SimCenter_DL_output(output_path, output_df, index_name='#Num',
+def write_SimCenter_DL_output(output_dir, output_filename, output_df, index_name='#Num',
                               collapse_columns = True, stats_only=False):
 
     output_df = deepcopy(output_df)
@@ -2183,9 +2183,9 @@ def write_SimCenter_DL_output(output_path, output_df, index_name='#Num',
 
     # write the results in a csv file
     # TODO: provide other file formats
-    output_df.to_csv(output_path)
+    output_df.to_csv(posixpath.join(output_dir, output_filename))
 
-def write_SimCenter_DM_output(DM_file_path, DMG_df):
+def write_SimCenter_DM_output(output_dir, DM_filename, DMG_df):
 
     # Start with the probability of being in a particular damage state.
     # Here, the damage state of the building (asset) is defined as the highest
@@ -2195,7 +2195,7 @@ def write_SimCenter_DM_output(DM_file_path, DMG_df):
 
     # Determine the probability of DS exceedance by collecting the DS from all
     # components and assigning ones to all lower damage states.
-    DMG_agg = DMG_df.T.groupby('DS').sum().T
+    DMG_agg = DMG_df.T.groupby('DSG_DS').sum().T
     DMG_agg[DMG_agg > 0.0] = DMG_agg[DMG_agg > 0.0] / DMG_agg[DMG_agg > 0.0]
 
     cols = DMG_agg.columns
@@ -2207,7 +2207,7 @@ def write_SimCenter_DM_output(DM_file_path, DMG_df):
     # exceedance probabilites. This will not work well for a FEMA P58 assessment
     # with Damage State Groups that include multiple Damage States.
     DMG_agg_mean = DMG_agg.describe().loc['mean',:]
-    DS_0 = 1.0 - DMG_agg_mean['1-1']
+    DS_0 = 1.0 - DMG_agg_mean['1_1']
     for i in range(len(DMG_agg_mean.index)-1):
         DMG_agg_mean.iloc[i] = DMG_agg_mean.iloc[i] - DMG_agg_mean.iloc[i+1]
 
@@ -2234,13 +2234,13 @@ def write_SimCenter_DM_output(DM_file_path, DMG_df):
             DM[str(FG)].update({str(PG):{}})
 
             for DS in sorted(
-                DMG_mean.loc[idx[FG],:].loc[idx[:,PG],:].index.get_level_values('DS').unique()):
+                DMG_mean.loc[idx[FG],:].loc[idx[:,PG],:].index.get_level_values('DSG_DS').unique()):
                 DM[str(FG)][str(PG)].update({str(DS): DMG_mean.loc[(FG,PG,DS)]})
 
-    with open(DM_file_path, 'w') as f:
+    with open(posixpath.join(output_dir, DM_filename), 'w') as f:
         json.dump(DM, f, indent = 2)
 
-def write_SimCenter_DV_output(DV_file_path, DV_df, DV_name):
+def write_SimCenter_DV_output(output_dir, DV_filename, DV_df, DV_name):
 
     DV_name = convert_dv_name[DV_name]
 
@@ -2269,7 +2269,7 @@ def write_SimCenter_DV_output(DV_file_path, DV_df, DV_name):
                 DV_i[str(FG)].update({str(PG):{}})
 
                 for DS in sorted(
-                    DV_stats.loc[:,idx[FG, PG]].columns.get_level_values('DS').unique()):
+                    DV_stats.loc[:,idx[FG, PG]].columns.get_level_values('DSG_DS').unique()):
                     DV_i[str(FG)][str(PG)].update({str(DS): {}})
                     DV_stats_i = DV_stats.loc[:,(FG,PG,DS)]
                     for stat in DV_stats_i.index:
@@ -2278,5 +2278,5 @@ def write_SimCenter_DV_output(DV_file_path, DV_df, DV_name):
     except:
         pass
 
-    with open(DV_file_path, 'w') as f:
+    with open(posixpath.join(output_dir, DV_filename), 'w') as f:
         json.dump(DV, f, indent = 2)

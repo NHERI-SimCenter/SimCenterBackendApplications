@@ -54,6 +54,7 @@ else:
 
 # import libraries for other modules
 import time
+from time import gmtime, strftime
 import numpy as np
 import pandas as pd
 
@@ -68,15 +69,19 @@ pd.options.display.max_columns = None
 pd.options.display.expand_frame_repr = True
 pd.options.display.width = 300
 
+log_file = None
+
+log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
+
+# get the absolute path of the pelicun directory
+pelicun_path = os.path.dirname(os.path.abspath(__file__))
+
 # print a matrix in a nice way using a DataFrame
 def show_matrix(data, describe=False):
     if describe:
         pp.pprint(pd.DataFrame(data).describe(percentiles=[0.01,0.1,0.5,0.9,0.99]))
     else:
         pp.pprint(pd.DataFrame(data))
-
-# get the absolute path of the pelicun directory
-pelicun_path = os.path.dirname(os.path.abspath(__file__))
 
 # Monkeypatch warnings to get prettier messages
 def _warning(message, category, filename, lineno, file=None, line=None):
@@ -87,6 +92,37 @@ def _warning(message, category, filename, lineno, file=None, line=None):
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
 warnings.showwarning = _warning
+
+def show_warning(warning_msg):
+    warnings.warn(UserWarning(warning_msg))
+
+def set_log_file(filepath):
+    globals()['log_file'] = filepath
+    with open(filepath, 'w') as f:
+        f.write('pelicun\n')
+
+def log_msg(msg='', prepend_timestamp=True):
+    """
+    Print a message to the screen with the current time as prefix
+
+    The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
+
+    Parameters
+    ----------
+    msg: string
+       Message to print.
+
+    """
+    if prepend_timestamp:
+        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+    else:
+        formatted_msg = msg
+
+    #print(formatted_msg)
+
+    if globals()['log_file'] is not None:
+        with open(globals()['log_file'], 'a') as f:
+            f.write('\n'+formatted_msg)
 
 # Constants for unit conversion
 
@@ -124,15 +160,23 @@ mile2 = mile**2.
 # volume
 m3 = m**3.
 
+inch3 = inch**3.
 ft3 = ft**3.
+
 
 # speed / velocity
 cmps = cm / sec
 mps = m / sec
 mph = mile / h
 
+inchps = inch / sec
+ftps = ft / sec
+
 # acceleration
 mps2 = m / sec2
+
+inchps2 = inch / sec2
+ftps2 = ft / sec2
 
 g = 9.80665 * mps2
 
