@@ -19,7 +19,7 @@ class simCenterBackendApps(ConanFile):
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
-               "mkl-static/2019.4@simcenter/stable", \
+               "mkl-static/2019.4@simcenter/testing", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.0@simcenter/stable"
 
@@ -28,17 +28,17 @@ class simCenterBackendApps(ConanFile):
     _build_subfolder = "build_subfolder"
     # Set short paths for Windows
     short_paths = True    
-    # scm = {
-    #     "type": "git",  # Use "type": "svn", if local repo is managed using SVN
-    #     "subfolder": _source_subfolder,
-    #     "url": "auto",
-    #     "revision": "auto"
-    # }
+    scm = {
+        "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+        "subfolder": _source_subfolder,
+        "url": "auto",
+        "revision": "auto"
+    }
 
     
-    def source(self):
-       git = tools.Git(folder=self._source_subfolder)
-       git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
+    # def source(self):
+    #    git = tools.Git(folder=self._source_subfolder)
+    #    git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
 
     def configure(self):
         self.options.shared = False
