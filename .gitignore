@@ -69,6 +69,7 @@ MultipleSimCenterEvents
 MultiplePEER_Events
 postprocessDAKOTA
 *.pyc
+*.bak
 *.autosave
 debug.log
 MDOF_BuildingModelToSAM

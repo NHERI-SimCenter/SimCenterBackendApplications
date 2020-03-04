@@ -75,6 +75,10 @@ def main(run_type, input_file, app_registry):
         app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'])
 
     if WF.run_type != 'loss_only':
+
+        # initialize the working directory
+        WF.init_simdir()
+
         # prepare the input files for the simulation
         WF.create_RV_files(
             app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])

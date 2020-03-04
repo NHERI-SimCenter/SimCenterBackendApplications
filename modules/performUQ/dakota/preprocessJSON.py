@@ -7,9 +7,7 @@ if sys.version.startswith('2'):
 #else:
 #    from past.builtins import basestring
 
-import json
-import os
-import sys
+import os, sys, json
 import platform
 import posixpath
 
@@ -68,7 +66,7 @@ discreteDesignSetStringValues =[]
 numResultFiles = 0
 outputResultFiles = []
 
-def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData):
+def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runType, uqData):
 
     global numRandomVariables
     global numNormalUncertain
@@ -87,24 +85,24 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     # get UQ method data
     #
 
-    with open('dakota.json') as data_file:    
+    with open(bimName) as data_file:    
         data = json.load(data_file)
         
-    uqData_in = data["UQ_Method"];
-    for key in uqData.keys():
-        if key not in uqData_in.keys():
-            uqData_in.update({key: uqData[key]})
-    uqData = uqData_in
+    #uqData_in = data["UQ_Method"];
+    #for key in uqData.keys():
+    #    if key not in uqData_in.keys():
+    #        uqData_in.update({key: uqData[key]})
+    #uqData = uqData_in
 
-    samplingData = uqData["samplingMethodData"];
-    method = samplingData["method"];
+    #uqData = uqData["samplingMethodData"];
+    method = uqData["method"];
 
     #if (method == "Monte Carlo"):
     #    method = 'random'
     #else:
     #    method = 'lhs'
-    #numSamples=samplingData["samples"];
-    #seed = samplingData["seed"];
+    #numSamples=uqData["samples"];
+    #seed = uqData["seed"];
 
     #
     # get result files
@@ -120,10 +118,12 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     # parse the data
     #
 
+    print('\nParsing random variables...')
     bimExists = parseFileForRV(bimName)
     evtExists = parseFileForRV(evtName)
     samExists = parseFileForRV(samName)
-    simExists = parseFileForRV(simName)
+    # Note that the SIM random vars are not used for now
+    # simExists = parseFileForRV(simName)
     edpExists = parseFileForRV(edpName)
 
     # Add a dummy random variable if no other RV was defined
@@ -133,7 +133,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
     remoteWorkflowDriverName = 'workflow_driver'
-    if platform.system() == 'Windows':
+    if ((platform.system() == 'Windows') and (runType == 'run')):
         workflowDriverName = 'workflow_driver.bat'
 
     #
@@ -148,70 +148,68 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uq
     
     dakota_input += (
     """environment
-    tabular_data
-    tabular_data_file = 'dakotaTab.out'
+tabular_data
+tabular_data_file = 'dakotaTab.out'
     
-    method,
-    """)
+method,
+""")
     
     if method == "Importance Sampling":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
-        imp_sams_arg = samplingData["ismethod"]
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]
+        imp_sams_arg = uqData["ismethod"]
 
         dakota_input += (
     """importance_sampling
-    {ismethod}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        ismethod = imp_sams_arg,
-        samples = numSamples,
-        seed = seed))
+{ismethod}
+samples = {samples}
+seed = {seed}
+
+""".format(
+    ismethod = imp_sams_arg,
+    samples = numSamples,
+    seed = seed))
     
     elif method == "Monte Carlo":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]
 
         dakota_input += (
     """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        sample_type = 'random',
-        samples = numSamples,
-        seed = seed))
+sample_type = {sample_type}
+samples = {samples}
+seed = {seed}
+
+""".format(
+    sample_type = 'random',
+    samples = numSamples,
+    seed = seed))
     
     elif method == "LHS":
-        numSamples=samplingData["samples"]
-        seed = samplingData["seed"]        
+        numSamples=uqData["samples"]
+        seed = uqData["seed"]        
 
         dakota_input += (
     """sampling
-    sample_type = {sample_type}
-    samples = {samples}
-    seed = {seed}
-    
-    """.format(
-        sample_type = 'lhs' ,
-        samples = numSamples,
-        seed = seed))
+sample_type = {sample_type}
+samples = {samples}
+seed = {seed}
+
+""".format(
+    sample_type = 'lhs' ,
+    samples = numSamples,
+    seed = seed))
     
     elif method == "Gaussian Process Regression":
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
-
+        train_samples = uqData["samples"]
+        gpr_seed = uqData["seed"]
+        train_method = uqData["dataMethod"]
         if train_method == "Monte Carlo":
             train_method = "random"
         
-        train_samples2 = samplingData["samples2"]
-        gpr_seed2 = samplingData["seed2"]
-        train_method2 = samplingData["dataMethod2"]
-
+        train_samples2 = uqData["samples2"]
+        gpr_seed2 = uqData["seed2"]
+        train_method2 = uqData["dataMethod2"]
         if train_method2 == "Monte Carlo":
             train_method2 = "random"
         
@@ -245,9 +243,9 @@ formats
 text_archive
         
 """).format(
-        no_surr_sams = train_samples2,
-        surr_seed = gpr_seed2,
-        surr_sams_type = train_method2)
+    no_surr_sams = train_samples2,
+    surr_seed = gpr_seed2,
+    surr_sams_type = train_method2)
 
     # write out the variable data
     #f.write('variables,\n')
@@ -530,9 +528,9 @@ text_archive
 
     if method == "Gaussian Process Regression":
         
-        train_samples = samplingData["samples"]
-        gpr_seed = samplingData["seed"]
-        train_method = samplingData["dataMethod"]
+        train_samples = uqData["samples"]
+        gpr_seed = uqData["seed"]
+        train_method = uqData["dataMethod"]
 
         if train_method == "Monte Carlo":
         	train_method = "random"
@@ -568,28 +566,34 @@ interface_pointer = 'SimulationInterface'
     if method == "Gaussian Process Regression":
         dakota_input += ('id_interface = \'SimulationInterface\',\n')
 
-    if (runType == "local"):
-        uqData['concurrency'] = 4
-    
-    if uqData['concurrency'] == None:
-        dakota_input += "fork asynchronous\n"
-    elif uqData['concurrency'] > 1:
-        dakota_input += "fork asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
-    
     if runType == "local":    
-        dakota_input += "analysis_driver = '{}'\n".format(workflowDriverName)
+        dakota_input += "  analysis_driver = '{}'\n".format(workflowDriverName)
     else:
-        dakota_input += "analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
+        dakota_input += "  analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
 
+    dakota_input += "    fork\n"
 
     # dakota_input += ('\nanalysis_driver = \'python analysis_driver.py\' \n')
-    dakota_input += ('parameters_file = \'params.in\' \n')
-    dakota_input += ('results_file = \'results.out\' \n')
-    dakota_input += ('work_directory directory_tag directory_save\n')
-    dakota_input += ('copy_files = \'templatedir/*\' \n')
+    dakota_input += ('      parameters_file = \'params.in\' \n')
+    dakota_input += ('      results_file = \'results.out\' \n')
+    dakota_input += ('      aprepro \n')
+    dakota_input += ('      work_directory\n')
+    dakota_input += ('        named \'workdir\' \n')
+    dakota_input += ('        directory_tag\n')    
+    if uqData['keepSamples']:
+        dakota_input += ('        directory_save\n')    
+
+    dakota_input += ('      copy_files = \'templatedir/*\' \n')
     # dakota_input += ('named \'workdir\' file_save  directory_save \n')
-    dakota_input += ('named \'workdir\' \n')
-    dakota_input += ('aprepro \n')
+
+    if (runType == "local"):
+        uqData['concurrency'] = uqData.get('concurrency', 4)
+    
+    if uqData['concurrency'] == None:
+        dakota_input += "  asynchronous\n"
+    elif uqData['concurrency'] > 1:
+        dakota_input += "  asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
+
     dakota_input += ('\n')
 
 
@@ -661,7 +665,7 @@ interface_pointer = 'SimulationInterface'
     # Write the workflow driver
     #
 
-    if platform.system() == 'Darwin':
+    if platform.system() != 'Windows':
         f = open(workflowDriverName, 'w')
     else:
         f = open(workflowDriverName, 'w', newline='\n')
@@ -671,19 +675,19 @@ interface_pointer = 'SimulationInterface'
     if samExists == True: f.write('perl dpreproSimCenter params.in sam.j ' + samName + '\n')
     if evtExists == True: f.write('perl dpreproSimCenter params.in evt.j ' + evtName + '\n')
     if edpExists == True: f.write('perl dpreproSimCenter params.in edp.j ' + edpName + '\n')
+    #if simExists == True: f.write('perl dpreproSimCenter params.in sim.j ' + simName + '\n')
 
     scriptDir = os.path.dirname(os.path.realpath(__file__))
 
     with open(driverFile) as fp:
         for line in fp:
-            #print(line)
-            #print(localDir)
-            if remoteDir is not None:
-                line = line.replace(localDir,remoteDir)
+            #if remoteDir is not None:
+            #    line = line.replace(localDir,remoteDir)
             f.write(line)
-            print(line)
+            #print(line)
 
-    f.write('#comment to fix a bug\n')
+    os.remove(driverFile)
+
     files = " "
     files =  files + "".join([str(i) for i in outputResultFiles])
     numR = str(numResultFiles)
@@ -757,30 +761,38 @@ def parseFileForRV(fileName):
     global normalDiscreteDesignSetName
     global normalDiscreteSetValues
 
-
     global numResultFiles
     global outputResultFiles
 
-    exists = os.path.isfile(fileName)
-
-    print(exists)
-
-    if not exists:
+    if os.path.isfile(fileName):
+        print("{}:".format(fileName))
+    else:
+        print("ERROR: {} file not found.".format(fileName))
         return False
 
     with open(fileName,'r') as data_file:
         data = json.load(data_file)
-        if data.get("randomVariables"):
-            for k in data["randomVariables"]:
 
-                if (k["distribution"] == "Normal"):
+        # TODO: we need to decide if we prefer camelCase or CamelCase...
+        RVs = data.get("randomVariables", None)
+        if RVs is None:
+            RVs = data.get("RandomVariables", None)
+
+        if RVs is not None:
+            for k in RVs:
+
+                if (k["distribution"] in ["Normal", "normal"]):
                     normalUncertainName.append(k["name"])
                     normalUncertainMean.append(k["mean"])
                     normalUncertainStdDev.append(k["stdDev"])
                     numNormalUncertain += 1
                     numRandomVariables += 1
+                    print('\t{name} | normal mu={mean} sig={stdDev}'.format(
+                        name = normalUncertainName[-1],
+                        mean = normalUncertainMean[-1],
+                        stdDev = normalUncertainStdDev[-1]))
 
-                elif (k["distribution"] == "Lognormal"):
+                elif (k["distribution"] == ["Lognormal", "lognormal"]):
                     lognormalUncertainName.append(k["name"])
                     lognormalUncertainMean.append(k["mean"])
                     lognormalUncertainStdDev.append(k["stdDev"])
@@ -830,9 +842,11 @@ def parseFileForRV(fileName):
                         elements.append(l)
                     elements.sort()
                     discreteDesignSetStringValues.append(elements)
-                    print(elements)
                     numDiscreteDesignSetString += 1
                     numRandomVariables += 1
+                    print('\t{name} | discrete set={elements}'.format(
+                        name = discreteDesignSetStringName[-1], 
+                        elements = discreteDesignSetStringValues[-1]))
 
         if data.get("resultFiles"):
             for k in data["resultFiles"]:

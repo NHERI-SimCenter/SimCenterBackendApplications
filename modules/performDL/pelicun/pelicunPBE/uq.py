@@ -385,6 +385,12 @@ def tmvn_MLE(samples,
 
     mu_hatc = np.mean(samplesT, axis=0)
     sig_hatc = np.std(samplesT, axis=0)
+    if ndims == 1:
+        if sig_hatc == 0:
+            sig_hatc = 0.999
+    else:
+        sig_zero_id = np.where(sig_hatc == 0.0)[0]
+        sig_hatc[sig_zero_id] = 0.999
 
     if verbose:
         print('\nstandardized estimates:')
@@ -394,7 +400,8 @@ def tmvn_MLE(samples,
     # define initial values of distribution parameters using simple estimates
     if ndims == 1:
         #mu_init = np.mean(samples)
-        mu_init = mu_hatc
+        # we perturb the mu to improve optimization
+        mu_init = mu_hatc + sig_hatc*0.1
         # use biased estimate for std, because MLE will converge to that anyway
         #sig_init = np.std(samples, ddof=0)
         sig_init = sig_hatc
@@ -402,6 +409,7 @@ def tmvn_MLE(samples,
         if sig_init == 0.0:
             sig_init = 1e-6 * np.abs(mu_init)
         rho_init=()
+        fit_rho = False
         # prepare a vector of initial values
         inits = np.asarray([mu_init, sig_init])
     else:
@@ -417,14 +425,18 @@ def tmvn_MLE(samples,
         rho_init = np.corrcoef(np.transpose(samplesT))
         # If there is not enough samples, or the samples are not from a
         # multivariate normal distribution, the rho values might be nan.
-        # Rather than trying to patch it, in this case, we assume uncorrelated
-        # samples and make sure that at least the mu and sig values will be
-        # OK.
-        if np.isnan(np.sum(rho_init.flatten())):
+        # First, we replace the nan values with zeros. Then, check if the
+        # resulting matrix is positive semidefinite. If not, then rather than
+        # trying to patch it, in this case, we assume uncorrelated
+        # samples and make sure that at least the mu and sig values will be OK.
+        rho_init = np.nan_to_num(rho_init)
+        pos_sem_def = np.all(np.linalg.eigvals(rho_init) >= 0.)
+        if not pos_sem_def:
+        #if np.isnan(np.sum(rho_init.flatten())):
+            show_warning("The number of samples is not sufficient to estimate "
+                "the correlation matrix. We assume uncorrelated EDPs.")
             rho_init = np.zeros(rho_init.shape)
-            #TODO: show a warning message to let the user know there is an issue
-            # replace nan corrcoef with zero correlation
-            #rho_init[np.where(np.isnan(rho_init))] = 0.0
+            #rho_init = np.ones(rho_init.shape)*0.0       #*0.7
         np.fill_diagonal(rho_init,1.0)
         # collect the independent values (i.e. elements above the main
         # diagonal) from the correlation matrix in a list
@@ -434,7 +446,7 @@ def tmvn_MLE(samples,
         rho_init_ids2 = rho_init_ids[::-1]
         # prepare a vector of initial values
         # if there is too few samples, we do not fit the correlation matrix
-        fit_rho = nsamples > ndims**2.0+2.0
+        fit_rho = nsamples > 2.0*ndims**2.0
         if fit_rho:
             inits = np.concatenate([mu_init, sig_init, rho_init_list])
         else:
@@ -442,18 +454,19 @@ def tmvn_MLE(samples,
 
     # If the distribution is censored or truncated, check if the number of
     # samples is greater than the number of unknowns. If not, show a warning.
-    if (((tr_lower is not None) or (tr_upper is not None)
-        or (det_lower is not None) or (det_upper is not None))
-       and (len(inits) >= nsamples)):
-        if verbose: print('samples:',nsamples,'unknowns:',len(inits))
-        warnings.warn(UserWarning(
-            "The number of samples is less than the number of unknowns. There "
-            "is no unique solution available for such a case. Expect a poor "
-            "estimate of the distribution (especially the covariance matrix). "
-            "Either provide more samples, or relax the assumed dependencies "
-            "between variables, or remove the truncation/detection limits to "
-            "improve the situation."
-        ))
+    if fit_rho:
+        if (((tr_lower is not None) or (tr_upper is not None)
+            or (det_lower is not None) or (det_upper is not None))
+           and (len(inits) >= nsamples)):
+            if verbose: print('samples:',nsamples,'unknowns:',len(inits))
+            show_warning(
+                "The number of samples is less than the number of unknowns. There "
+                "is no unique solution available for such a case. Expect a poor "
+                "estimate of the distribution (especially the covariance matrix). "
+                "Either provide more samples, or relax the assumed dependencies "
+                "between variables, or remove the truncation/detection limits to "
+                "improve the situation."
+            )
 
     # define the bounds for the distribution parameters
     # mu is not bounded
@@ -496,7 +509,7 @@ def tmvn_MLE(samples,
             mu = params[:ndims]
             sig = params[ndims:2*ndims]
             if unbiased:
-                sig = sig * nsamples / (nsamples-1)
+                sig = sig * np.sqrt(nsamples / (nsamples-1))
 
             # reconstruct the covariance matrix
             COV = np.outer(sig, sig)
@@ -539,6 +552,7 @@ def tmvn_MLE(samples,
 
         if ndims >= 2:
             pos_sem_def = np.all(np.linalg.eigvals(COV) >= 0.)
+            #TODO: replace this with Cholesky decomposition check
             if not pos_sem_def:
                 if verbose_NLL: print(params_to_show, 'COV not pos sem def', 1e10)
                 return 1e10
@@ -653,12 +667,14 @@ def tmvn_MLE(samples,
         #print(mu[-4:], NLL)
         #print(np.sqrt(np.diagonal(COV))[-4:],NLL)
 
-        if verbose_NLL: pass
-        #print(params_to_show, 'all good', NLL)
+        if verbose_NLL:
+          pass
+          #print(params_to_show, 'all good', NLL)
         return NLL
 
     # initialize the message flags
     msg = [False, False, False]
+
     if verbose: print(_neg_log_likelihood(inits, rho_init))
 
     # perturbation
@@ -670,32 +686,46 @@ def tmvn_MLE(samples,
     #out = minimize(_neg_log_likelihood, inits, args=(rho_init, True),
     #               bounds=bounds, method='TNC')
 
-    out_d = differential_evolution(_neg_log_likelihood, mu_bounds + sig_bounds,
-                                   args=(rho_init,),
-                                   maxiter=200,
-                                   polish=False)
-    if verbose:
-        print(out_d)
-        #print(out.fun, out.nfev, out.nit, out.message, out.x)
-        print('runtime: ', time.time() - t_0)
+    # Global optimization with a more sophisticated method is only
+    # reasonable if we have a sufficiently large number of samples.
+    # Considering the size of the covariance matrix, we are looking for at least
+    # ndims^2 samples to use differential evolution.
+    if nsamples > 2.0 * ndims**2.0:
 
-    # minimize the negative log-likelihood function using the adaptive
+        out_d = differential_evolution(_neg_log_likelihood, mu_bounds + sig_bounds,
+                                       args=(rho_init,),
+                                       maxiter=200,
+                                       polish=False)
+        mu_sig_vals = out_d.x
+
+        if verbose:
+            print(out_d)
+            # print(out.fun, out.nfev, out.nit, out.message, out.x)
+            print('runtime: ', time.time() - t_0)
+    else:
+        mu_sig_vals = np.array(inits[:2*ndims])
+
+    # Minimize the negative log-likelihood function using the adaptive
     # Adaptive Nelder-Mead algorithm (Gao and Han, 2012)
-    out_m = minimize(_neg_log_likelihood, np.concatenate([out_d.x, inits[2*ndims:]]),
-                   args=(rho_init,True), method='Nelder-Mead',
-                   options=dict(maxfev=1000*ndims,
-                                xatol = 0.001,
-                                fatol = 1e-10,
-                                adaptive=True)
-                   )
+    if nsamples > ndims:
+        out_m = minimize(_neg_log_likelihood,
+                         np.concatenate([mu_sig_vals, inits[2*ndims:]]),
+                       args=(rho_init,True), method='Nelder-Mead',
+                       options=dict(maxfev=min(1000*ndims, 10000),
+                                    xatol = 0.01,
+                                    fatol = 1e-10,
+                                    adaptive=True)
+                       )
 
-    if verbose:
-        print(out_m)
-        #print(out.fun, out.nfev, out.nit, out.message, out.x)
-        print('runtime: ', time.time() - t_0)
+        if verbose:
+            print(out_m)
+            #print(out.fun, out.nfev, out.nit, out.message, out.x)
+            print('runtime: ', time.time() - t_0)
 
-    # reconstruct the mu and COV arrays from the solutions and return them
-    mu, COV = _get_mu_COV(out_m.x, rho_init, unbiased=True)
+        # reconstruct the mu and COV arrays from the solutions and return them
+        mu, COV = _get_mu_COV(out_m.x, rho_init, unbiased=True)
+    else:
+        mu, COV = _get_mu_COV(mu_sig_vals, rho_init, unbiased=True)
 
     if verbose:
         if ndims >= 2:
@@ -1064,6 +1094,11 @@ class RandomVariable(object):
             data = raw_data
             if distribution_list == 'lognormal':
                 data = np.exp(raw_data)
+        elif distribution_list.shape == (1,):
+            if distribution_list[0] == 'lognormal':
+                data = np.exp(raw_data)
+            else:
+                data = raw_data
         else:
             data = raw_data
             for dim, dk in enumerate(distribution_list):

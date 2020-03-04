@@ -9,6 +9,8 @@ else:
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
+import json
+import numpy as np
 import platform
 import shutil
 import subprocess
@@ -29,6 +31,8 @@ def main(args):
     elif platform.system() == 'Linux':
         env["PATH"] = env["PATH"] + ':{}/bin'.format(home)
         env["PATH"] = env["PATH"] + ':{}/dakota/dakota-6.5/bin'.format(home)
+    elif platform.system() == 'Windows':
+        pass
     else:
         print("PLATFORM {} NOT RECOGNIZED".format(platform.system))
 
@@ -39,14 +43,23 @@ def main(args):
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')
     parser.add_argument('--filenameSIM')
+    
     parser.add_argument('--driverFile')
+    
     parser.add_argument('--method', default="LHS")
-    parser.add_argument('--samples', default=None)
-    parser.add_argument('--seed', default=None)
+    parser.add_argument('--samples', type=int, default=None)
+    parser.add_argument('--seed', type=int, default=np.random.randint(1,1000))
+    parser.add_argument('--samples2', type=int, default=None)
+    parser.add_argument('--seed2', type=int, default=None)
+    parser.add_argument('--ismethod', default=None)
+    parser.add_argument('--dataMethod', default=None)
+    parser.add_argument('--dataMethod2', default=None)
+    
     parser.add_argument('--type')
-    parser.add_argument('--concurrency', default=None)
+    parser.add_argument('--concurrency', type=int, default=None)
+    parser.add_argument('--keepSamples', default="True")
     parser.add_argument('--runType')
-    parser.add_argument('--keepSamples', default=True)
+    
     args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
@@ -59,68 +72,70 @@ def main(args):
 
     uqData = dict(
         method = args.method,
+        
         samples = args.samples,
+        samples2 = args.samples2,
         seed = args.seed,
-        concurrency = args.concurrency
+        seed2 = args.seed2,
+        ismethod = args.ismethod,
+        dataMethod = args.dataMethod,
+        dataMethod2 = args.dataMethod2,
+
+        concurrency = args.concurrency,
+        keepSamples = args.keepSamples not in ["False", 'False', "false", 'false', False]
     )
+
+    if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the BIM file
+        with open(bimName) as data_file:
+            uq_info = json.load(data_file)['UQ_Method']
+
+        if 'samplingMethodData' in uq_info.keys():
+            uq_info = uq_info['samplingMethodData']
+            for attribute in uqData.keys():
+                if attribute not in ['concurrency', 'keepSamples']:
+                    uqData[attribute] = uq_info.get(attribute, None)
 
     runDakota = args.runType
 
     #Run Preprocess for Dakota
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    # preProcessArgs = ["python", "{}/preprocessJSON.py".format(scriptDir), bimName, evtName,\
-    # samName, edpName, lossName, simName, driverFile, scriptDir, bldgName]
-    # subprocess.call(preProcessArgs)
-    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, uqData)
+    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
-    if platform.system() == 'Windows':
+    if ((platform.system() == 'Windows') and (runDakota == 'run')):
         workflowDriverName = 'workflow_driver.bat'
 
     #Create Template Directory and copy files
-    templateDir = "templatedir"
-    #if os.path.exists(templateDir):
-    #    shutil.rmtree(templateDir)
-
-    #os.mkdir(templateDir)
     st = os.stat(workflowDriverName)
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
-    shutil.copy(workflowDriverName, templateDir)
+    #shutil.copy(workflowDriverName, "templatedir")
     shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
-    shutil.copy(bimName, "bim.j")
-    shutil.copy(evtName, "evt.j")
-    exists = os.path.isfile(samName)
-    if exists:
-        shutil.copy(samName, "sam.j")
+    shutil.move(bimName, "bim.j")
+    shutil.move(evtName, "evt.j")
+    if os.path.isfile(samName): shutil.move(samName, "sam.j")
+    shutil.move(edpName, "edp.j")
+    #if os.path.isfile(simName): shutil.move(simName, "sim.j")
 
-    shutil.copy(edpName, "edp.j")
+    # copy the dakota input file to the main working dir for the structure
+    shutil.move("dakota.in", "../")
 
-    exists = os.path.isfile(simName)
-    if exists:
-        shutil.copy(simName, "sim.j")
-
-    shutil.copy("dakota.in", "../")
+    # change dir to the main working dir for the structure
     os.chdir("../")
 
     if runDakota == "run":
 
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
-        print(dakotaCommand)
+        print('running Dakota: ', dakotaCommand)
         try:
             result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
             returncode = e.returncode
+        
         #result = result.decode(sys.stdout.encoding)
-        print(result, returncode)
-
-        #Postprocess Dakota results
-        #postprocessCommand = '{}/postprocessDAKOTA {} {} {} {} dakotaTab.out'.format(
-        #    scriptDir, numRVs, numSamples, bimName, edpName)
-
-        #subprocess.Popen(postprocessCommand, shell=True).wait()
+        #print(result, returncode)
 
 if __name__ == '__main__':
 

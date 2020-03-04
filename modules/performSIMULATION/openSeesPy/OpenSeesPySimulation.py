@@ -24,18 +24,27 @@ def write_RV():
     # TODO: check simulation data exists and contains all important fields
     # TODO: get simulation data & write to SIM file
 
-def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, 
+def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
 
     sys.path.insert(0, os.getcwd())
 
     # load the model builder script
-    with open(SAM_input_path, 'r') as f:
-        SAM_in = json.load(f)
-
+    with open(BIM_input_path, 'r') as f:
+        BIM_in = json.load(f)
+        model_script_path = BIM_in['Simulation']['fileName']
     model_script = importlib.__import__(
-        SAM_in['mainScript'][:-3], globals(), locals(), ['build_model',], 0)
+        model_script_path[:-3], globals(), locals(), ['build_model',], 0)
     build_model = model_script.build_model
+
+    # with open(SAM_input_path, 'r') as f:
+    #     SAM_in = json.load(f)
+    #
+    # model_script = importlib.__import__(
+    #     SAM_in['mainScript'][:-3], globals(), locals(), ['build_model',], 0)
+    # build_model = model_script.build_model
+
+    wipe()
 
     # build the model
     build_model()
@@ -54,7 +63,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     # define the time series
     for evt_i, event in enumerate(event_list):
-        
+
         timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', event['factor']*f_G,
                    '-values', *event['data'], '-prependZero')
 
@@ -94,7 +103,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
             loc = response['floor']
         else:
             loc = response['floor2']
-        response['scalar_data'] = EDP_res[EDP_kind][loc]
+        response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)

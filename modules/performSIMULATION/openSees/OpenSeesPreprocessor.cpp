@@ -405,12 +405,12 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
       int nEigenJ=0;
       if (nStory <= 0) {
-	nEigenJ = 2;
-	nStory = 1;
+      	nEigenJ = 2;
+      	nStory = 1;
       } else if (nStory<=2)
-	nEigenJ=nStory*2;   //first mode or second mode
+        nEigenJ=nStory*2;   //first mode or second mode
       else
-	nEigenJ=3*2;          
+        nEigenJ=3*2;          
       
       s << "set nEigenJ "<<nEigenJ<<";\n"
 	<< "set lambdaN [eigen -fullGenLapack "<< nEigenJ <<"];\n"
