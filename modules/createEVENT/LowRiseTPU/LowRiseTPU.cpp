@@ -220,7 +220,8 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t* modelLengthJson = json_object_get(modelUnitsJson, "length");
 
       Units::UnitSystem modelUnits;
-      modelUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+      modelUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(modelLengthJson));
+
       double lengthModelUnitConversion = Units::GetLengthFactor(modelUnits, eventUnits);
 
       json_t *roofTypeT = json_object_get(tapData,"roofType");
@@ -260,7 +261,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
 
       double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
-      std::cerr << "\n LOAD FCATOR: " << loadFactor << "\n";
+      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -305,12 +306,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	double *forces = new double[numFloors];
 	double *moments = new double[numFloors];
 	double *data = new double[numSteps];
+
 	for (int j=0; j<numFloors; j++) {
 	  forces[j]=0.0;
 	  moments[j]=0.0;
-	  data[j]=0.0;
 	}
 
+	bool found = false;
 	for (int j=0; j<numTaps; j++) {
 	  json_t *jsonCP = json_array_get(tapCp, j);
 	  int tapID = json_integer_value(json_object_get(jsonCP,"id"));
@@ -320,9 +322,15 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	      data[k] = json_real_value(json_array_get(arrayData, k));
 	    }	    
 	    j = numTaps;
+	    found = true;
 	  }
 	}
-	  
+	if (found == false) {
+	  for (int j=0; j<numSteps; j++) {
+	    data[j]=0.0;
+	  }
+	}
+
 	theTAPS[i].forces = forces;
 	theTAPS[i].moments = moments;
 	theTAPS[i].data = data;
@@ -664,41 +672,58 @@ int addForcesFace(TAP *theTaps, int numTaps,
   double centerLine = length/2.0;
   double A = dY*dX;
   double locY = dY/2.0;
+
+  for (int i = 0; i <numFloors; i++) {
   
-  for (int i=0; i<numDivisionY; i++) {
-    double locX = dX/2.0;
-    double Rbelow = locY*A/heightStory;
-    double Rabove = (heightStory-locY)*A/heightStory;
-    
-    for (int i=0; i<numDivisionX; i++) {
-      double Mabove = Rabove*(locX-centerLine);
-      double Mbelow = Rbelow*(locX-centerLine);
+    for (int j=0; j<numDivisionY; j++) {
       
-      // find nearestTAP
-      TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
-
-      // add force coefficients
-      if (theTap != NULL) {
-	if (i != 0) { // don;t add to ground floor
+      double locX = dX/2.0;
+      double Rabove = locY*A/heightStory;
+      double Rbelow = (heightStory-locY)*A/heightStory;
+      
+      for (int k=0; k<numTaps; k++) {
+	TAP *theTap = &theTaps[k];
+	if (theTap->face == 1)
+	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
+      }
+            
+      for (int k=0; k<numDivisionX; k++) {
+	
+	double Mabove = Rabove*(locX-centerLine);
+	double Mbelow = Rbelow*(locX-centerLine);
+	
+	// find nearestTAP
+	TAP *theTap = findNearestTAP(theTaps, numTaps, locX, locY, face);
+	
+	// add force coefficients
+	if (theTap != NULL) {
+	  
+	  if (i != 0) { // don;t add to ground floor
+	    if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
+	      theTap->forces[i-1] = theTap->forces[i-1] + Rbelow;
+	    else
+	      theTap->forces[i-1] = theTap->forces[i-1] - Rbelow;
+	    
+	    theTap->moments[i-1] = theTap->moments[i-1] + Mbelow;
+	  }
+	  
 	  if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-	    theTap->forces[i-1] += Rbelow;
+	    
+	    theTap->forces[i] = theTap->forces[i] + Rabove;
 	  else
-	    theTap->forces[i-1] -= Rbelow;
-
-	  theTap->moments[i-1] += Mbelow;
-	}
-	if (face == 1 || face == 2) // pressure on face 3 and 4 are negative to pos x & y dirn
-
-	  theTap->forces[i] += Rabove;
-	else
-	  theTap->forces[i] -= Rabove;
-
-	theTap->moments[i] += Mabove;
-      }	    
-      locX += dX;
+	    theTap->forces[i] = theTap->forces[i] - Rabove;
+	  
+	  theTap->moments[i] = theTap->moments[i] + Mabove;
+	  
+	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
+	  
+	}	    
+	locX += dX;
+      }
+      locY += dY;
     }
-    locY += dY;
   }
+
   return 0;
 }
 

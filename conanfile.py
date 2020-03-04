@@ -35,7 +35,7 @@ class simCenterBackendApps(ConanFile):
         self.options.shared = False
        
     def configure_cmake(self):
-        cmake = CMake(self)
+        cmake = CMake(self, msbuild_verbosity='detailed')
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
     

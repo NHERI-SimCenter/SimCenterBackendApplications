@@ -161,89 +161,75 @@ int main(int argc, char **argv)
       const char *cline = 0;
       const char *floor = 0;
 
-      bool hasResponse = false;
-      json_array_foreach(mappingArray, mapIndex1, value1) {
-	cline = json_string_value(json_object_get(value1,"cline"));
-	std::cerr << "CLINE: " << cline << "\n";
-	if (strcmp(cline,"response") == 0)
-	  hasResponse = true;
-	break;
-      }
-      std::cerr << hasResponse << " " << true;
-
       json_array_foreach(mappingArray, mapIndex1, value1) {
 	
 	cline = json_string_value(json_object_get(value1,"cline"));
-	if (((hasResponse == true) && (strcmp(cline,"response") == 0)) || 
-	    ((hasResponse == false) && (strcmp(cline,"1") == 0))) {
-	      
-	      floor = json_string_value(json_object_get(value1,"floor"));
-	      int node = json_integer_value(json_object_get(value1,"node"));
-	      
-	      // floor abs acceleration
-	      if (strcmp(floor,"0") != 0) {
-		json_t *responseA = json_object();
-		json_object_set(responseA,"type",json_string("max_abs_acceleration"));      
-		json_object_set(responseA,"cline",json_string(cline));
-		json_object_set(responseA,"floor",json_string(floor));
-		json_object_set(responseA,"dofs",theDOFs);
-		json_t *dataArrayA = json_array(); 
-		json_object_set(responseA,"scalar_data",dataArrayA);
-		json_array_append(responsesArray,responseA);
-		numEDP += numDOF;
-	      }
+	floor = json_string_value(json_object_get(value1,"floor"));
+	int node = json_integer_value(json_object_get(value1,"node"));
 
-	      if (count > 0) {
-		
-		// floor relative disp
-		json_t *responseD = json_object();
-		json_object_set(responseD,"type",json_string("max_rel_disp"));      
-		json_object_set(responseD,"cline",json_string(cline));
-		json_object_set(responseD,"floor",json_string(floor));
-		json_object_set(responseD,"dofs",theDOFs);
-		json_t *dataArrayD = json_array(); 
-		json_object_set(responseD,"scalar_data",dataArrayD);
-		json_array_append(responsesArray,responseD);
-		numEDP += numDOF;
-		
-		// drift
-		json_t *response = json_object();
-		json_object_set(response,"type",json_string("max_drift"));      
-		json_object_set(response,"cline",json_string(cline));
-		json_object_set(response,"floor1",json_string(floor1));
-		json_object_set(response,"floor2",json_string(floor));
-		
-		// we cannot just add dof's as before in case vertical
-		json_t *dofArray = json_array();
-		for (int i=0; i<numDOF; i++) {
-		  if (tDOFs[i] != ndm) {
-		    json_array_append(dofArray, json_integer(tDOFs[i]));
-		    numEDP++; // numEDP+=2; // drift and pressure
-		  }
-		}
-		json_object_set(response,"dofs",dofArray);
+	if (count > 0) {
+	
+	  // floor abs acceleration
+	  json_t *responseA = json_object();
+	  json_object_set(responseA,"type",json_string("max_abs_acceleration"));      
+	  json_object_set(responseA,"cline",json_string(cline));
+	  json_object_set(responseA,"floor",json_string(floor));
+	  json_object_set(responseA,"dofs",theDOFs);
+	  json_t *dataArrayA = json_array(); 
+	  json_object_set(responseA,"scalar_data",dataArrayA);
+	  json_array_append(responsesArray,responseA);
+	  numEDP += numDOF;
 
-		json_t *dataArray = json_array(); 
-		json_object_set(response,"scalar_data",dataArray);
-		json_array_append(responsesArray,response);
+	  // floor relative disp
+	  json_t *responseD = json_object();
+	  json_object_set(responseD,"type",json_string("max_rel_disp"));      
+	  json_object_set(responseD,"cline",json_string(cline));
+	  json_object_set(responseD,"floor",json_string(floor));
+	  json_object_set(responseD,"dofs",theDOFs);
+	  json_t *dataArrayD = json_array(); 
+	  json_object_set(responseD,"scalar_data",dataArrayD);
+	  json_array_append(responsesArray,responseD);
+	  numEDP += numDOF;
 
-		// pressure
-		/*************************************************
+	  // drift
+	  for (int i=0; i<numDOF; i++) {
+	    json_t *response = json_object();
+	    json_object_set(response,"type",json_string("max_drift"));      
+	    json_object_set(response,"cline",json_string(cline));
+	    json_object_set(response,"floor1",json_string(floor1));
+	    json_object_set(response,"floor2",json_string(floor));
+	    
+	    // we cannot just add dof's as before in case vertical
+	    json_t *dofArray = json_array();
+	    json_array_append(dofArray, json_integer(tDOFs[i]));
+
+	    //	    if (tDOFs[i] != ndm) {
+	    numEDP+=1; // drift and pressure
+	    //	    }
+	    json_object_set(response,"dofs",dofArray);
+
+	    json_t *dataArray = json_array(); 
+	    json_object_set(response,"scalar_data",dataArray);
+	    json_array_append(responsesArray,response);
+	  }
+
+
+	  /*
+	  // pressure
 	  json_t *responseP = json_object();
 	  json_object_set(responseP,"type",json_string("max_pressure"));      
 	  json_object_set(responseP,"floor1",json_string(floor1));
 	  json_object_set(responseP,"floor2",json_string(floor));
 	  json_object_set(responseP,"dofs",dofArray);
-          
+
 	  json_t *dataArrayP = json_array(); 
 	  json_object_set(response,"scalar_data",dataArrayP);
 	  json_array_append(responsesArray,responseP);
-          ************************************************ */
-	      }
+	  */
+	}
 
-	      floor1 = floor;
-	      count++;
-	    }
+	floor1 = floor;
+	count++;
       }
 
       json_object_set(eventObj,"responses",responsesArray);
