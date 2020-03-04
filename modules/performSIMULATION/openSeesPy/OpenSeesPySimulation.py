@@ -86,8 +86,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     run_analysis = analysis_script.run_analysis
 
     # run the analysis
-    print(recorder_nodes)
-    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], GM_npts=EVENT_in['numSteps'],
+    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], GM_npts=EVENT_in['numSteps'], 
         TS_List = TS_list, nodes_COD = recorder_nodes)
 
     # TODO: default analysis script
@@ -126,3 +125,6 @@ if __name__ == '__main__':
         sys.exit(run_openseesPy(
             args.filenameEVENT, args.filenameSAM, args.filenameBIM,
             args.filenameEDP))
+
+
+
