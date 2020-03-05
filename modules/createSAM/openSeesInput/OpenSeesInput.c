@@ -99,7 +99,7 @@ main(int argc, char **argv) {
 	json_t *nodeEntry =json_object();
 	int tag = json_integer_value(intObj);
 	json_object_set(nodeEntry,"node",json_integer(tag));
-	json_object_set(nodeEntry,"cline",json_string("1"));
+	json_object_set(nodeEntry,"cline",json_string("centroid"));
 	sprintf(floorString,"%d",floor);
 	json_object_set(nodeEntry,"floor",json_string(floorString));
 	floor++;
