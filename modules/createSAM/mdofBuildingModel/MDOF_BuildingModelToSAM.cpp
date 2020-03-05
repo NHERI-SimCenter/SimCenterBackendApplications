@@ -334,17 +334,17 @@ main(int argc, char **argv) {
   json_t *mappingArray = json_array();
   int nodeTag = 1; // node tags start at 0
   char floorString[16];
-
+  
   for (int i=0; i<numNodes; i++) {
-      json_t *nodeEntry = json_object();
-      json_object_set(nodeEntry,"node",json_integer(nodeTag));
-      json_object_set(nodeEntry,"cline",json_string("1"));
 
       sprintf(floorString,"%d",nodeTag-1); // floors start at 0
-
+      json_t *nodeEntry = json_object();
+      json_object_set(nodeEntry,"node",json_integer(nodeTag));
+      json_object_set(nodeEntry,"cline",json_string("centroid"));
       //  itoa(floor, floorString, floor); NOT IN STANDARD
       json_object_set(nodeEntry,"floor",json_string(floorString));
-
+      json_array_append(mappingArray, nodeEntry);
+      
       if (eResponse == true) {
 	if (i != 0) {
 	  json_t *respNode = json_object();
@@ -359,9 +359,15 @@ main(int argc, char **argv) {
 	  json_object_set(respNode,"floor",json_string(floorString));
 	  json_array_append(mappingArray, respNode);
 	}
+      } else {
+	json_t *nodeEntry = json_object();
+	json_object_set(nodeEntry,"node",json_integer(nodeTag));
+	json_object_set(nodeEntry,"cline",json_string("response"));
+	//  itoa(floor, floorString, floor); NOT IN STANDARD
+	json_object_set(nodeEntry,"floor",json_string(floorString));
+	json_array_append(mappingArray, nodeEntry);
       }
 
-      json_array_append(mappingArray, nodeEntry);
       nodeTag++;
   }
 

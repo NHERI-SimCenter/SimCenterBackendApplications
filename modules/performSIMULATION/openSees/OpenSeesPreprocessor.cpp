@@ -310,7 +310,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
   }
 
   if (constraintsProvided == false) {
-    // fix node floor 0 column ine 1
+    // fix node floor 0 column line 1
     int nodeTag = getNode("1","0"); 
     s << "fix " << nodeTag;
     for (int i=0; i<NDF; i++)
@@ -397,7 +397,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       int numStory = 0;
       json_array_foreach(theNodes, index, theNode) {      
 	json_t *cline = json_object_get(theNode,"cline");
-	if ((cline!= NULL) && (strcmp("1",json_string_value(cline)) == 0))
+	if ((cline!= NULL) && (strcmp("response",json_string_value(cline)) == 0))
 	  numStory++;
       }
 
