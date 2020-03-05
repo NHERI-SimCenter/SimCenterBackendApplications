@@ -1,9 +1,9 @@
 include ../../Makefile.inc
 
 SRCS=extractEDP.cpp postprocessDakota.cpp
-OBJS=extractEDP.o  postprocessDakota.o
+OBJS=extractEDP.o  postprocessDakota.o simCenterDprepro.o
 
-all: extractEDP
+all: extractEDP simCenterDprepro
 
 debug: CPPFLAGS += -DDEBUG -g
 debug: all
@@ -14,6 +14,9 @@ postprocessDakota.o: postprocessDakota.cpp
 
 postprocessDakota: $(OBJS)
 	$(CXX) $(LDFLAGS) -o postprocessDakota postprocessDakota.o $(LDLIBS)
+
+simCenterDprepro: $(OBJS)
+	$(CXX) $(LDFLAGS) -o simCenterDprepro simCenterDprepro.o $(LDLIBS)
 
 extractEDP: $(OBJS)
 	$(CXX) $(LDFLAGS) -o extractEDP extractEDP.o $(LDLIBS)
