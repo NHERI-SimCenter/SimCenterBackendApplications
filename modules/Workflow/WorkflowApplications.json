@@ -31,8 +31,14 @@
           },
           {
             "id": "buildingSourceFile",
-            "type": "string",
+            "type": "path",
             "description": "path to buildings file",
+            "default": ""
+          },
+          {
+            "id": "config",
+            "type": "path",
+            "description": "path to buildings config file",
             "default": ""
           }
         ]
@@ -55,15 +61,52 @@
           },
           {
             "id": "buildingSourceFile",
-            "type": "string",
+            "type": "path",
             "description": "path to buildings database file",
             "default": ""
           },
           {
             "id": "configFile",
-            "type": "string",
+            "type": "path",
             "description": "path to workflow config file",
             "default": ""
+          }
+        ]
+      }
+    ]
+  },
+  "RegionalEventApplications": {
+    "API": {
+      "Inputs":[
+        {
+          "id": "buildingFile",
+          "type": "path",
+          "description": "Name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildings.json"
+        }
+      ],
+      "Outputs":[
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "NearestNeighborEvents",
+        "ExecutablePath": "applications/performRegionalEventSimulation/NearestNeighborEvents/NNE.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "filenameEVENTmeta",
+            "type": "path",
+            "description": "Path to file containing location information on each event file"
+          },
+          {
+            "id": "samples",
+            "type": "int",
+            "description": "Number of event samples to use (interesting when using more than one neighbors)"
+          },
+          {
+            "id": "neighbors",
+            "type": "int",
+            "description": "Number of neighbors to consider for each asset."
           }
         ]
       }
@@ -141,7 +184,18 @@
       {
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
-        "ApplicationSpecificInputs":["modelName", "seed"]
+        "ApplicationSpecificInputs":[
+          {
+            "id": "modelName",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "..."
+          }
+        ]
       },		
       {
         "Name": "CFDEvent",
@@ -165,9 +219,25 @@
         ]
       },
       {
+        "Name": "LLNL-SW4",
+        "ExecutablePath": "applications/createEVENT/LLNL_SW4/LLNL_SW4.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "pathSW4results",
+            "type": "path",
+            "description": "Path to directory containig output point files"
+          }
+        ]
+      },
+      {
         "Name": "ASCE7_WindSpeed",
         "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
         "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "pointWindSpeed",
+        "ExecutablePath": "applications/createEVENT/pointWindSpeed/pointWindSpeed",
+        "ApplicationSpecificInputs":["filenameWindSpeedCloudData"]
       }
     ]
   },
@@ -200,7 +270,13 @@
       {
         "Name": "MDOF-LU",
         "ExecutablePath": "applications/createSAM/MDOF-LU/MDOF-LU",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "hazusData",
+            "type": "path",
+            "description": "Defines the location of the hazus building config data file."
+          }
+        ]
       },
       {
         "Name": "OpenSeesInput",
@@ -334,7 +410,7 @@
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
       {
-        "Name": "OpenSees",
+        "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
       },
       {
@@ -395,7 +471,69 @@
     "Applications": [
       {
         "Name": "Dakota-UQ",
-        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py"
+        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "method",
+            "type": "string",
+            "description": "Defines the UQ method to use."
+          },
+          {
+            "id": "samples",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model."
+          },
+          {
+            "id": "samples2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the number of realizations to generate from the trained model."
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "Specifies the random seed."
+          },
+          {
+            "id": "seed2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the random seed to generate samples from the models."
+          },
+          {
+            "id": "ismethod",
+            "type": "string",
+            "description": "Specifies the importance sampling method."
+          },
+          {
+            "id": "dataMethod",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "dataMethod2",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "type",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "concurrency",
+            "type": "int",
+            "description": "Specifies the number of processes to use for simulation."
+          },
+          {
+            "id": "keepSamples",
+            "type": "bool",
+            "description": "True if the intermediate results shall be kept for each sample."
+          },
+          {
+            "id": "runType",
+            "type": "string",
+            "description": "..."
+          }
+        ]
       },
       {
         "Name": "Dakota-FEM",

@@ -310,7 +310,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
   }
 
   if (constraintsProvided == false) {
-    // fix node floor 0 column ine 1
+    // fix node floor 0 column line 1
     int nodeTag = getNode("1","0"); 
     s << "fix " << nodeTag;
     for (int i=0; i<NDF; i++)
@@ -397,7 +397,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       int numStory = 0;
       json_array_foreach(theNodes, index, theNode) {      
 	json_t *cline = json_object_get(theNode,"cline");
-	if ((cline!= NULL) && (strcmp("1",json_string_value(cline)) == 0))
+	if ((cline!= NULL) && (strcmp("response",json_string_value(cline)) == 0))
 	  numStory++;
       }
 
@@ -405,12 +405,12 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
       int nEigenJ=0;
       if (nStory <= 0) {
-	nEigenJ = 2;
-	nStory = 1;
+      	nEigenJ = 2;
+      	nStory = 1;
       } else if (nStory<=2)
-	nEigenJ=nStory*2;   //first mode or second mode
+        nEigenJ=nStory*2;   //first mode or second mode
       else
-	nEigenJ=3*2;          
+        nEigenJ=3*2;          
       
       s << "set nEigenJ "<<nEigenJ<<";\n"
 	<< "set lambdaN [eigen -fullGenLapack "<< nEigenJ <<"];\n"

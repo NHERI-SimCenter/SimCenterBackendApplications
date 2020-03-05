@@ -83,34 +83,51 @@ OpenSeesPostprocessor::processEDPs(){
       int numResponses = json_array_size(eventEDP);
       for (int k=0; k<numResponses; k++) {
 
-	json_t *response = json_array_get(eventEDP, k);
-	const char *type = json_string_value(json_object_get(response, "type"));
+		json_t *response = json_array_get(eventEDP, k);
+		const char *type = json_string_value(json_object_get(response, "type"));
 
-	if (strcmp(type,"max_abs_acceleration") == 0) {
-	  int cline = json_integer_value(json_object_get(response, "cline"));
-	  int floor = json_integer_value(json_object_get(response, "floor"));
+		if (strcmp(type,"max_abs_acceleration") == 0) {
+		  int cline = json_integer_value(json_object_get(response, "cline"));
+		  int floor = json_integer_value(json_object_get(response, "floor"));
 	  
-	  string fileString;
-	  ostringstream temp;  //temp as in temporary
-	  temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-	  fileString=temp.str(); 
+		  string fileString;
+		  ostringstream temp;  //temp as in temporary
+		  temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+		  fileString=temp.str(); 
 
-	  const char *fileName = fileString.c_str();
+		  const char *fileName = fileString.c_str();
+
+		  //
+			// open file & process data into a json array called: data
+			//
 	    
-	  // openfile & process data
-	  ifstream myfile;
-	  myfile.open (fileName);
+		  // openfile & process data
+		  ifstream myfile;
+		  myfile.open (fileName);
+
 	  double abs1Min, abs1Max, abs1Value;
 	  double abs2Min, abs2Max, abs2Value;
+	  abs1Min = 0;
+	  abs1Max = 0;
+	  abs1Value = 0;
+	  abs2Min = 0;
+	  abs2Max = 0;
+	  abs2Value = 0;
 
 	  if (myfile.is_open()) {
 	    myfile >> abs1Min >> abs2Min >> abs1Max >> abs2Max >> abs1Value >> abs2Value;
 	    myfile.close();
 	  }
-	  if (abs2Value > abs1Value)
-	    abs1Value = abs2Value;
+	  //if (abs2Value > abs1Value)
+	  //  abs1Value = abs2Value;
 
-	  json_object_set(response,"scalar_data",json_real(abs2Value));
+	  //json_object_set(response,"scalar_data",json_real(abs2Value));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(abs1Value));
+	  json_array_append(data, json_real(abs2Value));
+	  json_object_set(response,"scalar_data",data);
+
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(abs2Value));
@@ -134,11 +151,18 @@ OpenSeesPostprocessor::processEDPs(){
 	  // openfile & process data
 	  ifstream myfile;
 	  myfile.open (fileName1);
-	  double absMin, absMax, absValue;
-	  
-	  absValue = 0.0;
+	  double abs1Min, abs1Max, abs1Value;
+	  double abs2Min, abs2Max, abs2Value;
+	  abs1Min = 0;
+	  abs1Max = 0;
+	  abs1Value = 0;
+	  abs2Min = 0;
+	  abs2Max = 0;
+	  abs2Value = 0;
+
+	  //absValue = 0.0;
 	  if (myfile.is_open()) {
-	    myfile >> absMin >> absMax >> absValue;
+	    myfile >> abs1Min >> abs1Max >> abs1Value;
 	    myfile.close();
 	  } 
 
@@ -155,14 +179,19 @@ OpenSeesPostprocessor::processEDPs(){
 	  myfile.open (fileName2);
 	  
 	  if (myfile.is_open()) {
-	    myfile >> absMin >> absMax >> absMax;
+	    myfile >> abs2Min >> abs2Max >> abs2Value;
 	    myfile.close();
 	  } 
 	    
-	  if (absMax > absValue)
-	    absValue = absMax;
+	  //if (absMax > absValue)
+	  //  absValue = absMax;
 
-	  json_object_set(response,"scalar_data",json_real(absValue));
+	  //json_object_set(response,"scalar_data",json_real(absValue));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(abs1Value));
+	  json_array_append(data, json_real(abs2Value));
+	  json_object_set(response,"scalar_data",data);
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(absValue));
@@ -196,14 +225,19 @@ OpenSeesPostprocessor::processEDPs(){
 	    }
 	    
 	    // need to process to get the right value, for now just output last
-	    num = fabs(num1);
-	    if (fabs(num2) > num)
-	      num = fabs(num2);
+	    //num = fabs(num1);
+	    //if (fabs(num2) > num)
+	    //  num = fabs(num2);
 
 	    myfile.close();
 	  }
 	  
-	  json_object_set(response,"scalar_data",json_real(num));
+	  //json_object_set(response,"scalar_data",json_real(num));
+
+	  json_t *data = json_array();
+	  json_array_append(data, json_real(num1));
+	  json_array_append(data, json_real(num2));
+	  json_object_set(response,"scalar_data",data);
 	  /*
 	  json_t *scalarValues = json_object_get(response,"scalar_data");
 	  json_array_append(scalarValues,json_real(num));

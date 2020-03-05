@@ -36,14 +36,14 @@ int main(int argc, const char **argv)
     json_t *responsesArray = json_object_get(value1,"responses");  
     if (responsesArray != NULL) {
       json_array_foreach(responsesArray, index2, value2) {
-	json_t *sType = json_object_get(value2,"scalar_data");
-	int numValues = json_array_size(sType);
-	for (int i=0; i<numValues; i++) {
-	  double value = json_number_value(json_array_get(sType,i));
-	  printf("%f ", value);
-	  fOut << value << " ";
-	  numEDP++;
-	}
+      	json_t *sType = json_object_get(value2,"scalar_data");
+      	int numValues = json_array_size(sType);
+      	for (int i=0; i<numValues; i++) {
+      	  double value = json_number_value(json_array_get(sType,i));
+      	  printf("%f ", value);
+      	  fOut << value << " ";
+      	  numEDP++;
+      	}
       }
     }
     responsesArray = json_object_get(value1,"userSpecificResponses");  
@@ -91,37 +91,37 @@ int main(int argc, const char **argv)
       json_t *rootDakota = json_load_file(dakotaIN, 0, &error);
       json_t *uqMethod = json_object_get(rootDakota,"UQ_Method");  
       if (uqMethod != NULL) {
-	std::cerr << "HELLO1";
-	json_t *samplingData = json_object_get(uqMethod,"samplingMethodData");
-	if (samplingData != NULL) {
-	std::cerr << "HELLO2";
-	  json_t *evalID_Data = json_object_get(samplingData,"evalID");
-	  if (evalID_Data != NULL) {
-	    std::cerr << "HELLO3";
-	    evalID = json_integer_value(evalID_Data);
-	  }
-	}
+      	std::cerr << "HELLO1";
+      	json_t *samplingData = json_object_get(uqMethod,"samplingMethodData");
+      	if (samplingData != NULL) {
+      	std::cerr << "HELLO2";
+      	  json_t *evalID_Data = json_object_get(samplingData,"evalID");
+      	  if (evalID_Data != NULL) {
+      	    std::cerr << "HELLO3";
+      	    evalID = json_integer_value(evalID_Data);
+      	  }
+      	}
       }
       
       if (evalID != -1) {
-	for (int i=0; i<numFiles; i++) {
-	  const char *filename = argv[5+i];
-	  std::string name(filename);
-	  std::string copy = dirName + std::to_string(evalID) + std::string("-") + name;
-	  std::cerr << copy << "\n";
+      	for (int i=0; i<numFiles; i++) {
+      	  const char *filename = argv[5+i];
+      	  std::string name(filename);
+      	  std::string copy = dirName + std::to_string(evalID) + std::string("-") + name;
+      	  std::cerr << copy << "\n";
 
-	  std::ifstream source(filename, std::ios::binary);
-	  std::ofstream dest(copy, std::ios::binary);
+      	  std::ifstream source(filename, std::ios::binary);
+      	  std::ofstream dest(copy, std::ios::binary);
 
-	  std::istreambuf_iterator<char> begin_source(source);
-	  std::istreambuf_iterator<char> end_source;
-	  std::ostreambuf_iterator<char> begin_dest(dest); 
-	  std::copy(begin_source, end_source, begin_dest);
+      	  std::istreambuf_iterator<char> begin_source(source);
+      	  std::istreambuf_iterator<char> end_source;
+      	  std::ostreambuf_iterator<char> begin_dest(dest); 
+      	  std::copy(begin_source, end_source, begin_dest);
 
-	  source.close();
-	  dest.close();
+      	  source.close();
+      	  dest.close();
 
-	}
+      	}
       }   
     }
   }
