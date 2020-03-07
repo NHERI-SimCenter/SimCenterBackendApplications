@@ -738,6 +738,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
     }
     numSteps = json_integer_value(numStepJO);
     dT = json_number_value(dtJO);
+
   } else
     return -1;
 
@@ -819,7 +820,14 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	double dt = json_number_value(json_object_get(timeSeries,"dT"));
 	json_t *data = json_object_get(timeSeries,"data");
 
-	s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor " << seriesFactor;
+	if (analysisType == 1) {
+
+	  // place all load factors on event in TimeSeries for accel recorders .. thanks adam for pointing out
+	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor [expr " << seriesFactor << " * " << eventFactor << " * " << unitConversionFactorAcceleration << " ]";
+	} else {
+	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor expr " << seriesFactor;
+	}
+	
 	s << " -values { ";	
 
 	json_t *dataV;
@@ -869,7 +877,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       
       int seriesTag = timeSeriesList[name];
       s << "pattern UniformExcitation " << numPattern << " " << dirn;
-      s << " -fact " << unitConversionFactorAcceleration * eventFactor;
+      //      s << " -fact " << unitConversionFactorAcceleration * eventFactor;
+      s << " -fact " << 1.0 ;
       s << " -accel " << series << "\n";
       
       s << "set numStep " << numSteps << "\n";
