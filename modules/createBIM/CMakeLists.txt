@@ -1,0 +1,2 @@
+add_subdirectory(genericBimDatabase)
+add_subdirectory(GeoJSON_to_BIM)
