@@ -1,0 +1,4 @@
+add_subdirectory(mdofBuildingModel)
+add_subdirectory(openSeesInput)
+add_subdirectory(MDOF-LU)
+add_subdirectory(openSeesPyInput)

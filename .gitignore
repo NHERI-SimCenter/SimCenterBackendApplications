@@ -48,13 +48,13 @@ qrc_images1.cpp
 qrc_styles.cpp
 
 # OTHER
-Makefile
-Makefile.*
+applications
+build
+# Makefile
+# Makefile.*
 StandardGMT_EDP
 StandardWindEDP
 UserDefinedEDP
-DEDM_HRP
-NOWS1
 SiteResponse
 MDOF_BuildingModel
 ExtractPGA
@@ -69,7 +69,15 @@ MultipleSimCenterEvents
 MultiplePEER_Events
 postprocessDAKOTA
 *.pyc
+*.bak
 *.autosave
 debug.log
-*.json
 MDOF_BuildingModelToSAM
+#EVENT.json*
+#dakota.json
+#testFile.json
+#testInput.json
+#evt.json
+#SAM.json
+#edp.json
+#input.json

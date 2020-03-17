@@ -1,0 +1,596 @@
+{
+  "BuildingApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+        {
+          "id": "buildingFile",
+          "type": "string",
+          "description": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildingsFile.json"
+        }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "GenericBimDatabase",
+        "ExecutablePath": "applications/createBIM/genericBimDatabase/GenericBimDatabase",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "path",
+            "description": "path to buildings file",
+            "default": ""
+          },
+          {
+            "id": "config",
+            "type": "path",
+            "description": "path to buildings config file",
+            "default": ""
+          }
+        ]
+      },
+      {
+        "Name": "GeoJSON_to_BIM",
+        "ExecutablePath": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "path",
+            "description": "path to buildings database file",
+            "default": ""
+          },
+          {
+            "id": "configFile",
+            "type": "path",
+            "description": "path to workflow config file",
+            "default": ""
+          }
+        ]
+      }
+    ]
+  },
+  "RegionalEventApplications": {
+    "API": {
+      "Inputs":[
+        {
+          "id": "buildingFile",
+          "type": "path",
+          "description": "Name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildings.json"
+        }
+      ],
+      "Outputs":[
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "NearestNeighborEvents",
+        "ExecutablePath": "applications/performRegionalEventSimulation/NearestNeighborEvents/NNE.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "filenameEVENTmeta",
+            "type": "path",
+            "description": "Path to file containing location information on each event file"
+          },
+          {
+            "id": "samples",
+            "type": "int",
+            "description": "Number of event samples to use (interesting when using more than one neighbors)"
+          },
+          {
+            "id": "neighbors",
+            "type": "int",
+            "description": "Number of neighbors to consider for each asset."
+          }
+        ]
+      }
+    ]
+  },
+  "EventApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameBIM",
+          "type": "string",
+          "description": "name of bim file",
+          "default": "BIM.json"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameEVENT",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EVENT.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "SimCenterEvent",
+        "ExecutablePath": "applications/createEVENT/SimCenterEvent.py",
+        "ApplicationSpecificInputs": [
+	]
+      },
+      {
+        "Name": "ExistingSimCenterEvents",
+        "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
+        "ApplicationSpecificInputs": [
+	]
+      },
+      {
+        "Name": "ExistingPEER_Events",
+        "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
+        "ApplicationSpecificInputs": [
+	]
+      },
+      {
+        "Name": "Site Response",
+        "ExecutablePath": "applications/createEVENT/siteResponse/SiteResponse",
+        "ApplicationSpecificInputs": [
+	]
+      },
+      {
+        "Name": "HazardBasedEvent",
+        "ExecutablePath": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "DEDM_HRP",
+        "ExecutablePath": "applications/createEVENT/DEDM_HRP/DEDM_HRP.py",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "LowRiseTPU",
+        "ExecutablePath": "applications/createEVENT/LowRiseTPU/LowRiseTPU",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "WindTunnelExperiment",
+        "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "StochasticWindInput-WittigSinha1975",
+        "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
+        "ApplicationSpecificInputs":["modelName", "seed"]
+      },		
+      {
+        "Name": "StochasticGroundMotion",
+        "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
+        "ApplicationSpecificInputs":[
+          {
+            "id": "modelName",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "..."
+          }
+        ]
+      },		
+      {
+        "Name": "CFDEvent",
+        "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
+        "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
+      },
+      {
+        "Name": "NNGM",
+        "ExecutablePath": "applications/createEVENT/NNGM/NNGM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "groundMotions",
+            "type": "path",
+            "description": "Configuration file with information about the ground motions to use"
+          },
+          {
+            "id": "recordsFolder",
+            "type": "path",
+            "description": "Folder containing records"
+          }
+        ]
+      },
+      {
+        "Name": "LLNL-SW4",
+        "ExecutablePath": "applications/createEVENT/LLNL_SW4/LLNL_SW4.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "pathSW4results",
+            "type": "path",
+            "description": "Path to directory containig output point files"
+          }
+        ]
+      },
+      {
+        "Name": "ASCE7_WindSpeed",
+        "ExecutablePath": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
+        "ApplicationSpecificInputs":[]
+      },
+      {
+        "Name": "pointWindSpeed",
+        "ExecutablePath": "applications/createEVENT/pointWindSpeed/pointWindSpeed",
+        "ApplicationSpecificInputs":["filenameWindSpeedCloudData"]
+      }
+    ]
+  },
+  "ModelingApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameBIM",
+          "type": "string",
+          "description": "name of bim file",
+          "default": "BIM.json"
+      },
+      {
+          "id": "filenameEVENT",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EVENT.json"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameSAM",
+          "type": "string",
+          "description": "name of file containing the outputted SAM",
+          "default": "SAM.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "MDOF-LU",
+        "ExecutablePath": "applications/createSAM/MDOF-LU/MDOF-LU",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "hazusData",
+            "type": "path",
+            "description": "Defines the location of the hazus building config data file."
+          }
+        ]
+      },
+      {
+        "Name": "OpenSeesInput",
+        "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "OpenSeesPyInput",
+        "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "MDOF_BuildingModel",
+        "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BuildingModel",
+        "ApplicationSpecificInputs": []
+      }
+    ]
+  },
+  "EDPApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameBIM",
+          "type": "string",
+          "description": "name of bim file",
+          "default": "BIM.json"
+      },
+      {
+          "id": "filenameEVENT",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EVENT.json"
+      },
+      {
+          "id": "filenameSAM",
+          "type": "string",
+          "description": "name of file containing the SAM",
+          "default": "SAM.json"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of file containing the EDP to be determined from the analysis",
+          "default": "EDP.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "StandardEarthquakeEDP",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP/StandardEQEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardEarthquakeEDP_R",
+        "ExecutablePath": "applications/createEDP/standardEarthquakeEDP_R/StandardEarthquakeEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardWindEDP",
+        "ExecutablePath": "applications/createEDP/standardWindEDP/StandardWindEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardGMT_EDP",
+        "ExecutablePath": "applications/createEDP/gmtEDP/StandardGMT_EDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "UserDefinedEDP",
+        "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SimpleEDP",
+        "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
+        "ApplicationSpecificInputs": []
+      }
+    ]
+  },
+  "SimulationApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameBIM",
+          "type": "string",
+          "description": "name of file containing the BIM",
+          "default": "BIM.json"
+      },
+      {
+          "id": "filenameSAM",
+          "type": "string",
+          "description": "name of file containing the SAM",
+          "default": "SAM.json"
+      },
+      {
+          "id": "filenameEVENT",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EVENT.json"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of EDP file to be added to",
+          "default": "EDP.json"
+      },
+      {
+          "id": "filenameSIM",
+          "type": "string",
+          "description": "name of SIM file to be added to",
+          "default": "SIM.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "OpenSees-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/openSees/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "OpenSeesPy-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"        
+      },
+      {
+        "Name": "ExtractPGA",
+        "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
+      },
+      {
+        "Name": "OpenSees-Simulation_R",
+        "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "IMasEDP",
+        "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
+      }
+    ]
+  },
+  "UQApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameBIM",
+          "type": "string",
+          "description": "name of file containing the BIM",
+          "default": "BIM.json"
+      },
+      {
+          "id": "filenameSAM",
+          "type": "string",
+          "description": "name of file containing the SAM",
+          "default": "SAM.json"
+      },
+      {
+          "id": "filenameEVENT",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EVENT.json"
+      },
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "EDP.json"
+      },
+      {
+          "id": "filenameSIM",
+          "type": "string",
+          "description": "name of file containing the event data",
+          "default": "SIM.json"
+      },
+      {
+          "id": "driverFile",
+          "type": "string",
+          "description": "name of file containing the simulation driver",
+          "default": "driver"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of EDP file to be added to",
+          "default": "EDP.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "Dakota-UQ",
+        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "method",
+            "type": "string",
+            "description": "Defines the UQ method to use."
+          },
+          {
+            "id": "samples",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model."
+          },
+          {
+            "id": "samples2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the number of realizations to generate from the trained model."
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "Specifies the random seed."
+          },
+          {
+            "id": "seed2",
+            "type": "int",
+            "description": "Only for surrogate models. Specifies the random seed to generate samples from the models."
+          },
+          {
+            "id": "ismethod",
+            "type": "string",
+            "description": "Specifies the importance sampling method."
+          },
+          {
+            "id": "dataMethod",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "dataMethod2",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "type",
+            "type": "string",
+            "description": "..."
+          },
+          {
+            "id": "concurrency",
+            "type": "int",
+            "description": "Specifies the number of processes to use for simulation."
+          },
+          {
+            "id": "keepSamples",
+            "type": "bool",
+            "description": "True if the intermediate results shall be kept for each sample."
+          },
+          {
+            "id": "runType",
+            "type": "string",
+            "description": "..."
+          }
+        ]
+      },
+      {
+        "Name": "Dakota-FEM",
+        "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
+      }
+    ]
+  },
+  "DLApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "filenameDL",
+          "type": "string",
+          "description": "name of file containing the DL model information",
+          "default": "BIM.json"
+      },
+      {
+          "id": "filenameEDP",
+          "type": "string",
+          "description": "name of file containing the EDP data",
+          "default": "dakotaTab.out"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "filenameDM",
+          "type": "string",
+          "description": "name of file to store damage estimates",
+          "default": "DM.json"
+      },
+      {
+          "id": "filenameDV",
+          "type": "string",
+          "description": "name of DV file to store decision variable estimates",
+          "default": "DV.json"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "pelicun",
+        "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "DL_Method",
+            "type": "string",
+            "description": "Defines the damage and loss assessment method."
+          },
+          {
+            "id": "Realizations",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+
