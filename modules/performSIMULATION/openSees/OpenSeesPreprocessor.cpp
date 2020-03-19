@@ -806,7 +806,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	if (analysisType == 2) {
 	  s << "numberer RCM\n";
 	  s << "constraints Transformation\n";
-	  s << "system Umfpack\n";
+
+	  if (json_object_get(rootSIM, "solver") == NULL) 
+	    s << "system Umfpack\n";
+	  else
+	    s << "system " << json_string_value(json_object_get(rootSIM,"solver")) << "\n";
 
 	  if (json_object_get(rootSIM, "tolerance") == NULL) {
 	    s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " \n";
@@ -824,8 +828,12 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	s << "numberer RCM\n";
 	s << "constraints Transformation\n";
-	s << "system Umfpack\n";
 
+	if (json_object_get(rootSIM, "solver") == NULL) 
+	  s << "system Umfpack\n";
+	else
+	  s << "system " << json_string_value(json_object_get(rootSIM,"solver")) << "\n";
+	  
 	s << "integrator " << json_string_value(json_object_get(rootSIM,"integration")) << "\n";
 
 	if (json_object_get(rootSIM, "tolerance") == NULL) {
@@ -836,7 +844,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	}
 
 	s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
-	s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
+
+	if (json_object_get(rootSIM, "analysis") == NULL) 
+	  s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
+	else
+	  s << "analysis " << json_string_value(json_object_get(rootSIM,"analysis")) << "\n";
 
 	processDamping(s);
 
