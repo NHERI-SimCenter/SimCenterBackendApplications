@@ -146,7 +146,6 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
   rootSIM = json_load_file(SIM, 0, &error);
   // do not prescribe damping for custom analysis scripts
   json_t *fileScript = json_object_get(rootSIM,"fileName");
-  if (fileScript == NULL) processDamping(tclFile);
 
   // 
   // process events
@@ -155,6 +154,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 
   rootEVENT = json_load_file(EVENT, 0, &error);
   rootEDP = json_load_file(EDP, 0, &error);
+  //  if (fileScript == NULL) processDamping(tclFile);
 
   processEvents(tclFile);
 
@@ -378,6 +378,7 @@ OpenSeesPreprocessor::processElements(ofstream &s){
   return 0;
 }
 
+/*
 int
 OpenSeesPreprocessor::processDamping(ofstream &s){
 
@@ -427,7 +428,142 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
      return 0;
 }
+*/
 
+int
+OpenSeesPreprocessor::processDamping(ofstream &s){
+
+  if (json_object_get(rootSIM, "dampingModel") == NULL) {
+
+    //
+    // old legacy code
+    //
+
+    double damping = json_number_value(json_object_get(rootSIM,"dampingRatio"));
+    
+    if (damping != 0.0) {
+      s << "set xDamp " << damping << ";\n"
+	<< "set MpropSwitch 1.0;\n"
+	<< "set KcurrSwitch 0.0;\n"
+	<< "set KinitSwitch 1.0;\n"
+	<< "set KcommSwitch 0.0;\n"
+	<< "set nEigenI 1;\n";
+      
+      json_t *theNodes = json_object_get(rootSAM,"NodeMapping");
+      json_t *theNode;
+      int index = 0;
+      int numStory = 0;
+      json_array_foreach(theNodes, index, theNode) {      
+	json_t *cline = json_object_get(theNode,"cline");
+	if ((cline!= NULL) && (strcmp("response",json_string_value(cline)) == 0))
+	  numStory++;
+      }
+      
+      int nStory = numStory-1;
+      
+      int nEigenJ=0;
+      if (nStory <= 0) {
+      	nEigenJ = 2;
+      	nStory = 1;
+      } else if (nStory<=2)
+        nEigenJ=nStory*2;   //first mode or second mode
+      else
+        nEigenJ=3*2;          
+      
+      s << "set nEigenJ "<<nEigenJ<<";\n"
+	<< "set lambdaN [eigen -fullGenLapack "<< nEigenJ <<"];\n"
+	<< "set lambdaI [lindex $lambdaN [expr $nEigenI-1]];\n"
+	<< "set lambdaJ [lindex $lambdaN [expr $nEigenJ-1]];\n"
+	<< "set omegaI [expr pow($lambdaI,0.5)];\n"
+	<< "set omegaJ [expr pow($lambdaJ,0.5)];\n"
+	<< "set alphaM [expr $MpropSwitch*$xDamp*(2*$omegaI*$omegaJ)/($omegaI+$omegaJ)];\n"
+	<< "set betaKcurr [expr $KcurrSwitch*2.*$xDamp/($omegaI+$omegaJ)];\n"
+	<< "set betaKinit [expr $KinitSwitch*2.*$xDamp/($omegaI+$omegaJ)];\n"
+	<< "set betaKcomm [expr $KcommSwitch*2.*$xDamp/($omegaI+$omegaJ)];\n"
+	<< "rayleigh $alphaM $betaKcurr $betaKinit $betaKcomm;\n";
+    }
+  } else {
+
+    const char *dampingModel = json_string_value(json_object_get(rootSIM,"dampingModel"));
+
+    if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
+
+      double damping = json_number_value(json_object_get(rootSIM,"dampingRatio"));	
+      int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
+      int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));	
+      const char *dampingTangent = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
+      int KcurrSwitch = 0;
+      int KcommSwitch = 0;
+      int KinitSwitch = 0;
+      
+      if (strcmp(dampingTangent,"Initial"))
+	KinitSwitch = 1;
+      else if (strcmp(dampingTangent,"Current"))
+	KcurrSwitch = 1;
+      else if (strcmp(dampingTangent,"Committed"))
+	KcommSwitch = 1;
+
+      if (damping != 0.0) {
+
+	s << "set xDamp " << damping << ";\n";
+
+	if (mode1 != 0 && mode2 != 0) {
+	  
+	  s << "set lambdaN [eigen " << mode2 <<"];\n"
+	    << "set lambdaI [lindex $lambdaN [expr " << mode1 << " -1]];\n"
+	    << "set lambdaJ [lindex $lambdaN [expr " << mode2 << " -1]];\n"
+	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
+	    << "set omegaJ [expr pow($lambdaJ,0.5)];\n"
+	    << "set alphaM [expr $xDamp*(2*$omegaI*$omegaJ)/($omegaI+$omegaJ)];\n"
+	    << "set betaKinit [expr " << KinitSwitch << " *2.0*$xDamp/($omegaI+$omegaJ)];\n"
+	    << "set betaKcomm [expr " << KcommSwitch << " *2.0*$xDamp/($omegaI+$omegaJ)];\n"
+	    << "set betaKcurr [expr " << KcurrSwitch << " *2.0*$xDamp/($omegaI+$omegaJ)];\n"
+	    << "rayleigh $alphaM $betaKcurr $betaKinit $betaKcomm;\n";
+	  
+	} else if (mode2 == 0) {
+	  
+	  s << "set lambdaN [eigen " << mode1 <<"];\n"
+	    << "set lambdaI [lindex $lambdaN [expr " << mode1 << " -1]];\n"
+	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
+	    << "set alphaM [expr 2.0*$xDamp/$omegaI];\n"
+	    << "rayleigh $alphaM 0. 0. 0.;\n";	  
+
+	} else if (mode1 == 0) {
+	  
+	  s << "set lambdaN [eigen "<< mode2 <<"];\n"
+	    << "set lambdaI [lindex $lambdaN [expr " << mode2 << " -1]];\n"
+	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
+	    << "set betaKinit [expr $KinitSwitch*2.*$xDamp/$omegaI];\n"
+	    << "set betaKcomm [expr $KcommSwitch*2.*$xDamp/$omegaI];\n"
+	    << "set betaKcurr [expr $KcurrSwitch*2.*$xDamp/$omegaI];\n"
+	    << "rayleigh 0.0 $betaKcurr $betaKinit $betaKcomm;\n";
+	}
+      }
+    } else {
+
+      double damping = json_number_value(json_object_get(rootSIM,"dampingRatioModal"));	
+      int numModes = json_integer_value(json_object_get(rootSIM,"numModesModal"));	
+      double dampingTangent = json_number_value(json_object_get(rootSIM,"modalRayleighTangentRatio"));	
+
+      if (damping != 0.0) {
+	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
+      
+	s << "set lambdaN [eigen " << numModes << "];\n"
+	  << "modalDamping " << damping << "\n";
+
+	if (dampingTangent != 0.0) {
+	  s << "set lambdaI [lindex $lambdaN [expr " << numModes << " -1]];\n"
+	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
+	    << "set betaKinit [expr 2.0 * " << dampingTangent << " / $omegaI];\n"
+	    << "rayleigh 0.0 0.0 $betaKinit 0.0;\n";
+	}
+      }
+    }
+  }
+
+
+  return 0;
+}
 
 int 
 OpenSeesPreprocessor::processEvents(ofstream &s){
@@ -670,10 +806,20 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	if (analysisType == 2) {
 	  s << "numberer RCM\n";
 	  s << "constraints Transformation\n";
-	  s << "system Umfpack\n";
-	  double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+
+	  if (json_object_get(rootSIM, "solver") == NULL) 
+	    s << "system Umfpack\n";
+	  else
+	    s << "system " << json_string_value(json_object_get(rootSIM,"solver")) << "\n";
+
+	  if (json_object_get(rootSIM, "tolerance") == NULL) {
+	    s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " \n";
+	  } else {
+	    double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+	    s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	  }
+
 	  s << "integrator LoadControl 0.0\n";
-	  s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
 	  s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
 	  s << "analysis Static \n";
 	  s << "analyze " << 1 << "\n";      	  
@@ -682,12 +828,30 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	s << "numberer RCM\n";
 	s << "constraints Transformation\n";
-	s << "system Umfpack\n";
-	double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+
+	if (json_object_get(rootSIM, "solver") == NULL) 
+	  s << "system Umfpack\n";
+	else
+	  s << "system " << json_string_value(json_object_get(rootSIM,"solver")) << "\n";
+	  
 	s << "integrator " << json_string_value(json_object_get(rootSIM,"integration")) << "\n";
-	s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+
+	if (json_object_get(rootSIM, "tolerance") == NULL) {
+	  s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " \n";
+	} else {
+	  double tol = json_number_value(json_object_get(rootSIM,"tolerance"));
+	  s << "test " << json_string_value(json_object_get(rootSIM,"convergenceTest")) << " " << tol << " 20 \n";
+	}
+
 	s << "algorithm " << json_string_value(json_object_get(rootSIM,"algorithm")) << "\n";
-	s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
+
+	if (json_object_get(rootSIM, "analysis") == NULL) 
+	  s << "analysis Transient -numSubLevels 2 -numSubSteps 10 \n";
+	else
+	  s << "analysis " << json_string_value(json_object_get(rootSIM,"analysis")) << "\n";
+
+	processDamping(s);
+
 	s << "analyze " << numSteps << " " << dT << "\n";      
       }
     }
@@ -738,6 +902,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
     }
     numSteps = json_integer_value(numStepJO);
     dT = json_number_value(dtJO);
+
   } else
     return -1;
 
@@ -819,7 +984,14 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	double dt = json_number_value(json_object_get(timeSeries,"dT"));
 	json_t *data = json_object_get(timeSeries,"data");
 
-	s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor " << seriesFactor;
+	if (analysisType == 1) {
+
+	  // place all load factors on event in TimeSeries for accel recorders .. thanks adam for pointing out
+	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor [expr " << seriesFactor << " * " << eventFactor << " * " << unitConversionFactorAcceleration << " ]";
+	} else {
+	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor expr " << seriesFactor;
+	}
+	
 	s << " -values { ";	
 
 	json_t *dataV;
@@ -869,7 +1041,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       
       int seriesTag = timeSeriesList[name];
       s << "pattern UniformExcitation " << numPattern << " " << dirn;
-      s << " -fact " << unitConversionFactorAcceleration * eventFactor;
+      //      s << " -fact " << unitConversionFactorAcceleration * eventFactor;
+      s << " -fact " << 1.0 ;
       s << " -accel " << series << "\n";
       
       s << "set numStep " << numSteps << "\n";
