@@ -544,7 +544,7 @@ writeResponse(std::ostream &dakotaFile, json_t *rootEDP, std::string idResponse)
 
   dakotaFile << "\nno_gradients\nno_hessians\n\n";
 
-  return 0;
+  return numResponses;
 }
 
 
@@ -824,6 +824,47 @@ int main(int argc, const char **argv) {
       writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
       writeResponse(dakotaFile, rootEDP, emptyString);
 
+    }
+
+    else if (strcmp(method,"Polynomial Chaos Expansion")==0) {
+
+      const char *dataMethod = json_string_value(json_object_get(samplingMethodData,"dataMethod"));    
+      int intValue = json_integer_value(json_object_get(samplingMethodData,"level"));
+      int samplingSeed = json_integer_value(json_object_get(samplingMethodData,"samplingSeed"));
+      int samplingSamples = json_integer_value(json_object_get(samplingMethodData,"samplingSamples"));
+      const char *sampleMethod = json_string_value(json_object_get(samplingMethodData,"samplingMethod"));
+
+      std::string pceMethod;
+      if (strcmp(dataMethod,"Quadrature") == 0)
+	pceMethod = "quadrature_order = ";
+      else if (strcmp(dataMethod,"Smolyak Sparse_Grid") == 0)
+	pceMethod = "sparse_grid_level = ";
+      else if (strcmp(dataMethod,"Stroud Curbature") == 0)
+	pceMethod = "cubature_integrand = ";
+      else if (strcmp(dataMethod,"Orthogonal Least_Interpolation") == 0)
+	pceMethod = "orthogonal_least_squares collocation_points = ";
+      else
+	pceMethod = "quadrature_order = ";
+
+      std::string samplingMethod(sampleMethod);
+      if (strcmp(sampleMethod,"Monte Carlo") == 0) 
+	samplingMethod = "random";
+
+      dakotaFile << "environment \n  tabular_data \n tabular_data_file = 'a.out'\n\n"; // a.out for trial data
+
+      std::string emptyString;
+      std::string interfaceString("SimulationInterface");
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
+      int numResponse = writeResponse(dakotaFile, rootEDP, emptyString);
+
+      dakotaFile << "method \n polynomial_chaos \n " << pceMethod << intValue;
+      dakotaFile << "\n samples_on_emulator = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
+		 << samplingMethod << "\n";
+      dakotaFile << " probability_levels = ";
+      for (int i=0; i<numResponse; i++)
+	dakotaFile << " .1 .5 .9 ";
+      dakotaFile << "\n export_approx_points_file = 'dakotaTab.out'\n\n"; // dakotaTab.out for surrogate evaluations
     }
 
   } else {
