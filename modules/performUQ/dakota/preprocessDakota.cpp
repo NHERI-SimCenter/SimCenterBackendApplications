@@ -719,7 +719,7 @@ int main(int argc, const char **argv) {
   const char *type = json_string_value(json_object_get(uqData, "uqType"));
   
   bool sensitivityAnalysis = false;
-  if (strcmp(type, "Sensitivty Analysis") == 0)
+  if (strcmp(type, "Sensitivity Analysis") == 0)
     sensitivityAnalysis = true;
 
 
