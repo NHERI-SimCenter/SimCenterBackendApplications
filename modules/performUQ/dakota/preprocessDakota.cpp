@@ -602,13 +602,13 @@ int main(int argc, const char **argv) {
   }
 
   int numRV = parseForRV(rootINPUT, theRandomVariables);
-  if (numRV > 0) {
-    if (rename(bimName, "bim.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename bim file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in bim.j " << bimName << "\n";
-  } 
+  //  if (numRV > 0) {
+  if (rename(bimName, "bim.j") != 0) {
+    std::cerr << "preprocessDakota - cound not rename bim file\n";
+    exit(802);
+  }
+  workflowDriverFile << dpreproCommand << " params.in bim.j " << bimName << "\n";
+  //  } 
 
   // load event read random variables, if any rename file and add a dprepro line to workflow
 
@@ -618,13 +618,13 @@ int main(int argc, const char **argv) {
     exit(801); // no random variables is allowed
   } 
   numRV = parseForRV(rootEVT, theRandomVariables);
-  if (numRV > 0) {
-    if (rename(evtName, "evt.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename event file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in evt.j " << evtName << "\n";
+  //if (numRV > 0) {
+  if (rename(evtName, "evt.j") != 0) {
+    std::cerr << "preprocessDakota - cound not rename event file\n";
+    exit(802);
   }
+  workflowDriverFile << dpreproCommand << " params.in evt.j " << evtName << "\n";
+  //  }
 
   // load sam, read random variables, if any rename file and add a dprepro line to workflow
 
@@ -634,13 +634,13 @@ int main(int argc, const char **argv) {
     exit(801); // no random variables is allowed
   } 
   numRV = parseForRV(rootSAM, theRandomVariables);
-  if (numRV > 0) {
-    if (rename(samName, "sam.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename bim file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in sam.j " << samName << "\n";
+  //if (numRV > 0) {
+  if (rename(samName, "sam.j") != 0) {
+    std::cerr << "preprocessDakota - cound not rename bim file\n";
+    exit(802);
   }
+  workflowDriverFile << dpreproCommand << " params.in sam.j " << samName << "\n";
+  //}
 
   // load sim, read random variables, if any rename file and add a dprepro to workflow
 
@@ -650,13 +650,13 @@ int main(int argc, const char **argv) {
     exit(801); // no random variables is allowed
   } 
   numRV = parseForRV(rootSIM, theRandomVariables);
-  if (numRV > 0) {
-    if (rename(simName, "sim.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename sim file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in sim.j " << simName << "\n";
+  //if (numRV > 0) {
+  if (rename(simName, "sim.j") != 0) {
+    std::cerr << "preprocessDakota - cound not rename sim file\n";
+    exit(802);
   }
+  workflowDriverFile << dpreproCommand << " params.in sim.j " << simName << "\n";
+  //}
 
   // load edp, read random variables, if any rename file and add a dprepro to workflow
 
