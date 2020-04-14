@@ -402,6 +402,7 @@ writeRV(std::ofstream &dakotaFile, struct randomVariables &theRandomVariables, s
 	dakotaFile << it->elements.size() << " ";
       dakotaFile << "\n    set_values ";
       for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+	it->elements.sort(); // sort the elements NEEDED THOUGH NOT IN DAKOTA DOC!
 	std::list<std::string>::iterator element;
 	for (element = it->elements.begin(); element != it->elements.end(); element++) 
 	  dakotaFile << " \'" << *element << "\'";
