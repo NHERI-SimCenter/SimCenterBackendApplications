@@ -526,7 +526,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     if (analysisType == 1) {
       //      s << "handler Plain\n";
       s << "numberer RCM\n";
-      s << "system BandGen\n";
+      s << "system BandSPD\n";
+      s << "test NormDispIncr 1e-6 100\n";
+      s << "algorithm NewtonLineSearch\n";      
+      s << "integrator Newmark 0.5 0.25\n";
+
 
       if (filenameUQ != 0) {
 	printf("HI filenameUQ %s\n", filenameUQ);
