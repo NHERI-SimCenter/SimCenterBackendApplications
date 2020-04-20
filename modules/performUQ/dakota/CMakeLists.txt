@@ -4,6 +4,9 @@ simcenter_add_executable(NAME extractEDP
 simcenter_add_executable(NAME postprocessDakota
                          FILES postprocessDakota.cpp
                          DEPENDS CONAN_PKG::jansson)
+simcenter_add_executable(NAME preprocessDakota
+                         FILES preprocessDakota.cpp
+                         DEPENDS CONAN_PKG::jansson)
 simcenter_add_executable(NAME simCenterDprepro
                          FILES simCenterDprepro.cpp)
 simcenter_add_python_script(SCRIPT preprocessJSON.py)
