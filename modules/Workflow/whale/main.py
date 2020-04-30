@@ -52,21 +52,12 @@ This module has classes and methods that handle everything at the moment.
 
 """
 
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys
-if sys.version.startswith('2'): 
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
-
 from time import gmtime, strftime
-import json
+from io import StringIO
+import sys, os, json
 import pprint
 import posixpath
 import ntpath
-import os
 import shutil
 import importlib
 from copy import deepcopy
@@ -74,6 +65,7 @@ import subprocess
 import warnings
 import numpy as np
 import pandas as pd
+import platform
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -134,6 +126,22 @@ def log_error(msg):
     log_msg(''*(80-21-6) + ' ERROR')
     log_msg(msg)
     log_msg(log_div)
+
+def print_system_info():
+
+    log_msg('System information\n')
+    log_msg('\tpython: '+sys.version)
+    log_msg('\tnumpy: '+np.__version__)
+    log_msg('\tpandas: '+pd.__version__)
+
+    # additional info about numpy libraries
+    if False:
+        old_stdout = sys.stdout
+        result = StringIO()
+        sys.stdout = result
+        np.show_config()
+        sys.stdout = old_stdout
+        log_msg(result.getvalue())
 
 def create_command(command_list, enforced_python=None):
     """
@@ -219,9 +227,11 @@ def run_command(command):
         if returncode != 0:
             log_error('return code: {}'.format(returncode))
         
-        #return result.decode(sys.stdout.encoding), returncode
-        print(result, returncode)
-        return str(result), returncode
+        if platform.system() == 'Windows':
+            return result.decode(sys.stdout.encoding), returncode
+        else:
+            #print(result, returncode)
+            return str(result), returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
