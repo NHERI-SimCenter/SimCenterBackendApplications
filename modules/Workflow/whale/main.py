@@ -984,6 +984,16 @@ class Workflow(object):
 
         log_msg(result, prepend_timestamp=False)
 
+        # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+        if 'Building' in self.app_type_list:
+
+            try:
+                shutil.copy(
+                    src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                    dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+            except:
+                pass
+
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)
 
