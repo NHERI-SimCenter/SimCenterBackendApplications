@@ -52,21 +52,12 @@ This module has classes and methods that handle everything at the moment.
 
 """
 
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys
-if sys.version.startswith('2'): 
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
-
 from time import gmtime, strftime
-import json
+from io import StringIO
+import sys, os, json
 import pprint
 import posixpath
 import ntpath
-import os
 import shutil
 import importlib
 from copy import deepcopy
@@ -74,6 +65,7 @@ import subprocess
 import warnings
 import numpy as np
 import pandas as pd
+import platform
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -134,6 +126,22 @@ def log_error(msg):
     log_msg(''*(80-21-6) + ' ERROR')
     log_msg(msg)
     log_msg(log_div)
+
+def print_system_info():
+
+    log_msg('System information\n')
+    log_msg('\tpython: '+sys.version)
+    log_msg('\tnumpy: '+np.__version__)
+    log_msg('\tpandas: '+pd.__version__)
+
+    # additional info about numpy libraries
+    if False:
+        old_stdout = sys.stdout
+        result = StringIO()
+        sys.stdout = result
+        np.show_config()
+        sys.stdout = old_stdout
+        log_msg(result.getvalue())
 
 def create_command(command_list, enforced_python=None):
     """
@@ -219,9 +227,11 @@ def run_command(command):
         if returncode != 0:
             log_error('return code: {}'.format(returncode))
         
-        #return result.decode(sys.stdout.encoding), returncode
-        print(result, returncode)
-        return str(result), returncode
+        if platform.system() == 'Windows':
+            return result.decode(sys.stdout.encoding), returncode
+        else:
+            #print(result, returncode)
+            return str(result), returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
@@ -974,6 +984,16 @@ class Workflow(object):
 
         log_msg(result, prepend_timestamp=False)
 
+        # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+        if 'Building' in self.app_type_list:
+
+            try:
+                shutil.copy(
+                    src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                    dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+            except:
+                pass
+
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)
 
@@ -991,88 +1011,130 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        # start with the damage data
-        DM_agg = pd.DataFrame()
-
+        
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
+
+        EDP_list = []
+        DM_list = []
+        DV_list = []
+
         for bldg in bldg_data:
             bldg_id = bldg['id']
             min_id = min(int(bldg_id), min_id)
             max_id = max(int(bldg_id), max_id)
 
             try:
-                with open(bldg_id+'/DM.json') as f:
-                    DM = json.load(f)            
-                    
-                for FG in DM.keys():
+            #if True:
+                # EDP data
+                df_i = pd.read_csv(bldg_id+'/EDP.csv', header=[0,1,2,3], index_col=0)
+                df_i.index = [bldg_id,]
+                EDP_list.append(df_i)
 
-                    if FG == 'aggregate':
-                        PG = ''
-                        DS_list = list(DM[FG].keys())
-                    else:
-                        PG = next(iter(DM[FG]))
-                        DS_list = list(DM[FG][PG].keys())
-                    
-                    if ((DM_agg.size == 0) or 
-                        (FG not in DM_agg.columns.get_level_values('FG'))):
-                        MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
-                        DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
-                        
-                        for DS in DS_list:
-                            if PG == '':
-                                val = DM[FG][DS]
-                            else:
-                                val = DM[FG][PG][DS]
-                            DM_add.loc[bldg_id, (FG, DS)] = val
-                            
-                        DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
-                    
-                    else:        
-                        for DS in DS_list:
-                            if PG == '':
-                                val = DM[FG][DS]
-                            else:
-                                val = DM[FG][PG][DS]
-                            DM_agg.loc[bldg_id, (FG, DS)] = val
             except:
-                log_msg('Error reading DM data for building {}'.format(bldg_id))
-
-        # then collect the decision variables
-        DV_agg = pd.DataFrame()
-
-        for bldg in bldg_data:
-            bldg_id = bldg['id']
+                log_msg('Error reading EDP data for building {}'.format(bldg_id))
 
             try:
-            
-                with open(bldg_id+'/DV.json') as f:
-                    DV = json.load(f)
-                    
-                for DV_type in DV.keys():
-                    
-                    stat_list = list(DV[DV_type]['total'].keys())
-                    
-                    if ((DV_agg.size == 0) or 
-                        (DV_type not in DV_agg.columns.get_level_values('DV'))): 
-                    
-                        MI = pd.MultiIndex.from_product(
-                            [[DV_type,],stat_list],names=['DV','stat'])
-                    
-                        DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
-                        
-                        for stat in stat_list:
-                            DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                            
-                        DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
-                    else:                     
-                        for stat in stat_list:
-                            DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                            
+            #if True:
+                # damage data
+                df_i = pd.read_csv(bldg_id+'/DM.csv', header=[0,1,2], index_col=0)
+                df_i.index = [bldg_id,]
+                DM_list.append(df_i)
+
             except:
                 log_msg('Error reading DM data for building {}'.format(bldg_id))
 
+            try:
+            #if True:
+                # damage data
+                df_i = pd.read_csv(bldg_id+'/DV.csv', header=[0,1,2,3], index_col=0)
+                df_i.index = [bldg_id,]
+                DV_list.append(df_i)
+
+            except:
+                log_msg('Error reading DV data for building {}'.format(bldg_id))
+
+        EDP_agg = pd.concat(EDP_list, axis=0, sort=False)
+        EDP_agg.sort_index(axis=0, inplace=True)
+
+        DM_agg = pd.concat(DM_list, axis=0, sort=False)
+        DM_agg.sort_index(axis=0, inplace=True)
+
+        DV_agg = pd.concat(DV_list, axis=0, sort=False)
+        DV_agg.sort_index(axis=0, inplace=True)
+
+        if False: # keep it temporarily
+            with open(bldg_id+'/DM.csv') as f:
+                DM = json.load(f)            
+                
+            for FG in DM.keys():
+
+                if FG == 'aggregate':
+                    PG = ''
+                    DS_list = list(DM[FG].keys())
+                else:
+                    PG = next(iter(DM[FG]))
+                    DS_list = list(DM[FG][PG].keys())
+                
+                if ((DM_agg.size == 0) or 
+                    (FG not in DM_agg.columns.get_level_values('FG'))):
+                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
+                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                    
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_add.loc[bldg_id, (FG, DS)] = val
+                        
+                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
+                
+                else:        
+                    for DS in DS_list:
+                        if PG == '':
+                            val = DM[FG][DS]
+                        else:
+                            val = DM[FG][PG][DS]
+                        DM_agg.loc[bldg_id, (FG, DS)] = val
+
+            # then collect the decision variables
+            DV_agg = pd.DataFrame()
+
+            for bldg in bldg_data:
+                bldg_id = bldg['id']
+
+                try:
+                #if True:
+                
+                    with open(bldg_id+'/DV.json') as f:
+                        DV = json.load(f)
+                        
+                    for DV_type in DV.keys():
+                        
+                        stat_list = list(DV[DV_type]['total'].keys())
+                        
+                        if ((DV_agg.size == 0) or 
+                            (DV_type not in DV_agg.columns.get_level_values('DV'))): 
+                        
+                            MI = pd.MultiIndex.from_product(
+                                [[DV_type,],stat_list],names=['DV','stat'])
+                        
+                            DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                            
+                            for stat in stat_list:
+                                DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                                
+                            DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
+                        else:                     
+                            for stat in stat_list:
+                                DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
+                                
+                except:
+                    log_msg('Error reading DV data for building {}'.format(bldg_id))
+
         # save the collected DataFrames as csv files
+        EDP_agg.to_csv('EDP_{}-{}.csv'.format(min_id, max_id))
         DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
         DV_agg.to_csv('DV_{}-{}.csv'.format(min_id, max_id))
 

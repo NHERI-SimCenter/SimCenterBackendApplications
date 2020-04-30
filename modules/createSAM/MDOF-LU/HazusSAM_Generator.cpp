@@ -88,7 +88,7 @@ void HazusSAM_Generator::CalcBldgPara(Building *bldg)
     int codelevel=0;
 	switch (bldg->zone)
 	{
-case 0:
+  case 0:
 		codelevel = 3;	//pre-code
 		if (strucType == "W1")
 		{

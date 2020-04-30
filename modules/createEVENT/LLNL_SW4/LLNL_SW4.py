@@ -1,6 +1,5 @@
 import argparse, posixpath, json, sys
 import numpy as np
-import pandas as pd
 
 def write_RV(BIM_file, EVENT_file, data_dir):
 	
@@ -46,7 +45,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):
 	with open(EVENT_file, 'w') as f:
 		json.dump(event_file, f, indent=2)
 
-def load_record(fileName, data_dir, empty=False):
+def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
 
 	fileName = fileName.split('x')[0]
 
@@ -64,27 +63,36 @@ def load_record(fileName, data_dir, empty=False):
 	if not empty:
 		for i, (src_label, tar_label) in enumerate(zip(['data_x', 'data_y'],
 													   ['accel_X', 'accel_Y'])):
-			event_dic['timeSeries'].append({
-				'name': tar_label,
-				'type': 'Value',
-				'dT': event_data['dT'],
-				'data': event_data[src_label]
-			})
-			event_dic['pattern'].append({
-				'type': 'UniformAcceleration',
-				'timeSeries': tar_label,
-				'dof': i+1
+			if src_label in event_data.keys():
+
+				event_dic['timeSeries'].append({
+					'name': tar_label,
+					'type': 'Value',
+					'dT': event_data['dT'],
+					'data': list(np.array(event_data[src_label])*scale_factor)
 				})
+				event_dic['pattern'].append({
+					'type': 'UniformAcceleration',
+					'timeSeries': tar_label,
+					'dof': i+1
+					})
 
 	return event_dic
 
-def get_records(EVENT_file, data_dir):
+def get_records(BIM_file, EVENT_file, data_dir):
 	
+	with open(BIM_file, 'r') as f:
+		bim_file = json.load(f)
+
 	with open(EVENT_file, 'r') as f:
 		event_file = json.load(f)
 
-	event_file['Events'][0].update(load_record(event_file['Events'][0]['event_id'],
-		                           data_dir))
+	event_id = event_file['Events'][0]['event_id']
+
+	scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
+
+	event_file['Events'][0].update(
+		load_record(event_id, data_dir, scale_factor))
 
 	with open(EVENT_file, 'w') as f:
 		json.dump(event_file, f, indent=2)
@@ -101,4 +109,4 @@ if __name__ == '__main__':
     if args.getRV:
     	sys.exit(write_RV(args.filenameBIM, args.filenameEVENT, args.pathSW4results))
     else:
-    	sys.exit(get_records(args.filenameEVENT, args.pathSW4results))
+    	sys.exit(get_records(args.filenameBIM, args.filenameEVENT, args.pathSW4results))
