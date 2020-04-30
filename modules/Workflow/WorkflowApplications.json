@@ -72,6 +72,30 @@
             "default": ""
           }
         ]
+      },
+      {
+        "Name": "CSV_to_BIM",
+        "ExecutablePath": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "path",
+            "description": "path to buildings database file",
+            "default": ""
+          }
+        ]
       }
     ]
   },
