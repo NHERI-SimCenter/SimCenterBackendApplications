@@ -673,15 +673,25 @@ interface_pointer = 'SimulationInterface'
     scriptDir = os.path.dirname(os.path.realpath(__file__))
 
     # want to dprepro the files with the random variables
-    if (runType == "local"):
-        dpreproCommand = format(scriptDir) + '/simCenterDprepro'
-    elif remoteDir is not None:
-        dpreproCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/simCenterDprepro')
+    use_perl_dprepro = False # for DesignSafe
 
-    if bimExists == True: f.write(dpreproCommand + " params.in bim.j " + bimName + '\n')
-    if samExists == True: f.write(dpreproCommand + " params.in sam.j " + samName + '\n')
-    if evtExists == True: f.write(dpreproCommand + " params.in evt.j " + evtName + '\n')
-    if edpExists == True: f.write(dpreproCommand + " params.in edp.j " + edpName + '\n')
+    if use_perl_dprepro:
+        if bimExists == True: f.write('perl dpreproSimCenter params.in bim.j ' + bimName + '\n')
+        if samExists == True: f.write('perl dpreproSimCenter params.in sam.j ' + samName + '\n')
+        if evtExists == True: f.write('perl dpreproSimCenter params.in evt.j ' + evtName + '\n')
+        if edpExists == True: f.write('perl dpreproSimCenter params.in edp.j ' + edpName + '\n')
+        #if simExists == True: f.write('perl dpreproSimCenter params.in sim.j ' + simName + '\n')
+
+    else:
+        if (runType == "local"):
+            dpreproCommand = format(scriptDir) + '/simCenterDprepro'
+        elif remoteDir is not None:
+            dpreproCommand = posixpath.join(remoteDir, 'applications/performUQ/dakota/simCenterDprepro')
+
+        if bimExists == True: f.write(dpreproCommand + " params.in bim.j " + bimName + '\n')
+        if samExists == True: f.write(dpreproCommand + " params.in sam.j " + samName + '\n')
+        if evtExists == True: f.write(dpreproCommand + " params.in evt.j " + evtName + '\n')
+        if edpExists == True: f.write(dpreproCommand + " params.in edp.j " + edpName + '\n')
 
 
 
