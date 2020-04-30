@@ -1,12 +1,4 @@
-from __future__ import division, print_function
-import os, sys
-if sys.version.startswith('2'):
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
-
-import argparse, posixpath, ntpath, json
+import os, sys, argparse, posixpath, ntpath, json
 
 def create_building_files(output_file, building_source_file, 
     min_id, max_id):
