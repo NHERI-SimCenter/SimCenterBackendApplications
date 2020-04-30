@@ -106,6 +106,7 @@ Building::readBIM(const char *event, const char *bim)
   json_t *nType = json_object_get(GI,"numStory");
   json_t *hType = json_object_get(GI,"height");
   json_t *yType = json_object_get(GI,"yearBuilt");
+  json_t *dRatio = json_object_get(GI,"dampingRatio");
 
   const char *type = json_string_value(sType);
   string s(type);
@@ -116,6 +117,11 @@ Building::readBIM(const char *event, const char *bim)
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
   storyheight=json_number_value(hType)/(nStory*1.);
+  if (dRatio == NULL) {
+    dampingRatio_IN = 0;
+  } else { 
+    dampingRatio_IN = json_number_value(dRatio);
+  }
 
   // parse EVENT (to see dimensionality needed
   ndf = 1;
@@ -143,6 +149,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *nType = json_object_get(GI,"numStory");
   json_t *hType = json_object_get(GI,"height");
   json_t *yType = json_object_get(GI,"yearBuilt");
+  json_t *dRatio = json_object_get(GI,"dampingRatio");
   
   json_t *zType = json_object_get(GI, "seismicZone");
   const char *type = json_string_value(sType);
@@ -165,6 +172,11 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
   storyheight=json_number_value(hType)/(nStory*1.);
+  if (dRatio == NULL) {
+    dampingRatio_IN = 0;
+  } else { 
+    dampingRatio_IN = json_number_value(dRatio);
+  }
 
   json_object_clear(rootBIM);
 
@@ -298,7 +310,12 @@ Building::writeSAM(const char *path)
       json_array_append(elements, element);
     }
     
-    json_object_set(properties,"dampingRatio",json_real(dampingRatio*dampFactor));
+    if (dampingRatio_IN == 0) {
+      json_object_set(properties,"dampingRatio",json_real(dampingRatio*dampFactor));
+    } else {
+      json_object_set(properties,"dampingRatio",json_real(dampingRatio_IN*dampFactor));
+    }
+    
     json_object_set(properties,"uniaxialMaterials",materials);
     json_object_set(root,"Properties",properties);
 
