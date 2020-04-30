@@ -204,7 +204,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
 }
 
 void
-Building::writeRV(const char *path)
+Building::writeRV(const char *path, double stdStiffness, double stdDamping)
 {
     json_t *root = json_object();
     json_t *randomVariables = json_array();
@@ -214,7 +214,7 @@ Building::writeRV(const char *path)
     json_object_set(kFactor, "mean", json_real(1.0));
     json_object_set(kFactor, "name", json_string("kFactor"));
     json_object_set(kFactor, "value", json_string("RV.kFactor"));
-    json_object_set(kFactor, "stdDev", json_real(.1));
+    json_object_set(kFactor, "stdDev", json_real(stdStiffness));
     json_t *kFactorVariable = json_object();
 
     json_t *dampFactor = json_object();
@@ -222,7 +222,7 @@ Building::writeRV(const char *path)
     json_object_set(dampFactor, "mean", json_real(1.0));
     json_object_set(dampFactor, "name", json_string("dampFactor"));
     json_object_set(dampFactor, "value", json_string("RV.dampFactor"));
-    json_object_set(dampFactor, "stdDev", json_real(.1));
+    json_object_set(dampFactor, "stdDev", json_real(stdDamping));
 
     json_array_append(randomVariables, kFactor);
     json_array_append(randomVariables, dampFactor);
