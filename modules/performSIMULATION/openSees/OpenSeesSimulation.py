@@ -21,8 +21,8 @@ def main(args):
     else:
         #Run preprocessor
         preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(scriptDir, bimName, samName, evtName, edpName, simName)
-        subprocess.Popen(preprocessorCommand, shell=True).wait()
-        
+        subprocess.Popen(preprocessorCommand, shell=True).wait()        
+
         #Run OpenSees
         subprocess.Popen("OpenSees example.tcl", shell=True).wait()
 
