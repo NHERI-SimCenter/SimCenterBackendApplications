@@ -42,19 +42,12 @@ This module defines constants, basic classes and methods for pelicun.
 
 """
 
-# imports for Python 2.X support
-from __future__ import division, print_function
-import os, sys
+import os, sys, time
 import warnings
-if sys.version.startswith('2'):
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
+from datetime import datetime
+from time import strftime
 
 # import libraries for other modules
-import time
-from time import gmtime, strftime
 import numpy as np
 import pandas as pd
 
@@ -114,7 +107,7 @@ def log_msg(msg='', prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+        formatted_msg = '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
     else:
         formatted_msg = msg
 
@@ -123,6 +116,59 @@ def log_msg(msg='', prepend_timestamp=True):
     if globals()['log_file'] is not None:
         with open(globals()['log_file'], 'a') as f:
             f.write('\n'+formatted_msg)
+
+def describe(df):
+
+    if isinstance(df, (pd.Series, pd.DataFrame)):
+        vals = df.values
+        if isinstance(df, pd.DataFrame):
+            cols = df.columns
+        elif df.name is not None:
+            cols = df.name
+        else:
+            cols = 0
+    else:
+        vals = df
+        cols = np.arange(vals.shape[1]) if vals.ndim > 1 else 0
+
+    if vals.ndim == 1:
+        df_10, df_50, df_90 = np.nanpercentile(vals, [10, 50, 90])
+        desc = pd.Series({
+            'count': np.sum(~np.isnan(vals)),
+            'mean': np.nanmean(vals),
+            'std': np.nanstd(vals),
+            'min': np.nanmin(vals),
+            '10%': df_10,
+            '50%': df_50,
+            '90%': df_90,
+            'max': np.nanmax(vals),
+        }, name=cols)
+    else:
+        df_10, df_50, df_90 = np.nanpercentile(vals, [10, 50, 90], axis=0)
+        desc = pd.DataFrame({
+            'count': np.sum(~np.isnan(vals), axis=0),
+            'mean': np.nanmean(vals, axis=0),
+            'std': np.nanstd(vals, axis=0),
+            'min': np.nanmin(vals, axis=0),
+            '10%': df_10,
+            '50%': df_50,
+            '90%': df_90,
+            'max': np.nanmax(vals, axis=0),
+        }, index=cols).T
+
+    return desc
+
+def str2bool(v):
+    # courtesy of Maxim @ stackoverflow
+
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 # Constants for unit conversion
 
