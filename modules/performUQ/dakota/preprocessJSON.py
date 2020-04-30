@@ -1,12 +1,3 @@
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys
-if sys.version.startswith('2'): 
-    range=xrange
-
-#else:
-#    from past.builtins import basestring
-
 import os, sys, json
 import platform
 import posixpath
@@ -628,6 +619,11 @@ interface_pointer = 'SimulationInterface'
             elif(edp["type"] == "max_drift"):
                 edpAcronym = "PID"
                 floor = edp["floor2"]
+                known = True
+
+            elif(edp["type"] == "max_roof_drift"):
+                edpAcronym = "PRD"
+                floor = 1
                 known = True
 
             elif(edp["type"] == "residual_disp"):
