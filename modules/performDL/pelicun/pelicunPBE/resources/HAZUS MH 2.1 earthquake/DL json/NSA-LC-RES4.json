@@ -10,7 +10,8 @@
     "Unit": [
       1,
       "g"
-    ]
+    ],
+    "Offset": 1
   },
   "DSGroups": [
     {
@@ -23,7 +24,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.009000000000000001
+              "Amount": 0.009000000000000001,
+              "CurveType": "N/A"
             }
           },
           "Description": "Slight"
@@ -40,7 +42,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.043
+              "Amount": 0.043,
+              "CurveType": "N/A"
             }
           },
           "Description": "Moderate"
@@ -57,7 +60,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.13
+              "Amount": 0.13,
+              "CurveType": "N/A"
             }
           },
           "Description": "Extensive"
@@ -74,7 +78,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.43200000000000005
+              "Amount": 0.43200000000000005,
+              "CurveType": "N/A"
             }
           },
           "Description": "Complete"
