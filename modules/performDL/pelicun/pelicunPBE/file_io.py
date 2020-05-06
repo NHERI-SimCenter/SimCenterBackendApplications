@@ -2254,7 +2254,7 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         del df_res_q[(comp_type, '4_2')]
 
     # aggregate the damage data along Performance Groups
-    DMG_agg = DMG_df.groupby(['FG', 'DSG_DS'], axis=1).sum()
+    DMG_agg = DMG_df.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
 
     # for each type of component...
     for comp_type in ['S', 'NSA', 'NSD', 'NS']:
@@ -2263,7 +2263,7 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
                      if c.startswith(comp_type)]
 
-        df_sel = DMG_agg.loc[:, type_cols].groupby('DSG_DS',axis=1).sum()
+        df_sel = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
         df_sel = df_sel / len(type_cols)
 
         # calculate the probability of DSG exceedance
@@ -2291,7 +2291,7 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         # get the quantity of components in the highest damage state
         # skip this part for now to reduce file size
         if False:
-            df_init = DMG_agg.loc[:, type_cols].groupby('DSG_DS', axis=1).sum()
+            df_init = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS', axis=1).sum()
             df_init = (df_init / len(type_cols)).round(2)
 
             df_sel = df_sel.sum(axis=1)
@@ -2479,11 +2479,11 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
     if DV_cost is not 0:
         for type_ID in ['S', 'NS', 'NSA', 'NSD']: 
                 
-            DV_res = DV_cost.groupby(['FG', 'DSG_DS'], axis=1).sum()    
+            DV_res = DV_cost.groupby(level=['FG', 'DSG_DS'], axis=1).sum()    
 
             type_cols = [c for c in DV_res.columns.get_level_values('FG').unique() if c.startswith(type_ID)] 
             
-            df_cost = DV_res.loc[:, type_cols].groupby('DSG_DS',axis=1).sum()
+            df_cost = DV_res.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
 
             # create a df with 1s at cells with damage and identify the governing DS
             df_sel = df_cost.copy()
