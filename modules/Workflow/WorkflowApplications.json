@@ -94,6 +94,12 @@
             "type": "path",
             "description": "path to buildings database file",
             "default": ""
+          },
+          {
+            "id": "lengthUnit",
+            "type": "string",
+            "description": "Identifies the unit used to measure length (e.g. footprint area)",
+            "default": "m"
           }
         ]
       }
