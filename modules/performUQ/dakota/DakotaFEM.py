@@ -1,16 +1,8 @@
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys, os
-if sys.version.startswith('2'): 
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
+import os, sys, json
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-import json
-import numpy as np
+from random import randrange
 import platform
 import shutil
 import subprocess
@@ -48,7 +40,7 @@ def main(args):
     
     parser.add_argument('--method', default="LHS")
     parser.add_argument('--samples', type=int, default=None)
-    parser.add_argument('--seed', type=int, default=np.random.randint(1,1000))
+    parser.add_argument('--seed', type=int, default=randrange(1,1000))
     parser.add_argument('--samples2', type=int, default=None)
     parser.add_argument('--seed2', type=int, default=None)
     parser.add_argument('--ismethod', default=None)

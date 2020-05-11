@@ -38,17 +38,17 @@
 # Adam Zsarnóczay
 # Joanna J. Zou
 
-# imports for Python 2.X support
-from __future__ import division, print_function
-import os, sys
-import warnings
-if sys.version.startswith('2'):
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
+from time import gmtime, strftime
 
-import json, ntpath, posixpath, argparse
+def log_msg(msg):
+
+	formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+
+	print(formatted_msg)
+
+log_msg('First line of DL_calculation')
+
+import sys, os, json, ntpath, posixpath, argparse
 import numpy as np
 import pandas as pd
 
@@ -57,6 +57,7 @@ idx = pd.IndexSlice
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import pelicunPBE
+from pelicunPBE.base import str2bool
 from pelicunPBE.control import FEMA_P58_Assessment, HAZUS_Assessment
 from pelicunPBE.file_io import write_SimCenter_DL_output, write_SimCenter_DM_output, write_SimCenter_DV_output
 from pelicunPBE.auto import auto_populate
@@ -121,8 +122,8 @@ def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
 # END temporary functions ----
 
 def run_pelicun(DL_input_path, EDP_input_path,
-	DL_method, realization_count,
-	output_path=None, DM_file = 'DM.json', DV_file = 'DV.json'):
+	DL_method, realization_count, EDP_file, DM_file, DV_file, 
+	output_path=None, detailed_results=True, log_file=True):
 
 	DL_input_path = os.path.abspath(DL_input_path) # BIM file
 	EDP_input_path = os.path.abspath(EDP_input_path) # dakotaTab
@@ -241,11 +242,11 @@ def run_pelicun(DL_input_path, EDP_input_path,
 		stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
 
 		if DL_method == 'FEMA P58':
-			A = FEMA_P58_Assessment()
+			A = FEMA_P58_Assessment(log_file=log_file)
 		elif DL_method in ['HAZUS MH EQ', 'HAZUS MH']:
-			A = HAZUS_Assessment(hazard = 'EQ')
+			A = HAZUS_Assessment(hazard = 'EQ', log_file=log_file)
 		elif DL_method == 'HAZUS MH HU':
-			A = HAZUS_Assessment(hazard = 'HU')
+			A = HAZUS_Assessment(hazard = 'HU', log_file=log_file)
 
 		A.read_inputs(DL_input_path, EDP_files[s_i], verbose=False) # make DL inputs into array of all BIM files
 
@@ -259,7 +260,8 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 		A.aggregate_results()
 
-		A.save_outputs(output_path, DM_file, DV_file, stripe_str)
+		A.save_outputs(output_path, EDP_file, DM_file, DV_file, stripe_str,
+					   detailed_results=detailed_results)
 
 	return 0
 
@@ -270,17 +272,28 @@ def main(args):
 	parser.add_argument('--filenameEDP')
 	parser.add_argument('--DL_Method', default = None)
 	parser.add_argument('--Realizations', default = None)
-	parser.add_argument('--filenameDM', default = 'DM.json')
-	parser.add_argument('--filenameDV', default = 'DV.json')
-	parser.add_argument('--dirnameOutput')
+	parser.add_argument('--outputEDP', default='EDP.csv')
+	parser.add_argument('--outputDM', default = 'DM.csv')
+	parser.add_argument('--outputDV', default = 'DV.csv')
+	parser.add_argument('--dirnameOutput', default = None)
+	parser.add_argument('--detailed_results', default = True,
+		type = str2bool, nargs='?', const=True)
+	parser.add_argument('--log_file', default = True,
+		type = str2bool, nargs='?', const=True)
 	args = parser.parse_args(args)
 
-	#print(args.dirnameOutput)
+	log_msg('Initializing pelicun calculation...')
+
+	#print(args)
 	run_pelicun(
 		args.filenameDL, args.filenameEDP,
-		args.DL_Method, args.Realizations,
-		args.dirnameOutput,
-		args.filenameDM, args.filenameDV)
+		args.DL_Method, args.Realizations, 
+		args.outputEDP, args.outputDM, args.outputDV,
+		output_path = args.dirnameOutput, 
+		detailed_results = args.detailed_results, 
+		log_file = args.log_file)
+
+	log_msg('pelicun calculation completed.')
 
 if __name__ == '__main__':
 

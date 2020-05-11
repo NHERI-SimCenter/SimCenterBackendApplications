@@ -23,7 +23,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.006999999999999999
+              "Amount": 0.006999999999999999,
+              "CurveType": "N/A"
             }
           },
           "Description": "Slight"
@@ -40,7 +41,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.033
+              "Amount": 0.033,
+              "CurveType": "N/A"
             }
           },
           "Description": "Moderate"
@@ -57,7 +59,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.16399999999999998
+              "Amount": 0.16399999999999998,
+              "CurveType": "N/A"
             }
           },
           "Description": "Extensive"
@@ -74,7 +77,8 @@
           "Weight": 1.0,
           "Consequences": {
             "ReconstructionCost": {
-              "Amount": 0.32899999999999996
+              "Amount": 0.32899999999999996,
+              "CurveType": "N/A"
             }
           },
           "Description": "Complete"

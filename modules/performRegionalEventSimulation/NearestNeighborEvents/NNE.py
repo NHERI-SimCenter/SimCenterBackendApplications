@@ -39,19 +39,44 @@ def find_neighbors(building_file, event_metadata, samples, neighbors):
     for i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index, 
                                                           distances, 
                                                           indices)):
+
         dist_list = 1./(dist_list**2.0)
         weights = np.array(dist_list)/np.sum(dist_list)
+
         evt_count = multinomial(samples, weights)
 
-        event_list = []
-        for e, i in zip(evt_count, ind_list):
-            event_list += [meta_df.iloc[i]['sta'],]*e
+        if meta_df.iloc[0]['sta'][-3:] == 'csv':
+            gm_dir = posixpath.dirname(event_metadata)
+
+            event_list = []
+            scale_list = []
+            for e, i in zip(evt_count, ind_list):
+                gm_collection_file = meta_df.iloc[i]['sta']
+
+                gm_df = pd.read_csv(posixpath.join(gm_dir, gm_collection_file), header=None)
+                
+                event_list +=  gm_df.iloc[:,0].values.tolist() * e 
+
+                if len(gm_df.columns) > 1:
+                    scale_list += gm_df.iloc[:,1].values.tolist() * e
+                else:
+                    scale_list += np.ones(gm_df.shape[0]).tolist() * e                 
+
+        else:
+            
+
+            event_list = []
+            for e, i in zip(evt_count, ind_list):
+                event_list += [meta_df.iloc[i]['sta'],]*e
+
+            scale_list = np.ones(len(event_list))
 
         event_list_json = []
         for e_i, event in enumerate(event_list):
             event_list_json.append({
                 "EventClassification": "Earthquake",
-                "fileName": '{}x{}'.format(event,e_i),
+                "fileName": f'{event}x{e_i:03d}',
+                "factor": scale_list[e_i],
                 "type": "SW4"
                 })
 

@@ -72,6 +72,36 @@
             "default": ""
           }
         ]
+      },
+      {
+        "Name": "CSV_to_BIM",
+        "ExecutablePath": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "path",
+            "description": "path to buildings database file",
+            "default": ""
+          },
+          {
+            "id": "lengthUnit",
+            "type": "string",
+            "description": "Identifies the unit used to measure length (e.g. footprint area)",
+            "default": "m"
+          }
+        ]
       }
     ]
   },
@@ -275,6 +305,16 @@
             "id": "hazusData",
             "type": "path",
             "description": "Defines the location of the hazus building config data file."
+          },
+          {
+            "id": "stdStiffness",
+            "type": "float",
+            "description": "Defines the standard deviation that should be considered when sampling the stiffness for the building."
+          },
+          {
+            "id": "stdDamping",
+            "type": "float",
+            "description": "Defines the standard deviation that should be considered when sampling the damping ratio for the building."
           }
         ]
       },
@@ -559,16 +599,22 @@
       ],
       "Outputs": [
       {
-          "id": "filenameDM",
+          "id": "outputEDP",
           "type": "string",
-          "description": "name of file to store damage estimates",
-          "default": "DM.json"
+          "description": "name of file to store response estimates",
+          "default": "EDP.csv"
       },
       {
-          "id": "filenameDV",
+          "id": "outputDM",
+          "type": "string",
+          "description": "name of file to store damage estimates",
+          "default": "DM.csv"
+      },
+      {
+          "id": "outputDV",
           "type": "string",
           "description": "name of DV file to store decision variable estimates",
-          "default": "DV.json"
+          "default": "DV.csv"
       }
       ]
     },
@@ -586,6 +632,16 @@
             "id": "Realizations",
             "type": "int",
             "description": "Specifies the number of realizations to generate"
+          },
+          {
+            "id": "detailed_results",
+            "type": "bool",
+            "description": "If false, only the main results are saved to improve performance."
+          },
+          {
+            "id": "log_file",
+            "type": "bool",
+            "description": "If false, pelicun does not create a log file."
           }
         ]
       }

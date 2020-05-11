@@ -106,6 +106,7 @@ Building::readBIM(const char *event, const char *bim)
   json_t *nType = json_object_get(GI,"numStory");
   json_t *hType = json_object_get(GI,"height");
   json_t *yType = json_object_get(GI,"yearBuilt");
+  json_t *dRatio = json_object_get(GI,"dampingRatio");
 
   const char *type = json_string_value(sType);
   string s(type);
@@ -116,6 +117,11 @@ Building::readBIM(const char *event, const char *bim)
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
   storyheight=json_number_value(hType)/(nStory*1.);
+  if (dRatio == NULL) {
+    dampingRatio_IN = 0;
+  } else { 
+    dampingRatio_IN = json_number_value(dRatio);
+  }
 
   // parse EVENT (to see dimensionality needed
   ndf = 1;
@@ -143,6 +149,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *nType = json_object_get(GI,"numStory");
   json_t *hType = json_object_get(GI,"height");
   json_t *yType = json_object_get(GI,"yearBuilt");
+  json_t *dRatio = json_object_get(GI,"dampingRatio");
   
   json_t *zType = json_object_get(GI, "seismicZone");
   const char *type = json_string_value(sType);
@@ -165,6 +172,11 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
   storyheight=json_number_value(hType)/(nStory*1.);
+  if (dRatio == NULL) {
+    dampingRatio_IN = 0;
+  } else { 
+    dampingRatio_IN = json_number_value(dRatio);
+  }
 
   json_object_clear(rootBIM);
 
@@ -192,7 +204,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
 }
 
 void
-Building::writeRV(const char *path)
+Building::writeRV(const char *path, double stdStiffness, double stdDamping)
 {
     json_t *root = json_object();
     json_t *randomVariables = json_array();
@@ -202,7 +214,7 @@ Building::writeRV(const char *path)
     json_object_set(kFactor, "mean", json_real(1.0));
     json_object_set(kFactor, "name", json_string("kFactor"));
     json_object_set(kFactor, "value", json_string("RV.kFactor"));
-    json_object_set(kFactor, "stdDev", json_real(.1));
+    json_object_set(kFactor, "stdDev", json_real(stdStiffness));
     json_t *kFactorVariable = json_object();
 
     json_t *dampFactor = json_object();
@@ -210,7 +222,7 @@ Building::writeRV(const char *path)
     json_object_set(dampFactor, "mean", json_real(1.0));
     json_object_set(dampFactor, "name", json_string("dampFactor"));
     json_object_set(dampFactor, "value", json_string("RV.dampFactor"));
-    json_object_set(dampFactor, "stdDev", json_real(.1));
+    json_object_set(dampFactor, "stdDev", json_real(stdDamping));
 
     json_array_append(randomVariables, kFactor);
     json_array_append(randomVariables, dampFactor);
@@ -298,7 +310,12 @@ Building::writeSAM(const char *path)
       json_array_append(elements, element);
     }
     
-    json_object_set(properties,"dampingRatio",json_real(dampingRatio*dampFactor));
+    if (dampingRatio_IN == 0) {
+      json_object_set(properties,"dampingRatio",json_real(dampingRatio*dampFactor));
+    } else {
+      json_object_set(properties,"dampingRatio",json_real(dampingRatio_IN*dampFactor));
+    }
+    
     json_object_set(properties,"uniaxialMaterials",materials);
     json_object_set(root,"Properties",properties);
 

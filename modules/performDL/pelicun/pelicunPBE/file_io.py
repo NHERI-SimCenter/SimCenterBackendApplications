@@ -249,7 +249,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     if inhabitants is not None:
         path_POP_data = inhabitants.get("PopulationDataFile", "")
     else:
-        path_POP_data = ""       
+        path_POP_data = ""
 
     if data['decision_variables']['injuries']:
         if path_POP_data == "":
@@ -283,11 +283,11 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             if 'volume' not in data['unit_names']:
                 data['unit_names'].update({
                     'volume': data['unit_names']['length']+'3'})
-            
+
             if 'speed' not in data['unit_names'].keys():
                 data['unit_names'].update({
                     'speed': data['unit_names']['length']+'ps'})
-            
+
             if 'acceleration' not in data['unit_names'].keys():
                 data['unit_names'].update({
                     #'acceleration': 1.0 })
@@ -409,7 +409,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 to_aggregate = set([x for x in PG_loc_dir_list if PG_loc_dir_list.count(x) > 1])
                 for combo in to_aggregate:
                     PG_loc_dir_list = list(zip(comp_data['locations'], comp_data['directions']))
-                    combo_ids = [i for i,e in enumerate(PG_loc_dir_list) if e==combo]                    
+                    combo_ids = [i for i,e in enumerate(PG_loc_dir_list) if e==combo]
 
                     c_base = combo_ids[0]
                     comp_data['csg_weights'][c_base] = list(np.array(comp_data['csg_weights'][c_base]) * comp_data['quantities'][c_base])
@@ -419,9 +419,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     comp_data['csg_weights'][c_base] = list(np.array(comp_data['csg_weights'][c_base]) / comp_data['quantities'][c_base])
 
                     for ci in combo_ids[1:][::-1]:
-                        for key in ['locations', 'directions', 'quantities', 
+                        for key in ['locations', 'directions', 'quantities',
                         'csg_weights', 'distribution', 'cov']:
-                            del comp_data[key][ci]               
+                            del comp_data[key][ci]
 
             elif AT.startswith('HAZUS'):
                 comp_data = {
@@ -450,7 +450,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     else:
                         dirs = [1, ]
 
-                    if 'median_quantity' in comp:    
+                    if 'median_quantity' in comp:
                         qnts = [float(qnt)
                                 for qnt in comp['median_quantity'].split(',')]
                         csg_weights = (qnts / np.sum(qnts)).tolist()
@@ -576,7 +576,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 DGDL[EDP_kind] = DGDL[EDP_kind] * f_EDP
     else:
         data['general'].update({'detection_limits':{}})
-    
+
     # make sure that detection limits are initialized
     for key in EDP_keys:
         if key not in data['general']['detection_limits'].keys():
@@ -669,17 +669,15 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             data['general'].update({'response': {}})
         if ((damage is not None) and (coll_prob is not None)):
             data['general']['response'].update({
-                'coll_prob'   : coll_prob.get('Value',
-                                                    'estimated'),
-                'CP_est_basis': coll_prob.get('BasisOfEstimate',
-                                                    'raw EDP')})
+                'coll_prob'   : coll_prob.get('Value', 'estimated'),
+                'CP_est_basis': coll_prob.get('BasisOfEstimate', 'raw EDP')})
             if data['general']['response']['coll_prob'] != 'estimated':
                 data['general']['response']['coll_prob'] = \
                     float_or_None(data['general']['response']['coll_prob'])
         else:
             data['general']['response'].update({
                 'coll_prob'       : 'estimated',
-                'CP_est_basis'    : 'raw EDP'}) 
+                'CP_est_basis'    : 'raw EDP'})
 
     # loss model info ----------------------------------------------------------
     if loss is None:
@@ -1074,13 +1072,13 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         c_data['cov'] = [float_or_None(cov) for cov in ci_data['cov']]
 
         # replace N/A distribution with normal and negligible cov
-        c_data['cov'] = [0.0001 if dk == 'N/A' else cov
-                         for cov,dk in list(zip(c_data['cov'],
-                                                c_data['distribution_kind']))]
-        c_data['distribution_kind'] = ['normal' if dk == 'N/A' else dk
-                                       for dk in c_data['distribution_kind']]
-        c_data['cov'] = [0.0001 if cov==None else cov
-                         for cov in c_data['cov']]
+        #c_data['cov'] = [0.0001 if dk == 'N/A' else cov
+        #                 for cov,dk in list(zip(c_data['cov'],
+        #                                        c_data['distribution_kind']))]
+        #c_data['distribution_kind'] = ['normal' if dk == 'N/A' else dk
+        #                               for dk in c_data['distribution_kind']]
+        #c_data['cov'] = [0.0001 if cov==None else cov
+        #                 for cov in c_data['cov']]
 
         #c_data['kind'] = ci_data['kind']
         #c_data['unit'] = ci_data['unit'][0] * globals()[ci_data['unit'][1]]
@@ -1111,14 +1109,12 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
             # PFA corresponds to the top of the given story. The ground floor
             # has an idex of 0. When damage of acceleration-sensitive components
             # is controlled by the acceleration of the bottom of the story, the
-            # corresponding PFA location needs to be reduced by 1. Since FEMA
-            # P58 assumes that PFA corresponds to the bottom of the given story
-            # by default, we need to subtract 1 from the location values in a
-            # FEMA P58 assessment. Rather than changing the locations themselves,
-            # we assign an offset so that the results still get collected at the
-            # appropriate story.
-            if AT == 'P58':
-                c_data['offset'] = c_data['offset'] - 1
+            # corresponding PFA location needs to be reduced by 1. Our framework
+            # assumes that PFA corresponds to the bottom of the given story
+            # by default, we need to subtract 1 from the location values. Rather
+            # than changing the locations themselves, we assign an offset of -1
+            # so that the results still get collected at the appropriate story.
+            c_data['offset'] = c_data['offset'] - 1
         elif EDP_type == 'Peak Gust Wind Speed':
             demand_type = 'PWS'
             demand_factor = mph
@@ -1148,7 +1144,8 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
 
         # dictionary to convert DL data to internal representation
         curve_type = {'LogNormal': 'lognormal',
-                      'Normal'   : 'normal'}
+                      'Normal'   : 'normal',
+                      'N/A'      : None}
         DS_set_kind = {'MutuallyExclusive' : 'mutually exclusive',
                        'mutually exclusive': 'mutually exclusive',
                        'simultaneous'      : 'simultaneous',
@@ -1181,41 +1178,41 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                     DS_CC = DS_C['ReconstructionCost']
                     if isinstance(DS_CC['Amount'], list):
                         DS_data.update({'repair_cost': {
-                            'median_max'       : DS_CC['Amount'][0],
-                            'median_min'       : DS_CC['Amount'][1],
-                            'quantity_lower'   : DS_CC['Quantity'][0],
-                            'quantity_upper'   : DS_CC['Quantity'][1],
-                            'distribution_kind': curve_type[DS_CC['CurveType']],
-                            'cov'              : DS_CC['Beta'],
+                            'medians'          : np.array(DS_CC['Amount']),
+                            'quantities'       : np.array(DS_CC['Quantity']),
+                            'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
+                            'cov'              : DS_CC.get('Beta',None),
                         }})
 
                         # convert the units to standard ones
-                        DS_data['repair_cost']['quantity_lower'] *= data_unit
-                        DS_data['repair_cost']['quantity_upper'] *= data_unit
-                        DS_data['repair_cost']['median_min'] /= data_unit
-                        DS_data['repair_cost']['median_max'] /= data_unit
+                        DS_data['repair_cost']['quantities'] *= data_unit
+                        DS_data['repair_cost']['medians'] /= data_unit                        
                     else:
-                        DS_data.update({'repair_cost': DS_CC['Amount']})
+                        DS_data.update({'repair_cost': {
+                            'medians': np.array([DS_CC['Amount'],]),
+                            'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
+                            'cov'              : DS_CC.get('Beta',None),
+                        }})
 
                 if 'ReconstructionTime' in DS_C.keys():
                     DS_CT = DS_C['ReconstructionTime']
                     if isinstance(DS_CT['Amount'], list):
                         DS_data.update({'repair_time': {
-                            'median_max'       : DS_CT['Amount'][0],
-                            'median_min'       : DS_CT['Amount'][1],
-                            'quantity_lower'   : DS_CT['Quantity'][0],
-                            'quantity_upper'   : DS_CT['Quantity'][1],
-                            'distribution_kind': curve_type[DS_CT['CurveType']],
-                            'cov'              : DS_CT['Beta'],
+                            'medians'          : np.array(DS_CT['Amount']),
+                            'quantities'       : np.array(DS_CT['Quantity']),
+                            'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
+                            'cov'              : DS_CT.get('Beta',None),
                         }})
 
                         # convert the units to standard ones
-                        DS_data['repair_time']['quantity_lower'] *= data_unit
-                        DS_data['repair_time']['quantity_upper'] *= data_unit
-                        DS_data['repair_time']['median_min'] /= data_unit
-                        DS_data['repair_time']['median_max'] /= data_unit
+                        DS_data['repair_cost']['quantities'] *= data_unit
+                        DS_data['repair_cost']['medians'] /= data_unit                        
                     else:
-                        DS_data.update({'repair_time': DS_CT['Amount']})
+                        DS_data.update({'repair_time': {
+                            'medians': np.array([DS_CT['Amount'],]),
+                            'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
+                            'cov'              : DS_CT.get('Beta',None),
+                        }})
 
                 if 'RedTag' in DS_C.keys():
                     DS_CR = DS_C['RedTag']
@@ -1524,13 +1521,13 @@ def convert_P58_data_to_json(data_dir, target_dir):
                             row['DS {}, Description'.format(DS[-1])],
                         'RepairMeasures': repair_measures
                     })
-                    
+
                     IMG = row['DS{}, Illustrations'.format(DS[-1])]
                     if IMG not in ['none', np.nan]:
                         DSG['DamageStates'][-1].update({'DamageImageName': IMG})
 
                     AA = row['DS {} - Casualty Affected Area'.format(DS[-1])]
-                    if (isinstance(AA, string_types) and (is_float(AA.split(' ')[0]))):
+                    if (isinstance(AA, str) and (is_float(AA.split(' ')[0]))):
                         AA = AA.split(' ')
                         DSG['DamageStates'][-1].update(
                             {'AffectedArea': [int(AA[0]), AA[1]]})
@@ -1805,6 +1802,9 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
                                 'Weight'] = 1.0 - DS5_w
 
                     for dsg_i, DSG in enumerate(json_output['DSGroups']):
+                        base_cost = S_data['Reconstruction_cost'][ot][dsg_i] / 100.
+                        base_time = S_data['Reconstruction_time'][ot][dsg_i]
+
                         for DS in DSG['DamageStates']:
                             DS_id = DS['Description']
                             DS['Consequences'] = {
@@ -1813,12 +1813,14 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
                                     {'Amount': val / 100.} for val in
                                     S_data['Injury_rates'][DS_id][bt]],
                                 # reconstruction cost is provided in percentages of replacement cost
-                                'ReconstructionCost': {"Amount": S_data[
-                                                                     'Reconstruction_cost'][
-                                                                     ot][
-                                                                     dsg_i] / 100.},
-                                'ReconstructionTime': {"Amount": S_data[
-                                    'Reconstruction_time'][ot][dsg_i]}
+                                'ReconstructionCost': {
+                                    "Amount": base_cost,
+                                    "CurveType": "N/A",
+                                },
+                                'ReconstructionTime': {
+                                    "Amount": base_time,
+                                    "CurveType": "N/A",
+                                }
                             }
                             DS['Description'] = convert_DS_description[
                                 DS['Description']]
@@ -1850,7 +1852,8 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
             json_output.update({
                 'EDP': {
                     'Type': 'Peak Floor Acceleration',
-                    'Unit': [1, 'g']
+                    'Unit': [1, 'g'],
+                    'Offset': NSA_data.get('Offset', 0)
                 }
             })
 
@@ -1858,6 +1861,8 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
             json_output.update({'DSGroups': []})
 
             for dsg_i in range(4):
+                base_cost = NSA_data['Reconstruction_cost'][ot][dsg_i] / 100.
+
                 json_output['DSGroups'].append({
                     'MedianEDP'   : NSA_data['EDP_limits'][dl][dsg_i],
                     'Beta'        : NSA_data['Fragility_beta'],
@@ -1867,10 +1872,10 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
                         'Weight'      : 1.0,
                         'Consequences': {
                             # reconstruction cost is provided in percentages of replacement cost
-                            'ReconstructionCost': {'Amount': NSA_data[
-                                                                  'Reconstruction_cost'][
-                                                                  ot][
-                                                                  dsg_i] / 100.}
+                            'ReconstructionCost': {
+                                "Amount": base_cost,
+                                "CurveType": "N/A",
+                            },
                         },
                         'Description' : convert_DS_description[
                             'DS{}'.format(dsg_i + 1)]
@@ -1913,6 +1918,8 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
         json_output.update({'DSGroups': []})
 
         for dsg_i in range(4):
+            base_cost = NSD_data['Reconstruction_cost'][ot][dsg_i] / 100.
+
             json_output['DSGroups'].append({
                 'MedianEDP'   : NSD_data['EDP_limits'][dsg_i],
                 'Beta'        : NSD_data['Fragility_beta'],
@@ -1923,8 +1930,9 @@ def create_HAZUS_EQ_json_files(data_dir, target_dir):
                     'Consequences': {
                         # reconstruction cost is provided in percentages of replacement cost
                         'ReconstructionCost': {
-                            'Amount': NSD_data['Reconstruction_cost'][ot][
-                                          dsg_i] / 100.}
+                            "Amount": base_cost,
+                            "CurveType": "N/A",                            
+                        },
                     },
                     'Description' : convert_DS_description[
                         'DS{}'.format(dsg_i + 1)]
@@ -2098,13 +2106,11 @@ def create_HAZUS_HU_json_files(data_dir, target_dir):
             bldg_chars["sec_water_res"] = int(bldg_chars["sec_water_res"])
 
         if bldg_type[:4] == "WMUH":
-            if not isinstance(bldg_chars["roof_cover"],
-                              string_types) and np.isnan(
-                bldg_chars["roof_cover"]):
+            if (not isinstance(bldg_chars["roof_cover"],str)
+                and np.isnan(bldg_chars["roof_cover"])):
                 bldg_chars["roof_cover"] = 'null'
-            if not isinstance(bldg_chars["roof_quality"],
-                              string_types) and np.isnan(
-                bldg_chars["roof_quality"]):
+            if (not isinstance(bldg_chars["roof_quality"], str)
+                and np.isnan(bldg_chars["roof_quality"])):
                 bldg_chars["roof_quality"] = 'null'
 
         dl_id = "_".join(bldg_chars.astype(str))
@@ -2162,17 +2168,20 @@ def create_HAZUS_HU_json_files(data_dir, target_dir):
 def write_SimCenter_DL_output(output_dir, output_filename, output_df, index_name='#Num',
                               collapse_columns = True, stats_only=False):
 
-    output_df = deepcopy(output_df)
-
     # if the summary flag is set, then not all realizations are returned, but
     # only the first two moments and the empirical CDF through 100 percentiles
     if stats_only:
         #output_df = output_df.describe(np.arange(1, 100)/100.)
-        output_df = output_df.describe([0.1,0.5,0.9])
+        #output_df = output_df.describe([0.1,0.5,0.9])
+        if len(output_df.columns) > 0:
+            output_df = describe(output_df)
+        else:
+            output_df = describe(np.zeros(len(output_df.index)))
+    else:
+        output_df = output_df.copy()
 
     # the name of the index column is replaced with the provided value
     output_df.index.name = index_name
-
 
     # multiple levels of indices are collapsed into a single level if needed
     # TODO: check for the number of levels and prepare a smarter collapse method
@@ -2183,9 +2192,136 @@ def write_SimCenter_DL_output(output_dir, output_filename, output_df, index_name
 
     # write the results in a csv file
     # TODO: provide other file formats
-    output_df.to_csv(posixpath.join(output_dir, output_filename))
+    log_msg('\t\t\tSaving file {}'.format(output_filename))
+    file_path = posixpath.join(output_dir, output_filename)
+    output_df.to_csv(file_path)
+    # TODO: this requires pandas 1.0+ > wait until next release
+    #with open(file_path[:-3]+'zip', 'w') as f:
+    #    output_df.to_csv(f, compression=dict(mehtod='zip', archive_name=output_filename))
 
-def write_SimCenter_DM_output(output_dir, DM_filename, DMG_df):
+def write_SimCenter_EDP_output(output_dir, EDP_filename, EDP_df):
+
+    # initialize the output DF
+    col_info = np.transpose([col.split('-') for col in EDP_df.columns])
+
+    EDP_types = np.unique(col_info[0])
+    EDP_locs = np.unique(col_info[2])
+    EDP_dirs = np.unique(col_info[4])
+
+    MI = pd.MultiIndex.from_product(
+        [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+        names=['type', 'loc', 'dir', 'stat'])
+
+    df_res = pd.DataFrame(columns=MI, index=[0, ])
+    del df_res[('PID', '0')]
+
+    # store the EDP statistics in the output DF
+    for col in np.transpose(col_info):
+        df_res.loc[0, (col[0], col[2], col[4], 'median')] = EDP_df[
+            '{}-LOC-{}-DIR-{}'.format(col[0], col[2], col[4])].median()
+        df_res.loc[0, (col[0], col[2], col[4], 'beta')] = np.log(
+            EDP_df['{}-LOC-{}-DIR-{}'.format(col[0], col[2], col[4])]).std()
+
+    df_res = df_res.astype(float).round(4)
+
+    # save the output
+    df_res.to_csv('EDP.csv')
+
+def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
+
+    # first, get the collapses from the SUMMARY_df 
+    df_res_c = pd.DataFrame([0,], 
+        columns=pd.MultiIndex.from_tuples([('probability',' '),]), 
+        index=[0, ])
+    df_res_c['probability'] = SUMMARY_df[('collapses', 'collapsed?')].mean()
+
+    # second, get the damage state likelihoods
+    df_res_l = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([['S', 'NS', 'NSA', 'NSD'],
+                                            ['0', '1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    # third, get the damage quantities conditioned on damage state
+    df_res_q = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([['S', 'NS', 'NSA', 'NSD'],
+                                            ['1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    for comp_type in ['NSA', 'NSD', 'NS']:
+        del df_res_l[(comp_type, '4_2')]
+        del df_res_q[(comp_type, '4_2')]
+
+    # aggregate the damage data along Performance Groups
+    DMG_agg = DMG_df.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
+
+    # for each type of component...
+    for comp_type in ['S', 'NSA', 'NSD', 'NS']:
+
+        # select the corresponding subset of columns
+        type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
+                     if c.startswith(comp_type)]
+
+        df_sel = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
+        df_sel = df_sel / len(type_cols)
+
+        # calculate the probability of DSG exceedance
+        df_sel[df_sel > 0.0] = df_sel[df_sel > 0.0] / df_sel[df_sel > 0.0]
+
+        cols = df_sel.columns
+        for i in range(len(cols)):
+            filter = np.where(df_sel.iloc[:, i].values > 0.0)[0]
+            df_sel.iloc[filter, idx[0:i]] = 1.0
+
+        df_sel_exc = pd.Series(np.mean(df_sel.values, axis=0),
+                               index=df_sel.columns)
+
+        DS_0 = 1.0 - df_sel_exc['1_1']
+        for i in range(len(df_sel_exc.index) - 1):
+            df_sel_exc.iloc[i] = df_sel_exc.iloc[i] - df_sel_exc.iloc[i + 1]
+
+        # Add the probability of no damage for convenience.
+        df_sel_exc.loc['0'] = DS_0
+        df_sel_exc = df_sel_exc.sort_index()
+
+        # store the results in the output DF
+        df_res_l.loc[:, idx[comp_type, :]] = df_sel_exc.values
+
+        # get the quantity of components in the highest damage state
+        # skip this part for now to reduce file size
+        if False:
+            df_init = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS', axis=1).sum()
+            df_init = (df_init / len(type_cols)).round(2)
+
+            df_sel = df_sel.sum(axis=1)
+
+            for lvl, lvl_label in zip([1.0, 2.0, 3.0, 4.0, 5.0],
+                                      ['1_1', '2_1', '3_1', '4_1', '4_2']):
+
+                df_cond = df_init[df_sel == lvl]
+
+                if df_cond.size > 0:
+                    unique_vals, unique_counts = np.unique(
+                        df_cond[lvl_label].values, return_counts=True)
+                    unique_counts = np.around(unique_counts / df_cond.shape[0],
+                                              decimals=4)
+                    sorter = np.argsort(unique_counts)[::-1][:4]
+                    DQ = list(zip(unique_vals[sorter], unique_counts[sorter]))
+
+                    # store the damaged quantities in the output df
+                    df_res_q.loc[:,idx[comp_type, lvl_label]] = str(DQ)
+
+    # join the output dataframes
+    #df_res = pd.concat([df_res_c, df_res_l, df_res_q], axis=1, 
+    #    keys=['Collapse','DS likelihood','Damaged Quantities'])
+    df_res = pd.concat([df_res_c, df_res_l], axis=1, keys=['Collapse','DS likelihood'])
+
+    # save the output
+    with open(posixpath.join(output_dir, DM_filename), 'w') as f:
+        df_res.to_csv(f)
+
+def write_SimCenter_DM_output_old(output_dir, DM_filename, DMG_df):
 
     # Start with the probability of being in a particular damage state.
     # Here, the damage state of the building (asset) is defined as the highest
@@ -2206,7 +2342,9 @@ def write_SimCenter_DM_output(output_dir, DM_filename, DMG_df):
     # The P(DS=ds) probability is determined by subtracting consecutive DS
     # exceedance probabilites. This will not work well for a FEMA P58 assessment
     # with Damage State Groups that include multiple Damage States.
-    DMG_agg_mean = DMG_agg.describe().loc['mean',:]
+    #DMG_agg_mean = DMG_agg.describe().loc['mean',:]
+    DMG_agg_mean = pd.Series(np.mean(DMG_agg.values, axis=0), index=DMG_agg.columns)
+
     DS_0 = 1.0 - DMG_agg_mean['1_1']
     for i in range(len(DMG_agg_mean.index)-1):
         DMG_agg_mean.iloc[i] = DMG_agg_mean.iloc[i] - DMG_agg_mean.iloc[i+1]
@@ -2223,7 +2361,8 @@ def write_SimCenter_DM_output(output_dir, DM_filename, DMG_df):
 
     # Now determine the probability of being in a damage state for individual
     # components / component assemblies...
-    DMG_mean = DMG_df.describe().loc['mean',:]
+    #DMG_mean = DMG_df.describe().loc['mean',:]
+    DMG_mean = pd.Series(np.mean(DMG_df.values, axis=0), index=DMG_df.columns)
 
     # and save the results in the output json file.
     for FG in sorted(DMG_mean.index.get_level_values('FG').unique()):
@@ -2237,12 +2376,178 @@ def write_SimCenter_DM_output(output_dir, DM_filename, DMG_df):
                 DMG_mean.loc[idx[FG],:].loc[idx[:,PG],:].index.get_level_values('DSG_DS').unique()):
                 DM[str(FG)][str(PG)].update({str(DS): DMG_mean.loc[(FG,PG,DS)]})
 
+    log_msg('\t\t\tSaving file {}'.format(DM_filename))
     with open(posixpath.join(output_dir, DM_filename), 'w') as f:
         json.dump(DM, f, indent = 2)
 
-def write_SimCenter_DV_output(output_dir, DV_filename, DV_df, DV_name):
+def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
+
+    DV_cost = 0
+    DV_time = 0
+    DV_inj = [0,]*4
+
+    for DV_name, DV_mod in DV_dict.items():
+        if 'rec_cost' in DV_name:
+            DV_cost = DV_mod
+        elif 'rec_time' in DV_name:
+            DV_time = DV_mod
+        elif 'injuries_1' in DV_name:
+            DV_inj[0] = DV_mod
+        elif 'injuries_2' in DV_name:
+            DV_inj[1] = DV_mod
+        elif 'injuries_3' in DV_name:
+            DV_inj[2] = DV_mod
+        elif 'injuries_4' in DV_name:
+            DV_inj[3] = DV_mod
+        
+    DVs = SUMMARY_df.columns.get_level_values(1)
+
+    if DV_cost is not 0:
+        
+        repl_cost = GI['replacement_cost']
+
+        headers = [['Repair Cost',],
+                   ['aggregate',],
+                   [' ',],
+                   ['mean','std','10%','median','90%']]
+
+        MI = pd.MultiIndex.from_product(headers,
+                                        names=['DV', 'comp_type', 'DSG_DS', 'stat'])
+
+        df_res_Cagg = pd.DataFrame(columns=MI, index=[0, ])
+        df_res_Cagg.fillna(0, inplace=True)
+
+        headers = [['Repair Impractical',],
+                   ['probability',],
+                   [' ',],
+                   [' ',]]
+
+        MI = pd.MultiIndex.from_product(headers,
+                                        names=['DV', 'comp_type', 'DSG_DS', 'stat'])
+
+        df_res_Cimp = pd.DataFrame(columns=MI, index=[0, ])
+        df_res_Cimp[('Repair Impractical', 'probability')] = SUMMARY_df[('reconstruction', 'cost impractical?')].mean()
+        df_res_Cimp = df_res_Cimp.astype(float)
+
+        headers = [['Repair Cost',],
+                   ['S','NS','NSA','NSD'],
+                   ['aggregate','1_1', '2_1', '3_1', '4_1', '4_2'],
+                   ['mean',]]
+
+        MI = pd.MultiIndex.from_product(headers,
+                                        names=['DV', 'comp_type', 'DSG_DS', 'stat'])
+
+        df_res_C = pd.DataFrame(columns=MI, index=[0, ])
+
+        for comp_type in ['NSA', 'NSD', 'NS']:
+            del df_res_C[('Repair Cost', comp_type, '4_2')]
+
+    if DV_time is not 0:
+
+        repl_time = GI['replacement_time']
+
+        headers = [['Repair Time',],
+                   [' ',],
+                   ['aggregate',],
+                   ['mean','std','10%','median','90%']]
+
+        MI = pd.MultiIndex.from_product(headers,
+                                        names=['DV', 'comp_type', 'DSG_DS', 'stat'])
+
+        df_res_Tagg = pd.DataFrame(columns=MI, index=[0, ])
+        df_res_Tagg.fillna(0, inplace=True)
+
+    if DV_inj[0] is not 0:
+
+        lvls = []
+        [lvls.append(f'sev. {i+1}') for i in range(4) if DV_inj[i] is not 0]
+
+        headers = [['Injuries',],
+                   lvls,
+                   ['aggregate',],
+                   ['mean','std','10%','median','90%']]
+
+        MI = pd.MultiIndex.from_product(headers,
+                                        names=['DV', 'comp_type', 'DSG_DS', 'stat'])
+
+        df_res_Iagg = pd.DataFrame(columns=MI, index=[0, ])
+        df_res_Iagg.fillna(0, inplace=True)
+
+    dfs_to_join = []
+
+    # start with the disaggregated costs...
+    if DV_cost is not 0:
+        for type_ID in ['S', 'NS', 'NSA', 'NSD']: 
+                
+            DV_res = DV_cost.groupby(level=['FG', 'DSG_DS'], axis=1).sum()    
+
+            type_cols = [c for c in DV_res.columns.get_level_values('FG').unique() if c.startswith(type_ID)] 
+            
+            df_cost = DV_res.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
+
+            # create a df with 1s at cells with damage and identify the governing DS
+            df_sel = df_cost.copy()
+            df_sel[df_sel>0.0] = df_sel[df_sel>0.0] / df_sel[df_sel>0.0]
+
+            cols = df_sel.columns
+            for i in range(len(cols)):
+                filter = np.where(df_sel.iloc[:,i].values > 0.0)[0]
+                df_sel.iloc[filter,idx[0:i]] = 1.0
+            df_sel = df_sel.sum(axis=1)
+
+            if type_ID == 'S':
+                ds_list = ['1_1', '2_1', '3_1', '4_1', '4_2']
+            else:
+                ds_list = ['1_1', '2_1', '3_1', '4_1']
+
+            # store the results in the output DF
+            df_cost = df_cost.sum(axis=1)
+            df_cost.loc[:] = np.minimum(df_cost.values, repl_cost)
+            mean_costs = [df_cost.loc[df_sel == dsg_i+1].mean() for dsg_i, dsg in enumerate(ds_list)]
+
+            df_res_C.loc[:, idx['Repair Cost', type_ID, ds_list, 'mean']] = mean_costs
+            df_res_C.loc[:, idx['Repair Cost', type_ID, 'aggregate', 'mean']] = df_cost.mean()
+            
+            df_res_C = df_res_C.astype(float).round(0)
+
+        # now store the aggregate results for cost
+        DV_res = describe(SUMMARY_df[('reconstruction','cost')])
+        
+        df_res_Cagg.loc[:, idx['Repair Cost', 'aggregate', ' ', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
+           
+        df_res_Cagg = df_res_Cagg.astype(float).round(0)
+        dfs_to_join = dfs_to_join + [df_res_Cagg, df_res_Cimp, df_res_C]
+
+    if DV_time is not 0:
+        DV_res = describe(SUMMARY_df[('reconstruction','time')])
+         
+        df_res_Tagg.loc[:, idx['Repair Time', ' ', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
+        
+        df_res_Tagg = df_res_Tagg.astype(float).round(1)
+        dfs_to_join.append(df_res_Tagg)
+
+    if DV_inj[0] is not 0:
+        for i in range(4):
+            if DV_inj[i] is not 0:
+                DV_res = describe(SUMMARY_df[('injuries',f'sev. {i+1}')])
+                 
+                df_res_Iagg.loc[:, idx['Injuries', f'sev. {i+1}', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
+                
+                df_res_Iagg = df_res_Iagg.astype(float).round(6)
+        
+        dfs_to_join.append(df_res_Iagg)
+
+    df_res = pd.concat(dfs_to_join,axis=1)
+
+    # save the output
+    with open(posixpath.join(output_dir, DV_filename), 'w') as f:
+        df_res.to_csv(f)
+
+def write_SimCenter_DV_output_old(output_dir, DV_filename, DV_df, DV_name):
 
     DV_name = convert_dv_name[DV_name]
+
+    DV_file_path = posixpath.join(output_dir, DV_filename)
 
     try:
         with open(DV_file_path, 'r') as f:
@@ -2255,12 +2560,15 @@ def write_SimCenter_DV_output(output_dir, DV_filename, DV_df, DV_name):
     DV_i = DV[DV_name]
 
     try:
-        DV_tot = DV_df.sum(axis=1).describe([0.1,0.5,0.9]).drop('count')
+    #if True:
+        #DV_tot = DV_df.sum(axis=1).describe([0.1,0.5,0.9]).drop('count')
+        DV_tot = describe(np.sum(DV_df.values, axis=1))
         DV_i.update({'total':{}})
         for stat in DV_tot.index:
             DV_i['total'].update({stat: DV_tot.loc[stat]})
 
-        DV_stats = DV_df.describe([0.1,0.5,0.9]).drop('count')
+        #DV_stats = DV_df.describe([0.1,0.5,0.9]).drop('count')
+        DV_stats = describe(DV_df)
         for FG in sorted(DV_stats.columns.get_level_values('FG').unique()):
             DV_i.update({str(FG):{}})
 
@@ -2278,5 +2586,6 @@ def write_SimCenter_DV_output(output_dir, DV_filename, DV_df, DV_name):
     except:
         pass
 
-    with open(posixpath.join(output_dir, DV_filename), 'w') as f:
+    log_msg('\t\t\tSaving file {}'.format(DV_filename))
+    with open(DV_file_path, 'w') as f:
         json.dump(DV, f, indent = 2)

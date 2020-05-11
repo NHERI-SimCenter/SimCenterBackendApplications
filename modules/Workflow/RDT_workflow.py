@@ -41,15 +41,7 @@
 # Michael Gardner
 # Chaofeng Wang
 
-# import functions for Python 2.X support
-from __future__ import division, print_function
 import sys, os, json
-if sys.version.startswith('2'): 
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
-
 import argparse
 import json
 
@@ -60,7 +52,7 @@ from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry, 
          force_cleanup, bldg_id_range, reference_dir,
-         working_dir):
+         working_dir, log_file):
 
     # initialize the log file
     with open(input_file, 'r') as f:
@@ -72,9 +64,14 @@ def main(run_type, input_file, app_registry,
 
     if not os.path.exists(runDir):
         os.mkdir(runDir)
-    whale.log_file = runDir + '/log.txt'
+    if log_file == 'log.txt':
+        whale.log_file = runDir + '/log.txt'
+    else:
+        whale.log_file = log_file
     with open(whale.log_file, 'w') as f:
         f.write('RDT workflow\n') 
+
+    whale.print_system_info()
 
     # echo the inputs
     log_msg(log_div)
@@ -175,6 +172,9 @@ if __name__ == '__main__':
     workflowArgParser.add_argument("-w", "--workDir",
         default=os.getcwd(),
         help="Absolute path to the working directory. Overwrite the rundir setting in the config file.")
+    workflowArgParser.add_argument("-l", "--logFile",
+        default='log.txt',
+        help="Path where the log file will be saved.")
 
 
     #Parsing the command line arguments
@@ -192,4 +192,5 @@ if __name__ == '__main__':
          force_cleanup = wfArgs.forceCleanup,
          bldg_id_range = [wfArgs.Min, wfArgs.Max],
          reference_dir = wfArgs.referenceDir,
-         working_dir = wfArgs.workDir)
+         working_dir = wfArgs.workDir,
+         log_file = wfArgs.logFile)
