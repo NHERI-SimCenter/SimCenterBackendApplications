@@ -30,7 +30,7 @@ public:
     void readBIM(const char *fileEVENT, const char *fileBIM);
     void readBIM(const char *fileEVENT, const char *fileBIM, const char *fileSAM);
     void writeSAM(const char *path);
-    void writeRV(const char *path);
+    void writeRV(const char *path, double stdStiffness, double stdDamping);
 
     string GetHazusType();    
     static StruType s2StruType(string s);
@@ -57,6 +57,7 @@ public:
     vector <InterstoryParam> interstoryParams;
     vector <FloorParam> floorParams;
     double dampingRatio;
+    double dampingRatio_IN;
     double T0;
     double T2;
 

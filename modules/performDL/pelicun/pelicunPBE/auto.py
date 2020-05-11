@@ -50,14 +50,21 @@ from .base import *
 import json
 
 ap_DesignLevel = {
-    1950: 'Pre-Code',
-    1970: 'Low-Code',
-    1990: 'Moderate-Code',
+    1940: 'Pre-Code',
+    1940: 'Low-Code',
+    1975: 'Moderate-Code',
+    2100: 'High-Code'
+}
+
+ap_DesignLevel_W1 = {
+       0: 'Pre-Code',
+       0: 'Low-Code',
+    1975: 'Moderate-Code',
     2100: 'High-Code'
 }
 
 ap_Occupancy = {
-    'Other/Unknown': 'RES1',
+    'Other/Unknown': 'RES3',
     'Residential - Single-Family': 'RES1',
     'Residential - Town-Home': 'RES3',
     'Residential - Multi-Family': 'RES3',
@@ -121,7 +128,10 @@ def auto_populate(DL_input_path, EDP_input_path,
             else:
                 bt += 'H'
 
-        ot = ap_Occupancy[BIM_in['occupancy']]
+        if BIM_in['occupancy'] in ap_Occupancy.keys():
+            ot = ap_Occupancy[BIM_in['occupancy']]
+        else:
+            ot = BIM_in['occupancy']
 
         loss_dict = {
             '_method': DL_method,
@@ -132,7 +142,7 @@ def auto_populate(DL_input_path, EDP_input_path,
                 'DecisionVariables': {
                     'ReconstructionCost': True,
                     'ReconstructionTime': True,
-                    'Injuries': False
+                    'Injuries': True
                 },
                 'Inhabitants': {
                     'OccupancyType': ot,
@@ -146,43 +156,111 @@ def auto_populate(DL_input_path, EDP_input_path,
                 'Realizations': realization_count
                 },
                 "AdditionalUncertainty": {
-                    "GroundMotion": "0.15",
-                    "Modeling"    : "0.30"
+                    "GroundMotion": "0.10",
+                    "Modeling"    : "0.20"
+                },
+                "DetectionLimits": {
+                    "PFA": "50.0",
+                    "PID": "0.10"
                 }
+            },
+            "Dependencies": {
+                "Fragilities": "btw. Performance Groups"                
             }
         }
 
+        if 'W1' in bt:
+            DesignL = ap_DesignLevel_W1
+        else:
+            DesignL = ap_DesignLevel
 
-        for year in sorted(ap_DesignLevel.keys()):
+        for year in sorted(DesignL.keys()):
             if year_built <= year:
                 loss_dict['DamageModel'].update(
-                    {'DesignLevel': ap_DesignLevel[year]})
+                    {'DesignLevel': DesignL[year]})
                 break
+
         dl = convert_design_level[loss_dict['DamageModel']['DesignLevel']]
         if 'C3' in bt:
             if dl not in ['LC', 'PC']:
                 dl = 'LC'
+
+        def story_scale(stories, comp_type):
+            if comp_type == 'NSA':
+                if stories == 1:
+                    return 1.00
+                elif stories == 2:
+                    return 1.22
+                elif stories == 3:
+                    return 1.40
+                elif stories == 4:
+                    return 1.45
+                elif stories == 5:
+                    return 1.50
+                elif stories == 6:
+                    return 1.90
+                elif stories == 7:
+                    return 2.05
+                elif stories == 8:
+                    return 2.15
+                elif stories == 9:
+                    return 2.20
+                elif (stories >= 10) and (stories < 30):
+                    return 2.30 + (stories-10)*0.04
+                elif stories >= 30:
+                    return 3.10
+                else:
+                    return 1.0 
+
+            elif comp_type in ['S', 'NSD']:
+                if stories == 1:
+                    return 1.45
+                elif stories == 2:
+                    return 1.90
+                elif stories == 3:
+                    return 2.50
+                elif stories == 4:
+                    return 2.75
+                elif stories == 5:
+                    return 3.00
+                elif stories == 6:
+                    return 3.50
+                elif stories == 7:
+                    return 3.50
+                elif stories == 8:
+                    return 3.50
+                elif stories == 9:
+                    return 4.50
+                elif (stories >= 10) and (stories < 50):
+                    return 4.50 + (stories-10)*0.07
+                elif stories >= 50:
+                    return 7.30
+                else:
+                    return 1.0 
 
         loss_dict.update({
             'Components': {
                 'S-{}-{}-{}'.format(bt, dl ,ot) : [
                     {'location': 'all',
                      'direction': '1, 2',
-                     'median_quantity': '{q}'.format(q = 0.5/stories),
+                     #'median_quantity': '{q}'.format(q = 0.5), #/stories),
+                     'median_quantity': '{q}'.format(q = story_scale(stories, 'S')/stories/2.),
                      'unit': 'ea',
                      'distribution': 'N/A'
                     }],
                 'NSA-{}-{}'.format(dl ,ot): [
                     {'location': 'all',
                      'direction': '1',
-                     'median_quantity': '{q}'.format(q = 1.0/stories),
+                     #'median_quantity': '{q}'.format(q = 1.0), #/stories),
+                     'median_quantity': '{q}'.format(q = story_scale(stories, 'NSA')/stories),
                      'unit': 'ea',
                      'distribution': 'N/A'
                     }],
                 'NSD-{}'.format(ot): [
                     {'location': 'all',
                      'direction': '1, 2',
-                     'median_quantity': '{q}'.format(q = 0.5/stories),
+                     #'median_quantity': '{q}'.format(q = 0.5), #/stories),
+                     'median_quantity': '{q}'.format(q = story_scale(stories, 'NSD')/stories/2.),
                      'unit': 'ea',
                      'distribution': 'N/A'
                     }]

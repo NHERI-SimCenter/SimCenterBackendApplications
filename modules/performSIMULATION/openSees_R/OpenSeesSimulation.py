@@ -21,8 +21,8 @@ if (("-getRV" in inputArgs) or ("--getRV" in inputArgs)):
 else:
     #Run preprocessor
     preprocessorCommand = u'"{}/mainPreprocessor" {} {} {} {} example.tcl'.format(scriptDir, bimName, samName, evtName, edpName)
-    subprocess.Popen(preprocessorCommand, shell=True).wait()
-    
+    subprocess.Popen(preprocessorCommand, shell=True).wait() 
+
     #Run OpenSees
     subprocess.Popen("OpenSees example.tcl", shell=True).wait()
 

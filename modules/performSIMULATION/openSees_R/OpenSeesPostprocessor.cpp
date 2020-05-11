@@ -133,7 +133,8 @@ OpenSeesPostprocessor::processEDPs(){
 	  json_array_append(scalarValues,json_real(abs2Value));
 	  */
 
-	} else if (strcmp(type,"max_drift") == 0) {
+	} else if ((strcmp(type,"max_drift") == 0) || 
+		       (strcmp(type,"max_roof_drift") == 0)) {
 
 	  int cline = json_integer_value(json_object_get(response, "cline"));
 	  int floor1 = json_integer_value(json_object_get(response, "floor1"));

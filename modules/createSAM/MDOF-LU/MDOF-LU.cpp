@@ -16,6 +16,8 @@ int main(int argc, char **argv)
   char *filenameEVENT = 0;
   char *filenameSAM = 0;
   char *filenameHazusData = 0;
+  double stdStiffness = 0.1;
+  double stdDamping = 0.1;
   bool getRV = false;
 
   int arg = 1;
@@ -40,6 +42,16 @@ int main(int argc, char **argv)
       arg++;
       filenameHazusData = argv[arg];
     }
+    else if ((strcmp(argv[arg], "-stdStiffness") == 0) ||
+         (strcmp(argv[arg], "--stdStiffness") == 0)) {
+      arg++;
+      stdStiffness = atof(argv[arg]);
+    }
+    else if ((strcmp(argv[arg], "-stdDamping") == 0) ||
+         (strcmp(argv[arg], "--stdDamping") == 0)) {
+      arg++;
+      stdDamping = atof(argv[arg]);
+    }
     else if ((strcmp(argv[arg], "-getRV") == 0) ||
 		     (strcmp(argv[arg], "--getRV") == 0)) {
       getRV = true;
@@ -52,7 +64,7 @@ int main(int argc, char **argv)
   Building *theBuilding = new Building();
   
   if(getRV == true) {
-    theBuilding->writeRV(filenameSAM);
+    theBuilding->writeRV(filenameSAM, stdStiffness, stdDamping);
   } else {
     theBuilding->readBIM(filenameEVENT, filenameBIM, filenameSAM);
     aim->CalcBldgPara(theBuilding);

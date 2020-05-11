@@ -463,6 +463,8 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
      dakota_input += "  asynchronous evaluation_concurrency = {}\n".format(uqData['concurrency'])
   }
   */
+
+  return 0;
 }
 
 int
