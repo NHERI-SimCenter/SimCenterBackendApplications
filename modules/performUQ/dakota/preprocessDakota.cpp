@@ -254,7 +254,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
 
 int
-writeRV(std::ofstream &dakotaFile, struct randomVariables &theRandomVariables, std::string idVariables){ 
+writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, std::string idVariables){ 
 
 
   if (idVariables.empty())
@@ -466,7 +466,7 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
 }
 
 int
-writeResponse(std::ostream &dakotaFile, json_t *rootEDP, std::string idResponse) {
+writeResponse(std::ostream &dakotaFile, json_t *rootEDP,  std::string idResponse, bool numericalGradients = false, bool numericalHessians = false) {
 
   int numResponses = json_integer_value(json_object_get(rootEDP,"total_number_edp"));
 
@@ -475,7 +475,7 @@ writeResponse(std::ostream &dakotaFile, json_t *rootEDP, std::string idResponse)
   if (!idResponse.empty())
     dakotaFile << "  id_responses = '" << idResponse << "'\n";
 
-  dakotaFile << "  response_functions = " << numResponses << "\nresponse_descriptors = ";
+  dakotaFile << "  response_functions = " << numResponses << "\n response_descriptors = ";
 
   json_t *EDPs = json_object_get(rootEDP,"EngineeringDemandParameters");
   if (EDPs == NULL) {
@@ -542,11 +542,282 @@ writeResponse(std::ostream &dakotaFile, json_t *rootEDP, std::string idResponse)
       }
     }
   }
+  if (numericalGradients == true) 
+    dakotaFile << "\n numerical_gradients";
+  else
+    dakotaFile << "\n no_gradients";
 
-  dakotaFile << "\nno_gradients\nno_hessians\n\n";
+  if (numericalHessians == true) 
+    dakotaFile << "\n numerical_hessians\n\n";
+  else
+    dakotaFile << "\n no_hessians\n\n";
 
   return numResponses;
 }
+
+
+int
+writeDakotaInputFile(std::ostream &dakotaFile, 
+		     json_t *uqData, 
+		     json_t *rootEDP, 
+		     struct randomVariables &theRandomVariables, 
+		     std::string &workflowDriver) { 
+
+  const char *type = json_string_value(json_object_get(uqData, "uqType"));
+  
+  bool sensitivityAnalysis = false;
+  if (strcmp(type, "Sensitivity Analysis") == 0)
+    sensitivityAnalysis = true;
+
+  int numResponses = json_integer_value(json_object_get(rootEDP,"total_number_edp"));
+
+  //
+  // based on method do stuff
+  // 
+
+  if ((strcmp(type, "Forward Propagation") == 0) || sensitivityAnalysis == true) {
+
+    json_t *samplingMethodData = json_object_get(uqData,"samplingMethodData");
+
+    const char *method = json_string_value(json_object_get(samplingMethodData,"method"));
+
+    if (strcmp(method,"Monte Carlo")==0) {
+      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
+      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
+
+      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+      dakotaFile << "method, \n sampling \n sample_type = random \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
+
+      if (sensitivityAnalysis == true)
+	dakotaFile << "variance_based_decomp \n\n";
+
+      std::string emptyString;
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
+    }
+
+    else if (strcmp(method,"LHS")==0) {
+
+      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
+      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
+
+      std::cerr << numSamples << " " << seed;
+
+      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+      dakotaFile << "method,\n sampling\n sample_type = lhs \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
+
+      if (sensitivityAnalysis == true)
+	dakotaFile << "variance_based_decomp \n\n";
+
+      std::string emptyString;
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
+    }
+
+    else if (strcmp(method,"Importance Sampling")==0) {
+
+      const char *isMethod = json_string_value(json_object_get(samplingMethodData,"ismethod"));
+      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
+      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
+
+      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+      dakotaFile << "method, \n importance_sampling \n " << isMethod << " \n samples = " << numSamples << "\n seed = " << seed << "\n\n";
+
+      std::string emptyString;
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
+    }
+
+    else if (strcmp(method,"Gaussian Process Regression")==0) {
+
+      int trainingSamples = json_integer_value(json_object_get(samplingMethodData,"trainingSamples"));
+      int trainingSeed = json_integer_value(json_object_get(samplingMethodData,"trainingSeed"));
+      const char *trainMethod = json_string_value(json_object_get(samplingMethodData,"trainingMethod"));    
+      int samplingSamples = json_integer_value(json_object_get(samplingMethodData,"samplingSamples"));
+      int samplingSeed = json_integer_value(json_object_get(samplingMethodData,"samplingSeed"));
+      const char *sampleMethod = json_string_value(json_object_get(samplingMethodData,"samplingMethod"));
+
+      const char *surrogateMethod = json_string_value(json_object_get(samplingMethodData,"surrogateSurfaceMethod"));
+
+      std::string trainingMethod(trainMethod);
+      std::string samplingMethod(sampleMethod);
+      if (strcmp(trainMethod,"Monte Carlo") == 0)
+	trainingMethod = "random";
+      if (strcmp(sampleMethod,"Monte Carlo") == 0) 
+	samplingMethod = "random";
+
+
+      dakotaFile << "environment \n method_pointer = 'SurrogateMethod' \n tabular_data \n tabular_data_file = 'dakotaTab.out'\n";
+      dakotaFile << "custom_annotated header eval_id \n\n";
+
+      dakotaFile << "method \n id_method = 'SurrogateMethod' \n model_pointer = 'SurrogateModel'\n";
+      dakotaFile << " sampling \n samples = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
+		 << samplingMethod << "\n\n";
+
+      dakotaFile << "model \n id_model = 'SurrogateModel' \n surrogate global \n dace_method_pointer = 'TrainingMethod'\n "
+		 << surrogateMethod << "\n\n";
+
+      dakotaFile << "method \n id_method = 'TrainingMethod' \n model_pointer = 'TrainingModel'\n";
+      dakotaFile << " sampling \n samples = " << trainingSamples << "\n seed = " << trainingSeed << "\n sample_type = "
+		 << trainingMethod << "\n\n";
+
+      dakotaFile << "model \n id_model = 'TrainingModel' \n single \n interface_pointer = 'SimulationInterface'";
+
+      std::string emptyString;
+      std::string interfaceString("SimulationInterface");
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
+
+    }
+
+    else if (strcmp(method,"Polynomial Chaos Expansion")==0) {
+
+      const char *dataMethod = json_string_value(json_object_get(samplingMethodData,"dataMethod"));    
+      int intValue = json_integer_value(json_object_get(samplingMethodData,"level"));
+      int samplingSeed = json_integer_value(json_object_get(samplingMethodData,"samplingSeed"));
+      int samplingSamples = json_integer_value(json_object_get(samplingMethodData,"samplingSamples"));
+      const char *sampleMethod = json_string_value(json_object_get(samplingMethodData,"samplingMethod"));
+
+      std::string pceMethod;
+      if (strcmp(dataMethod,"Quadrature") == 0)
+	pceMethod = "quadrature_order = ";
+      else if (strcmp(dataMethod,"Smolyak Sparse_Grid") == 0)
+	pceMethod = "sparse_grid_level = ";
+      else if (strcmp(dataMethod,"Stroud Curbature") == 0)
+	pceMethod = "cubature_integrand = ";
+      else if (strcmp(dataMethod,"Orthogonal Least_Interpolation") == 0)
+	pceMethod = "orthogonal_least_squares collocation_points = ";
+      else
+	pceMethod = "quadrature_order = ";
+
+      std::string samplingMethod(sampleMethod);
+      if (strcmp(sampleMethod,"Monte Carlo") == 0) 
+	samplingMethod = "random";
+
+      dakotaFile << "environment \n  tabular_data \n tabular_data_file = 'a.out'\n\n"; // a.out for trial data
+
+      std::string emptyString;
+      std::string interfaceString("SimulationInterface");
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
+      int numResponse = writeResponse(dakotaFile, rootEDP, emptyString);
+
+      dakotaFile << "method \n polynomial_chaos \n " << pceMethod << intValue;
+      dakotaFile << "\n samples_on_emulator = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
+		 << samplingMethod << "\n";
+      dakotaFile << " probability_levels = ";
+      for (int i=0; i<numResponse; i++)
+	dakotaFile << " .1 .5 .9 ";
+      dakotaFile << "\n export_approx_points_file = 'dakotaTab.out'\n\n"; // dakotaTab.out for surrogate evaluations
+    }
+
+  } else if ((strcmp(type, "Reliability Analysis") == 0)) {
+
+    json_t *reliabilityMethodData = json_object_get(uqData,"reliabilityMethodData");
+
+    const char *method = json_string_value(json_object_get(reliabilityMethodData,"method"));
+
+    if (strcmp(method,"Local Reliability")==0) {
+
+      const char *localMethod = json_string_value(json_object_get(reliabilityMethodData,"localMethod"));    
+      const char *mppMethod = json_string_value(json_object_get(reliabilityMethodData,"mpp_Method"));    
+      const char *levelType = json_string_value(json_object_get(reliabilityMethodData,"levelType"));    
+      const char *integrationMethod = json_string_value(json_object_get(reliabilityMethodData,"integrationMethod"));    
+
+      std::string intMethod;
+      if (strcmp(integrationMethod,"First Order") == 0)
+	intMethod = "first_order";
+      else
+	intMethod = "second_order ";
+
+      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+      if (strcmp(localMethod,"Mean Value") == 0) {
+	dakotaFile << "method, \n local_reliability \n";	  
+      } else {
+	dakotaFile << "method, \n local_reliability \n mpp_search " << mppMethod 
+		   << " \n integration " << intMethod << " \n";
+      }
+
+      json_t *levels =  json_object_get(reliabilityMethodData, "probabilityLevel");
+      if (levels == NULL) {
+	return 0; 
+      }
+
+      int numLevels = json_array_size(levels);
+      if (strcmp(levelType, "Probability Levels") == 0) 
+	dakotaFile << " \n num_probability_levels = ";
+      else 
+	dakotaFile << " \n num_response_levels = ";
+
+      for (int i=0; i<numResponses; i++) 
+	dakotaFile << numLevels << " ";
+
+      if (strcmp(levelType, "Probability Levels") == 0) 	
+	dakotaFile << " \n probability_levels = " ;
+      else
+	dakotaFile << " \n response_levels = " ;
+
+      for (int j=0; j<numResponses; j++) {
+	for (int i=0; i<numLevels; i++) {
+	    json_t *responseLevel = json_array_get(levels,i);
+	    double val = json_number_value(responseLevel);
+	    dakotaFile << val << " ";
+	  }
+	dakotaFile << "\n\t";
+      }
+      dakotaFile << "\n\n";
+
+      std::string emptyString;
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString, true, false);
+    }
+
+    else if (strcmp(method,"Global Reliability")==0) {
+
+      int seed = json_integer_value(json_object_get(reliabilityMethodData,"seed"));    
+      const char *gp = json_string_value(json_object_get(reliabilityMethodData,"gpApproximation"));    
+      json_t *levels =  json_object_get(reliabilityMethodData, "responseLevel");
+      if (levels == NULL) {
+	return 0; 
+      }
+      int numLevels = json_array_size(levels);
+
+      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+      dakotaFile << "method, \n global_reliability " << gp << " \n seed " << seed;
+
+      dakotaFile << " \n num_response_levels = ";
+      for (int i=0; i<numResponses; i++) 
+	dakotaFile << numLevels << " ";
+
+      dakotaFile << " \n response_levels = " ;
+      for (int j=0; j<numResponses; j++) {
+	for (int i=0; i<numLevels; i++) {
+	  json_t *responseLevel = json_array_get(levels,i);
+	  double val = json_number_value(responseLevel);
+	  dakotaFile << val << " ";
+	}
+	dakotaFile << "\n\t";
+      }
+      dakotaFile << "\n\n";
+
+      std::string emptyString;
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString, true, false);
+    }
+
+  } else {
+    std::cerr << "uqType: NOT KNOWN\n";
+    return -1;
+  }
+  return 0;
+}
+
 
 
 int main(int argc, const char **argv) {
@@ -717,166 +988,13 @@ int main(int argc, const char **argv) {
     exit(-1); // no random variables is allowed
   }
 
-  const char *type = json_string_value(json_object_get(uqData, "uqType"));
-  
-  bool sensitivityAnalysis = false;
-  if (strcmp(type, "Sensitivity Analysis") == 0)
-    sensitivityAnalysis = true;
-
-
-  //
-  // based on method do stuff
-  // 
-
-  if ((strcmp(type, "Forward Propagation") == 0) || sensitivityAnalysis == true) {
-
-    json_t *samplingMethodData = json_object_get(uqData,"samplingMethodData");
-
-    const char *method = json_string_value(json_object_get(samplingMethodData,"method"));
-
-    if (strcmp(method,"Monte Carlo")==0) {
-      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
-      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
-
-      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-      dakotaFile << "method, \n sampling \n sample_type = random \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
-
-      if (sensitivityAnalysis == true)
-	dakotaFile << "variance_based_decomp \n\n";
-
-      std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
-      writeResponse(dakotaFile, rootEDP, emptyString);
-    }
-
-    else if (strcmp(method,"LHS")==0) {
-
-      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
-      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
-
-      std::cerr << numSamples << " " << seed;
-
-      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-      dakotaFile << "method,\n sampling\n sample_type = lhs \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
-
-      if (sensitivityAnalysis == true)
-	dakotaFile << "variance_based_decomp \n\n";
-
-      std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
-      writeResponse(dakotaFile, rootEDP, emptyString);
-    }
-
-    else if (strcmp(method,"Importance Sampling")==0) {
-
-      const char *isMethod = json_string_value(json_object_get(samplingMethodData,"ismethod"));
-      int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
-      int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
-
-      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-      dakotaFile << "method, \n importance_sampling \n " << isMethod << " \n samples = " << numSamples << "\n seed = " << seed << "\n\n";
-
-      std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
-      writeResponse(dakotaFile, rootEDP, emptyString);
-    }
-
-    else if (strcmp(method,"Gaussian Process Regression")==0) {
-
-      int trainingSamples = json_integer_value(json_object_get(samplingMethodData,"trainingSamples"));
-      int trainingSeed = json_integer_value(json_object_get(samplingMethodData,"trainingSeed"));
-      const char *trainMethod = json_string_value(json_object_get(samplingMethodData,"trainingMethod"));    
-      int samplingSamples = json_integer_value(json_object_get(samplingMethodData,"samplingSamples"));
-      int samplingSeed = json_integer_value(json_object_get(samplingMethodData,"samplingSeed"));
-      const char *sampleMethod = json_string_value(json_object_get(samplingMethodData,"samplingMethod"));
-
-      const char *surrogateMethod = json_string_value(json_object_get(samplingMethodData,"surrogateSurfaceMethod"));
-
-      std::string trainingMethod(trainMethod);
-      std::string samplingMethod(sampleMethod);
-      if (strcmp(trainMethod,"Monte Carlo") == 0)
-	trainingMethod = "random";
-      if (strcmp(sampleMethod,"Monte Carlo") == 0) 
-	samplingMethod = "random";
-
-
-      dakotaFile << "environment \n method_pointer = 'SurrogateMethod' \n tabular_data \n tabular_data_file = 'dakotaTab.out'\n";
-      dakotaFile << "custom_annotated header eval_id \n\n";
-
-      dakotaFile << "method \n id_method = 'SurrogateMethod' \n model_pointer = 'SurrogateModel'\n";
-      dakotaFile << " sampling \n samples = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
-		 << samplingMethod << "\n\n";
-
-      dakotaFile << "model \n id_model = 'SurrogateModel' \n surrogate global \n dace_method_pointer = 'TrainingMethod'\n "
-		 << surrogateMethod << "\n\n";
-
-      dakotaFile << "method \n id_method = 'TrainingMethod' \n model_pointer = 'TrainingModel'\n";
-      dakotaFile << " sampling \n samples = " << trainingSamples << "\n seed = " << trainingSeed << "\n sample_type = "
-		 << trainingMethod << "\n\n";
-
-      dakotaFile << "model \n id_model = 'TrainingModel' \n single \n interface_pointer = 'SimulationInterface'";
-
-      std::string emptyString;
-      std::string interfaceString("SimulationInterface");
-      writeRV(dakotaFile, theRandomVariables, emptyString);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
-      writeResponse(dakotaFile, rootEDP, emptyString);
-
-    }
-
-    else if (strcmp(method,"Polynomial Chaos Expansion")==0) {
-
-      const char *dataMethod = json_string_value(json_object_get(samplingMethodData,"dataMethod"));    
-      int intValue = json_integer_value(json_object_get(samplingMethodData,"level"));
-      int samplingSeed = json_integer_value(json_object_get(samplingMethodData,"samplingSeed"));
-      int samplingSamples = json_integer_value(json_object_get(samplingMethodData,"samplingSamples"));
-      const char *sampleMethod = json_string_value(json_object_get(samplingMethodData,"samplingMethod"));
-
-      std::string pceMethod;
-      if (strcmp(dataMethod,"Quadrature") == 0)
-	pceMethod = "quadrature_order = ";
-      else if (strcmp(dataMethod,"Smolyak Sparse_Grid") == 0)
-	pceMethod = "sparse_grid_level = ";
-      else if (strcmp(dataMethod,"Stroud Curbature") == 0)
-	pceMethod = "cubature_integrand = ";
-      else if (strcmp(dataMethod,"Orthogonal Least_Interpolation") == 0)
-	pceMethod = "orthogonal_least_squares collocation_points = ";
-      else
-	pceMethod = "quadrature_order = ";
-
-      std::string samplingMethod(sampleMethod);
-      if (strcmp(sampleMethod,"Monte Carlo") == 0) 
-	samplingMethod = "random";
-
-      dakotaFile << "environment \n  tabular_data \n tabular_data_file = 'a.out'\n\n"; // a.out for trial data
-
-      std::string emptyString;
-      std::string interfaceString("SimulationInterface");
-      writeRV(dakotaFile, theRandomVariables, emptyString);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
-      int numResponse = writeResponse(dakotaFile, rootEDP, emptyString);
-
-      dakotaFile << "method \n polynomial_chaos \n " << pceMethod << intValue;
-      dakotaFile << "\n samples_on_emulator = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
-		 << samplingMethod << "\n";
-      dakotaFile << " probability_levels = ";
-      for (int i=0; i<numResponse; i++)
-	dakotaFile << " .1 .5 .9 ";
-      dakotaFile << "\n export_approx_points_file = 'dakotaTab.out'\n\n"; // dakotaTab.out for surrogate evaluations
-    }
-
-  } else {
-    std::cerr << "uqType: NOT KNOWN\n";
-    exit(800);
-  }
+  int errorWrite = writeDakotaInputFile(dakotaFile, uqData, rootEDP, theRandomVariables, workflowDriver);
 
   dakotaFile.close();
   std::cerr << "NUM RV: " << theRandomVariables.numRandomVariables << "\n";
   std::cerr << "DONE PREPROCESSOR .. DONE\n";
-  exit(0);
+
+  exit(errorWrite);
 }
 
 
