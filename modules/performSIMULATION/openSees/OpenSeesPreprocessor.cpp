@@ -241,7 +241,7 @@ OpenSeesPreprocessor::processSections(ofstream &s) {
 
 int 
 OpenSeesPreprocessor::processNodes(ofstream &s){
-  std::cerr << "ProcessingNodes\n";
+
   int index;
   json_t *node;
 
@@ -323,7 +323,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
 
 int 
 OpenSeesPreprocessor::processElements(ofstream &s){
-  std::cerr << "ProcessingElements\n";
+
   int index;
   json_t *element;
 
@@ -488,14 +488,15 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
     if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
 
-      double damping = json_number_value(json_object_get(rootSIM,"dampingRatio"));	
+      double damping = json_real_value(json_object_get(rootSIM,"dampingRatio"));
+
       int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
       int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));	
       const char *dampingTangent = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
       int KcurrSwitch = 0;
       int KcommSwitch = 0;
       int KinitSwitch = 0;
-      
+
       if (strcmp(dampingTangent,"Initial"))
 	KinitSwitch = 1;
       else if (strcmp(dampingTangent,"Current"))
