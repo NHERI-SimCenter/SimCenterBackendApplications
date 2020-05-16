@@ -119,6 +119,8 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		else:
 			occupancy = bldg[occupancy_label]
 
+		population = bldg.get('population', 1.0)
+
 		BIM_i = {
 		    "RandomVariables": [],
 		    "GI": dict(
@@ -136,7 +138,8 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		        occupancy       = occupancy,
 		        height          = height, #the height is always in [m] already
 		        replacementCost = bldg[cost_label],
-		        replacementTime = 1.0 
+		        replacementTime = 1.0,
+		        population      = population,
 		        units           = units
 		    )
 		}
