@@ -59,15 +59,18 @@ def get_label(options, labels, label_name):
 
 	print(f'ERROR: Could not identify the label for the {label_name}')
 
-def create_building_files(output_file, building_source_file, min_id, max_id, lengthUnit):
+def create_building_files(output_file, building_source_file, min_id, max_id):
 	
 	import numpy as np
 	import pandas as pd
 
-	if lengthUnit == None:
-		lengthUnit = 'm'
-	length_scale = globals()[lengthUnit]
-	area_scale = globals()[lengthUnit+'2']
+	# get the units
+	main_dir = posixpath.dirname(output_file)
+	with open(posixpath.join(main_dir, 'units.json'), 'r') as f:
+		units = json.load(f)
+
+	length_scale = globals()[units['length']]
+	area_scale = globals()[units['length']+'2']
 
 	# check if the min and max values are provided in the right order
 	if (min_id is not None) and (max_id is not None):
@@ -134,6 +137,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id, len
 		        height          = height, #the height is always in [m] already
 		        replacementCost = bldg[cost_label],
 		        replacementTime = 1.0 
+		        units           = units
 		    )
 		}
 
@@ -160,12 +164,11 @@ if __name__ == '__main__':
     parser.add_argument('--buildingSourceFile')
     parser.add_argument('--Min', default=None)
     parser.add_argument('--Max', default=None)
-    parser.add_argument('--lengthUnit', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
     if args.getRV:
         sys.exit(create_building_files(args.buildingFile, args.buildingSourceFile,
-            int(args.Min), int(args.Max), args.lengthUnit))
+            int(args.Min), int(args.Max)))
     else:
         pass # not used
