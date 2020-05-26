@@ -167,7 +167,7 @@ int main(int argc, const char **argv) {
   }
 
   //
-  // get UQ Method data
+  // write dakota file
   // 
   
   json_t *uqData =  json_object_get(rootINPUT, "UQ_Method");
