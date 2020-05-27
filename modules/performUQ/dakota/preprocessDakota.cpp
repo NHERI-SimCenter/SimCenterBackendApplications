@@ -22,8 +22,11 @@ int main(int argc, const char **argv) {
   struct randomVariables theRandomVariables;
   theRandomVariables.numRandomVariables = 0;
 
+for (int i=0; i<=8; i++)
+    std::cerr << i << " " << argv[i] << "\n";
+
   std::string workflowDriver = "workflow_driver";
-  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"Local") == 0))
+  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"run") == 0))
     workflowDriver = "workflow_driver.bat";
 
 
@@ -55,7 +58,7 @@ int main(int argc, const char **argv) {
   const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
   const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));
 
-  if (strcmp(runType, "local")) {
+  if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
     dpreproCommand = localDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
   } else {
     dpreproCommand = remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
@@ -145,7 +148,7 @@ int main(int argc, const char **argv) {
   }
 
   std::string extractEDP;
-  if (strcmp(runType, "local")) {
+    if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
     extractEDP = localDir + std::string("/applications/performUQ/dakota/extractEDP");
   } else {
     extractEDP = remoteDir + std::string("/applications/performUQ/dakota/extractEDP");
