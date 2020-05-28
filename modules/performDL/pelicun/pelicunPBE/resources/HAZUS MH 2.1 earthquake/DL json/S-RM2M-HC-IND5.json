@@ -14,7 +14,7 @@
   },
   "DSGroups": [
     {
-      "MedianEDP": 0.0027,
+      "MedianEDP": 0.004,
       "Beta": 0.4,
       "CurveType": "LogNormal",
       "DSGroupType": "Single",
@@ -37,10 +37,12 @@
               }
             ],
             "ReconstructionCost": {
-              "Amount": 0.004
+              "Amount": 0.004,
+              "CurveType": "N/A"
             },
             "ReconstructionTime": {
-              "Amount": 20
+              "Amount": 20,
+              "CurveType": "N/A"
             }
           },
           "Description": "Slight"
@@ -48,7 +50,7 @@
       ]
     },
     {
-      "MedianEDP": 0.0053,
+      "MedianEDP": 0.008,
       "Beta": 0.4,
       "CurveType": "LogNormal",
       "DSGroupType": "Single",
@@ -71,10 +73,12 @@
               }
             ],
             "ReconstructionCost": {
-              "Amount": 0.016
+              "Amount": 0.016,
+              "CurveType": "N/A"
             },
             "ReconstructionTime": {
-              "Amount": 45
+              "Amount": 45,
+              "CurveType": "N/A"
             }
           },
           "Description": "Moderate"
@@ -82,7 +86,7 @@
       ]
     },
     {
-      "MedianEDP": 0.016,
+      "MedianEDP": 0.024,
       "Beta": 0.4,
       "CurveType": "LogNormal",
       "DSGroupType": "Single",
@@ -105,10 +109,12 @@
               }
             ],
             "ReconstructionCost": {
-              "Amount": 0.078
+              "Amount": 0.078,
+              "CurveType": "N/A"
             },
             "ReconstructionTime": {
-              "Amount": 180
+              "Amount": 180,
+              "CurveType": "N/A"
             }
           },
           "Description": "Extensive"
@@ -116,7 +122,7 @@
       ]
     },
     {
-      "MedianEDP": 0.0467,
+      "MedianEDP": 0.07,
       "Beta": 0.4,
       "CurveType": "LogNormal",
       "DSGroupType": "MutuallyExclusive",
@@ -139,10 +145,12 @@
               }
             ],
             "ReconstructionCost": {
-              "Amount": 0.157
+              "Amount": 0.157,
+              "CurveType": "N/A"
             },
             "ReconstructionTime": {
-              "Amount": 360
+              "Amount": 360,
+              "CurveType": "N/A"
             }
           },
           "Description": "Complete"
@@ -165,10 +173,12 @@
               }
             ],
             "ReconstructionCost": {
-              "Amount": 0.157
+              "Amount": 0.157,
+              "CurveType": "N/A"
             },
             "ReconstructionTime": {
-              "Amount": 360
+              "Amount": 360,
+              "CurveType": "N/A"
             }
           },
           "Description": "Collapse"

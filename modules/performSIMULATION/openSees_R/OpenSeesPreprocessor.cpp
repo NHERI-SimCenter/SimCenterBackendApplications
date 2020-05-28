@@ -469,7 +469,8 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     			s << " accel\n";
     		  }
 
-    		  else if (strcmp(type,"max_drift") == 0) {
+    		else if ((strcmp(type,"max_drift") == 0) || 
+                 (strcmp(type,"max_roof_drift") == 0)) {
     			int cline = json_integer_value(json_object_get(response, "cline"));
     			int floor1 = json_integer_value(json_object_get(response, "floor1"));
     			int floor2 = json_integer_value(json_object_get(response, "floor2"));
@@ -526,7 +527,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     if (analysisType == 1) {
       //      s << "handler Plain\n";
       s << "numberer RCM\n";
-      s << "system BandGen\n";
+      s << "system BandSPD\n";
+      s << "test NormDispIncr 1e-6 100\n";
+      s << "algorithm NewtonLineSearch\n";      
+      s << "integrator Newmark 0.5 0.25\n";
+
 
       if (filenameUQ != 0) {
 	printf("HI filenameUQ %s\n", filenameUQ);
