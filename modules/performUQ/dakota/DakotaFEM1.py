@@ -131,7 +131,7 @@ def main(args):
     # change dir to the main working dir for the structure
     os.chdir("../")
 
-    if runDakota == "run":
+    if runDakota == "runningLocal":
 
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
         print('running Dakota: ', dakotaCommand)

@@ -5,8 +5,11 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <thread>
+#include <vector>
 
 #include "dakotaProcedures.h"
+
 
 int main(int argc, const char **argv) {
 
@@ -22,17 +25,18 @@ int main(int argc, const char **argv) {
   struct randomVariables theRandomVariables;
   theRandomVariables.numRandomVariables = 0;
 
-for (int i=0; i<=8; i++)
+  for (int i=0; i<=8; i++)
     std::cerr << i << " " << argv[i] << "\n";
-
-  std::string workflowDriver = "workflow_driver";
-  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"run") == 0))
-    workflowDriver = "workflow_driver.bat";
 
 
   //
   // open workflow driver 
   //
+
+  std::string workflowDriver = "workflow_driver";
+  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"runningLocal") == 0))
+    workflowDriver = "workflow_driver.bat";
+
 
   std::ofstream workflowDriverFile(workflowDriver);
 
@@ -58,7 +62,7 @@ for (int i=0; i<=8; i++)
   const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
   const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));
 
-  if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
+  if ((strcmp(runType, "local") == 0) || (strcmp(runType,"runningLocal") == 0)) {
     dpreproCommand = localDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
   } else {
     dpreproCommand = remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
@@ -179,7 +183,24 @@ for (int i=0; i<=8; i++)
     exit(-1); // no random variables is allowed
   }
 
-  int errorWrite = writeDakotaInputFile(dakotaFile, uqData, rootEDP, theRandomVariables, workflowDriver);
+  std::vector<std::string> edpList;
+  std::vector<std::string> rvList;
+
+  int evalConcurrency = 0;
+  if (strcmp(runType,"runningLocal") == 0) {
+    evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency();
+    std::cerr << "EVAL: " << evalConcurrency << "\n";
+  }
+
+
+  int errorWrite = writeDakotaInputFile(dakotaFile, 
+					uqData, 
+					rootEDP, 
+					theRandomVariables, 
+					workflowDriver,
+					rvList,
+					edpList,
+					evalConcurrency);
 
   dakotaFile.close();
   std::cerr << "NUM RV: " << theRandomVariables.numRandomVariables << "\n";
