@@ -118,7 +118,7 @@ def main(args):
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
-    if ((platform.system() == 'Windows') and (runDakota == 'run')):
+    if ((platform.system() == 'Windows') and (runDakota == 'runningLocal')):
         workflowDriverName = 'workflow_driver.bat'
 
     #Change permision of workflow driver
