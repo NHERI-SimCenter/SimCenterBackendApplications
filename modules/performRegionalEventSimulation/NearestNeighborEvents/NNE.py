@@ -46,12 +46,24 @@ from numpy.random import multinomial
 
 from sklearn.neighbors import NearestNeighbors
 
-def find_neighbors(building_file, event_metadata, samples, neighbors):
-    
-    meta_df = pd.read_csv(event_metadata, sep='\s+',header=0)
-    
-    lat_E = meta_df['lat']
-    lon_E = meta_df['lon']
+# distance, area, volume
+m = 1.
+
+mm = 0.001 * m
+cm = 0.01 * m
+km = 1000. * m
+
+inch = 0.0254
+ft = 12. * inch
+
+# acceleration
+mps2 = m
+
+inchps2 = inch
+ftps2 = ft
+
+g = 9.80665 * mps2
+
 def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label):
     
     # read the event grid data file
@@ -99,6 +111,19 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         bldg_file = bim_df.iloc[bim_id]['file']
         with open(bldg_file, 'r') as f:
             bldg_data = json.load(f)
+
+        # temporary - check the acceleration unit for time history analysis
+        acc_unit = bldg_data['GI']['units'].get('acceleration', None)
+        length_unit = bldg_data['GI']['units'].get('length', None)
+        if acc_unit is not None:
+            if acc_unit == 'inps2':
+                acc_unit = 'inchps2'
+            if length_unit == 'in':
+                length_unit = 'inch'
+
+            acc_scale = globals()[acc_unit] / globals()[length_unit]
+        else:
+            acc_scale = 1.0
         # calculate the weights for each neighbor based on their distance
         dist_list = 1./(dist_list**2.0)
         weights = np.array(dist_list)/np.sum(dist_list)
