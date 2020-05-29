@@ -10,6 +10,7 @@ add_subdirectory(windTunnelExperiment)
 add_subdirectory(LowRiseTPU)
 add_subdirectory(pointWindSpeed)
 add_subdirectory(LLNL_SW4)
+add_subdirectory(SimCenterEvent)
 add_subdirectory(ASCE7_WindSpeed)
 
 
