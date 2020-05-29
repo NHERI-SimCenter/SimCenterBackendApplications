@@ -69,6 +69,8 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 	with open(posixpath.join(main_dir, 'units.json'), 'r') as f:
 		units = json.load(f)
 
+	if units['length'] == 'in':
+		units['length'] = 'inch'
 	length_scale = globals()[units['length']]
 	area_scale = globals()[units['length']+'2']
 
