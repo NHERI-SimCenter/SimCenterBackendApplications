@@ -5,8 +5,11 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <thread>
+#include <vector>
 
 #include "dakotaProcedures.h"
+
 
 int main(int argc, const char **argv) {
 
@@ -22,14 +25,18 @@ int main(int argc, const char **argv) {
   struct randomVariables theRandomVariables;
   theRandomVariables.numRandomVariables = 0;
 
-  std::string workflowDriver = "workflow_driver";
-  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"Local") == 0))
-    workflowDriver = "workflow_driver.bat";
+  for (int i=0; i<=8; i++)
+    std::cerr << i << " " << argv[i] << "\n";
 
 
   //
   // open workflow driver 
   //
+
+  std::string workflowDriver = "workflow_driver";
+  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"runningLocal") == 0))
+    workflowDriver = "workflow_driver.bat";
+
 
   std::ofstream workflowDriverFile(workflowDriver);
 
@@ -55,7 +62,7 @@ int main(int argc, const char **argv) {
   const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
   const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));
 
-  if (strcmp(runType, "local")) {
+  if ((strcmp(runType, "local") == 0) || (strcmp(runType,"runningLocal") == 0)) {
     dpreproCommand = localDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
   } else {
     dpreproCommand = remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
@@ -145,7 +152,7 @@ int main(int argc, const char **argv) {
   }
 
   std::string extractEDP;
-  if (strcmp(runType, "local")) {
+    if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
     extractEDP = localDir + std::string("/applications/performUQ/dakota/extractEDP");
   } else {
     extractEDP = remoteDir + std::string("/applications/performUQ/dakota/extractEDP");
@@ -167,7 +174,7 @@ int main(int argc, const char **argv) {
   }
 
   //
-  // get UQ Method data
+  // write dakota file
   // 
   
   json_t *uqData =  json_object_get(rootINPUT, "UQ_Method");
@@ -176,7 +183,24 @@ int main(int argc, const char **argv) {
     exit(-1); // no random variables is allowed
   }
 
-  int errorWrite = writeDakotaInputFile(dakotaFile, uqData, rootEDP, theRandomVariables, workflowDriver);
+  std::vector<std::string> edpList;
+  std::vector<std::string> rvList;
+
+  int evalConcurrency = 0;
+  if (strcmp(runType,"runningLocal") == 0) {
+    evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency();
+    std::cerr << "EVAL: " << evalConcurrency << "\n";
+  }
+
+
+  int errorWrite = writeDakotaInputFile(dakotaFile, 
+					uqData, 
+					rootEDP, 
+					theRandomVariables, 
+					workflowDriver,
+					rvList,
+					edpList,
+					evalConcurrency);
 
   dakotaFile.close();
   std::cerr << "NUM RV: " << theRandomVariables.numRandomVariables << "\n";

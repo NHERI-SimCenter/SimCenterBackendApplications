@@ -10,4 +10,6 @@
 700, DL application failed
 800, UQ application failed
 801, UQ application failed to open input file
-802, UQ application failed, missing sections in JSON 
+802, UQ application failed to create input file for UQ engine
+803, UQ application failed, missing sections in JSON 
+803, UQ application failed, no EngineeringDemandParameters in evt file

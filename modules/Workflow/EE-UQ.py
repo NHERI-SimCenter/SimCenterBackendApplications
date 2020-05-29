@@ -388,7 +388,7 @@ def main(run_type, inputFile, applicationsRegistry):
             else:
                 uqAppDataList.append(u'' + str(value))
 
-        if run_type == 'run' or run_type == 'set_up':
+        if run_type == 'run' or run_type == 'set_up' or run_type == 'runningRemote':
             workflow_log('Running Simulation...')
             workflow_log(' '.join(uqAppDataList))
             command, result, returncode = runApplication(uqAppDataList)

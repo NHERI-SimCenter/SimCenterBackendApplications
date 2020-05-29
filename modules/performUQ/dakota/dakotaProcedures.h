@@ -1,3 +1,6 @@
+
+#define OVERSUBSCRIBE_CORE_MULTIPLIER 1
+
 struct normalRV {
   std::string name;
   double mean;
@@ -78,21 +81,27 @@ int parseForRV(json_t *root,
 
 int writeRV(std::ostream &dakotaFile, 
 	    struct randomVariables &theRandomVariables, 
-	    std::string idVariables);
+	    std::string idVariables,
+	    std::vector<std::string> &rvList);
 
 int writeInterface(std::ostream &dakotaFile, 
 		   json_t *uqData, 
 		   std::string &workflowDriver, 
-		   std::string idInterface);
+		   std::string idInterface,
+		   int evalConcurrency);
 
 int writeResponse(std::ostream &dakotaFile, 
 		  json_t *rootEDP,  
 		  std::string idResponse, 
 		  bool numericalGradients, 
-		  bool numericalHessians);
+		  bool numericalHessians,
+		  std::vector<std::string> &edpList);
 
 int writeDakotaInputFile(std::ostream &dakotaFile, 
 			 json_t *uqData, 
 			 json_t *rootEDP, 
 			 struct randomVariables &theRandomVariables, 
-			 std::string &workflowDriver);
+			 std::string &workflowDriver,
+			 std::vector<std::string> &rvList,
+			 std::vector<std::string> &edpList,
+			 int evalConcurrency);
