@@ -76,6 +76,10 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
     # prepare the tree for the nearest neighbor search
+    if filter_label != "":
+        neighbors_to_get = min(neighbors*10, len(lon_E))
+    else:
+        neighbors_to_get = neighbors
     nbrs = NearestNeighbors(n_neighbors = neighbors_to_get, algorithm='ball_tree').fit(X)
 
     # load the building data file
@@ -124,6 +128,27 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
             acc_scale = globals()[acc_unit] / globals()[length_unit]
         else:
             acc_scale = 1.0
+
+        if filter_label != '':
+            # soil type of building
+            bldg_label = bldg_data['GI'][filter_label]
+            # soil types of all initial neighbors
+            grid_label = grid_df[filter_label][ind_list]
+            
+            # only keep the distances and indices corresponding to neighbors 
+            # with the same soil type
+            dist_list  = dist_list[(grid_label==bldg_label).values]
+            ind_list   = ind_list[(grid_label==bldg_label).values]
+
+            # return dist_list & ind_list with a length equals neighbors
+            # assuming that at least neighbors grid points exist with 
+            # the same filter_label as the building
+            
+            # because dist_list, ind_list sorted initially in order of increasing 
+            # distance, just take the first neighbors grid points of each
+            dist_list = dist_list[:neighbors]
+            ind_list = ind_list[:neighbors]
+
         # calculate the weights for each neighbor based on their distance
         dist_list = 1./(dist_list**2.0)
         weights = np.array(dist_list)/np.sum(dist_list)
@@ -224,7 +249,8 @@ if __name__ == '__main__':
     parser.add_argument('--filenameEVENTgrid')
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
+    parser.add_argument('--filter_label', default="")
     args = parser.parse_args()
 
     find_neighbors(args.buildingFile, args.filenameEVENTgrid,
-                   args.samples,args.neighbors)
+                   args.samples,args.neighbors, args.filter_label)
