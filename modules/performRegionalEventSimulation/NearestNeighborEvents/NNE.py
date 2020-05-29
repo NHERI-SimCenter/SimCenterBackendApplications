@@ -52,15 +52,26 @@ def find_neighbors(building_file, event_metadata, samples, neighbors):
     
     lat_E = meta_df['lat']
     lon_E = meta_df['lon']
+def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label):
+    
+    # read the event grid data file
+    grid_df = pd.read_csv(event_grid_file, sep='\s+',header=0)
+    event_dir = posixpath.dirname(event_grid_file)
+    
+    # store the locations of the grid points in X
+    lat_E = grid_df['lat']
+    lon_E = grid_df['lon']
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
-    nbrs = NearestNeighbors(n_neighbors = neighbors, algorithm='ball_tree').fit(X)
+    # prepare the tree for the nearest neighbor search
+    nbrs = NearestNeighbors(n_neighbors = neighbors_to_get, algorithm='ball_tree').fit(X)
 
+    # load the building data file
     with open(building_file, 'r') as f:
         bldg_dict = json.load(f)
 
+    # prepare a dataframe that holds building filenames and locations
     bim_df = pd.DataFrame(columns=['lat', 'lon', 'file'], index=np.arange(len(bldg_dict)))
-
     for i, bldg in enumerate(bldg_dict):
         with open(bldg['file'], 'r') as f:
             bldg_data = json.load(f)
@@ -73,62 +84,109 @@ def find_neighbors(building_file, event_metadata, samples, neighbors):
         bim_df.iloc[i]['lat'] = bldg_loc['latitude']
         bim_df.iloc[i]['file'] = bldg['file']
 
+    # store building locations in Y
     Y = np.array([[lo, la] for lo, la in zip(bim_df['lon'], bim_df['lat'])])
 
+    # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
 
-    for i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index, 
+    # iterate through the buildings and store the selected events in the BIM
+    for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index, 
                                                           distances, 
                                                           indices)):
 
+        # open the BIM file
+        bldg_file = bim_df.iloc[bim_id]['file']
+        with open(bldg_file, 'r') as f:
+            bldg_data = json.load(f)
+        # calculate the weights for each neighbor based on their distance
         dist_list = 1./(dist_list**2.0)
         weights = np.array(dist_list)/np.sum(dist_list)
 
-        evt_count = multinomial(samples, weights)
+        # get the pre-defined number of samples for each neighbor
+        nbr_samples = np.where(multinomial(1, weights, samples) == 1)[1]
 
-        if meta_df.iloc[0]['sta'][-3:] == 'csv':
-            gm_dir = posixpath.dirname(event_metadata)
+        # this is the preferred behavior, the else caluse is left for legacy inputs
+        if grid_df.iloc[0]['sta'][-3:] == 'csv':
 
+            # We assume that every grid point has the same type and number of 
+            # event data. That is, you cannot mix ground motion records and
+            # intensity measures and you cannot assign 10 records to one point
+            # and 15 records to another.
+
+            # Load the first file and identify if this is a grid of IM or GM 
+            # information. GM grids have GM record filenames defined in the 
+            # grid point files.
+            first_file = pd.read_csv(
+                posixpath.join(event_dir, grid_df.iloc[0]['sta']), header=0)
+            if first_file.columns[0]=='GM_file':
+                event_type = 'timeHistory'
+            else:
+                event_type = 'intensityMeasure'
+            event_count = first_file.shape[0]
+
+            # collect the list of events and scale factors
             event_list = []
             scale_list = []
-            for e, i in zip(evt_count, ind_list):
-                gm_collection_file = meta_df.iloc[i]['sta']
 
-                gm_df = pd.read_csv(posixpath.join(gm_dir, gm_collection_file), header=None)
-                
-                event_list +=  gm_df.iloc[:,0].values.tolist() * e 
+            # for each neighbor
+            for sample_j, nbr in enumerate(nbr_samples):
 
-                if len(gm_df.columns) > 1:
-                    scale_list += gm_df.iloc[:,1].values.tolist() * e
-                else:
-                    scale_list += np.ones(gm_df.shape[0]).tolist() * e                 
+                # make sure we resample events if samples > event_count
+                event_j = sample_j % event_count
 
+                # get the index of the nth neighbor
+                nbr_index = ind_list[nbr]
+
+                # if the grid has ground motion records...
+                if event_type == 'timeHistory':
+
+                    # load the file for the selected grid point
+                    event_collection_file = grid_df.iloc[nbr_index]['sta']
+                    event_df = pd.read_csv(
+                        posixpath.join(event_dir, event_collection_file), header=0)
+                        
+                    # append the GM record name to the event list
+                    event_list.append(event_df.iloc[event_j,0])
+
+                    # append the scale factor (or 1.0) to the scale list
+                    if len(event_df.columns) > 1:
+                        scale_list.append(event_df.iloc[event_j,1] * acc_scale)
+                    else:
+                        scale_list.append(1.0 * acc_scale) 
+
+                # if the grid has intensity measures
+                elif event_type == 'intensityMeasure':
+
+                    # save the collection file name and the IM row id
+                    event_list.append(grid_df.iloc[nbr_index]['sta']+f'x{event_j}')
+
+                    # IM collections are not scaled
+                    scale_list.append(1.0)            
+
+        # TODO: update the LLNL input data and remove this clause
         else:
-            
-
             event_list = []
-            for e, i in zip(evt_count, ind_list):
-                event_list += [meta_df.iloc[i]['sta'],]*e
+            for e, i in zip(nbr_samples, ind_list):
+                event_list += [grid_df.iloc[i]['sta'],]*e
 
             scale_list = np.ones(len(event_list))
 
+        # prepare a dictionary of events
         event_list_json = []
         for e_i, event in enumerate(event_list):
             event_list_json.append({
                 "EventClassification": "Earthquake",
-                "fileName": f'{event}x{e_i:03d}',
+                "fileName": f'{event}x{e_i:05d}',
                 "factor": scale_list[e_i],
-                "type": "SW4"
+                "type": event_type
                 })
 
-        bldg_file = bim_df.iloc[bim_id]['file']
-        with open(bldg_file, 'r') as f:
-            bldg_data = json.load(f)
-
+        # save the event dictionary to the BIM
         bldg_data['Events'] = {
             "EventClassification": "Earthquake",
             "Events": event_list_json,
-            "type": "SW4_Events"
+            "type": "SimCenterEvents"
         }
 
         with open(bldg_file, 'w') as f:
@@ -138,10 +196,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--buildingFile')
-    parser.add_argument('--filenameEVENTmeta')
+    parser.add_argument('--filenameEVENTgrid')
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
     args = parser.parse_args()
 
-    find_neighbors(args.buildingFile, args.filenameEVENTmeta,
+    find_neighbors(args.buildingFile, args.filenameEVENTgrid,
                    args.samples,args.neighbors)
