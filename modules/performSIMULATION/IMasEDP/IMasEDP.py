@@ -37,6 +37,43 @@
 # Contributors:
 # Adam Zsarnóczay
 # 
+
+import os, sys, posixpath
+import argparse, json
+import string
+
+def write_RV(EVENT_input_path):
+    
+    # open the event file and get the list of events
+    with open(EVENT_input_path, 'r') as f:
+        EVENT_in = json.load(f)
+    event_list = EVENT_in['randomVariables'][0]['elements']
+
+    data_dir = EVENT_in['Events'][0]['data_dir']
+
+    # for each IM in the list
+    header = None
+    val_list = []
+    for event in event_list:
+        filename, sample_id, __ = event.split('x')
+
+        with open(posixpath.join(data_dir, filename), 'r') as f:
+            for line_id, line in enumerate(f):
+                # get the header if we are in the first line
+                if (header == None) and (line_id == 0):
+                    header = line.split(',')
+
+                # after getting to the line of interest
+                if line_id == int(sample_id)+1:
+
+                    # load the values and append them to the output
+                    vals = line
+                    if not vals.endswith('\n'):
+                        vals+='\n'
+                    val_list.append(vals)
+
+    working_dir = posixpath.dirname(EVENT_input_path)
+
     # prepare the header
     header_out = []
     for h_label in header:
@@ -51,13 +88,14 @@
             header_out.append(f'1-{h_label[:-2]}-1-2')
         else:
             header_out.append(f'1-{h_label.strip()}-1-1')
-    string_types = str
 
-import argparse, posixpath, ntpath, json
+    with open(posixpath.join(working_dir, 'response.csv'), 'w') as f:        
+        f.write(','+', '.join(header_out)+'\n')
 
-def write_RV():
-    pass 
+        for v_i, vals in enumerate(val_list):
+            f.write(str(v_i)+', '+vals)
 
+# TODO: consider removing this function
 def create_EDP(EVENT_input_path, EDP_input_path):
     
     # load the EDP file
@@ -89,6 +127,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV())
+        sys.exit(write_RV(args.filenameEVENT))
     else:
         sys.exit(create_EDP(args.filenameEVENT, args.filenameEDP))
