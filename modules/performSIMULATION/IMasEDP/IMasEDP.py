@@ -4,6 +4,20 @@ if sys.version.startswith('2'):
     range=xrange
     string_types = basestring
 else:
+    # prepare the header
+    header_out = []
+    for h_label in header:
+        h_label = h_label.strip()
+        if h_label.endswith('_h'):
+            header_out.append(f'1-{h_label[:-2]}-1-1')
+        elif h_label.endswith('_v'):
+            header_out.append(f'1-{h_label[:-2]}-1-3')
+        elif h_label.endswith('_x'):
+            header_out.append(f'1-{h_label[:-2]}-1-1')
+        elif h_label.endswith('_y'):
+            header_out.append(f'1-{h_label[:-2]}-1-2')
+        else:
+            header_out.append(f'1-{h_label.strip()}-1-1')
     string_types = str
 
 import argparse, posixpath, ntpath, json
