@@ -350,13 +350,15 @@ class Workflow(object):
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None):
+        reference_dir=None, working_dir=None, units=None, outputs=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
         log_msg('\tapplication registry file: {}'.format(app_registry))
         log_msg('\trun type: {}'.format(run_type))
         log_msg(log_div)
+
+        self.optional_apps = ['Modeling', 'EDP', 'UQ'] 
 
         self.run_type = run_type
         self.input_file = input_file
@@ -533,7 +535,7 @@ class Workflow(object):
                 else: 
                     raise WorkFlowInputError('Need Event Classification')
         else: 
-            raise WorkFlowInputError('Need an Events Entry in Applications')        
+            raise WorkFlowInputError('Need an Events Entry in Applications')               
 
         for app_type in self.app_type_list:
             if app_type != 'Event':
@@ -552,15 +554,16 @@ class Workflow(object):
                     self.workflow_apps[app_type] = app_object
               
                 else:
-                    if app_type != "Modeling":
+                    if app_type in self.optional_apps:
+                        self.app_registry.pop(app_type, None)
+                        log_msg(f'\tNo {app_type} among requested applications.')
+                    else:
                         raise WorkFlowInputError(
-                            'Need {} entry in Applications'.format(app_type))
-                    else:                        
-                        self.app_registry.pop("Modeling", None)
-                        log_msg('\tNo Modeling among requested applications.')
-
-        if "Modeling" not in self.app_registry:
-            self.app_type_list.remove("Modeling")
+                            f'Need {app_type} entry in Applications')
+                        
+        for app_type in self.optional_apps:
+            if app_type not in self.app_registry:
+                self.app_type_list.remove(app_type)
 
         log_msg('\tRequested workflow:')
         for app_type, app_object in self.workflow_apps.items():
@@ -807,9 +810,10 @@ class Workflow(object):
 
         os.chdir('templatedir')
 
-        if (("Modeling" in app_sequence) and
-            ("Modeling" not in self.workflow_apps.keys())):
-            app_sequence.remove("Modeling")
+        for app_type in self.optional_apps:
+            if ((app_type in app_sequence) and
+                (app_type not in self.workflow_apps.keys())):
+                app_sequence.remove(app_type)
 
         for app_type in app_sequence:
 
@@ -850,42 +854,48 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Creating the workflow driver file')
+        if 'UQ' in self.workflow_apps.keys():
+            log_msg('Creating the workflow driver file')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)       
+            if bldg_id is not None:
+                os.chdir(bldg_id)       
 
-        os.chdir('templatedir')
+            os.chdir('templatedir')
 
-        driver_script = u''
+            driver_script = u''
 
-        if (("Modeling" in app_sequence) and
-            ("Modeling" not in self.workflow_apps.keys())):
-            app_sequence.remove("Modeling")
+            for app_type in self.optional_apps:
+                if ((app_type in app_sequence) and
+                    (app_type not in self.workflow_apps.keys())):
+                    app_sequence.remove(app_type)
 
-        for app_type in app_sequence:
+            for app_type in app_sequence:
 
-            if self.run_type == 'set_up' or self.run_type == 'runningRemote':
-                command_list = self.workflow_apps[app_type].get_command_list(
-                    app_path = self.app_dir_remote)
+                if self.run_type in ['set_up', 'runningRemote']:
+                    command_list = self.workflow_apps[app_type].get_command_list(
+                        app_path = self.app_dir_remote)
 
-                driver_script += create_command(command_list, enforced_python='python3') + u'\n'
-            else:
-                command_list = self.workflow_apps[app_type].get_command_list(
-                    app_path = self.app_dir_local)
+                    driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+                else:
+                    command_list = self.workflow_apps[app_type].get_command_list(
+                        app_path = self.app_dir_local)
 
-                driver_script += create_command(command_list) + u'\n'
+                    driver_script += create_command(command_list) + u'\n'
 
-        log_msg('Workflow driver script:')
-        log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
+            log_msg('Workflow driver script:')
+            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
 
-        with open('driver','w') as f:
-            f.write(driver_script)
+            with open('driver','w') as f:
+                f.write(driver_script)
 
-        log_msg('Workflow driver file successfully created.')
-        log_msg(log_div)
+            log_msg('Workflow driver file successfully created.')
+            log_msg(log_div)
+        else:
+            log_msg('')
+            log_msg('No UQ requested, workflow driver is not needed.')
+            log_msg('')
 
     def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
@@ -897,46 +907,51 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Running response simulation')
+        if 'UQ' in self.workflow_apps.keys():
+            log_msg('Running response simulation')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)       
+            if bldg_id is not None:
+                os.chdir(bldg_id)       
 
-        os.chdir('templatedir')
+            os.chdir('templatedir')
 
-        workflow_app = self.workflow_apps['UQ']
+            workflow_app = self.workflow_apps['UQ']
 
-        # TODO: not elegant code, fix later
-        if BIM_file is not None:
-            for input_var in workflow_app.inputs:
-                if input_var['id'] == 'filenameBIM':
-                    input_var['default'] = BIM_file
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameBIM':
+                        input_var['default'] = BIM_file
 
-        command_list = workflow_app.get_command_list(
-            app_path=self.app_dir_local)
+            command_list = workflow_app.get_command_list(
+                app_path=self.app_dir_local)
 
-        # add the run type to the uq command list
-        command_list.append(u'--runType')
-        command_list.append(u'{}'.format(self.run_type))
+            # add the run type to the uq command list
+            command_list.append(u'--runType')
+            command_list.append(u'{}'.format(self.run_type))
 
-        command = create_command(command_list)
+            command = create_command(command_list)
 
-        log_msg('\tSimulation command:')
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+            log_msg('\tSimulation command:')
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
-        result, returncode = run_command(command)
+            result, returncode = run_command(command)
 
-        log_msg('\tOutput: ')
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+            log_msg('\tOutput: ')
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
-        if self.run_type == 'run':
-            log_msg('Response simulation finished successfully.')
-        elif self.run_type == 'set_up' or self.run_type == 'runningRemote':
-            log_msg('Response simulation set up successfully')
-        log_msg(log_div)
+            if self.run_type == 'run':
+                log_msg('Response simulation finished successfully.')
+            elif self.run_type in ['set_up', 'runningRemote']:
+                log_msg('Response simulation set up successfully')
+            log_msg(log_div)
 
+        else:
+            log_msg('')
+            log_msg('No UQ requested, response simulation step is skipped.')
+            log_msg('')
     def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
         """
         Short description
@@ -999,7 +1014,7 @@ class Workflow(object):
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)
 
-    def aggregate_dmg_and_loss(self, bldg_data):
+    def aggregate_results(self, bldg_data):
         """
         Short description
 
