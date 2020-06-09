@@ -1060,133 +1060,74 @@ class Workflow(object):
         log_msg('Collecting damage and loss results')
 
         os.chdir(self.run_dir)
-
-        
+ 
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        EDP_list = []
-        DM_list = []
-        DV_list = []
+        out_types = ['EDP', 'DM', 'DV', 'every_realization']
 
-        for bldg in bldg_data:
-            bldg_id = bldg['id']
-            min_id = min(int(bldg_id), min_id)
-            max_id = max(int(bldg_id), max_id)
+        headers = dict(
+            EDP = [0, 1, 2, 3],
+            DM = [0, 1, 2],
+            DV = [0, 1, 2, 3])
 
-            try:
-            #if True:
-                # EDP data
-                df_i = pd.read_csv(bldg_id+'/EDP.csv', header=[0,1,2,3], index_col=0)
-                df_i.index = [bldg_id,]
-                EDP_list.append(df_i)
+        for out_type in out_types:
+            if (self.outputs is None) or (self.outputs.get(out_type, False)):
 
-            except:
-                log_msg('Error reading EDP data for building {}'.format(bldg_id))
+                if out_type == 'every_realization':
 
-            try:
-            #if True:
-                # damage data
-                df_i = pd.read_csv(bldg_id+'/DM.csv', header=[0,1,2], index_col=0)
-                df_i.index = [bldg_id,]
-                DM_list.append(df_i)
+                    realizations = None
 
-            except:
-                log_msg('Error reading DM data for building {}'.format(bldg_id))
+                    for bldg in bldg_data:
+                        bldg_id = bldg['id']
+                        min_id = min(int(bldg_id), min_id)
+                        max_id = max(int(bldg_id), max_id)
 
-            try:
-            #if True:
-                # damage data
-                df_i = pd.read_csv(bldg_id+'/DV.csv', header=[0,1,2,3], index_col=0)
-                df_i.index = [bldg_id,]
-                DV_list.append(df_i)
-
-            except:
-                log_msg('Error reading DV data for building {}'.format(bldg_id))
-
-        EDP_agg = pd.concat(EDP_list, axis=0, sort=False)
-        EDP_agg.sort_index(axis=0, inplace=True)
-
-        DM_agg = pd.concat(DM_list, axis=0, sort=False)
-        DM_agg.sort_index(axis=0, inplace=True)
-
-        DV_agg = pd.concat(DV_list, axis=0, sort=False)
-        DV_agg.sort_index(axis=0, inplace=True)
-
-        if False: # keep it temporarily
-            with open(bldg_id+'/DM.csv') as f:
-                DM = json.load(f)            
-                
-            for FG in DM.keys():
-
-                if FG == 'aggregate':
-                    PG = ''
-                    DS_list = list(DM[FG].keys())
-                else:
-                    PG = next(iter(DM[FG]))
-                    DS_list = list(DM[FG][PG].keys())
-                
-                if ((DM_agg.size == 0) or 
-                    (FG not in DM_agg.columns.get_level_values('FG'))):
-                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
-                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
-                    
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_add.loc[bldg_id, (FG, DS)] = val
-                        
-                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
-                
-                else:        
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_agg.loc[bldg_id, (FG, DS)] = val
-
-            # then collect the decision variables
-            DV_agg = pd.DataFrame()
-
-            for bldg in bldg_data:
-                bldg_id = bldg['id']
-
-                try:
-                #if True:
-                
-                    with open(bldg_id+'/DV.json') as f:
-                        DV = json.load(f)
-                        
-                    for DV_type in DV.keys():
-                        
-                        stat_list = list(DV[DV_type]['total'].keys())
-                        
-                        if ((DV_agg.size == 0) or 
-                            (DV_type not in DV_agg.columns.get_level_values('DV'))): 
-                        
-                            MI = pd.MultiIndex.from_product(
-                                [[DV_type,],stat_list],names=['DV','stat'])
-                        
-                            DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                        #try:
+                        if True:
+                            df_i = pd.read_csv(bldg_id+f'/DL_summary.csv', 
+                                               header=0, index_col=0)
+                            if realizations == None:
+                                realizations = dict([(col, []) for col in df_i.columns])
                             
-                            for stat in stat_list:
-                                DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                                
-                            DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
-                        else:                     
-                            for stat in stat_list:
-                                DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                                
-                except:
-                    log_msg('Error reading DV data for building {}'.format(bldg_id))
+                            for col in df_i.columns:
+                                vals = df_i.loc[:,col].to_frame().T
+                                vals.index = [bldg_id,]
+                                realizations[col].append(vals)
 
-        # save the collected DataFrames as csv files
-        EDP_agg.to_csv('EDP_{}-{}.csv'.format(min_id, max_id))
-        DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
-        DV_agg.to_csv('DV_{}-{}.csv'.format(min_id, max_id))
+                        #except:
+                        #    log_msg(f'Error reading realization data for building {bldg_id}')
+
+                    for d_type in realizations.keys():
+                        d_agg = pd.concat(realizations[d_type], axis=0, sort=False)
+                        #d_agg.sort_index(axis=0, inplace=True)
+                        
+                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hd5', d_type, mode='a', format='fixed')
+
+                else:
+                    out_list = []
+
+                    for bldg in bldg_data:
+                        bldg_id = bldg['id']
+                        min_id = min(int(bldg_id), min_id)
+                        max_id = max(int(bldg_id), max_id)
+
+                        try:
+                        #if True:
+                            # EDP data
+                            df_i = pd.read_csv(bldg_id+f'/{out_type}.csv', 
+                                               header=headers[out_type], index_col=0)
+                            df_i.index = [bldg_id,]
+                            out_list.append(df_i)
+
+                        except:
+                            log_msg(f'Error reading {out_type} data for building {bldg_id}')
+
+                    out_agg = pd.concat(out_list, axis=0, sort=False)
+                    #out_agg.sort_index(axis=0, inplace=True)
+
+                    # save the collected DataFrames as csv files
+                    out_agg.to_csv(f'{out_type}_{min_id}-{max_id}.csv')
 
         log_msg('Damage and loss results collected successfully.')
         log_msg(log_div)
