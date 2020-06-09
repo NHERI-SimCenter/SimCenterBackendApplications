@@ -947,6 +947,26 @@ class Workflow(object):
             log_msg('\tOutput: ')
             log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
+            # create the response.csv file from the dakotaTab.out file
+            os.chdir(self.run_dir)
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+            dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
+            
+            # if the DL is coupled with response estimation, we need to sort the results
+            DL_app = self.workflow_apps.get('DL', None)
+            if DL_app is not None:
+                is_coupled = DL_app.pref.get('coupled_EDP', None)
+                if is_coupled:
+                    if 'eventID' in dakota_out.columns:
+                        events = dakota_out['eventID'].values
+                        events = [int(e.split('x')[-1]) for e in events]
+                        sorter = np.argsort(events)
+                        dakota_out = dakota_out.iloc[sorter, :]
+                        dakota_out.index = np.arange(dakota_out.shape[0])
+
+            dakota_out.to_csv('response.csv')
+            
             if self.run_type == 'run':
                 log_msg('Response simulation finished successfully.')
             elif self.run_type in ['set_up', 'runningRemote']:
@@ -957,6 +977,14 @@ class Workflow(object):
             log_msg('')
             log_msg('No UQ requested, response simulation step is skipped.')
             log_msg('')
+
+            # copy the response.csv from the templatedir to the run dir
+            os.chdir(self.run_dir)
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+            shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
+
+
     def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
         """
         Short description
