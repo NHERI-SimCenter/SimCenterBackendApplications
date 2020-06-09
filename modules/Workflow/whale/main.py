@@ -764,6 +764,11 @@ class Workflow(object):
                 else:
                     os.remove(dir_or_file)
 
+        # add a json file with the units (if they were provided)
+        if self.units is not None:
+            with open('units.json', 'w') as f:
+                json.dump(self.units, f, indent=2)
+
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
 
