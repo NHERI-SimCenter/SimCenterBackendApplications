@@ -84,7 +84,9 @@ def main(run_type, input_file, app_registry,
         app_type_list = ['Building', 'RegionalEvent', 'Event', 'Modeling', 
                          'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
-        working_dir = working_dir)
+        working_dir = working_dir,
+        units = inputs.get('units', None),
+        outputs=inputs.get('outputs', None))
 
     if bldg_id_range[0] is not None:
         print(bldg_id_range)
@@ -135,8 +137,8 @@ def main(run_type, input_file, app_registry,
             #clean up intermediate files from the simulation
             WF.cleanup_simdir(bldg['id'])
 
-    # aggregate damage and loss results
-    WF.aggregate_dmg_and_loss(bldg_data = bldg_data)
+    # aggregate results
+    WF.aggregate_results(bldg_data = bldg_data)
 
     if force_cleanup:
         # clean up intermediate files from the working directory

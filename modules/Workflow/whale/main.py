@@ -364,6 +364,8 @@ class Workflow(object):
         self.reference_dir = reference_dir
         self.working_dir = working_dir
         self.app_type_list = app_type_list
+        self.units = units
+        self.outputs = outputs
 
         # initialize app registry
         self._init_app_registry()        
