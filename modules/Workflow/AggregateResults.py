@@ -76,11 +76,13 @@ def main(threads = 1):
                     df_list_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
                     df_i = delayed(pd.concat)(df_list_i, axis=0, sort=False)
 
+                    df_list.append(df_i)
+
                 elif t_i*chunk == file_count-1:
                     df_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
                     df_i = df_i[0]
                 
-                df_list.append(df_i)
+                    df_list.append(df_i)
 
             df_all = delayed(pd.concat)(df_list, axis=0, sort=False)
 
