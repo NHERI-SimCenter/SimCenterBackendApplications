@@ -101,6 +101,7 @@ def main(threads = 1):
 
         # save the results
         log_msg('Saving results')
+        df_all.index = df_all.index.astype(np.int32)
         df_all.to_hdf('{}.hd5'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:snappy')
         #df_all.to_csv('{}.csv'.format(res_type))
 
@@ -115,9 +116,13 @@ def main(threads = 1):
 
     files = glob.glob('./results/{}/*/{}_*.hd5'.format('realizations','realizations'))
 
+    log_msg('Number of files: {}'.format(len(files)))
+
     # get the keys from the first file
     if len(files) > 0:
-        keys = pd.HDFStore(files[0]).keys()
+        first_file = pd.HDFStore(files[0])
+        keys = first_file.keys()
+        first_file.close()
 
         for key in keys:
             log_msg('Processing realizations for key {key}'.format(key=key))
@@ -126,9 +131,11 @@ def main(threads = 1):
             log_msg('\t\tConcatenating files')
             df_all = pd.concat(df_list, axis=0, sort=False)
 
+            df_all.index = df_all.index.astype(np.int32)
+
             df_all.sort_index(axis=0, inplace=True)
 
-            df_all.to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+            df_all.astype(np.float16).to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
 
             log_msg('\t\tResults saved for {key}.'.format(key=key))
 
