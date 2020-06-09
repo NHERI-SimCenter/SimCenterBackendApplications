@@ -56,8 +56,8 @@ def main(threads = 1):
         log_msg('Cluster initialized.')
         log_msg(client)
 
-    #for res_type in ['EDP', 'DM', 'DV']:
-    for res_type in ['EDP', 'DV']:
+    for res_type in ['EDP', 'DM', 'DV']:
+    #for res_type in ['EDP', 'DV']:
 
         log_msg('Loading {} files...'.format(res_type))
 
@@ -107,6 +107,28 @@ def main(threads = 1):
         log_msg('Closing cluster...')
         cluster.close()
         client.close()
+
+    # aggregate the realizations files
+    log_msg('Aggregating individual realizations...')
+
+    files = glob.glob('./results/{}/*/{}_*.hd5'.format('realizations','realizations'))
+
+    # get the keys from the first file
+    if len(files) > 0:
+        keys = pd.HDFStore(files[0]).keys()
+
+        for key in keys:
+            log_msg('Processing realizations for key {key}'.format(key=key))
+            df_list = [pd.read_hdf(resFileName, key) for resFileName in files]
+
+            log_msg('\t\tConcatenating files')
+            df_all = pd.concat(df_list, axis=0, sort=False)
+
+            df_all.sort_index(axis=0, inplace=True)
+
+            df_all.to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+
+            log_msg('\t\tResults saved for {key}.'.format(key=key))
 
     log_msg('End of script')
         
