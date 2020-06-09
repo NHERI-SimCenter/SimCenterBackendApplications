@@ -187,6 +187,7 @@ int main(int argc, const char **argv) {
   std::vector<std::string> rvList;
 
   int evalConcurrency = 0;
+  //  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"runningLocal") == 0)) {
   if (strcmp(runType,"runningLocal") == 0) {
     evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency();
     std::cerr << "EVAL: " << evalConcurrency << "\n";
