@@ -94,12 +94,6 @@
             "type": "path",
             "description": "path to buildings database file",
             "default": ""
-          },
-          {
-            "id": "lengthUnit",
-            "type": "string",
-            "description": "Identifies the unit used to measure length (e.g. footprint area)",
-            "default": "m"
           }
         ]
       }
@@ -124,7 +118,7 @@
         "ExecutablePath": "applications/performRegionalEventSimulation/NearestNeighborEvents/NNE.py",
         "ApplicationSpecificInputs": [
           {
-            "id": "filenameEVENTmeta",
+            "id": "filenameEVENTgrid",
             "type": "path",
             "description": "Path to file containing location information on each event file"
           },
@@ -137,6 +131,11 @@
             "id": "neighbors",
             "type": "int",
             "description": "Number of neighbors to consider for each asset."
+          },
+          {
+            "id": "filter_label",
+            "type": "string",
+            "description": "Custom label to use for pre-selection of grid points"
           }
         ]
       }
@@ -256,6 +255,17 @@
             "id": "pathSW4results",
             "type": "path",
             "description": "Path to directory containig output point files"
+          }
+        ]
+      },
+      {
+        "Name": "SimCenterEvent",
+        "ExecutablePath": "applications/createEVENT/SimCenterEvent/SimCenterEvent.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "pathEventData",
+            "type": "path",
+            "description": "Path to directory containig event data files in SimCenter format"
           }
         ]
       },
@@ -597,7 +607,7 @@
           "id": "filenameEDP",
           "type": "string",
           "description": "name of file containing the EDP data",
-          "default": "dakotaTab.out"
+          "default": "response.csv"
       }
       ],
       "Outputs": [
@@ -645,6 +655,21 @@
             "id": "log_file",
             "type": "bool",
             "description": "If false, pelicun does not create a log file."
+          },
+          {
+            "id": "coupled_EDP",
+            "type": "bool",
+            "description": "If true, the raw EDPs are used as-is without re-sampling."
+          },
+          {
+            "id": "event_time",
+            "type": "string",
+            "description": "Defines the time of the event in YYYY-MM-DD:HH format. 'off' turns all time-effects off."
+          },
+          {
+            "id": "ground_failure",
+            "type": "bool",
+            "description": "If true, fragility groups associated with ground failure are added in the auto-population phase. Note that such analysis requires PGD values as inputs."
           }
         ]
       }
