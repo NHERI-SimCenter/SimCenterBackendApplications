@@ -51,26 +51,43 @@ def write_RV(EVENT_input_path):
 
     data_dir = EVENT_in['Events'][0]['data_dir']
 
-    # for each IM in the list
-    header = None
-    val_list = []
-    for event in event_list:
+    file_sample_dict = {}
+
+    for e_i, event in enumerate(event_list):
         filename, sample_id, __ = event.split('x')
 
-        with open(posixpath.join(data_dir, filename), 'r') as f:
-            for line_id, line in enumerate(f):
-                # get the header if we are in the first line
-                if (header == None) and (line_id == 0):
-                    header = line.split(',')
+        if filename not in file_sample_dict.keys():
+            file_sample_dict.update({filename: [[], []]})
 
-                # after getting to the line of interest
-                if line_id == int(sample_id)+1:
+        file_sample_dict[filename][0].append(e_i)
+        file_sample_dict[filename][1].append(int(sample_id))
 
-                    # load the values and append them to the output
-                    vals = line
-                    if not vals.endswith('\n'):
-                        vals+='\n'
-                    val_list.append(vals)
+    EDP_output = None 
+
+    for filename in file_sample_dict.keys():
+
+        data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', skip_header=1)
+
+        samples = data[file_sample_dict[filename][1]]
+
+        if EDP_output is None:
+            if len(samples.shape) > 1:
+                EDP_output = np.zeros((len(event_list), samples.shape[1]))
+            else:
+                EDP_output = np.zeros(len(event_list))
+
+            # get the header
+            header_data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', names=True)
+            header = header_data.dtype.names
+
+        EDP_output[file_sample_dict[filename][0]] = samples
+
+    if len(EDP_output.shape) == 1:
+        EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
+
+    index = np.reshape(np.arange(EDP_output.shape[0]), (EDP_output.shape[0],1))
+
+    EDP_output = np.concatenate([index, EDP_output], axis=1)
 
     working_dir = posixpath.dirname(EVENT_input_path)
 
@@ -89,11 +106,8 @@ def write_RV(EVENT_input_path):
         else:
             header_out.append(f'1-{h_label.strip()}-1-1')
 
-    with open(posixpath.join(working_dir, 'response.csv'), 'w') as f:        
-        f.write(','+', '.join(header_out)+'\n')
-
-        for v_i, vals in enumerate(val_list):
-            f.write(str(v_i)+', '+vals)
+    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',', 
+        header=','+', '.join(header_out), comments='')
 
 # TODO: consider removing this function
 def create_EDP(EVENT_input_path, EDP_input_path):
