@@ -865,7 +865,7 @@ class Workflow(object):
 
         for app_type in app_sequence:
 
-            if self.run_type == 'set_up':
+            if self.run_type == 'set_up' or self.run_type == 'runningRemote':
                 command_list = self.workflow_apps[app_type].get_command_list(
                     app_path = self.app_dir_remote)
 
@@ -931,7 +931,7 @@ class Workflow(object):
 
         if self.run_type == 'run':
             log_msg('Response simulation finished successfully.')
-        elif self.run_type == 'set_up':
+        elif self.run_type == 'set_up' or self.run_type == 'runningRemote':
             log_msg('Response simulation set up successfully')
         log_msg(log_div)
 
