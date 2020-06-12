@@ -578,6 +578,9 @@
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
+      },{
+        "Name": "Dakota-UQ1",
+        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
       }
     ]
   },

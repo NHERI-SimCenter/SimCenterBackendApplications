@@ -118,7 +118,7 @@ def main(args):
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
-    if ((platform.system() == 'Windows') and (runDakota == 'run')):
+    if ((platform.system() == 'Windows') and (runDakota == 'runningLocal')):
         workflowDriverName = 'workflow_driver.bat'
 
     #Change permision of workflow driver
@@ -131,7 +131,7 @@ def main(args):
     # change dir to the main working dir for the structure
     os.chdir("../")
 
-    if runDakota == "run":
+    if runDakota == "runningLocal":
 
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
         print('running Dakota: ', dakotaCommand)

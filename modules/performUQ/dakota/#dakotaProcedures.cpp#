@@ -5,7 +5,6 @@
 #include <string>
 #include <sstream>
 #include <list>
-#include <vector>
 
 
 struct normalRV {
@@ -195,13 +194,13 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       numberRVs++;
     }
 
-    else if (strcmp(variableType, "Gumbel") == 0) {
+    else if (strcmp(variableType, "Gumbell") == 0) {
 
       struct gumbellRV theRV;
 
       theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
-      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"alphaparam"));
-      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"betaparam"));
+      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"alphas"));
+      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"betas"));
 
       theRandomVariables.gumbellRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
@@ -255,46 +254,14 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
 
 int
-writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, std::string idVariables, std::vector<std::string> &rvList){ 
+writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, std::string idVariables){ 
 
 
-    int numContinuousDesign = theRandomVariables.continuousDesignRVs.size();
+  if (idVariables.empty())
+    dakotaFile << "variables \n active uncertain \n";
+  else
+    dakotaFile << "variables \n id_variables =  '" << idVariables << "'\n active uncertain \n";    
 
-    if (numContinuousDesign != 0) {
-
-      if (idVariables.empty())
-	dakotaFile << "variables \n ";
-      else
-	dakotaFile << "variables \n id_variables =  '" << idVariables << "'\n";    
-
-
-      if (numContinuousDesign > 0) {
-	dakotaFile << "  continuous_design = " << numContinuousDesign << "\n    initial_point = ";
-	// std::list<struct continuousDesignRV>::iterator it;
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->initialPoint << " ";
-	dakotaFile << "\n    lower_bounds = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->lowerBound << " ";
-	dakotaFile << "\n    upper_bounds = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
-	  dakotaFile << it->upperBound << " ";
-	dakotaFile << "\n    descriptors = ";
-	for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++) {
-	  dakotaFile << "\'" << it->name << "\' ";
-	  rvList.push_back(it->name);
-	}
-	dakotaFile << "\n\n";
-      }
-      return 0;
-    }
-
-
-    if (idVariables.empty())
-      dakotaFile << "variables \n active uncertain \n";
-    else
-      dakotaFile << "variables \n id_variables =  '" << idVariables << "'\n active uncertain \n";    
-    
     int numNormalUncertain = theRandomVariables.normalRVs.size();
 
     int numNormal = theRandomVariables.normalRVs.size();
@@ -307,11 +274,8 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.normalRVs.begin(); it != theRandomVariables.normalRVs.end(); it++)
 	dakotaFile << it->stdDev << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.normalRVs.begin(); it != theRandomVariables.normalRVs.end(); it++) {
+      for (auto it = theRandomVariables.normalRVs.begin(); it != theRandomVariables.normalRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
-      
       dakotaFile << "\n";
     }
 
@@ -325,15 +289,13 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.lognormalRVs.begin(); it != theRandomVariables.lognormalRVs.end(); it++)
 	dakotaFile << it->stdDev << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.lognormalRVs.begin(); it != theRandomVariables.lognormalRVs.end(); it++) {
+      for (auto it = theRandomVariables.lognormalRVs.begin(); it != theRandomVariables.lognormalRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
 
     int numUniform = theRandomVariables.uniformRVs.size();
-    if (numUniform > 0) {
+    if (numLognormal > 0) {
       dakotaFile << "  uniform_uncertain = " << numUniform << "\n    lower_bounds = ";
       // std::list<struct uniformRV>::iterator it;
       for (auto it = theRandomVariables.uniformRVs.begin(); it != theRandomVariables.uniformRVs.end(); it++)
@@ -347,6 +309,23 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       dakotaFile << "\n";
     }
 
+    int numContinuousDesign = theRandomVariables.continuousDesignRVs.size();
+    if (numContinuousDesign > 0) {
+      dakotaFile << "  continuous_design = " << numContinuousDesign << "\n    initial_point = ";
+      // std::list<struct continuousDesignRV>::iterator it;
+      for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+	dakotaFile << it->initialPoint << " ";
+      dakotaFile << "\n    lower_bounds = ";
+      for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+	dakotaFile << it->lowerBound << " ";
+      dakotaFile << "\n    upper_bounds = ";
+      for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+	dakotaFile << it->upperBound << " ";
+      dakotaFile << "\n    descriptors = ";
+      for (auto it = theRandomVariables.continuousDesignRVs.begin(); it != theRandomVariables.continuousDesignRVs.end(); it++)
+	dakotaFile << "\'" << it->name << "\' ";
+      dakotaFile << "\n";
+    }
 
     int numWeibull = theRandomVariables.weibullRVs.size();
     if (numWeibull > 0) {
@@ -358,16 +337,14 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.weibullRVs.begin(); it != theRandomVariables.weibullRVs.end(); it++)
 	dakotaFile << it->scaleParam << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.weibullRVs.begin(); it != theRandomVariables.weibullRVs.end(); it++) {
+      for (auto it = theRandomVariables.weibullRVs.begin(); it != theRandomVariables.weibullRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
 
     int numGumbell = theRandomVariables.gumbellRVs.size();
     if (numGumbell > 0) {
-      dakotaFile << "  gumbel_uncertain = " << numGumbell << "\n    alphas = ";
+      dakotaFile << "  gumbell_uncertain = " << numGumbell << "\n    alphas = ";
       // std::list<struct gumbellRV>::iterator it;
       for (auto it = theRandomVariables.gumbellRVs.begin(); it != theRandomVariables.gumbellRVs.end(); it++)
 	dakotaFile << it->alphas << " ";
@@ -375,10 +352,8 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.gumbellRVs.begin(); it != theRandomVariables.gumbellRVs.end(); it++)
 	dakotaFile << it->betas << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.gumbellRVs.begin(); it != theRandomVariables.gumbellRVs.end(); it++) {
+      for (auto it = theRandomVariables.gumbellRVs.begin(); it != theRandomVariables.gumbellRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
 
@@ -393,10 +368,8 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.gammaRVs.begin(); it != theRandomVariables.gammaRVs.end(); it++)
 	dakotaFile << it->betas << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.gammaRVs.begin(); it != theRandomVariables.gammaRVs.end(); it++) {
+      for (auto it = theRandomVariables.gammaRVs.begin(); it != theRandomVariables.gammaRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
 
@@ -416,10 +389,8 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       for (auto it = theRandomVariables.betaRVs.begin(); it != theRandomVariables.betaRVs.end(); it++)
 	dakotaFile << it->upperBound << " ";
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.betaRVs.begin(); it != theRandomVariables.betaRVs.end(); it++) {
+      for (auto it = theRandomVariables.betaRVs.begin(); it != theRandomVariables.betaRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
             
@@ -437,10 +408,8 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 	  dakotaFile << " \'" << *element << "\'";
       }
       dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+      for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
 	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
       dakotaFile << "\n";
     }
 
@@ -450,7 +419,6 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       dakotaFile << "   discrete_uncertain_set\n    string 1 \n    num_set_values = 2";      
       dakotaFile << "\n    set_values  '1' '2'";
       dakotaFile << "\n    descriptors = dummy\n";
-      rvList.push_back(std::string("dummy"));
     }
 
     dakotaFile << "\n\n";
@@ -459,7 +427,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 }
 
 int
-writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDriver, std::string idInterface, int evalConcurrency) {
+writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDriver, std::string idInterface) {
 
   dakotaFile << "interface \n";
   if (!idInterface.empty())
@@ -467,7 +435,7 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
 
   dakotaFile << "  analysis_driver = '" << workflowDriver << "'\n";
 
-  dakotaFile << "  fork\n";  
+  dakotaFile << " fork\n";  
 
   dakotaFile << "   parameters_file = 'params.in'\n";
   dakotaFile << "   results_file = 'results.out' \n";
@@ -483,10 +451,7 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
   */
 
   dakotaFile << "     copy_files = 'templatedir/*' \n";
-  if (evalConcurrency > 0)
-    dakotaFile << "  asynchronous evaluation_concurrency = " << evalConcurrency << "\n\n";
-  else
-    dakotaFile << "  asynchronous \n\n";
+  dakotaFile << "  asynchronous\n\n";
 
   /*
   if (runType == "local") {
@@ -503,118 +468,82 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
 }
 
 int
-writeResponse(std::ostream &dakotaFile, json_t *rootEDP,  std::string idResponse, bool numericalGradients, bool numericalHessians,
-	      std::vector<std::string> &edpList) {
+writeResponse(std::ostream &dakotaFile, json_t *rootEDP,  std::string idResponse, bool numericalGradients = false, bool numericalHessians = false) {
 
-  int numResponses = 0;
+  int numResponses = json_integer_value(json_object_get(rootEDP,"total_number_edp"));
 
   dakotaFile << "responses\n";
 
-  if (!idResponse.empty() && (idResponse.compare("calibration") != 0))
+  if (!idResponse.empty())
     dakotaFile << "  id_responses = '" << idResponse << "'\n";
-    
-  //
-  // look in file for EngineeringDemandParameters 
-  // .. if there parse edp for each event
-  //
+
+  dakotaFile << "  response_functions = " << numResponses << "\n response_descriptors = ";
 
   json_t *EDPs = json_object_get(rootEDP,"EngineeringDemandParameters");
+  if (EDPs == NULL) {
+    dakotaFile << 0 << "\n";
+    return 803;
+  }
+  
+  int numEvents = json_array_size(EDPs);
 
-  if (EDPs != NULL) {
+  // loop over all events
+  for (int i=0; i<numEvents; i++) {
 
-    numResponses = json_integer_value(json_object_get(rootEDP,"total_number_edp"));
-    dakotaFile << " response_functions = " << numResponses << "\n response_descriptors = ";
+    json_t *event = json_array_get(EDPs,i);
+    json_t *eventEDPs = json_object_get(event,"responses");
+    int numResponses = json_array_size(eventEDPs);  
 
-    // for each event write the edps
-    int numEvents = json_array_size(EDPs);
-    
-    // loop over all events
-    for (int i=0; i<numEvents; i++) {
-      
-      json_t *event = json_array_get(EDPs,i);
-      json_t *eventEDPs = json_object_get(event,"responses");
-      int numResponses = json_array_size(eventEDPs);  
-      
-      // loop over all edp for the event
-      for (int j=0; j<numResponses; j++) {
-	
-	json_t *eventEDP = json_array_get(eventEDPs,j);
-	const char *eventType = json_string_value(json_object_get(eventEDP,"type"));
-	bool known = false;
-	std::string edpAcronym("");
-	const char *floor = NULL;
-	std::cerr << "writeResponse: type: " << eventType;
-	// based on edp do something 
-	if (strcmp(eventType,"max_abs_acceleration") == 0) {
-	  edpAcronym = "PFA";
-	  floor = json_string_value(json_object_get(eventEDP,"floor"));
-	  known = true;
-	} else if	(strcmp(eventType,"max_drift") == 0) {
-	  edpAcronym = "PID";
-	  floor = json_string_value(json_object_get(eventEDP,"floor2"));
-	  known = true;
-	} else if	(strcmp(eventType,"residual_disp") == 0) {
-	  edpAcronym = "RD";
-	  floor = json_string_value(json_object_get(eventEDP,"floor"));
-	  known = true;
-	} else if (strcmp(eventType,"max_pressure") == 0) {
-	  edpAcronym = "PSP";
-	  floor = json_string_value(json_object_get(eventEDP,"floor2"));
-	  known = true;
-	} else if (strcmp(eventType,"max_rel_disp") == 0) {
-	  edpAcronym = "PFD";
-	  floor = json_string_value(json_object_get(eventEDP,"floor"));
-	  known = true;
-	} else if (strcmp(eventType,"peak_wind_gust_speed") == 0) {
-	  edpAcronym = "PWS";
-	  floor = json_string_value(json_object_get(eventEDP,"floor"));
-	  known = true;
-	} else {
-	  dakotaFile << "'" << eventType << "' ";
-	  std::string newEDP(eventType);
-	  edpList.push_back(newEDP);
-	}
-	
-	if (known == true) {
-	  json_t *dofs = json_object_get(eventEDP,"dofs");
-	  int numDOF = json_array_size(dofs);
-	  
-	  // loop over all edp for the event
-	  for (int k=0; k<numDOF; k++) {
-	    int dof = json_integer_value(json_array_get(dofs,k));
-	    dakotaFile << "'" << i+1 << "-" << edpAcronym << "-" << floor << "-" << dof << "' ";
-	    std::string newEDP = std::string(std::to_string(i+1)) + std::string("-")
-	      + edpAcronym 
-	      + std::string("-") 
-	      + std::string(floor) +
-	      std::string("-") + std::string(std::to_string(dof));
-	    edpList.push_back(newEDP);
-	  }
+    // loop over all edp for the event
+    for (int j=0; j<numResponses; j++) {
+
+      json_t *eventEDP = json_array_get(eventEDPs,j);
+      const char *eventType = json_string_value(json_object_get(eventEDP,"type"));
+      bool known = false;
+      std::string edpAcronym("");
+      const char *floor = NULL;
+      std::cerr << "writeResponse: type: " << eventType;
+      // based on edp do something 
+      if (strcmp(eventType,"max_abs_acceleration") == 0) {
+	edpAcronym = "PFA";
+	floor = json_string_value(json_object_get(eventEDP,"floor"));
+	known = true;
+      } else if	(strcmp(eventType,"max_drift") == 0) {
+	edpAcronym = "PID";
+	floor = json_string_value(json_object_get(eventEDP,"floor2"));
+	known = true;
+      } else if	(strcmp(eventType,"residual_disp") == 0) {
+	edpAcronym = "RD";
+	floor = json_string_value(json_object_get(eventEDP,"floor"));
+	known = true;
+      } else if (strcmp(eventType,"max_pressure") == 0) {
+	edpAcronym = "PSP";
+	floor = json_string_value(json_object_get(eventEDP,"floor2"));
+	known = true;
+      } else if (strcmp(eventType,"max_rel_disp") == 0) {
+	edpAcronym = "PFD";
+	floor = json_string_value(json_object_get(eventEDP,"floor"));
+	known = true;
+      } else if (strcmp(eventType,"peak_wind_gust_speed") == 0) {
+	edpAcronym = "PWS";
+	floor = json_string_value(json_object_get(eventEDP,"floor"));
+	known = true;
+      } else {
+	dakotaFile << "'" << eventType << "' ";
+      }
+
+      if (known == true) {
+	json_t *dofs = json_object_get(eventEDP,"dofs");
+	int numDOF = json_array_size(dofs);
+
+	// loop over all edp for the event
+	for (int k=0; k<numDOF; k++) {
+	  int dof = json_integer_value(json_array_get(dofs,k));
+	  dakotaFile << "'" << i+1 << "-" << edpAcronym << "-" << floor << "-" << dof << "' ";
 	}
       }
     }
-  } else {
-
-    //
-    // quoFEM .. just a list of straight EDP
-    //
-
-    numResponses = json_array_size(rootEDP);
-
-    if (idResponse.compare("calibration") != 0)
-      dakotaFile << " response_functions = " << numResponses << "\n response_descriptors = ";
-    else
-      dakotaFile << " calibration_terms = " << numResponses << "\n response_descriptors = ";
-    
-    for (int j=0; j<numResponses; j++) {
-      json_t *theEDP_Item = json_array_get(rootEDP,j);
-      const char *theEDP = json_string_value(json_object_get(theEDP_Item,"name"));
-      dakotaFile << "'" << theEDP << "' ";
-      std::string newEDP(theEDP);
-      edpList.push_back(newEDP);
-    }
   }
-
   if (numericalGradients == true) 
     dakotaFile << "\n numerical_gradients";
   else
@@ -634,10 +563,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 		     json_t *uqData, 
 		     json_t *rootEDP, 
 		     struct randomVariables &theRandomVariables, 
-		     std::string &workflowDriver,
-		     std::vector<std::string> &rvList,
-		     std::vector<std::string> &edpList,
-		     int evalConcurrency) { 
+		     std::string &workflowDriver) { 
 
   const char *type = json_string_value(json_object_get(uqData, "uqType"));
   
@@ -668,9 +594,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 	dakotaFile << "variance_based_decomp \n\n";
 
       std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
     }
 
     else if (strcmp(method,"LHS")==0) {
@@ -687,9 +613,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 	dakotaFile << "variance_based_decomp \n\n";
 
       std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
     }
 
     else if (strcmp(method,"Importance Sampling")==0) {
@@ -702,9 +628,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       dakotaFile << "method, \n importance_sampling \n " << isMethod << " \n samples = " << numSamples << "\n seed = " << seed << "\n\n";
 
       std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
     }
 
     else if (strcmp(method,"Gaussian Process Regression")==0) {
@@ -744,9 +670,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 
       std::string emptyString;
       std::string interfaceString("SimulationInterface");
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
+      writeResponse(dakotaFile, rootEDP, emptyString);
 
     }
 
@@ -778,9 +704,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 
       std::string emptyString;
       std::string interfaceString("SimulationInterface");
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evalConcurrency);
-      int numResponse = writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString);
+      int numResponse = writeResponse(dakotaFile, rootEDP, emptyString);
 
       dakotaFile << "method \n polynomial_chaos \n " << pceMethod << intValue;
       dakotaFile << "\n samples_on_emulator = " << samplingSamples << "\n seed = " << samplingSeed << "\n sample_type = "
@@ -848,9 +774,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       dakotaFile << "\n\n";
 
       std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, true, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString, true, false);
     }
 
     else if (strcmp(method,"Global Reliability")==0) {
@@ -882,97 +808,10 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       dakotaFile << "\n\n";
 
       std::string emptyString;
-      writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-      writeResponse(dakotaFile, rootEDP, emptyString, true, false, edpList);
+      writeRV(dakotaFile, theRandomVariables, emptyString);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString);
+      writeResponse(dakotaFile, rootEDP, emptyString, true, false);
     }
-  
-  } else if ((strcmp(type, "Parameters Estimation") == 0)) {
-
-    json_t *methodData = json_object_get(uqData,"calibrationMethodData");
-
-    const char *method = json_string_value(json_object_get(methodData,"method"));
-
-    std::string methodString("nl2sol");
-    if (strcmp(method,"OPT++GaussNewton")==0) 
-      methodString = "optpp_g_newton";
-
-    int maxIterations = json_integer_value(json_object_get(methodData,"maxIterations"));    
-    double tol = json_number_value(json_object_get(methodData,"convergenceTol"));    
-    
-    dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-    dakotaFile << "method, \n " << methodString << "\n  convergence_tolerance = " << tol 
-	       << " \n   max_iterations = " << maxIterations << "\n\n";
-
-    std::string calibrationString("calibration");
-    std::string emptyString;
-    writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-    writeResponse(dakotaFile, rootEDP, calibrationString, true, false, edpList);
-
-
-  } else if ((strcmp(type, "Inverse Problem") == 0)) {
-
-    json_t *methodData = json_object_get(uqData,"bayesianCalibrationMethodData");
-
-    const char *method = json_string_value(json_object_get(methodData,"method"));
-
-    const char *emulator = json_string_value(json_object_get(methodData,"emulator"));
-    std::string emulatorString("gaussian_process");
-    if (strcmp(emulator,"Polynomial Chaos")==0) 
-      emulatorString = "pce";
-    else if (strcmp(emulator,"Multilevel Polynomial Chaos")==0) 
-      emulatorString = "ml_pce";
-    else if (strcmp(emulator,"Multifidelity Polynomial Chaos")==0) 
-      emulatorString = "mf_pce";
-    else if (strcmp(emulator,"Stochastic Collocation")==0) 
-      emulatorString = "sc";
-
-    int chainSamples = json_integer_value(json_object_get(methodData,"chainSamples"));    
-    int seed = json_integer_value(json_object_get(methodData,"seed"));    
-    int burnInSamples = json_integer_value(json_object_get(methodData,"burnInSamples"));    
-    int maxIterations = json_integer_value(json_object_get(methodData,"maxIter"));    
-    double tol = json_number_value(json_object_get(methodData,"tol"));    
-
-    if (strcmp(method,"DREAM")==0) {
-
-      int chains = json_integer_value(json_object_get(methodData,"chains"));    
-
-      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-      dakotaFile << "method \n bayes_calibration dream "
-		 << "\n  chain_samples = " << chainSamples
-		 << "\n  chains = " << chains
-		 << "\n  burn_in_samples = " << burnInSamples
-		 << "\n  convergence_tolerance = " << tol 
-		 << "\n  max_iterations = " << maxIterations << "\n\n";
-
-    } else {
-
-      const char *mcmc = json_string_value(json_object_get(methodData,"mcmcMethod"));
-      std::string mcmcString("dram");
-      if (strcmp(mcmc,"Delayed Rejection")==0)       
-	mcmcString = "delayed_rejection";
-      else if (strcmp(mcmc,"Adaptive Metropolis")==0)
-	mcmcString = "adaptive_metropolis";
-      else if (strcmp(mcmc,"Metropolis Hastings")==0)
-	mcmcString = "metropolis_hastings";
-      else if (strcmp(mcmc,"Multilevek")==0)
-	mcmcString = "multilevel";
-
-      dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
-      dakotaFile << "method \n bayes_calibration queso\n  " << mcmc
-		 << "\n  chain_samples = " << chainSamples
-		 << "\n  burn_in_samples = " << burnInSamples
-		 << "\n  convergence_tolerance = " << tol 
-		 << "\n  max_iterations = " << maxIterations << "\n\n";
-      
-    }
-
-    std::string calibrationString("calibration");
-    std::string emptyString;
-    writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evalConcurrency);
-    writeResponse(dakotaFile, rootEDP, calibrationString, false, false, edpList);
 
   } else {
     std::cerr << "uqType: NOT KNOWN\n";
