@@ -1,5 +1,6 @@
 #This python script process the input and will use it to run SHA and ground motion selection
 #In addition to providing the event file
+from __future__ import print_function    # (at top of module)
 
 import json
 import os
@@ -85,10 +86,10 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):
     pattern = os.path.join(recordsFolder, "RSN") + str(rsn)  +"_*.AT2"
     recordFiles = glob.glob(pattern)
     if(len(recordFiles) != 2):
-        print 'Error finding NGA West 2 files.\n'\
+        print('Error finding NGA West 2 files.\n'\
         'Please download the files for record {} '\
         'from NGA West 2 website and place them in the records folder ({})'\
-        .format(rsn, recordsFolder)
+        .format(rsn, recordsFolder))
         exit(-1)
 
     h1, dt1 = readNGAWest2File(recordFiles[0], scaleFactor)

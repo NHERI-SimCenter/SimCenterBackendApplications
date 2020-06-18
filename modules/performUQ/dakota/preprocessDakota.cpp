@@ -38,7 +38,7 @@ int main(int argc, const char **argv) {
     workflowDriver = "workflow_driver.bat";
 
 
-  std::ofstream workflowDriverFile(workflowDriver);
+  std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
 
   if (!workflowDriverFile.is_open()) {
     std::cerr << "parseFileForRV:: could not create dakota input file: dakota.in\n";
@@ -168,7 +168,7 @@ int main(int argc, const char **argv) {
   // open empty dakota input file
   //
 
-  std::ofstream dakotaFile("dakota.in");
+  std::ofstream dakotaFile("dakota.in", std::ios::binary);
 
   if (!dakotaFile.is_open()) {
     std::cerr << "parseFileForRV:: could not create dakota input file: dakota.in\n";
