@@ -38,7 +38,7 @@ int main(int argc, const char **argv) {
     workflowDriver = "workflow_driver.bat";
 
 
-  std::ofstream workflowDriverFile(workflowDriver);
+  std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
 
   if (!workflowDriverFile.is_open()) {
     std::cerr << "parseFileForRV:: could not create dakota input file: dakota.in\n";
@@ -62,10 +62,12 @@ int main(int argc, const char **argv) {
   const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
   const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));
 
+  std::string quoteIt("\"");
+
   if ((strcmp(runType, "local") == 0) || (strcmp(runType,"runningLocal") == 0)) {
-    dpreproCommand = localDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
+    dpreproCommand = quoteIt + localDir + std::string("/applications/performUQ/dakota/simCenterDprepro") + quoteIt;
   } else {
-    dpreproCommand = remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro");
+    dpreproCommand = quoteIt + remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro") + quoteIt;
   }
 
   int numRV = parseForRV(rootINPUT, theRandomVariables);
@@ -153,9 +155,9 @@ int main(int argc, const char **argv) {
 
   std::string extractEDP;
     if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
-    extractEDP = localDir + std::string("/applications/performUQ/dakota/extractEDP");
+      extractEDP = quoteIt + localDir + std::string("/applications/performUQ/dakota/extractEDP") + quoteIt;
   } else {
-    extractEDP = remoteDir + std::string("/applications/performUQ/dakota/extractEDP");
+      extractEDP = quoteIt + remoteDir + std::string("/applications/performUQ/dakota/extractEDP") + quoteIt;
   }
   workflowDriverFile << extractEDP << " "  << edpName << "  results.out "  <<  bimName  <<  "\n"; //  + numR + ' ' + files + '\n')
 
@@ -166,7 +168,7 @@ int main(int argc, const char **argv) {
   // open empty dakota input file
   //
 
-  std::ofstream dakotaFile("dakota.in");
+  std::ofstream dakotaFile("dakota.in", std::ios::binary);
 
   if (!dakotaFile.is_open()) {
     std::cerr << "parseFileForRV:: could not create dakota input file: dakota.in\n";
