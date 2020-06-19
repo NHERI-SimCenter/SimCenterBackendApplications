@@ -123,7 +123,8 @@ def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
 
 def run_pelicun(DL_input_path, EDP_input_path,
 	DL_method, realization_count, EDP_file, DM_file, DV_file, 
-	output_path=None, detailed_results=True, log_file=True):
+	output_path=None, detailed_results=True, coupled_EDP=False,
+	log_file=True, event_time=None, ground_failure=False):
 
 	DL_input_path = os.path.abspath(DL_input_path) # BIM file
 	EDP_input_path = os.path.abspath(EDP_input_path) # dakotaTab
@@ -231,10 +232,10 @@ def run_pelicun(DL_input_path, EDP_input_path,
 			EDP_input_path = EDP_files[s_i]
 
 			# and try to auto-populate the loss model using the BIM information
-			DL_input, DL_input_path = auto_populate(DL_input_path,
-													EDP_input_path,
-													DL_method,
-													realization_count)
+			DL_input, DL_input_path = auto_populate(DL_input_path, EDP_input_path,
+													DL_method, realization_count,
+													coupled_EDP, event_time, 
+													ground_failure)
 
 
 		DL_method = DL_input['DamageAndLoss']['_method']
@@ -243,7 +244,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
 		if DL_method == 'FEMA P58':
 			A = FEMA_P58_Assessment(log_file=log_file)
-		elif DL_method in ['HAZUS MH EQ', 'HAZUS MH']:
+		elif DL_method in ['HAZUS MH EQ', 'HAZUS MH', 'HAZUS MH EQ IM']:			
 			A = HAZUS_Assessment(hazard = 'EQ', log_file=log_file)
 		elif DL_method == 'HAZUS MH HU':
 			A = HAZUS_Assessment(hazard = 'HU', log_file=log_file)
@@ -276,10 +277,15 @@ def main(args):
 	parser.add_argument('--outputDM', default = 'DM.csv')
 	parser.add_argument('--outputDV', default = 'DV.csv')
 	parser.add_argument('--dirnameOutput', default = None)
+	parser.add_argument('--event_time', default=None)
 	parser.add_argument('--detailed_results', default = True,
 		type = str2bool, nargs='?', const=True)
+	parser.add_argument('--coupled_EDP', default = False,
+		type = str2bool, nargs='?', const=False)
 	parser.add_argument('--log_file', default = True,
 		type = str2bool, nargs='?', const=True)
+	parser.add_argument('--ground_failure', default = False,
+		type = str2bool, nargs='?', const=False)
 	args = parser.parse_args(args)
 
 	log_msg('Initializing pelicun calculation...')
@@ -291,7 +297,10 @@ def main(args):
 		args.outputEDP, args.outputDM, args.outputDV,
 		output_path = args.dirnameOutput, 
 		detailed_results = args.detailed_results, 
-		log_file = args.log_file)
+		coupled_EDP = args.coupled_EDP,
+		log_file = args.log_file,
+		event_time = args.event_time,
+		ground_failure = args.ground_failure)
 
 	log_msg('pelicun calculation completed.')
 

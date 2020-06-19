@@ -56,8 +56,8 @@ def main(threads = 1):
         log_msg('Cluster initialized.')
         log_msg(client)
 
-    #for res_type in ['EDP', 'DM', 'DV']:
-    for res_type in ['EDP', 'DV']:
+    for res_type in ['EDP', 'DM', 'DV']:
+    #for res_type in ['EDP', 'DV']:
 
         log_msg('Loading {} files...'.format(res_type))
 
@@ -76,11 +76,13 @@ def main(threads = 1):
                     df_list_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
                     df_i = delayed(pd.concat)(df_list_i, axis=0, sort=False)
 
+                    df_list.append(df_i)
+
                 elif t_i*chunk == file_count-1:
                     df_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
                     df_i = df_i[0]
                 
-                df_list.append(df_i)
+                    df_list.append(df_i)
 
             df_all = delayed(pd.concat)(df_list, axis=0, sort=False)
 
@@ -99,6 +101,7 @@ def main(threads = 1):
 
         # save the results
         log_msg('Saving results')
+        df_all.index = df_all.index.astype(np.int32)
         df_all.to_hdf('{}.hd5'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:snappy')
         #df_all.to_csv('{}.csv'.format(res_type))
 
@@ -107,6 +110,34 @@ def main(threads = 1):
         log_msg('Closing cluster...')
         cluster.close()
         client.close()
+
+    # aggregate the realizations files
+    log_msg('Aggregating individual realizations...')
+
+    files = glob.glob('./results/{}/*/{}_*.hd5'.format('realizations','realizations'))
+
+    log_msg('Number of files: {}'.format(len(files)))
+
+    # get the keys from the first file
+    if len(files) > 0:
+        first_file = pd.HDFStore(files[0])
+        keys = first_file.keys()
+        first_file.close()
+
+        for key in keys:
+            log_msg('Processing realizations for key {key}'.format(key=key))
+            df_list = [pd.read_hdf(resFileName, key) for resFileName in files]
+
+            log_msg('\t\tConcatenating files')
+            df_all = pd.concat(df_list, axis=0, sort=False)
+
+            df_all.index = df_all.index.astype(np.int32)
+
+            df_all.sort_index(axis=0, inplace=True)
+
+            df_all.astype(np.float16).to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+
+            log_msg('\t\tResults saved for {key}.'.format(key=key))
 
     log_msg('End of script')
         
