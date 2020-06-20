@@ -71,6 +71,13 @@ def main(run_type, input_file, app_registry):
     log_msg('Started running the workflow script')
     log_msg(log_div) 
 
+    # If there is an external EDP file provided, change the run_type to loss_only
+    try:
+        if inputs['DamageAndLoss']['ResponseModel']['ResponseDescription']['EDPDataFile'] is not None:
+            run_type = 'loss_only'
+    except:
+        pass
+
     WF = whale.Workflow(run_type, input_file, app_registry,
         app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'])
 

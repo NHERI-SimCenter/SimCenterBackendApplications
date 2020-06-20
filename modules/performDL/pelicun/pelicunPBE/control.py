@@ -36,6 +36,7 @@
 #
 # Contributors:
 # Adam Zsarnóczay
+# Pouria Kourehpaz
 
 """
 This module has classes and methods that control the loss assessment.
@@ -252,10 +253,12 @@ class Assessment(object):
                 path_EDP_input,
                 EDP_kinds=('PID', 'PRD', 'RID', 'PFA', 'PMD',
                            'PGA', 'PGV', 'SA', 'SV', 'SD',
-                           'PGD'),
+                           'PGD','DWD', 'RDR'),
                 units=dict(PID=1.,
                            PRD=1.,
                            RID=1.,
+                           DWD=1.,
+                           RDR=1.,
                            PFA=self._AIM_in['units']['acceleration'],
                            PMD=1.,
                            PGA=self._AIM_in['units']['acceleration'],
@@ -338,6 +341,10 @@ class Assessment(object):
         EDPs = sorted(self._EDP_dict.keys())
         EDP_samples = self._EDP_dict[EDPs[0]]._RV.samples.copy()
         cols = EDP_samples.columns
+        col_info = [col.split('-') for col in EDP_samples.columns]
+        EDP_samples.columns = [
+            '1-{}-{}-{}'.format(col[0], col[2], col[4]) for col in col_info]
+
         # TODO: use some global vars to identify EDP units because this is a mess
         for col_i, col in enumerate(cols):
             if ('PFA' in col) or ('PGA' in col) or ('SA' in col):
@@ -3436,6 +3443,7 @@ class HAZUS_Assessment(Assessment):
                         if DVs['rec_cost'] and ('repair_cost' in DS.keys()):
                             data = DS['repair_cost']
                             data_scaled = deepcopy(data)
+                            data_scaled['medians'] = np.array(data_scaled['medians'])
                             data_scaled['medians'] *= repl_cost
 
                             if len(data['medians']) > 1:

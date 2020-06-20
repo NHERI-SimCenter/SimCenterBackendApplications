@@ -733,8 +733,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	    delete [] dof;
 	  }
-
-	  else if (strcmp(type,"max_drift") == 0) {
+    
+    else if ((strcmp(type,"max_drift") == 0) || 
+             (strcmp(type,"max_roof_drift") == 0)) {
 	    const char * cline = json_string_value(json_object_get(response, "cline"));
 	    const char * floor1 = json_string_value(json_object_get(response, "floor1"));
 	    const char * floor2 = json_string_value(json_object_get(response, "floor2"));
