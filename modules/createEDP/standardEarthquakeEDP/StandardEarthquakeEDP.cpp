@@ -221,8 +221,7 @@ int main(int argc, char **argv)
       	    }
       	    */
       	    for (int i=0; i<numDOF; i++) {
-      	      if ((numDOF < ndm) ||
-          		   ((numDOF == ndm) && (tDOFs[i] != ndm))) {
+      	      if ((numDOF < ndm) || ((numDOF == ndm) && (tDOFs[i] != ndm))) {
             		json_array_append(dofArray, json_integer(tDOFs[i]));
             		numEDP++;
       	      }
@@ -232,13 +231,32 @@ int main(int argc, char **argv)
       	    json_t *dataArray = json_array(); 
       	    json_object_set(response,"scalar_data",dataArray);
       	    json_array_append(responsesArray,response);
-      	    
+
       	  }
 
       	  floor1 = floor;
       	  count++;
       	}
       }
+
+      // roof drift
+      json_t *response_max_roof_drift = json_object();
+      json_object_set(response_max_roof_drift,"type",json_string("max_roof_drift"));      
+      json_object_set(response_max_roof_drift,"cline",json_string(cline));
+      json_object_set(response_max_roof_drift,"floor1",json_string("0"));
+      json_object_set(response_max_roof_drift,"floor2",json_string(floor));
+      json_t *dofArray_max_roof_drift = json_array();
+      for (int i=0; i<numDOF; i++) {
+        if ((numDOF < ndm) || ((numDOF == ndm) && (tDOFs[i] != ndm))) {
+          json_array_append(dofArray_max_roof_drift, json_integer(tDOFs[i]));
+          numEDP++;
+        }
+      }
+      json_object_set(response_max_roof_drift,"dofs",dofArray_max_roof_drift);
+      json_t *dataArray_max_roof_drift = json_array(); 
+      json_object_set(response_max_roof_drift,"scalar_data",dataArray_max_roof_drift);
+      json_array_append(responsesArray,response_max_roof_drift);
+
       /*
     	json_t *response = json_object();
     	json_object_set(response,"type",json_string("residual_disp"));      

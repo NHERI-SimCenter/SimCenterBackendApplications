@@ -553,6 +553,10 @@ writeResponse(std::ostream &dakotaFile, json_t *rootEDP,  std::string idResponse
 	  edpAcronym = "PID";
 	  floor = json_string_value(json_object_get(eventEDP,"floor2"));
 	  known = true;
+  } else if (strcmp(eventType,"max_roof_drift") == 0) {
+    edpAcronym = "PRD";
+    floor = "1";
+    known = true;
 	} else if	(strcmp(eventType,"residual_disp") == 0) {
 	  edpAcronym = "RD";
 	  floor = json_string_value(json_object_get(eventEDP,"floor"));
