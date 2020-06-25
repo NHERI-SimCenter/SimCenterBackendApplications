@@ -36,6 +36,7 @@
 #
 # Contributors:
 # Adam Zsarnóczay
+# Pouria Kourehpaz
 
 """
 This module has classes and methods that handle file input and output.
@@ -239,7 +240,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         if AT == 'P58':
             path_CMP_data += '/resources/FEMA_P58_2nd_ed.hdf'
         elif AT == 'HAZUS_EQ':
-            path_CMP_data += '/resources/HAZUS_MH_2.1_EQ_story.hdf'
+            path_CMP_data += '/resources/HAZUS_MH_2.1_EQ.hdf'
         elif AT == 'HAZUS_HU':
             path_CMP_data += '/resources/HAZUS_MH_2.1_HU.hdf'
     data['data_sources'].update({'path_CMP_data': path_CMP_data})
@@ -256,7 +257,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             if AT == 'P58':
                 path_POP_data += '/resources/FEMA_P58_2nd_ed.hdf'
             elif AT == 'HAZUS_EQ':
-                path_POP_data += '/resources/HAZUS_MH_2.1_EQ_story.hdf'
+                path_POP_data += '/resources/HAZUS_MH_2.1_EQ.hdf'
         data['data_sources'].update({'path_POP_data': path_POP_data})
 
     # general information
@@ -558,7 +559,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     if AT in ['P58', 'HAZUS_EQ']:
         EDP_keys = ['PID', 'PRD', 'PFA',
                     'PGV', 'RID', 'PMD',
-                    'PGA', 'SA', 'SV', 'SD']
+                    'PGA', 'SA', 'SV', 'SD',
+                    'RDR','DWD']
     elif AT in ['HAZUS_HU']:
         EDP_keys = ['PWS', ]
 
@@ -991,7 +993,7 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         store = pd.HDFStore(path_POP)
         store.open()
         pop_table = store.select('pop', where = f'index in {[occupancy,]}')
-        data = convert_Series_to_dict(pop_table)
+        data = convert_Series_to_dict(pop_table.loc[occupancy,:])
         store.close()
 
     # convert peak population to persons/m2
@@ -1163,6 +1165,10 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
             demand_type = 'PID'
         elif EDP_type == 'Roof Drift Ratio':
             demand_type = 'PRD'
+        elif EDP_type == 'Damageable Wall Drift':
+            demand_type = 'DWD'
+        elif EDP_type == 'Racking Drift Ratio':
+            demand_type = 'RDR'
         elif EDP_type == 'Peak Floor Acceleration':
             demand_type = 'PFA'
             #demand_factor = g
@@ -1213,7 +1219,7 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         else: # pragma: no cover
             demand_type = None
             warnings.warn(UserWarning(
-                'Unexpected EDP type: {}'.format(EDP_type)))
+                f'Unexpected EDP type in component {c_id}: {EDP_type}'))
         if demand_type is None:
             del data[c_id]
             continue
@@ -1382,11 +1388,11 @@ def write_SimCenter_DL_output(output_dir, output_filename, output_df, index_name
 def write_SimCenter_EDP_output(output_dir, EDP_filename, EDP_df):
 
     # initialize the output DF
-    col_info = np.transpose([col.split('-') for col in EDP_df.columns])
+    col_info = np.transpose([col.split('-')[1:] for col in EDP_df.columns])
 
     EDP_types = np.unique(col_info[0])
-    EDP_locs = np.unique(col_info[2])
-    EDP_dirs = np.unique(col_info[4])
+    EDP_locs = np.unique(col_info[1])
+    EDP_dirs = np.unique(col_info[2])
 
     MI = pd.MultiIndex.from_product(
         [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
@@ -1398,14 +1404,14 @@ def write_SimCenter_EDP_output(output_dir, EDP_filename, EDP_df):
 
     # store the EDP statistics in the output DF
     for col in np.transpose(col_info):
-        df_res.loc[0, (col[0], col[2], col[4], 'median')] = EDP_df[
-            '{}-LOC-{}-DIR-{}'.format(col[0], col[2], col[4])].median()
-        df_res.loc[0, (col[0], col[2], col[4], 'beta')] = np.log(
-            EDP_df['{}-LOC-{}-DIR-{}'.format(col[0], col[2], col[4])]).std()
+        df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+            '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+        df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+            EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
 
     df_res.dropna(axis=1, how='all', inplace=True)
 
-    df_res = df_res.astype(float).round(4)
+    df_res = df_res.astype(float) #.round(4)
 
     # save the output
     df_res.to_csv('EDP.csv')
@@ -1705,14 +1711,14 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
             df_res_C.loc[:, idx['Repair Cost', type_ID, ds_list, 'mean']] = mean_costs
             df_res_C.loc[:, idx['Repair Cost', type_ID, 'aggregate', 'mean']] = df_cost.mean()
 
-            df_res_C = df_res_C.astype(float).round(0)
+            df_res_C = df_res_C.astype(float) #.round(0)
 
         # now store the aggregate results for cost
         DV_res = describe(SUMMARY_df[('reconstruction','cost')])
 
         df_res_Cagg.loc[:, idx['Repair Cost', 'aggregate', ' ', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
 
-        df_res_Cagg = df_res_Cagg.astype(float).round(0)
+        df_res_Cagg = df_res_Cagg.astype(float) #.round(0)
         dfs_to_join = dfs_to_join + [df_res_Cagg, df_res_Cimp, df_res_C]
 
     if DV_time is not 0:
@@ -1720,7 +1726,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
 
         df_res_Tagg.loc[:, idx['Repair Time', ' ', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
 
-        df_res_Tagg = df_res_Tagg.astype(float).round(1)
+        df_res_Tagg = df_res_Tagg.astype(float) #.round(1)
         dfs_to_join.append(df_res_Tagg)
 
     if DV_inj[0] is not 0:
@@ -1730,7 +1736,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
 
                 df_res_Iagg.loc[:, idx['Injuries', f'sev{i+1}', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
 
-                df_res_Iagg = df_res_Iagg.astype(float).round(6)
+                df_res_Iagg = df_res_Iagg.astype(float) #.round(6)
 
         dfs_to_join.append(df_res_Iagg)
 

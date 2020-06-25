@@ -53,7 +53,7 @@ This module has classes and methods to manage databases used by pelicun.
 
 from .base import *
 from pathlib import Path
-import json
+import json, h5py
 import xml.etree.ElementTree as ET
 import shutil
 
@@ -159,6 +159,66 @@ def convert_jsons_to_table(json_id_list, json_list, json_template):
 
     return json_DF
 
+
+def save_to_standard_HDF(df, name, target_path, mode='w'):
+    """
+    Saves a DataFrame in a standard HDF format using h5py.
+
+    """
+
+    df = df.T
+
+    hf = h5py.File(target_path, mode)
+
+    #try:
+    if True:
+        # save each row (i.e., column of FG_df) as a separate dataset in the file
+        for row_id, row in df.iterrows():
+            row = row.convert_dtypes()
+
+            # create a tree that identifies the column in the hierarchy
+            row_name = name
+            for label in row_id:
+                if label != " ":
+                    row_name += f'/{label}'
+
+            # perform the appropriate type conversion before saving
+            if row.dtype == np.float64:
+                values = row.values.astype(float)
+
+                hf.create_dataset(row_name, data=values)
+
+            elif row.dtype == pd.StringDtype():
+                # Strings are saved as ASCII strings so that the files can be
+                # opened with any tool on any platform. Non-ASCII characters
+                # are replaced by a backslash-escaped UTF8 identifier.
+                values = row.values.astype(str)
+                values = np.char.encode(values, encoding='ASCII',
+                                        errors='backslashreplace')
+
+                hf.create_dataset(row_name, data=values)
+
+            elif row.dtype in [pd.BooleanDtype(), pd.Int64Dtype()]:
+                row.fillna(-1, inplace=True)
+                values = row.values.astype(int)
+
+                hf.create_dataset(row_name, data=values)
+
+            else:
+                print("unknown dtype: ", row.dtype)
+
+        # finally, save the index
+        values = df.columns.values.astype(str)
+        values = np.char.encode(values, encoding='ASCII',
+                                errors='backslashreplace')
+        hf.create_dataset(f'{name}/index', data=values)
+
+    #except:
+    #    show_warning("Error while trying to save standard HDF5 file.")
+
+    hf.close()
+
+
 def convert_json_files_to_HDF(data_source_dir, DL_dir, db_name):
     """
     Converts data from json files to a single HDF5 file
@@ -186,7 +246,12 @@ def convert_json_files_to_HDF(data_source_dir, DL_dir, db_name):
 
     FG_df = convert_jsons_to_table(FG_ID_list, FG_list, FG_template)
 
-    FG_df.to_hdf(DL_dir / f'{db_name}.hdf', 'data', mode='w', format='table',
+    # start with saving the data in standard HDF5 format
+    save_to_standard_HDF(FG_df, name='data_standard',
+                         target_path=DL_dir / f'{db_name}.hdf')
+
+    # then also save it using PyTables for quick access and slicing
+    FG_df.to_hdf(DL_dir / f'{db_name}.hdf', 'data', mode='a', format='table',
                  complevel=1, complib='blosc:snappy')
 
     # Now add the population distribution data - we'll call it pop
@@ -204,6 +269,9 @@ def convert_json_files_to_HDF(data_source_dir, DL_dir, db_name):
             pop_template = json.load(f)
 
         pop_df = convert_jsons_to_table(pop_ID_list, pop_data, pop_template)
+
+        save_to_standard_HDF(pop_df, name='pop_standard',
+                             target_path=DL_dir / f'{db_name}.hdf', mode='a')
 
         pop_df.to_hdf(DL_dir / f'{db_name}.hdf', 'pop', mode='a', format='table',
                       complevel=1, complib='blosc:snappy')
@@ -695,6 +763,316 @@ def convert_P58_data_to_json(data_dir, target_dir):
 
 
 def create_HAZUS_EQ_json_files(data_dir, target_dir):
+    """
+    Create JSON data files from publicly available HAZUS data.
+
+    HAZUS damage and loss information is publicly available in the technical
+    manuals. The relevant tables have been converted into a JSON input file
+    (hazus_data_eq.json) that is stored in the 'resources/HAZUS MH 2.1' folder
+    in the pelicun repo. Here we read that file (or a file of similar format)
+    and produce damage and loss data for Fragility Groups in the common
+    SimCenter JSON format.
+
+    HAZUS handles damage and losses at the assembly level differentiating only
+    structural and two types of non-structural component assemblies. In this
+    implementation we consider each of those assemblies a Fragility Group
+    and describe their damage and its consequences in a FEMA P58-like framework
+    but using the data from the HAZUS Technical Manual.
+
+    Parameters
+    ----------
+    data_dir: string
+        Path to the folder with the hazus_data_eq JSON file.
+    target_dir: string
+        Path to the folder where the results shall be saved. The population
+        distribution file will be saved here, the DL JSON files will be saved
+        to a 'DL json' subfolder.
+
+    """
+
+    data_dir = Path(data_dir).resolve()
+    target_dir = Path(target_dir).resolve()
+    DL_dir = None
+
+    convert_design_level = {
+        'High_code'    : 'HC',
+        'Moderate_code': 'MC',
+        'Low_code'     : 'LC',
+        'Pre_code'     : 'PC'
+    }
+
+    convert_DS_description = {
+        'DS1': 'Slight',
+        'DS2': 'Moderate',
+        'DS3': 'Extensive',
+        'DS4': 'Complete',
+        'DS5': 'Collapse',
+    }
+
+    # open the raw HAZUS data
+    with open(data_dir / 'hazus_data_eq.json', 'r') as f:
+        raw_data = json.load(f)
+
+    design_levels = list(
+        raw_data['Structural_Fragility_Groups']['EDP_limits'].keys())
+    building_types = list(
+        raw_data['Structural_Fragility_Groups']['P_collapse'].keys())
+    occupancy_types = list(raw_data['Structural_Fragility_Groups'][
+                               'Reconstruction_cost'].keys())
+
+    S_data = raw_data['Structural_Fragility_Groups']
+    NSA_data = raw_data[
+        'NonStructural_Acceleration_Sensitive_Fragility_Groups']
+    NSD_data = raw_data['NonStructural_Drift_Sensitive_Fragility_Groups']
+
+    for ot in occupancy_types:
+
+        # first, structural fragility groups
+        for dl in design_levels:
+            for bt in building_types:
+                if bt in S_data['EDP_limits'][dl].keys():
+
+                    json_output = {}
+
+                    dl_id = 'S-{}-{}-{}'.format(bt,
+                                                convert_design_level[dl],
+                                                ot)
+
+                    # this might get replaced by a more descriptive name in the future
+                    json_output.update({'Name': dl_id})
+
+                    # General info
+                    json_output.update({
+                        'Directional': False,
+                        'GeneralInformation': {
+                            'ID'         : dl_id,
+                            'Description': dl_id,
+                        # this might get replaced by more details in the future
+                            # other fields can be added here if needed
+                        }
+                    })
+
+                    # EDP info
+                    json_output.update({
+                        'EDP': {
+                            'Type': 'Roof Drift Ratio',
+                            'Unit': [1, 'rad']
+                        }
+                    })
+
+                    # Damage State info
+                    json_output.update({'DSGroups': []})
+                    EDP_lim = S_data['EDP_limits'][dl][bt]
+
+                    for dsg_i in range(4):
+                        json_output['DSGroups'].append({
+                            'MedianEDP'   : EDP_lim[dsg_i],
+                            'Beta'        : S_data['Fragility_beta'][dl],
+                            'CurveType'   : 'LogNormal',
+                            'DSGroupType' : 'Single',
+                            'DamageStates': [{
+                                'Weight'      : 1.0,
+                                'Consequences': {},
+                                'Description' : 'DS{}'.format(dsg_i + 1),
+                            }]
+                        })
+                        # the last DSG is different
+                        if dsg_i == 3:
+                            json_output['DSGroups'][-1][
+                                'DSGroupType'] = 'MutuallyExclusive'
+                            DS5_w = S_data['P_collapse'][bt]
+                            json_output['DSGroups'][-1][
+                                'DamageStates'].append({
+                                'Weight'      : DS5_w,
+                                'Consequences': {},
+                                'Description' : 'DS5'
+                            })
+                            json_output['DSGroups'][-1]['DamageStates'][0][
+                                'Weight'] = 1.0 - DS5_w
+
+                    for dsg_i, DSG in enumerate(json_output['DSGroups']):
+                        base_cost = S_data['Reconstruction_cost'][ot][dsg_i] / 100.
+                        base_time = S_data['Reconstruction_time'][ot][dsg_i]
+
+                        for DS in DSG['DamageStates']:
+                            DS_id = DS['Description']
+                            DS['Consequences'] = {
+                                # injury rates are provided in percentages of the population
+                                'Injuries'          : [
+                                    {'Amount': val / 100.} for val in
+                                    S_data['Injury_rates'][DS_id][bt]],
+                                # reconstruction cost is provided in percentages of replacement cost
+                                'ReconstructionCost': {
+                                    "Amount": base_cost,
+                                    "CurveType": "N/A",
+                                },
+                                'ReconstructionTime': {
+                                    "Amount": base_time,
+                                    "CurveType": "N/A",
+                                }
+                            }
+                            DS['Description'] = convert_DS_description[
+                                DS['Description']]
+
+                    # create the DL json directory (if it does not exist)
+                    if DL_dir is None:
+                        DL_dir = target_dir / "DL json"
+                        DL_dir.mkdir(exist_ok=True)
+
+                    with open(DL_dir / f'{dl_id}.json', 'w') as f:
+                        json.dump(json_output, f, indent=2)
+
+            # second, nonstructural acceleration sensitive fragility groups
+            json_output = {}
+
+            dl_id = 'NSA-{}-{}'.format(convert_design_level[dl], ot)
+
+            # this might get replaced by a more descriptive name in the future
+            json_output.update({'Name': dl_id})
+
+            # General info
+            json_output.update({
+                'Directional': False,
+                'GeneralInformation': {
+                    'ID'         : dl_id,
+                    'Description': dl_id,
+                # this might get replaced by more details in the future
+                    # other fields can be added here if needed
+                }
+            })
+
+            # EDP info
+            json_output.update({
+                'EDP': {
+                    'Type': 'Peak Floor Acceleration',
+                    'Unit': [1, 'g'],
+                    'Offset': NSA_data.get('Offset', 0)
+                }
+            })
+
+            # Damage State info
+            json_output.update({'DSGroups': []})
+
+            for dsg_i in range(4):
+                base_cost = NSA_data['Reconstruction_cost'][ot][dsg_i] / 100.
+
+                json_output['DSGroups'].append({
+                    'MedianEDP'   : NSA_data['EDP_limits'][dl][dsg_i],
+                    'Beta'        : NSA_data['Fragility_beta'],
+                    'CurveType'   : 'LogNormal',
+                    'DSGroupType' : 'Single',
+                    'DamageStates': [{
+                        'Weight'      : 1.0,
+                        'Consequences': {
+                            # reconstruction cost is provided in percentages of replacement cost
+                            'ReconstructionCost': {
+                                "Amount": base_cost,
+                                "CurveType": "N/A",
+                            },
+                        },
+                        'Description' : convert_DS_description[
+                            'DS{}'.format(dsg_i + 1)]
+                    }]
+                })
+
+            # create the DL json directory (if it does not exist)
+            if DL_dir is None:
+                DL_dir = target_dir / "DL json"
+                DL_dir.mkdir(exist_ok=True)
+
+            with open(DL_dir / f'{dl_id}.json', 'w') as f:
+                json.dump(json_output, f, indent=2)
+
+                # third, nonstructural drift sensitive fragility groups
+        json_output = {}
+
+        dl_id = 'NSD-{}'.format(ot)
+
+        # this might get replaced by a more descriptive name in the future
+        json_output.update({'Name': dl_id})
+
+        # General info
+        json_output.update({
+            'Directional': False,
+            'GeneralInformation': {
+                'ID'         : dl_id,
+                'Description': dl_id,
+            # this might get replaced by more details in the future
+                # other fields can be added here if needed
+            }
+        })
+
+        # EDP info
+        json_output.update({
+            'EDP': {
+                'Type': 'Roof Drift Ratio',
+                'Unit': [1, 'rad']
+            }
+        })
+
+        # Damage State info
+        json_output.update({'DSGroups': []})
+
+        for dsg_i in range(4):
+            base_cost = NSD_data['Reconstruction_cost'][ot][dsg_i] / 100.
+
+            json_output['DSGroups'].append({
+                'MedianEDP'   : NSD_data['EDP_limits'][dsg_i],
+                'Beta'        : NSD_data['Fragility_beta'],
+                'CurveType'   : 'LogNormal',
+                'DSGroupType' : 'Single',
+                'DamageStates': [{
+                    'Weight'      : 1.0,
+                    'Consequences': {
+                        # reconstruction cost is provided in percentages of replacement cost
+                        'ReconstructionCost': {
+                            "Amount": base_cost,
+                            "CurveType": "N/A",
+                        },
+                    },
+                    'Description' : convert_DS_description[
+                        'DS{}'.format(dsg_i + 1)]
+                }]
+            })
+
+        if DL_dir is None:
+            DL_dir = target_dir / "DL json"
+            DL_dir.mkdir(exist_ok=True)
+
+        with open(DL_dir / f'{dl_id}.json', 'w') as f:
+            json.dump(json_output, f, indent=2)
+
+    # finally, prepare the population distribution data
+    PD_data = raw_data['Population_Distribution']
+
+    pop_output = {}
+    for ot in PD_data.keys():
+        night_ids = raw_data['Parts_of_day']['Nighttime']
+        day_ids = raw_data['Parts_of_day']['Daytime']
+        commute_ids = raw_data['Parts_of_day']['Commute']
+
+        daily_pop = np.ones(24)
+        daily_pop[night_ids] = PD_data[ot][0]
+        daily_pop[day_ids] = PD_data[ot][1]
+        daily_pop[commute_ids] = PD_data[ot][2]
+        daily_pop = list(daily_pop)
+
+        # HAZUS does not introduce monthly and weekend/weekday variation
+        pop_output.update({ot: {
+            "weekday": {
+                "daily"  : daily_pop,
+                "monthly": list(np.ones(12))
+            },
+            "weekend": {
+                "daily"  : daily_pop,
+                "monthly": list(np.ones(12))
+            }
+        }})
+
+    with open(target_dir / 'population.json', 'w') as f:
+        json.dump(pop_output, f, indent=2)
+
+def create_HAZUS_EQ_story_json_files(data_dir, target_dir):
     """
     Create JSON data files from publicly available HAZUS data.
 
