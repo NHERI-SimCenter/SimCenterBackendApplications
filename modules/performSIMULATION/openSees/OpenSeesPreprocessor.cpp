@@ -508,8 +508,12 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       else if (strcmp(dampingTangent,"Committed"))
 	KcommSwitch = 1;
 
-      if (damping != 0.0) {
+      if (damping == 0.0) {
+	s << "set lambdaN [eigen 1];\n"
+	  << "set lambda1 [lindex $lambdaN 0]\n"
+	  << "set omega1 [expr pow($lambda1,0.5)];\n";
 
+      } else {
 	s << "set xDamp " << damping << ";\n";
 
 	if (mode1 != 0 && mode2 != 0) {
@@ -517,6 +521,8 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	  s << "set lambdaN [eigen " << mode2 <<"];\n"
 	    << "set lambdaI [lindex $lambdaN [expr " << mode1 << " -1]];\n"
 	    << "set lambdaJ [lindex $lambdaN [expr " << mode2 << " -1]];\n"
+	    << "set lambda1 [lindex $lambdaN 0]\n"
+	    << "set omega1 [expr pow($lambda1,0.5)];\n"
 	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
 	    << "set omegaJ [expr pow($lambdaJ,0.5)];\n"
 	    << "set alphaM [expr $xDamp*(2*$omegaI*$omegaJ)/($omegaI+$omegaJ)];\n"
@@ -529,6 +535,8 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	  
 	  s << "set lambdaN [eigen " << mode1 <<"];\n"
 	    << "set lambdaI [lindex $lambdaN [expr " << mode1 << " -1]];\n"
+	    << "set lambda1 [lindex $lambdaN 0]\n"
+	    << "set omega1 [expr pow($lambda1,0.5)];\n"
 	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
 	    << "set alphaM [expr 2.0*$xDamp/$omegaI];\n"
 	    << "rayleigh $alphaM 0. 0. 0.;\n";	  
@@ -537,6 +545,8 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	  
 	  s << "set lambdaN [eigen "<< mode2 <<"];\n"
 	    << "set lambdaI [lindex $lambdaN [expr " << mode2 << " -1]];\n"
+	    << "set lambda1 [lindex $lambdaN 0]\n"
+	    << "set omega1 [expr pow($lambda1,0.5)];\n"
 	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
 	    << "set betaKinit [expr $KinitSwitch*2.*$xDamp/$omegaI];\n"
 	    << "set betaKcomm [expr $KcommSwitch*2.*$xDamp/$omegaI];\n"
@@ -555,7 +565,9 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
       
 	s << "set lambdaN [eigen " << numModes << "];\n"
-	  << "modalDamping " << damping << "\n";
+	  << "modalDamping " << damping << "\n"
+	  << "set lambda1 [lindex $lambdaN 0]\n"
+	  << "set omega1 [expr pow($lambda1,0.5)];\n";
 
 	if (dampingTangent != 0.0) {
 	  s << "set lambdaI [lindex $lambdaN [expr " << numModes << " -1]];\n"
@@ -563,6 +575,10 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	    << "set betaKinit [expr 2.0 * " << dampingTangent << " / $omegaI];\n"
 	    << "rayleigh 0.0 0.0 $betaKinit 0.0;\n";
 	}
+      } else {
+	s << "set lambdaN [eigen 1];\n"
+	  << "set lambda1 [lindex $lambdaN 0]\n"
+	  << "set omega1 [expr pow($lambda1,0.5)];\n";
       }
     }
   }
@@ -804,7 +820,6 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
       }
     }
    
-    std::cerr << "\nDONE RECORDERS\n";
     // create analysis
     if (analysisType == 1 || analysisType == 2) {
 
@@ -813,7 +828,6 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
       if (fileScript != NULL) {
 	s << "source " << json_string_value(fileScript);
       } else {
-
 
 	// if wind we need to perform 1 static load step
 	if (analysisType == 2) {
@@ -865,7 +879,10 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	processDamping(s);
 
-	s << "analyze " << numSteps << " " << dT << "\n";      
+	s << "set T1 [expr 2*3.14159/$lambda1]\n"
+	  << "set dTana [expr $T1/20.]\n"
+	  << "if {$dt < $dTana} {set dTana $dt}\n";
+	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
       }
     }
 
@@ -1015,7 +1032,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	  // place all load factors on event in TimeSeries for accel recorders .. thanks adam for pointing out
 	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor [expr " << seriesFactor << " * " << eventFactor << " * " << unitConversionFactorAcceleration << " ]";
 	} else {
-	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor expr " << seriesFactor;
+	  s << "timeSeries Path " << numSeries << " -dt " << dt << " -factor [expr " << seriesFactor << " ] ";
 	}
 	
 	s << " -values { ";	
@@ -1027,15 +1044,24 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 	// write data to file, multiply it by conversion factor and eventFactor
 	//
 
+	int count = 0;
+	double val0 = 0.0;
 	json_array_foreach(data, dataIndex, dataV) {
-	  //	  s << json_number_value(dataV) * unitConversionFactorAcceleration * eventFactor << " " ;
-	  s << json_number_value(dataV) << " " ;
+	// s << json_number_value(dataV) * unitConversionFactorAcceleration * eventFactor << " " ;
+	  double valCount = json_number_value(dataV);
+	  /*
+	  if (count == 0 && analysisType == 2) {
+	    val0 = valCount;
+	    count++;
+	  }
+	  s << valCount-val0 << " " ;
+	  */
+	  s << valCount << " " ;
 	}
 
 	s << " }\n";
 	
 	string name(json_string_value(json_object_get(timeSeries,"name")));
-	//printf("TIMESERIES: %s\n",name.c_str());
 	
 	timeSeriesList[name]=numSeries;
 	numSeries++;
@@ -1102,7 +1128,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       }
 	std::cerr << "NOW FACTOR: " << factorPattern;
 
-      int nodeTag = this->getNode("1",floor.c_str());	          
+      int nodeTag = this->getNode("centroid",floor.c_str());	          
       int seriesTag = timeSeriesList[name];
       s << "pattern Plain " << numPattern << " " << 
 	series << " -fact " << unitConversionFactorForce * eventFactor * factorPattern <<  " {\n";
