@@ -718,6 +718,43 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    delete [] dof;
 	  }
 
+	  if (strcmp(type,"rms_acceleration") == 0) {
+	    
+	    const char *cline = json_string_value(json_object_get(response, "cline"));
+	    const char *floor = json_string_value(json_object_get(response, "floor"));
+	    
+	    int nodeTag = this->getNode(cline,floor);	    
+	    
+	    json_t *theDOFs = json_object_get(response, "dofs");
+	    int sizeDOFs = json_array_size(theDOFs);
+	    int *dof = new int[sizeDOFs];
+	    for (int ii=0; ii<sizeDOFs; ii++)
+	      dof[ii] = json_integer_value(json_array_get(theDOFs,ii));
+
+	    string fileString;
+	    ostringstream temp;  //temp as in temporary
+
+	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+
+	    fileString=temp.str(); 
+
+	    const char *fileName = fileString.c_str();
+
+	    int startTimeSeries = 101;
+	    s << "recorder NodeRMS -file " << fileName;
+	    if (seismicEventType == true) {
+	      s << " -timeSeries ";
+	      for (int ii=0; ii<sizeDOFs; ii++)
+		s << ii+startTimeSeries << " " ;
+	    }
+	    s << " -node " << nodeTag << " -dof ";
+	    for (int ii=0; ii<sizeDOFs; ii++)
+	      s << dof[ii] << " " ;
+	    s << " accel\n";
+
+	    delete [] dof;
+	  }
+
 	  else if (strcmp(type,"max_rel_disp") == 0) {
 
 	    const char *cline = json_string_value(json_object_get(response, "cline"));
