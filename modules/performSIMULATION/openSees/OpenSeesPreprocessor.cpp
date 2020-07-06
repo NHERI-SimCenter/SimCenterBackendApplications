@@ -562,7 +562,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
       if (damping != 0.0) {
 
-	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
+	//	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
       
 	s << "set lambdaN [eigen " << numModes << "];\n"
 	  << "modalDamping " << damping << "\n"
@@ -607,9 +607,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
   json_t *edps = json_object_get(rootEDP,"EngineeringDemandParameters");  
 
   int numEvents = json_array_size(events);
-  std::cerr << "numEvents: " << numEvents << "\n";
+  //  std::cerr << "numEvents: " << numEvents << "\n";
   int numEDPs = json_array_size(edps);
-  std::cerr << "numEDPs: " << numEDPs << "\n";
+  //  std::cerr << "numEDPs: " << numEDPs << "\n";
 
   s << "loadConst -time 0.0\n";
 
@@ -673,13 +673,13 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
       if (eventEDP != NULL) {
       
 	int numResponses = json_array_size(eventEDP);
-	  std::cerr << "numResponse: " << numResponses <<"\n";	
+	// std::cerr << "numResponse: " << numResponses <<"\n";	
 	for (int k=0; k<numResponses; k++) {
 	  
 	  json_t *response = json_array_get(eventEDP, k);
 	  const char *type = json_string_value(json_object_get(response, "type"));
 
-	  std::cerr << "type: " << type <<"\n";
+	  // std::cerr << "type: " << type <<"\n";
 
 	  if (strcmp(type,"max_abs_acceleration") == 0) {
 	    
@@ -1000,12 +1000,14 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
   json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
   json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+  json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
   json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");
 
   
   //Parsing BIM Units
   Units::UnitSystem bimUnits;
   bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+  bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
   bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
 
   // loop over time series & create the time series
@@ -1027,7 +1029,11 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       json_t* evtLengthJson = json_object_get(evtUnitsJson, "length");
       if(NULL != evtLengthJson)
 	  eventUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(evtLengthJson));
-      
+
+      json_t* evtForceJson = json_object_get(evtUnitsJson, "force");
+      if(NULL != evtForceJson) 
+	eventUnits.forceUnit = Units::ParseForceUnit(json_string_value(evtForceJson));
+
       json_t* evtTimeJson = json_object_get(evtUnitsJson, "time");
       if(NULL != evtTimeJson)
 	eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
@@ -1050,7 +1056,6 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
     timeSeries = json_array_get(timeSeriesArray, i);
     
     const char *subType = json_string_value(json_object_get(timeSeries,"type"));        
-    std::cerr << "subType: " << subType << "\n";
 
     if (strcmp(subType,"Value")  == 0) {
       
@@ -1161,14 +1166,17 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       if (patternFactorObj != NULL) {
 	if (json_is_real(patternFactorObj))
 	  factorPattern = json_number_value(patternFactorObj);
-	std::cerr << "FACTOR: " << factorPattern;
       }
-	std::cerr << "NOW FACTOR: " << factorPattern;
 
       int nodeTag = this->getNode("centroid",floor.c_str());	          
       int seriesTag = timeSeriesList[name];
-      s << "pattern Plain " << numPattern << " " << 
-	series << " -fact " << unitConversionFactorForce * eventFactor * factorPattern <<  " {\n";
+      if (dof < 3) {
+	s << "pattern Plain " << numPattern << " " << 
+	  series << " -fact " << unitConversionFactorForce * eventFactor * factorPattern <<  " {\n";
+      } else {
+	s << "pattern Plain " << numPattern << " " << 
+	  series << " -fact " << unitConversionFactorForce * unitConversionFactorLength * eventFactor * factorPattern <<  " {\n";
+      }
       s << "   load " << nodeTag << " ";
       for (int i=0; i<NDF; i++) {
         if (dof == (i+1)) //i+1 as OpenSees starts with 0 indexing                                        
