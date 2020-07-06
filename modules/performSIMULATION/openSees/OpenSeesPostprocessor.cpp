@@ -113,158 +113,201 @@ OpenSeesPostprocessor::processEDPs(){
       const char *type = json_string_value(json_object_get(response, "type"));
 
       if (strcmp(type,"max_abs_acceleration") == 0) {
-				const char * cline = json_string_value(json_object_get(response, "cline"));
-				const char * floor = json_string_value(json_object_get(response, "floor"));
-				json_t *dofs = json_object_get(response, "dofs");
-				int numDOFs = json_array_size(dofs);
+	const char * cline = json_string_value(json_object_get(response, "cline"));
+	const char * floor = json_string_value(json_object_get(response, "floor"));
+	json_t *dofs = json_object_get(response, "dofs");
+	int numDOFs = json_array_size(dofs);
 
-				string fileString;
-				ostringstream temp;  //temp as in temporary
-				temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-				fileString=temp.str(); 
-				
-				const char *fileName = fileString.c_str();
-				
-				//
-				// open file & process data into a json array called: data
-				//
-
-				json_t *data = json_array();
-
-				// open file
-				ifstream myfile;
-				myfile.open (fileName);
-				double tmp;
-
-				if (myfile.is_open()) {
-				  
-				  // read first 2 rows of useless data
-				  for (int ii=0; ii<2; ii++)
-				    for (int jj=0; jj<numDOFs; jj++) 
-				      myfile >> tmp;
-				  // read last row and add components to data
-				  for (int jj=0; jj<numDOFs; jj++) {
-				      myfile >> tmp;
-				      json_array_append(data, json_real(tmp));
-				  }
-				  myfile.close();
-				}
-				
-				// set the response
-				json_object_set(response,"scalar_data",data);
-
-      } else if (strcmp(type,"max_rel_disp") == 0) {
-				const char * cline = json_string_value(json_object_get(response, "cline"));
-				const char * floor = json_string_value(json_object_get(response, "floor"));
-				json_t *dofs = json_object_get(response, "dofs");
-				int numDOFs = json_array_size(dofs);
-
-				string fileString;
-				ostringstream temp;  //temp as in temporary
-				temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-				fileString=temp.str(); 
-				
-				const char *fileName = fileString.c_str();
-				
-				//
-				// opencfile & process data into a json array called: data
-				//
-
-				json_t *data = json_array();
-
-				// open file
-				ifstream myfile;
-				myfile.open (fileName);
-				double tmp;
-
-				if (myfile.is_open()) {
-				  
-				  // read first 2 rows of useless data
-				  for (int ii=0; ii<2; ii++)
-				    for (int jj=0; jj<numDOFs; jj++) 
-				      myfile >> tmp;
-				  // read last row and add components to data
-				  for (int jj=0; jj<numDOFs; jj++) {
-				      myfile >> tmp;
-				      json_array_append(data, json_real(tmp));
-				  }
-				  myfile.close();
-				}
-				
-				// set the response
-				json_object_set(response,"scalar_data",data);
-
-      } else if (strcmp(type,"max_drift") == 0) {
+	string fileString;
+	ostringstream temp;  //temp as in temporary
+	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	fileString=temp.str(); 
 	
-				const char *cline = json_string_value(json_object_get(response, "cline"));
-				const char *floor1 = json_string_value(json_object_get(response, "floor1"));
-				const char *floor2 = json_string_value(json_object_get(response, "floor2"));
-				json_t *dofs = json_object_get(response, "dofs");
-				int numDOFs = json_array_size(dofs);
-				
-				json_t *data = json_array();	
-				for (int ii=0; ii<numDOFs; ii++) {
-				  int dof = json_integer_value(json_array_get(dofs,ii));
-				  string fileString1;
-				  ostringstream temp1;  //temp as in temporary
-				    
-				  temp1 << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof << ".out";
-				  fileString1=temp1.str(); 
-				  
-				  const char *fileName1 = fileString1.c_str();	
-				  
-				  // openfile & process data
-				  ifstream myfile;
-				  myfile.open (fileName1);
-				  double absMin, absMax, absValue;
-				  
-				  absValue = 0.0;
-				  if (myfile.is_open()) {
-				    myfile >> absMin >> absMax >> absValue;
-				    myfile.close();
-				  } 
-				  json_array_append(data, json_real(absValue));
-				}
-				
-				// set the response
-				json_object_set(response,"scalar_data",data);
-			      }
+	const char *fileName = fileString.c_str();
+	
+	//
+	// open file & process data into a json array called: data
+	//
+	
+	json_t *data = json_array();
+	
+	// open file
+	ifstream myfile;
+	myfile.open (fileName);
+	double tmp;
+	
+	if (myfile.is_open()) {
+	  
+	  // read first 2 rows of useless data
+	  for (int ii=0; ii<2; ii++)
+	    for (int jj=0; jj<numDOFs; jj++) 
+	      myfile >> tmp;
+	  // read last row and add components to data
+	  for (int jj=0; jj<numDOFs; jj++) {
+	    myfile >> tmp;
+	    json_array_append(data, json_real(tmp));
+	  }
+	  myfile.close();
+	}
+	
+	// set the response
+	json_object_set(response,"scalar_data",data);
+
+      }
+
+      else if (strcmp(type,"rms_acceleration") == 0) {
+	const char * cline = json_string_value(json_object_get(response, "cline"));
+	const char * floor = json_string_value(json_object_get(response, "floor"));
+	json_t *dofs = json_object_get(response, "dofs");
+	int numDOFs = json_array_size(dofs);
+
+	string fileString;
+	ostringstream temp;  //temp as in temporary
+	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	fileString=temp.str(); 
+	
+	const char *fileName = fileString.c_str();
+	
+	//
+	// open file & process data into a json array called: data
+	//
+	
+	json_t *data = json_array();
+	
+	// open file
+	ifstream myfile;
+	myfile.open (fileName);
+	double tmp;
+	
+	if (myfile.is_open()) {
+	  
+	  for (int jj=0; jj<numDOFs; jj++) {
+	    myfile >> tmp;
+	    json_array_append(data, json_real(tmp));
+	  }
+	  myfile.close();
+	}
+	
+	// set the response
+	json_object_set(response,"scalar_data",data);
+	
+      } 
+
+      else if (strcmp(type,"max_rel_disp") == 0) {
+	const char * cline = json_string_value(json_object_get(response, "cline"));
+	const char * floor = json_string_value(json_object_get(response, "floor"));
+	json_t *dofs = json_object_get(response, "dofs");
+	int numDOFs = json_array_size(dofs);
+	
+	string fileString;
+	ostringstream temp;  //temp as in temporary
+	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	fileString=temp.str(); 
+	
+	const char *fileName = fileString.c_str();
+	
+	//
+	// opencfile & process data into a json array called: data
+				//
+	
+	json_t *data = json_array();
+	
+	// open file
+	ifstream myfile;
+	myfile.open (fileName);
+	double tmp;
+	
+	if (myfile.is_open()) {
+	  
+	  // read first 2 rows of useless data
+	  for (int ii=0; ii<2; ii++)
+	    for (int jj=0; jj<numDOFs; jj++) 
+	      myfile >> tmp;
+	  // read last row and add components to data
+	  for (int jj=0; jj<numDOFs; jj++) {
+	    myfile >> tmp;
+	    json_array_append(data, json_real(tmp));
+	  }
+	  myfile.close();
+	}
+	
+	// set the response
+	json_object_set(response,"scalar_data",data);
+	
+      } 
+
+      else if ((strcmp(type,"max_drift") == 0) || 
+	       (strcmp(type,"max_roof_drift") == 0)) {
+	
+	const char *cline = json_string_value(json_object_get(response, "cline"));
+	const char *floor1 = json_string_value(json_object_get(response, "floor1"));
+	const char *floor2 = json_string_value(json_object_get(response, "floor2"));
+	json_t *dofs = json_object_get(response, "dofs");
+	int numDOFs = json_array_size(dofs);
+	
+	json_t *data = json_array();	
+	for (int ii=0; ii<numDOFs; ii++) {
+	  int dof = json_integer_value(json_array_get(dofs,ii));
+	  string fileString1;
+	  ostringstream temp1;  //temp as in temporary
+	  
+	  temp1 << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof << ".out";
+	  fileString1=temp1.str(); 
+	  
+	  const char *fileName1 = fileString1.c_str();	
+	  
+	  // openfile & process data
+	  ifstream myfile;
+	  myfile.open (fileName1);
+	  double absMin, absMax, absValue;
+	  
+	  absValue = 0.0;
+	  if (myfile.is_open()) {
+	    myfile >> absMin >> absMax >> absValue;
+	    myfile.close();
+	  } 
+	  json_array_append(data, json_real(absValue));
+	}
+	
+	// set the response
+	json_object_set(response,"scalar_data",data);
+      }
       
       else if (strcmp(type,"residual_disp") == 0) {
-
-				printf("ERROR - OpenSeesPostprocessor needs to implement\n");
-				exit(-1);
+	
+	printf("ERROR - OpenSeesPostprocessor needs to implement\n");
+	exit(-1);
+	
+	const char *cline = json_string_value(json_object_get(response, "cline"));
+	const char *floor = json_string_value(json_object_get(response, "floor"));
+	
+	string fileString;
+	ostringstream temp;  //temp as in temporary
+	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	fileString=temp.str(); 
+	
+	const char *fileName = fileString.c_str();
+	
+	// openfile & process data
+	ifstream myfile;
+	myfile.open (fileName);
+	double num1 = 0.; 
+	double num2 = 0.;
+	double num = 0.;
 				
-				const char *cline = json_string_value(json_object_get(response, "cline"));
-				const char *floor = json_string_value(json_object_get(response, "floor"));
-				
-				string fileString;
-				ostringstream temp;  //temp as in temporary
-				temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-				fileString=temp.str(); 
-				
-				const char *fileName = fileString.c_str();
-				
-				// openfile & process data
-				ifstream myfile;
-				myfile.open (fileName);
-				double num1 = 0.; 
-				double num2 = 0.;
-				double num = 0.;
-				
-				if (myfile.is_open()) {
-				  //	    std::vector<double> scores;
-				  //keep storing values from the text file so long as data exists:
-				  while (myfile >> num1 >> num2) {
-				    //	      scores.push_back(num);
-				  }
-				  
-				  // need to process to get the right value, for now just output last
-				  num = fabs(num1);
-				  if (fabs(num2) > num)
-				    num = fabs(num2);
-				  
-				  myfile.close();
+	if (myfile.is_open()) {
+	  //	    std::vector<double> scores;
+	  //keep storing values from the text file so long as data exists:
+	  while (myfile >> num1 >> num2) {
+	    //	      scores.push_back(num);
+	  }
+	  
+	  // need to process to get the right value, for now just output last
+	  num = fabs(num1);
+	  if (fabs(num2) > num)
+	    num = fabs(num2);
+	  
+	  myfile.close();
 	}
 	
 	json_object_set(response,"scalar_data",json_real(num));
@@ -274,7 +317,7 @@ OpenSeesPostprocessor::processEDPs(){
 	*/
       } 
       else if (strcmp(type,"max_pressure") == 0)
-      {
+	{
           json_t *data = json_array();
 
           //json_t* floor2Json = json_object_get(response, "floor2");

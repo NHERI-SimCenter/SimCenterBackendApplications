@@ -195,13 +195,13 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       numberRVs++;
     }
 
-    else if (strcmp(variableType, "Gumbell") == 0) {
+    else if (strcmp(variableType, "Gumbel") == 0) {
 
       struct gumbellRV theRV;
 
       theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
-      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"alphas"));
-      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"betas"));
+      theRV.alphas = json_number_value(json_object_get(fileRandomVariable,"alphaparam"));
+      theRV.betas = json_number_value(json_object_get(fileRandomVariable,"betaparam"));
 
       theRandomVariables.gumbellRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
@@ -367,7 +367,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 
     int numGumbell = theRandomVariables.gumbellRVs.size();
     if (numGumbell > 0) {
-      dakotaFile << "  gumbell_uncertain = " << numGumbell << "\n    alphas = ";
+      dakotaFile << "  gumbel_uncertain = " << numGumbell << "\n    alphas = ";
       // std::list<struct gumbellRV>::iterator it;
       for (auto it = theRandomVariables.gumbellRVs.begin(); it != theRandomVariables.gumbellRVs.end(); it++)
 	dakotaFile << it->alphas << " ";
@@ -549,11 +549,19 @@ writeResponse(std::ostream &dakotaFile, json_t *rootEDP,  std::string idResponse
 	  edpAcronym = "PFA";
 	  floor = json_string_value(json_object_get(eventEDP,"floor"));
 	  known = true;
-	} else if	(strcmp(eventType,"max_drift") == 0) {
+	} else if (strcmp(eventType,"rms_acceleration") == 0) {
+	  edpAcronym = "RMSA";
+	  floor = json_string_value(json_object_get(eventEDP,"floor"));
+	  known = true;
+	} else if (strcmp(eventType,"max_drift") == 0) {
 	  edpAcronym = "PID";
 	  floor = json_string_value(json_object_get(eventEDP,"floor2"));
 	  known = true;
-	} else if	(strcmp(eventType,"residual_disp") == 0) {
+	} else if (strcmp(eventType,"max_roof_drift") == 0) {
+	  edpAcronym = "PRD";
+	  floor = "1";
+	  known = true;
+	} else if (strcmp(eventType,"residual_disp") == 0) {
 	  edpAcronym = "RD";
 	  floor = json_string_value(json_object_get(eventEDP,"floor"));
 	  known = true;

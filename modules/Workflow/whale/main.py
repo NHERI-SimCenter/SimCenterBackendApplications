@@ -350,7 +350,7 @@ class Workflow(object):
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None):
+        reference_dir=None, working_dir=None, units=None, outputs=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -358,12 +358,16 @@ class Workflow(object):
         log_msg('\trun type: {}'.format(run_type))
         log_msg(log_div)
 
+        self.optional_apps = ['Modeling', 'EDP', 'UQ'] 
+
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
         self.reference_dir = reference_dir
         self.working_dir = working_dir
         self.app_type_list = app_type_list
+        self.units = units
+        self.outputs = outputs
 
         # initialize app registry
         self._init_app_registry()        
@@ -531,7 +535,7 @@ class Workflow(object):
                 else: 
                     raise WorkFlowInputError('Need Event Classification')
         else: 
-            raise WorkFlowInputError('Need an Events Entry in Applications')        
+            raise WorkFlowInputError('Need an Events Entry in Applications')               
 
         for app_type in self.app_type_list:
             if app_type != 'Event':
@@ -550,15 +554,16 @@ class Workflow(object):
                     self.workflow_apps[app_type] = app_object
               
                 else:
-                    if app_type != "Modeling":
+                    if app_type in self.optional_apps:
+                        self.app_registry.pop(app_type, None)
+                        log_msg(f'\tNo {app_type} among requested applications.')
+                    else:
                         raise WorkFlowInputError(
-                            'Need {} entry in Applications'.format(app_type))
-                    else:                        
-                        self.app_registry.pop("Modeling", None)
-                        log_msg('\tNo Modeling among requested applications.')
-
-        if "Modeling" not in self.app_registry:
-            self.app_type_list.remove("Modeling")
+                            f'Need {app_type} entry in Applications')
+                        
+        for app_type in self.optional_apps:
+            if app_type not in self.app_registry:
+                self.app_type_list.remove(app_type)
 
         log_msg('\tRequested workflow:')
         for app_type, app_object in self.workflow_apps.items():
@@ -759,6 +764,11 @@ class Workflow(object):
                 else:
                     os.remove(dir_or_file)
 
+        # add a json file with the units (if they were provided)
+        if self.units is not None:
+            with open('units.json', 'w') as f:
+                json.dump(self.units, f, indent=2)
+
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
 
@@ -805,9 +815,10 @@ class Workflow(object):
 
         os.chdir('templatedir')
 
-        if (("Modeling" in app_sequence) and
-            ("Modeling" not in self.workflow_apps.keys())):
-            app_sequence.remove("Modeling")
+        for app_type in self.optional_apps:
+            if ((app_type in app_sequence) and
+                (app_type not in self.workflow_apps.keys())):
+                app_sequence.remove(app_type)
 
         for app_type in app_sequence:
 
@@ -848,42 +859,48 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Creating the workflow driver file')
+        if 'UQ' in self.workflow_apps.keys():
+            log_msg('Creating the workflow driver file')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)       
+            if bldg_id is not None:
+                os.chdir(bldg_id)       
 
-        os.chdir('templatedir')
+            os.chdir('templatedir')
 
-        driver_script = u''
+            driver_script = u''
 
-        if (("Modeling" in app_sequence) and
-            ("Modeling" not in self.workflow_apps.keys())):
-            app_sequence.remove("Modeling")
+            for app_type in self.optional_apps:
+                if ((app_type in app_sequence) and
+                    (app_type not in self.workflow_apps.keys())):
+                    app_sequence.remove(app_type)
 
-        for app_type in app_sequence:
+            for app_type in app_sequence:
 
-            if self.run_type == 'set_up' or self.run_type == 'runningRemote':
-                command_list = self.workflow_apps[app_type].get_command_list(
-                    app_path = self.app_dir_remote)
+                if self.run_type in ['set_up', 'runningRemote']:
+                    command_list = self.workflow_apps[app_type].get_command_list(
+                        app_path = self.app_dir_remote)
 
-                driver_script += create_command(command_list, enforced_python='python3') + u'\n'
-            else:
-                command_list = self.workflow_apps[app_type].get_command_list(
-                    app_path = self.app_dir_local)
+                    driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+                else:
+                    command_list = self.workflow_apps[app_type].get_command_list(
+                        app_path = self.app_dir_local)
 
-                driver_script += create_command(command_list) + u'\n'
+                    driver_script += create_command(command_list) + u'\n'
 
-        log_msg('Workflow driver script:')
-        log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
+            log_msg('Workflow driver script:')
+            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
 
-        with open('driver','w') as f:
-            f.write(driver_script)
+            with open('driver','w') as f:
+                f.write(driver_script)
 
-        log_msg('Workflow driver file successfully created.')
-        log_msg(log_div)
+            log_msg('Workflow driver file successfully created.')
+            log_msg(log_div)
+        else:
+            log_msg('')
+            log_msg('No UQ requested, workflow driver is not needed.')
+            log_msg('')
 
     def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
@@ -895,45 +912,78 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Running response simulation')
+        if 'UQ' in self.workflow_apps.keys():
+            log_msg('Running response simulation')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)       
+            if bldg_id is not None:
+                os.chdir(bldg_id)       
 
-        os.chdir('templatedir')
+            os.chdir('templatedir')
 
-        workflow_app = self.workflow_apps['UQ']
+            workflow_app = self.workflow_apps['UQ']
 
-        # TODO: not elegant code, fix later
-        if BIM_file is not None:
-            for input_var in workflow_app.inputs:
-                if input_var['id'] == 'filenameBIM':
-                    input_var['default'] = BIM_file
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameBIM':
+                        input_var['default'] = BIM_file
 
-        command_list = workflow_app.get_command_list(
-            app_path=self.app_dir_local)
+            command_list = workflow_app.get_command_list(
+                app_path=self.app_dir_local)
 
-        # add the run type to the uq command list
-        command_list.append(u'--runType')
-        command_list.append(u'{}'.format(self.run_type))
+            # add the run type to the uq command list
+            command_list.append(u'--runType')
+            command_list.append(u'{}'.format(self.run_type))
 
-        command = create_command(command_list)
+            command = create_command(command_list)
 
-        log_msg('\tSimulation command:')
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+            log_msg('\tSimulation command:')
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
-        result, returncode = run_command(command)
+            result, returncode = run_command(command)
 
-        log_msg('\tOutput: ')
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+            log_msg('\tOutput: ')
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
-        if self.run_type == 'run':
-            log_msg('Response simulation finished successfully.')
-        elif self.run_type == 'set_up' or self.run_type == 'runningRemote':
-            log_msg('Response simulation set up successfully')
-        log_msg(log_div)
+            # create the response.csv file from the dakotaTab.out file
+            os.chdir(self.run_dir)
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+            dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
+            
+            # if the DL is coupled with response estimation, we need to sort the results
+            DL_app = self.workflow_apps.get('DL', None)
+            if DL_app is not None:
+                is_coupled = DL_app.pref.get('coupled_EDP', None)
+                if is_coupled:
+                    if 'eventID' in dakota_out.columns:
+                        events = dakota_out['eventID'].values
+                        events = [int(e.split('x')[-1]) for e in events]
+                        sorter = np.argsort(events)
+                        dakota_out = dakota_out.iloc[sorter, :]
+                        dakota_out.index = np.arange(dakota_out.shape[0])
+
+            dakota_out.to_csv('response.csv')
+            
+            if self.run_type == 'run':
+                log_msg('Response simulation finished successfully.')
+            elif self.run_type in ['set_up', 'runningRemote']:
+                log_msg('Response simulation set up successfully')
+            log_msg(log_div)
+
+        else:
+            log_msg('')
+            log_msg('No UQ requested, response simulation step is skipped.')
+            log_msg('')
+
+            # copy the response.csv from the templatedir to the run dir
+            os.chdir(self.run_dir)
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+            shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
+
 
     def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
         """
@@ -997,7 +1047,7 @@ class Workflow(object):
         log_msg('Damage and loss assessment finished successfully.')
         log_msg(log_div)
 
-    def aggregate_dmg_and_loss(self, bldg_data):
+    def aggregate_results(self, bldg_data):
         """
         Short description
 
@@ -1010,133 +1060,74 @@ class Workflow(object):
         log_msg('Collecting damage and loss results')
 
         os.chdir(self.run_dir)
-
-        
+ 
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        EDP_list = []
-        DM_list = []
-        DV_list = []
+        out_types = ['EDP', 'DM', 'DV', 'every_realization']
 
-        for bldg in bldg_data:
-            bldg_id = bldg['id']
-            min_id = min(int(bldg_id), min_id)
-            max_id = max(int(bldg_id), max_id)
+        headers = dict(
+            EDP = [0, 1, 2, 3],
+            DM = [0, 1, 2],
+            DV = [0, 1, 2, 3])
 
-            try:
-            #if True:
-                # EDP data
-                df_i = pd.read_csv(bldg_id+'/EDP.csv', header=[0,1,2,3], index_col=0)
-                df_i.index = [bldg_id,]
-                EDP_list.append(df_i)
+        for out_type in out_types:
+            if (self.outputs is None) or (self.outputs.get(out_type, False)):
 
-            except:
-                log_msg('Error reading EDP data for building {}'.format(bldg_id))
+                if out_type == 'every_realization':
 
-            try:
-            #if True:
-                # damage data
-                df_i = pd.read_csv(bldg_id+'/DM.csv', header=[0,1,2], index_col=0)
-                df_i.index = [bldg_id,]
-                DM_list.append(df_i)
+                    realizations = None
 
-            except:
-                log_msg('Error reading DM data for building {}'.format(bldg_id))
+                    for bldg in bldg_data:
+                        bldg_id = bldg['id']
+                        min_id = min(int(bldg_id), min_id)
+                        max_id = max(int(bldg_id), max_id)
 
-            try:
-            #if True:
-                # damage data
-                df_i = pd.read_csv(bldg_id+'/DV.csv', header=[0,1,2,3], index_col=0)
-                df_i.index = [bldg_id,]
-                DV_list.append(df_i)
-
-            except:
-                log_msg('Error reading DV data for building {}'.format(bldg_id))
-
-        EDP_agg = pd.concat(EDP_list, axis=0, sort=False)
-        EDP_agg.sort_index(axis=0, inplace=True)
-
-        DM_agg = pd.concat(DM_list, axis=0, sort=False)
-        DM_agg.sort_index(axis=0, inplace=True)
-
-        DV_agg = pd.concat(DV_list, axis=0, sort=False)
-        DV_agg.sort_index(axis=0, inplace=True)
-
-        if False: # keep it temporarily
-            with open(bldg_id+'/DM.csv') as f:
-                DM = json.load(f)            
-                
-            for FG in DM.keys():
-
-                if FG == 'aggregate':
-                    PG = ''
-                    DS_list = list(DM[FG].keys())
-                else:
-                    PG = next(iter(DM[FG]))
-                    DS_list = list(DM[FG][PG].keys())
-                
-                if ((DM_agg.size == 0) or 
-                    (FG not in DM_agg.columns.get_level_values('FG'))):
-                    MI = pd.MultiIndex.from_product([[FG,],DS_list],names=['FG','DS'])
-                    DM_add = pd.DataFrame(columns=MI, index=[bldg_id])
-                    
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_add.loc[bldg_id, (FG, DS)] = val
-                        
-                    DM_agg = pd.concat([DM_agg, DM_add], axis=1, sort=False)
-                
-                else:        
-                    for DS in DS_list:
-                        if PG == '':
-                            val = DM[FG][DS]
-                        else:
-                            val = DM[FG][PG][DS]
-                        DM_agg.loc[bldg_id, (FG, DS)] = val
-
-            # then collect the decision variables
-            DV_agg = pd.DataFrame()
-
-            for bldg in bldg_data:
-                bldg_id = bldg['id']
-
-                try:
-                #if True:
-                
-                    with open(bldg_id+'/DV.json') as f:
-                        DV = json.load(f)
-                        
-                    for DV_type in DV.keys():
-                        
-                        stat_list = list(DV[DV_type]['total'].keys())
-                        
-                        if ((DV_agg.size == 0) or 
-                            (DV_type not in DV_agg.columns.get_level_values('DV'))): 
-                        
-                            MI = pd.MultiIndex.from_product(
-                                [[DV_type,],stat_list],names=['DV','stat'])
-                        
-                            DV_add = pd.DataFrame(columns=MI, index=[bldg_id])
+                        #try:
+                        if True:
+                            df_i = pd.read_csv(bldg_id+f'/DL_summary.csv', 
+                                               header=0, index_col=0)
+                            if realizations == None:
+                                realizations = dict([(col, []) for col in df_i.columns])
                             
-                            for stat in stat_list:
-                                DV_add.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                                
-                            DV_agg = pd.concat([DV_agg, DV_add], axis=1, sort=False)
-                        else:                     
-                            for stat in stat_list:
-                                DV_agg.loc[bldg_id, (DV_type, stat)] = DV[DV_type]['total'][stat]
-                                
-                except:
-                    log_msg('Error reading DV data for building {}'.format(bldg_id))
+                            for col in df_i.columns:
+                                vals = df_i.loc[:,col].to_frame().T
+                                vals.index = [bldg_id,]
+                                realizations[col].append(vals)
 
-        # save the collected DataFrames as csv files
-        EDP_agg.to_csv('EDP_{}-{}.csv'.format(min_id, max_id))
-        DM_agg.to_csv('DM_{}-{}.csv'.format(min_id, max_id))
-        DV_agg.to_csv('DV_{}-{}.csv'.format(min_id, max_id))
+                        #except:
+                        #    log_msg(f'Error reading realization data for building {bldg_id}')
+
+                    for d_type in realizations.keys():
+                        d_agg = pd.concat(realizations[d_type], axis=0, sort=False)
+                        #d_agg.sort_index(axis=0, inplace=True)
+                        
+                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hd5', d_type, mode='a', format='fixed')
+
+                else:
+                    out_list = []
+
+                    for bldg in bldg_data:
+                        bldg_id = bldg['id']
+                        min_id = min(int(bldg_id), min_id)
+                        max_id = max(int(bldg_id), max_id)
+
+                        try:
+                        #if True:
+                            # EDP data
+                            df_i = pd.read_csv(bldg_id+f'/{out_type}.csv', 
+                                               header=headers[out_type], index_col=0)
+                            df_i.index = [bldg_id,]
+                            out_list.append(df_i)
+
+                        except:
+                            log_msg(f'Error reading {out_type} data for building {bldg_id}')
+
+                    out_agg = pd.concat(out_list, axis=0, sort=False)
+                    #out_agg.sort_index(axis=0, inplace=True)
+
+                    # save the collected DataFrames as csv files
+                    out_agg.to_csv(f'{out_type}_{min_id}-{max_id}.csv')
 
         log_msg('Damage and loss results collected successfully.')
         log_msg(log_div)

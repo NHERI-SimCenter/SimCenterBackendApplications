@@ -254,14 +254,14 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double lambdaT = lambdaL/lambdaU;
       double dT = 1.0/(modelFrequency*lambdaT);
 
-      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
-      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
+      //      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
+      //      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
 
-      std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
-      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
+      // std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
+      //      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
 
       double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
-      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
+      //      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -511,7 +511,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       // invoke python and LowRiseTPU.py script to process the .mat file into json file
       //
       
-      std::cerr << "INVOKE PYTHON\n";
+      //      std::cerr << "INVOKE PYTHON\n";
 
       /********************************************* old involves including python library 
       int pyArgc = 3;
@@ -534,7 +534,7 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       std::string command = "python ";
       command += pyArgs;
       system(command.c_str());
-      std::cerr << "DONE PYTHON\n";
+      //      std::cerr << "DONE PYTHON\n";
 
       // need to write empty event for EDP
 
@@ -681,11 +681,13 @@ int addForcesFace(TAP *theTaps, int numTaps,
       double Rabove = locY*A/heightStory;
       double Rbelow = (heightStory-locY)*A/heightStory;
       
+      /*
       for (int k=0; k<numTaps; k++) {
 	TAP *theTap = &theTaps[k];
 	if (theTap->face == 1)
 	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
       }
+      */
             
       for (int k=0; k<numDivisionX; k++) {
 	
@@ -715,7 +717,7 @@ int addForcesFace(TAP *theTaps, int numTaps,
 	  
 	  theTap->moments[i] = theTap->moments[i] + Mabove;
 	  
-	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
+	  //	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
 	  
 	}	    
 	locX += dX;
