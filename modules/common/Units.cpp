@@ -105,8 +105,13 @@ double GetForceFactor(const UnitSystem &fromUnitSystem,
                       const UnitSystem &toUnitSystem) {
 
   // Unknown force unit
-  if (fromUnitSystem.forceUnit == ForceUnit::Unknown || toUnitSystem.forceUnit == ForceUnit::Unknown) {
-    std::cerr << "Unknown force unit!!!" << std::endl;
+  if (fromUnitSystem.forceUnit == ForceUnit::Unknown) {
+    std::cerr << "from: Unknown force unit!!!" << std::endl;
+    return 1.0;
+  }
+
+  if (toUnitSystem.forceUnit == ForceUnit::Unknown) {
+    std::cerr << "to: Unknown force unit!!!" << std::endl;
     return 1.0;
   }
 
