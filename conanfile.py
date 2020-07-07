@@ -3,7 +3,7 @@ import os
 
 class simCenterBackendApps(ConanFile):
     name = "SimCenterBackendApplications"
-    version = "1.2.0"
+    version = "1.2.1"
     description = "Backend applications for SimCenter software"
     license = "BSD 3-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
