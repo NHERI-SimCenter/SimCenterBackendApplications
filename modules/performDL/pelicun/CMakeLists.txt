@@ -1,1 +1,2 @@
 simcenter_add_python_script(SCRIPT DL_calculation.py DEPENDS pelicunPBE)
+simcenter_add_python_script(SCRIPT export_DB.py DEPENDS pelicunPBE)
