@@ -41,6 +41,7 @@
 import os, sys, posixpath
 import argparse, json
 import string
+import numpy as np
 
 def write_RV(EVENT_input_path):
     
