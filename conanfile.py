@@ -35,14 +35,14 @@ class simCenterBackendApps(ConanFile):
         "revision": "auto"
     }
 
-    
-    # def source(self):
-    #    git = tools.Git(folder=self._source_subfolder)
-    #    git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
 
     def configure(self):
         self.options.shared = False
-       
+
+        if self.settings.os == "Windows":
+            self.options["libcurl"].with_winssl = True
+            self.options["libcurl"].with_openssl = False
+
     def configure_cmake(self):
         cmake = CMake(self, msbuild_verbosity='detailed')
         cmake.configure(source_folder=self._source_subfolder)
