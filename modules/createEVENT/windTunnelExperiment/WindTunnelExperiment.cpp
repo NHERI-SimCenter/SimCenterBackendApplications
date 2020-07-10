@@ -255,21 +255,13 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 	return -4;
       }
 
-      //      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
       double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
       double lambdaU = modelWindSpeed/windSpeed;
       double lambdaT = lambdaL/lambdaU;
       double dT = 1.0/(modelFrequency*lambdaT);
 
-      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
-      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
-
-      std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
-      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
-
-      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
-      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
+      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.; // N to kN
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -644,12 +636,6 @@ int addForcesFace(TAP *theTaps, int numTaps,
       double Rabove = locY*A/heightStory;
       double Rbelow = (heightStory-locY)*A/heightStory;
       
-      for (int k=0; k<numTaps; k++) {
-	TAP *theTap = &theTaps[k];
-	if (theTap->face == 1)
-	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
-      }
-            
       for (int k=0; k<numDivisionX; k++) {
 	
 	double Mabove = Rabove*(locX-centerLine);
@@ -677,9 +663,6 @@ int addForcesFace(TAP *theTaps, int numTaps,
 	    theTap->forces[i] = theTap->forces[i] - Rabove;
 	  
 	  theTap->moments[i] = theTap->moments[i] + Mabove;
-	  
-	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
-	  
 	}	    
 	locX += dX;
       }

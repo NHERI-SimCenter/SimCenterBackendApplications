@@ -206,9 +206,9 @@
         "ApplicationSpecificInputs":[]
       },
       {
-        "Name": "StochasticWindInput-WittigSinha1975",
+        "Name": "StochasticWindWittigSinha",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
-        "ApplicationSpecificInputs":["modelName", "seed"]
+        "ApplicationSpecificInputs":[]
       },		
       {
         "Name": "StochasticGroundMotion",
@@ -229,7 +229,16 @@
       {
         "Name": "CFDEvent",
         "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
-        "ApplicationSpecificInputs":["OpenFOAMCase", "OpenFOAMSolver"]
+        "ApplicationSpecificInputs":[
+		{
+			"id":"OpenFOAMCase",
+			"type":"string",
+            "description": "Remote directory containing OpenFOAM case input"
+		},{
+			"id":"OpenFOAMSolver",
+			"type":"string",
+            "description": "OpenFOAM solver used"
+		}]
       },
       {
         "Name": "NNGM",

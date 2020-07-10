@@ -73,10 +73,10 @@ int main(int argc, char** argv) {
 
     for (json::iterator it = input_data["Events"].begin();
          it != input_data["Events"].end(); ++it) {
-      if (it->at("type") == "StochasticWindInput-WittigSinha1975") {
+      if (it->at("type") == "StochasticWindWittigSinha") {
         json current_event;
         current_event.emplace("type", "Wind");
-        current_event.emplace("subtype", "StochasticWindInput-WittigSinha1975");
+        current_event.emplace("subtype", "StochasticWindWittigSinha");
 
 	std::string exposure_category = it->at("exposureCategory");
         double drag_coeff = 1.0, gust_wind_speed = 100.0;

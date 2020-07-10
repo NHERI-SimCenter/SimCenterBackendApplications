@@ -3,7 +3,7 @@ import os
 
 class simCenterBackendApps(ConanFile):
     name = "SimCenterBackendApplications"
-    version = "1.1.0"
+    version = "1.2.1"
     description = "Backend applications for SimCenter software"
     license = "BSD 3-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
@@ -19,7 +19,7 @@ class simCenterBackendApps(ConanFile):
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
-               "mkl-static/2019.4@simcenter/testing", \
+               "mkl-static/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.0@simcenter/stable"
 
