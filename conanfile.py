@@ -44,7 +44,7 @@ class simCenterBackendApps(ConanFile):
             self.options["libcurl"].with_openssl = False
 
     def configure_cmake(self):
-        cmake = CMake(self, msbuild_verbosity='detailed')
+        cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
     
