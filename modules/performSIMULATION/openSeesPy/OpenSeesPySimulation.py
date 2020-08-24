@@ -48,7 +48,8 @@ from openseespy.opensees import *
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
     'max_rel_disp' : 'PFD',
-    'max_drift' : 'PID'
+    'max_drift' : 'PID',
+    'max_roof_drift': 'PRD'
 }
 
 def write_RV():
@@ -66,22 +67,25 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # load the model builder script
     with open(BIM_input_path, 'r') as f:
         BIM_in = json.load(f)
-        model_script_path = BIM_in['Simulation']['fileName']
+
+    model_params = BIM_in['GI']
+
+    with open(SAM_input_path, 'r') as f:
+        SAM_in = json.load(f)
+
+    sys.path.insert(0, SAM_in['modelPath'])
+
+    model_script_path = SAM_in['mainScript']
+    dof_map = [int(dof) for dof in SAM_in['dofMap'].split(',')]
+
     model_script = importlib.__import__(
         model_script_path[:-3], globals(), locals(), ['build_model',], 0)
     build_model = model_script.build_model
 
-    # with open(SAM_input_path, 'r') as f:
-    #     SAM_in = json.load(f)
-    #
-    # model_script = importlib.__import__(
-    #     SAM_in['mainScript'][:-3], globals(), locals(), ['build_model',], 0)
-    # build_model = model_script.build_model
-
     wipe()
 
     # build the model
-    build_model()
+    build_model(model_params)
 
     # load the event file
     with open(EVENT_input_path, 'r') as f:
@@ -89,6 +93,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     event_list = EVENT_in['timeSeries']
     pattern_list = EVENT_in['pattern']
+    #TODO: use dictionary
     pattern_ts_link = [p['timeSeries'] for p in pattern_list]
 
     TS_list = []
