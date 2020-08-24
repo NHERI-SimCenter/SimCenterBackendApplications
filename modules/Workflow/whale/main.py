@@ -358,7 +358,7 @@ class Workflow(object):
         log_msg('\trun type: {}'.format(run_type))
         log_msg(log_div)
 
-        self.optional_apps = ['Modeling', 'EDP', 'UQ'] 
+        self.optional_apps = ['Modeling', 'EDP', 'UQ', 'DL'] 
 
         self.run_type = run_type
         self.input_file = input_file
@@ -995,57 +995,102 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Running damage and loss assessment')
+        if 'DL' in self.workflow_apps.keys():
+            log_msg('Running damage and loss assessment')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if 'Building' not in self.app_type_list:
-            # Copy the dakota.json file from the templatedir to the run_dir so that
-            # all the required inputs are in one place.
-            input_file = ntpath.basename(input_file)
-            shutil.copy(
-                src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
-                dst = posixpath.join(self.run_dir,BIM_file))
-        else:            
-            # copy the BIM file from the main dir to the building dir
-            shutil.copy(
-                src = posixpath.join(self.run_dir, BIM_file),
-                dst = posixpath.join(self.run_dir, 
-                                     '{}/{}'.format(bldg_id, BIM_file)))
-            os.chdir(str(bldg_id))
-
-        workflow_app = self.workflow_apps['DL']
-
-        # TODO: not elegant code, fix later
-        if BIM_file is not None:
-            for input_var in workflow_app.inputs:
-                if input_var['id'] == 'filenameDL':
-                    input_var['default'] = BIM_file     
-
-        command_list = self.workflow_apps['DL'].get_command_list(
-            app_path=self.app_dir_local)     
-
-        command = create_command(command_list)
-
-        log_msg('\tDamage and loss assessment command:')
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
-
-        result, returncode = run_command(command)
-
-        log_msg(result, prepend_timestamp=False)
-
-        # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
-        if 'Building' in self.app_type_list:
-
-            try:
+            if 'Building' not in self.app_type_list:
+                # Copy the dakota.json file from the templatedir to the run_dir so that
+                # all the required inputs are in one place.
+                input_file = ntpath.basename(input_file)
                 shutil.copy(
-                    src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
-                    dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
-            except:
-                pass
+                    src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
+                    dst = posixpath.join(self.run_dir,BIM_file))
+            else:            
+                # copy the BIM file from the main dir to the building dir
+                shutil.copy(
+                    src = posixpath.join(self.run_dir, BIM_file),
+                    dst = posixpath.join(self.run_dir, 
+                                         '{}/{}'.format(bldg_id, BIM_file)))
+                os.chdir(str(bldg_id))
 
-        log_msg('Damage and loss assessment finished successfully.')
-        log_msg(log_div)
+            workflow_app = self.workflow_apps['DL']
+
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameDL':
+                        input_var['default'] = BIM_file     
+
+            command_list = self.workflow_apps['DL'].get_command_list(
+                app_path=self.app_dir_local)     
+
+            command = create_command(command_list)
+
+            log_msg('\tDamage and loss assessment command:')
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+
+            result, returncode = run_command(command)
+
+            log_msg(result, prepend_timestamp=False)
+
+            # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+            if 'Building' in self.app_type_list:
+
+                try:
+                    shutil.copy(
+                        src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                        dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+                except:
+                    pass
+
+            log_msg('Damage and loss assessment finished successfully.')
+            log_msg(log_div)
+
+        else:
+            log_msg('')
+            log_msg('No DL requested, loss assessment step is skipped.')
+            log_msg('')
+
+            EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+
+            col_info = []
+            for col in EDP_df.columns:
+                try:
+                    split_col = col.split('-')
+                    if len(split_col[1]) == 3:
+                        col_info.append(split_col[1:])
+                except:
+                    continue
+
+            col_info = np.transpose(col_info)
+
+            EDP_types = np.unique(col_info[0])
+            EDP_locs = np.unique(col_info[1])
+            EDP_dirs = np.unique(col_info[2])
+
+            MI = pd.MultiIndex.from_product(
+                [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+                names=['type', 'loc', 'dir', 'stat'])
+
+            df_res = pd.DataFrame(columns=MI, index=[0, ])
+            if ('PID', '0') in df_res.columns:
+                del df_res[('PID', '0')]
+
+            # store the EDP statistics in the output DF
+            for col in np.transpose(col_info):
+                df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+                    '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+                df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                    EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+
+            df_res.dropna(axis=1, how='all', inplace=True)
+
+            df_res = df_res.astype(float)
+
+            # save the output
+            df_res.to_csv('EDP.csv')
 
     def aggregate_results(self, bldg_data):
         """
