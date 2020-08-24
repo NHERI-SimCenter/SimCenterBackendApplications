@@ -105,6 +105,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
+    distances = distances + 1e-20
 
     # iterate through the buildings and store the selected events in the BIM
     for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index, 
