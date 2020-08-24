@@ -55,9 +55,10 @@ def get_label(options, labels, label_name):
 
 	for option in options:
 		if option in labels:
-			return option
+			labels = labels[labels != option]
+			return option, labels
 
-	print(f'ERROR: Could not identify the label for the {label_name}')
+	print(f'WARNING: Could not identify the label for the {label_name}')
 
 def create_building_files(output_file, building_source_file, min_id, max_id):
 	
@@ -98,14 +99,18 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 	# identify the labels
 	labels = selected_bldgs.columns.values
 
-	lon_label = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
-	lat_label = get_label(['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude')
-	story_label = get_label(['Stories', 'stories'], labels, 'number of stories')
-	year_label = get_label(['Year Built', 'yearbuilt', 'yearBuilt'], labels, 'year of construction')
-	structure_label = get_label(['Structure Type', 'structure', 'structureType'], labels, 'structure type')
-	area_label = get_label(['Area', 'areafootprint', 'areaFootprint'], labels, 'footprint area')
-	occupancy_label = get_label(['Type ID', 'occupancy', 'occupancyType'], labels, 'occupancy type')
-	cost_label = get_label(['Replacement Cost', 'replacementCost'], labels, 'replacement cost')
+	lon_label, labels = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
+	lat_label, labels = get_label(['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude')
+	story_label, labels = get_label(['Stories', 'stories'], labels, 'number of stories')
+	year_label, labels = get_label(['Year Built', 'yearbuilt', 'yearBuilt'], labels, 'year of construction')
+	structure_label, labels = get_label(['Structure Type', 'structure', 'structureType'], labels, 'structure type')
+	area_label, labels = get_label(['Area', 'areafootprint', 'areaFootprint', 'area'], labels, 'footprint area')
+	occupancy_label, labels = get_label(['Type ID', 'occupancy', 'occupancyType'], labels, 'occupancy type')
+	cost_label, labels = get_label(['Replacement Cost', 'replacementCost'], labels, 'replacement cost')
+
+	labels = labels[labels != 'population']
+	labels = labels[labels != 'Damping']
+	labels = labels[labels != 'PGA target']
 
 	for bldg_id, bldg in selected_bldgs.iterrows():
 
@@ -135,7 +140,6 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		        yearBuilt       = bldg[year_label],
 		        structType      = bldg[structure_label],
 		        name            = bldg_id,
-		        area            = float(bldg[area_label]) * area_scale,
 		        numStory        = bldg[story_label],
 		        occupancy       = occupancy,
 		        height          = height, #the height is always in [m] already
@@ -146,14 +150,35 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		    )
 		}
 
-		if 'soil_type' in bldg.keys():
-			BIM_i["GI"].update({'soil_type': bldg['soil_type']})
+		if area_label in bldg.keys():
+			BIM_i['GI'].update({'area': float(bldg[area_label]) * area_scale})
 
 		if 'Damping' in bldg.keys():
 			BIM_i["GI"].update({'dampingRatio': bldg['Damping']})
 
 		if 'PGA target' in bldg.keys():
 			BIM_i["GI"].update({'PGA_target': bldg['PGA target']})
+
+		# take every other label as-is
+		for label in labels:
+			BIM_i["GI"].update({label: bldg[label]})
+
+		"""
+			if 'roofType' in bldg.keys():
+				BIM_i["GI"].update({'roofType': bldg['roofType']})	
+
+			if 'buildingDescription' in bldg.keys():
+				BIM_i["GI"].update({'buildingDescription': bldg['buildingDescription']})		
+
+			if 'soil_type' in bldg.keys():
+				BIM_i["GI"].update({'soil_type': bldg['soil_type']})
+
+			if 'V_design' in bldg.keys():
+				BIM_i["GI"].update({'V_design': bldg['V_design']})
+
+			if 'z0' in bldg.keys():
+				BIM_i["GI"].update({'z0': bldg['z0']})
+		"""
 
 		BIM_file_name = "{}-BIM.json".format(bldg_id)
 
