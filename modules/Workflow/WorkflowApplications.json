@@ -345,7 +345,33 @@
       {
         "Name": "OpenSeesPyInput",
         "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "modelPath",
+            "type": "path",
+            "description": "Defines the location of the OpenSeesPy model files."
+          },
+          {
+            "id": "mainScript",
+            "type": "string",
+            "description": "Defines the name of the main model file."
+          },
+          {
+            "id": "ndm",
+            "type": "int",
+            "description": "Defines the number of degrees of freedom in the numerical model."
+          },
+          {
+            "id": "dofMap",
+            "type": "string",
+            "description": "The workflow assumes X=1, Y=2, Z=3 mapping between directions and degrees of freedom; XY being the horizontal directions. This input allows you to define an alternative mapping by providing three numbers separated by commas in a string, such as '1, 3, 2' if you want to have Y as the vertical direction."
+          },
+          {
+            "id": "ctrlNodes",
+            "type": "string",
+            "description": "Defines the ids of the control nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building."
+          }
+        ]
       },
       {
         "Name": "MDOF_BuildingModel",
@@ -462,7 +488,7 @@
       },
       {
         "Name": "OpenSeesPy-Simulation",
-        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"        
+        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"       
       },
       {
         "Name": "ExtractPGA",
