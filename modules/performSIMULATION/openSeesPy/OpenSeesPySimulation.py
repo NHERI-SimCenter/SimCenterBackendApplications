@@ -103,15 +103,14 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # define the time series
     for evt_i, event in enumerate(event_list):
 
-        timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', event['factor']*f_G,
+        timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
                    '-values', *event['data'], '-prependZero')
 
         pat = pattern_list[pattern_ts_link.index(event['name'])]
 
-        pattern('UniformExcitation', evt_i+2, pat['dof'], '-accel', evt_i+2)
+        pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
 
-        #TS_list.append(list(np.insert(np.array(event['data'])*event['factor']*f_G, 0, 0.)))
-        TS_list.append(list(np.array([0.,] + event['data'])*event['factor']*f_G))
+        TS_list.append(list(np.array([0.,] + event['data'])*f_G))
 
     # TODO: recorders
 
