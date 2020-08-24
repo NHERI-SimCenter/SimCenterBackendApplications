@@ -115,16 +115,15 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # TODO: recorders
 
     # load the analysis script
-    with open(BIM_input_path, 'r') as f:
-        BIM_in = json.load(f)
-        analysis_script_path = BIM_in['Simulation']['fileName']
-        recorder_nodes = BIM_in['StructuralInformation']['nodes']
     analysis_script = importlib.__import__(
-        analysis_script_path[:-3], globals(), locals(), ['run_analysis',], 0)
+        model_script_path[:-3], globals(), locals(), ['run_analysis',], 0)
     run_analysis = analysis_script.run_analysis
 
+    recorder_nodes = SAM_in['recorderNodes']
+
     # run the analysis
-    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], GM_npts=EVENT_in['numSteps'], 
+    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], 
+        GM_npts=EVENT_in['numSteps'], 
         TS_List = TS_list, nodes_COD = recorder_nodes)
 
     # TODO: default analysis script
@@ -135,13 +134,19 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
 
+    #print(EDP_res)
+
     for response in EDP_list:
         EDP_kind = convert_EDP[response['type']]
-        if EDP_kind != 'PID':
+        if EDP_kind not in ['PID', 'PRD']:
             loc = response['floor']
         else:
             loc = response['floor2']
-        response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
+
+        try:
+            response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
+        except:
+            response['scalar_data'] = [0.0, 0.0]
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
