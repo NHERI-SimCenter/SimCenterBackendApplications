@@ -61,7 +61,7 @@ def get_label(options, labels, label_name):
 	print(f'WARNING: Could not identify the label for the {label_name}')
 
 def create_building_files(output_file, building_source_file, min_id, max_id):
-	
+
 	import numpy as np
 	import pandas as pd
 
@@ -80,8 +80,8 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 	    if min_id > max_id:
 	        tmp = min_id
 	        min_id = max_id
-	        max_id = tmp	
-	        
+	        max_id = tmp
+
 	buildings_array = []
 
 	bldgs_df = pd.read_csv(building_source_file, header=0, index_col=0)
@@ -114,6 +114,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 
 	for bldg_id, bldg in selected_bldgs.iterrows():
 
+		bldg_id = int(bldg_id)
 		if bldg[story_label] == 1:
 			height = 4.66 # m
 		elif bldg[structure_label][0] in ['C', 'P', 'R', 'U', 'M']:
@@ -165,10 +166,10 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 
 		"""
 			if 'roofType' in bldg.keys():
-				BIM_i["GI"].update({'roofType': bldg['roofType']})	
+				BIM_i["GI"].update({'roofType': bldg['roofType']})
 
 			if 'buildingDescription' in bldg.keys():
-				BIM_i["GI"].update({'buildingDescription': bldg['buildingDescription']})		
+				BIM_i["GI"].update({'buildingDescription': bldg['buildingDescription']})
 
 			if 'soil_type' in bldg.keys():
 				BIM_i["GI"].update({'soil_type': bldg['soil_type']})
