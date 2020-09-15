@@ -141,6 +141,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		        structType      = bldg[structure_label],
 		        name            = bldg_id,
 		        numStory        = bldg[story_label],
+		        stories         = bldg[story_label], # this is needed for pelicun
 		        occupancy       = occupancy,
 		        height          = height, #the height is always in [m] already
 		        replacementCost = bldg[cost_label],
