@@ -358,7 +358,7 @@ class Workflow(object):
         log_msg('\trun type: {}'.format(run_type))
         log_msg(log_div)
 
-        self.optional_apps = ['Modeling', 'EDP', 'UQ', 'DL'] 
+        self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL'] 
 
         self.run_type = run_type
         self.input_file = input_file
@@ -620,7 +620,7 @@ class Workflow(object):
 
         return building_file
 
-    def create_regional_event(self, building_file):
+    def perform_regional_mapping(self, building_file):
         """
         Short description
 
@@ -631,9 +631,9 @@ class Workflow(object):
 
         """
 
-        log_msg('Creating regional event...')
+        log_msg('Creating regional mapping...')
 
-        reg_event_app = self.workflow_apps['RegionalEvent']
+        reg_event_app = self.workflow_apps['RegionalMapping']
 
         # TODO: not elegant code, fix later
         for input_ in reg_event_app.inputs:
@@ -652,7 +652,7 @@ class Workflow(object):
         log_msg('\tOutput: ')
         log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
-        log_msg('Regional event successfully created.')
+        log_msg('Regional mapping successfully created.')
         log_msg(log_div)
 
     def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):

@@ -101,6 +101,16 @@
   },
   "RegionalEventApplications": {
     "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+      ]
+    },
+    "Applications":[
+    ]
+  },
+  "RegionalMappingApplications": {
+    "API": {
       "Inputs":[
         {
           "id": "buildingFile",
@@ -115,7 +125,7 @@
     "Applications": [
       {
         "Name": "NearestNeighborEvents",
-        "ExecutablePath": "applications/performRegionalEventSimulation/NearestNeighborEvents/NNE.py",
+        "ExecutablePath": "applications/performRegionalMapping/NearestNeighborEvents/NNE.py",
         "ApplicationSpecificInputs": [
           {
             "id": "filenameEVENTgrid",
@@ -705,6 +715,11 @@
             "id": "ground_failure",
             "type": "bool",
             "description": "If true, fragility groups associated with ground failure are added in the auto-population phase. Note that such analysis requires PGD values as inputs."
+          },
+          {
+            "id": "auto_script",
+            "type": "path",
+            "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
           }
         ]
       }
