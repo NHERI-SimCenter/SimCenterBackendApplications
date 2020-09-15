@@ -39,17 +39,17 @@
 # Joanna J. Zou
 # 
 
-import os
+import os, sys
 import argparse, json
 import importlib
-import numpy as np
-from openseespy.opensees import *
 
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
     'max_rel_disp' : 'PFD',
     'max_drift' : 'PID',
-    'max_roof_drift': 'PRD'
+    'max_roof_drift': 'PRD',
+    'residual_drift': 'RID',
+    'residual_disp': 'RFD'
 }
 
 def write_RV():
@@ -61,6 +61,9 @@ def write_RV():
 
 def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
+
+    import numpy as np
+    import openseespy.opensees as ops
 
     sys.path.insert(0, os.getcwd())
 
@@ -82,7 +85,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
         model_script_path[:-3], globals(), locals(), ['build_model',], 0)
     build_model = model_script.build_model
 
-    wipe()
+    ops.wipe()
 
     # build the model
     build_model(model_params)
@@ -103,12 +106,12 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # define the time series
     for evt_i, event in enumerate(event_list):
 
-        timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
+        ops.timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
                    '-values', *event['data'], '-prependZero')
 
         pat = pattern_list[pattern_ts_link.index(event['name'])]
 
-        pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
+        ops.pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
 
         TS_list.append(list(np.array([0.,] + event['data'])*f_G))
 
@@ -137,6 +140,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     #print(EDP_res)
 
     for response in EDP_list:
+        #print(response)
         EDP_kind = convert_EDP[response['type']]
         if EDP_kind not in ['PID', 'PRD']:
             loc = response['floor']
