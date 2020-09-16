@@ -382,8 +382,8 @@ class Assessment(object):
                     DV_mods.append(replace_FG_IDs_with_FG_names(self._DV_dict[key][i]))
                     DV_names.append('{}DV_{}_{}'.format(suffix, key, i+1))
 
-        #try:
-        if True:
+        try:
+        #if True:
             log_msg('\tSaving files:')
 
             log_msg('\t\tSummary')
@@ -470,8 +470,8 @@ class Assessment(object):
                     output_path, suffix+DV_file, self._AIM_in['general'],
                     self._SUMMARY, dict(zip(DV_names, DV_mods)))
 
-        #except:
-        #    print("ERROR when trying to create DL output files.")
+        except:
+            print("ERROR when trying to create DL output files.")
 
     def _create_RV_demands(self):
 
@@ -2082,6 +2082,9 @@ class FEMA_P58_Assessment(Assessment):
                                 pd.Series(np.maximum(new_samples.values,EDP_samples.values),
                                           index=EDP_samples.index))
 
+                    # scale the max of inputs by 1.2 as per FEMA P58 vol 2 3.2.3
+                    EDP_samples *= 1.2
+
                 else:
                     demand_ID = (FG._demand_type +
                              '-LOC-' + str(PG._location + FG._demand_location_offset) +
@@ -2864,7 +2867,7 @@ class HAZUS_Assessment(Assessment):
                 ('injuries', 'sev4'),
             ]
 
-        if (DVs['injuries'] and 
+        if (DVs['injuries'] and
             (self._AIM_in['general']['event_time'] != 'off')):
             MI_raw += [
                 ('event time', 'month'),
@@ -2886,7 +2889,7 @@ class HAZUS_Assessment(Assessment):
         SUMMARY[:] = np.NaN
 
         # event time (if needed)
-        if (DVs['injuries'] and 
+        if (DVs['injuries'] and
             (self._AIM_in['general']['event_time'] != 'off')):
             for prop in ['month', 'weekday?', 'hour']:
                 offset = 0

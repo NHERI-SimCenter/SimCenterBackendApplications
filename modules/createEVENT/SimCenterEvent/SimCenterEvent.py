@@ -66,25 +66,26 @@ def write_RV(BIM_file, EVENT_file, data_dir):
 			'event_id': 'RV.eventID',
 			'data_dir': data_dir
 			})
+
+		RV_elements = []
+		for event in events:
+			if event['EventClassification'] == 'Earthquake':
+				RV_elements.append(event['fileName'])
+
+		event_file['randomVariables'][0]['elements'] = RV_elements
 	else:
 		event_file['Events'].append({
 			'type': 'Seismic',
 			'subtype': bim_data['Events']['Events'][0]['type'],
-			'event_id': 0,
+			'event_id': events[0]['fileName'],
 			'data_dir': data_dir
 			})
-
-	RV_elements = []
-	for event in events:
-		if event['EventClassification'] == 'Earthquake':
-			RV_elements.append(event['fileName'])
-
-	event_file['randomVariables'][0]['elements'] = RV_elements
 
 	# if time histories are used, then load the first event
 	if events[0]['type'] == 'timeHistory':
 		event_file['Events'][0].update(load_record(events[0]['fileName'], 
-									               data_dir, empty=True))
+									               data_dir, 
+									               empty=len(events) > 1))
 
 	with open(EVENT_file, 'w') as f:
 		json.dump(event_file, f, indent=2)

@@ -1,3 +1,44 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2018 Leland Stanford Junior University
+# Copyright (c) 2018 The Regents of the University of California
+#
+# This file is part of the SimCenter Backend Applications
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# You should have received a copy of the BSD 3-Clause License along with
+# this file. If not, see <http://www.opensource.org/licenses/>.
+#
+# Contributors:
+# Adam Zsarnóczay
+# Wael Elhaddad
+# 
+
 import glob
 import numpy as np
 import pandas as pd
@@ -64,46 +105,58 @@ def main(threads = 1):
         files = glob.glob('./results/{}/*/{}_*.csv'.format(res_type, res_type))
         #files = files[:1000]
 
-        if use_dask:
+        if len(files) > 0:
 
-            file_count = len(files)
-            chunk = math.ceil(file_count/threads)
-            df_list = []
+            if use_dask:
 
-            for t_i in range(threads):
-                
-                if t_i*chunk < file_count-1:
-                    df_list_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
-                    df_i = delayed(pd.concat)(df_list_i, axis=0, sort=False)
+                file_count = len(files)
+                chunk = math.ceil(file_count/threads)
+                df_list = []
 
-                    df_list.append(df_i)
+                print('Creating threads for {} files...'.format(file_count))
 
-                elif t_i*chunk == file_count-1:
-                    df_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
-                    df_i = df_i[0]
-                
-                    df_list.append(df_i)
+                for t_i in range(threads):
 
-            df_all = delayed(pd.concat)(df_list, axis=0, sort=False)
+                    print(t_i)
+                    
+                    if t_i*chunk < file_count-1:
 
-            df_all = client.compute(df_all)
+                        df_list_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
+                        df_i = delayed(pd.concat)(df_list_i, axis=0, sort=False)
 
-            df_all = client.gather(df_all)
+                        df_list.append(df_i)
+
+                    elif t_i*chunk == file_count-1:
+
+                        df_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
+                        df_i = df_i[0]
+                    
+                        df_list.append(df_i)
+
+                df_all = delayed(pd.concat)(df_list, axis=0, sort=False)
+
+                df_all = client.compute(df_all)
+
+                df_all = client.gather(df_all)
+
+            else:
+                log_msg('Loading all files')
+                df_list = [pd.read_csv(resFileName, header=headers[res_type], index_col=0) for resFileName in files]
+
+                log_msg('Concatenating all files')
+                df_all = pd.concat(df_list, axis=0, sort=False)
+
+            df_all.sort_index(axis=0, inplace=True)
+
+            # save the results
+            log_msg('Saving results')
+            df_all.index = df_all.index.astype(np.int32)
+            df_all.to_hdf('{}.hdf'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:snappy')
+            #df_all.to_csv('{}.csv'.format(res_type))
 
         else:
-            log_msg('Loading all files')
-            df_list = [pd.read_csv(resFileName, header=headers[res_type], index_col=0) for resFileName in files]
 
-            log_msg('Concatenating all files')
-            df_all = pd.concat(df_list, axis=0, sort=False)
-
-        df_all.sort_index(axis=0, inplace=True)
-
-        # save the results
-        log_msg('Saving results')
-        df_all.index = df_all.index.astype(np.int32)
-        df_all.to_hdf('{}.hd5'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:snappy')
-        #df_all.to_csv('{}.csv'.format(res_type))
+            print('No {} files found'.format(res_type))
 
     if use_dask:
 
@@ -147,7 +200,7 @@ if __name__ == "__main__":
     #Defining the command line arguments
 
     workflowArgParser = argparse.ArgumentParser(
-        "Aggregate the reuslts from rWHALE.")
+        "Aggregate the results from rWHALE.")
 
     workflowArgParser.add_argument("-threads", "-t", 
         type=int, default=48, 
