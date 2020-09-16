@@ -181,7 +181,7 @@
       },
       {
         "Name": "Site Response",
-        "ExecutablePath": "applications/createEVENT/siteResponse/SiteResponse",
+        "ExecutablePath": "applications/createEVENT/siteResponse/SiteResponse.py",
         "ApplicationSpecificInputs": [
 	]
       },
