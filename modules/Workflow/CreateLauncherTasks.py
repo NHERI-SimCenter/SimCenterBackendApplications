@@ -61,7 +61,7 @@ with open('WorkflowTasks.txt', 'w+') as tasksFile:
         min = i * taskSize + firstBuilding
         max = (i + 1) * taskSize + firstBuilding - 1
         runDir = "/tmp/rWHALE/applications/Workflow/RunDir{}-{}".format(min,max)
-        logPath = "{}/logs/{}/log{}-{}.txt".format(outDir, subfolder, min, max)
+        logPath = "{}/logs/{}/log{:07d}-{:07d}.txt".format(outDir, subfolder, min, max)
         tasksFile.write('mkdir -p {}/logs/{}/ && '.format(outDir, subfolder))
         tasksFile.write('python3 {} {} -Min {} -Max {} -d /tmp/rWHALE/applications/Workflow/data -w {} -l {} && '.format(workflowScript, configFile, min, max, runDir, logPath))
         tasksFile.write('mkdir -p {}/results/DV/{}/ && '.format(outDir, subfolder))
@@ -71,7 +71,7 @@ with open('WorkflowTasks.txt', 'w+') as tasksFile:
         tasksFile.write('cp -f {}/DM*.csv {}/results/DM/{}/ && '.format(runDir, outDir, subfolder))
         tasksFile.write('cp -f {}/DV*.csv {}/results/DV/{}/ && '.format(runDir, outDir, subfolder))
         tasksFile.write('cp -f {}/EDP*.csv {}/results/EDP/{}/ && '.format(runDir, outDir, subfolder))
-        tasksFile.write('cp -f {}/realizations*.csv {}/results/realizations/{}/ && '.format(runDir, outDir, subfolder))
+        tasksFile.write('cp -f {}/realizations*.hd5 {}/results/realizations/{}/ && '.format(runDir, outDir, subfolder))
         #tasksFile.write('cp -f {}/log.txt {}/logs/{}/log{}-{}.txt && '.format(outDir, subfolder, runDir, outDir, subfolder, min, max))
         tasksFile.write('( cp -f {}/pelicun_log*.txt {}/logs/{} 2> /dev/null || : ) && '.format(runDir, outDir, subfolder))
         #tasksFile.write("(cd {0} && realpath `find {0} -type 'f' -path '*dakota*.out'` --relative-to {0} | cpio -pdm {1}/logs/{2} ) && ".format(runDir, outDir, subfolder))
