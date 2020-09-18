@@ -37,19 +37,19 @@
 # Contributors:
 # Adam Zsarnóczay
 # Joanna J. Zou
-# 
+#
 
-import os
+import os, sys
 import argparse, json
 import importlib
-import numpy as np
-from openseespy.opensees import *
 
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
     'max_rel_disp' : 'PFD',
     'max_drift' : 'PID',
-    'max_roof_drift': 'PRD'
+    'max_roof_drift': 'PRD',
+    'residual_drift': 'RID',
+    'residual_disp': 'RFD'
 }
 
 def write_RV():
@@ -61,6 +61,9 @@ def write_RV():
 
 def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
+
+    import numpy as np
+    import openseespy.opensees as ops
 
     sys.path.insert(0, os.getcwd())
 
@@ -82,7 +85,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
         model_script_path[:-3], globals(), locals(), ['build_model',], 0)
     build_model = model_script.build_model
 
-    wipe()
+    ops.wipe()
 
     # build the model
     build_model(model_params)
@@ -103,12 +106,12 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # define the time series
     for evt_i, event in enumerate(event_list):
 
-        timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
+        ops.timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
                    '-values', *event['data'], '-prependZero')
 
         pat = pattern_list[pattern_ts_link.index(event['name'])]
 
-        pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
+        ops.pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
 
         TS_list.append(list(np.array([0.,] + event['data'])*f_G))
 
@@ -121,22 +124,45 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     recorder_nodes = SAM_in['recorderNodes']
 
-    # run the analysis
-    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], 
-        GM_npts=EVENT_in['numSteps'], 
-        TS_List = TS_list, nodes_COD = recorder_nodes)
-
-    # TODO: default analysis script
-
-    # save the EDP results
+    # create the EDP specification
+    # load the EDP file
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
 
+    edp_specs = {}
+    for response in EDP_list:
+        if response['type'] not in edp_specs.keys():
+            edp_specs.update({response['type']: {}})
+        edp_specs[response['type']].update(
+            {response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
+                              for dof in response['dofs']])})
+
+    #for edp_name, edp_data in edp_specs.items():
+    #    print(edp_name, edp_data)
+
+    # run the analysis
+    EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
+        GM_npts=EVENT_in['numSteps'],
+        TS_List = TS_list, EDP_specs = edp_specs)
+
+    #for edp_name, edp_data in edp_specs.items():
+    #    print(edp_name, edp_data)
+
+    # TODO: default analysis script
+
+    # save the EDP results
+
     #print(EDP_res)
 
     for response in EDP_list:
+        edp = EDP_res[response['type']][response['id']]
+
+        response['scalar_data'] = [val for dof, val in edp.items()]
+
+        #print(response)
+        """
         EDP_kind = convert_EDP[response['type']]
         if EDP_kind not in ['PID', 'PRD']:
             loc = response['floor']
@@ -147,6 +173,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
             response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
         except:
             response['scalar_data'] = [0.0, 0.0]
+        """
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
