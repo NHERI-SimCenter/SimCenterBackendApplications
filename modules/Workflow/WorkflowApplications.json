@@ -219,7 +219,7 @@
         "Name": "StochasticWindWittigSinha",
         "ExecutablePath": "applications/createEVENT/stochasticWind/StochasticWind",
         "ApplicationSpecificInputs":[]
-      },		
+      },
       {
         "Name": "StochasticGroundMotion",
         "ExecutablePath": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
@@ -235,7 +235,7 @@
             "description": "..."
           }
         ]
-      },		
+      },
       {
         "Name": "CFDEvent",
         "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
@@ -448,6 +448,17 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "UserDefinedEDP_R",
+        "ExecutablePath": "applications/createEDP/userEDP_R/UserDefinedEDP.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPspecs",
+            "type": "path",
+            "description": "Identifies the location of a json file that specifies the requested EDPs."
+          }
+        ]
+      },
+      {
         "Name": "SimpleEDP",
         "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
         "ApplicationSpecificInputs": []
@@ -498,7 +509,7 @@
       },
       {
         "Name": "OpenSeesPy-Simulation",
-        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"       
+        "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"
       },
       {
         "Name": "ExtractPGA",

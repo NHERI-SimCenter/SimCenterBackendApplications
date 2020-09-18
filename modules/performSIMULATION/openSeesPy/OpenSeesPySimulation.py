@@ -37,7 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 # Joanna J. Zou
-# 
+#
 
 import os, sys
 import argparse, json
@@ -124,23 +124,45 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     recorder_nodes = SAM_in['recorderNodes']
 
-    # run the analysis
-    EDP_res = run_analysis(GM_dt = EVENT_in['dT'], 
-        GM_npts=EVENT_in['numSteps'], 
-        TS_List = TS_list, nodes_COD = recorder_nodes)
-
-    # TODO: default analysis script
-
-    # save the EDP results
+    # create the EDP specification
+    # load the EDP file
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
 
+    edp_specs = {}
+    for response in EDP_list:
+        if response['type'] not in edp_specs.keys():
+            edp_specs.update({response['type']: {}})
+        edp_specs[response['type']].update(
+            {response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
+                              for dof in response['dofs']])})
+
+    #for edp_name, edp_data in edp_specs.items():
+    #    print(edp_name, edp_data)
+
+    # run the analysis
+    EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
+        GM_npts=EVENT_in['numSteps'],
+        TS_List = TS_list, EDP_specs = edp_specs)
+
+    #for edp_name, edp_data in edp_specs.items():
+    #    print(edp_name, edp_data)
+
+    # TODO: default analysis script
+
+    # save the EDP results
+
     #print(EDP_res)
 
     for response in EDP_list:
+        edp = EDP_res[response['type']][response['id']]
+
+        response['scalar_data'] = [val for dof, val in edp.items()]
+
         #print(response)
+        """
         EDP_kind = convert_EDP[response['type']]
         if EDP_kind not in ['PID', 'PRD']:
             loc = response['floor']
@@ -151,6 +173,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
             response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
         except:
             response['scalar_data'] = [0.0, 0.0]
+        """
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
