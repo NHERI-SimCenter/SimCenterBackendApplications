@@ -158,8 +158,9 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     for response in EDP_list:
         edp = EDP_res[response['type']][response['id']]
+        print(edp)
 
-        response['scalar_data'] = [val for dof, val in edp.items()]
+        response['scalar_data'] = edp # [val for dof, val in edp.items()]
 
         #print(response)
         """
@@ -195,6 +196,3 @@ if __name__ == '__main__':
         sys.exit(run_openseesPy(
             args.filenameEVENT, args.filenameSAM, args.filenameBIM,
             args.filenameEDP))
-
-
-
