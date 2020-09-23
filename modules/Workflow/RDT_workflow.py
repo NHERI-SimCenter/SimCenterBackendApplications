@@ -81,8 +81,8 @@ def main(run_type, input_file, app_registry,
         log_msg('Forced cleanup turned on.')
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Building', 'RegionalEvent', 'Event', 'Modeling', 
-                         'EDP', 'Simulation', 'UQ', 'DL'],
+        app_type_list = ['Building', 'RegionalEvent', 'RegionalMapping',
+                         'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
         units = inputs.get('units', None),
@@ -105,7 +105,7 @@ def main(run_type, input_file, app_registry,
 
     # prepare the basic inputs for individual buildings
     building_file = WF.create_building_files()
-    WF.create_regional_event(building_file)
+    WF.perform_regional_mapping(building_file)
 
     # TODO: not elegant code, fix later
     with open(WF.building_file_path, 'r') as f:

@@ -920,6 +920,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	  << "set dTana [expr $T1/20.]\n"
 	  << "if {$dt < $dTana} {set dTana $dt}\n";
 	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
+	s << "remove recorders \n";
       }
     }
 

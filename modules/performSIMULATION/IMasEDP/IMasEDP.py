@@ -67,7 +67,10 @@ def write_RV(EVENT_input_path):
 
     for filename in file_sample_dict.keys():
 
-        data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', skip_header=1)
+        data = np.atleast_1d(
+            np.genfromtxt(posixpath.join(data_dir, filename), 
+                          delimiter=',', skip_header=1)
+            )
 
         samples = data[file_sample_dict[filename][1]]
 
