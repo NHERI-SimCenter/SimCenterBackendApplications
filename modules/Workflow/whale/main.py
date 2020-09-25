@@ -565,7 +565,7 @@ class Workflow(object):
                             f'Need {app_type} entry in Applications')
 
         for app_type in self.optional_apps:
-            if app_type not in self.app_registry:
+            if (app_type not in self.app_registry) and (app_type in self.app_type_list):
                 self.app_type_list.remove(app_type)
 
         log_msg('\tRequested workflow:')
