@@ -35,28 +35,25 @@
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
-# Adam Zsarnóczay
-# 
+# Adam Zsarnï¿½czay
+#
 
 import sys, argparse,json
 
-def create_SAM(BIM_file, EVENT_file, SAM_file, 
-    model_script, model_path, ndm, dof_map, ctrl_nodes, getRV):
+def create_SAM(BIM_file, EVENT_file, SAM_file,
+    model_script, model_path, ndm, dof_map, getRV):
 
     with open(BIM_file, 'r') as f:
         root_BIM = json.load(f)['GI']
 
-    try:        
+    try:
         stories = root_BIM['numStory']
     except:
         raise ValueError("OpenSeesPyInput - structural information missing")
 
     # we create dummy nodes for now
     # TODO: improve this to use actual node information if needed
-    if ctrl_nodes != "":
-        nodes = [int(n) for n in ctrl_nodes.split(',')][:stories+1]
-    else:
-        nodes = range(stories+1)
+    nodes = list(range(stories+1))
 
     node_map = []
     for floor, node in enumerate(nodes):
@@ -79,7 +76,7 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
     }
 
     with open(SAM_file, 'w') as f:
-        json.dump(root_SAM, f, indent=2)    
+        json.dump(root_SAM, f, indent=2)
 
 if __name__ == '__main__':
 
@@ -91,11 +88,10 @@ if __name__ == '__main__':
     parser.add_argument('--modelPath')
     parser.add_argument('--ndm', default=3)
     parser.add_argument('--dofMap', default=[1, 2, 3])
-    parser.add_argument('--ctrlNodes', default="")
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
     sys.exit(create_SAM(
         args.filenameBIM, args.filenameEVENT, args.filenameSAM,
         args.mainScript, args.modelPath, args.ndm,
-        args.dofMap, args.ctrlNodes, args.getRV))
+        args.dofMap, args.getRV))

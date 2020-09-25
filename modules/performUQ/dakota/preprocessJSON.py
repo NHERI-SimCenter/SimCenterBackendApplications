@@ -76,9 +76,9 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     # get UQ method data
     #
 
-    with open(bimName) as data_file:    
+    with open(bimName) as data_file:
         data = json.load(data_file)
-        
+
     #uqData_in = data["UQ_Method"];
     #for key in uqData.keys():
     #    if key not in uqData_in.keys():
@@ -105,7 +105,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     else:
         numResultFiles = 0;
 
-    # 
+    #
     # parse the data
     #
 
@@ -128,7 +128,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
         workflowDriverName = 'workflow_driver.bat'
 
     #
-    # Write the input file: dakota.in 
+    # Write the input file: dakota.in
     #
 
     # write out the method data
@@ -136,7 +136,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
 
     # write out the env data
     dakota_input = ""
-    
+
     dakota_input += (
     """environment
 tabular_data
@@ -144,7 +144,7 @@ tabular_data_file = 'dakotaTab.out'
     
 method,
 """)
-    
+
     if method == "Importance Sampling":
         numSamples=uqData["samples"]
         seed = uqData["seed"]
@@ -160,7 +160,7 @@ seed = {seed}
     ismethod = imp_sams_arg,
     samples = numSamples,
     seed = seed))
-    
+
     elif method == "Monte Carlo":
         numSamples=uqData["samples"]
         seed = uqData["seed"]
@@ -175,10 +175,10 @@ seed = {seed}
     sample_type = 'random',
     samples = numSamples,
     seed = seed))
-    
+
     elif method == "LHS":
         numSamples=uqData["samples"]
-        seed = uqData["seed"]        
+        seed = uqData["seed"]
 
         dakota_input += (
     """sampling
@@ -190,23 +190,23 @@ seed = {seed}
     sample_type = 'lhs' ,
     samples = numSamples,
     seed = seed))
-    
+
     elif method == "Gaussian Process Regression":
         train_samples = uqData["samples"]
         gpr_seed = uqData["seed"]
         train_method = uqData["dataMethod"]
         if train_method == "Monte Carlo":
             train_method = "random"
-        
+
         train_samples2 = uqData["samples2"]
         gpr_seed2 = uqData["seed2"]
         train_method2 = uqData["dataMethod2"]
         if train_method2 == "Monte Carlo":
             train_method2 = "random"
-        
+
         # write out the env data
         dakota_input = ""
-        
+
         dakota_input += (
         """environment
 method_pointer = 'EvalSurrogate'
@@ -259,8 +259,8 @@ text_archive
             dakota_input += ('{}'.format(normalUncertainStdDev[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numNormalUncertain):
             dakota_input += ('\'')
             dakota_input += (normalUncertainName[i])
@@ -281,8 +281,8 @@ text_archive
             dakota_input += ('{}'.format(lognormalUncertainStdDev[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-            
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numLognormalUncertain):
             dakota_input += ('\'')
             dakota_input += (lognormalUncertainName[i])
@@ -303,8 +303,8 @@ text_archive
             dakota_input += ('{}'.format(uniformUncertainUpper[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numUniformUncertain):
             dakota_input += ('\'')
             dakota_input += (uniformUncertainName[i])
@@ -333,27 +333,27 @@ text_archive
             dakota_input += ('{}'.format(continuousDesignUpper[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-        
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numContinuousDesign):
             dakota_input += ('\'')
             dakota_input += (continuousDesignName[i])
             dakota_input += ('\' ')
         dakota_input += ('\n')
-            
+
 
     numCState = 0
     if (numCState > 0):
         dakota_input += ('discrete_state_range = ' '{}'.format(numConstantState))
         dakota_input += ('\n')
-        
+
         dakota_input += ('initial_state = ')
         for i in range(numConstantState):
             dakota_input += ('{}'.format(constantStateValue[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
 
-        dakota_input += ('descriptors = ')    
+        dakota_input += ('descriptors = ')
         for i in range(numConstantState):
             dakota_input += ('\'')
             dakota_input += (constantStateName[i])
@@ -363,20 +363,20 @@ text_archive
     if (numConstantState > 0):
         dakota_input += ('discrete_design_set\nreal = ' '{}'.format(numConstantState))
         dakota_input += ('\n')
-        
+
         dakota_input += ('num_set_values = ')
         for i in range(numConstantState):
             dakota_input += ('{}'.format(1))
             dakota_input += (' ')
         dakota_input += ('\n')
-        
+
         dakota_input += ('set_values = ')
         for i in range(numConstantState):
             dakota_input += ('{}'.format(constantStateValue[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
 
-        dakota_input += ('descriptors = ')    
+        dakota_input += ('descriptors = ')
         for i in range(numConstantState):
             dakota_input += ('\'')
             dakota_input += (constantStateName[i])
@@ -397,7 +397,7 @@ text_archive
             dakota_input += ('{}'.format(betaUncertainBetas[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-        
+
         dakota_input += ('lower_bounds = ')
         for i in range(numBetaUncertain):
             dakota_input += ('{}'.format(betaUncertainLower[i]))
@@ -409,8 +409,8 @@ text_archive
             dakota_input += ('{}'.format(betaUncertainHigher[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numBetaUncertain):
             dakota_input += ('\'')
             dakota_input += (betaUncertainName[i])
@@ -431,8 +431,8 @@ text_archive
             dakota_input += ('{}'.format(gammaUncertainBetas[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numGammaUncertain):
             dakota_input += ('\'')
             dakota_input += (gammaUncertainName[i])
@@ -453,8 +453,8 @@ text_archive
             dakota_input += ('{}'.format(gumbellUncertainBetas[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numGumbellUncertain):
             dakota_input += ('\'')
             dakota_input += (gumbellUncertainName[i])
@@ -469,14 +469,14 @@ text_archive
             dakota_input += ('{}'.format(weibullUncertainAlphas[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-            
+
         dakota_input += ('betas = ')
         for i in range(numWeibullUncertain):
             dakota_input += ('{}'.format(weibullUncertainBetas[i]))
             dakota_input += (' ')
         dakota_input += ('\n')
-    
-        dakota_input += ('descriptors = ')    
+
+        dakota_input += ('descriptors = ')
         for i in range(numWeibullUncertain):
             dakota_input += ('\'')
             dakota_input += (weibullUncertainName[i])
@@ -485,13 +485,13 @@ text_archive
 
     dakota_input += ('\n')
 
-            
+
     if (numDiscreteDesignSetString > 0):
         dakota_input += 'discrete_uncertain_set\n'
         dakota_input += 'string ' '{}'.format(numDiscreteDesignSetString)
         dakota_input += '\n'
 
-        dakota_input += 'num_set_values = '  
+        dakota_input += 'num_set_values = '
         for i in range(numDiscreteDesignSetString):
             numElements = len(discreteDesignSetStringValues[i])
             dakota_input += ' ' '{}'.format(numElements)
@@ -499,7 +499,7 @@ text_archive
             print(numElements)
 
         dakota_input += '\n'
-        dakota_input += 'set_values  '   
+        dakota_input += 'set_values  '
         for i in range(numDiscreteDesignSetString):
             elements = discreteDesignSetStringValues[i]
             for j in elements:
@@ -507,7 +507,7 @@ text_archive
                 dakota_input += '\' '
             dakota_input += '\n'
 
-        dakota_input += 'descriptors = '   
+        dakota_input += 'descriptors = '
         for i in range(numDiscreteDesignSetString):
             dakota_input += '\''
             dakota_input += discreteDesignSetStringName[i]
@@ -518,7 +518,7 @@ text_archive
     dakota_input += ('\n\n')
 
     if method == "Gaussian Process Regression":
-        
+
         train_samples = uqData["samples"]
         gpr_seed = uqData["seed"]
         train_method = uqData["dataMethod"]
@@ -557,7 +557,7 @@ interface_pointer = 'SimulationInterface'
     if method == "Gaussian Process Regression":
         dakota_input += ('id_interface = \'SimulationInterface\',\n')
 
-    if runType == "local":    
+    if runType == "local":
         dakota_input += "  analysis_driver = '{}'\n".format(workflowDriverName)
     else:
         dakota_input += "  analysis_driver = '{}'\n".format(remoteWorkflowDriverName)
@@ -570,16 +570,16 @@ interface_pointer = 'SimulationInterface'
     dakota_input += ('      aprepro \n')
     dakota_input += ('      work_directory\n')
     dakota_input += ('        named \'workdir\' \n')
-    dakota_input += ('        directory_tag\n')    
+    dakota_input += ('        directory_tag\n')
     if uqData['keepSamples']:
-        dakota_input += ('        directory_save\n')    
+        dakota_input += ('        directory_save\n')
 
     dakota_input += ('      copy_files = \'templatedir/*\' \n')
     # dakota_input += ('named \'workdir\' file_save  directory_save \n')
 
     if (runType == "local"):
         uqData['concurrency'] = uqData.get('concurrency', 4)
-    
+
     if uqData['concurrency'] == None:
         dakota_input += "  asynchronous\n"
     elif uqData['concurrency'] > 1:
@@ -589,12 +589,12 @@ interface_pointer = 'SimulationInterface'
 
 
     f.write(dakota_input)
-    
+
     #
     # write out the responses
     #
 
-    with open(edpName) as data_file:    
+    with open(edpName) as data_file:
         data = json.load(data_file)
 
     numResponses=data["total_number_edp"]
@@ -604,9 +604,9 @@ interface_pointer = 'SimulationInterface'
     f.write('responses, \n')
     f.write('response_functions = ' '{}'.format(numResponses))
     f.write('\n')
-    f.write('response_descriptors = ')    
+    f.write('response_descriptors = ')
 
-    
+
     for event in data["EngineeringDemandParameters"]:
         eventIndex = data["EngineeringDemandParameters"].index(event)
         for edp in event["responses"]:
@@ -644,9 +644,15 @@ interface_pointer = 'SimulationInterface'
                 edpAcronym = "PWS"
                 floor = edp["floor"]
                 known = True
-
+            elif(edp["type"] == "PID"):
+                edpAcronym = "PID"
+                floor = edp["id"]
+                known = True
             else:
-                f.write("'{}' ".format(edp["type"]))
+                edpAcronym = edp["type"]
+                floor = edp["id"]
+                known = True
+                #f.write("'{}' ".format(edp["type"]))
 
             if (known == True):
                 for dof in edp.get("dofs",[1,]):
@@ -714,7 +720,7 @@ interface_pointer = 'SimulationInterface'
         f.write('\n')
         f.write('"'+os.path.join(scriptDir,'extractEDP')+'" ' + edpName + ' results.out \n')
 
-    # Run 
+    # Run
     #f.write('rm -f *.com *.done *.dat *.log *.sta *.msg')
     #f.write('echo 1 >> results.out\n')
     f.close()
@@ -858,7 +864,7 @@ def parseFileForRV(fileName):
                     numDiscreteDesignSetString += 1
                     numRandomVariables += 1
                     print('\t{name} | discrete set={elements}'.format(
-                        name = discreteDesignSetStringName[-1], 
+                        name = discreteDesignSetStringName[-1],
                         elements = discreteDesignSetStringValues[-1]))
 
         if data.get("resultFiles"):
