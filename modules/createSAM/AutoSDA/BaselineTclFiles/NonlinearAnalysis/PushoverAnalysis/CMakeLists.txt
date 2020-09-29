@@ -1,0 +1,7 @@
+simcenter_add_file(NAME DefineVariables.tcl)
+simcenter_add_file(NAME Database.csv)
+simcenter_add_file(NAME Model.tcl)
+simcenter_add_file(NAME DefineAllRecorders.tcl)
+simcenter_add_file(NAME PerformGravityAnalysis.tcl)
+simcenter_add_file(NAME DefineFunctionsAndProcedures.tcl)
+simcenter_add_file(NAME RunStaticPushover.tcl)
