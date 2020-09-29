@@ -31,10 +31,6 @@ from model_generation import model_generation
 def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     start_time = time.time()
 
-    print("************START***************")
-
-    print(getRV)
-
     # Get the current directory
     workingDirectory = os.getcwd()
 
@@ -70,8 +66,6 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
             curVal = float(rv['mean'])
 
         RV_ARRAY[rvName] = curVal
-
-    print(RV_ARRAY)
 
     # Count the starting time of the main program
     start_time = time.time()
@@ -163,8 +157,6 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
                 full_file_name = os.path.join(pathToMainScriptFolder, file_name)
                 if os.path.isfile(full_file_name):
                     shutil.copy(full_file_name, workingDirectory)
-
-    print("************END***************")
 
 
 if __name__ == '__main__':
