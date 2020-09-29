@@ -11,8 +11,6 @@ def main(args):
     srtName = args[1]
     evtName = args[3]
 
-    #If requesting random variables run getUncertainty
-    #Otherwise, QSh3ark already ran, do nothing
     RFflag = False
 
     with open(srtName) as json_file:
@@ -23,14 +21,15 @@ def main(args):
             RFflag = True
             break
     if RFflag:
+        #create material file based on 1D Gaussian field
         soilData = data["Events"][0]
         createMaterial(soilData)
 
-        #Run OpenSees
-        subprocess.Popen("OpenSees model.tcl", shell=True).wait()
+    #Run OpenSees
+    subprocess.Popen("OpenSees model.tcl", shell=True).wait()
 
-        #Run postprocessor to create EVENT.json
-        postProcess(evtName)
+    #Run postprocessor to create EVENT.json
+    postProcess(evtName)
 
 if __name__ == '__main__':
 
