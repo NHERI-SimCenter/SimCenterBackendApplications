@@ -13,9 +13,10 @@ class simCenterBackendApps(ConanFile):
     default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True}    
     generators = "cmake"
     build_policy = "missing"
-    requires = "jansson/2.11@bincrafters/stable", \
+    requires = "jansson/2.13.1", \
+               "zlib/1.2.11", \
+               "libcurl/7.72.0", \
                "smelt/1.2.0@simcenter/stable", \
-               "libcurl/7.64.1@bincrafters/stable", \
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
