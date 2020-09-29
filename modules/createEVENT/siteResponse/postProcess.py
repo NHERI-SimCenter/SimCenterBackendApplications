@@ -1,10 +1,12 @@
 # This script create evt.j for workflow
 import numpy as np
 import json
+import os
 
 
 def postProcess(evtName):
     acc = np.loadtxt("acceleration.out")
+    os.remove("acceleration.out")  # remove acceleration file to save space
     time = acc[:,0]
     acc_surf = acc[:,-2] / 9.81
     dT = time[1] - time[0]
