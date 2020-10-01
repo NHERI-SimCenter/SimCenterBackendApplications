@@ -45,7 +45,10 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
         raise ValueError("AutoSDA - structural information missing")
 
     # Extract the path for the directory containing the folder with the building data .csv files
-    pathDataFolder = rootSIM['pathDataFolder']
+    #    pathDataFolder = rootSIM['pathDataFolder']
+    pathDataFolder = os.path.join(os.getcwd(), rootSIM['folderName'])
+
+    #    pathDataFolder = workingDirectory + "/" + rootSIM['folderName']
 
     # Get the random variables from the input file
     try:
