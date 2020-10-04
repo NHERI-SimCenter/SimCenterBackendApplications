@@ -1,0 +1,94 @@
+{
+  "Name": "MLRM2_spm_8d_nav_trs_0_tnail_1_B_nav_1_nav_75",
+  "GeneralInformation": {
+    "ID": "string",
+    "Description": "string",
+    "Building type": "string",
+    "Roof Shape": "string",
+    "Roof Cover Type": "string",
+    "Roof Cover Quality": "string",
+    "Roof Deck Attachment": "string",
+    "Roof-Wall Connection": "string",
+    "Secondary Water Resistance": "bool",
+    "Garage": "string",
+    "Shutters": "bool",
+    "Terrain": "string"
+  },
+  "EDP": {
+    "Type": "Peak Gust Wind Speed",
+    "Unit": [
+      1.0,
+      "mph"
+    ]
+  },
+  "DSGroups": [
+    {
+      "MedianEDP": 136.87220624001168,
+      "Beta": 0.1583165862659654,
+      "CurveType": "LogNormal",
+      "DSGroupType": "Single",
+      "DamageStates": [
+        {
+          "Weight": 1.0,
+          "Consequences": {
+            "ReconstructionCost": {
+              "Amount": 0.1967544364489957
+            }
+          },
+          "Description": "Minor"
+        }
+      ]
+    },
+    {
+      "MedianEDP": 143.79412550919474,
+      "Beta": 0.12803753085348674,
+      "CurveType": "LogNormal",
+      "DSGroupType": "Single",
+      "DamageStates": [
+        {
+          "Weight": 1.0,
+          "Consequences": {
+            "ReconstructionCost": {
+              "Amount": 0.3070892443971508
+            }
+          },
+          "Description": "Moderate"
+        }
+      ]
+    },
+    {
+      "MedianEDP": 147.11629189766717,
+      "Beta": 0.1216630615758619,
+      "CurveType": "LogNormal",
+      "DSGroupType": "Single",
+      "DamageStates": [
+        {
+          "Weight": 1.0,
+          "Consequences": {
+            "ReconstructionCost": {
+              "Amount": 0.36599898419361576
+            }
+          },
+          "Description": "Severe"
+        }
+      ]
+    },
+    {
+      "MedianEDP": 160.19243001961948,
+      "Beta": 0.12350646938182637,
+      "CurveType": "LogNormal",
+      "DSGroupType": "Single",
+      "DamageStates": [
+        {
+          "Weight": 1.0,
+          "Consequences": {
+            "ReconstructionCost": {
+              "Amount": 0.602634536001341
+            }
+          },
+          "Description": "Destruction"
+        }
+      ]
+    }
+  ]
+}

@@ -36,13 +36,13 @@
 #
 # Contributors:
 # Adam Zsarnóczay
-# 
+#
 
 import argparse, posixpath, json, sys
 import numpy as np
 
 def write_RV(BIM_file, EVENT_file, data_dir):
-	
+
 	with open(BIM_file, 'r') as f:
 		bim_data = json.load(f)
 
@@ -71,6 +71,10 @@ def write_RV(BIM_file, EVENT_file, data_dir):
 		for event in events:
 			if event['EventClassification'] == 'Earthquake':
 				RV_elements.append(event['fileName'])
+			elif event['EventClassification'] == 'Hurricane':
+				RV_elements.append(event['fileName'])
+			elif event['EventClassification'] == 'Flood':
+				RV_elements.append(event['fileName'])
 
 		event_file['randomVariables'][0]['elements'] = RV_elements
 	else:
@@ -83,8 +87,8 @@ def write_RV(BIM_file, EVENT_file, data_dir):
 
 	# if time histories are used, then load the first event
 	if events[0]['type'] == 'timeHistory':
-		event_file['Events'][0].update(load_record(events[0]['fileName'], 
-									               data_dir, 
+		event_file['Events'][0].update(load_record(events[0]['fileName'],
+									               data_dir,
 									               empty=len(events) > 1))
 
 	with open(EVENT_file, 'w') as f:
@@ -125,7 +129,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
 	return event_dic
 
 def get_records(BIM_file, EVENT_file, data_dir):
-	
+
 	with open(BIM_file, 'r') as f:
 		bim_file = json.load(f)
 
