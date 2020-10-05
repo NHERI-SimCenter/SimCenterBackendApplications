@@ -1414,13 +1414,20 @@ def write_SimCenter_EDP_output(output_dir, EDP_filename, EDP_df):
     df_res = pd.DataFrame(columns=MI, index=[0, ])
     if ('PID', '0') in df_res.columns:
         del df_res[('PID', '0')]
-
+        
     # store the EDP statistics in the output DF
     for col in np.transpose(col_info):
         df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
             '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
-        df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
-            EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+        if np.min(EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]) > 0:
+            # assume lognormal distribution for this kind of EDP
+            df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+        else:
+            # negative EDP values are also possible, so switching to normal
+            # distribution
+            df_res.loc[0, (col[0], col[1], col[2], 'beta')] = \
+                EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])].std()
 
     df_res.dropna(axis=1, how='all', inplace=True)
 
