@@ -2543,7 +2543,8 @@ class HAZUS_Assessment(Assessment):
         # components
         log_msg('\tDamage and Loss data files...')
         self._FG_in = read_component_DL_data(
-            self._AIM_in['data_sources']['path_CMP_data'], BIM['components'],
+            self._AIM_in['data_sources']['path_CMP_data'],
+            BIM['components'],
             assessment_type=self._assessment_type, verbose=verbose)
 
         data = self._FG_in

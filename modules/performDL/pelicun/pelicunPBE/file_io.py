@@ -242,13 +242,13 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         elif AT == 'HAZUS_EQ':
             path_CMP_data += '/resources/HAZUS_MH_2.1_EQ.hdf'
         elif AT == 'HAZUS_HU':
-            #path_CMP_data += '/resources/HAZUS_MH_2.1_HU.hdf'
-            path_CMP_data = posixpath.join(path_CMP_data, 'resources/HAZUS_MU_2.1')
+            path_CMP_data = path_CMP_data + '/resources/HAZUS_MH_2.1.hdf'
+            #path_CMP_data = posixpath.join(path_CMP_data, 'resources/HAZUS_MU_2.1')
         elif AT == 'HAZUS_FL':
             #path_CMP_data = path_CMP_data
-            path_CMP_data = posixpath.join(output_dir, 'resources/HAZUS_MU_2.1')
+            path_CMP_data += '/resources/HAZUS_MH_2.1_FL.hdf'
 
-    data['data_sources'].update({'path_CMP_data': path_CMP_data})
+        data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
     # The population data is only needed if we are interested in injuries
     if inhabitants is not None:
@@ -567,9 +567,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                     'PGA', 'SA', 'SV', 'SD',
                     'RDR','DWD']
     elif AT in ['HAZUS_HU']:
-        EDP_keys = ['PWS', ]
+        EDP_keys = ['PWS', 'FWD']
     elif AT in ['HAZUS_FL']:
-        EDP_keys = ['PWS,''FWD']
+        EDP_keys = ['FWD']
 
     # response model info ------------------------------------------------------
     if response is None:
@@ -1086,13 +1086,26 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
 
     # else if an HDF5 file is provided we assume it contains the DL data
     elif path_CMP.endswith('hdf'):
-
-        store = pd.HDFStore(path_CMP)
-        store.open()
-        CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
         for c_id in s_cmp_keys:
-            DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-        store.close()
+            if AT == 'HAZUS_HU':
+                if c_id.startswith('fl'):
+                    store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
+                    store.open()
+                    CMP_table = store.select('data', where=f'index in {c_id}')
+                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    store.close()
+                else:
+                    store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
+                    store.open()
+                    CMP_table = store.select('data', where=f'index in {c_id}')
+                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    store.close()
+            else:
+                store = pd.HDFStore(path_CMP)
+                store.open()
+                CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
+                DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                store.close()
 
     else:
         raise ValueError(
@@ -1414,7 +1427,7 @@ def write_SimCenter_EDP_output(output_dir, EDP_filename, EDP_df):
     df_res = pd.DataFrame(columns=MI, index=[0, ])
     if ('PID', '0') in df_res.columns:
         del df_res[('PID', '0')]
-        
+
     # store the EDP statistics in the output DF
     for col in np.transpose(col_info):
         df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
