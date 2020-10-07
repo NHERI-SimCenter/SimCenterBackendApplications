@@ -36,7 +36,7 @@
 #
 # Contributors:
 # Adam Zsarnóczay
-# 
+#
 
 import os, sys, posixpath
 import argparse, json
@@ -44,7 +44,7 @@ import string
 import numpy as np
 
 def write_RV(EVENT_input_path):
-    
+
     # open the event file and get the list of events
     with open(EVENT_input_path, 'r') as f:
         EVENT_in = json.load(f)
@@ -63,20 +63,21 @@ def write_RV(EVENT_input_path):
         file_sample_dict[filename][0].append(e_i)
         file_sample_dict[filename][1].append(int(sample_id))
 
-    EDP_output = None 
+    EDP_output = None
 
     for filename in file_sample_dict.keys():
 
         data = np.atleast_1d(
-            np.genfromtxt(posixpath.join(data_dir, filename), 
+            np.genfromtxt(posixpath.join(data_dir, filename),
                           delimiter=',', skip_header=1)
             )
 
-        samples = data[file_sample_dict[filename][1]]
+        #samples = data[file_sample_dict[filename][1]]
+        samples = data
 
         if EDP_output is None:
-            if len(samples.shape) > 1:
-                EDP_output = np.zeros((len(event_list), samples.shape[1]))
+            if len(samples) > 1:
+                EDP_output = np.zeros((len(event_list), len(samples)))
             else:
                 EDP_output = np.zeros(len(event_list))
 
@@ -85,7 +86,7 @@ def write_RV(EVENT_input_path):
             header = header_data.dtype.names
 
         EDP_output[file_sample_dict[filename][0]] = samples
-
+        
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
 
@@ -110,12 +111,12 @@ def write_RV(EVENT_input_path):
         else:
             header_out.append(f'1-{h_label.strip()}-1-1')
 
-    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',', 
+    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',',
         header=','+', '.join(header_out), comments='')
 
 # TODO: consider removing this function
 def create_EDP(EVENT_input_path, EDP_input_path):
-    
+
     # load the EDP file
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)
