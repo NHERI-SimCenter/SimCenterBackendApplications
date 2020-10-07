@@ -37,6 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 # Pouria Kourehpaz
+# Kuanshi Zhong
 
 """
 This module has classes and methods that handle file input and output.
@@ -61,6 +62,8 @@ from .db import convert_Series_to_dict
 
 import json, posixpath
 
+from tables.exceptions import HDF5ExtError
+from time import sleep
 
 import warnings
 
@@ -1002,6 +1005,28 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         pop_table = store.select('pop', where = f'index in {[occupancy,]}')
         data = convert_Series_to_dict(pop_table.loc[occupancy,:])
         store.close()
+        ## this for loop is needed to avoid issues from race conditions on HPC
+        #for i in range(1000):
+        #    try:
+        #        store = pd.HDFStore(path_POP)
+        #        store.open()
+
+        #    except HDF5ExtError:
+        #        pop_table = None
+        #        sleep(0.01)
+        #        continue
+
+        #    else:
+        #        pop_table = store.select('pop',
+        #                                 where=f'index in {[occupancy, ]}')
+        #        store.close()
+        #        break
+
+    #if pop_table is not None:
+    #    data = convert_Series_to_dict(pop_table.loc[occupancy, :])
+    #else:
+    #    raise IOError("Couldn't read the HDF file for POP data after 20 "
+    #                  "tries because it was blocked by other processes.")
 
     # convert peak population to persons/m2
     if 'peak' in data.keys():
@@ -1094,18 +1119,84 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                     CMP_table = store.select('data', where=f'index in {c_id}')
                     DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                     store.close()
+                    # this for loop is needed to avoid issues from race conditions on HPC
+                    for i in range(1000):
+                        try:
+                            store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
+                            store.open()
+
+                        except HDF5ExtError:
+                            CMP_table = None
+                            sleep(0.1)
+                            continue
+
+                        else:
+                            CMP_table = store.select('data', where=f'index in {c_id}')
+                            store.close()
+                            break
+
+                    if CMP_table is not None:
+                        DL_data_dict.update(
+                            {c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    else:
+                        raise IOError("Couldn't read the HDF file for DL data after 20 "
+                                      "tries because it was blocked by other processes.")
                 else:
                     store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
                     store.open()
                     CMP_table = store.select('data', where=f'index in {c_id}')
                     DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                     store.close()
+                    # this for loop is needed to avoid issues from race conditions on HPC
+                    for i in range(1000):
+                        try:
+                            store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
+                            store.open()
+
+                        except HDF5ExtError:
+                            CMP_table = None
+                            sleep(0.1)
+                            continue
+
+                        else:
+                            CMP_table = store.select('data', where=f'index in {c_id}')
+                            store.close()
+                            break
+
+                    if CMP_table is not None:
+                        DL_data_dict.update(
+                            {c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    else:
+                        raise IOError("Couldn't read the HDF file for DL data after 20 "
+                                      "tries because it was blocked by other processes.")
             else:
                 store = pd.HDFStore(path_CMP)
                 store.open()
                 CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
                 DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                 store.close()
+                # this for loop is needed to avoid issues from race conditions on HPC
+                for i in range(1000):
+                    try:
+                        store = pd.HDFStore(path_CMP)
+                        store.open()
+
+                    except HDF5ExtError:
+                        CMP_table = None
+                        sleep(0.1)
+                        continue
+
+                    else:
+                        CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
+                        store.close()
+                        break
+
+                if CMP_table is not None:
+                    DL_data_dict.update(
+                        {c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                else:
+                    raise IOError("Couldn't read the HDF file for DL data after 20 "
+                                  "tries because it was blocked by other processes.")
 
     else:
         raise ValueError(
