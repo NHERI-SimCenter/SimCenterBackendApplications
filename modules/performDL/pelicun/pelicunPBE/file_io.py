@@ -1114,11 +1114,11 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         for c_id in s_cmp_keys:
             if AT == 'HAZUS_HU':
                 if c_id.startswith('fl'):
-                    store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
-                    store.open()
-                    CMP_table = store.select('data', where=f'index in {c_id}')
-                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                    store.close()
+                    #store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
+                    #store.open()
+                    #CMP_table = store.select('data', where=f'index in {c_id}')
+                    #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
                     for i in range(1000):
                         try:
@@ -1142,11 +1142,11 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                         raise IOError("Couldn't read the HDF file for DL data after 20 "
                                       "tries because it was blocked by other processes.")
                 else:
-                    store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
-                    store.open()
-                    CMP_table = store.select('data', where=f'index in {c_id}')
-                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                    store.close()
+                    #store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
+                    #store.open()
+                    #CMP_table = store.select('data', where=f'index in {c_id}')
+                    #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
                     for i in range(1000):
                         try:
@@ -1170,11 +1170,11 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                         raise IOError("Couldn't read the HDF file for DL data after 20 "
                                       "tries because it was blocked by other processes.")
             else:
-                store = pd.HDFStore(path_CMP)
-                store.open()
-                CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
-                DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                store.close()
+                #store = pd.HDFStore(path_CMP)
+                #store.open()
+                #CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
+                #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                #store.close()
                 # this for loop is needed to avoid issues from race conditions on HPC
                 for i in range(1000):
                     try:
