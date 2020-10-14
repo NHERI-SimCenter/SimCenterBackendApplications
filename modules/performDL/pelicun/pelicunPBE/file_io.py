@@ -253,6 +253,18 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
 
         data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
+    # HAZUS combination of flood and wind losses
+    log_msg('\t\t\tCombinations')
+    comb = DL_input.get('Combinations', None)
+    if comb is not None:
+        path_combination_data = pelicun_path
+        if AT == 'HAZUS_HU':
+            #path_combination_data = posixpath.join(path_combination_data,
+            #    'resources/HAZUS_MU_2.1')
+            path_combination_data += '/resources/HAZUS_MH_2.1_MISC.hdf'
+    data['data_sources'].update({'path_combination_data': path_combination_data})
+    data['loss_combination'] = comb
+
     # The population data is only needed if we are interested in injuries
     if inhabitants is not None:
         path_POP_data = inhabitants.get("PopulationDataFile", "")
@@ -1036,6 +1048,64 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         pp.pprint(data)
 
     return data
+
+def read_combination_DL_data(path_combination_data, comp_info, assessment_type='P58',
+    verbose=False):
+    """
+    Read the combination rules for damage and loss for the components of the asset.
+
+    Parameters
+    ----------
+    path_combination_data: string
+        Location of the folder that contains the combination rules.
+    comp_info: list
+        List of data names that contains the comibnation rules.
+    assessment_type: {'P58', 'HAZUS_EQ', 'HAZUS_HU'}
+        Tailors the warnings and verifications towards the type of assessment.
+        default: 'P58'.
+    verbose: boolean
+        If True, the function echoes the information read from the files. This
+        can be useful to ensure that the information in the files is properly
+        read by the method.
+
+    Returns
+    -------
+    data: dict
+        A dictionary with damage and loss data for each component.
+
+    """
+
+    AT = assessment_type
+
+    comb_data_dict = {}
+    if os.path.isdir(path_combination_data):
+        tmp_dir = Path(path_combination_data).resolve()
+        for c_id in comp_info:
+            with open(tmp_dir / f'{c_id}.json', 'r') as f:
+                comb_data_dict.update({c_id: json.load(f)})
+    ## TODO: hdf type
+    elif path_combination_data.endswith('hdf'):
+        for c_id in comp_info:
+            for i in range(1000):
+                try:
+                    store = pd.HDFStore(path_combination_data)
+                    store.open()
+                except HDF5ExtError:
+                    comb_data_table = None
+                    sleep(0.1)
+                    continue
+                else:
+                    comb_data_table = store['HAZUS Subassembly Loss Ratio']
+                    store.close()
+                    break
+            if comb_data_table is not None:
+                comb_data_dict.update(
+                    {c_id: {'LossRatio': comb_data_table[c_id].tolist()}})
+            else:
+                raise IOError("Couldn't read the HDF file for DL data after 20 "
+                              "tries because it was blocked by other processes.")
+
+    return comb_data_dict
 
 
 def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
