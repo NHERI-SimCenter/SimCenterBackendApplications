@@ -294,7 +294,7 @@ def prep_bounded_multilinear_median_DV(medians, quantities):
         function.
     quantities: ndarray
         Series of values that define the component quantities corresponding to
-        the series of medians and serving as the x coordinates of the 
+        the series of medians and serving as the x coordinates of the
         multilinear DV function.
 
     Returns
