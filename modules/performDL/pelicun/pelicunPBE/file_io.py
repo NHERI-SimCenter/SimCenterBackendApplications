@@ -1018,7 +1018,7 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         data = convert_Series_to_dict(pop_table.loc[occupancy,:])
         store.close()
         ## this for loop is needed to avoid issues from race conditions on HPC
-        #for i in range(1000):
+        #for i in range(4000):
         #    try:
         #        store = pd.HDFStore(path_POP)
         #        store.open()
@@ -1086,7 +1086,7 @@ def read_combination_DL_data(path_combination_data, comp_info, assessment_type='
     ## TODO: hdf type
     elif path_combination_data.endswith('hdf'):
         for c_id in comp_info:
-            for i in range(1000):
+            for i in range(4000):
                 try:
                     store = pd.HDFStore(path_combination_data)
                     store.open()
@@ -1190,7 +1190,7 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                     #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                     #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
-                    for i in range(1000):
+                    for i in range(4000):
                         try:
                             store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
                             store.open()
@@ -1218,7 +1218,7 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                     #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                     #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
-                    for i in range(1000):
+                    for i in range(4000):
                         try:
                             store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
                             store.open()
@@ -1246,7 +1246,7 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                 #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
                 #store.close()
                 # this for loop is needed to avoid issues from race conditions on HPC
-                for i in range(1000):
+                for i in range(4000):
                     try:
                         store = pd.HDFStore(path_CMP)
                         store.open()
