@@ -1629,7 +1629,11 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
 
         for comp_type in ['S', 'NS', 'NSA', 'NSD']:
             if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
-                comp_types.append(comp_type)
+                # fixing the issue caused by steel building tag starting with 'S'
+                if any([fg.startswith('SE') or fg.startswith('SP') for fg in FG_list]):
+                    continue
+                else:
+                    comp_types.append(comp_type)
         if np.sum([np.any([fg.startswith(comp_type) for comp_type in comp_types])
                            for fg in FG_list]) != len(FG_list):
             comp_types.append('other')
@@ -1650,6 +1654,7 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         # third, get the damage quantities conditioned on damage state
         tmp_colname = list(cur_DMG.columns.get_level_values('DSG_DS'))
         tmp_colname.append('4_2')
+
         df_res_q = pd.DataFrame(
             #columns=pd.MultiIndex.from_product([comp_types,
             #                                    ['1_1', '2_1', '3_1', '4_1', '4_2']],
@@ -1826,7 +1831,10 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
         FG_list = [c for c in DV_cost.columns.get_level_values('FG').unique()]
         for comp_type in ['S', 'NS', 'NSA', 'NSD']:
             if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
-                comp_types.append(comp_type)
+                if any([fg.startswith('SE') or fg.startswith('SP') for fg in FG_list]):
+                    continue
+                else:
+                    comp_types.append(comp_type)
 
         repl_cost = GI['replacement_cost']
 
