@@ -10,7 +10,7 @@ tasksCount = int(math.ceil(count/taskSize))
 jobId = os.getenv('SLURM_JOB_ID')
 pythonDir = '/tmp/{}/python'.format(jobId)
 firstBuilding = int(sys.argv[5])
-workflowScript = "/tmp/rWHALE/applications/Workflow/RDT_workflow.py"
+workflowScript = "/tmp/rWhale/applications/Workflow/RDT_workflow.py"
 
 with open('WorkflowTasks.txt', 'w+') as tasksFile:
     subfolder = 0
@@ -19,10 +19,10 @@ with open('WorkflowTasks.txt', 'w+') as tasksFile:
             subfolder = subfolder + 1
         min = i * taskSize + firstBuilding
         max = (i + 1) * taskSize + firstBuilding - 1
-        runDir = "/tmp/rWHALE/applications/Workflow/RunDir{}-{}".format(min,max)
+        runDir = "/tmp/rWhale/applications/Workflow/RunDir{}-{}".format(min,max)
         logPath = "{}/logs/{}/log{}-{}.txt".format(outDir, subfolder, min, max)
         tasksFile.write('mkdir -p {}/logs/{}/ && '.format(outDir, subfolder))
-        tasksFile.write('python3 {} {} -Min {} -Max {} -d /tmp/rWHALE/applications/Workflow/data -w {} -l {} && '.format(workflowScript, configFile, min, max, runDir, logPath))
+        tasksFile.write('python3 {} {} -Min {} -Max {} -d /tmp/rWhale/applications/Workflow/data -w {} -l {} && '.format(workflowScript, configFile, min, max, runDir, logPath))
         tasksFile.write('mkdir -p {}/results/DV/{}/ && '.format(outDir, subfolder))
         tasksFile.write('mkdir -p {}/results/DM/{}/ && '.format(outDir, subfolder))
         tasksFile.write('mkdir -p {}/results/EDP/{}/ && '.format(outDir, subfolder))
