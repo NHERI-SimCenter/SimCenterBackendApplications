@@ -251,7 +251,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             #path_CMP_data = path_CMP_data
             path_CMP_data += '/resources/HAZUS_MH_2.1_FL.hdf'
 
-        data['data_sources'].update({'path_CMP_data': path_CMP_data})
+    data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
     # HAZUS combination of flood and wind losses
     log_msg('\t\t\tCombinations')
