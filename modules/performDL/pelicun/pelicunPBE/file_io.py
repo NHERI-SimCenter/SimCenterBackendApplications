@@ -251,7 +251,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             #path_CMP_data = path_CMP_data
             path_CMP_data += '/resources/HAZUS_MH_2.1_FL.hdf'
 
-        data['data_sources'].update({'path_CMP_data': path_CMP_data})
+    data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
     # HAZUS combination of flood and wind losses
     log_msg('\t\t\tCombinations')
@@ -1018,7 +1018,7 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         data = convert_Series_to_dict(pop_table.loc[occupancy,:])
         store.close()
         ## this for loop is needed to avoid issues from race conditions on HPC
-        #for i in range(1000):
+        #for i in range(4000):
         #    try:
         #        store = pd.HDFStore(path_POP)
         #        store.open()
