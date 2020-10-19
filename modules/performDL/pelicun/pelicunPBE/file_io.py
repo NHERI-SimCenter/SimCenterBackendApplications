@@ -254,16 +254,17 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     data['data_sources'].update({'path_CMP_data': path_CMP_data})
 
     # HAZUS combination of flood and wind losses
-    log_msg('\t\t\tCombinations')
-    comb = DL_input.get('Combinations', None)
-    if comb is not None:
+    if AT == 'HAZUS_HU':
+        log_msg('\t\t\tCombinations')
+        comb = DL_input.get('Combinations', None)
         path_combination_data = pelicun_path
-        if AT == 'HAZUS_HU':
-            #path_combination_data = posixpath.join(path_combination_data,
-            #    'resources/HAZUS_MU_2.1')
-            path_combination_data += '/resources/HAZUS_MH_2.1_MISC.hdf'
-    data['data_sources'].update({'path_combination_data': path_combination_data})
-    data['loss_combination'] = comb
+        if comb is not None:
+            if AT == 'HAZUS_HU':
+                #path_combination_data = posixpath.join(path_combination_data,
+                #    'resources/HAZUS_MU_2.1')
+                path_combination_data += '/resources/HAZUS_MH_2.1_MISC.hdf'
+        data['data_sources'].update({'path_combination_data': path_combination_data})
+        data['loss_combination'] = comb
 
     # The population data is only needed if we are interested in injuries
     if inhabitants is not None:
@@ -1018,7 +1019,7 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
         data = convert_Series_to_dict(pop_table.loc[occupancy,:])
         store.close()
         ## this for loop is needed to avoid issues from race conditions on HPC
-        #for i in range(4000):
+        #for i in range(1000):
         #    try:
         #        store = pd.HDFStore(path_POP)
         #        store.open()
@@ -1624,6 +1625,113 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
     comp_types = []
     FG_list = [c for c in DMG_agg.columns.get_level_values('FG').unique()]
 
+    for comp_type in ['S', 'NS', 'NSA', 'NSD']:
+        if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
+            comp_types.append(comp_type)
+    if np.sum([np.any([fg.startswith(comp_type) for comp_type in comp_types])
+                       for fg in FG_list]) != len(FG_list):
+        comp_types.append('other')
+
+    # second, get the damage state likelihoods
+    df_res_l = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([comp_types,
+                                            ['0', '1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    # third, get the damage quantities conditioned on damage state
+    df_res_q = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([comp_types,
+                                            ['1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    for comp_type in ['NSA', 'NSD', 'NS', 'other']:
+        if comp_type in comp_types:
+            del df_res_l[(comp_type, '4_2')]
+            del df_res_q[(comp_type, '4_2')]
+
+    # for each type of component...
+    for comp_type in comp_types:
+
+        # select the corresponding subset of columns
+        if comp_type == 'other':
+            type_cols = [fg for fg in FG_list
+                         if np.all([~fg.startswith(comp_type) for comp_type in comp_types])]
+        else:
+            type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
+                         if c.startswith(comp_type)]
+
+        df_sel = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
+        df_sel = df_sel / len(type_cols)
+
+        # calculate the probability of DSG exceedance
+        df_sel[df_sel > 0.0] = df_sel[df_sel > 0.0] / df_sel[df_sel > 0.0]
+
+        cols = df_sel.columns
+        for i in range(len(cols)):
+            filter = np.where(df_sel.iloc[:, i].values > 0.0)[0]
+            df_sel.iloc[filter, idx[0:i]] = 1.0
+
+        df_sel_exc = pd.Series(np.mean(df_sel.values, axis=0),
+                               index=df_sel.columns)
+
+        DS_0 = 1.0 - df_sel_exc['1_1']
+        for i in range(len(df_sel_exc.index) - 1):
+            df_sel_exc.iloc[i] = df_sel_exc.iloc[i] - df_sel_exc.iloc[i + 1]
+
+        # Add the probability of no damage for convenience.
+        df_sel_exc.loc['0'] = DS_0
+        df_sel_exc = df_sel_exc.sort_index()
+
+        # store the results in the output DF
+        df_res_l.loc[:, idx[comp_type, :]] = df_sel_exc.values
+
+        # get the quantity of components in the highest damage state
+        # skip this part for now to reduce file size
+        if False:
+            df_init = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS', axis=1).sum()
+            df_init = (df_init / len(type_cols)).round(2)
+
+            df_sel = df_sel.sum(axis=1)
+
+            for lvl, lvl_label in zip([1.0, 2.0, 3.0, 4.0, 5.0],
+                                      ['1_1', '2_1', '3_1', '4_1', '4_2']):
+
+                df_cond = df_init[df_sel == lvl]
+
+                if df_cond.size > 0:
+                    unique_vals, unique_counts = np.unique(
+                        df_cond[lvl_label].values, return_counts=True)
+                    unique_counts = np.around(unique_counts / df_cond.shape[0],
+                                              decimals=4)
+                    sorter = np.argsort(unique_counts)[::-1][:4]
+                    DQ = list(zip(unique_vals[sorter], unique_counts[sorter]))
+
+                    # store the damaged quantities in the output df
+                    df_res_q.loc[:,idx[comp_type, lvl_label]] = str(DQ)
+
+    # join the output dataframes
+    df_res = pd.concat([df_res_c, df_res_l], axis=1, keys=['Collapse','DS likelihood'])
+
+    # save the output
+    with open(posixpath.join(output_dir, DM_filename), 'w') as f:
+        df_res.to_csv(f)
+
+def write_SimCenter_DM_output_hu(output_dir, DM_filename, SUMMARY_df, DMG_df):
+
+    # first, get the collapses from the SUMMARY_df
+    df_res_c = pd.DataFrame([0,],
+        columns=pd.MultiIndex.from_tuples([('probability',' '),]),
+        index=[0, ])
+    df_res_c['probability'] = SUMMARY_df[('collapses', 'collapsed')].mean()
+
+    # aggregate the damage data along Performance Groups
+    DMG_agg = DMG_df.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
+
+    comp_types = []
+    FG_list = [c for c in DMG_agg.columns.get_level_values('FG').unique()]
+
     for fg_i, fg_id in enumerate(FG_list):
         cur_DMG = DMG_agg.groupby(level=['FG'], axis=1).get_group(fg_id)
 
@@ -1643,10 +1751,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         tmp_colname.insert(0,'0')
         tmp_colname.append('4_2')
         df_res_l = pd.DataFrame(
-            #columns=pd.MultiIndex.from_product([comp_types,
-            #                                    ['0', '1_1', '2_1', '3_1', '4_1', '4_2']],
-            #                                   names=['comp_type', 'DSG_DS']),
-            #index=[0, ])
             columns=pd.MultiIndex.from_product([[comp_types[fg_i]], tmp_colname],
                                                names=['comp_type', 'DSG_DS']),
             index=[0, ])
@@ -1656,10 +1760,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         tmp_colname.append('4_2')
 
         df_res_q = pd.DataFrame(
-            #columns=pd.MultiIndex.from_product([comp_types,
-            #                                    ['1_1', '2_1', '3_1', '4_1', '4_2']],
-            #                                   names=['comp_type', 'DSG_DS']),
-            #index=[0, ])
             columns=pd.MultiIndex.from_product([[comp_types[fg_i]], tmp_colname],
                                                names=['comp_type', 'DSG_DS']),
             index=[0, ])
@@ -1730,8 +1830,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
                         df_res_q.loc[:,idx[comp_type, lvl_label]] = str(DQ)
 
         # join the output dataframes
-        #df_res = pd.concat([df_res_c, df_res_l, df_res_q], axis=1,
-        #    keys=['Collapse','DS likelihood','Damaged Quantities'])
         if fg_i == 0:
             df_res = df_res_l
         else:
@@ -1739,10 +1837,10 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
 
     # join the output dataframes
     df_res['Collapse','probability',' '] = df_res_c['probability']
-    #df_res = pd.concat([df_res_c, df_res], axis=1, keys=['Collapse','DS likelihood'])
     # save the output
     with open(posixpath.join(output_dir, DM_filename), 'w') as f:
         df_res.to_csv(f)
+
 
 def write_SimCenter_DM_output_old(output_dir, DM_filename, DMG_df):
 

@@ -471,9 +471,14 @@ class Assessment(object):
             # create the DM file
             if self._assessment_type.startswith('HAZUS'):
                 log_msg('\t\tSimCenter DM file')
-                write_SimCenter_DM_output(
-                    output_path, suffix+DM_file, self._SUMMARY,
-                    DMG_mod)
+                if self._hazard == 'HU':
+                    write_SimCenter_DM_output_hu(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
+                else:
+                    write_SimCenter_DM_output(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
 
             # create the DV file
             if self._assessment_type.startswith('HAZUS'):
@@ -2552,11 +2557,12 @@ class HAZUS_Assessment(Assessment):
         for key, val in data.items():
             log_msg('\t\t\t{} demand:{} PGs: {}'.format(key, val['demand_type'], len(val['locations'])))
 
-        log_msg('\tLoss combination files...')
-        self._LC_in = read_combination_DL_data(
-            self._AIM_in['data_sources']['path_combination_data'],
-            BIM['loss_combination'],
-            assessment_type=self._assessment_type, verbose=verbose)
+        if self._hazard == 'HU':
+            log_msg('\tLoss combination files...')
+            self._LC_in = read_combination_DL_data(
+                self._AIM_in['data_sources']['path_combination_data'],
+                BIM['loss_combination'],
+                assessment_type=self._assessment_type, verbose=verbose)
 
         # population (if needed)
         if self._AIM_in['decision_variables']['injuries']:
@@ -2943,15 +2949,10 @@ class HAZUS_Assessment(Assessment):
 
         # reconstruction cost
         if DVs['rec_cost']:
-
-            if len(self._DV_dict['rec_cost'].columns.levels[0]) == 1:
-                # if only a single FG ground (i.e., only the flood or wind case)
-                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
-                    self._DV_dict['rec_cost'].sum(axis=1)
-            else:
+            if self._hazard == 'HU':
                 # individual losses
                 indiv_loss = self._DV_dict['rec_cost'].groupby(level=[0], axis=1).sum()
-                # loss weight from HAZUS (now just default coupled at
+                # loss weight from HAZUS HU (now just default coupled at
                 # the entire building level)
                 loss_weight = []
                 for i, tag in enumerate(self._LC_in.keys()):
@@ -2961,8 +2962,11 @@ class HAZUS_Assessment(Assessment):
                 for i, rlz in enumerate(zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1])):
                     tmp1 = loss_weight[0][i] * rlz[0]
                     tmp2 = loss_weight[1][i] * rlz[1]
-                    combined_loss.append(np.sum(tmp1 + tmp2) + tmp1.T.dot(tmp2))
+                    combined_loss.append(np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))
                 SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
+            else:
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
+                    self._DV_dict['rec_cost'].sum(axis=1)
 
             repl_cost = self._AIM_in['general']['replacement_cost']
             SUMMARY.loc[colID, ('reconstruction', 'cost')] = repl_cost
