@@ -471,9 +471,14 @@ class Assessment(object):
             # create the DM file
             if self._assessment_type.startswith('HAZUS'):
                 log_msg('\t\tSimCenter DM file')
-                write_SimCenter_DM_output(
-                    output_path, suffix+DM_file, self._SUMMARY,
-                    DMG_mod)
+                if self._hazard == 'HU':
+                    write_SimCenter_DM_output_hu(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
+                else:
+                    write_SimCenter_DM_output(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
 
             # create the DV file
             if self._assessment_type.startswith('HAZUS'):
@@ -2552,6 +2557,13 @@ class HAZUS_Assessment(Assessment):
         for key, val in data.items():
             log_msg('\t\t\t{} demand:{} PGs: {}'.format(key, val['demand_type'], len(val['locations'])))
 
+        if self._hazard == 'HU':
+            log_msg('\tLoss combination files...')
+            self._LC_in = read_combination_DL_data(
+                self._AIM_in['data_sources']['path_combination_data'],
+                BIM['loss_combination'],
+                assessment_type=self._assessment_type, verbose=verbose)
+
         # population (if needed)
         if self._AIM_in['decision_variables']['injuries']:
 
@@ -2937,26 +2949,24 @@ class HAZUS_Assessment(Assessment):
 
         # reconstruction cost
         if DVs['rec_cost']:
-
-            if len(self._DV_dict['rec_cost'].columns.levels[0]) == 1:
-                # if only a single FG ground (i.e., only the flood or wind case)
-                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
-                    self._DV_dict['rec_cost'].sum(axis=1)
-            else:
+            if self._hazard == 'HU':
                 # individual losses
                 indiv_loss = self._DV_dict['rec_cost'].groupby(level=[0], axis=1).sum()
-                # loss weight from HAZUS (now just default coupled at
+                # loss weight from HAZUS HU (now just default coupled at
                 # the entire building level)
                 loss_weight = []
-                loss_weight.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
-                loss_weight.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+                for i, tag in enumerate(self._LC_in.keys()):
+                    loss_weight.append(self._calc_loss_composition(self._LC_in[tag],indiv_loss.iloc[:,i]))
                 # combining losses
                 combined_loss = []
-                for rlz1, rlz2 in zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1]):
-                    tmp1 = np.array(loss_weight[0]) * rlz1
-                    tmp2 = np.array(loss_weight[1]) * rlz2
-                    combined_loss.append(np.sum(tmp1 + tmp2) + tmp1.T.dot(tmp2))
+                for i, rlz in enumerate(zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1])):
+                    tmp1 = loss_weight[0][i] * rlz[0]
+                    tmp2 = loss_weight[1][i] * rlz[1]
+                    combined_loss.append(np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))
                 SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
+            else:
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
+                    self._DV_dict['rec_cost'].sum(axis=1)
 
             repl_cost = self._AIM_in['general']['replacement_cost']
             SUMMARY.loc[colID, ('reconstruction', 'cost')] = repl_cost
@@ -3978,3 +3988,29 @@ class HAZUS_Assessment(Assessment):
             DV_INJ_dict[i] = DV_INJ_dict[i].sort_index(axis=1, ascending=True)
 
         return DV_INJ_dict
+
+    def _calc_loss_composition(self, comb_data, loss_ratio):
+        """
+        _calc_loss_composition: this method processes the HAZUS loss ratio
+        combination rules given a total loss ratio, and returns a list of
+        loss compositions of 7 different building subassemblies.
+        Input:
+          comb_data: a dict of HAZUS loss ratio combination rules
+          loss_ratio: a float of total loss ratio
+        Output:
+          loss_weight: a list of loss compositions
+        """
+
+        comb_rule = comb_data['LossRatio']
+        ref_ratio = []
+        ref_comp = []
+        for level in comb_rule:
+            ref_ratio.append(level['Total'])
+            ref_comp.append(level['Composition'])
+        ref_comp = np.array(ref_comp)
+        res_comp = np.empty(shape = (len(loss_ratio), ref_comp.shape[1]))
+        for assm in range(ref_comp.shape[1]):
+            res_comp[:, assm] = np.interp(loss_ratio, ref_ratio,
+                                          ref_comp[:, assm].tolist())
+
+        return res_comp
