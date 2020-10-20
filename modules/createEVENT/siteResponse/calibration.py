@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import json
 import sys
-
+import os
 
 def materialPM4(baseInputs, matTag, fn):
     fn.write("nDMaterial PM4Sand {} {:.3f} {:.2f} {:.3f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \
@@ -64,10 +64,9 @@ def calibration(variables, inputParameters, fn):
     # mapping from random field to mesh
     elemID = np.arange(variables["eleStart"], variables["eleEnd"] + 1, 1)
     elementY = np.linspace(variables["elevationStart"], variables["elevationEnd"], len(elemID))
-
+    outData = []
     for matTag in elemID:
         residual = variables["mean"] * f(elementY[matTag - variables["eleStart"]]) * variables["COV"]
-        print()
         if variables["name"] == "Dr":
             # bound Dr between 0.2 and 0.95
             Dr = min(max(0.2, variables["mean"] + residual), 0.95)
@@ -97,6 +96,7 @@ def calibration(variables, inputParameters, fn):
                         hpo = 1.0
                 baseInputs["hpo"] = hpo
                 materialPM4(baseInputs, matTag, fn)
+                outData.append([elementY[matTag - variables["eleStart"]] + variables["elevationBase"], Dr])
             elif variables["materialType"] == "PDMY03_Random":
                 Dr = max(min(Dr, 0.87), 0.33)
                 baseInputs["Dr"] = Dr
@@ -114,6 +114,8 @@ def calibration(variables, inputParameters, fn):
                     f_Dr = interp1d(drs, df[columnName], kind="cubic")
                     baseInputs[columnName] = f_Dr(Dr)
                 materialPDMY03(baseInputs, matTag, fn)
+                outData.append([elementY[matTag - variables["eleStart"]] + variables["elevationBase"], Dr])
+
         elif variables["name"] == "Vs":
             if variables["materialType"] == "Elastic_Random":
                 # bound Dr between 50 and 1500
@@ -121,6 +123,11 @@ def calibration(variables, inputParameters, fn):
                 baseInputs["E"] = 2.0 * baseInputs["density"] * Vs * Vs * (1.0 + baseInputs["poisson"])
                 fn.write("#Vs = {:.2f}\n".format(Vs))
                 materialElastic(baseInputs, matTag, fn)
+                outData.append([elementY[matTag - variables["eleStart"]] + variables["elevationBase"], Vs])
+
+    with open("./realization.out", "w") as outfile:
+        for listitem in outData:
+            outfile.write("{:.3f} {:.3f}\n".format(listitem[0], listitem[1]))
 
 def createMaterial(data):
 
@@ -154,7 +161,8 @@ def createMaterial(data):
                 eleStart = eleStart,
                 eleEnd = eleEnd,
                 elevationStart = elevationStart,  # location of first Gauss Point respect to layer base
-                elevationEnd = elevationEnd  # location of last Gauss Point respect to layer base
+                elevationEnd = elevationEnd,  # location of last Gauss Point respect to layer base
+                elevationBase = totalHeight - layer["thickness"]
             )
             inputParameters =  data["materials"][layer["material"] - 1]
             calibration(variables, inputParameters, fn)
