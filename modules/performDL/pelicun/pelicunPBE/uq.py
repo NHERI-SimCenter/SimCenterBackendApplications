@@ -1595,8 +1595,7 @@ class RandomVariable(object):
 
                 else:
                     # generate a random list of indices
-                    id_list = np.random.randint(0, self._ncount,
-                                                size=sample_size)
+                    id_list = np.random.randint(0, self._ncount, size=sample_size)
 
                     # get the raw data that corresponds to the random ids
                     if self._ndim > 1:

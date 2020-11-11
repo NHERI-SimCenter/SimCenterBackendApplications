@@ -270,8 +270,19 @@ class Assessment(object):
                 verbose=verbose)
         elif self._hazard == 'HU':
             self._EDP_in = read_SimCenter_EDP_input(
-                path_EDP_input, EDP_kinds=('PWS',),
-                units=dict(PWS=self._AIM_in['units']['speed']),
+                path_EDP_input, EDP_kinds=('PWS','FWD',),
+                units=dict(PWS=self._AIM_in['units']['speed'],
+                           FWD=self._AIM_in['units']['length']),
+                verbose=verbose)
+
+        elif self._hazard == 'FL':
+            # updating 'FL' module
+            # 'FWD': fload water depth
+            # units: ft (in general)
+            self._EDP_in = read_SimCenter_EDP_input(
+                path_EDP_input, EDP_kinds=('PWS','FWD',),
+                units=dict(PWS=self._AIM_in['units']['speed'],
+                           FWD=self._AIM_in['units']['length']),
                 verbose=verbose)
 
         data = self._EDP_in
@@ -450,6 +461,7 @@ class Assessment(object):
 
             #if True:
             # create the EDP file
+            print('start creating the edp file')
             if self._assessment_type.startswith('HAZUS'):
                 log_msg('\t\tSimCenter EDP file')
                 write_SimCenter_EDP_output(
@@ -504,8 +516,8 @@ class Assessment(object):
                 elif GI['response']['EDP_dist_basis'] == 'all results':
                     coll_lim = np.inf
 
-                detection_limits.append([0., det_lim])
-                collapse_limits.append([0., coll_lim])
+                detection_limits.append([-np.inf, det_lim]) # negative FWD for fload
+                collapse_limits.append([-np.inf, coll_lim]) # negative FWD for fload
 
         detection_limits = np.transpose(np.asarray(detection_limits))
         collapse_limits = np.transpose(np.asarray(collapse_limits))
@@ -2531,7 +2543,8 @@ class HAZUS_Assessment(Assessment):
         # components
         log_msg('\tDamage and Loss data files...')
         self._FG_in = read_component_DL_data(
-            self._AIM_in['data_sources']['path_CMP_data'], BIM['components'],
+            self._AIM_in['data_sources']['path_CMP_data'],
+            BIM['components'],
             assessment_type=self._assessment_type, verbose=verbose)
 
         data = self._FG_in
@@ -2924,8 +2937,26 @@ class HAZUS_Assessment(Assessment):
 
         # reconstruction cost
         if DVs['rec_cost']:
-            SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
-                self._DV_dict['rec_cost'].sum(axis=1)
+
+            if len(self._DV_dict['rec_cost'].columns.levels[0]) == 1:
+                # if only a single FG ground (i.e., only the flood or wind case)
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
+                    self._DV_dict['rec_cost'].sum(axis=1)
+            else:
+                # individual losses
+                indiv_loss = self._DV_dict['rec_cost'].groupby(level=[0], axis=1).sum()
+                # loss weight from HAZUS (now just default coupled at
+                # the entire building level)
+                loss_weight = []
+                loss_weight.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+                loss_weight.append([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+                # combining losses
+                combined_loss = []
+                for rlz1, rlz2 in zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1]):
+                    tmp1 = np.array(loss_weight[0]) * rlz1
+                    tmp2 = np.array(loss_weight[1]) * rlz2
+                    combined_loss.append(np.sum(tmp1 + tmp2) + tmp1.T.dot(tmp2))
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
 
             repl_cost = self._AIM_in['general']['replacement_cost']
             SUMMARY.loc[colID, ('reconstruction', 'cost')] = repl_cost
@@ -3719,6 +3750,7 @@ class HAZUS_Assessment(Assessment):
                         EDP_samples = self._EDP_dict[demand_ID].samples.loc[ncID]
 
                 csg_w_list = np.array(PG._csg_weights)
+
                 for csg_i, csg_w in enumerate(csg_w_list):
                     DSG_df = PG._FF_set[csg_i].DSG_given_EDP(EDP_samples)
 
@@ -3800,6 +3832,7 @@ class HAZUS_Assessment(Assessment):
 
         s_fg_keys = sorted(self._FG_dict.keys())
         for fg_id in s_fg_keys:
+
             log_msg('\t\t{}...'.format(fg_id))
             FG = self._FG_dict[fg_id]
 
