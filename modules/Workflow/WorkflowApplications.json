@@ -384,6 +384,27 @@
         ]
       },
       {
+        "Name": "OpenSeesInputSRT",
+        "ExecutablePath": "applications/createSAM/openSeesInputSRT/OpenSeesInputSRT.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "modelPath",
+            "type": "path",
+            "description": "Defines the location of the OpenSees tcl model files."
+          },
+          {
+            "id": "mainScript",
+            "type": "string",
+            "description": "Defines the name of the main model file."
+          },
+          {
+            "id": "ndm",
+            "type": "int",
+            "description": "Defines the number of degrees of freedom in the numerical model."
+          }
+        ]
+      },
+      {
         "Name": "MDOF_BuildingModel",
         "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BuildingModel",
         "ApplicationSpecificInputs": []
@@ -523,6 +544,10 @@
       {
         "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
+      },
+      {
+        "Name": "OpenSees-Simulation-SRT",
+        "ExecutablePath": "applications/performSIMULATION/openSeesSRT/OpenSeesSimulationSRT.py"
       },
       {
         "Name": "IMasEDP",
