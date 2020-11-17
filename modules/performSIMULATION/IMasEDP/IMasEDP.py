@@ -42,6 +42,7 @@ import os, sys, posixpath
 import argparse, json
 import string
 import numpy as np
+import pandas as pd
 
 def write_RV(EVENT_input_path):
 
@@ -67,17 +68,20 @@ def write_RV(EVENT_input_path):
 
     for filename in file_sample_dict.keys():
 
-        data = np.atleast_1d(
-            np.genfromtxt(posixpath.join(data_dir, filename),
-                          delimiter=',', skip_header=1)
-            )
+        #data = np.atleast_1d(
+        #    np.genfromtxt(posixpath.join(data_dir, filename),
+        #                  delimiter=',', skip_header=1)
+        #    )
 
         #samples = data[file_sample_dict[filename][1]]
-        samples = data
+        #samples = data
+
+        data = np.array(pd.read_csv(posixpath.join(data_dir, filename), header=0))
+        samples = data[file_sample_dict[filename][1]]
 
         if EDP_output is None:
             if len(samples) > 1:
-                EDP_output = np.zeros((len(event_list), len(samples)))
+                EDP_output = np.zeros((len(event_list), samples.shape[1]))
             else:
                 EDP_output = np.zeros(len(event_list))
 
@@ -86,7 +90,7 @@ def write_RV(EVENT_input_path):
             header = header_data.dtype.names
 
         EDP_output[file_sample_dict[filename][0]] = samples
-        
+
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
 
