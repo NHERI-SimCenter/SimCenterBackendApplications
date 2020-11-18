@@ -141,7 +141,7 @@ def preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, ru
     """environment
 tabular_data
 tabular_data_file = 'dakotaTab.out'
-    
+
 method,
 """)
 
@@ -213,16 +213,16 @@ method_pointer = 'EvalSurrogate'
 tabular_data
 tabular_data_file = 'dakotaTab.out'
 custom_annotated header eval_id
-        
+
 method
 id_method = 'EvalSurrogate'
 model_pointer = 'SurrogateModel'
-        
+
 sampling
 samples = {no_surr_sams}
 seed = {surr_seed}
 sample_type {surr_sams_type}
-        
+
 model
 id_model = 'SurrogateModel'
 surrogate global
@@ -232,7 +232,7 @@ export_model
 filename_prefix = 'dak_gp_model'
 formats
 text_archive
-        
+
 """).format(
     no_surr_sams = train_samples2,
     surr_seed = gpr_seed2,
@@ -534,12 +534,12 @@ sampling
 seed = {setseed}
 sample_type {settype}
 samples = {setsamples}
-        
+
 model
 id_model = 'SimulationModel'
 single
 interface_pointer = 'SimulationInterface'
-        
+
 """).format(
     setseed = gpr_seed,
     settype = train_method,
@@ -786,7 +786,8 @@ def parseFileForRV(fileName):
     if os.path.isfile(fileName):
         print("{}:".format(fileName))
     else:
-        print("ERROR: {} file not found.".format(fileName))
+        if fileName is not 'SIM.json':
+            print("ERROR: {} file not found.".format(fileName))
         return False
 
     with open(fileName,'r') as data_file:
