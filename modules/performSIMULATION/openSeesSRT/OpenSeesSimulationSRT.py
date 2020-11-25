@@ -71,8 +71,7 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
         BIM_in = json.load(f)
 
     model_params = BIM_in['GI']
-    print(model_params)
-
+    
     with open(SAM_input_path, 'r') as f:
         SAM_in = json.load(f)
 
@@ -145,7 +144,7 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
     for response in EDP_list:
         edp = [max(abs(acc_surf_x)), max(abs(acc_surf_z))]
 
-        response['PGA'] = edp # [val for dof, val in edp.items()]
+        response['scalar_data'] = edp # [val for dof, val in edp.items()]
 
 
     with open(EDP_input_path, 'w') as f:
@@ -154,6 +153,7 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
 
 def build_model(model_params, numEvt):
     elementSize = 0.5
+    g = 9.81
     VsRock = 760 #site class B
     try:
         depthToRock = model_params['DepthToRock']
@@ -204,14 +204,34 @@ def build_model(model_params, numEvt):
 
     # Create Material
     f = open('freefield_material.tcl', 'w')
-    rhoSoil = 2.0
-    poisson = 0.3
-    for ii in range(numElems):
-        f.write('set rho({:d}) {:.1f}\n'.format(ii+1, rhoSoil))
-        f.write('set shearG({:d}) {:.2f}\n'.format(ii+1, rhoSoil * Vs[ii] * Vs[ii]))
-        f.write('set nu({:d}) {:.2f}\n'.format(ii+1, poisson))
-        f.write('set E({:d}) {:.2f}\n\n'.format(ii+1, 2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson)))
-        f.write('set mat({:d}) "ElasticIsotropic {:d} $E({:d}) $nu({:d}) $rho({:d})"\n\n\n'.format(ii+1, ii+1, ii+1, ii+1, ii+1))
+
+    if model_params['Model'] in 'BA':
+        # Borja and Amies 1994 J2 model
+        rhoSoil = model_params['Den']
+        poisson = 0.3
+        sig_v = rhoSoil * g * eleVsize * 0.5
+        for ii in range(numElems):
+            f.write('set rho({:d}) {:.1f}\n'.format(ii+1, rhoSoil))
+            shearG = rhoSoil * Vs[ii] * Vs[ii]
+            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
+            f.write('set shearG({:d}) {:.2f}\n'.format(ii+1, shearG))
+            f.write('set bulkK({:d}) {:.2f}\n'.format(ii+1, bulkK))
+            f.write('set su({:d}) {:.2f}\n'.format(ii+1, model_params['Su_rat'] * sig_v))
+            sig_v = sig_v + rhoSoil * g * eleVsize
+            f.write('set h({:d}) {:.2f}\n'.format(ii+1, shearG * model_params['h/G']))
+            f.write('set m({:d}) {:.2f}\n'.format(ii+1, model_params['m']))
+            f.write('set h0({:d}) {:.2f}\n'.format(ii+1, model_params['h0']))
+            f.write('set chi({:d}) {:.2f}\n'.format(ii+1, model_params['chi']))          
+            f.write('set mat({:d}) "J2CyclicBoundingSurface {:d} $shearG({:d}) $bulkK({:d}) $su({:d}) $rho({:d}) $h({:d}) $m({:d}) $h0({:d}) $chi({:d}) 0.5"\n\n\n'.format(ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1))
+    else:
+        rhoSoil = model_params['Den']
+        poisson = 0.3
+        for ii in range(numElems):
+            f.write('set rho({:d}) {:.1f}\n'.format(ii+1, rhoSoil))
+            f.write('set shearG({:d}) {:.2f}\n'.format(ii+1, rhoSoil * Vs[ii] * Vs[ii]))
+            f.write('set nu({:d}) {:.2f}\n'.format(ii+1, poisson))
+            f.write('set E({:d}) {:.2f}\n\n'.format(ii+1, 2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson)))
+            f.write('set mat({:d}) "ElasticIsotropic {:d} $E({:d}) $nu({:d}) $rho({:d})"\n\n\n'.format(ii+1, ii+1, ii+1, ii+1, ii+1))
 
 
     f.close()
