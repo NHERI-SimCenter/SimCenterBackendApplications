@@ -74,9 +74,16 @@ class Assessment(object):
         self._FG_in = None
 
         # random variables and loss model
+        self._RV_reg = RandomVariableRegistry() # object to manage RVs
         self._RV_dict = None # dictionary to store random variables
         self._EDP_dict = None
+        self._QNT_dict = None
+        self._FF_dict = None
+        self._DSG_dict = None
         self._FG_dict = None
+        self._DV_RED_dict = None
+        self._DV_REP_dict = None
+        self._DV_INJ_dict = None
 
         # results
         self._TIME = None
@@ -363,7 +370,7 @@ class Assessment(object):
             elif (('PFV' in col) or ('PGV' in col) or ('SV' in col) or
                   ('PWS' in col)):
                 scale_factor = self._AIM_in['units']['speed']
-            elif ('PGD' in col):
+            elif ('PGD', 'FWD' in col):
                 scale_factor = self._AIM_in['units']['length']
             else:
                 scale_factor = 1.0
@@ -380,6 +387,8 @@ class Assessment(object):
             scale_factor = self._FG_dict[FG_name]._unit
             if scale_factor != 1.0:
                 DMG_scaled.iloc[:,col_i] = DMG_scaled.iloc[:,col_i].div(scale_factor)
+
+        print('control.py: DMG_scaled = ', DMG_scaled)
 
         log_msg('\tReplacing headers with FG names...')
         DMG_mod = replace_FG_IDs_with_FG_names(DMG_scaled)
@@ -458,6 +467,8 @@ class Assessment(object):
                         output_path, '{}{}_agg_stats.csv'.format(suffix, DV_name),
                         DV_mod_agg, index_name='#Num', collapse_columns=False,
                         stats_only=True)
+
+            print('control.py: DMG_mod = ', DMG_mod)
 
             #if True:
             # create the EDP file
@@ -2960,9 +2971,9 @@ class HAZUS_Assessment(Assessment):
                 # combining losses
                 combined_loss = []
                 for i, rlz in enumerate(zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1])):
-                    tmp1 = loss_weight[0][i] * rlz[0]
-                    tmp2 = loss_weight[1][i] * rlz[1]
-                    combined_loss.append(np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))
+                    tmp1 = (loss_weight[0][i] * rlz[0]) / 100.
+                    tmp2 = (loss_weight[1][i] * rlz[1]) / 100.
+                    combined_loss.append((np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))* 100.)
                 SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
             else:
                 SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
@@ -3842,7 +3853,6 @@ class HAZUS_Assessment(Assessment):
 
         s_fg_keys = sorted(self._FG_dict.keys())
         for fg_id in s_fg_keys:
-
             log_msg('\t\t{}...'.format(fg_id))
             FG = self._FG_dict[fg_id]
 
@@ -3853,8 +3863,11 @@ class HAZUS_Assessment(Assessment):
 
             for d_i, d_tag in enumerate(DS_list):
 
-                dsg_i = int(d_tag[0]) - 1
-                ds_i = int(d_tag[-1]) - 1
+                #dsg_i = int(d_tag[0]) - 1
+                #ds_i = int(d_tag[-1]) - 1
+
+                dsg_i = int(d_tag.split('_')[0]) - 1
+                ds_i = int(d_tag.split('_')[-1]) - 1
 
                 TOT_qnt = DMG_by_FG_and_DS.loc[repID, (FG._ID, d_tag)]
 
@@ -3943,8 +3956,11 @@ class HAZUS_Assessment(Assessment):
             for i in range(self._inj_lvls):
 
                 for d_i, d_tag in enumerate(DS_list):
-                    dsg_i = int(d_tag[0]) - 1
-                    ds_i = int(d_tag[-1]) - 1
+                    #dsg_i = int(d_tag[0]) - 1
+                    #ds_i = int(d_tag[-1]) - 1
+
+                    dsg_i = int(d_tag.split('_')[0]) - 1
+                    ds_i = int(d_tag.split('_')[-1]) - 1
 
                     # check what can we expect later
                     # pull the DS from the first PG

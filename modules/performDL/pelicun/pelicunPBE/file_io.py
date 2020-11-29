@@ -260,8 +260,6 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         path_combination_data = pelicun_path
         if comb is not None:
             if AT == 'HAZUS_HU':
-                #path_combination_data = posixpath.join(path_combination_data,
-                #    'resources/HAZUS_MU_2.1')
                 path_combination_data += '/resources/HAZUS_MH_2.1_MISC.hdf'
         data['data_sources'].update({'path_combination_data': path_combination_data})
         data['loss_combination'] = comb
@@ -1428,7 +1426,6 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         for DSG_id, DSG_i in enumerate(DL_DSG):
             DSG_data = dict(
                 theta=float(DSG_i['MedianEDP']) * demand_factor,
-                #theta=float(DSG_i['MedianEDP']),
                 sig=float(DSG_i['Beta']),
                 DS_set_kind=DS_set_kind[DSG_i['DSGroupType']],
                 distribution_kind = curve_type[DSG_i['CurveType']],
@@ -1437,7 +1434,6 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
             # sig needs to be scaled for normal distributions
             if DSG_data['distribution_kind'] == 'normal':
                 DSG_data['sig'] = DSG_data['sig'] * demand_factor
-                #DSG_data['sig'] = DSG_data['sig']
 
             for DS_id, DS_i in enumerate(DSG_i['DamageStates']):
                 DS_data = {'description': DS_i['Description'],
@@ -1624,7 +1620,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
 
     comp_types = []
     FG_list = [c for c in DMG_agg.columns.get_level_values('FG').unique()]
-
     for comp_type in ['S', 'NS', 'NSA', 'NSD']:
         if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
             comp_types.append(comp_type)
