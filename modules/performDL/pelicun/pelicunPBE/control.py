@@ -74,7 +74,7 @@ class Assessment(object):
         self._FG_in = None
 
         # random variables and loss model
-        self._RV_reg = RandomVariableRegistry() # object to manage RVs
+        #self._RV_reg = RandomVariableRegistry() # object to manage RVs
         self._RV_dict = None # dictionary to store random variables
         self._EDP_dict = None
         self._QNT_dict = None
