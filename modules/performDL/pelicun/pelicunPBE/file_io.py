@@ -251,7 +251,18 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             #path_CMP_data = path_CMP_data
             path_CMP_data += '/resources/HAZUS_MH_2.1_FL.hdf'
 
-        data['data_sources'].update({'path_CMP_data': path_CMP_data})
+    data['data_sources'].update({'path_CMP_data': path_CMP_data})
+
+    # HAZUS combination of flood and wind losses
+    if AT == 'HAZUS_HU':
+        log_msg('\t\t\tCombinations')
+        comb = DL_input.get('Combinations', None)
+        path_combination_data = pelicun_path
+        if comb is not None:
+            if AT == 'HAZUS_HU':
+                path_combination_data += '/resources/HAZUS_MH_2.1_MISC.hdf'
+        data['data_sources'].update({'path_combination_data': path_combination_data})
+        data['loss_combination'] = comb
 
     # The population data is only needed if we are interested in injuries
     if inhabitants is not None:
@@ -1037,6 +1048,64 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
 
     return data
 
+def read_combination_DL_data(path_combination_data, comp_info, assessment_type='P58',
+    verbose=False):
+    """
+    Read the combination rules for damage and loss for the components of the asset.
+
+    Parameters
+    ----------
+    path_combination_data: string
+        Location of the folder that contains the combination rules.
+    comp_info: list
+        List of data names that contains the comibnation rules.
+    assessment_type: {'P58', 'HAZUS_EQ', 'HAZUS_HU'}
+        Tailors the warnings and verifications towards the type of assessment.
+        default: 'P58'.
+    verbose: boolean
+        If True, the function echoes the information read from the files. This
+        can be useful to ensure that the information in the files is properly
+        read by the method.
+
+    Returns
+    -------
+    data: dict
+        A dictionary with damage and loss data for each component.
+
+    """
+
+    AT = assessment_type
+
+    comb_data_dict = {}
+    if os.path.isdir(path_combination_data):
+        tmp_dir = Path(path_combination_data).resolve()
+        for c_id in comp_info:
+            with open(tmp_dir / f'{c_id}.json', 'r') as f:
+                comb_data_dict.update({c_id: json.load(f)})
+    ## TODO: hdf type
+    elif path_combination_data.endswith('hdf'):
+        for c_id in comp_info:
+            for i in range(4000):
+                try:
+                    store = pd.HDFStore(path_combination_data)
+                    store.open()
+                except HDF5ExtError:
+                    comb_data_table = None
+                    sleep(0.1)
+                    continue
+                else:
+                    comb_data_table = store['HAZUS Subassembly Loss Ratio']
+                    store.close()
+                    break
+            if comb_data_table is not None:
+                comb_data_dict.update(
+                    {c_id: {'LossRatio': comb_data_table[c_id].tolist()}})
+            else:
+                raise IOError("Couldn't read the HDF file for DL data after 20 "
+                              "tries because it was blocked by other processes.")
+
+    return comb_data_dict
+
 
 def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
     verbose=False):
@@ -1114,13 +1183,13 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         for c_id in s_cmp_keys:
             if AT == 'HAZUS_HU':
                 if c_id.startswith('fl'):
-                    store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
-                    store.open()
-                    CMP_table = store.select('data', where=f'index in {c_id}')
-                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                    store.close()
+                    #store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
+                    #store.open()
+                    #CMP_table = store.select('data', where=f'index in {c_id}')
+                    #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
-                    for i in range(1000):
+                    for i in range(4000):
                         try:
                             store = pd.HDFStore(path_CMP.replace('.hdf','_FL.hdf'))
                             store.open()
@@ -1142,13 +1211,13 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                         raise IOError("Couldn't read the HDF file for DL data after 20 "
                                       "tries because it was blocked by other processes.")
                 else:
-                    store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
-                    store.open()
-                    CMP_table = store.select('data', where=f'index in {c_id}')
-                    DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                    store.close()
+                    #store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
+                    #store.open()
+                    #CMP_table = store.select('data', where=f'index in {c_id}')
+                    #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                    #store.close()
                     # this for loop is needed to avoid issues from race conditions on HPC
-                    for i in range(1000):
+                    for i in range(4000):
                         try:
                             store = pd.HDFStore(path_CMP.replace('.hdf','_HU.hdf'))
                             store.open()
@@ -1170,13 +1239,13 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                         raise IOError("Couldn't read the HDF file for DL data after 20 "
                                       "tries because it was blocked by other processes.")
             else:
-                store = pd.HDFStore(path_CMP)
-                store.open()
-                CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
-                DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-                store.close()
+                #store = pd.HDFStore(path_CMP)
+                #store.open()
+                #CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
+                #DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+                #store.close()
                 # this for loop is needed to avoid issues from race conditions on HPC
-                for i in range(1000):
+                for i in range(4000):
                     try:
                         store = pd.HDFStore(path_CMP)
                         store.open()
@@ -1357,7 +1426,6 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
         for DSG_id, DSG_i in enumerate(DL_DSG):
             DSG_data = dict(
                 theta=float(DSG_i['MedianEDP']) * demand_factor,
-                #theta=float(DSG_i['MedianEDP']),
                 sig=float(DSG_i['Beta']),
                 DS_set_kind=DS_set_kind[DSG_i['DSGroupType']],
                 distribution_kind = curve_type[DSG_i['CurveType']],
@@ -1366,7 +1434,6 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
             # sig needs to be scaled for normal distributions
             if DSG_data['distribution_kind'] == 'normal':
                 DSG_data['sig'] = DSG_data['sig'] * demand_factor
-                #DSG_data['sig'] = DSG_data['sig']
 
             for DS_id, DS_i in enumerate(DSG_i['DamageStates']):
                 DS_data = {'description': DS_i['Description'],
@@ -1553,13 +1620,123 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
 
     comp_types = []
     FG_list = [c for c in DMG_agg.columns.get_level_values('FG').unique()]
+    for comp_type in ['S', 'NS', 'NSA', 'NSD']:
+        if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
+            comp_types.append(comp_type)
+    if np.sum([np.any([fg.startswith(comp_type) for comp_type in comp_types])
+                       for fg in FG_list]) != len(FG_list):
+        comp_types.append('other')
+
+    # second, get the damage state likelihoods
+    df_res_l = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([comp_types,
+                                            ['0', '1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    # third, get the damage quantities conditioned on damage state
+    df_res_q = pd.DataFrame(
+        columns=pd.MultiIndex.from_product([comp_types,
+                                            ['1_1', '2_1', '3_1', '4_1', '4_2']],
+                                           names=['comp_type', 'DSG_DS']),
+        index=[0, ])
+
+    for comp_type in ['NSA', 'NSD', 'NS', 'other']:
+        if comp_type in comp_types:
+            del df_res_l[(comp_type, '4_2')]
+            del df_res_q[(comp_type, '4_2')]
+
+    # for each type of component...
+    for comp_type in comp_types:
+
+        # select the corresponding subset of columns
+        if comp_type == 'other':
+            type_cols = [fg for fg in FG_list
+                         if np.all([~fg.startswith(comp_type) for comp_type in comp_types])]
+        else:
+            type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
+                         if c.startswith(comp_type)]
+
+        df_sel = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
+        df_sel = df_sel / len(type_cols)
+
+        # calculate the probability of DSG exceedance
+        df_sel[df_sel > 0.0] = df_sel[df_sel > 0.0] / df_sel[df_sel > 0.0]
+
+        cols = df_sel.columns
+        for i in range(len(cols)):
+            filter = np.where(df_sel.iloc[:, i].values > 0.0)[0]
+            df_sel.iloc[filter, idx[0:i]] = 1.0
+
+        df_sel_exc = pd.Series(np.mean(df_sel.values, axis=0),
+                               index=df_sel.columns)
+
+        DS_0 = 1.0 - df_sel_exc['1_1']
+        for i in range(len(df_sel_exc.index) - 1):
+            df_sel_exc.iloc[i] = df_sel_exc.iloc[i] - df_sel_exc.iloc[i + 1]
+
+        # Add the probability of no damage for convenience.
+        df_sel_exc.loc['0'] = DS_0
+        df_sel_exc = df_sel_exc.sort_index()
+
+        # store the results in the output DF
+        df_res_l.loc[:, idx[comp_type, :]] = df_sel_exc.values
+
+        # get the quantity of components in the highest damage state
+        # skip this part for now to reduce file size
+        if False:
+            df_init = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS', axis=1).sum()
+            df_init = (df_init / len(type_cols)).round(2)
+
+            df_sel = df_sel.sum(axis=1)
+
+            for lvl, lvl_label in zip([1.0, 2.0, 3.0, 4.0, 5.0],
+                                      ['1_1', '2_1', '3_1', '4_1', '4_2']):
+
+                df_cond = df_init[df_sel == lvl]
+
+                if df_cond.size > 0:
+                    unique_vals, unique_counts = np.unique(
+                        df_cond[lvl_label].values, return_counts=True)
+                    unique_counts = np.around(unique_counts / df_cond.shape[0],
+                                              decimals=4)
+                    sorter = np.argsort(unique_counts)[::-1][:4]
+                    DQ = list(zip(unique_vals[sorter], unique_counts[sorter]))
+
+                    # store the damaged quantities in the output df
+                    df_res_q.loc[:,idx[comp_type, lvl_label]] = str(DQ)
+
+    # join the output dataframes
+    df_res = pd.concat([df_res_c, df_res_l], axis=1, keys=['Collapse','DS likelihood'])
+
+    # save the output
+    with open(posixpath.join(output_dir, DM_filename), 'w') as f:
+        df_res.to_csv(f)
+
+def write_SimCenter_DM_output_hu(output_dir, DM_filename, SUMMARY_df, DMG_df):
+
+    # first, get the collapses from the SUMMARY_df
+    df_res_c = pd.DataFrame([0,],
+        columns=pd.MultiIndex.from_tuples([('probability',' '),]),
+        index=[0, ])
+    df_res_c['probability'] = SUMMARY_df[('collapses', 'collapsed')].mean()
+
+    # aggregate the damage data along Performance Groups
+    DMG_agg = DMG_df.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
+
+    comp_types = []
+    FG_list = [c for c in DMG_agg.columns.get_level_values('FG').unique()]
 
     for fg_i, fg_id in enumerate(FG_list):
         cur_DMG = DMG_agg.groupby(level=['FG'], axis=1).get_group(fg_id)
 
         for comp_type in ['S', 'NS', 'NSA', 'NSD']:
             if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
-                comp_types.append(comp_type)
+                # fixing the issue caused by steel building tag starting with 'S'
+                if any([fg.startswith('SE') or fg.startswith('SP') for fg in FG_list]):
+                    continue
+                else:
+                    comp_types.append(comp_type)
         if np.sum([np.any([fg.startswith(comp_type) for comp_type in comp_types])
                            for fg in FG_list]) != len(FG_list):
             comp_types.append('other')
@@ -1569,10 +1746,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         tmp_colname.insert(0,'0')
         tmp_colname.append('4_2')
         df_res_l = pd.DataFrame(
-            #columns=pd.MultiIndex.from_product([comp_types,
-            #                                    ['0', '1_1', '2_1', '3_1', '4_1', '4_2']],
-            #                                   names=['comp_type', 'DSG_DS']),
-            #index=[0, ])
             columns=pd.MultiIndex.from_product([[comp_types[fg_i]], tmp_colname],
                                                names=['comp_type', 'DSG_DS']),
             index=[0, ])
@@ -1580,11 +1753,8 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         # third, get the damage quantities conditioned on damage state
         tmp_colname = list(cur_DMG.columns.get_level_values('DSG_DS'))
         tmp_colname.append('4_2')
+
         df_res_q = pd.DataFrame(
-            #columns=pd.MultiIndex.from_product([comp_types,
-            #                                    ['1_1', '2_1', '3_1', '4_1', '4_2']],
-            #                                   names=['comp_type', 'DSG_DS']),
-            #index=[0, ])
             columns=pd.MultiIndex.from_product([[comp_types[fg_i]], tmp_colname],
                                                names=['comp_type', 'DSG_DS']),
             index=[0, ])
@@ -1655,8 +1825,6 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
                         df_res_q.loc[:,idx[comp_type, lvl_label]] = str(DQ)
 
         # join the output dataframes
-        #df_res = pd.concat([df_res_c, df_res_l, df_res_q], axis=1,
-        #    keys=['Collapse','DS likelihood','Damaged Quantities'])
         if fg_i == 0:
             df_res = df_res_l
         else:
@@ -1664,10 +1832,10 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
 
     # join the output dataframes
     df_res['Collapse','probability',' '] = df_res_c['probability']
-    #df_res = pd.concat([df_res_c, df_res], axis=1, keys=['Collapse','DS likelihood'])
     # save the output
     with open(posixpath.join(output_dir, DM_filename), 'w') as f:
         df_res.to_csv(f)
+
 
 def write_SimCenter_DM_output_old(output_dir, DM_filename, DMG_df):
 
@@ -1756,7 +1924,10 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
         FG_list = [c for c in DV_cost.columns.get_level_values('FG').unique()]
         for comp_type in ['S', 'NS', 'NSA', 'NSD']:
             if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
-                comp_types.append(comp_type)
+                if any([fg.startswith('SE') or fg.startswith('SP') for fg in FG_list]):
+                    continue
+                else:
+                    comp_types.append(comp_type)
 
         repl_cost = GI['replacement_cost']
 
