@@ -1,0 +1,33 @@
+<config>
+  <items base="$SIMCENTER_DEV/SimCenterBackendApplications">
+    <item id="bknd-0001" src="meta/entities.xml#bknd-0001" />
+    <item id="bknd-0002" src="meta/entities.xml#bknd-0002" />
+    <item id="bknd-0003" src="meta/entities.xml#bknd-0003" />
+    <item id="bknd-0004" src="meta/entities.xml#bknd-0004" />
+    <item id="bknd-0005" src="meta/entities.xml#bknd-0005" />
+    <item id="bknd-0006" src="meta/entities.xml#bknd-0006" />
+    <item id="bknd-0007" src="meta/entities.xml#bknd-0007" />
+    <item id="bknd-0008" src="meta/entities.xml#bknd-0008" />
+    <item id="bknd-0009" src="meta/entities.xml#bknd-0009" />
+    <item id="bknd-0010" src="meta/entities.xml#bknd-0010" />
+    <item id="bknd-0011" src="meta/entities.xml#bknd-0011" />
+    <item id="bknd-0012" src="meta/entities.xml#bknd-0012" />
+    <item id="bknd-0013" src="meta/entities.xml#bknd-0013" />
+    <item id="bknd-0014" src="meta/entities.xml#bknd-0014" />
+    <item id="bknd-0015" src="meta/entities.xml#bknd-0015" />
+    <item id="bknd-0016" src="meta/entities.xml#bknd-0016" />
+    <item id="bknd-0017" src="meta/entities.xml#bknd-0017" />
+    <item id="bknd-0018" src="meta/entities.xml#bknd-0018" />
+    <item id="bknd-0019" src="meta/entities.xml#bknd-0019" />
+    <item id="bknd-0020" src="meta/entities.xml#bknd-0020" />
+    <item id="bknd-0021" src="meta/entities.xml#bknd-0021" />
+    <item id="bknd-0022" src="meta/entities.xml#bknd-0022" />
+    <item id="bknd-0023" src="meta/entities.xml#bknd-0023" />
+    <item id="bknd-0024" src="meta/entities.xml#bknd-0024" />
+    <item id="bknd-0025" src="meta/entities.xml#bknd-0025" />
+    <item id="bknd-0026" src="meta/entities.xml#bknd-0026" />
+    <item id="bknd-0027" src="meta/entities.xml#bknd-0027" />
+    <item id="bknd-0028" src="meta/entities.xml#bknd-0028" />
+    <item id="bknd-0029" src="meta/entities.xml#bknd-0029" />
+  </items>
+</config>

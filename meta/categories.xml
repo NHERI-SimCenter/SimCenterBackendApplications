@@ -1,0 +1,28 @@
+<category-schemes>
+  <category-scheme key="workflow-module" var="" >
+
+    <var>
+      <eval>item["api"]["cmd"]["path"].split(os.path.sep)[1]</eval>
+    </var>
+
+    <map>
+      <str key="createBIM"                      >Building</str>
+      <str key="createEDP"                      >EDP</str>
+      <str key="createEVENT"                    >Event</str>
+      <str key="createSAM"                      >Structural Model</str>
+      <str key="performDL"                      >Damage and Loss</str>
+      <str key="performRegionalEventSimulation" >Regional Event</str>
+      <str key="performRegionalMapping"         >Regional Mapping</str>
+      <str key="performSIMULATION"              >Simulation</str>
+      <str key="performUQ"                      >Uncertainty</str>
+    </map>
+  </category-scheme>
+
+  <!-- <category-scheme key="qfem-FEM"> -->
+    <!-- <var name="uqType" href="./src/input.json#/fem/program"> -->
+    <!-- <categories> -->
+      <!-- <map key="" ></map> -->
+    <!-- </categories> -->
+  <!-- </category-scheme> -->
+
+</category-schemes>

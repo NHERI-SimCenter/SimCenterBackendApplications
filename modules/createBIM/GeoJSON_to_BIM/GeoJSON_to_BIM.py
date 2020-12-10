@@ -1,3 +1,6 @@
+"""
+"""
+
 import os, sys, argparse, posixpath, ntpath, json
 
 def create_building_files(output_file, building_source_file, 
@@ -49,7 +52,7 @@ def create_building_files(output_file, building_source_file,
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--buildingFile')
+    parser.add_argument('--buildingFile',help="")
     parser.add_argument('--buildingSourceFile')
     parser.add_argument('--Min', default=None)
     parser.add_argument('--Max', default=None)

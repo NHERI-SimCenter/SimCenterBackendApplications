@@ -37,6 +37,10 @@
 # Contributors:
 # Adam Zsarnóczay
 #
+"""
+Python file creating EVENT.json file containing on event intensity measure 
+from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).
+"""
 
 import argparse, posixpath, json, sys
 import numpy as np
@@ -148,9 +152,9 @@ def get_records(BIM_file, EVENT_file, data_dir):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
-    parser.add_argument('--filenameEVENT')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--filenameBIM', help="name of BIM file")
+    parser.add_argument('--filenameEVENT', help="name of file containing the event data")
     parser.add_argument('--pathEventData')
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
