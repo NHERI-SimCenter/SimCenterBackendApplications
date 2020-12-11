@@ -39,30 +39,37 @@
 # Joanna J. Zou
 # Long Chen
 
-import os, sys
-import argparse, json
-import importlib
+import os
+import sys
+import argparse
+import json
 import subprocess
 import shutil
 from scipy import integrate
 import numpy as np
 from math import pi
-import matplotlib.pyplot as plt
 
 
 convert_EDP = {
-    'max_abs_acceleration' : 'PGA'
+    'max_abs_acceleration': 'PGA'
 }
+
+gravityG = 9.81
+# default element size before wave length check
+elementSize = 0.5
+# site class B
+VsRock = 760
+plotFlag = False
 
 def write_RV():
 
     pass
-
     # TODO: check simulation data exists and contains all important fields
     # TODO: get simulation data & write to SIM file
 
+
 def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
-                   EDP_input_path):
+                 EDP_input_path):
 
     sys.path.insert(0, os.getcwd())
 
@@ -71,7 +78,16 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
         BIM_in = json.load(f)
 
     model_params = BIM_in['GI']
-    
+    model_units = BIM_in['units']
+
+    # convert units if necessary
+    if model_units['length'] in ['inch', 'in']:
+        model_params['Vs30'] = model_params['Vs30'] * 0.0254
+        model_params['DepthToRock'] = model_params['DepthToRock'] * 0.3048
+    elif model_units['length'] in ['foot', 'ft', 'feet']:
+        model_params['Vs30'] = model_params['Vs30'] * 0.0254
+        model_params['DepthToRock'] = model_params['DepthToRock'] * 0.3048
+
     with open(SAM_input_path, 'r') as f:
         SAM_in = json.load(f)
 
@@ -91,7 +107,7 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
     for evt_i, event in enumerate(event_list):
 
         acc = event['data']
-        vel = integrate.cumtrapz(acc, dx=event['dT']) * 9.81
+        vel = integrate.cumtrapz(acc, dx=event['dT']) * gravityG
         vel = np.insert(vel, 0, 0.0)
         disp = integrate.cumtrapz(vel, dx=event['dT'])
         disp = np.insert(disp, 0, 0.0)
@@ -100,7 +116,6 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
         np.savetxt(fileNames[evt_i] + '.vel', vel)
         np.savetxt(fileNames[evt_i] + '.disp', disp)
         np.savetxt(fileNames[evt_i] + '.time', time)
-
 
     # create the EDP specification
     # load the EDP file
@@ -115,46 +130,37 @@ def run_opensees(EVENT_input_path, SAM_input_path, BIM_input_path,
             edp_specs.update({response['type']: {}})
         edp_specs[response['type']].update(
             {response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
-                              for dof in response['dofs']])})
-
-    #for edp_name, edp_data in edp_specs.items():
-    #    print(edp_name, edp_data)
+                                   for dof in response['dofs']])})
 
     # run the analysis
-    shutil.copyfile(os.path.join(SAM_in['modelPath'], model_script_path), os.path.join(os.getcwd(), model_script_path))
+    shutil.copyfile(os.path.join(SAM_in['modelPath'], model_script_path), os.path.join(
+        os.getcwd(), model_script_path))
     build_model(model_params, evt_i + 1)
-    #print('OpenSees ' + model_script_path + ' {:.2f} {:.1f}'.format(model_params['Vs30'], model_params['Depth_to_Rock']))
-    #subprocess.Popen('OpenSees ' + model_script_path + ' {:.2f} {:.1f}'.format(model_params['Vs30'], model_params['Depth_to_Rock']), shell=True).wait()
+
     subprocess.Popen('OpenSees ' + model_script_path, shell=True).wait()
 
     acc = np.loadtxt('accelerationElasAct.out')
-    acc_surf_x = acc[:,-3] / 9.81
-    acc_surf_z = acc[:,-1] / 9.81
+    acc_surf_x = acc[:, -3] / gravityG
+    if SAM_in['ndm'] in '3':
+        acc_surf_z = acc[:, -1] / gravityG
 
-    
-    #for edp_name, edp_data in edp_specs.items():
+    # for edp_name, edp_data in edp_specs.items():
     #    print(edp_name, edp_data)
 
     # TODO: default analysis script
 
     # save the EDP results
 
-    #print(EDP_res)
-
     for response in EDP_list:
         edp = [max(abs(acc_surf_x)), max(abs(acc_surf_z))]
-
-        response['scalar_data'] = edp # [val for dof, val in edp.items()]
-
+        response['scalar_data'] = edp  # [val for dof, val in edp.items()]
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
 
 
 def build_model(model_params, numEvt):
-    elementSize = 0.5
-    g = 9.81
-    VsRock = 760 #site class B
+
     try:
         depthToRock = model_params['DepthToRock']
     except:
@@ -178,8 +184,8 @@ def build_model(model_params, numEvt):
         f.write('set nElemY({:d}) 1\n'.format(ii+1))
         f.write('set sElemY({:d}) {:.3f}\n'.format(ii+1, eleVsize))
         travelTime += eleVsize / Vs[ii]
-    
-    averageVs = thickness / travelTime # time averaged shear wave velocity
+
+    averageVs = thickness / travelTime  # time averaged shear wave velocity
     naturalFrequency = averageVs / 4 / thickness  # Vs/4H
 
     f.write('set nElemT {:d}\n'.format(numElems))
@@ -188,14 +194,14 @@ def build_model(model_params, numEvt):
     f.write('set dispFile xInput.disp\n')
     f.write('set velFile  xInput.vel\n')
     f.write('set timeFile xInput.time\n')
-   
+
     if numEvt > 1:
         f.write('set numEvt 2\n')
         f.write('set accFile2  yInput.acc\n')
         f.write('set dispFile2 yInput.disp\n')
         f.write('set velFile2  yInput.vel\n')
     else:
-        f.write('set numEvt 1\n')    
+        f.write('set numEvt 1\n')
 
     f.write('set rockVs {:.1f}\n'.format(VsRock))
     f.write('set omega1 {:.2f}\n'.format(2.0 * pi * naturalFrequency))
@@ -209,52 +215,58 @@ def build_model(model_params, numEvt):
         # Borja and Amies 1994 J2 model
         rhoSoil = model_params['Den']
         poisson = 0.3
-        sig_v = rhoSoil * g * eleVsize * 0.5
+        sig_v = rhoSoil * gravityG * eleVsize * 0.5
         for ii in range(numElems):
             f.write('set rho({:d}) {:.1f}\n'.format(ii+1, rhoSoil))
             shearG = rhoSoil * Vs[ii] * Vs[ii]
             bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
             f.write('set shearG({:d}) {:.2f}\n'.format(ii+1, shearG))
             f.write('set bulkK({:d}) {:.2f}\n'.format(ii+1, bulkK))
-            f.write('set su({:d}) {:.2f}\n'.format(ii+1, model_params['Su_rat'] * sig_v))
-            sig_v = sig_v + rhoSoil * g * eleVsize
-            f.write('set h({:d}) {:.2f}\n'.format(ii+1, shearG * model_params['h/G']))
+            f.write('set su({:d}) {:.2f}\n'.format(
+                ii+1, model_params['Su_rat'] * sig_v))
+            sig_v = sig_v + rhoSoil * gravityG * eleVsize
+            f.write('set h({:d}) {:.2f}\n'.format(
+                ii+1, shearG * model_params['h/G']))
             f.write('set m({:d}) {:.2f}\n'.format(ii+1, model_params['m']))
             f.write('set h0({:d}) {:.2f}\n'.format(ii+1, model_params['h0']))
-            f.write('set chi({:d}) {:.2f}\n'.format(ii+1, model_params['chi']))          
-            f.write('set mat({:d}) "J2CyclicBoundingSurface {:d} $shearG({:d}) $bulkK({:d}) $su({:d}) $rho({:d}) $h({:d}) $m({:d}) $h0({:d}) $chi({:d}) 0.5"\n\n\n'.format(ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1))
+            f.write('set chi({:d}) {:.2f}\n'.format(ii+1, model_params['chi']))
+            f.write('set mat({:d}) "J2CyclicBoundingSurface {:d} $shearG({:d}) $bulkK({:d}) $su({:d}) $rho({:d}) $h({:d}) $m({:d}) $h0({:d}) $chi({:d}) 0.5"\n\n\n'.format(
+                ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1))
     else:
         rhoSoil = model_params['Den']
         poisson = 0.3
         for ii in range(numElems):
             f.write('set rho({:d}) {:.1f}\n'.format(ii+1, rhoSoil))
-            f.write('set shearG({:d}) {:.2f}\n'.format(ii+1, rhoSoil * Vs[ii] * Vs[ii]))
+            f.write('set shearG({:d}) {:.2f}\n'.format(
+                ii+1, rhoSoil * Vs[ii] * Vs[ii]))
             f.write('set nu({:d}) {:.2f}\n'.format(ii+1, poisson))
-            f.write('set E({:d}) {:.2f}\n\n'.format(ii+1, 2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson)))
-            f.write('set mat({:d}) "ElasticIsotropic {:d} $E({:d}) $nu({:d}) $rho({:d})"\n\n\n'.format(ii+1, ii+1, ii+1, ii+1, ii+1))
-
+            f.write('set E({:d}) {:.2f}\n\n'.format(
+                ii+1, 2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson)))
+            f.write('set mat({:d}) "ElasticIsotropic {:d} $E({:d}) $nu({:d}) $rho({:d})"\n\n\n'.format(
+                ii+1, ii+1, ii+1, ii+1, ii+1))
 
     f.close()
 
+
 def SVM(Vs30, depthToRock, VsRock, elementSize):
-    # Sediment Velocity Model (SVM) 
+    # Sediment Velocity Model (SVM)
     # Developed by Jian Shi and Domniki Asimaki (2018)
     # Generates a shear velocity profile from Vs30 for shallow crust profiles
     # Valid for 173.1 m/s < Vs30 < 1000 m/s
 
     # Check Vs30
     if Vs30 < 173.1 or Vs30 > 1000:
-        print('Caution: Vs30 is not within the valid range of the SVM! \n') 
+        print('Caution: Vs30 is not within the valid range of the SVM! \n')
 
     # Parameters specific to: California
-    z_star = 2.5;    # [m] depth considered to have constant Vs
+    z_star = 2.5    # [m] depth considered to have constant Vs
     p1 = -2.1688e-4
-    p2 =  0.5182
-    p3 =  69.452
+    p2 = 0.5182
+    p3 = 69.452
     r1 = -59.67
     r2 = -0.2722
-    r3 =  11.132
-    s1 =  4.110
+    r3 = 11.132
+    s1 = 4.110
     s2 = -1.0521e-4
     s3 = -10.827
     s4 = -7.6187e-3
@@ -265,7 +277,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
     n = s1 * np.exp(s2 * Vs30) + s3 * np.exp(s4 * Vs30)
 
     # Check element size for max. frequency
-    maxFrequency = 50   #Hz
+    maxFrequency = 50  # Hz
     waveLength = Vs0 / maxFrequency
     # Need four elements per wavelength
     if 4.0 * elementSize <= waveLength:
@@ -274,7 +286,8 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
         step_size = waveLength / 4.0
 
     depth = max(30.0, depthToRock)
-    z = np.linspace(0.0 + 0.5 * step_size, depth - 0.5 * step_size, int(depth / step_size)) # discretize depth to bedrock
+    z = np.linspace(0.0 + 0.5 * step_size, depth - 0.5 * step_size,
+                    int(depth / step_size))  # discretize depth to bedrock
 
     # Vs Profile
     Vs = np.zeros(len(z))
@@ -291,23 +304,26 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
     else:
         Vs_cropped = Vs[np.where(Vs <= VsRock)]
         thickness = z[len(Vs_cropped) - 1] + 0.5 * step_size
-    
-    fig = plt.figure()
-    plt.plot(Vs, z, label='Vs profile')
-    plt.plot(Vs_cropped, z[0 : len(Vs_cropped)], label='Vs profile to bedrock')
-    plt.grid(True)
-    ax = plt.gca()
-    ax.invert_yaxis()
-    plt.legend()
-    plt.text(100, 12.5, 'Vs30 = {:.1f}m/s'.format(Vs30))
-    plt.text(100, 17.5, 'Depth to bedrock = {:.1f}m'.format(depthToRock))
-    ax.set_xlabel('Vs (m/s)')
-    ax.set_ylabel('Depth (m)')
-    ax.set_xlim(left = 0)
-    ax.set_title('Sediment Velocity Model (SVM)')
-    fig.savefig('Vs.png')
+
+    if plotFlag:
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        plt.plot(Vs, z, label='Vs profile')
+        plt.plot(Vs_cropped, z[0: len(Vs_cropped)], label='Vs profile to bedrock')
+        plt.grid(True)
+        ax = plt.gca()
+        ax.invert_yaxis()
+        plt.legend()
+        plt.text(100, 12.5, 'Vs30 = {:.1f}m/s'.format(Vs30))
+        plt.text(100, 17.5, 'Depth to bedrock = {:.1f}m'.format(depthToRock))
+        ax.set_xlabel('Vs (m/s)')
+        ax.set_ylabel('Depth (m)')
+        ax.set_xlim(left=0)
+        ax.set_title('Sediment Velocity Model (SVM)')
+        fig.savefig('Vs.png')
 
     return thickness, Vs_cropped
+
 
 if __name__ == '__main__':
 
