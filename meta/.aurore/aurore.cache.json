@@ -1,0 +1,1558 @@
+{
+  "items": {
+    "bknd-0001": {
+      "id": "bknd-0001",
+      "title": "CSV_to_BIM",
+      "links": {
+        "develop": "modules/createBIM/CSV_to_BIM"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
+          "prog": "CSV_to_BIM",
+          "args": [
+            {
+              "name": "buildingFile",
+              "type": "FILENAME(W)",
+              "default": "buildingsFile.json",
+              "help": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+              "app-specific": true
+            },
+            {
+              "name": "Min",
+              "type": "int",
+              "default": "1",
+              "help": "min id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "Max",
+              "type": "int",
+              "default": "10",
+              "help": "max id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "buildingSourceFile",
+              "type": "path",
+              "default": "None",
+              "help": "path to buildings database file",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: CSV_to_BIM.py [-h] [--buildingFile BUILDINGFILE]\n                     [--buildingSourceFile BUILDINGSOURCEFILE] [--Min MIN]\n                     [--Max MAX] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --buildingFile BUILDINGFILE\n  --buildingSourceFile BUILDINGSOURCEFILE\n  --Min MIN\n  --Max MAX\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Parses building source information from CSV and saves into BIM.json files for each building.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0001",
+      "published": "2020-12-12T19:46:09.181004-08:00",
+      "categories": {
+        "workflow-module": "createBIM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0002": {
+      "id": "bknd-0002",
+      "title": "GenericBimDatabase",
+      "links": {
+        "develop": "modules/createBIM/genericBimDatabase"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createBIM/genericBimDatabase/GenericBimDatabase",
+          "prog": "GenericBimDatabase",
+          "args": [
+            {
+              "name": "buildingFile",
+              "type": "FILENAME(W)",
+              "default": "buildingsFile.json",
+              "help": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+              "app-specific": true
+            },
+            {
+              "name": "Min",
+              "type": "int",
+              "default": "1",
+              "help": "min id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "Max",
+              "type": "int",
+              "default": "10",
+              "help": "max id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "buildingSourceFile",
+              "type": "path",
+              "default": "None",
+              "help": "path to buildings file",
+              "app-specific": true
+            },
+            {
+              "name": "config",
+              "type": "path",
+              "default": "None",
+              "help": "path to buildings config file",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0002",
+      "published": "2020-12-12T19:46:09.183405-08:00",
+      "categories": {
+        "workflow-module": "createBIM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0003": {
+      "id": "bknd-0003",
+      "title": "GeoJSON_to_BIM",
+      "links": {
+        "develop": "modules/createBIM/GeoJSON_to_BIM"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
+          "prog": "GeoJSON_to_BIM",
+          "args": [
+            {
+              "name": "buildingFile",
+              "type": "FILENAME(W)",
+              "default": "buildingsFile.json",
+              "help": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+              "app-specific": true
+            },
+            {
+              "name": "Min",
+              "type": "int",
+              "default": "1",
+              "help": "min id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "Max",
+              "type": "int",
+              "default": "10",
+              "help": "max id of building to obtain BIM for",
+              "app-specific": true
+            },
+            {
+              "name": "buildingSourceFile",
+              "type": "path",
+              "default": "None",
+              "help": "path to buildings database file",
+              "app-specific": true
+            },
+            {
+              "name": "configFile",
+              "type": "path",
+              "default": "None",
+              "help": "path to workflow config file",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: GeoJSON_to_BIM.py [-h] [--buildingFile BUILDINGFILE]\n                         [--buildingSourceFile BUILDINGSOURCEFILE] [--Min MIN]\n                         [--Max MAX] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --buildingFile BUILDINGFILE\n  --buildingSourceFile BUILDINGSOURCEFILE\n  --Min MIN\n  --Max MAX\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0003",
+      "published": "2020-12-12T19:46:09.185462-08:00",
+      "categories": {
+        "workflow-module": "createBIM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0004": {
+      "id": "bknd-0004",
+      "title": "SimCenterEvent",
+      "links": {
+        "develop": "modules/createEVENT/SimCenterEvent"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/SimCenterEvent/SimCenterEvent.py",
+          "prog": "SimCenterEvent",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: SimCenterEvent.py [-h] [--filenameBIM FILENAMEBIM]\n                         [--filenameEVENT FILENAMEEVENT]\n                         [--pathEventData PATHEVENTDATA] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameEVENT FILENAMEEVENT\n  --pathEventData PATHEVENTDATA\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Python file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0004",
+      "published": "2020-12-12T19:46:09.187474-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0005": {
+      "id": "bknd-0005",
+      "title": "ExistingSimCenterEvents",
+      "links": {
+        "develop": "modules/createEVENT/multipleSimCenter"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
+          "prog": "MultipleSCEvents",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0005",
+      "published": "2020-12-12T19:46:09.189534-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0006": {
+      "id": "bknd-0006",
+      "title": "ExistingPEER_Events",
+      "links": {
+        "develop": "modules/createEVENT/multiplePEER"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/multiplePEER/MultiplePEER",
+          "prog": "MultiplePEER",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Application file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0006",
+      "published": "2020-12-12T19:46:09.191359-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "earthquake-event"
+      }
+    },
+    "bknd-0007": {
+      "id": "bknd-0007",
+      "title": "Site Response",
+      "links": {
+        "develop": "modules/createEVENT/siteResponse"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/siteResponse/SiteResponse",
+          "prog": "SiteResponse",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0007",
+      "published": "2020-12-12T19:46:09.192890-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0008": {
+      "id": "bknd-0008",
+      "title": "HazardBasedEvent",
+      "links": {
+        "develop": "modules/createEVENT/hazardBasedEvent"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
+          "prog": "HazardBasedEvent",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0008",
+      "published": "2020-12-12T19:46:09.194662-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0009": {
+      "id": "bknd-0009",
+      "title": "DEDM_HRP",
+      "links": {
+        "develop": "modules/createEVENT/DEDM_HRP"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/DEDM_HRP/DEDM_HRP.py",
+          "prog": "DEDM_HRP",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0009",
+      "published": "2020-12-12T19:46:09.196165-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0010": {
+      "id": "bknd-0010",
+      "title": "LowRiseTPU",
+      "links": {
+        "develop": "modules/createEVENT/LowRiseTPU"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/LowRiseTPU/LowRiseTPU",
+          "prog": "LowRiseTPU",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0010",
+      "published": "2020-12-12T19:46:09.197588-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "wind-event"
+      }
+    },
+    "bknd-0011": {
+      "id": "bknd-0011",
+      "title": "WindTunnelExperiment",
+      "links": {
+        "develop": "modules/createEVENT/windTunnelExperiment"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
+          "prog": "WindTunnelExperiment",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0011",
+      "published": "2020-12-12T19:46:09.199199-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "wind-event"
+      }
+    },
+    "bknd-0012": {
+      "id": "bknd-0012",
+      "title": "StochasticWindWittigSinha",
+      "links": {
+        "develop": "modules/createEVENT/stochasticWind"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/stochasticWind/StochasticWind",
+          "prog": "StochasticWind",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage:\n  StochasticWind  options\n\nwhere options are:\n  -?, -h, --help                           display usage information\n  --filenameEVENT &ltEvent file location>    Location where generated time\n                                           history should be stored\n  --filenameBIM &ltBIM file location>        Location where building\n                                           information model is stored\n  --seed &ltSeed value>                      Seed value that should be used to\n                                           generate time histories\n  -r, --getRV                              Flag indicating whether the\n                                           generated event file should\n                                           specify random variable\n\n"
+        }
+      },
+      "summary": "Application file creating EVENT.json files for stochastic wind fields based on the Witting-Sinha method. Supports Wind hazard events.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0012",
+      "published": "2020-12-12T19:46:09.200658-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0013": {
+      "id": "bknd-0013",
+      "title": "StochasticGroundMotion",
+      "links": {
+        "develop": "modules/createEVENT/stochasticGroundMotion"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/stochasticGroundMotion/StochasticGM",
+          "prog": "StochasticGM",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "modelName",
+              "type": "string",
+              "help": "...",
+              "app-specific": true
+            },
+            {
+              "name": "seed",
+              "type": "int",
+              "help": "...",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage:\n  StochasticGM  options\n\nwhere options are:\n  -?, -h, --help                           display usage information\n  --modelName &ltModel name>                 Name of stochastic model to use\n  --filenameEVENT &ltEvent file location>    Location where generated time\n                                           history should be stored\n  --filenameBIM &ltBIM file location>        Location where building\n                                           information model is stored\n  --seed &ltSeed value>                      Seed value that should be used to\n                                           generate time histories\n  -r, --getRV                              Flag indicating whether the\n                                           generated event file should\n                                           specify random variable\n\n"
+        }
+      },
+      "summary": "Application file for creating EVENT.json files for stochastic ground motion events based on the ___ GMPE. Supports Earthquake hazard events.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0013",
+      "published": "2020-12-12T19:46:09.202084-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0014": {
+      "id": "bknd-0014",
+      "title": "CFDEvent",
+      "links": {
+        "develop": "modules/createEVENT/CFDEvent"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/CFDEvent/CFDEvent.py",
+          "prog": "CFDEvent",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "OpenFOAMCase",
+              "type": "string",
+              "help": "Remote directory containing OpenFOAM case input",
+              "app-specific": true
+            },
+            {
+              "name": "OpenFOAMSolver",
+              "type": "string",
+              "help": "OpenFOAM solver used",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: CFDEvent.py [-h] -b FILENAMEBIM -e FILENAMEEVENT [--getRV]\n\nGet sample EVENT file produced by CFD\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -b FILENAMEBIM, --filenameBIM FILENAMEBIM\n                        BIM File\n  -e FILENAMEEVENT, --filenameEVENT FILENAMEEVENT\n                        Event File\n  --getRV               getRV\n"
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0014",
+      "published": "2020-12-12T19:46:09.203730-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0015": {
+      "id": "bknd-0015",
+      "title": "NNGM",
+      "links": {
+        "develop": "modules/createEVENT/NNGM"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/NNGM/NNGM.py",
+          "prog": "NNGM",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "groundMotions",
+              "type": "path",
+              "help": "Configuration file with information about the ground motions to use",
+              "app-specific": true
+            },
+            {
+              "name": "recordsFolder",
+              "type": "path",
+              "help": "Folder containing records",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0015",
+      "published": "2020-12-12T19:46:09.206162-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0016": {
+      "id": "bknd-0016",
+      "title": "LLNL-SW4",
+      "links": {
+        "develop": "modules/createEVENT/LLNL_SW4"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/LLNL_SW4/LLNL_SW4.py",
+          "prog": "LLNL_SW4",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "pathSW4results",
+              "type": "path",
+              "help": "Path to directory containig output point files",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: LLNL_SW4.py [-h] [--filenameBIM FILENAMEBIM]\n                   [--filenameEVENT FILENAMEEVENT]\n                   [--pathSW4results PATHSW4RESULTS] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameEVENT FILENAMEEVENT\n  --pathSW4results PATHSW4RESULTS\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0016",
+      "published": "2020-12-12T19:46:09.209325-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0017": {
+      "id": "bknd-0017",
+      "title": "ASCE7_WindSpeed",
+      "links": {
+        "develop": "modules/createEVENT/ASCE7_WindSpeed"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/ASCE7_WindSpeed/ASCE7_WindSpeed.py",
+          "prog": "ASCE7_WindSpeed",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: ASCE7_WindSpeed.py [-h] [--filenameBIM FILENAMEBIM]\n                          [--filenameEVENT FILENAMEEVENT]\n                          [--windDatabase WINDDATABASE] [--severity SEVERITY]\n                          [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameEVENT FILENAMEEVENT\n  --windDatabase WINDDATABASE\n  --severity SEVERITY\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0017",
+      "published": "2020-12-12T19:46:09.210842-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0018": {
+      "id": "bknd-0018",
+      "title": "pointWindSpeed",
+      "links": {
+        "develop": "modules/createEVENT/pointWindSpeed"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEVENT/pointWindSpeed/pointWindSpeed",
+          "prog": "pointWindSpeed",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "FILENAME(W)",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameWindSpeedCloudData",
+              "type": "FILENAME(R)",
+              "help": "None",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "No description",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0018",
+      "published": "2020-12-12T19:46:09.212231-08:00",
+      "categories": {
+        "workflow-module": "createEVENT",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0019": {
+      "id": "bknd-0019",
+      "title": "MDOF-LU",
+      "links": {
+        "develop": "modules/createSAM/MDOF-LU"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createSAM/MDOF-LU/MDOF-LU",
+          "prog": "MDOF-LU",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "FILENAME(W)",
+              "default": "SAM.json",
+              "help": "name of file containing the outputted SAM",
+              "app-specific": true
+            },
+            {
+              "name": "hazusData",
+              "type": "path",
+              "help": "Defines the location of the hazus building config data file.",
+              "app-specific": true
+            },
+            {
+              "name": "stdStiffness",
+              "type": "float",
+              "help": "Defines the standard deviation that should be considered when sampling the stiffness for the building.",
+              "app-specific": true
+            },
+            {
+              "name": "stdDamping",
+              "type": "float",
+              "help": "Defines the standard deviation that should be considered when sampling the damping ratio for the building.",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Creates SAM.json file and generates script for creating a hysteretic multi-degree of freedom (MDOF) system subject to earthquake time history analysis, based on the Lu method. Analysis is executed by the OpenSeesSimulation application.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0019",
+      "published": "2020-12-12T19:46:09.213717-08:00",
+      "categories": {
+        "workflow-module": "createSAM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0020": {
+      "id": "bknd-0020",
+      "title": "OpenSeesInput",
+      "links": {
+        "develop": "modules/createSAM/openSeesInput"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createSAM/openSeesInput/OpenSeesInput",
+          "prog": "OpenSeesInput",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "FILENAME(W)",
+              "default": "SAM.json",
+              "help": "name of file containing the outputted SAM",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Creates SAM.json file containing model information for an input OpenSees structural model. Analysis is executed in the OpenSeesSimulation application.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0020",
+      "published": "2020-12-12T19:46:09.215085-08:00",
+      "categories": {
+        "workflow-module": "createSAM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0021": {
+      "id": "bknd-0021",
+      "title": "OpenSeesPyInput",
+      "links": {
+        "develop": "modules/createSAM/openSeesPyInput"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
+          "prog": "OpenSeesPyInput",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "FILENAME(W)",
+              "default": "SAM.json",
+              "help": "name of file containing the outputted SAM",
+              "app-specific": true
+            },
+            {
+              "name": "modelPath",
+              "type": "path",
+              "help": "Defines the location of the OpenSeesPy model files.",
+              "app-specific": true
+            },
+            {
+              "name": "mainScript",
+              "type": "string",
+              "help": "Defines the name of the main model file.",
+              "app-specific": true
+            },
+            {
+              "name": "ndm",
+              "type": "int",
+              "help": "Defines the number of degrees of freedom in the numerical model.",
+              "app-specific": true
+            },
+            {
+              "name": "dofMap",
+              "type": "string",
+              "help": "The workflow assumes X=1, Y=2, Z=3 mapping between directions and degrees of freedom; XY being the horizontal directions. This input allows you to define an alternative mapping by providing three numbers separated by commas in a string, such as '1, 3, 2' if you want to have Y as the vertical direction.",
+              "app-specific": true
+            },
+            {
+              "name": "ctrlNodes",
+              "type": "string",
+              "help": "Defines the ids of the control nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building.",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: OpenSeesPyInput.py [-h] [--filenameBIM FILENAMEBIM]\n                          [--filenameEVENT FILENAMEEVENT]\n                          [--filenameSAM FILENAMESAM]\n                          [--mainScript MAINSCRIPT] [--modelPath MODELPATH]\n                          [--ndm NDM] [--dofMap DOFMAP] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameEVENT FILENAMEEVENT\n  --filenameSAM FILENAMESAM\n  --mainScript MAINSCRIPT\n  --modelPath MODELPATH\n  --ndm NDM\n  --dofMap DOFMAP\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Creates SAM.json file containing model information for an input OpenSeesPy structural model. The functions 'build_model' and 'run_analysis' must be defined in the model script. Analysis is executed in the OpenSeesPySimulation application.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0021",
+      "published": "2020-12-12T19:46:09.216866-08:00",
+      "categories": {
+        "workflow-module": "createSAM",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0022": {
+      "id": "bknd-0022",
+      "title": "StandardEarthquakeEDP_R",
+      "links": {
+        "develop": "modules/createEDP/standardEarthquakeEDP_R"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEDP/standardEarthquakeEDP_R/StandardEarthquakeEDP",
+          "prog": "StandardEarthquakeEDP",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of file containing the EDP to be determined from the analysis",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0022",
+      "published": "2020-12-12T19:46:09.218477-08:00",
+      "categories": {
+        "workflow-module": "createEDP",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0023": {
+      "id": "bknd-0023",
+      "title": "UserDefinedEDP_R",
+      "links": {
+        "develop": "modules/createEDP/userEDP_R"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/createEDP/userEDP_R/UserDefinedEDP.py",
+          "prog": "UserDefinedEDP",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of bim file",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of file containing the EDP to be determined from the analysis",
+              "app-specific": true
+            },
+            {
+              "name": "EDPspecs",
+              "type": "path",
+              "help": "Identifies the location of a json file that specifies the requested EDPs.",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: UserDefinedEDP.py [-h] [--filenameBIM FILENAMEBIM]\n                         [--filenameEVENT FILENAMEEVENT]\n                         [--filenameSAM FILENAMESAM]\n                         [--filenameEDP FILENAMEEDP] [--EDPspecs EDPSPECS]\n                         [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameEVENT FILENAMEEVENT\n  --filenameSAM FILENAMESAM\n  --filenameEDP FILENAMEEDP\n  --EDPspecs EDPSPECS\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0023",
+      "published": "2020-12-12T19:46:09.219964-08:00",
+      "categories": {
+        "workflow-module": "createEDP",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0024": {
+      "id": "bknd-0024",
+      "title": "OpenSees-Simulation_R",
+      "links": {
+        "develop": "modules/performSIMULATION/openSees_R"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py",
+          "prog": "OpenSeesSimulation",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of file containing the BIM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of EDP file to be added to",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSIM",
+              "type": "FILENAME(W)",
+              "default": "SIM.json",
+              "help": "name of SIM file to be added to",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Executes script for building structural model in OpenSees and running analysis for the response simulation, then saves the results in EDP.json.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0024",
+      "published": "2020-12-12T19:46:09.222152-08:00",
+      "categories": {
+        "workflow-module": "performSIMULATION",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0025": {
+      "id": "bknd-0025",
+      "title": "OpenSees-Simulation_R",
+      "links": {
+        "develop": "modules/performSIMULATION/openSeesPy"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py",
+          "prog": "OpenSeesPySimulation",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of file containing the BIM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of EDP file to be added to",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSIM",
+              "type": "FILENAME(W)",
+              "default": "SIM.json",
+              "help": "name of SIM file to be added to",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: OpenSeesPySimulation.py [-h] [--filenameBIM FILENAMEBIM]\n                               [--filenameSAM FILENAMESAM]\n                               [--filenameEVENT FILENAMEEVENT]\n                               [--filenameEDP FILENAMEEDP]\n                               [--filenameSIM FILENAMESIM] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameSAM FILENAMESAM\n  --filenameEVENT FILENAMEEVENT\n  --filenameEDP FILENAMEEDP\n  --filenameSIM FILENAMESIM\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Executes script for building structural model in OpenSeesPy and running analysis for the response simulation, then saves the results in EDP.json.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0025",
+      "published": "2020-12-12T19:46:09.224268-08:00",
+      "categories": {
+        "workflow-module": "performSIMULATION",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0026": {
+      "id": "bknd-0026",
+      "title": "IMasEDP",
+      "links": {
+        "develop": "modules/performSIMULATION/IMasEDP"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performSIMULATION/IMasEDP/IMasEDP.py",
+          "prog": "IMasEDP",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of file containing the BIM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of EDP file to be added to",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSIM",
+              "type": "FILENAME(W)",
+              "default": "SIM.json",
+              "help": "name of SIM file to be added to",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: IMasEDP.py [-h] [--filenameBIM FILENAMEBIM] [--filenameSAM FILENAMESAM]\n                  [--filenameEVENT FILENAMEEVENT] [--filenameEDP FILENAMEEDP]\n                  [--filenameSIM FILENAMESIM] [--getRV [GETRV]]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameBIM FILENAMEBIM\n  --filenameSAM FILENAMESAM\n  --filenameEVENT FILENAMEEVENT\n  --filenameEDP FILENAMEEDP\n  --filenameSIM FILENAMESIM\n  --getRV [GETRV]\n"
+        }
+      },
+      "summary": "Returns the input event IM as the EDP in the absence of a response simulation method. This application is appropriate to use when damages and losses are estimated as function of IM in the DL assessment.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0026",
+      "published": "2020-12-12T19:46:09.226449-08:00",
+      "categories": {
+        "workflow-module": "performSIMULATION",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0027": {
+      "id": "bknd-0027",
+      "title": "Dakota-UQ",
+      "links": {
+        "develop": "modules/performUQ/dakota_R"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performUQ/dakota_R/DakotaFEM.py",
+          "prog": "DakotaFEM",
+          "args": [
+            {
+              "name": "filenameBIM",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of file containing the BIM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSAM",
+              "type": "string",
+              "default": "SAM.json",
+              "help": "name of file containing the SAM",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENT",
+              "type": "string",
+              "default": "EVENT.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "string",
+              "default": "EDP.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "filenameSIM",
+              "type": "string",
+              "default": "SIM.json",
+              "help": "name of file containing the event data",
+              "app-specific": true
+            },
+            {
+              "name": "driverFile",
+              "type": "string",
+              "default": "driver",
+              "help": "name of file containing the simulation driver",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.json",
+              "help": "name of EDP file to be added to",
+              "app-specific": true
+            },
+            {
+              "name": "method",
+              "type": "string",
+              "help": "Defines the UQ method to use.",
+              "app-specific": true
+            },
+            {
+              "name": "samples",
+              "type": "int",
+              "help": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model.",
+              "app-specific": true
+            },
+            {
+              "name": "samples2",
+              "type": "int",
+              "help": "Only for surrogate models. Specifies the number of realizations to generate from the trained model.",
+              "app-specific": true
+            },
+            {
+              "name": "seed",
+              "type": "int",
+              "help": "Specifies the random seed.",
+              "app-specific": true
+            },
+            {
+              "name": "seed2",
+              "type": "int",
+              "help": "Only for surrogate models. Specifies the random seed to generate samples from the models.",
+              "app-specific": true
+            },
+            {
+              "name": "ismethod",
+              "type": "string",
+              "help": "Specifies the importance sampling method.",
+              "app-specific": true
+            },
+            {
+              "name": "dataMethod",
+              "type": "string",
+              "help": "...",
+              "app-specific": true
+            },
+            {
+              "name": "dataMethod2",
+              "type": "string",
+              "help": "...",
+              "app-specific": true
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "help": "...",
+              "app-specific": true
+            },
+            {
+              "name": "concurrency",
+              "type": "int",
+              "help": "Specifies the number of processes to use for simulation.",
+              "app-specific": true
+            },
+            {
+              "name": "keepSamples",
+              "type": "bool",
+              "help": "True if the intermediate results shall be kept for each sample.",
+              "app-specific": true
+            },
+            {
+              "name": "runType",
+              "type": "string",
+              "help": "...",
+              "app-specific": true
+            }
+          ],
+          "usage": ""
+        }
+      },
+      "summary": "Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0027",
+      "published": "2020-12-12T19:46:09.228672-08:00",
+      "categories": {
+        "workflow-module": "performUQ",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0028": {
+      "id": "bknd-0028",
+      "title": "pelicun",
+      "links": {
+        "develop": "modules/performDL/pelicun"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performDL/pelicun/DL_calculation.py",
+          "prog": "DL_calculation",
+          "args": [
+            {
+              "name": "filenameDL",
+              "type": "string",
+              "default": "BIM.json",
+              "help": "name of file containing the DL model information",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEDP",
+              "type": "string",
+              "default": "response.csv",
+              "help": "name of file containing the EDP data",
+              "app-specific": true
+            },
+            {
+              "name": "outputEDP",
+              "type": "FILENAME(W)",
+              "default": "EDP.csv",
+              "help": "name of file to store response estimates",
+              "app-specific": true
+            },
+            {
+              "name": "outputDM",
+              "type": "FILENAME(W)",
+              "default": "DM.csv",
+              "help": "name of file to store damage estimates",
+              "app-specific": true
+            },
+            {
+              "name": "outputDV",
+              "type": "FILENAME(W)",
+              "default": "DV.csv",
+              "help": "name of DV file to store decision variable estimates",
+              "app-specific": true
+            },
+            {
+              "name": "DL_Method",
+              "type": "string",
+              "help": "Defines the damage and loss assessment method.",
+              "app-specific": true
+            },
+            {
+              "name": "Realizations",
+              "type": "int",
+              "help": "Specifies the number of realizations to generate",
+              "app-specific": true
+            },
+            {
+              "name": "detailed_results",
+              "type": "bool",
+              "help": "If false, only the main results are saved to improve performance.",
+              "app-specific": true
+            },
+            {
+              "name": "log_file",
+              "type": "bool",
+              "help": "If false, pelicun does not create a log file.",
+              "app-specific": true
+            },
+            {
+              "name": "coupled_EDP",
+              "type": "bool",
+              "help": "If true, the raw EDPs are used as-is without re-sampling.",
+              "app-specific": true
+            },
+            {
+              "name": "event_time",
+              "type": "string",
+              "help": "Defines the time of the event in YYYY-MM-DD:HH format. 'off' turns all time-effects off.",
+              "app-specific": true
+            },
+            {
+              "name": "ground_failure",
+              "type": "bool",
+              "help": "If true, fragility groups associated with ground failure are added in the auto-population phase. Note that such analysis requires PGD values as inputs.",
+              "app-specific": true
+            },
+            {
+              "name": "auto_script",
+              "type": "path",
+              "help": "Identifies the location of a python script that can be used to auto-populate the loss model.",
+              "app-specific": true
+            }
+          ],
+          "usage": "2020-12-13T23:29:57Z First line of DL_calculation\nusage: DL_calculation.py [-h] [--filenameDL FILENAMEDL]\n                         [--filenameEDP FILENAMEEDP] [--DL_Method DL_METHOD]\n                         [--Realizations REALIZATIONS] [--outputEDP OUTPUTEDP]\n                         [--outputDM OUTPUTDM] [--outputDV OUTPUTDV]\n                         [--dirnameOutput DIRNAMEOUTPUT]\n                         [--event_time EVENT_TIME]\n                         [--detailed_results [DETAILED_RESULTS]]\n                         [--coupled_EDP [COUPLED_EDP]] [--log_file [LOG_FILE]]\n                         [--ground_failure [GROUND_FAILURE]]\n                         [--auto_script AUTO_SCRIPT]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameDL FILENAMEDL\n  --filenameEDP FILENAMEEDP\n  --DL_Method DL_METHOD\n  --Realizations REALIZATIONS\n  --outputEDP OUTPUTEDP\n  --outputDM OUTPUTDM\n  --outputDV OUTPUTDV\n  --dirnameOutput DIRNAMEOUTPUT\n  --event_time EVENT_TIME\n  --detailed_results [DETAILED_RESULTS]\n  --coupled_EDP [COUPLED_EDP]\n  --log_file [LOG_FILE]\n  --ground_failure [GROUND_FAILURE]\n  --auto_script AUTO_SCRIPT\n"
+        }
+      },
+      "summary": "Performs damage and loss (DL) assessment using the pelicun Python package. The application uses built-in fragility functions and the replacement cost defined in the building source file to determine damage state and loss likelihoods.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0028",
+      "published": "2020-12-12T19:46:09.230768-08:00",
+      "categories": {
+        "workflow-module": "performDL",
+        "workflow-type": "-"
+      }
+    },
+    "bknd-0029": {
+      "id": "bknd-0029",
+      "title": "NearestNeighborEvents",
+      "links": {
+        "develop": "modules/performRegionalMapping/NearestNeighborEvents"
+      },
+      "api": {
+        "cmd": {
+          "path": "applications/performRegionalMapping/NearestNeighborEvents/NNE.py",
+          "prog": "NNE",
+          "args": [
+            {
+              "name": "buildingFile",
+              "type": "path",
+              "default": "buildings.json",
+              "help": "Name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+              "app-specific": true
+            },
+            {
+              "name": "filenameEVENTgrid",
+              "type": "path",
+              "help": "Path to file containing location information on each event file",
+              "app-specific": true
+            },
+            {
+              "name": "samples",
+              "type": "int",
+              "help": "Number of event samples to use (interesting when using more than one neighbors)",
+              "app-specific": true
+            },
+            {
+              "name": "neighbors",
+              "type": "int",
+              "help": "Number of neighbors to consider for each asset.",
+              "app-specific": true
+            },
+            {
+              "name": "filter_label",
+              "type": "string",
+              "help": "Custom label to use for pre-selection of grid points",
+              "app-specific": true
+            }
+          ],
+          "usage": "usage: NNE.py [-h] [--buildingFile BUILDINGFILE]\n              [--filenameEVENTgrid FILENAMEEVENTGRID] [--samples SAMPLES]\n              [--neighbors NEIGHBORS] [--filter_label FILTER_LABEL]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --buildingFile BUILDINGFILE\n  --filenameEVENTgrid FILENAMEEVENTGRID\n  --samples SAMPLES\n  --neighbors NEIGHBORS\n  --filter_label FILTER_LABEL\n"
+        }
+      },
+      "summary": "Assigns events to building site by sampling from nearest neighboring event sites, using coordinate locations. The user specifies the number of sampled events and the number of neighbors to sample events from.",
+      "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0029",
+      "published": "2020-12-12T19:46:09.232205-08:00",
+      "categories": {
+        "workflow-module": "performRegionalMapping",
+        "workflow-type": "-"
+      }
+    }
+  },
+  "categories": {
+    "workflow-module": {
+      "createBIM": "Building",
+      "createEDP": "EDP",
+      "createEVENT": "Event",
+      "createSAM": "Structural Model",
+      "performDL": "Damage and Loss",
+      "performRegionalEventSimulation": "Regional Event",
+      "performRegionalMapping": "Regional Mapping",
+      "performSIMULATION": "Simulation",
+      "performUQ": "Uncertainty"
+    },
+    "workflow-type": {
+      "wind-event": "Wind Event",
+      "earthquake-event": "Earthquake Event",
+      "-": "None"
+    }
+  }
+}
