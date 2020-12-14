@@ -92,7 +92,7 @@
 
           <map>
             <str  key="name">buildingFile</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">buildingsFile.json</str>
             <str  key="help">name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename</str>
             <bool key="app-specific">False</bool>
@@ -125,7 +125,7 @@
 
       <str  key="summary">Parses building source information from CSV and saves into BIM.json files for each building.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0001</str>
-      <date key="published">2020-12-12T19:46:09.181004-08:00</date>
+      <date key="published">2020-12-13T16:22:41.231789-08:00</date>
     </map>
 
 
@@ -143,7 +143,7 @@
 
           <map>
             <str  key="name">buildingFile</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">buildingsFile.json</str>
             <str  key="help">name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename</str>
             <bool key="app-specific">False</bool>
@@ -183,7 +183,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0002</str>
-      <date key="published">2020-12-12T19:46:09.183405-08:00</date>
+      <date key="published">2020-12-13T16:22:41.233860-08:00</date>
     </map>
 
 
@@ -201,7 +201,7 @@
 
           <map>
             <str  key="name">buildingFile</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">buildingsFile.json</str>
             <str  key="help">name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename</str>
             <bool key="app-specific">False</bool>
@@ -241,7 +241,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0003</str>
-      <date key="published">2020-12-12T19:46:09.185462-08:00</date>
+      <date key="published">2020-12-13T16:22:41.235559-08:00</date>
     </map>
 
 
@@ -266,7 +266,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -278,7 +278,7 @@
 
       <str  key="summary">Python file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0004</str>
-      <date key="published">2020-12-12T19:46:09.187474-08:00</date>
+      <date key="published">2020-12-13T16:22:41.237066-08:00</date>
     </map>
 
 
@@ -303,7 +303,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -315,7 +315,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0005</str>
-      <date key="published">2020-12-12T19:46:09.189534-08:00</date>
+      <date key="published">2020-12-13T16:22:41.238912-08:00</date>
     </map>
 
 
@@ -340,7 +340,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -352,7 +352,7 @@
 
       <str  key="summary">Application file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0006</str>
-      <date key="published">2020-12-12T19:46:09.191359-08:00</date>
+      <date key="published">2020-12-13T16:22:41.240732-08:00</date>
     </map>
 
 
@@ -377,7 +377,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -389,7 +389,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0007</str>
-      <date key="published">2020-12-12T19:46:09.192890-08:00</date>
+      <date key="published">2020-12-13T16:22:41.242261-08:00</date>
     </map>
 
 
@@ -414,7 +414,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -426,7 +426,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0008</str>
-      <date key="published">2020-12-12T19:46:09.194662-08:00</date>
+      <date key="published">2020-12-13T16:22:41.243776-08:00</date>
     </map>
 
 
@@ -451,7 +451,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -463,7 +463,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0009</str>
-      <date key="published">2020-12-12T19:46:09.196165-08:00</date>
+      <date key="published">2020-12-13T16:22:41.245282-08:00</date>
     </map>
 
 
@@ -488,7 +488,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -500,7 +500,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0010</str>
-      <date key="published">2020-12-12T19:46:09.197588-08:00</date>
+      <date key="published">2020-12-13T16:22:41.246787-08:00</date>
     </map>
 
 
@@ -525,7 +525,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -537,7 +537,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0011</str>
-      <date key="published">2020-12-12T19:46:09.199199-08:00</date>
+      <date key="published">2020-12-13T16:22:41.248516-08:00</date>
     </map>
 
 
@@ -562,7 +562,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -574,7 +574,7 @@
 
       <str  key="summary">Application file creating EVENT.json files for stochastic wind fields based on the Witting-Sinha method. Supports Wind hazard events.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0012</str>
-      <date key="published">2020-12-12T19:46:09.200658-08:00</date>
+      <date key="published">2020-12-13T16:22:41.250795-08:00</date>
     </map>
 
 
@@ -599,7 +599,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -625,7 +625,7 @@
 
       <str  key="summary">Application file for creating EVENT.json files for stochastic ground motion events based on the ___ GMPE. Supports Earthquake hazard events.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0013</str>
-      <date key="published">2020-12-12T19:46:09.202084-08:00</date>
+      <date key="published">2020-12-13T16:22:41.252342-08:00</date>
     </map>
 
 
@@ -650,7 +650,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -676,7 +676,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0014</str>
-      <date key="published">2020-12-12T19:46:09.203730-08:00</date>
+      <date key="published">2020-12-13T16:22:41.253764-08:00</date>
     </map>
 
 
@@ -701,7 +701,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -727,7 +727,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0015</str>
-      <date key="published">2020-12-12T19:46:09.206162-08:00</date>
+      <date key="published">2020-12-13T16:22:41.255161-08:00</date>
     </map>
 
 
@@ -752,7 +752,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -771,7 +771,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0016</str>
-      <date key="published">2020-12-12T19:46:09.209325-08:00</date>
+      <date key="published">2020-12-13T16:22:41.257405-08:00</date>
     </map>
 
 
@@ -796,7 +796,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -808,7 +808,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0017</str>
-      <date key="published">2020-12-12T19:46:09.210842-08:00</date>
+      <date key="published">2020-12-13T16:22:41.258902-08:00</date>
     </map>
 
 
@@ -833,7 +833,7 @@
           </map>
           <map>
             <str  key="name">filenameEVENT</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EVENT.json</str>
             <str  key="help">name of file containing the event data</str>
             <bool key="app-specific">False</bool>
@@ -852,7 +852,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0018</str>
-      <date key="published">2020-12-12T19:46:09.212231-08:00</date>
+      <date key="published">2020-12-13T16:22:41.260341-08:00</date>
     </map>
 
 
@@ -884,7 +884,7 @@
           </map>
           <map>
             <str  key="name">filenameSAM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SAM.json</str>
             <str  key="help">name of file containing the outputted SAM</str>
             <bool key="app-specific">False</bool>
@@ -917,7 +917,7 @@
 
       <str  key="summary">Creates SAM.json file and generates script for creating a hysteretic multi-degree of freedom (MDOF) system subject to earthquake time history analysis, based on the Lu method. Analysis is executed by the OpenSeesSimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0019</str>
-      <date key="published">2020-12-12T19:46:09.213717-08:00</date>
+      <date key="published">2020-12-13T16:22:41.261787-08:00</date>
     </map>
 
 
@@ -949,7 +949,7 @@
           </map>
           <map>
             <str  key="name">filenameSAM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SAM.json</str>
             <str  key="help">name of file containing the outputted SAM</str>
             <bool key="app-specific">False</bool>
@@ -961,7 +961,7 @@
 
       <str  key="summary">Creates SAM.json file containing model information for an input OpenSees structural model. Analysis is executed in the OpenSeesSimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0020</str>
-      <date key="published">2020-12-12T19:46:09.215085-08:00</date>
+      <date key="published">2020-12-13T16:22:41.263206-08:00</date>
     </map>
 
 
@@ -993,7 +993,7 @@
           </map>
           <map>
             <str  key="name">filenameSAM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SAM.json</str>
             <str  key="help">name of file containing the outputted SAM</str>
             <bool key="app-specific">False</bool>
@@ -1040,7 +1040,7 @@
 
       <str  key="summary">Creates SAM.json file containing model information for an input OpenSeesPy structural model. The functions 'build_model' and 'run_analysis' must be defined in the model script. Analysis is executed in the OpenSeesPySimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0021</str>
-      <date key="published">2020-12-12T19:46:09.216866-08:00</date>
+      <date key="published">2020-12-13T16:22:41.264818-08:00</date>
     </map>
 
 
@@ -1079,7 +1079,7 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of file containing the EDP to be determined from the analysis</str>
             <bool key="app-specific">False</bool>
@@ -1091,11 +1091,215 @@
 
       <str  key="summary">Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0022</str>
-      <date key="published">2020-12-12T19:46:09.218477-08:00</date>
+      <date key="published">2020-12-13T16:22:41.266629-08:00</date>
     </map>
 
 
     <map id="bknd-0023" bhash="" >
+      <str key="title" >StandardEarthquakeEDP</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/createEDP/standardEarthquakeEDP</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/createEDP/standardEarthquakeEDP/StandardEQEDP</str>
+        <str key="prog">StandardEQEDP</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of bim file</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the EDP to be determined from the analysis</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/createEDP/standardEarthquakeEDP/StandardEQEDP" />
+      </map></map>
+
+      <str  key="summary">Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0023</str>
+      <date key="published">2020-12-13T16:22:41.268401-08:00</date>
+    </map>
+
+
+    <map id="bknd-0024" bhash="" >
+      <str key="title" >StandardGMT_EDP</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/createEDP/gmtEDP</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/createEDP/gmtEDP/StandardGMT_EDP.exe</str>
+        <str key="prog">StandardGMT_EDP</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of bim file</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the EDP to be determined from the analysis</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/createEDP/gmtEDP/StandardGMT_EDP.exe" />
+      </map></map>
+
+      <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0024</str>
+      <date key="published">2020-12-13T16:22:41.269957-08:00</date>
+    </map>
+
+
+    <map id="bknd-0025" bhash="" >
+      <str key="title" >SimpleEDP</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/createEDP/simpleEDP</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/createEDP/simpleEDP/simpleEDP.py</str>
+        <str key="prog">simpleEDP</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of bim file</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the EDP to be determined from the analysis</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/createEDP/simpleEDP/simpleEDP.py" />
+      </map></map>
+
+      <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0025</str>
+      <date key="published">2020-12-13T16:22:41.271342-08:00</date>
+    </map>
+
+
+    <map id="bknd-0026" bhash="" >
+      <str key="title" >UserDefinedEDP</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/createEDP/userEDP</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/createEDP/userEDP/UserDefinedEDP.exe</str>
+        <str key="prog">UserDefinedEDP</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of bim file</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the EDP to be determined from the analysis</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/createEDP/userEDP/UserDefinedEDP.exe" />
+      </map></map>
+
+      <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0026</str>
+      <date key="published">2020-12-13T16:22:41.273145-08:00</date>
+    </map>
+
+
+    <map id="bknd-0027" bhash="" >
       <str key="title" >UserDefinedEDP_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
@@ -1130,7 +1334,7 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of file containing the EDP to be determined from the analysis</str>
             <bool key="app-specific">False</bool>
@@ -1148,12 +1352,63 @@
       </map></map>
 
       <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0023</str>
-      <date key="published">2020-12-12T19:46:09.219964-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0027</str>
+      <date key="published">2020-12-13T16:22:41.274741-08:00</date>
     </map>
 
 
-    <map id="bknd-0024" bhash="" >
+    <map id="bknd-0028" bhash="" >
+      <str key="title" >StandardWindEDP</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/createEDP/standardWindEDP</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/createEDP/standardWindEDP/StandardWindEDP.exe</str>
+        <str key="prog">StandardWindEDP</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of bim file</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the EDP to be determined from the analysis</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/createEDP/standardWindEDP/StandardWindEDP.exe" />
+      </map></map>
+
+      <str  key="summary">No description</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0028</str>
+      <date key="published">2020-12-13T16:22:41.276346-08:00</date>
+    </map>
+
+
+    <map id="bknd-0029" bhash="" >
       <str key="title" >OpenSees-Simulation_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
@@ -1188,14 +1443,14 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of EDP file to be added to</str>
             <bool key="app-specific">False</bool>
           </map>
           <map>
             <str  key="name">filenameSIM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SIM.json</str>
             <str  key="help">name of SIM file to be added to</str>
             <bool key="app-specific">False</bool>
@@ -1206,13 +1461,13 @@
       </map></map>
 
       <str  key="summary">Executes script for building structural model in OpenSees and running analysis for the response simulation, then saves the results in EDP.json.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0024</str>
-      <date key="published">2020-12-12T19:46:09.222152-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0029</str>
+      <date key="published">2020-12-13T16:22:41.277822-08:00</date>
     </map>
 
 
-    <map id="bknd-0025" bhash="" >
-      <str key="title" >OpenSees-Simulation_R</str>
+    <map id="bknd-0030" bhash="" >
+      <str key="title" >OpenSeesPy-Simulation_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
         <uri key="develop" >modules/performSIMULATION/openSeesPy</uri>
@@ -1246,14 +1501,14 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of EDP file to be added to</str>
             <bool key="app-specific">False</bool>
           </map>
           <map>
             <str  key="name">filenameSIM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SIM.json</str>
             <str  key="help">name of SIM file to be added to</str>
             <bool key="app-specific">False</bool>
@@ -1264,12 +1519,12 @@
       </map></map>
 
       <str  key="summary">Executes script for building structural model in OpenSeesPy and running analysis for the response simulation, then saves the results in EDP.json.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0025</str>
-      <date key="published">2020-12-12T19:46:09.224268-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0030</str>
+      <date key="published">2020-12-13T16:22:41.279714-08:00</date>
     </map>
 
 
-    <map id="bknd-0026" bhash="" >
+    <map id="bknd-0031" bhash="" >
       <str key="title" >IMasEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
@@ -1304,14 +1559,14 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of EDP file to be added to</str>
             <bool key="app-specific">False</bool>
           </map>
           <map>
             <str  key="name">filenameSIM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">SIM.json</str>
             <str  key="help">name of SIM file to be added to</str>
             <bool key="app-specific">False</bool>
@@ -1322,13 +1577,129 @@
       </map></map>
 
       <str  key="summary">Returns the input event IM as the EDP in the absence of a response simulation method. This application is appropriate to use when damages and losses are estimated as function of IM in the DL assessment.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0026</str>
-      <date key="published">2020-12-12T19:46:09.226449-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0031</str>
+      <date key="published">2020-12-13T16:22:41.281646-08:00</date>
     </map>
 
 
-    <map id="bknd-0027" bhash="" >
-      <str key="title" >Dakota-UQ</str>
+    <map id="bknd-0032" bhash="" >
+      <str key="title" >OpenSees-Simulation</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/performSIMULATION/openSeesPy</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py</str>
+        <str key="prog">OpenSeesPySimulation</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of file containing the BIM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of EDP file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSIM</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">SIM.json</str>
+            <str  key="help">name of SIM file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py" />
+      </map></map>
+
+      <str  key="summary">No description</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0032</str>
+      <date key="published">2020-12-13T16:22:41.284233-08:00</date>
+    </map>
+
+
+    <map id="bknd-0033" bhash="" >
+      <str key="title" >ExtractPGA</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/performSIMULATION/extractPGA</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/performSIMULATION/extractPGA/ExtractPGA.exe</str>
+        <str key="prog">ExtractPGA</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of file containing the BIM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of EDP file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSIM</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">SIM.json</str>
+            <str  key="help">name of SIM file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performSIMULATION/extractPGA/ExtractPGA.exe" />
+      </map></map>
+
+      <str  key="summary">No description</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0033</str>
+      <date key="published">2020-12-13T16:22:41.285738-08:00</date>
+    </map>
+
+
+    <map id="bknd-0034" bhash="" >
+      <str key="title" >Dakota-FEM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
         <uri key="develop" >modules/performUQ/dakota_R</uri>
@@ -1383,7 +1754,79 @@
           </map>
           <map>
             <str  key="name">filenameEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of EDP file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performUQ/dakota_R/DakotaFEM.py" />
+      </map></map>
+
+      <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0034</str>
+      <date key="published">2020-12-13T16:22:41.287160-08:00</date>
+    </map>
+
+
+    <map id="bknd-0035" bhash="" >
+      <str key="title" >Dakota-UQ</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/performUQ/dakota</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/performUQ/dakota/DakotaFEM.py</str>
+        <str key="prog">DakotaFEM</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of file containing the BIM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">string</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSIM</str>
+            <str  key="type">string</str>
+            <str  key="default">SIM.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">driverFile</str>
+            <str  key="type">string</str>
+            <str  key="default">driver</str>
+            <str  key="help">name of file containing the simulation driver</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.json</str>
             <str  key="help">name of EDP file to be added to</str>
             <bool key="app-specific">False</bool>
@@ -1474,16 +1917,88 @@
           </map>
         </lst>
 
-        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performUQ/dakota_R/DakotaFEM.py" />
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performUQ/dakota/DakotaFEM.py" />
       </map></map>
 
       <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0027</str>
-      <date key="published">2020-12-12T19:46:09.228672-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0035</str>
+      <date key="published">2020-12-13T16:22:41.289194-08:00</date>
     </map>
 
 
-    <map id="bknd-0028" bhash="" >
+    <map id="bknd-0036" bhash="" >
+      <str key="title" >Dakota-UQ1</str>
+      <!-- <str key="anchor" src="%i@a" /> -->
+      <map key="links">
+        <uri key="develop" >modules/performUQ/dakota</uri>
+      </map>
+
+      <map key="api"><map key="cmd">
+        <str key="path">applications/performUQ/dakota/DakotaFEM1.py</str>
+        <str key="prog">DakotaFEM1</str>
+        <lst key="args">
+
+          <map>
+            <str  key="name">filenameBIM</str>
+            <str  key="type">string</str>
+            <str  key="default">BIM.json</str>
+            <str  key="help">name of file containing the BIM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSAM</str>
+            <str  key="type">string</str>
+            <str  key="default">SAM.json</str>
+            <str  key="help">name of file containing the SAM</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEVENT</str>
+            <str  key="type">string</str>
+            <str  key="default">EVENT.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">string</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameSIM</str>
+            <str  key="type">string</str>
+            <str  key="default">SIM.json</str>
+            <str  key="help">name of file containing the event data</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">driverFile</str>
+            <str  key="type">string</str>
+            <str  key="default">driver</str>
+            <str  key="help">name of file containing the simulation driver</str>
+            <bool key="app-specific">False</bool>
+          </map>
+          <map>
+            <str  key="name">filenameEDP</str>
+            <str  key="type">FileName(W)</str>
+            <str  key="default">EDP.json</str>
+            <str  key="help">name of EDP file to be added to</str>
+            <bool key="app-specific">False</bool>
+          </map>
+        </lst>
+
+        <str key="usage" proc="aurore.cli_usage" src="SimCenterBackendApplications/applications/performUQ/dakota/DakotaFEM1.py" />
+      </map></map>
+
+      <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0036</str>
+      <date key="published">2020-12-13T16:22:41.291294-08:00</date>
+    </map>
+
+
+    <map id="bknd-0037" bhash="" >
       <str key="title" >pelicun</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
@@ -1511,21 +2026,21 @@
           </map>
           <map>
             <str  key="name">outputEDP</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">EDP.csv</str>
             <str  key="help">name of file to store response estimates</str>
             <bool key="app-specific">False</bool>
           </map>
           <map>
             <str  key="name">outputDM</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">DM.csv</str>
             <str  key="help">name of file to store damage estimates</str>
             <bool key="app-specific">False</bool>
           </map>
           <map>
             <str  key="name">outputDV</str>
-            <str  key="type">FILENAME(W)</str>
+            <str  key="type">FileName(W)</str>
             <str  key="default">DV.csv</str>
             <str  key="help">name of DV file to store decision variable estimates</str>
             <bool key="app-specific">False</bool>
@@ -1592,12 +2107,12 @@
       </map></map>
 
       <str  key="summary">Performs damage and loss (DL) assessment using the pelicun Python package. The application uses built-in fragility functions and the replacement cost defined in the building source file to determine damage state and loss likelihoods.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0028</str>
-      <date key="published">2020-12-12T19:46:09.230768-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0037</str>
+      <date key="published">2020-12-13T16:22:41.292858-08:00</date>
     </map>
 
 
-    <map id="bknd-0029" bhash="" >
+    <map id="bknd-0038" bhash="" >
       <str key="title" >NearestNeighborEvents</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
@@ -1650,8 +2165,8 @@
       </map></map>
 
       <str  key="summary">Assigns events to building site by sampling from nearest neighboring event sites, using coordinate locations. The user specifies the number of sampled events and the number of neighbors to sample events from.</str>
-      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0029</str>
-      <date key="published">2020-12-12T19:46:09.232205-08:00</date>
+      <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0038</str>
+      <date key="published">2020-12-13T16:22:41.294304-08:00</date>
     </map>
 
   </items>
