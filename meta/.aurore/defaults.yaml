@@ -1,0 +1,24 @@
+standardUQ: &standardUQ
+  include-item:
+    - bknd-0001
+
+quoFEM:
+  createEVENT:
+    include-item:
+      - bknd-0001
+      - bknd-0002
+
+WEUQ:
+  performUQ: *standardUQ
+  createEVENT:
+    include-item:
+      - bknd-0001
+
+EEUQ:
+  performUQ: *standardUQ
+  createEVENT:
+    include-item:
+      - bknd-0001
+      - bknd-0002
+
+RDT: ~
