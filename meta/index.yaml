@@ -1,0 +1,54 @@
+standardUQ: &standardUQ
+  ? bknd-000*
+
+createSAM: &createSAM
+  ? bknd-0019   # MDOF-LU
+  ? bknd-0020   # OpenSeesInput
+  ? bknd-0021   # OpenSeesPyInput
+  ? bknd-0022
+
+createBIM: &createBIM 
+  ? bknd-0001   # CSV_to_BIM
+
+createEDP: &createEDP 
+  ? bknd-0024   # standardEarthquakeEDP
+  ? bknd-0025   # standardEarthquakeEDP
+  ? bknd-0030   # standardWindEDP
+  ? bknd-0028   # UserDefinedEDP
+
+performSIMULATION: &performSIMULATION
+  ? bknd-0031   # OpenSees_R
+  ? bknd-0032   # OpenSeesPy
+  ? bknd-0033   # IMasEDP
+  ? bknd-0034   # OpenSees
+  ? bknd-0035   # ExtractPGA
+
+
+#----------------------------------------------------------
+
+quoFEM:
+  include-item:
+    # performSIM
+    ? '%c:performSIM' # include all applications
+                      # under 'performSIM' category
+    # performUQ
+    ? bknd-0001
+
+WE-UQ:
+  include-item:
+    <<: *createEDP
+    <<: *standardUQ
+    <<: *performSIMULATION
+    ? bknd-0001
+
+EE-UQ:
+  include-item:
+    <<: *standardUQ
+    ? bknd-0001
+    ? bknd-0002
+
+RDT:
+  include-item:
+    <<: *createBIM
+    <<: *performSIMULATION
+

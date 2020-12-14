@@ -1,32 +1,24 @@
 SIMCENTER_DEVDIR=../..
-# GALLERY=$(SIMCENTER_DEVDIR)/SimCenterDocumentation/docs/common/developer_manual/architecture/desktop/backendApplications/_static/html
 GALLERY=$(SIMCENTER_DEVDIR)/SimCenterDocumentation/docs/common/developer_manual/architecture/desktop/applications/_static/html
 AURORE=aurore #-D ./aurore.db.xml 
-
-MODULES = createBIM createEDP createEVENT createSAM
-MODULES += performDL performRegionalMapping performSIMULATION performUQ Workflow
-MODULES += wind-events earthquake-events
 
 CACHE = .aurore/aurore.cache.json
 RENDRE = cat $(CACHE) | rendre
 
-.PHONY: cache
+APPS = quoFEM WE-UQ EE-UQ RDT
+MODULES = createBIM createEDP createEVENT createSAM
+MODULES += performDL performRegionalMapping performSIMULATION performUQ Workflow
+
+
+.PHONY: cache all
 
 all:
-	for mod in $(MODULES); do \
-		$(RENDRE) -q gallery -i \%c:$$mod > $(GALLERY)/$$mod.html; \
-	done
+	for app in $(APPS); do \
+	  for mod in $(MODULES); do \
+	    $(RENDRE) -d index.yaml#/$$app -q gallery -i \%c:$$mod > $(GALLERY)/$$app/$$mod.html; \
+	  done \
+	done \
 
 cache:
 	$(AURORE) -q get > $(CACHE)
-
-
-
-
-4:
-	$(AURORE) -vvv -C ./categories.xml get
-
-wind-events:
-	rendre -d defaults.yaml#/wind-events gallery < $(CACHE)
-
 
