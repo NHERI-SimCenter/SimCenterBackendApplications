@@ -7,7 +7,7 @@ createSAM: &createSAM
   ? bknd-0021   # OpenSeesPyInput
   ? bknd-0022
 
-createBIM: &createBIM 
+createBIM: &createBIM
   ? bknd-0001   # CSV_to_BIM
 
 createEDP: &createEDP 
@@ -23,16 +23,16 @@ performSIMULATION: &performSIMULATION
   ? bknd-0034   # OpenSees
   ? bknd-0035   # ExtractPGA
 
+performDL: &performDL
+  ? bknd-0044
 
 #----------------------------------------------------------
 
 quoFEM:
   include-item:
-    # performSIM
     ? '%c:performSIM' # include all applications
                       # under 'performSIM' category
     # performUQ
-    ? bknd-0001
 
 WE-UQ:
   include-item:
@@ -43,12 +43,18 @@ WE-UQ:
 
 EE-UQ:
   include-item:
+    <<: *createEDP
     <<: *standardUQ
+    <<: *performSIMULATION
     ? bknd-0001
     ? bknd-0002
 
 RDT:
   include-item:
     <<: *createBIM
+    <<: *createEDP
+    <<: *createSAM
+    <<: *standardUQ
+    <<: *performDL
     <<: *performSIMULATION
 

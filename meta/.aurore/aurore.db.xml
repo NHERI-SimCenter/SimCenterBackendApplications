@@ -88,7 +88,8 @@
       <str key="title" >CSV_to_BIM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createBIM/CSV_to_BIM</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createBIM/CSV_to_BIM</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -124,7 +125,7 @@
 
       <str  key="summary">Parses building source information from CSV and saves into BIM.json files for each building.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0001</str>
-      <date key="published">2020-12-14T01:30:13.208687-08:00</date>
+      <date key="published">2020-12-15T14:36:10.503435-08:00</date>
     </map>
 
 
@@ -132,7 +133,8 @@
       <str key="title" >GenericBimDatabase</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createBIM/genericBimDatabase</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createBIM/genericBimDatabase</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -175,7 +177,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0002</str>
-      <date key="published">2020-12-14T01:30:13.211837-08:00</date>
+      <date key="published">2020-12-15T14:36:10.512256-08:00</date>
     </map>
 
 
@@ -183,7 +185,8 @@
       <str key="title" >GeoJSON_to_BIM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createBIM/GeoJSON_to_BIM</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createBIM/GeoJSON_to_BIM</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -233,7 +236,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0003</str>
-      <date key="published">2020-12-14T01:30:13.214610-08:00</date>
+      <date key="published">2020-12-15T14:36:10.515518-08:00</date>
     </map>
 
 
@@ -241,7 +244,8 @@
       <str key="title" >SimCenterEvent</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/SimCenterEvent</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/SimCenterEvent</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -270,7 +274,7 @@
 
       <str  key="summary">Python file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0004</str>
-      <date key="published">2020-12-14T01:30:13.217219-08:00</date>
+      <date key="published">2020-12-15T14:36:10.518361-08:00</date>
     </map>
 
 
@@ -278,7 +282,8 @@
       <str key="title" >ExistingSimCenterEvents</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/multipleSimCenter</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/multipleSimCenter</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -307,7 +312,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0005</str>
-      <date key="published">2020-12-14T01:30:13.219830-08:00</date>
+      <date key="published">2020-12-15T14:36:10.521368-08:00</date>
     </map>
 
 
@@ -315,7 +320,8 @@
       <str key="title" >ExistingPEER_Events</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/multiplePEER</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/multiplePEER</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -344,7 +350,7 @@
 
       <str  key="summary">Application file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0006</str>
-      <date key="published">2020-12-14T01:30:13.222931-08:00</date>
+      <date key="published">2020-12-15T14:36:10.523828-08:00</date>
     </map>
 
 
@@ -352,7 +358,8 @@
       <str key="title" >Site Response</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/siteResponse</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/siteResponse</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -381,7 +388,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0007</str>
-      <date key="published">2020-12-14T01:30:13.225687-08:00</date>
+      <date key="published">2020-12-15T14:36:10.526144-08:00</date>
     </map>
 
 
@@ -389,7 +396,8 @@
       <str key="title" >HazardBasedEvent</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/hazardBasedEvent</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/hazardBasedEvent</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -418,7 +426,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0008</str>
-      <date key="published">2020-12-14T01:30:13.227970-08:00</date>
+      <date key="published">2020-12-15T14:36:10.528446-08:00</date>
     </map>
 
 
@@ -426,7 +434,8 @@
       <str key="title" >DEDM_HRP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/DEDM_HRP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/DEDM_HRP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -455,7 +464,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0009</str>
-      <date key="published">2020-12-14T01:30:13.229451-08:00</date>
+      <date key="published">2020-12-15T14:36:10.530694-08:00</date>
     </map>
 
 
@@ -463,7 +472,8 @@
       <str key="title" >LowRiseTPU</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/LowRiseTPU</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/LowRiseTPU</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -492,7 +502,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0010</str>
-      <date key="published">2020-12-14T01:30:13.230841-08:00</date>
+      <date key="published">2020-12-15T14:36:10.532873-08:00</date>
     </map>
 
 
@@ -500,7 +510,8 @@
       <str key="title" >WindTunnelExperiment</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/windTunnelExperiment</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/windTunnelExperiment</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -529,7 +540,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0011</str>
-      <date key="published">2020-12-14T01:30:13.232235-08:00</date>
+      <date key="published">2020-12-15T14:36:10.534939-08:00</date>
     </map>
 
 
@@ -537,7 +548,8 @@
       <str key="title" >StochasticWindWittigSinha</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/stochasticWind</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/stochasticWind</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -559,7 +571,7 @@
 
       <str  key="summary">Application file creating EVENT.json files for stochastic wind fields based on the Witting-Sinha method. Supports Wind hazard events.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0012</str>
-      <date key="published">2020-12-14T01:30:13.233754-08:00</date>
+      <date key="published">2020-12-15T14:36:10.536818-08:00</date>
     </map>
 
 
@@ -567,7 +579,8 @@
       <str key="title" >StochasticGroundMotion</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/stochasticGroundMotion</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/stochasticGroundMotion</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -589,7 +602,7 @@
 
       <str  key="summary">Application file for creating EVENT.json files for stochastic ground motion events based on the ___ GMPE. Supports Earthquake hazard events.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0013</str>
-      <date key="published">2020-12-14T01:30:13.235149-08:00</date>
+      <date key="published">2020-12-15T14:36:10.538711-08:00</date>
     </map>
 
 
@@ -597,7 +610,8 @@
       <str key="title" >CFDEvent</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/CFDEvent</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/CFDEvent</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -640,7 +654,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0014</str>
-      <date key="published">2020-12-14T01:30:13.236528-08:00</date>
+      <date key="published">2020-12-15T14:36:10.540741-08:00</date>
     </map>
 
 
@@ -648,7 +662,8 @@
       <str key="title" >NNGM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/NNGM</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/NNGM</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -691,7 +706,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0015</str>
-      <date key="published">2020-12-14T01:30:13.237938-08:00</date>
+      <date key="published">2020-12-15T14:36:10.542309-08:00</date>
     </map>
 
 
@@ -699,7 +714,8 @@
       <str key="title" >LLNL-SW4</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/LLNL_SW4</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/LLNL_SW4</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -735,7 +751,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0016</str>
-      <date key="published">2020-12-14T01:30:13.239532-08:00</date>
+      <date key="published">2020-12-15T14:36:10.544056-08:00</date>
     </map>
 
 
@@ -743,7 +759,8 @@
       <str key="title" >ASCE7_WindSpeed</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/ASCE7_WindSpeed</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/ASCE7_WindSpeed</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -772,7 +789,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0017</str>
-      <date key="published">2020-12-14T01:30:13.240987-08:00</date>
+      <date key="published">2020-12-15T14:36:10.545624-08:00</date>
     </map>
 
 
@@ -780,7 +797,8 @@
       <str key="title" >pointWindSpeed</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEVENT/pointWindSpeed</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEVENT/pointWindSpeed</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -816,7 +834,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0018</str>
-      <date key="published">2020-12-14T01:30:13.242531-08:00</date>
+      <date key="published">2020-12-15T14:36:10.547422-08:00</date>
     </map>
 
 
@@ -824,7 +842,8 @@
       <str key="title" >MDOF-LU</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createSAM/MDOF-LU</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createSAM/MDOF-LU</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -874,7 +893,7 @@
 
       <str  key="summary">Creates SAM.json file and generates script for creating a hysteretic multi-degree of freedom (MDOF) system subject to earthquake time history analysis, based on the Lu method. Analysis is executed by the OpenSeesSimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0019</str>
-      <date key="published">2020-12-14T01:30:13.243908-08:00</date>
+      <date key="published">2020-12-15T14:36:10.549429-08:00</date>
     </map>
 
 
@@ -882,7 +901,8 @@
       <str key="title" >OpenSeesInput</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createSAM/openSeesInput</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createSAM/openSeesInput</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -918,7 +938,7 @@
 
       <str  key="summary">Creates SAM.json file containing model information for an input OpenSees structural model. Analysis is executed in the OpenSeesSimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0020</str>
-      <date key="published">2020-12-14T01:30:13.245302-08:00</date>
+      <date key="published">2020-12-15T14:36:10.551360-08:00</date>
     </map>
 
 
@@ -926,7 +946,8 @@
       <str key="title" >OpenSeesPyInput</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createSAM/openSeesPyInput</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createSAM/openSeesPyInput</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -997,7 +1018,7 @@
 
       <str  key="summary">Creates SAM.json file containing model information for an input OpenSeesPy structural model. The functions 'build_model' and 'run_analysis' must be defined in the model script. Analysis is executed in the OpenSeesPySimulation application.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0021</str>
-      <date key="published">2020-12-14T01:30:13.246675-08:00</date>
+      <date key="published">2020-12-15T14:36:10.553240-08:00</date>
     </map>
 
 
@@ -1005,7 +1026,8 @@
       <str key="title" >MDOF_BuildingModel</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createSAM/mdofBuildingModel</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createSAM/mdofBuildingModel</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1041,7 +1063,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0022</str>
-      <date key="published">2020-12-14T01:30:13.248198-08:00</date>
+      <date key="published">2020-12-15T14:36:10.554833-08:00</date>
     </map>
 
 
@@ -1049,7 +1071,8 @@
       <str key="title" >SteelBuildingModel</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createSAM/AutoSDA</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createSAM/AutoSDA</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1085,7 +1108,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0023</str>
-      <date key="published">2020-12-14T01:30:13.249593-08:00</date>
+      <date key="published">2020-12-15T14:36:10.556515-08:00</date>
     </map>
 
 
@@ -1093,7 +1116,8 @@
       <str key="title" >StandardEarthquakeEDP_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/standardEarthquakeEDP_R</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/standardEarthquakeEDP_R</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1136,7 +1160,7 @@
 
       <str  key="summary">Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0024</str>
-      <date key="published">2020-12-14T01:30:13.250973-08:00</date>
+      <date key="published">2020-12-15T14:36:10.558365-08:00</date>
     </map>
 
 
@@ -1144,7 +1168,8 @@
       <str key="title" >StandardEarthquakeEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/standardEarthquakeEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/standardEarthquakeEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1187,7 +1212,7 @@
 
       <str  key="summary">Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0025</str>
-      <date key="published">2020-12-14T01:30:13.252345-08:00</date>
+      <date key="published">2020-12-15T14:36:10.560125-08:00</date>
     </map>
 
 
@@ -1195,7 +1220,8 @@
       <str key="title" >StandardGMT_EDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/gmtEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/gmtEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1238,7 +1264,7 @@
 
       <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0026</str>
-      <date key="published">2020-12-14T01:30:13.253719-08:00</date>
+      <date key="published">2020-12-15T14:36:10.561630-08:00</date>
     </map>
 
 
@@ -1246,7 +1272,8 @@
       <str key="title" >SimpleEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/simpleEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/simpleEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1289,7 +1316,7 @@
 
       <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0027</str>
-      <date key="published">2020-12-14T01:30:13.255341-08:00</date>
+      <date key="published">2020-12-15T14:36:10.563464-08:00</date>
     </map>
 
 
@@ -1297,7 +1324,8 @@
       <str key="title" >UserDefinedEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/userEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/userEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1340,7 +1368,7 @@
 
       <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0028</str>
-      <date key="published">2020-12-14T01:30:13.257294-08:00</date>
+      <date key="published">2020-12-15T14:36:10.564979-08:00</date>
     </map>
 
 
@@ -1348,7 +1376,8 @@
       <str key="title" >UserDefinedEDP_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/userEDP_R</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/userEDP_R</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1391,7 +1420,7 @@
 
       <str  key="summary">Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0029</str>
-      <date key="published">2020-12-14T01:30:13.259166-08:00</date>
+      <date key="published">2020-12-15T14:36:10.566685-08:00</date>
     </map>
 
 
@@ -1399,7 +1428,8 @@
       <str key="title" >StandardWindEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/createEDP/standardWindEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/createEDP/standardWindEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1442,7 +1472,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0030</str>
-      <date key="published">2020-12-14T01:30:13.260758-08:00</date>
+      <date key="published">2020-12-15T14:36:10.568244-08:00</date>
     </map>
 
 
@@ -1450,7 +1480,8 @@
       <str key="title" >OpenSees-Simulation_R</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIMULATION/openSees_R</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performSIMULATION/openSees_R</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1500,7 +1531,7 @@
 
       <str  key="summary">Executes script for building structural model in OpenSees and running analysis for the response simulation, then saves the results in EDP.json.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0031</str>
-      <date key="published">2020-12-14T01:30:13.262237-08:00</date>
+      <date key="published">2020-12-15T14:36:10.569755-08:00</date>
     </map>
 
 
@@ -1508,7 +1539,8 @@
       <str key="title" >OpenSeesPy-Simulation</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIMULATION/openSeesPy</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performSIMULATION/openSeesPy</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1558,7 +1590,7 @@
 
       <str  key="summary">Executes script for building structural model in OpenSeesPy and running analysis for the response simulation, then saves the results in EDP.json.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0032</str>
-      <date key="published">2020-12-14T01:30:13.263583-08:00</date>
+      <date key="published">2020-12-15T14:36:10.571303-08:00</date>
     </map>
 
 
@@ -1566,7 +1598,8 @@
       <str key="title" >IMasEDP</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIMULATION/IMasEDP</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performSIMULATION/IMasEDP</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1616,7 +1649,7 @@
 
       <str  key="summary">Returns the input event IM as the EDP in the absence of a response simulation method. This application is appropriate to use when damages and losses are estimated as function of IM in the DL assessment.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0033</str>
-      <date key="published">2020-12-14T01:30:13.265005-08:00</date>
+      <date key="published">2020-12-15T14:36:10.573211-08:00</date>
     </map>
 
 
@@ -1624,7 +1657,8 @@
       <str key="title" >OpenSees-Simulation</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIMULATION/openSeesPy</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performSIMULATION/openSeesPy</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1674,7 +1708,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0034</str>
-      <date key="published">2020-12-14T01:30:13.266347-08:00</date>
+      <date key="published">2020-12-15T14:36:10.574958-08:00</date>
     </map>
 
 
@@ -1682,7 +1716,8 @@
       <str key="title" >ExtractPGA</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIMULATION/extractPGA</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performSIMULATION/extractPGA</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1732,7 +1767,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0035</str>
-      <date key="published">2020-12-14T01:30:13.267830-08:00</date>
+      <date key="published">2020-12-15T14:36:10.576523-08:00</date>
     </map>
 
 
@@ -1740,7 +1775,8 @@
       <str key="title" >Dakota-FEM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/dakota_R</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performUQ/dakota_R</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -1881,7 +1917,7 @@
 
       <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0036</str>
-      <date key="published">2020-12-14T01:30:13.269197-08:00</date>
+      <date key="published">2020-12-15T14:36:10.578159-08:00</date>
     </map>
 
 
@@ -1889,7 +1925,8 @@
       <str key="title" >Dakota-UQ</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/dakota</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performUQ/dakota</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2030,7 +2067,7 @@
 
       <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0037</str>
-      <date key="published">2020-12-14T01:30:13.270813-08:00</date>
+      <date key="published">2020-12-15T14:36:10.579889-08:00</date>
     </map>
 
 
@@ -2038,7 +2075,8 @@
       <str key="title" >Dakota-UQ1</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/dakota</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performUQ/dakota</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2179,7 +2217,7 @@
 
       <str  key="summary">Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0038</str>
-      <date key="published">2020-12-14T01:30:13.272170-08:00</date>
+      <date key="published">2020-12-15T14:36:10.581465-08:00</date>
     </map>
 
 
@@ -2187,7 +2225,8 @@
       <str key="title" >Dakota-UQ</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/dakota</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performUQ/dakota</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2223,7 +2262,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0039</str>
-      <date key="published">2020-12-14T01:30:13.274251-08:00</date>
+      <date key="published">2020-12-15T14:36:10.583215-08:00</date>
     </map>
 
 
@@ -2231,7 +2270,8 @@
       <str key="title" >DakotaFEM</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/dakota</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performUQ/dakota</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2246,7 +2286,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0040</str>
-      <date key="published">2020-12-14T01:30:13.276030-08:00</date>
+      <date key="published">2020-12-15T14:36:10.584808-08:00</date>
     </map>
 
 
@@ -2254,7 +2294,8 @@
       <str key="title" >SimCenterUQ-UQ</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/SimCenterUQ</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performUQ/SimCenterUQ</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2290,7 +2331,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0041</str>
-      <date key="published">2020-12-14T01:30:13.277533-08:00</date>
+      <date key="published">2020-12-15T14:36:10.586343-08:00</date>
     </map>
 
 
@@ -2298,7 +2339,8 @@
       <str key="title" >Other-UQ</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/other</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performUQ/other</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2334,7 +2376,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0042</str>
-      <date key="published">2020-12-14T01:30:13.278898-08:00</date>
+      <date key="published">2020-12-15T14:36:10.587846-08:00</date>
     </map>
 
 
@@ -2342,7 +2384,8 @@
       <str key="title" >UCSD-UQ</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performUQ/UCSD_UQ</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performUQ/UCSD_UQ</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2378,7 +2421,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0043</str>
-      <date key="published">2020-12-14T01:30:13.280295-08:00</date>
+      <date key="published">2020-12-15T14:36:10.589403-08:00</date>
     </map>
 
 
@@ -2386,7 +2429,8 @@
       <str key="title" >pelicun</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performDL/pelicun</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performDL/pelicun</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2471,7 +2515,7 @@
 
       <str  key="summary">Performs damage and loss (DL) assessment using the pelicun Python package. The application uses built-in fragility functions and the replacement cost defined in the building source file to determine damage state and loss likelihoods.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0044</str>
-      <date key="published">2020-12-14T01:30:13.281661-08:00</date>
+      <date key="published">2020-12-15T14:36:10.591403-08:00</date>
     </map>
 
 
@@ -2479,7 +2523,8 @@
       <str key="title" >NearestNeighborEvents</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performRegionalMapping/NearestNeighborEvents</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/SimCenterBackendApplications</uri>
+        <str key="local" >modules/performRegionalMapping/NearestNeighborEvents</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2515,7 +2560,7 @@
 
       <str  key="summary">Assigns events to building site by sampling from nearest neighboring event sites, using coordinate locations. The user specifies the number of sampled events and the number of neighbors to sample events from.</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0045</str>
-      <date key="published">2020-12-14T01:30:13.283199-08:00</date>
+      <date key="published">2020-12-15T14:36:10.593117-08:00</date>
     </map>
 
 
@@ -2523,7 +2568,8 @@
       <str key="title" >OpenSees</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIM/OpenSees</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performSIM/OpenSees</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2559,7 +2605,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0046</str>
-      <date key="published">2020-12-14T01:30:13.284637-08:00</date>
+      <date key="published">2020-12-15T14:36:10.594961-08:00</date>
     </map>
 
 
@@ -2567,7 +2613,8 @@
       <str key="title" >OpenSeesPy</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIM/OpenSeesPy</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performSIM/OpenSeesPy</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2603,7 +2650,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0047</str>
-      <date key="published">2020-12-14T01:30:13.286009-08:00</date>
+      <date key="published">2020-12-15T14:36:10.596980-08:00</date>
     </map>
 
 
@@ -2611,7 +2658,8 @@
       <str key="title" >FEAPpv</str>
       <!-- <str key="anchor" src="%i@a" /> -->
       <map key="links">
-        <uri key="develop" >modules/performSIM/feappv</uri>
+        <uri key="repository">http://github.com/NHERI-SimCenter/quoFEM</uri>
+        <str key="local" >modules/performSIM/feappv</str>
       </map>
 
       <map key="api"><map key="cmd">
@@ -2647,7 +2695,7 @@
 
       <str  key="summary">No description</str>
       <str  key="uri" >http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0048</str>
-      <date key="published">2020-12-14T01:30:13.287578-08:00</date>
+      <date key="published">2020-12-15T14:36:10.598876-08:00</date>
     </map>
 
   </items>
