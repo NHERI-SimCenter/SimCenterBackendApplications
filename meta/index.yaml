@@ -27,7 +27,7 @@ performSIMULATION: &performSIMULATION
   ? bknd-0035   # ExtractPGA
 
 performDL: &performDL
-  ? bknd-0044
+  ? bknd-0044   # pelicun
 
 #----------------------------------------------------------
 
@@ -42,7 +42,6 @@ WE-UQ:
     <<: *createEDP
     <<: *standardUQ
     <<: *performSIMULATION
-    ? bknd-0001
 
 EE-UQ:
   include-item:
@@ -58,4 +57,6 @@ RDT:
     <<: *standardUQ
     <<: *performDL
     <<: *performSIMULATION
+
+
 
