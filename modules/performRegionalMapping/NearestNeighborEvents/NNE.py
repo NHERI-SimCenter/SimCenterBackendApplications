@@ -37,7 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 # Tamika Bassman
-# 
+#
 
 import argparse, posixpath, json
 import numpy as np
@@ -92,10 +92,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         with open(bldg['file'], 'r') as f:
             bldg_data = json.load(f)
 
-        if 'GI' in bldg_data:
-            bldg_loc = bldg_data['GI']['location']
-        else:
-            bldg_loc = bldg_data['GeneralInformation']['location']
+        bldg_loc = bldg_data['GeneralInformation']['location']
         bim_df.iloc[i]['lon'] = bldg_loc['longitude']
         bim_df.iloc[i]['lat'] = bldg_loc['latitude']
         bim_df.iloc[i]['file'] = bldg['file']
@@ -108,8 +105,8 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     distances = distances + 1e-20
 
     # iterate through the buildings and store the selected events in the BIM
-    for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index, 
-                                                          distances, 
+    for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index,
+                                                          distances,
                                                           indices)):
 
         # open the BIM file
@@ -132,20 +129,20 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
 
         if filter_label != '':
             # soil type of building
-            bldg_label = bldg_data['GI'][filter_label]
+            bldg_label = bldg_data['GeneralInformation'][filter_label]
             # soil types of all initial neighbors
             grid_label = grid_df[filter_label][ind_list]
-            
-            # only keep the distances and indices corresponding to neighbors 
+
+            # only keep the distances and indices corresponding to neighbors
             # with the same soil type
             dist_list  = dist_list[(grid_label==bldg_label).values]
             ind_list   = ind_list[(grid_label==bldg_label).values]
 
             # return dist_list & ind_list with a length equals neighbors
-            # assuming that at least neighbors grid points exist with 
+            # assuming that at least neighbors grid points exist with
             # the same filter_label as the building
-            
-            # because dist_list, ind_list sorted initially in order of increasing 
+
+            # because dist_list, ind_list sorted initially in order of increasing
             # distance, just take the first neighbors grid points of each
             dist_list = dist_list[:neighbors]
             ind_list = ind_list[:neighbors]
@@ -213,7 +210,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
                     event_list.append(grid_df.iloc[nbr_index]['sta']+f'x{event_j}')
 
                     # IM collections are not scaled
-                    scale_list.append(1.0)            
+                    scale_list.append(1.0)
 
         # TODO: update the LLNL input data and remove this clause
         else:

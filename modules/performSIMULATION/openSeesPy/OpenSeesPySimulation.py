@@ -71,7 +71,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     with open(BIM_input_path, 'r') as f:
         BIM_in = json.load(f)
 
-    model_params = BIM_in['GI']
+    model_params = BIM_in['GeneralInformation']
 
     with open(SAM_input_path, 'r') as f:
         SAM_in = json.load(f)
@@ -158,23 +158,11 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     for response in EDP_list:
         edp = EDP_res[response['type']][response['id']]
-        print(edp)
+        #print(edp)
 
         response['scalar_data'] = edp # [val for dof, val in edp.items()]
 
         #print(response)
-        """
-        EDP_kind = convert_EDP[response['type']]
-        if EDP_kind not in ['PID', 'PRD']:
-            loc = response['floor']
-        else:
-            loc = response['floor2']
-
-        try:
-            response['scalar_data'] = EDP_res[EDP_kind][int(loc)]
-        except:
-            response['scalar_data'] = [0.0, 0.0]
-        """
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)

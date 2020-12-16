@@ -44,10 +44,10 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
     model_script, model_path, ndm, dof_map, getRV):
 
     with open(BIM_file, 'r') as f:
-        root_BIM = json.load(f)['GI']
+        root_BIM = json.load(f)['GeneralInformation']
 
     try:
-        stories = root_BIM['numStory']
+        stories = root_BIM['NumberofStories']
     except:
         raise ValueError("OpenSeesPyInput - structural information missing")
 
