@@ -595,8 +595,12 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        building_file = building_file.replace('.json',
-            '{}-{}.json'.format(bldg_app.pref['Min'], bldg_app.pref['Max']))
+        if bldg_app.pref.get('filter', None) is not None:
+            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+
+            building_file = building_file.replace('.json',
+                '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
+
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
