@@ -46,30 +46,30 @@ from numpy.random import multinomial
 
 from sklearn.neighbors import NearestNeighbors
 
-# distance, area, volume
-m = 1.
-
-mm = 0.001 * m
-cm = 0.01 * m
-km = 1000. * m
-
-inch = 0.0254
-ft = 12. * inch
-
-# acceleration
-mps2 = m
-
-inchps2 = inch
-ftps2 = ft
-
-g = 9.80665 * mps2
+# # distance, area, volume
+# m = 1.
+#
+# mm = 0.001 * m
+# cm = 0.01 * m
+# km = 1000. * m
+#
+# inch = 0.0254
+# ft = 12. * inch
+#
+# # acceleration
+# mps2 = m
+#
+# inchps2 = inch
+# ftps2 = ft
+#
+# g = 9.80665 * mps2
 
 def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label):
-    
+
     # read the event grid data file
-    grid_df = pd.read_csv(event_grid_file, sep='\s+',header=0)
+    grid_df = pd.read_csv(event_grid_file, header=0)
     event_dir = posixpath.dirname(event_grid_file)
-    
+
     # store the locations of the grid points in X
     lat_E = grid_df['lat']
     lon_E = grid_df['lon']
@@ -115,17 +115,19 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
             bldg_data = json.load(f)
 
         # temporary - check the acceleration unit for time history analysis
-        acc_unit = bldg_data['GI']['units'].get('acceleration', None)
-        length_unit = bldg_data['GI']['units'].get('length', None)
-        if acc_unit is not None:
-            if acc_unit == 'inps2':
-                acc_unit = 'inchps2'
-            if length_unit == 'in':
-                length_unit = 'inch'
-
-            acc_scale = globals()[acc_unit] / globals()[length_unit]
-        else:
-            acc_scale = 1.0
+        # skip this one - this app shall only select the IM/time history; the
+        # conversion of units is the responsibility of the apps down the road
+        # acc_unit = bldg_data['GeneralInformation']['units'].get('acceleration', None)
+        # length_unit = bldg_data['GeneralInformation']['units'].get('length', None)
+        # if acc_unit is not None:
+        #     if acc_unit == 'inps2':
+        #         acc_unit = 'inchps2'
+        #     if length_unit == 'in':
+        #         length_unit = 'inch'
+        #
+        #     acc_scale = globals()[acc_unit] / globals()[length_unit]
+        # else:
+        #     acc_scale = 1.0
 
         if filter_label != '':
             # soil type of building
@@ -157,17 +159,17 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         # this is the preferred behavior, the else caluse is left for legacy inputs
         if grid_df.iloc[0]['sta'][-3:] == 'csv':
 
-            # We assume that every grid point has the same type and number of 
+            # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and
             # intensity measures and you cannot assign 10 records to one point
             # and 15 records to another.
 
-            # Load the first file and identify if this is a grid of IM or GM 
-            # information. GM grids have GM record filenames defined in the 
+            # Load the first file and identify if this is a grid of IM or GM
+            # information. GM grids have GM record filenames defined in the
             # grid point files.
             first_file = pd.read_csv(
                 posixpath.join(event_dir, grid_df.iloc[0]['sta']), header=0)
-            if first_file.columns[0]=='GM_file':
+            if first_file.columns[0]=='TH_file':
                 event_type = 'timeHistory'
             else:
                 event_type = 'intensityMeasure'
@@ -193,15 +195,15 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
                     event_collection_file = grid_df.iloc[nbr_index]['sta']
                     event_df = pd.read_csv(
                         posixpath.join(event_dir, event_collection_file), header=0)
-                        
+
                     # append the GM record name to the event list
                     event_list.append(event_df.iloc[event_j,0])
 
                     # append the scale factor (or 1.0) to the scale list
                     if len(event_df.columns) > 1:
-                        scale_list.append(event_df.iloc[event_j,1] * acc_scale)
+                        scale_list.append(event_df.iloc[event_j,1])
                     else:
-                        scale_list.append(1.0 * acc_scale) 
+                        scale_list.append(1.0)
 
                 # if the grid has intensity measures
                 elif event_type == 'intensityMeasure':
