@@ -13,6 +13,9 @@ createSAM: &createSAM
 createBIM: &createBIM
   ? bknd-0001   # CSV_to_BIM
 
+createEVENT: &createEVENT
+  ? bknd-0005   # MultipleSimCenter
+
 createEDP: &createEDP 
   ? bknd-0024   # standardEarthquakeEDP
   ? bknd-0025   # standardEarthquakeEDP
@@ -29,6 +32,8 @@ performSIMULATION: &performSIMULATION
 performDL: &performDL
   ? bknd-0044   # pelicun
 
+performRegionalMapping: &performRegionalMapping 
+  ? bknd-0045
 #----------------------------------------------------------
 
 quoFEM:
@@ -48,15 +53,18 @@ EE-UQ:
     <<: *createEDP
     <<: *standardUQ
     <<: *performSIMULATION
+    ? bknd-0006   # MultiplePEER
 
 RDT:
   include-item:
     <<: *createBIM
     <<: *createEDP
     <<: *createSAM
+    ? bknd-0006   # MultiplePEER
     <<: *standardUQ
     <<: *performDL
     <<: *performSIMULATION
+    <<: *performRegionalMapping
 
 
 

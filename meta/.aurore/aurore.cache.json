@@ -39,7 +39,7 @@
       },
       "summary": "Parses building source information from CSV and saves into BIM.json files for each building.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0001",
-      "published": "2020-12-15T14:36:10.503435-08:00",
+      "published": "2020-12-15T16:51:27.092685-08:00",
       "categories": {
         "workflow-module": "createBIM",
         "workflow-type": "-"
@@ -89,7 +89,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0002",
-      "published": "2020-12-15T14:36:10.512256-08:00",
+      "published": "2020-12-15T16:51:27.096398-08:00",
       "categories": {
         "workflow-module": "createBIM",
         "workflow-type": "-"
@@ -148,7 +148,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0003",
-      "published": "2020-12-15T14:36:10.515518-08:00",
+      "published": "2020-12-15T16:51:27.099572-08:00",
       "categories": {
         "workflow-module": "createBIM",
         "workflow-type": "-"
@@ -186,7 +186,7 @@
       },
       "summary": "Python file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0004",
-      "published": "2020-12-15T14:36:10.518361-08:00",
+      "published": "2020-12-15T16:51:27.102914-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -224,7 +224,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0005",
-      "published": "2020-12-15T14:36:10.521368-08:00",
+      "published": "2020-12-15T16:51:27.106026-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -262,7 +262,7 @@
       },
       "summary": "Application file creating EVENT.json file containing on event intensity measure from individual event files. Supports all hazard event types (Earthquake, Wind, Hurricane).",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0006",
-      "published": "2020-12-15T14:36:10.523828-08:00",
+      "published": "2020-12-15T16:51:27.108781-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "earthquake-event"
@@ -300,7 +300,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0007",
-      "published": "2020-12-15T14:36:10.526144-08:00",
+      "published": "2020-12-15T16:51:27.111908-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -338,7 +338,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0008",
-      "published": "2020-12-15T14:36:10.528446-08:00",
+      "published": "2020-12-15T16:51:27.114707-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -376,7 +376,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0009",
-      "published": "2020-12-15T14:36:10.530694-08:00",
+      "published": "2020-12-15T16:51:27.117684-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -414,7 +414,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0010",
-      "published": "2020-12-15T14:36:10.532873-08:00",
+      "published": "2020-12-15T16:51:27.120685-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "wind-event"
@@ -452,7 +452,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0011",
-      "published": "2020-12-15T14:36:10.534939-08:00",
+      "published": "2020-12-15T16:51:27.123848-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "wind-event"
@@ -483,7 +483,7 @@
       },
       "summary": "Application file creating EVENT.json files for stochastic wind fields based on the Witting-Sinha method. Supports Wind hazard events.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0012",
-      "published": "2020-12-15T14:36:10.536818-08:00",
+      "published": "2020-12-15T16:51:27.126853-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -514,7 +514,7 @@
       },
       "summary": "Application file for creating EVENT.json files for stochastic ground motion events based on the ___ GMPE. Supports Earthquake hazard events.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0013",
-      "published": "2020-12-15T14:36:10.538711-08:00",
+      "published": "2020-12-15T16:51:27.129342-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -564,7 +564,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0014",
-      "published": "2020-12-15T14:36:10.540741-08:00",
+      "published": "2020-12-15T16:51:27.132389-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -614,7 +614,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0015",
-      "published": "2020-12-15T14:36:10.542309-08:00",
+      "published": "2020-12-15T16:51:27.136360-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -658,7 +658,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0016",
-      "published": "2020-12-15T14:36:10.544056-08:00",
+      "published": "2020-12-15T16:51:27.142244-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -696,7 +696,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0017",
-      "published": "2020-12-15T14:36:10.545624-08:00",
+      "published": "2020-12-15T16:51:27.148122-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -740,7 +740,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0018",
-      "published": "2020-12-15T14:36:10.547422-08:00",
+      "published": "2020-12-15T16:51:27.152086-08:00",
       "categories": {
         "workflow-module": "createEVENT",
         "workflow-type": "-"
@@ -799,7 +799,7 @@
       },
       "summary": "Creates SAM.json file and generates script for creating a hysteretic multi-degree of freedom (MDOF) system subject to earthquake time history analysis, based on the Lu method. Analysis is executed by the OpenSeesSimulation application.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0019",
-      "published": "2020-12-15T14:36:10.549429-08:00",
+      "published": "2020-12-15T16:51:27.155687-08:00",
       "categories": {
         "workflow-module": "createSAM",
         "workflow-type": "-"
@@ -844,7 +844,7 @@
       },
       "summary": "Creates SAM.json file containing model information for an input OpenSees structural model. Analysis is executed in the OpenSeesSimulation application.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0020",
-      "published": "2020-12-15T14:36:10.551360-08:00",
+      "published": "2020-12-15T16:51:27.159015-08:00",
       "categories": {
         "workflow-module": "createSAM",
         "workflow-type": "-"
@@ -922,7 +922,7 @@
       },
       "summary": "Creates SAM.json file containing model information for an input OpenSeesPy structural model. The functions 'build_model' and 'run_analysis' must be defined in the model script. Analysis is executed in the OpenSeesPySimulation application.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0021",
-      "published": "2020-12-15T14:36:10.553240-08:00",
+      "published": "2020-12-15T16:51:27.164276-08:00",
       "categories": {
         "workflow-module": "createSAM",
         "workflow-type": "-"
@@ -967,7 +967,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0022",
-      "published": "2020-12-15T14:36:10.554833-08:00",
+      "published": "2020-12-15T16:51:27.168415-08:00",
       "categories": {
         "workflow-module": "createSAM",
         "workflow-type": "-"
@@ -1012,7 +1012,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0023",
-      "published": "2020-12-15T14:36:10.556515-08:00",
+      "published": "2020-12-15T16:51:27.173851-08:00",
       "categories": {
         "workflow-module": "createSAM",
         "workflow-type": "-"
@@ -1064,7 +1064,7 @@
       },
       "summary": "Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0024",
-      "published": "2020-12-15T14:36:10.558365-08:00",
+      "published": "2020-12-15T16:51:27.181826-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1116,7 +1116,7 @@
       },
       "summary": "Creates EDP.json file containing standard EDPs for earthquake hazard events, including peak interstory drift ratio (PID), peak floor acceleration (PFA), peak roof drift (PRD), and peak floor displacement (PFD).",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0025",
-      "published": "2020-12-15T14:36:10.560125-08:00",
+      "published": "2020-12-15T16:51:27.186130-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1168,7 +1168,7 @@
       },
       "summary": "Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0026",
-      "published": "2020-12-15T14:36:10.561630-08:00",
+      "published": "2020-12-15T16:51:27.189765-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1220,7 +1220,7 @@
       },
       "summary": "Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0027",
-      "published": "2020-12-15T14:36:10.563464-08:00",
+      "published": "2020-12-15T16:51:27.193388-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1272,7 +1272,7 @@
       },
       "summary": "Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0028",
-      "published": "2020-12-15T14:36:10.564979-08:00",
+      "published": "2020-12-15T16:51:27.198351-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1324,7 +1324,7 @@
       },
       "summary": "Creates EDP.json file containing EDP information which is custom-defined in an input EDP specifications file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0029",
-      "published": "2020-12-15T14:36:10.566685-08:00",
+      "published": "2020-12-15T16:51:27.204647-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1376,7 +1376,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0030",
-      "published": "2020-12-15T14:36:10.568244-08:00",
+      "published": "2020-12-15T16:51:27.212713-08:00",
       "categories": {
         "workflow-module": "createEDP",
         "workflow-type": "-"
@@ -1435,7 +1435,7 @@
       },
       "summary": "Executes script for building structural model in OpenSees and running analysis for the response simulation, then saves the results in EDP.json.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0031",
-      "published": "2020-12-15T14:36:10.569755-08:00",
+      "published": "2020-12-15T16:51:27.216954-08:00",
       "categories": {
         "workflow-module": "performSIMULATION",
         "workflow-type": "-"
@@ -1494,7 +1494,7 @@
       },
       "summary": "Executes script for building structural model in OpenSeesPy and running analysis for the response simulation, then saves the results in EDP.json.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0032",
-      "published": "2020-12-15T14:36:10.571303-08:00",
+      "published": "2020-12-15T16:51:27.220644-08:00",
       "categories": {
         "workflow-module": "performSIMULATION",
         "workflow-type": "-"
@@ -1553,7 +1553,7 @@
       },
       "summary": "Returns the input event IM as the EDP in the absence of a response simulation method. This application is appropriate to use when damages and losses are estimated as function of IM in the DL assessment.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0033",
-      "published": "2020-12-15T14:36:10.573211-08:00",
+      "published": "2020-12-15T16:51:27.224446-08:00",
       "categories": {
         "workflow-module": "performSIMULATION",
         "workflow-type": "-"
@@ -1612,7 +1612,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0034",
-      "published": "2020-12-15T14:36:10.574958-08:00",
+      "published": "2020-12-15T16:51:27.227899-08:00",
       "categories": {
         "workflow-module": "performSIMULATION",
         "workflow-type": "-"
@@ -1671,7 +1671,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0035",
-      "published": "2020-12-15T14:36:10.576523-08:00",
+      "published": "2020-12-15T16:51:27.231387-08:00",
       "categories": {
         "workflow-module": "performSIMULATION",
         "workflow-type": "-"
@@ -1820,7 +1820,7 @@
       },
       "summary": "Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0036",
-      "published": "2020-12-15T14:36:10.578159-08:00",
+      "published": "2020-12-15T16:51:27.233694-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -1969,7 +1969,7 @@
       },
       "summary": "Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0037",
-      "published": "2020-12-15T14:36:10.579889-08:00",
+      "published": "2020-12-15T16:51:27.236550-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -2118,7 +2118,7 @@
       },
       "summary": "Uses the uncertainty quantification package Dakota to sample random variables and execute the workflow driver file.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0038",
-      "published": "2020-12-15T14:36:10.581465-08:00",
+      "published": "2020-12-15T16:51:27.238947-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -2163,9 +2163,9 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0039",
-      "published": "2020-12-15T14:36:10.583215-08:00",
+      "published": "2020-12-15T16:51:27.242209-08:00",
       "categories": {
-        "workflow-module": "performUQ",
+        "workflow-module": "preprocUQ",
         "workflow-type": "-"
       }
     },
@@ -2186,7 +2186,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0040",
-      "published": "2020-12-15T14:36:10.584808-08:00",
+      "published": "2020-12-15T16:51:27.245321-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -2231,9 +2231,9 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0041",
-      "published": "2020-12-15T14:36:10.586343-08:00",
+      "published": "2020-12-15T16:51:27.248235-08:00",
       "categories": {
-        "workflow-module": "performUQ",
+        "workflow-module": "preprocUQ",
         "workflow-type": "-"
       }
     },
@@ -2276,7 +2276,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0042",
-      "published": "2020-12-15T14:36:10.587846-08:00",
+      "published": "2020-12-15T16:51:27.251306-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -2321,7 +2321,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0043",
-      "published": "2020-12-15T14:36:10.589403-08:00",
+      "published": "2020-12-15T16:51:27.253906-08:00",
       "categories": {
         "workflow-module": "performUQ",
         "workflow-type": "-"
@@ -2410,12 +2410,12 @@
               "app-specific": true
             }
           ],
-          "usage": "2020-12-15T22:47:47Z First line of DL_calculation\nusage: DL_calculation.py [-h] [--filenameDL FILENAMEDL]\n                         [--filenameEDP FILENAMEEDP] [--DL_Method DL_METHOD]\n                         [--Realizations REALIZATIONS] [--outputEDP OUTPUTEDP]\n                         [--outputDM OUTPUTDM] [--outputDV OUTPUTDV]\n                         [--dirnameOutput DIRNAMEOUTPUT]\n                         [--event_time EVENT_TIME]\n                         [--detailed_results [DETAILED_RESULTS]]\n                         [--coupled_EDP [COUPLED_EDP]] [--log_file [LOG_FILE]]\n                         [--ground_failure [GROUND_FAILURE]]\n                         [--auto_script AUTO_SCRIPT]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameDL FILENAMEDL\n  --filenameEDP FILENAMEEDP\n  --DL_Method DL_METHOD\n  --Realizations REALIZATIONS\n  --outputEDP OUTPUTEDP\n  --outputDM OUTPUTDM\n  --outputDV OUTPUTDV\n  --dirnameOutput DIRNAMEOUTPUT\n  --event_time EVENT_TIME\n  --detailed_results [DETAILED_RESULTS]\n  --coupled_EDP [COUPLED_EDP]\n  --log_file [LOG_FILE]\n  --ground_failure [GROUND_FAILURE]\n  --auto_script AUTO_SCRIPT\n"
+          "usage": "2020-12-16T16:56:16Z First line of DL_calculation\nusage: DL_calculation.py [-h] [--filenameDL FILENAMEDL]\n                         [--filenameEDP FILENAMEEDP] [--DL_Method DL_METHOD]\n                         [--Realizations REALIZATIONS] [--outputEDP OUTPUTEDP]\n                         [--outputDM OUTPUTDM] [--outputDV OUTPUTDV]\n                         [--dirnameOutput DIRNAMEOUTPUT]\n                         [--event_time EVENT_TIME]\n                         [--detailed_results [DETAILED_RESULTS]]\n                         [--coupled_EDP [COUPLED_EDP]] [--log_file [LOG_FILE]]\n                         [--ground_failure [GROUND_FAILURE]]\n                         [--auto_script AUTO_SCRIPT]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  --filenameDL FILENAMEDL\n  --filenameEDP FILENAMEEDP\n  --DL_Method DL_METHOD\n  --Realizations REALIZATIONS\n  --outputEDP OUTPUTEDP\n  --outputDM OUTPUTDM\n  --outputDV OUTPUTDV\n  --dirnameOutput DIRNAMEOUTPUT\n  --event_time EVENT_TIME\n  --detailed_results [DETAILED_RESULTS]\n  --coupled_EDP [COUPLED_EDP]\n  --log_file [LOG_FILE]\n  --ground_failure [GROUND_FAILURE]\n  --auto_script AUTO_SCRIPT\n"
         }
       },
       "summary": "Performs damage and loss (DL) assessment using the pelicun Python package. The application uses built-in fragility functions and the replacement cost defined in the building source file to determine damage state and loss likelihoods.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0044",
-      "published": "2020-12-15T14:36:10.591403-08:00",
+      "published": "2020-12-15T16:51:27.256663-08:00",
       "categories": {
         "workflow-module": "performDL",
         "workflow-type": "-"
@@ -2460,7 +2460,7 @@
       },
       "summary": "Assigns events to building site by sampling from nearest neighboring event sites, using coordinate locations. The user specifies the number of sampled events and the number of neighbors to sample events from.",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0045",
-      "published": "2020-12-15T14:36:10.593117-08:00",
+      "published": "2020-12-15T16:51:27.259418-08:00",
       "categories": {
         "workflow-module": "performRegionalMapping",
         "workflow-type": "-"
@@ -2505,7 +2505,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0046",
-      "published": "2020-12-15T14:36:10.594961-08:00",
+      "published": "2020-12-15T16:51:27.262828-08:00",
       "categories": {
         "workflow-module": "performSIM",
         "workflow-type": "-"
@@ -2550,7 +2550,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0047",
-      "published": "2020-12-15T14:36:10.596980-08:00",
+      "published": "2020-12-15T16:51:27.265557-08:00",
       "categories": {
         "workflow-module": "performSIM",
         "workflow-type": "-"
@@ -2595,7 +2595,7 @@
       },
       "summary": "No description",
       "uri": "http://raw.githubusercontent.com/NHERI-SimCenter/SimCenterBackendApplications/master/meta/entities.xml#bknd-0048",
-      "published": "2020-12-15T14:36:10.598876-08:00",
+      "published": "2020-12-15T16:51:27.268578-08:00",
       "categories": {
         "workflow-module": "performSIM",
         "workflow-type": "-"
@@ -2613,7 +2613,9 @@
       "performRegionalMapping": "Regional Mapping",
       "performSIMULATION": "Simulation",
       "performSIM": "FEM",
-      "performUQ": "Uncertainty"
+      "performUQ": "Uncertainty",
+      "preprocUQ": "Uncertainty",
+      "preprocSIM": "Uncertainty"
     },
     "workflow-type": {
       "wind-event": "Wind Event",
