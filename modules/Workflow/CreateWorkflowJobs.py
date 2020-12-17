@@ -129,7 +129,7 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
                     file_name = f'{res_type}*.csv'
                 elif out_type == 'every_realization':
                     res_type = 'realizations'
-                    file_name = f'{res_type}*.hd5'
+                    file_name = f'{res_type}*.hdf'
 
                 if res_type is not None:
                     task_list += (f'mkdir -p {out_dir}/results/{res_type}'

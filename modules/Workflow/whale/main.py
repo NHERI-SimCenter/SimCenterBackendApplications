@@ -1154,7 +1154,7 @@ class Workflow(object):
                         d_agg = pd.concat(realizations[d_type], axis=0, sort=False)
                         #d_agg.sort_index(axis=0, inplace=True)
 
-                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hd5', d_type, mode='a', format='fixed')
+                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', d_type, mode='a', format='fixed')
 
                 else:
                     out_list = []

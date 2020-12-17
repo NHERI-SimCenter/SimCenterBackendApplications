@@ -167,7 +167,7 @@ def main(threads = 1):
     # aggregate the realizations files
     log_msg('Aggregating individual realizations...')
 
-    files = glob.glob('./results/{}/*/{}_*.hd5'.format('realizations','realizations'))
+    files = glob.glob('./results/{}/*/{}_*.hdf'.format('realizations','realizations'))
 
     log_msg('Number of files: {}'.format(len(files)))
 
@@ -189,9 +189,9 @@ def main(threads = 1):
             df_all.sort_index(axis=0, inplace=True)
 
             try:
-                df_all.astype(np.float16).to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+                df_all.astype(np.float16).to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
             except:
-                df_all.to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+                df_all.to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
 
             log_msg('\t\tResults saved for {key}.'.format(key=key))
 
