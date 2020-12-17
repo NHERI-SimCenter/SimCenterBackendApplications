@@ -60,20 +60,15 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
                 range(int(bldg_low), int(bldg_high) + 1))
         else:
             bldgs_requested.append(int(bldgs))
-    #bldgs_requested = np.array(bldgs_requested)
 
     count = len(bldgs_requested)
-    print(bldgs_requested)
-
-    #rWHALE_dir = 'rWHALE_Adam'
 
     tasksCount = int(math.ceil(count/task_size))
-    #last_bldg = count + first_building - 1
 
     workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/RDT_workflow.py"
 
     # get the type of outputs requested
-    with open(config_file, 'r') as f:
+    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
         settings = json.load(f)
     output_types = [out_type for out_type, val in settings['outputs'].items()
                     if val==True]
@@ -81,12 +76,9 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
     subfolder = 0
     for i in range(0, tasksCount):
 
-        # min_ID = i * task_size + first_building
-        # max_ID = min((i + 1)*task_size + first_building - 1, last_bldg)
         bldg_list = np.array(bldgs_requested[i*task_size : (i+1)*task_size])
-        print(bldg_list)
 
-        # do not try to run sims if we are beyond the last bldg
+        # do not try to run sims if there are no bldgs to run
         if len(bldg_list) > 0:
 
             min_ID = bldg_list[0]
@@ -98,18 +90,13 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
             min_ids = np.zeros(max_ids.shape, dtype=int)
             min_ids[1:] = max_ids[:-1] + 1
 
-            print(min_ids)
-            print(max_ids)
-
             filter = ""
             for i_min, i_max in zip(min_ids, max_ids):
                 if i_min == i_max:
                     filter += f",{bldg_list[i_min]}"
                 else:
                     filter += f",{bldg_list[i_min]}-{bldg_list[i_max]}"
-            print(filter)
             filter = filter[1:]  # to remove the initial comma
-            print(filter)
 
             if (i%500) == 0:
                 subfolder = subfolder + 1
@@ -126,8 +113,9 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
             task_list += f'mkdir -p {out_dir}/logs/{subfolder}/ && '
 
             # run the simulation
-            task_list += (f'python3 {workflowScript} {config_file} '                          
-                          f'-d /tmp/{rWHALE_dir}/applications/Workflow/data '
+            task_list += (f'python3 {workflowScript} '
+                          f'/tmp/{rWHALE_dir}/{config_file} '                          
+                          f'-d /tmp/{rWHALE_dir}/input_data '
                           f'-w {run_dir} -l {log_path} '
                           f'--filter {filter} && ')
 
@@ -154,7 +142,7 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
             task_list += f"rm -rf {run_dir} \n"
 
             # write the tasks to the output file
-            with open('WorkflowTasks.txt', 'a+') as tasksFile:
+            with open('WorkflowJobs.txt', 'a+') as tasksFile:
                 tasksFile.write(task_list)
 
 if __name__ == "__main__":
@@ -176,11 +164,6 @@ if __name__ == "__main__":
     workflowArgParser.add_argument("-rWHALE_dir", "-W", type=str,
         default='rWHALE',
         help="The path to the rWHALE files on the compute nodes")
-
-    # workflowArgParser.add_argument("-buildingsCount", "-B", type=int,
-    #     help="Number of buildings to include simulate.")
-    # workflowArgParser.add_argument("-firstBuilding", "-f", type=int,
-    #     help="The building ID to start counting from.")
 
     #Parsing the command line arguments
     line_args = workflowArgParser.parse_args()
