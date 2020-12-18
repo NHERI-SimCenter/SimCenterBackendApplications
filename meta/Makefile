@@ -7,7 +7,7 @@ AURORE=aurore
 CACHE = .aurore/aurore.cache.json
 RENDRE = rendre
 
-APPS = quoFEM WE-UQ EE-UQ RDT
+APPS = quoFEM WE-UQ EE-UQ RDT PBE
 MODULES = createBIM createEDP createEVENT createSAM
 MODULES += performDL performRegionalMapping performSIMULATION performUQ Workflow
 MODULES += preprocSIM preprocUQ
