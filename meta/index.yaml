@@ -38,28 +38,44 @@ performRegionalMapping: &performRegionalMapping
 
 quoFEM:
   include-item:
-    ? '%c:performSIM' # include all applications
-                      # under 'performSIM' category
-    # performUQ
+    ? '%c:prepro*'    
 
 WE-UQ:
   include-item:
     <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
     <<: *standardUQ
     <<: *performSIMULATION
 
 EE-UQ:
   include-item:
     <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    ? bknd-0006   # MultiplePEER
     <<: *standardUQ
     <<: *performSIMULATION
+
+PBE:
+  include-item:
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
     ? bknd-0006   # MultiplePEER
+    <<: *standardUQ
+    <<: *performSIMULATION
+    <<: *performDL
+
+
+
 
 RDT:
   include-item:
     <<: *createBIM
     <<: *createEDP
     <<: *createSAM
+    <<: *createEVENT
     ? bknd-0006   # MultiplePEER
     <<: *standardUQ
     <<: *performDL
