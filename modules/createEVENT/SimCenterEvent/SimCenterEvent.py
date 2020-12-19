@@ -72,11 +72,8 @@ def write_RV(BIM_file, EVENT_file):
 
         RV_elements = []
         for event in events:
-            if event['EventClassification'] == 'Earthquake':
-                RV_elements.append(event['fileName'])
-            elif event['EventClassification'] == 'Hurricane':
-                RV_elements.append(event['fileName'])
-            elif event['EventClassification'] == 'Flood':
+            if event['EventClassification'] in ['Earthquake', 'Hurricane',
+                                                'Flood']:
                 RV_elements.append(event['fileName'])
 
         event_file['randomVariables'][0]['elements'] = RV_elements
