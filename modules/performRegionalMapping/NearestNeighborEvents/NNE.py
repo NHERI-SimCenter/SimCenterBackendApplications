@@ -39,36 +39,22 @@
 # Tamika Bassman
 #
 
-import argparse, posixpath, json
+import argparse, json
 import numpy as np
 import pandas as pd
 from numpy.random import multinomial
+from pathlib import Path
 
 from sklearn.neighbors import NearestNeighbors
-
-# # distance, area, volume
-# m = 1.
-#
-# mm = 0.001 * m
-# cm = 0.01 * m
-# km = 1000. * m
-#
-# inch = 0.0254
-# ft = 12. * inch
-#
-# # acceleration
-# mps2 = m
-#
-# inchps2 = inch
-# ftps2 = ft
-#
-# g = 9.80665 * mps2
 
 def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label):
 
     # read the event grid data file
-    grid_df = pd.read_csv(event_grid_file, header=0)
-    event_dir = posixpath.dirname(event_grid_file)
+    event_grid_path = Path(event_grid_file).resolve()
+    event_dir = event_grid_path.parent
+    event_grid_file = event_grid_path.name
+
+    grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
     lat_E = grid_df['lat']
@@ -235,6 +221,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         # save the event dictionary to the BIM
         bldg_data['Events'] = {
             "EventClassification": "Earthquake",
+            "EventFolderPath": str(event_dir),
             "Events": event_list_json,
             "type": "SimCenterEvents"
         }

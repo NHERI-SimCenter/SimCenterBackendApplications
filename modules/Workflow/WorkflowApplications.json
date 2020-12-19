@@ -286,13 +286,7 @@
       {
         "Name": "SimCenterEvent",
         "ExecutablePath": "applications/createEVENT/SimCenterEvent/SimCenterEvent.py",
-        "ApplicationSpecificInputs": [
-          {
-            "id": "pathEventData",
-            "type": "path",
-            "description": "Path to directory containig event data files in SimCenter format"
-          }
-        ]
+        "ApplicationSpecificInputs": []
       },
       {
         "Name": "ASCE7_WindSpeed",
