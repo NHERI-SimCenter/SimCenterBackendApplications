@@ -63,7 +63,12 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
 
     import numpy as np
-    import openseespy.opensees as ops
+    
+    from sys import platform
+    if platform == "darwin": # MACOS
+        import openseespymac.opensees as ops
+    else:
+        import openseespy.opensees as ops
 
     sys.path.insert(0, os.getcwd())
 
