@@ -57,8 +57,8 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
-    lat_E = grid_df['lat']
-    lon_E = grid_df['lon']
+    lat_E = grid_df['Latitude']
+    lon_E = grid_df['Longitude']
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
     # prepare the tree for the nearest neighbor search
@@ -73,18 +73,19 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         bldg_dict = json.load(f)
 
     # prepare a dataframe that holds building filenames and locations
-    bim_df = pd.DataFrame(columns=['lat', 'lon', 'file'], index=np.arange(len(bldg_dict)))
+    bim_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
+                          index=np.arange(len(bldg_dict)))
     for i, bldg in enumerate(bldg_dict):
         with open(bldg['file'], 'r') as f:
             bldg_data = json.load(f)
 
         bldg_loc = bldg_data['GeneralInformation']['location']
-        bim_df.iloc[i]['lon'] = bldg_loc['longitude']
-        bim_df.iloc[i]['lat'] = bldg_loc['latitude']
+        bim_df.iloc[i]['Longitude'] = bldg_loc['longitude']
+        bim_df.iloc[i]['Latitude'] = bldg_loc['latitude']
         bim_df.iloc[i]['file'] = bldg['file']
 
     # store building locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(bim_df['lon'], bim_df['lat'])])
+    Y = np.array([[lo, la] for lo, la in zip(bim_df['Longitude'], bim_df['Latitude'])])
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
@@ -143,7 +144,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         nbr_samples = np.where(multinomial(1, weights, samples) == 1)[1]
 
         # this is the preferred behavior, the else caluse is left for legacy inputs
-        if grid_df.iloc[0]['sta'][-3:] == 'csv':
+        if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
 
             # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and
@@ -153,8 +154,8 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
             # Load the first file and identify if this is a grid of IM or GM
             # information. GM grids have GM record filenames defined in the
             # grid point files.
-            first_file = pd.read_csv(
-                posixpath.join(event_dir, grid_df.iloc[0]['sta']), header=0)
+            first_file = pd.read_csv(event_dir / grid_df.iloc[0]['GP_file'],
+                                     header=0)
             if first_file.columns[0]=='TH_file':
                 event_type = 'timeHistory'
             else:
@@ -178,9 +179,9 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
                 if event_type == 'timeHistory':
 
                     # load the file for the selected grid point
-                    event_collection_file = grid_df.iloc[nbr_index]['sta']
-                    event_df = pd.read_csv(
-                        posixpath.join(event_dir, event_collection_file), header=0)
+                    event_collection_file = grid_df.iloc[nbr_index]['GP_file']
+                    event_df = pd.read_csv(event_dir / event_collection_file,
+                                           header=0)
 
                     # append the GM record name to the event list
                     event_list.append(event_df.iloc[event_j,0])
@@ -195,7 +196,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
                 elif event_type == 'intensityMeasure':
 
                     # save the collection file name and the IM row id
-                    event_list.append(grid_df.iloc[nbr_index]['sta']+f'x{event_j}')
+                    event_list.append(grid_df.iloc[nbr_index]['GP_file']+f'x{event_j}')
 
                     # IM collections are not scaled
                     scale_list.append(1.0)
@@ -204,7 +205,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         else:
             event_list = []
             for e, i in zip(nbr_samples, ind_list):
-                event_list += [grid_df.iloc[i]['sta'],]*e
+                event_list += [grid_df.iloc[i]['GP_file'],]*e
 
             scale_list = np.ones(len(event_list))
 
