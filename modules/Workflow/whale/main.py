@@ -322,11 +322,14 @@ class WorkflowApplication(object):
                 else:
                     arg_list.append(u'{}'.format(out_arg['default']))
 
+        ASI_list =  [inp['id'] for inp in self.app_spec_inputs]
         for pref_name, pref_value in self.pref.items():
-            pref_id = u'--{}'.format(pref_name)
-            if pref_id not in arg_list:
-                arg_list.append(pref_id)
-                arg_list.append(u'{}'.format(pref_value))
+            # only pass those input arguments that are in the registry
+            if pref_name in ASI_list:
+                pref_id = u'--{}'.format(pref_name)
+                if pref_id not in arg_list:
+                    arg_list.append(pref_id)
+                    arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
