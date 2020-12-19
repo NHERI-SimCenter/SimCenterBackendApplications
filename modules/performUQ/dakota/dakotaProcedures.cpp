@@ -81,6 +81,8 @@ struct randomVariables {
   std::list<struct gumbellRV> gumbellRVs;
   std::list<struct betaRV> betaRVs;
   std::list<struct discreteDesignSetRV> discreteDesignSetRVs;
+  std::vector<int> ordering;
+  std::vector<double> corrMat;  
 };
   
 
@@ -111,6 +113,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       
       theRandomVariables.normalRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
       numberRVs++;
 
     }
@@ -125,6 +128,36 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
       theRandomVariables.lognormalRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
+      numberRVs++;
+
+    }
+
+    else if (strcmp(variableType, "Constant") == 0) {
+
+      struct constantRV theRV;
+
+      theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
+      theRV.value = json_number_value(json_object_get(fileRandomVariable,"value"));
+
+      theRandomVariables.constantRVs.push_back(theRV);
+      theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
+      numberRVs++;
+
+    }
+
+    else if (strcmp(variableType, "Uniform") == 0) {
+
+      struct uniformRV theRV;
+
+      theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
+      theRV.lowerBound = json_number_value(json_object_get(fileRandomVariable,"lowerbound"));
+      theRV.upperBound = json_number_value(json_object_get(fileRandomVariable,"upperbound"));
+
+      theRandomVariables.uniformRVs.push_back(theRV);
+      theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
       numberRVs++;
 
     }
@@ -141,21 +174,8 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       numberRVs++;
 
     }
-
-    else if (strcmp(variableType, "Uniform") == 0) {
-
-      struct uniformRV theRV;
-
-      theRV.name = json_string_value(json_object_get(fileRandomVariable,"name"));
-      theRV.lowerBound = json_number_value(json_object_get(fileRandomVariable,"lowerbound"));
-      theRV.upperBound = json_number_value(json_object_get(fileRandomVariable,"upperbound"));
-
-      theRandomVariables.uniformRVs.push_back(theRV);
-      theRandomVariables.numRandomVariables += 1;
-      numberRVs++;
-
-    }
-
+   
+    
     else if (strcmp(variableType, "ContinuousDesign") == 0) {
       struct continuousDesignRV theRV;
 
@@ -179,6 +199,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
       theRandomVariables.weibullRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
       numberRVs++;
     }
 
@@ -192,6 +213,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
       theRandomVariables.gammaRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
       numberRVs++;
     }
 
@@ -205,6 +227,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
 
       theRandomVariables.gumbellRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);
       numberRVs++;
     }
 
@@ -221,6 +244,7 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       std::cerr << theRV.name << " " << theRV.upperBound << " " << theRV.lowerBound << " " << theRV.alphas << " " << theRV.betas;
       theRandomVariables.betaRVs.push_back(theRV);
       theRandomVariables.numRandomVariables += 1;
+      theRandomVariables.ordering.push_back(i);      
       numberRVs++;
     }
 
@@ -248,6 +272,17 @@ parseForRV(json_t *root, struct randomVariables &theRandomVariables){
       }
     }
 
+    json_t* corrMatJson =  json_object_get(root,"correlationMatrix");
+    if (corrMatJson != NULL) {
+      int numCorrs = json_array_size(corrMatJson);
+      for (int i=0; i<numCorrs; i++) {
+        const double corrVal = json_number_value(json_array_get(corrMatJson,i));
+        theRandomVariables.corrMat.push_back(corrVal);
+      }
+    } else {
+      theRandomVariables.corrMat.push_back(0.0);
+    }
+    
   } // end loop over random variables
 
   return numRVs;
@@ -383,6 +418,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     }
 
 
+
     int numGamma = theRandomVariables.gammaRVs.size();
     if (numGamma > 0) {
       dakotaFile << "  gamma_uncertain = " << numGamma << "\n    alphas = ";
@@ -452,7 +488,22 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       dakotaFile << "\n    descriptors = dummy\n";
       rvList.push_back(std::string("dummy"));
     }
-
+    dakotaFile << "\n";
+    // if correlations, (sy)
+     //if (theRandomVariables.corrMat[0] != 0) {
+    
+     if (theRandomVariables.corrMat[0]!=0) {
+        dakotaFile<<"uncertain_correlation_matrix\n";
+        for (int i : theRandomVariables.ordering) {
+          dakotaFile << "    ";
+          for (int j : theRandomVariables.ordering) {
+            double corrval = theRandomVariables.corrMat[i*theRandomVariables.numRandomVariables+j];
+            dakotaFile << corrval << " ";
+          }
+          dakotaFile << "\n";
+        }
+     };
+    
     dakotaFile << "\n\n";
 
     return 0;

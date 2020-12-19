@@ -1,5 +1,6 @@
 all:         
 	(cd dakota; make all)
+	(cd templateSub; make all)
 
 clean: 
 	rm -f *~ *.o
