@@ -43,6 +43,14 @@ import os, sys
 import argparse, json
 import importlib
 
+from datetime import datetime
+
+def log_msg(msg):
+
+    formatted_msg = '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
+
+    print(formatted_msg)
+
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
     'max_rel_disp' : 'PFD',
@@ -62,8 +70,10 @@ def write_RV():
 def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
 
+    log_msg('Startring simulation script...')
+
     import numpy as np
-    
+
     from sys import platform
     if platform == "darwin": # MACOS
         import openseespymac.opensees as ops
@@ -85,6 +95,9 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     model_script_path = SAM_in['mainScript']
     dof_map = [int(dof) for dof in SAM_in['dofMap'].split(',')]
+
+    node_map = dict([(int(entry['floor']), int(entry['node']))
+                     for entry in SAM_in['NodeMapping']])
 
     model_script = importlib.__import__(
         model_script_path[:-3], globals(), locals(), ['build_model',], 0)
@@ -138,14 +151,40 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     edp_specs = {}
     for response in EDP_list:
+
+        if response['type'] in list(convert_EDP.keys()):
+            response['type'] = convert_EDP[response['type']]
+
         if response['type'] not in edp_specs.keys():
             edp_specs.update({response['type']: {}})
-        edp_specs[response['type']].update(
-            {response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
-                              for dof in response['dofs']])})
 
-    #for edp_name, edp_data in edp_specs.items():
-    #    print(edp_name, edp_data)
+        if 'node' in list(response.keys()):
+
+            if response.get('id', None) is None:
+                response.update({'id': 0})
+
+            edp_specs[response['type']].update({
+                response['id']: dict([(dof, list(np.atleast_1d(response['node'])))
+                                      for dof in response['dofs']])})
+        else:
+
+            if response.get('floor', None) is not None:
+                floor = int(response['floor'])
+                node_list = [node_map[floor],]
+            else:
+                floor = int(response['floor2'])
+                floor1 = int(response['floor1'])
+                node_list = [node_map[floor1], node_map[floor]]
+
+            if response.get('id', None) is None:
+                response.update({'id': floor})
+            if floor is not None:
+                edp_specs[response['type']].update({
+                    response['id']: dict([(dof, node_list)
+                                          for dof in response['dofs']])})
+
+    for edp_name, edp_data in edp_specs.items():
+        print(edp_name, edp_data)
 
     # run the analysis
     EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
@@ -171,6 +210,8 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
+
+    log_msg('Simulation script finished.')
 
 if __name__ == '__main__':
 

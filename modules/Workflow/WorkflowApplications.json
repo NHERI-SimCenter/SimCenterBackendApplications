@@ -377,9 +377,9 @@
             "description": "The workflow assumes X=1, Y=2, Z=3 mapping between directions and degrees of freedom; XY being the horizontal directions. This input allows you to define an alternative mapping by providing three numbers separated by commas in a string, such as '1, 3, 2' if you want to have Y as the vertical direction."
           },
           {
-            "id": "ctrlNodes",
+            "id": "columnLine",
             "type": "string",
-            "description": "Defines the ids of the control nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building."
+            "description": "Defines the ids of the nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building."
           }
         ]
       },

@@ -41,7 +41,7 @@
 import sys, argparse,json
 
 def create_SAM(BIM_file, EVENT_file, SAM_file,
-    model_script, model_path, ndm, dof_map, getRV):
+    model_script, model_path, ndm, dof_map, column_line, getRV):
 
     with open(BIM_file, 'r') as f:
         root_BIM = json.load(f)['GeneralInformation']
@@ -51,9 +51,11 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
     except:
         raise ValueError("OpenSeesPyInput - structural information missing")
 
-    # we create dummy nodes for now
-    # TODO: improve this to use actual node information if needed
-    nodes = list(range(stories+1))
+    if column_line is None:
+        nodes = list(range(stories+1))
+    else:
+        nodes = [int(node) for node in column_line.split(',')]
+        nodes = nodes[:stories+1]
 
     node_map = []
     for floor, node in enumerate(nodes):
@@ -86,12 +88,13 @@ if __name__ == '__main__':
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
     parser.add_argument('--modelPath')
-    parser.add_argument('--ndm', default=3)
-    parser.add_argument('--dofMap', default=[1, 2, 3])
+    parser.add_argument('--ndm', default="3")
+    parser.add_argument('--dofMap', default="1, 2, 3")
+    parser.add_argument('--columnLine', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
     sys.exit(create_SAM(
         args.filenameBIM, args.filenameEVENT, args.filenameSAM,
         args.mainScript, args.modelPath, args.ndm,
-        args.dofMap, args.getRV))
+        args.dofMap, args.columnLine, args.getRV))
