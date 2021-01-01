@@ -1082,7 +1082,12 @@ class RandomVariableSet(object):
             If provided, allows for selecting only a subset of the variables in
             the RV_set for the density calculation.
 
-            L = cholesky(self._Rho, lower=True)
+        Returns
+        -------
+        alpha: float
+            Estimate of the probability density within the orthotope.
+        eps_alpha: float
+            Estimate of the error in alpha.
 
         """
 

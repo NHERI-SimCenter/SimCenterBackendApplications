@@ -39,7 +39,7 @@
 
 name = "pelicunPBE"
 
-__version__ = '3.0.0pre'
+__version__ = '2.5.0'
 
 __copyright__ = """Copyright (c) 2018 Leland Stanford Junior University and
 The Regents of the University of California"""

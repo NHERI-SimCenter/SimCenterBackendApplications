@@ -390,8 +390,8 @@ class Assessment(object):
                     DV_mods.append(replace_FG_IDs_with_FG_names(self._DV_dict[key][i]))
                     DV_names.append('{}DV_{}_{}'.format(suffix, key, i+1))
 
-        #try:
-        if True:
+        try:
+        #if True:
             log_msg('\tSaving files:')
 
             log_msg('\t\tSummary')
@@ -478,8 +478,8 @@ class Assessment(object):
                     output_path, suffix+DV_file, self._AIM_in['general'],
                     self._SUMMARY, dict(zip(DV_names, DV_mods)))
 
-        #except:
-        #    print("ERROR when trying to create DL output files.")
+        except:
+            print("ERROR when trying to create DL output files.")
 
     def _create_RV_demands(self):
 
