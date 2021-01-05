@@ -20,8 +20,8 @@ all:
 	  echo "$${app}-------------------------------------------------"; \
 	  for mod in $(MODULES); do \
 		echo "MODULE: $$mod"; \
-		if [ "$$($(RENDRE) -d index.yaml#/$$app -q list -e \%c:$$mod )" ] ; then \
-			$(RENDRE) -d index.yaml#/$$app -q gallery -e \%c:$$mod > $(GALLERY)/$$app/$$mod.html; \
+		if [ "$$($(RENDRE) -l index.yaml#/$$app -q list -e \%c:$$mod )" ] ; then \
+			$(RENDRE) -l index.yaml#/$$app -q gallery -e \%c:$$mod > $(GALLERY)/$$app/$$mod.html; \
 			echo ''; \
 		fi; \
 	  done \
