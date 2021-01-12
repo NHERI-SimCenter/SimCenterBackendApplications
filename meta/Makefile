@@ -13,29 +13,7 @@ MODULES += performDL performRegionalMapping performSIMULATION performUQ Workflow
 MODULES += preprocSIM preprocUQ
 
 
-.PHONY: cache all
-
-all:
-	for app in $(APPS); do \
-	  echo "$${app}-------------------------------------------------"; \
-	  for mod in $(MODULES); do \
-		echo "MODULE: $$mod"; \
-		if [ "$$($(RENDRE) -l index.yaml#/$$app -q list -e \%c:$$mod )" ] ; then \
-			$(RENDRE) -l index.yaml#/$$app -q gallery -e \%c:$$mod > $(GALLERY)/$$app/$$mod.html; \
-			echo ''; \
-		fi; \
-	  done \
-	done \
-
-dry:
-	for app in $(APPS); do \
-	  echo "$${app}-------------------------------------------------"; \
-	  for mod in $(MODULES); do \
-		echo "$$mod"; \
-	    $(RENDRE) -d index.yaml#/$$app -q list -e \%c:$$mod ; \
-		echo ''; \
-	  done \
-	done \
+.PHONY: cache
 
 cache:
 	$(AURORE) -q get > $(CACHE)
