@@ -81,3 +81,11 @@ MDOF_BuildingModelToSAM
 #SAM.json
 #edp.json
 #input.json
+applications.tar
+DEDM_HRP
+LowRiseTPU
+MultiplePEER
+WindTunnelExperiment
+preprocessDakota
+simCenterDprepro
+simCenterSub
