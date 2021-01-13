@@ -1,8 +1,5 @@
 add_subdirectory(whale)
-simcenter_add_python_script(SCRIPT EE-UQ.py)
-simcenter_add_python_script(SCRIPT "EE-UQ workflow.py")
 simcenter_add_python_script(SCRIPT femUQ.py)
-simcenter_add_python_script(SCRIPT GMT.py)
 simcenter_add_python_script(SCRIPT PBE.py)
 simcenter_add_python_script(SCRIPT "PBE_workflow.py")
 simcenter_add_python_script(SCRIPT "RDT_workflow.py")
