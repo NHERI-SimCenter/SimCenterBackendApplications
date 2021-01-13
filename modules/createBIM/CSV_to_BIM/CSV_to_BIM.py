@@ -58,6 +58,8 @@ def get_label(options, labels, label_name):
 			labels = labels[labels != option]
 			return option, labels
 
+	# return -1 for not finding the expected tag
+	return -1, labels
 	print(f'WARNING: Could not identify the label for the {label_name}')
 
 def create_building_files(output_file, building_source_file, min_id, max_id):
@@ -101,12 +103,12 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 
 	lon_label, labels = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
 	lat_label, labels = get_label(['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude')
-	story_label, labels = get_label(['Stories', 'stories'], labels, 'number of stories')
-	year_label, labels = get_label(['Year Built', 'yearbuilt', 'yearBuilt'], labels, 'year of construction')
-	structure_label, labels = get_label(['Structure Type', 'structure', 'structureType'], labels, 'structure type')
-	area_label, labels = get_label(['Area', 'areafootprint', 'areaFootprint', 'area'], labels, 'footprint area')
-	occupancy_label, labels = get_label(['Type ID', 'occupancy', 'occupancyType'], labels, 'occupancy type')
-	cost_label, labels = get_label(['Replacement Cost', 'replacementCost'], labels, 'replacement cost')
+	story_label, labels = get_label(['NumberofStories', 'Stories', 'stories'], labels, 'number of stories')
+	year_label, labels = get_label(['YearBuilt', 'Year Built', 'yearbuilt', 'yearBuilt'], labels, 'year of construction')
+	structure_label, labels = get_label(['StructureType', 'Structure Type', 'structure', 'structureType'], labels, 'structure type')
+	area_label, labels = get_label(['PlanArea', 'Area', 'areafootprint', 'areaFootprint', 'area'], labels, 'footprint area')
+	occupancy_label, labels = get_label(['OccupancyClass', 'Type ID', 'occupancy', 'occupancyType'], labels, 'occupancy type')
+	cost_label, labels = get_label(['ReplacementCost', 'Replacement Cost', 'replacementCost'], labels, 'replacement cost')
 
 	labels = labels[labels != 'population']
 	labels = labels[labels != 'Damping']
@@ -117,7 +119,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
 		bldg_id = int(bldg_id)
 		if bldg[story_label] == 1:
 			height = 4.66 # m
-		elif bldg[structure_label][0] in ['C', 'P', 'R', 'U', 'M']:
+		elif (structure_label != -1) and (bldg[structure_label][0] in ['C', 'P', 'R', 'U', 'M']):
 			height = bldg[story_label] * 3.33 # m
 		else:
 			height = bldg[story_label] * 4.0 # m
