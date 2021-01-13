@@ -322,11 +322,14 @@ class WorkflowApplication(object):
                 else:
                     arg_list.append(u'{}'.format(out_arg['default']))
 
+        ASI_list =  [inp['id'] for inp in self.app_spec_inputs]
         for pref_name, pref_value in self.pref.items():
-            pref_id = u'--{}'.format(pref_name)
-            if pref_id not in arg_list:
-                arg_list.append(pref_id)
-                arg_list.append(u'{}'.format(pref_value))
+            # only pass those input arguments that are in the registry
+            if pref_name in ASI_list:
+                pref_id = u'--{}'.format(pref_name)
+                if pref_id not in arg_list:
+                    arg_list.append(pref_id)
+                    arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
@@ -595,8 +598,12 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        building_file = building_file.replace('.json',
-            '{}-{}.json'.format(bldg_app.pref['Min'], bldg_app.pref['Max']))
+        if bldg_app.pref.get('filter', None) is not None:
+            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+
+            building_file = building_file.replace('.json',
+                '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
+
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
@@ -1124,33 +1131,59 @@ class Workflow(object):
 
                 if out_type == 'every_realization':
 
-                    realizations = None
+                        realizations_EDP = None
+                        realizations_DL = None
 
-                    for bldg in bldg_data:
-                        bldg_id = bldg['id']
-                        min_id = min(int(bldg_id), min_id)
-                        max_id = max(int(bldg_id), max_id)
+                        for bldg in bldg_data:
+                            bldg_id = bldg['id']
+                            min_id = min(int(bldg_id), min_id)
+                            max_id = max(int(bldg_id), max_id)
 
-                        #try:
-                        if True:
-                            df_i = pd.read_csv(bldg_id+f'/DL_summary.csv',
-                                               header=0, index_col=0)
-                            if realizations == None:
-                                realizations = dict([(col, []) for col in df_i.columns])
+                            # save all EDP realizations
+
+                            df_i = pd.read_csv(bldg_id+'/response.csv', header=0, index_col=0)
+
+                            if realizations_EDP == None:
+                                realizations_EDP = dict([(col, []) for col in df_i.columns])
 
                             for col in df_i.columns:
                                 vals = df_i.loc[:,col].to_frame().T
                                 vals.index = [bldg_id,]
-                                realizations[col].append(vals)
+                                realizations_EDP[col].append(vals)
 
-                        #except:
-                        #    log_msg(f'Error reading realization data for building {bldg_id}')
+                            # If damage and loss assessment is part of the workflow
+                            # then save the DL outputs too
+                            if 'DL' in self.workflow_apps.keys():
 
-                    for d_type in realizations.keys():
-                        d_agg = pd.concat(realizations[d_type], axis=0, sort=False)
-                        #d_agg.sort_index(axis=0, inplace=True)
+                                try:
+                                #if True:
+                                    df_i = pd.read_csv(bldg_id+f'/DL_summary.csv',
+                                                       header=0, index_col=0)
 
-                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hd5', d_type, mode='a', format='fixed')
+                                    if realizations_DL == None:
+                                        realizations_DL = dict([(col, []) for col in df_i.columns])
+
+                                    for col in df_i.columns:
+                                        vals = df_i.loc[:,col].to_frame().T
+                                        vals.index = [bldg_id,]
+                                        realizations_DL[col].append(vals)
+
+                                except:
+                                    log_msg(f'Error reading DL realization data for building {bldg_id}')
+
+                        for d_type in realizations_EDP.keys():
+                            d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
+
+                            d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+
+                        if 'DL' in self.workflow_apps.keys():
+                            for d_type in realizations_DL.keys():
+                                d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
+                                #d_agg.sort_index(axis=0, inplace=True)
+
+                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
+
+
 
                 else:
                     out_list = []

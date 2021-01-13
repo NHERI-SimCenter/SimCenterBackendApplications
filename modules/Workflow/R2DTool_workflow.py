@@ -52,7 +52,7 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry,
-         force_cleanup, bldg_id_range, reference_dir,
+         force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file):
 
     # initialize the log file
@@ -90,17 +90,14 @@ def main(run_type, input_file, app_registry,
         units = inputs.get('units', None),
         outputs=inputs.get('outputs', None))
 
-    if bldg_id_range[0] is not None:
-        print(bldg_id_range)
+    if bldg_id_filter is not None:
+        print(bldg_id_filter)
         log_msg(
-            'Overriding simulation limits; running buildings {} - {}'.format(
-                bldg_id_range[0], bldg_id_range[1]))
+            f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
         # update the min and max values in the input file.
-        bldg_min, bldg_max = bldg_id_range
-        WF.workflow_apps['Building'].pref['Min'] = bldg_min
-        WF.workflow_apps['Building'].pref['Max'] = bldg_max
+        WF.workflow_apps['Building'].pref["filter"] = bldg_id_filter
 
     # initialize the working directory
     WF.init_workdir()
@@ -151,17 +148,15 @@ if __name__ == '__main__':
     #Defining the command line arguments
 
     workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter workflow for a set of assets.")
+        "Run the NHERI SimCenter workflow for a set of assets.",
+        allow_abbrev=False)
 
     workflowArgParser.add_argument("configuration",
         help="Configuration file specifying the applications and data to be "
              "used")
-    workflowArgParser.add_argument("-Min", "--Min",
-        type=int, default=None,
-        help="Override the index of the first building")
-    workflowArgParser.add_argument("-Max", "--Max",
-        type=int, default=None,
-        help="Override the index of the last building")
+    workflowArgParser.add_argument("-F", "--filter",
+        default=None,
+        help="Provide a subset of building ids to run")
     workflowArgParser.add_argument("-c", "--check",
         help="Check the configuration file")
     workflowArgParser.add_argument("-r", "--registry",
@@ -202,7 +197,7 @@ if __name__ == '__main__':
          input_file = wfArgs.configuration,
          app_registry = wfArgs.registry,
          force_cleanup = wfArgs.forceCleanup,
-         bldg_id_range = [wfArgs.Min, wfArgs.Max],
+         bldg_id_filter = wfArgs.filter,
          reference_dir = wfArgs.referenceDir,
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,

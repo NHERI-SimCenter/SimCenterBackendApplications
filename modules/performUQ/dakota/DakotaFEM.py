@@ -10,6 +10,18 @@ import stat
 import argparse
 from preprocessJSON import preProcessDakota
 
+def str2bool(v):
+    # courtesy of Maxim @ stackoverflow
+
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def main(args):
 
     #First we need to set the path and environment
@@ -49,7 +61,8 @@ def main(args):
 
     parser.add_argument('--type')
     parser.add_argument('--concurrency', type=int, default=None)
-    parser.add_argument('--keepSamples', default="True")
+    parser.add_argument('--keepSamples', default=True, type=str2bool)
+    parser.add_argument('--detailedLog', default=False, type=str2bool)
     parser.add_argument('--runType')
 
     args,unknowns = parser.parse_known_args()
@@ -74,7 +87,7 @@ def main(args):
         dataMethod2 = args.dataMethod2,
 
         concurrency = args.concurrency,
-        keepSamples = args.keepSamples not in ["False", 'False', "false", 'false', False]
+        keepSamples = args.keepSamples
     )
 
     if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the BIM file
@@ -126,8 +139,12 @@ def main(args):
             result = e.output
             returncode = e.returncode
 
-        #result = result.decode(sys.stdout.encoding)
-        #print(result, returncode)
+        if args.detailedLog: # print detailed output if detailed log is requested
+
+            if platform.system() == 'Windows':
+                result = result.decode(sys.stdout.encoding)
+
+            print(result, returncode)
 
 if __name__ == '__main__':
 
