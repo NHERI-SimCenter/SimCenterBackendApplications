@@ -39,7 +39,7 @@
 # Wael Elhaddad
 #
 
-import sys, os
+import os
 import math
 import json
 import argparse
@@ -50,7 +50,29 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
 
     jobId = os.getenv('SLURM_JOB_ID') # We might need this later
 
+    # get the type of outputs requested
+    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
+        settings = json.load(f)
+    output_types = [out_type for out_type, val in settings['outputs'].items()
+                    if val == True]
+
     # get the list of buildings requested to run
+    if bldg_filter == "":
+        # we pull the bldg_filter from the config file
+        bldg_filter = settings['Applications']['Building']['ApplicationData'].get('filter', "")
+
+        if bldg_filter == "":
+            raise ValueError(
+                "Running a regional simulation on DesignSafe requires either "
+                "the 'buildingFilter' parameter to be set for the workflow "
+                "application or the 'filter' parameter set for the Building "
+                "application in the workflow configuration file. Neither was "
+                "provided in the current job. If you want to run every building "
+                "in the input file, provide the filter like '#min-#max' where "
+                "#min is the id of the first building and #max is the id of the "
+                "last building in the inventory."
+            )
+
     # note: we assume that there are no gaps in the indexes
     bldgs_requested = []
     for bldgs in bldg_filter.split(','):
@@ -66,12 +88,6 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
     tasksCount = int(math.ceil(count/task_size))
 
     workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/RDT_workflow.py"
-
-    # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
-        settings = json.load(f)
-    output_types = [out_type for out_type, val in settings['outputs'].items()
-                    if val==True]
 
     subfolder = 0
     for i in range(0, tasksCount):
@@ -153,7 +169,7 @@ if __name__ == "__main__":
         "Create the workflow tasks for rWHALE.")
 
     workflowArgParser.add_argument("-buildingFilter", "-F", type=str,
-        default=None,
+        default="", nargs='?', const="",
         help="Filter a subset of the buildings to run")
     workflowArgParser.add_argument("-configFile", "-c", type=str,
         help="The file used to configure the simulation.")
