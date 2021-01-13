@@ -55,7 +55,7 @@ def write_EDP(BIM_file, EVENT_file, EDP_file, EDP_specs):
     with open(EVENT_file, 'r') as f:
         event_file = json.load(f)
 
-    stories = bim_file['GI']['stories']
+    stories = bim_file['GeneralInformation']['NumberofStories']
 
     with open(EDP_specs, 'r') as f:
         edp_specs = json.load(f)

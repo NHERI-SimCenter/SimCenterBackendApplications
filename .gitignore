@@ -47,6 +47,9 @@ qrc_images.cpp
 qrc_images1.cpp
 qrc_styles.cpp
 
+# PyCharm
+.idea
+
 # OTHER
 applications
 build

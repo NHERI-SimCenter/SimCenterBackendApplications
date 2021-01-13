@@ -49,26 +49,34 @@ Building::StruType Building::s2StruType(string s)
     return UNKNOWN;
 }
 
+// This function is not used at all
 Building::BldgOccupancy Building::s2BldgOccupancy(string s)
 {
     transform(s.begin(), s.end(), s.begin(), ::tolower);
 
-    if(s=="office")
+    if(s=="COM4") //office
         return office;
-    if(s=="education")
+
+    if(s=="EDU1") //education
         return education;
-    if(s=="healthcare")
-        return healthcare;
-    if(s=="hospitality")
+
+    if(s=="RES4") //hospitality
         return hospitality;
-    if(s=="residence")
+
+    if(s=="RES1" || s=="RES3") //residence
         return residence;
-    if(s=="retail")
+
+    if(s=="COM1") //retail
         return retail;
-    if(s=="warehouse")
+
+    if(s=="IND2" || s=="COM10") //warehouse
         return warehouse;
-    if(s=="research")
-        return research;
+
+    //if(s=="healthcare")
+    //    return healthcare;
+
+    //if(s=="EDU1") //research
+    //    return research;
 
     return unknown;
 }
@@ -100,13 +108,15 @@ Building::readBIM(const char *event, const char *bim)
   json_error_t error;
   json_t *rootBIM = json_load_file(bim, 0, &error);
 
-  json_t *GI = json_object_get(rootBIM,"GI");  
-  json_t *sType = json_object_get(GI,"structType");
-  json_t *aType = json_object_get(GI,"area");
-  json_t *nType = json_object_get(GI,"numStory");
-  json_t *hType = json_object_get(GI,"height");
-  json_t *yType = json_object_get(GI,"yearBuilt");
-  json_t *dRatio = json_object_get(GI,"dampingRatio");
+  json_t *GI = json_object_get(rootBIM,"GeneralInformation");
+  json_t *sType = json_object_get(GI,"StructureType");
+  json_t *aType = json_object_get(GI,"PlanArea");
+  json_t *nType = json_object_get(GI,"NumberofStories");
+  json_t *yType = json_object_get(GI,"YearBuilt");
+
+  // optional
+  json_t *hType = json_object_get(GI,"Height");
+  json_t *dRatio = json_object_get(GI,"DampingRatio");
 
   const char *type = json_string_value(sType);
   string s(type);
@@ -116,17 +126,23 @@ Building::readBIM(const char *event, const char *bim)
   year=json_integer_value(yType);
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
-  storyheight=json_number_value(hType)/(nStory*1.);
+
+  if (hType == NULL) {
+    storyheight=3.6; // meters
+  } else {
+    storyheight=json_number_value(hType)/(nStory*1.);
+  }
+
   if (dRatio == NULL) {
     dampingRatio_IN = 0;
-  } else { 
+  } else {
     dampingRatio_IN = json_number_value(dRatio);
   }
 
   // parse EVENT (to see dimensionality needed
   ndf = 1;
   ndf = 2;
-  
+
   // clean up
   json_object_clear(rootBIM);
 }
@@ -143,14 +159,16 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_error_t error;
   json_t *rootBIM = json_load_file(bim, 0, &error);
 
-  json_t *GI = json_object_get(rootBIM,"GI");  
-  json_t *sType = json_object_get(GI,"structType");
-  json_t *aType = json_object_get(GI,"area");
-  json_t *nType = json_object_get(GI,"numStory");
-  json_t *hType = json_object_get(GI,"height");
-  json_t *yType = json_object_get(GI,"yearBuilt");
-  json_t *dRatio = json_object_get(GI,"dampingRatio");
-  
+  json_t *GI = json_object_get(rootBIM,"GeneralInformation");
+  json_t *sType = json_object_get(GI,"StructureType");
+  json_t *aType = json_object_get(GI,"PlanArea");
+  json_t *nType = json_object_get(GI,"NumberofStories");
+  json_t *yType = json_object_get(GI,"YearBuilt");
+
+  // optional
+  json_t *hType = json_object_get(GI,"Height");
+  json_t *dRatio = json_object_get(GI,"DampingRatio");
+
   json_t *zType = json_object_get(GI, "seismicZone");
   const char *type = json_string_value(sType);
   string s(type);
@@ -171,10 +189,16 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   year=json_integer_value(yType);
   nStory=json_integer_value(nType);
   area=json_number_value(aType);
-  storyheight=json_number_value(hType)/(nStory*1.);
+
+  if (hType == NULL) {
+    storyheight=3.6; // meters, I assume it uses standard units
+  } else {
+    storyheight=json_number_value(hType)/(nStory*1.);
+  }
+
   if (dRatio == NULL) {
     dampingRatio_IN = 0;
-  } else { 
+  } else {
     dampingRatio_IN = json_number_value(dRatio);
   }
 
@@ -246,8 +270,8 @@ Building::writeSAM(const char *path)
 
     // add node at ground
     json_t *node = json_object();
-    json_object_set(node, "name", json_integer(1)); // +2 as we need node at 1 
-    json_t *nodePosn = json_array();      
+    json_object_set(node, "name", json_integer(1)); // +2 as we need node at 1
+    json_t *nodePosn = json_array();
     json_array_append(nodePosn,json_real(0.0));
     json_array_append(nodePosn,json_real(0.0));
     json_object_set(node, "crd", nodePosn);
@@ -266,9 +290,9 @@ Building::writeSAM(const char *path)
       json_t *element = json_object();
       json_t *material = json_object();
 
-      json_object_set(node, "name", json_integer(i+2)); // +2 as we need node at 1 
+      json_object_set(node, "name", json_integer(i+2)); // +2 as we need node at 1
       json_object_set(node, "mass", json_real(floorParams[i].mass));
-      json_t *nodePosn = json_array();      
+      json_t *nodePosn = json_array();
       json_array_append(nodePosn,json_real(floorParams[i].floor*storyheight));
       json_array_append(nodePosn,json_real(0.0));
       json_object_set(node, "crd", nodePosn);
@@ -287,11 +311,11 @@ Building::writeSAM(const char *path)
 	json_object_set(element, "type", json_string("shear_beam2d"));
 
       json_object_set(element, "uniaxial_material", json_integer(i+1));
-      json_t *eleNodes = json_array();      
+      json_t *eleNodes = json_array();
       json_array_append(eleNodes,json_integer(i+1));
       json_array_append(eleNodes,json_integer(i+2));
       json_object_set(element, "nodes", eleNodes);
-      
+
       json_object_set(material,"name",json_integer(i+1));
       json_object_set(material,"type",json_string("shear"));
       json_object_set(material,"K0",json_real(interstoryParams[i].K0*kFactor));
@@ -304,18 +328,18 @@ Building::writeSAM(const char *path)
       json_object_set(material,"omega",json_real(interstoryParams[i].omega));
       json_object_set(material,"eta_soft",json_real(interstoryParams[i].eta_soft));
       json_object_set(material,"a_k",json_real(interstoryParams[i].a_k));
-      
+
       json_array_append(nodes,node);
       json_array_append(materials,material);
       json_array_append(elements, element);
     }
-    
+
     if (dampingRatio_IN == 0) {
       json_object_set(properties,"dampingRatio",json_real(dampingRatio*dampFactor));
     } else {
       json_object_set(properties,"dampingRatio",json_real(dampingRatio_IN*dampFactor));
     }
-    
+
     json_object_set(properties,"uniaxialMaterials",materials);
     json_object_set(root,"Properties",properties);
 
