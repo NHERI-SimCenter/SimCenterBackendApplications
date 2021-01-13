@@ -67,26 +67,32 @@ def write_RV(EVENT_input_path):
 
     for filename in file_sample_dict.keys():
 
-        data = np.atleast_1d(
-            np.genfromtxt(posixpath.join(data_dir, filename),
-                          delimiter=',', skip_header=1)
-            )
+        # get the header
+        header_data = np.genfromtxt(posixpath.join(data_dir, filename),
+                                    delimiter=',', names=True, max_rows=1)
+        header = header_data.dtype.names
 
-        #samples = data[file_sample_dict[filename][1]]
-        samples = data
+        data = np.genfromtxt(posixpath.join(data_dir, filename),
+                             delimiter=',', skip_header=1)
+
+        # get the number of columns and reshape the data
+        col_count = len(header)
+        if col_count > 1:
+            data = data.reshape((data.size // col_count, col_count))
+        else:
+            data = np.atleast_1d(data)
+
+        # choose the right samples
+        samples = data[file_sample_dict[filename][1]]
 
         if EDP_output is None:
-            if len(samples) > 1:
-                EDP_output = np.zeros((len(event_list), len(samples)))
+            if len(samples.shape) > 1:
+                EDP_output = np.zeros((len(event_list), samples.shape[1]))
             else:
                 EDP_output = np.zeros(len(event_list))
 
-            # get the header
-            header_data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', names=True)
-            header = header_data.dtype.names
-
         EDP_output[file_sample_dict[filename][0]] = samples
-        
+
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
 
