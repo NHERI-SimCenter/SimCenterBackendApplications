@@ -643,6 +643,11 @@
             "id": "runType",
             "type": "string",
             "description": "..."
+          },
+          {
+            "id": "detailedLog",
+            "type": "bool",
+            "description": "If true, the output from the response simulation is printed in the log file."
           }
         ]
       },
