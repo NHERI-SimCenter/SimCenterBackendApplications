@@ -348,7 +348,7 @@ OpenSeesPreprocessor::processElements(ofstream &s){
       }
 
       int matTag = json_integer_value(json_object_get(element,"uniaxial_material"));
-      s << "-mat " << matTag << " -dir 1 \n";
+      s << "-mat " << matTag << " -dir 1 -doRayleigh\n";
     }
     else if (strcmp(type,"shear_beam2d") == 0) {
       s << "element zeroLength " << tag << " " ;
@@ -375,7 +375,7 @@ OpenSeesPreprocessor::processElements(ofstream &s){
 	  int matTag1 = json_integer_value(json_array_get(matObject,0));	  
 	  int matTag2 = json_integer_value(json_array_get(matObject,1));	  
 	  int matTag3 = json_integer_value(json_array_get(matObject,2));	  
-	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 6\n";
+	  s << "-mat " << matTag1 << " " << matTag2 << " " << matTag3 << " -dir 1 2 6 -doRayleigh\n";
 	}
     }
   }
