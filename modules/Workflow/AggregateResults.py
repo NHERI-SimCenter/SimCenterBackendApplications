@@ -37,7 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 # Wael Elhaddad
-# 
+#
 
 import glob
 import numpy as np
@@ -117,8 +117,8 @@ def main(threads = 1):
 
                 for t_i in range(threads):
 
-                    print(t_i)
-                    
+                    #print(t_i)
+
                     if t_i*chunk < file_count-1:
 
                         df_list_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
@@ -130,7 +130,7 @@ def main(threads = 1):
 
                         df_i = delayed(read_csv_files)(files[t_i*chunk:(t_i+1)*chunk], headers[res_type])
                         df_i = df_i[0]
-                    
+
                         df_list.append(df_i)
 
                 df_all = delayed(pd.concat)(df_list, axis=0, sort=False)
@@ -167,7 +167,7 @@ def main(threads = 1):
     # aggregate the realizations files
     log_msg('Aggregating individual realizations...')
 
-    files = glob.glob('./results/{}/*/{}_*.hd5'.format('realizations','realizations'))
+    files = glob.glob('./results/{}/*/{}_*.hdf'.format('realizations','realizations'))
 
     log_msg('Number of files: {}'.format(len(files)))
 
@@ -188,12 +188,15 @@ def main(threads = 1):
 
             df_all.sort_index(axis=0, inplace=True)
 
-            df_all.astype(np.float16).to_hdf('realizations.hd5', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+            try:
+                df_all.astype(np.float16).to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+            except:
+                df_all.to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
 
             log_msg('\t\tResults saved for {key}.'.format(key=key))
 
     log_msg('End of script')
-        
+
 
 if __name__ == "__main__":
 
@@ -202,12 +205,12 @@ if __name__ == "__main__":
     workflowArgParser = argparse.ArgumentParser(
         "Aggregate the results from rWHALE.")
 
-    workflowArgParser.add_argument("-threads", "-t", 
-        type=int, default=48, 
+    workflowArgParser.add_argument("-threads", "-t",
+        type=int, default=48,
         help="Number of threads to use to aggregate the files.")
 
     #Parsing the command line arguments
-    line_args = workflowArgParser.parse_args() 
+    line_args = workflowArgParser.parse_args()
 
 
     main(line_args.threads)
