@@ -12,7 +12,6 @@ add_subdirectory(pointWindSpeed)
 add_subdirectory(LLNL_SW4)
 add_subdirectory(SimCenterEvent)
 add_subdirectory(ASCE7_WindSpeed)
-add_subdirectory(NonisolatedLowRiseTPU)
-add_subdirectory(HighRiseTPU)
+
 
 
