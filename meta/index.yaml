@@ -1,0 +1,83 @@
+
+#----------------------------------------------------------
+
+standardUQ: &standardUQ
+  ? bknd-000*
+
+createSAM: &createSAM
+  ? bknd-0019   # MDOF-LU
+  ? bknd-0020   # OpenSeesInput
+  ? bknd-0021   # OpenSeesPyInput
+  ? bknd-0022   # MDOF_BuildingModel
+
+createBIM: &createBIM
+  ? bknd-0001   # CSV_to_BIM
+
+createEVENT: &createEVENT
+  ? bknd-0005   # MultipleSimCenter
+
+createEDP: &createEDP 
+  ? bknd-0024   # standardEarthquakeEDP
+  ? bknd-0025   # standardEarthquakeEDP
+  ? bknd-0030   # standardWindEDP
+  ? bknd-0028   # UserDefinedEDP
+
+performSIMULATION: &performSIMULATION
+  ? bknd-0031   # OpenSees_R
+  ? bknd-0032   # OpenSeesPy
+  ? bknd-0033   # IMasEDP
+  ? bknd-0034   # OpenSees
+  ? bknd-0035   # ExtractPGA
+
+performDL: &performDL
+  ? bknd-0044   # pelicun
+
+performRegionalMapping: &performRegionalMapping 
+  ? bknd-0045
+#----------------------------------------------------------
+
+quoFEM:
+  include-item:
+    ? '%c:prepro*'    
+
+WE-UQ:
+  include-item:
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    <<: *standardUQ
+    <<: *performSIMULATION
+
+EE-UQ:
+  include-item:
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    ? bknd-0006   # MultiplePEER
+    <<: *standardUQ
+    <<: *performSIMULATION
+
+PBE:
+  include-item:
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    ? bknd-0006   # MultiplePEER
+    <<: *standardUQ
+    <<: *performSIMULATION
+    <<: *performDL
+
+R2DTool:
+  include-item:
+    <<: *createBIM
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    ? bknd-0006   # MultiplePEER
+    <<: *standardUQ
+    <<: *performDL
+    <<: *performSIMULATION
+    <<: *performRegionalMapping
+
+
+
