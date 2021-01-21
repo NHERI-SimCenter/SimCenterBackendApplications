@@ -1,7 +1,6 @@
 all:         
 	(cd DEDM_HRP; make all)
 	(cd multipleSimCenter; make all)
-	(cd LowRiseTPU; make all)
 	(cd windTunnelExperiment; make all)
 	(cd multiplePEER; make all)
 	(cd stochasticGroundMotion; make all)

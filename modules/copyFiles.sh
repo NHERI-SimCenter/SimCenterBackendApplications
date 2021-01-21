@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SOURCEDIR=$(pwd)
-DESTDIR=$SOURCEDIR/applications
+DESTDIR=$SOURCEDIR/../v2.3.0/applications
 
 copy() {
     local DIRECTORY=$1
@@ -20,12 +20,23 @@ copy() {
         else
             if [ -x $DIRECTORY/$FILE ]
             then
-		echo copying EXE $DIRECTORY/$FILE to $REMOTEDIRECTORY/$FILE
+		#echo copying EXE $DIRECTORY/$FILE to $REMOTEDIRECTORY/$FILE
+		echo copying EXE $DIRECTORY/$FILE
 		cp $DIRECTORY/$FILE $REMOTEDIRECTORY/$FILE
 	    else
 		if [ ${FILE: -3} == ".py" ]
 		then
-		    echo copying PY $DIRECTORY/$FILE to $REMOTEDIRECTORY/$FILE
+		    echo copying PY $DIRECTORY/$FILE 
+		    cp $DIRECTORY/$FILE $REMOTEDIRECTORY/$FILE
+		fi
+		if [ ${FILE: -3} == "hdf" ]
+		then
+		    echo copying HDF5 $DIRECTORY/$FILE 
+		    cp $DIRECTORY/$FILE $REMOTEDIRECTORY/$FILE
+		fi
+		if [ ${FILE: -3} == "son" ]
+		then
+		    echo copying JSON $DIRECTORY/$FILE 
 		    cp $DIRECTORY/$FILE $REMOTEDIRECTORY/$FILE
 		fi
             fi
@@ -33,8 +44,11 @@ copy() {
     done
 }
 
-mkdir $DESTDIR
+#rm -fr $DESTDIR
+#mkdir $DESTDIR
 cd $SOURCEDIR
 copy $SOURCEDIR $DESTDIR
 
+chmod -R 'a+rx' $DESTDIR
+echo FINISHED DEST_DIR $DESTDIR
 

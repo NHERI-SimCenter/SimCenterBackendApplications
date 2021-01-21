@@ -1,14 +1,26 @@
 RM=rm -f
-CPPFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include -std=c++11 -I ./../../common
-CXXFLAGS= -I /usr/local/jansson/include -I ./nanoflann/include
-LDFLAGS= -static-libgcc
-LDLIBS=/usr/local/jansson/lib/libjansson.a -lcurl
+CC=icc
+CXX=icc
+RM=rm -f
+CPPFLAGS= -I$(HOME)/jansson-2.11/include -I./nanoflann/include -I ./../../common -I ./../../common/Clara -I ./../.. -I /home1/00477/tg457427/SimCenterBackendApplications/modules/external/Clara/include -std=c++11 
+LDFLAGS= 
+LDLIBS=$(HOME)/jansson-2.11/build/lib/libjansson.a -lcurl
+LINKER           = $(CXX)
+
+MKL_LIB = $(MKLROOT)/lib/intel64
+IPP_LIB = $(IPPROOT)/lib/intel64
 
 STOCHASTIC_INC = -I ./include \
+	-I ../../.. \
+	-I ../.. \
 	-I ../../external \
 	-I ../../external/nlohmann_json \
+	-I /home1/00477/tg457427/smelt/include \
+	-I /home1/00477/tg457427/smelt/external \
 	-I ../../external/stochastic_loading/include $(CPPFLAGS)
 
-STOCHASTIC_LIBS = /opt/intel/mkl/lib/libmkl_intel_lp64.a /opt/intel/mkl/lib/libmkl_intel_thread.a /opt/intel/mkl/lib/libmkl_core.a /opt/intel/compilers_and_libraries/mac/lib/libiomp5.a /opt/intel/ipp/lib/libippcore.a /opt/intel/ipp/lib/libippvm.a /opt/intel/ipp/lib/libipps.a ../../../smelt/build/liblstoc.a
+STOCHASTIC_LIBS = -L${MKLROOT}/lib/intel64 -L${IPPLIB}/lib/intel64 \
+$(HOME)/smelt/build/libsmelt.a \
+-lmkl_rt -lippcore -lippvm -lipps 
 
 
