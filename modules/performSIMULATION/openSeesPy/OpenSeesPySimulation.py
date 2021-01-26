@@ -111,7 +111,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     ops.wipe()
 
     # build the model
-    build_model(model_params)
+    build_model(model_params=model_params)
 
     # load the event file
     with open(EVENT_input_path, 'r') as f:
@@ -200,7 +200,8 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # run the analysis
     EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
         GM_npts=EVENT_in['numSteps'],
-        TS_List = TS_list, EDP_specs = edp_specs)
+        TS_List = TS_list, EDP_specs = edp_specs,
+        model_params = model_params)
 
     #for edp_name, edp_data in edp_specs.items():
     #    print(edp_name, edp_data)
