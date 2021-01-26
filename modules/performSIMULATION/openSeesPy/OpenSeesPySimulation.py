@@ -45,6 +45,11 @@ import importlib
 
 from datetime import datetime
 
+# Constants for acc. of gravity
+g_in = 386.1  # inches per s2
+g_ft = 32.174 # ft per s2
+g_m = 9.80665 # m per s2
+
 def log_msg(msg):
 
     formatted_msg = '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
@@ -119,7 +124,13 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     TS_list = []
 
-    f_G = 386.089
+    l_unit = model_params['units'].get('length', 'in')
+    if l_unit == 'in':
+        f_G = g_in
+    elif l_unit == 'ft':
+        f_G = g_ft
+    else: #elif l_unit == 'm':
+        f_G = g_m
 
     # define the time series
     for evt_i, event in enumerate(event_list):
