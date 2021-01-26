@@ -1,5 +1,6 @@
 all:         
 	(cd standardEarthquakeEDP; make all)
+	(cd standardEarthquakeEDP_R; make all)
 	(cd standardWindEDP; make all)
 	(cd userEDP; make all)
 	(cd gmtEDP; make all)
@@ -7,6 +8,7 @@ all:
 clean: 
 	rm -f *~ *.o
 	(cd standardEarthquakeEDP; make clean)
+	(cd standardEarthquakeEDP_R; make clean)
 	(cd standardWindEDP; make clean)
 	(cd userEDP; make clean)
 	(cd gmtEDP; make clean)

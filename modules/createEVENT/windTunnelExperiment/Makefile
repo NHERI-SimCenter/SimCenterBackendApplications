@@ -6,8 +6,7 @@ all: WindTunnelExperiment
 
 WindTunnelExperiment: $(OBJS) WindTunnelExperiment.o
 	$(CXX) $(CPPFLAGS) -c ../../common/Units.cpp -o Units.o
-	$(CXX) $(LDFLAGS) -o WindTunnelExperiment WindTunnelExperiment.o Units.o $(OBJS) $(LDLIBS) -lpython
-
+	$(CXX) $(LDFLAGS) -o WindTunnelExperiment WindTunnelExperiment.o Units.o $(OBJS) $(LDLIBS)
 
 test: WindTunnelExperiment
 	time ./WindTunnelExperiment --filenameBIM testInput.json --filenameEVENT event.json --getRV

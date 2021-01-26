@@ -1,16 +1,16 @@
 include ../../Makefile.inc
 
-all: MultipleSimCenterEvents 
+all: MultipleSCEvents 
 
 MultipleSimCenterEvents.o : MultipleSimCenterEvents.cpp
 
-MultipleSimCenterEvents: MultipleSimCenterEvents.o
-	$(CXX) $(LDFLAGS) -o MultipleSimCenterEvents MultipleSimCenterEvents.o $(LDLIBS)
+MultipleSCEvents: MultipleSimCenterEvents.o
+	$(CXX) $(LDFLAGS) -o MultipleSCEvents MultipleSimCenterEvents.o $(LDLIBS)
 
 clean:
 	$(RM) *.o *~
 
 distclean: clean
-	$(RM) MultipleSimCenterEvents
+	$(RM) MultipleSCEvents
 
 
