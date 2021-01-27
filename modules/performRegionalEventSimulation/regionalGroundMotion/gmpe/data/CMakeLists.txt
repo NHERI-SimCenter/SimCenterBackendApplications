@@ -1,6 +1,0 @@
-simcenter_add_file(NAME loth_baker_correlation_2013_B1.csv)
-simcenter_add_file(NAME loth_baker_correlation_2013_B2.csv)
-simcenter_add_file(NAME loth_baker_correlation_2013_B3.csv)
-simcenter_add_file(NAME markhvida_ceferino_baker_correlation_2017_model_coeff.csv)
-simcenter_add_file(NAME markhvida_ceferino_baker_correlation_2017_pca_coeff.csv)
-simcenter_add_file(NAME markhvida_ceferino_baker_correlation_2017_var_scale.csv)
