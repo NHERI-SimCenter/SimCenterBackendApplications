@@ -1,4 +1,3 @@
-add_subdirectory(bin)
 add_subdirectory(database)
 add_subdirectory(gmpe)
 add_subdirectory(lib)
