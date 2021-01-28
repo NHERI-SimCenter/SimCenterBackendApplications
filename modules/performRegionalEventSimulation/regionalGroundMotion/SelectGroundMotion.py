@@ -46,7 +46,9 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from selenium import webdriver
+R2D = True
+if not R2D:
+    from selenium import webdriver
 import json
 import random
 import numpy as np
@@ -161,6 +163,7 @@ def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):
     except:
         return 0
 
+""" Uncommenting below if use this tool alone to download records from PEER
 
 def download_ground_motion(gm_id, user_name, user_password, output_dir):
 
@@ -278,3 +281,6 @@ def parse_record(gm_file, raw_dir, output_dir, input_format, output_format):
     shutil.rmtree(raw_dir)
     # return
     return output_dir
+
+Uncommenting above if use this tool alone to download records from PEER
+"""

@@ -41,7 +41,11 @@
 import os
 import sys
 import subprocess
-packages = ['JPype1', 'selenium', 'tqdm']
+R2D = True
+if R2D:
+    packages = ['JPype1', 'tqdm']
+else:
+    packages = ['JPype1', 'selenium', 'tqdm']
 for p in packages:
     subprocess.check_call([sys.executable, "-m", "pip", "install", p])
 import argparse, posixpath, json
@@ -171,7 +175,7 @@ if __name__ == '__main__':
             # Downloading records
             user_name = event_info.get('UserName', None)
             user_password = event_info.get('UserPassword', None)
-            if (user_name is not None) and (user_password is not None):
+            if (user_name is not None) and (user_password is not None) and (not RDT):
                 print('HazardSimulation: downloading ground motion records.')
                 raw_dir = download_ground_motion(gm_id, user_name,
                                                  user_password, output_dir)
