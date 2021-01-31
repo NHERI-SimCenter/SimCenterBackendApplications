@@ -202,6 +202,32 @@
 	]
       },
       {
+        "Name": "Regional Site Response",
+        "ExecutablePath": "applications/createEVENT/siteResponse/RegionalSiteResponse.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "pathEventData",
+            "type": "path",
+            "description": "Path to directory containing event data files in SimCenter format"
+          },
+          {
+            "id": "modelPath",
+            "type": "path",
+            "description": "Defines the location of the OpenSees tcl model files."
+          },
+          {
+            "id": "mainScript",
+            "type": "string",
+            "description": "Defines the name of the main model file."
+          },
+          {
+            "id": "ndm",
+            "type": "int",
+            "description": "Defines the number of degrees of freedom in the numerical model."
+          }
+        ]
+      },	
+      {
         "Name": "HazardBasedEvent",
         "ExecutablePath": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
         "ApplicationSpecificInputs":[]
