@@ -283,6 +283,20 @@
 		}]
       },
       {
+        "Name": "GeoClawOpenFOAM",
+        "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
+        "ApplicationSpecificInputs":[
+		{
+			"id":"OpenFOAMCase",
+			"type":"string",
+            "description": "Remote directory containing OpenFOAM case input"
+		},{
+			"id":"OpenFOAMSolver",
+			"type":"string",
+            "description": "OpenFOAM solver used"
+		}]
+      },
+      {
         "Name": "NNGM",
         "ExecutablePath": "applications/createEVENT/NNGM/NNGM.py",
         "ApplicationSpecificInputs": [

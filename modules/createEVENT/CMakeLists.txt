@@ -1,4 +1,5 @@
 add_subdirectory(CFDEvent)
+add_subdirectory(GeoClawOpenFOAM)
 add_subdirectory(DEDM_HRP)
 add_subdirectory(hazardBasedEvent)
 add_subdirectory(multiplePEER)
