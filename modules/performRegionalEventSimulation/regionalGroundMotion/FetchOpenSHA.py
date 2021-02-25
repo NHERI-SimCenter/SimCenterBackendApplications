@@ -491,6 +491,8 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
                     saResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnSA': saResult})
         if tag_PGA:
+            # for PGV current T = 0
+            cur_T = [0.00]
             pgaResult = {'Mean': [],
                         'TotalStdDev': []}
             if hasIEStats:
@@ -510,6 +512,8 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
                 pgaResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnPGA': pgaResult})
         if tag_PGV:
+            # for PGV current T = 0
+            cur_T = [0.00]
             pgvResult = {'Mean': [],
                         'TotalStdDev': []}
             if hasIEStats:
