@@ -219,7 +219,7 @@ def export_im(stations, T, im_data, eq_data, output_dir, filename):
 		#return 1
 
 
-def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info):
+def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_info):
 
     # Sa inter-event model
 	sa_inter_cm = correlation_info['SaInterEvent']
@@ -241,10 +241,18 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info):
 		# Spectral data (median and dispersions)
 		sa_data = cur_psa_raw['GroundMotions']
 	    # Combining inter- and intra-event residuals
-		ln_sa = [sa_data[i]['lnSA']['Mean'] for i in range(len(sa_data))]
-		inter_sigma_sa = [sa_data[i]['lnSA']['InterEvStdDev'] for i in range(len(sa_data))]
-		intra_sigma_sa = [sa_data[i]['lnSA']['IntraEvStdDev'] for i in range(len(sa_data))]
-		ln_psa = np.zeros((len(sa_data), len(periods), num_simu))
+		if 'SA' in im_info['Type']:
+            ln_sa = [sa_data[i]['lnSA']['Mean'] for i in range(len(sa_data))]
+            ln_sa = [sa_data[i]['lnSA']['Mean'] for i in range(len(sa_data))]
+            inter_sigma_sa = [sa_data[i]['lnSA']['InterEvStdDev'] for i in range(len(sa_data))]
+            intra_sigma_sa = [sa_data[i]['lnSA']['IntraEvStdDev'] for i in range(len(sa_data))]
+        elif 'PGA' in im_info['Type']:
+            ln_sa = [sa_data[i]['lnPGA']['Mean'] for i in range(len(sa_data))]
+            ln_sa = [sa_data[i]['lnPGA']['Mean'] for i in range(len(sa_data))]
+            inter_sigma_sa = [sa_data[i]['lnPGA']['InterEvStdDev'] for i in range(len(sa_data))]
+            intra_sigma_sa = [sa_data[i]['lnPGA']['IntraEvStdDev'] for i in range(len(sa_data))]
+        else:
+            print('ComputeInensityMeasure: currently supporing spatial correlated SA and PGA.')
 		for i in range(num_simu):
 			epsilon_m = np.array([epsilon[:, i] for j in range(len(sa_data))])
 			ln_psa[:, :, i] = ln_sa + inter_sigma_sa * epsilon_m + intra_sigma_sa * eta[:, :, i]
