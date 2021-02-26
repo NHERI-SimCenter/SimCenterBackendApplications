@@ -106,6 +106,7 @@ def simulate_storm(scenarios, event_info, model_type):
                     proc = proc_list[k]
                     proc.start()
                 for k in range(num_per_site):
+                    proc = proc_list[k]
                     proc.join()
                 # extract data
                 res = [x for x in res_mp]
