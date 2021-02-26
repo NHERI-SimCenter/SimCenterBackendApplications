@@ -138,7 +138,32 @@ def simulate_storm_cpp(site_info, scenario_info, event_info, model_type, dir_inf
         # lat_w file
         abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
         # terrain file
-        abs_path_terrain = os.path.abspath(os.path.join(input_dir, scenario_info['Terrain']))
+        if ('Terrain' in scenario_info.keys()):
+            abs_path_terrain = os.path.abspath(os.path.join(input_dir, scenario_info['Terrain']))
+        else:
+            # default terrain z0 = 0.01 everywhere for the defined domain
+            abs_path_terrain = os.path.abspath(os.path.join(input_dir, 'DefaultTerrain.geojson'))
+            dict_dt = {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                        [-90.0, -180.0],
+                        [90.0, -180.0],
+                        [90.0, 180.0],
+                        [-90.0, 180.0]]
+                    },
+                    "properties": {
+                        "z0": 0.01
+                    }
+                }
+                ]
+            }
+            with open(abs_path_terrain, 'w') as f:
+                json.dump(dict_dt, f, indent=2)
+                
         # configuring perturbation
         num_per_site = event_info['NumberPerSite']
         if (num_per_site == 1):
