@@ -60,8 +60,9 @@ def baker_jayaram_correlation_2008(T1, T2, flag_orth = False):
         The valid range of T1 and T2 is 0.01s ~ 10.0s
     """
 
-    Tmin = min([T1, T2])
-    Tmax = max([T1, T2])
+    # Compute Tmin and Tmax (lower bounds 0.01 for T < 0.01)
+    Tmin = max(min([T1, T2]), 0.01)
+    Tmax = max(max([T1, T2]), 0.01)
     # Cofficient C1
     C1 = 1.0 - np.cos(np.pi / 2.0 - 0.366 * np.log(Tmax / max([Tmin, 0.109])))
     # Cofficient C2
@@ -79,7 +80,7 @@ def baker_jayaram_correlation_2008(T1, T2, flag_orth = False):
     C4 = C1 + 0.5 * (np.sqrt(C3) - C3) * (1.0 + np.cos(np.pi * Tmin / 0.109))
     # rho for a singe component
     if Tmax <= 0.109:
-        rho = C2;
+        rho = C2
     elif Tmin > 0.109:
         rho = C1
     elif Tmax < 0.2:
@@ -242,7 +243,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
     f1 = interp2d(B1['Period (s)'], B1['Period (s)'], B1.iloc[:, 1:])
     f2 = interp2d(B2['Period (s)'], B2['Period (s)'], B2.iloc[:, 1:])
     f3 = interp2d(B3['Period (s)'], B3['Period (s)'], B3.iloc[:, 1:])
-    # Three coefficients
+    # Three coefficients (T1, T2 < 0.01 would be given the boundary value)
     b1 = f1(T1, T2)
     b2 = f2(T1, T2)
     b3 = f3(T1, T2)
@@ -384,12 +385,16 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
     interp_fun = interp1d(model_periods, model_coef, axis = 0)
     model_Tmax = 5.0
     simu_periods = [i for i in periods if i <= model_Tmax]
-    simu_coef = interp_fun(simu_periods)
+    if (len(simu_periods) == 1) and (simu_periods[0] == 0):
+        # for PGA only (using 0.01 sec as the approxiamate)
+        simu_coef = model_coef.iloc[0, :]
+    else:
+        simu_coef = interp_fun(simu_periods)
     # Simulating residuals
     num_periods = len(simu_periods)
     residuals = np.empty([num_stations, num_periods, num_simu])
     for i in range(num_simu):
-        residuals[:, :, i] = np.matmul(residuals_pca[:, i, :], simu_coef.T)
+        residuals[:, :, i] = np.reshape(np.matmul(residuals_pca[:, i, :], simu_coef.T), residuals[:, :, i].shape)
     # Appending residuals for periods greater than model_Tmax (fixing at 5.0)
     if max(periods) > model_Tmax:
         Tmax_coef = interp_fun(model_Tmax)
