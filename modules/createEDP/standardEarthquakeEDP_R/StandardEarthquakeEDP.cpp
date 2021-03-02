@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
   json_t *rootBIM = json_load_file(filenameBIM, 0, &error);
   json_t *giROOT = json_object_get(rootBIM,"GeneralInformation");
-  int numStory =  json_integer_value(json_object_get(giROOT,"NumberofStories"));
+  int numStory =  json_integer_value(json_object_get(giROOT,"NumberOfStories"));
   //printf("number of stories: %d\n", numStory);
 
   json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
