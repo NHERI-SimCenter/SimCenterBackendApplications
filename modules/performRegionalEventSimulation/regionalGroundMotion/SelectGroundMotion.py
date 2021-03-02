@@ -69,14 +69,20 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
         tmp = gmdb.keys()[37:147]
         T_db = [float(a.replace('T','').replace('S','')) for a in tmp]
         psa_db = gmdb.iloc[:, 37:147]
+        pga = gmdb.iloc[:, 34]
+        pgv = gmdb.iloc[:, 35]
+        pgd = gmdb.iloc[:, 36]
         # Scaling factors
         sf_range = np.linspace(sf_min, sf_max, 100)
         # Selected ground motion ID
         gm_id = []
         sf_data = []
         filename = []
-        # Processing gmdb spectra
-        psa_db_m = [np.interp(target_period, T_db, psa_db.iloc[k, :]) for k in range(num_gm)]
+        # Processing gmdb spectra (or PGA)
+        if (len(target_period) == 1) and (target_period[0] == 0.0):
+            psa_db_m = pga.values.tolist()
+        else:
+            psa_db_m = [np.interp(target_period, T_db, psa_db.iloc[k, :]) for k in range(num_gm)]
         tmp_scen = 0
         # Looping over all scenarios
         for cur_target in target_ln_sa:
@@ -94,8 +100,10 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
                     tmp_target = [cur_target[j, :, i] for k in range(num_gm)]
                     min_err = 1000000.0
                     for s in sf_range:
-                        err = np.linalg.norm(np.exp(tmp_target) - np.exp(np.log(s) + np.log(psa_db_m)),
-                                             axis = 1)
+                        if (num_periods == 1) and (target_period[0] == 0.0):
+                            err = np.abs(np.exp([x[0] for x in tmp_target]) - np.exp(np.log(s) + np.log(psa_db_m)))
+                        else:
+                            err = np.linalg.norm(np.exp(tmp_target) - np.exp(np.log(s) + np.log(psa_db_m)), axis = 1)
                         if np.min(err) < min_err:
                             min_err = np.min(err)
                             tmp_tag = err.argmin()
