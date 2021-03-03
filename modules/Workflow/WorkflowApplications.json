@@ -390,7 +390,18 @@
       {
         "Name": "OpenSeesInput",
         "ExecutablePath": "applications/createSAM/openSeesInput/OpenSeesInput",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "fileName",
+            "type": "string",
+            "description": "Defines the name of the main OpenSees model file."
+          },
+          {
+            "id": "filePath",
+            "type": "string",
+            "description": "Defines the location of the main OpenSees model file."
+          }
+        ]
       },
       {
         "Name": "OpenSeesPyInput",
