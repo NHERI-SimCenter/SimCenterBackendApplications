@@ -97,13 +97,13 @@ if __name__ == '__main__':
     # Computing intensity measures
     print('HurricaneSimulation: computing intensity measures.')
     if scenario_info['Type'] == 'Wind':
-        if scenario_info['Generator'] == 'Simulation':
+        if 'Simulation' in scenario_info['Generator']:
             if scenario_info['ModelType'] == 'LinearAnalyticalPy':
                 # simulating storm
                 storm_simu = simulate_storm(scenarios, event_info, 'LinearAnalytical')
             elif scenario_info['ModelType'] == 'LinearAnalytical':
                 # simulation storm (c++ binary)
-                storm_simu = simulate_storm_cpp(site_info, scenario_info, event_info, 'LinearAnalytical', dir_info)
+                storm_simu = simulate_storm_cpp(site_info, scenario_info, scenarios, event_info, 'LinearAnalytical', dir_info)
             else:
                 print('HurricaneSimulation: currently supporting LinearAnalytical model type.')
             # converting peak wind speed

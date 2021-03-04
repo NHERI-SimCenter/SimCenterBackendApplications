@@ -204,7 +204,7 @@ int WindFieldModel::ConfigSimu(std::string config_file, std::string stn_file,
         value = 0;
         for (int jj = 0; jj < this->Lat_track.size() - 1; jj++)
         {
-            if ((this->Lat_w(ii) >= this->Lat_track(jj)) && (this->Lat_w(ii) < this->Lat_track(jj + 1)))
+            if (((this->Lat_w(ii) >= this->Lat_track(jj)) && (this->Lat_w(ii) < this->Lat_track(jj + 1))) || ((this->Lat_w(ii) <= this->Lat_track(jj)) && (this->Lat_w(ii) > this->Lat_track(jj + 1))))
             {
                 value = jj;
                 break;
