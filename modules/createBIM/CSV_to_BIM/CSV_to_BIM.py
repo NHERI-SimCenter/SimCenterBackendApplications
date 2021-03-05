@@ -24,13 +24,6 @@ def create_building_files(output_file, building_source_file, bldg_filter):
                 bldgs_requested.append(int(bldgs))
         bldgs_requested = np.array(bldgs_requested)
 
-    # check if the min and max values are provided in the right order
-    # if (min_id is not None) and (max_id is not None):
-    #     if min_id > max_id:
-    #         tmp = min_id
-    #         min_id = max_id
-    #         max_id = tmp
-
     # load the CSV file with the building information
     bldgs_df = pd.read_csv(building_source_file, header=0, index_col=0)
 
@@ -42,19 +35,6 @@ def create_building_files(output_file, building_source_file, bldg_filter):
         selected_bldgs = bldgs_df.loc[bldgs_to_run]
     else:
         selected_bldgs = bldgs_df
-
-    # # get the min and max ids in the input data
-    # bldg_ids_min = np.min(bldgs_df.index.values)
-    # bldg_ids_max = np.max(bldgs_df.index.values)
-    #
-    # if min_id is None: min_id = bldg_ids_min
-    # if max_id is None: max_id = bldg_ids_max
-    #
-    # min_id = np.max([bldg_ids_min, min_id])
-    # max_id = np.min([bldg_ids_max, max_id])
-    #
-    # # select the slice defined by the min max constraints
-    # selected_bldgs = bldgs_df.loc[min_id:max_id, :]
 
     # identify the labels
     labels = selected_bldgs.columns.values
@@ -73,7 +53,7 @@ def create_building_files(output_file, building_source_file, bldg_filter):
                     'latitude': bldg["Latitude"],
                     'longitude': bldg["Longitude"]
                 },
-                units           = units
+                units = units
             )
         }
 
@@ -94,10 +74,23 @@ def create_building_files(output_file, building_source_file, bldg_filter):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--buildingFile')
-    parser.add_argument('--buildingSourceFile')
-    parser.add_argument('--filter', default=None)
-    parser.add_argument('--getRV', nargs='?', const=True, default=False)
+
+    parser.add_argument('--buildingFile',
+        help = "Path to the file that will contain a list of building ids and "
+               "corresponding BIM filenames")
+    parser.add_argument('--buildingSourceFile',
+        help = "Path to the CSV file with the building inventory")
+    parser.add_argument('--filter',
+        help = "Filter applied to select a subset of buildings from the "
+               "inventory",
+        default=None)
+    parser.add_argument('--getRV',
+        help = "Identifies the preparational stage of the workflow. This app "
+               "is only used in that stage, so it does not do anything if "
+               "called without this flag.",
+        default=False,
+        nargs='?', const=True)
+
     args = parser.parse_args()
 
     if args.getRV:
