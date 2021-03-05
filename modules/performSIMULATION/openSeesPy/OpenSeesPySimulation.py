@@ -43,6 +43,16 @@ import os, sys
 import argparse, json
 import importlib
 
+from pathlib import Path
+
+# import the common constants and methods
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
+
+sys.path.insert(0, str(main_dir / 'common'))
+
+from simcenter_common import *
+
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
     'max_rel_disp' : 'PFD',
