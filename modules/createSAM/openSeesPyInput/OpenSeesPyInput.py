@@ -74,7 +74,8 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
         'NodeMapping': node_map,
         'numStory': stories,
         'ndm': ndm,
-        'randomVar': []  #TODO: improve this if we want random vars in the structure
+        # TODO: improve this if we want random vars in the structure
+        'randomVar': []
     }
 
     with open(SAM_file, 'w') as f:

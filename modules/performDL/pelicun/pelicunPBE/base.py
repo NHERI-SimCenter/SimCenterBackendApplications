@@ -177,8 +177,8 @@ def str2bool(v):
 sec = 1.
 
 minute = 60. * sec
-h = 60. * minute
-day = 24. * h
+hour = 60. * minute
+day = 24. * hour
 
 sec2 = sec**2.
 
@@ -214,7 +214,7 @@ ft3 = ft**3.
 # speed / velocity
 cmps = cm / sec
 mps = m / sec
-mph = mile / h
+mph = mile / hour
 
 inchps = inch / sec
 ftps = ft / sec
