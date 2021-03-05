@@ -1,1 +1,1 @@
-simcenter_add_module()
+simcenter_add_python_script(SCRIPT simcenter_common.py)
