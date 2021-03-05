@@ -101,21 +101,6 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         with open(bldg_file, 'r') as f:
             bldg_data = json.load(f)
 
-        # temporary - check the acceleration unit for time history analysis
-        # skip this one - this app shall only select the IM/time history; the
-        # conversion of units is the responsibility of the apps down the road
-        # acc_unit = bldg_data['GeneralInformation']['units'].get('acceleration', None)
-        # length_unit = bldg_data['GeneralInformation']['units'].get('length', None)
-        # if acc_unit is not None:
-        #     if acc_unit == 'inps2':
-        #         acc_unit = 'inchps2'
-        #     if length_unit == 'in':
-        #         length_unit = 'inch'
-        #
-        #     acc_scale = globals()[acc_unit] / globals()[length_unit]
-        # else:
-        #     acc_scale = 1.0
-
         if filter_label != '':
             # soil type of building
             bldg_label = bldg_data['GeneralInformation'][filter_label]

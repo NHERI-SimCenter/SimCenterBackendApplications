@@ -50,7 +50,9 @@ def write_RV(EVENT_input_path):
         EVENT_in = json.load(f)
     event_list = EVENT_in['randomVariables'][0]['elements']
 
-    data_dir = EVENT_in['Events'][0]['data_dir']
+    evt = EVENT_in['Events'][0]
+    data_dir = evt['data_dir']
+    f_scale = evt['unitScaleFactor']
 
     file_sample_dict = {}
 
@@ -95,6 +97,8 @@ def write_RV(EVENT_input_path):
 
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
+
+    EDP_output = EDP_output * f_scale
 
     index = np.reshape(np.arange(EDP_output.shape[0]), (EDP_output.shape[0],1))
 

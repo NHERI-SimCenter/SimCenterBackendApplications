@@ -43,18 +43,15 @@ import os, sys
 import argparse, json
 import importlib
 
-from datetime import datetime
+from pathlib import Path
 
-# Constants for acc. of gravity
-g_in = 386.1  # inches per s2
-g_ft = 32.174 # ft per s2
-g_m = 9.80665 # m per s2
+# import the common constants and methods
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
 
-def log_msg(msg):
+sys.path.insert(0, str(main_dir / 'common'))
 
-    formatted_msg = '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
-
-    print(formatted_msg)
+from simcenter_common import *
 
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
@@ -75,15 +72,13 @@ def write_RV():
 def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                    EDP_input_path):
 
-    log_msg('Startring simulation script...')
-
+    # these imports are here to save time when the app is called without
+    # the -getRV flag
+    import sys
     import numpy as np
+    import openseespy.opensees as ops
 
-    from sys import platform
-    if platform == "darwin": # MACOS
-        import openseespymac.opensees as ops
-    else:
-        import openseespy.opensees as ops
+    log_msg('Startring simulation script...')
 
     sys.path.insert(0, os.getcwd())
 
@@ -99,6 +94,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     sys.path.insert(0, SAM_in['modelPath'])
 
     model_script_path = SAM_in['mainScript']
+
     dof_map = [int(dof) for dof in SAM_in['dofMap'].split(',')]
 
     node_map = dict([(int(entry['floor']), int(entry['node']))
@@ -119,32 +115,22 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     event_list = EVENT_in['timeSeries']
     pattern_list = EVENT_in['pattern']
-    #TODO: use dictionary
+    # TODO: use dictionary
     pattern_ts_link = [p['timeSeries'] for p in pattern_list]
 
     TS_list = []
 
-    l_unit = model_params['units'].get('length', 'in')
-    if l_unit == 'in':
-        f_G = g_in
-    elif l_unit == 'ft':
-        f_G = g_ft
-    else: #elif l_unit == 'm':
-        f_G = g_m
-
     # define the time series
     for evt_i, event in enumerate(event_list):
 
-        ops.timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', f_G,
+        ops.timeSeries('Path', evt_i+2, '-dt', event['dT'], '-factor', 1.0,
                    '-values', *event['data'], '-prependZero')
 
         pat = pattern_list[pattern_ts_link.index(event['name'])]
 
         ops.pattern('UniformExcitation', evt_i+2, dof_map[pat['dof']-1], '-accel', evt_i+2)
 
-        TS_list.append(list(np.array([0.,] + event['data'])*f_G))
-
-    # TODO: recorders
+        TS_list.append(list(np.array([0.,] + event['data'])))
 
     # load the analysis script
     analysis_script = importlib.__import__(
@@ -154,6 +140,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     recorder_nodes = SAM_in['recorderNodes']
 
     # create the EDP specification
+
     # load the EDP file
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)
@@ -194,19 +181,15 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
                     response['id']: dict([(dof, node_list)
                                           for dof in response['dofs']])})
 
-    for edp_name, edp_data in edp_specs.items():
-        print(edp_name, edp_data)
+    #for edp_name, edp_data in edp_specs.items():
+    #    print(edp_name, edp_data)
 
     # run the analysis
+    # TODO: default analysis script
     EDP_res = run_analysis(GM_dt = EVENT_in['dT'],
         GM_npts=EVENT_in['numSteps'],
         TS_List = TS_list, EDP_specs = edp_specs,
         model_params = model_params)
-
-    #for edp_name, edp_data in edp_specs.items():
-    #    print(edp_name, edp_data)
-
-    # TODO: default analysis script
 
     # save the EDP results
 
@@ -217,7 +200,6 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
         #print(edp)
 
         response['scalar_data'] = edp # [val for dof, val in edp.items()]
-
         #print(response)
 
     with open(EDP_input_path, 'w') as f:
@@ -228,12 +210,19 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM', default=None)
+
+    parser.add_argument('--filenameBIM',
+        default=None)
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEVENT')
-    parser.add_argument('--filenameEDP', default=None)
-    parser.add_argument('--filenameSIM', default=None)
-    parser.add_argument('--getRV', nargs='?', const=True, default=False)
+    parser.add_argument('--filenameEDP',
+        default=None)
+    parser.add_argument('--filenameSIM',
+        default=None)
+    parser.add_argument('--getRV',
+        default=False,
+        nargs='?', const=True)
+
     args = parser.parse_args()
 
     if args.getRV:

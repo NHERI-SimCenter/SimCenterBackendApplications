@@ -3,7 +3,7 @@
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
-# This file is part of pelicun.
+# This file is part of the SimCenter Backend Applications
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,50 +32,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with
-# pelicun. If not, see <http://www.opensource.org/licenses/>.
+# this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Adam Zsarnóczay
+#
 
-"""
-This module defines constants, basic classes and methods for pelicun.
-
-"""
-
-import os, sys, time
 import warnings
 from datetime import datetime
-from time import strftime
-from copy import deepcopy
-
-# import libraries for other modules
-import numpy as np
-import pandas as pd
-
-idx = pd.IndexSlice
-
-# set printing options
-import pprint
-pp = pprint.PrettyPrinter(indent=4, width=300)
-
-pd.options.display.max_rows = 20
-pd.options.display.max_columns = None
-pd.options.display.expand_frame_repr = True
-pd.options.display.width = 300
-
-log_file = None
-
-log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
-
-# get the absolute path of the pelicun directory
-pelicun_path = os.path.dirname(os.path.abspath(__file__))
-
-# print a matrix in a nice way using a DataFrame
-def show_matrix(data, describe=False):
-    if describe:
-        pp.pprint(pd.DataFrame(data).describe(percentiles=[0.01,0.1,0.5,0.9,0.99]))
-    else:
-        pp.pprint(pd.DataFrame(data))
 
 # Monkeypatch warnings to get prettier messages
 def _warning(message, category, filename, lineno, file=None, line=None):
@@ -90,11 +54,6 @@ warnings.showwarning = _warning
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
 
-def set_log_file(filepath):
-    globals()['log_file'] = filepath
-    with open(filepath, 'w') as f:
-        f.write('pelicun\n')
-
 def log_msg(msg='', prepend_timestamp=True):
     """
     Print a message to the screen with the current time as prefix
@@ -108,77 +67,25 @@ def log_msg(msg='', prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
+        formatted_msg = '{} {}'.format(datetime.utcnow().strftime(
+            '%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
     else:
         formatted_msg = msg
 
-    #print(formatted_msg)
+    print(formatted_msg)
 
-    if globals()['log_file'] is not None:
+    if globals().get('log_file', None) is not None:
         with open(globals()['log_file'], 'a') as f:
             f.write('\n'+formatted_msg)
 
-def describe(df):
-
-    if isinstance(df, (pd.Series, pd.DataFrame)):
-        vals = df.values
-        if isinstance(df, pd.DataFrame):
-            cols = df.columns
-        elif df.name is not None:
-            cols = df.name
-        else:
-            cols = 0
-    else:
-        vals = df
-        cols = np.arange(vals.shape[1]) if vals.ndim > 1 else 0
-
-    if vals.ndim == 1:
-        df_10, df_50, df_90 = np.nanpercentile(vals, [10, 50, 90])
-        desc = pd.Series({
-            'count': np.sum(~np.isnan(vals)),
-            'mean': np.nanmean(vals),
-            'std': np.nanstd(vals),
-            'min': np.nanmin(vals),
-            '10%': df_10,
-            '50%': df_50,
-            '90%': df_90,
-            'max': np.nanmax(vals),
-        }, name=cols)
-    else:
-        df_10, df_50, df_90 = np.nanpercentile(vals, [10, 50, 90], axis=0)
-        desc = pd.DataFrame({
-            'count': np.sum(~np.isnan(vals), axis=0),
-            'mean': np.nanmean(vals, axis=0),
-            'std': np.nanstd(vals, axis=0),
-            'min': np.nanmin(vals, axis=0),
-            '10%': df_10,
-            '50%': df_50,
-            '90%': df_90,
-            'max': np.nanmax(vals, axis=0),
-        }, index=cols).T
-
-    return desc
-
-def str2bool(v):
-    # courtesy of Maxim @ stackoverflow
-
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
-# Constants for unit conversion
+# Constants for unit conversion to standard units
 
 # time
 sec = 1.
 
 minute = 60. * sec
-hour = 60. * minute
-day = 24. * hour
+h = 60. * minute
+day = 24. * h
 
 sec2 = sec**2.
 
@@ -214,7 +121,7 @@ ft3 = ft**3.
 # speed / velocity
 cmps = cm / sec
 mps = m / sec
-mph = mile / hour
+mph = mile / h
 
 inchps = inch / sec
 ftps = ft / sec
@@ -253,26 +160,3 @@ GPa = 1e9 * Pa
 psi = lbf / inch2
 ksi = 1e3 * psi
 Mpsi = 1e6 * psi
-
-# misc
-A = 1.
-
-V = 1.
-kV = 1000. * V
-
-ea = 1.
-
-rad = 1.
-
-C = 1.
-
-# FEMA P58 specific
-#TODO: work around these and make them available only in the parser methods
-EA = ea
-SF = ft2
-LF = ft
-TN = ton
-AP = A
-CF = ft3 / minute
-KV = kV * A
-
