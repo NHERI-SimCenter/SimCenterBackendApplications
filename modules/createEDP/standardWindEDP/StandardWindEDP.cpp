@@ -180,6 +180,17 @@ int main(int argc, char **argv)
 	    json_object_set(responseA,"scalar_data",dataArrayA);
 	    json_array_append(responsesArray,responseA);
 	    numEDP += numDOF;
+
+	    // floor abs acceleration
+	    json_t *responseRMS = json_object();
+	    json_object_set(responseRMS,"type",json_string("rms_acceleration"));      
+	    json_object_set(responseRMS,"cline",json_string(cline));
+	    json_object_set(responseRMS,"floor",json_string(floor));
+	    json_object_set(responseRMS,"dofs",theDOFs);
+	    json_t *dataArrayRMS = json_array(); 
+	    json_object_set(responseRMS,"scalar_data",dataArrayRMS);
+	    json_array_append(responsesArray,responseRMS);
+	    numEDP += numDOF;
 	    
 	    // floor relative disp
 	    json_t *responseD = json_object();

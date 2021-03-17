@@ -1,0 +1,189 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema#",
+    "type": "object",
+    "description": "Inputs for the UQ panel.",
+    "title": "UQ panel",
+    "properties": {
+        "uqEngine": {
+            "type": "string",
+            "title": "UQ Engine",
+            "description": "UQ engine.",
+            "default": "Dakota"
+        },
+        "uqType": {
+            "type": "string",
+            "title":"Dakota Method Category"
+        },
+        "samplingMethodData": {
+            "type": "object",
+            "title": "Forward Propagation",
+            "properties": {
+                "method":  {"type": "string" , "title": "Method"},
+                "samples": {"type": "integer", "title": "Samples", "default": 100},
+                "seed":    {"type": "integer", "title": "Seed",    "default": 175},
+
+                "dataMethod": {"type": "string", "title":"Method for Data Generation", 
+                    "enum": ["Quadrature", "Smolyak Sparse_Grid", "Stroud Cubature", "Orthogonal Least_Interpolation"]},
+                "level": {"type": "integer", "default": 2},
+                
+                "samplingMethod":  {"type": "string", "title":"Data Generation Method",
+                    "enum": ["Monte Carlo", "LHS"]},
+                "samplingSamples": {"type": "integer", "default": 100},
+                "samplingSeed":    {"type": "integer", "default": 175},
+                "surrogateSurfaceMethod": {"type": "string", "title":"Surface Fitting Method", 
+                    "enum": ["mars","gaussian_process surfpack","moving_least_squares","neural_network", "polynomial linear", "polynomial quadratic", "polynomial cubic"]},
+                
+                "trainingMethod":  {"type": "string", "title":"Data Generation Method",
+                    "enum": ["Monte Carlo", "LHS"]},
+                "trainingSamples": {"type": "integer", "default": 100},
+                "trainingSeed":    {"type": "integer", "default": 175},
+
+                "ismethod": {"type": "string", 
+                    "enum":["adapt_import", "import", "mm_adapt_import"]}
+            },
+            "oneOf": [
+                {
+                "properties": {"method": {"const": "Gaussian Process Regression"}},
+                "required": [
+                    "samplingMethod",
+                    "samplingSamples",
+                    "samplingSeed",
+                    "surrogateSurfaceMethod",
+                    "trainingMethod",
+                    "trainingSamples",
+                    "trainingSeed"]},
+                {
+                "properties": {"method": {"const": "LHS"}},
+                "required": [
+                    "samples",
+                    "seed"]
+                },
+                {
+                "properties": {"method": {"const": "Monte Carlo"}},
+                "required": [
+                    "samples",
+                    "seed"]
+                },
+                {
+                "properties": {"method": {"const": "Polynomial Chaos Expansion"}},
+                "required": [
+                    "dataMethod",
+                    "level",
+                    "samplingMethod",
+                    "samplingSeed"]
+                },
+                {
+                "properties": {"method": {"const": "Importance Sampling"}},
+                "required": [
+                    "samples",
+                    "ismethod",
+                    "seed"]
+                }
+            ]
+        },
+        "reliabilityMethodData": {
+            "type": "object",
+            "title": "Reliability Analysis",
+            "properties":{
+                "integrationMethod": {"type": "string", "title": "Integration Method",
+                                      "enum": ["First Order", "Second Order"]},
+                "levelType":         {"type": "string", "title": "Level Type",
+                                      "enum": ["Response Levels", "Probability Levels"]},
+                "localMethod":       {"type": "string", "title": "Local Method"},
+                "method":            {"type": "string", "title": "Reliability Method"},
+                "mpp_Method":        {"type": "string", "title": "MPP Search Method",
+                                      "enum": ["no_approx","u_taylor_mpp", "x_taylor_mpp",
+                                               "u_taylor_mean", "x_taylor_mean"]},
+                "gpApproximation":   {"type": "string", 
+                                      "enum": ["u-space", "x-space"]},
+                "probabilityLevel":  {"type": "array", "title": "Probability Levels", "default": [0.02, 0.20, 0.40, 0.60, 0.80, 0.99]},
+                "responseLevel":     {"type": "array", "title": "Response Levels",    "default": [0.02, 0.20, 0.40, 0.60, 0.80, 0.99]}
+            },
+            "oneOf": [
+                { "properties": {
+                    "method":      {"const":"Global Reliability"}},
+                "required": [
+                    "responseLevel",
+                    "gpApproximation"
+                ]},
+                { "properties": {
+                    "method":      {"const": "Local Reliability"},
+                    "localMethod": {"const": "Mean Value"},
+                    "levelType":   {"const": "Probability Levels"}},
+                "required": [
+                    "probabilityLevel"
+                ]},
+                { "properties": {
+                    "method":      {"const": "Local Reliability"},
+                    "localMethod": {"const": "Mean Value"},
+                    "levelType":   {"const": "Response Levels"}},
+                "required": [
+                    "responseLevel"
+                ]},
+                { "properties": {
+                    "method":      {"const": "Local Reliability"},
+                    "localMethod": {"const": "Most Probable Point"},
+                    "levelType":   {"const": "Response Levels"}},
+                "required": [
+                    "integrationMethod",
+                    "responseLevel",
+                    "mpp_Method"]},
+                { "properties": {
+                    "method":      {"const": "Local Reliability"},
+                    "localMethod": {"const": "Most Probable Point"},
+                    "levelType":   {"const": "Probability Levels"}},
+                "required": [
+                    "integrationMethod",
+                    "probabilityLevel",
+                    "mpp_Method"]}
+            ]
+        },
+        "bayesianCalibrationMethodData": {
+            "type": "object",
+            "title": "Inverse Problem",
+            "properties": {
+                "burnInSamples": {"type": "integer", "title": "No. Burn in Samples", "default": 100},
+                "chainSamples":  {"type": "integer", "title": "No. Chain Samples",   "default": 100},
+                "chains":        {"type": "integer", "title": "No. Chains",          "default": 100},
+                "jumpStep":      {"type": "integer", "title": "Jump Step",           "default": 100},
+                "method":        {"type": "string", "title": "Method",
+                                  "enum": ["DREAM"]},
+                "seed":          {"type": "integer", "title": "Seed", "default": 175}
+            }
+        },
+        "calibrationMethodData": {
+            "type": "object",
+            "description": "Input data for **Parameter Estimation**.",
+            "properties": {
+                "convergenceTol": {"type": "number", "title": "Convergence Tol", "description": "Convergence tolerance.", "default": 1e-6},
+                "factors":        {"type": "number", "title": "Scaling Factors",     "default": 1.0},
+                "maxIterations":  {"type": "integer", "title": "Max No. Iterations", "default": 100},
+                "method":         {"type": "string", "title": "Method",
+                                   "enum": ["NL2SOL", "OPT++GaussNewton"]}
+            }
+        }
+    },
+    "required": ["uqEngine","uqType"],
+    "oneOf": [
+        {"properties":
+            {"uqEngine": {"const": "Dakota"},
+             "uqType":   {"const": "Forward Propagation"}},
+         "required": ["samplingMethodData"]},
+        {"properties":
+            {"uqEngine": {"const": "Dakota"},
+             "uqType":   {"const": "Sensitivity Analysis"}},
+         "required": ["samplingMethodData"]}, 
+        {"properties":
+            {"uqEngine": {"const": "Dakota"},
+             "uqType":   {"const": "Reliability Analysis"}},
+         "required": ["reliabilityMethodData"]},
+        {"properties":
+            {"uqEngine": {"const": "Dakota"},
+             "uqType":   {"const": "Inverse Problem"}},
+         "required": ["bayesianCalibrationMethodData"]},
+        {"properties":
+            {"uqEngine": {"const": "Dakota"},
+             "uqType":   {"const": "Parameter Estimation"}},
+         "required": ["calibrationMethodData"]}
+    ]
+}

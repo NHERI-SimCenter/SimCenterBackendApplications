@@ -14,11 +14,11 @@
 int main(int argc, const char **argv) {
 
   const char *bimName = argv[1];
-  const char *evtName = argv[2];
-  const char *samName = argv[3];
+  const char *samName = argv[2];
+  const char *evtName = argv[3];
   const char *edpName = argv[4];
   const char *simName = argv[5];
-  const char *driver = argv[6];
+  const char *driver  = argv[6];
   const char *runType = argv[7];
   const char *osType = argv[8];
 

@@ -10,6 +10,18 @@ import stat
 import argparse
 from preprocessJSON import preProcessDakota
 
+def str2bool(v):
+    # courtesy of Maxim @ stackoverflow
+
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def main(args):
 
     #First we need to set the path and environment
@@ -35,9 +47,9 @@ def main(args):
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')
     parser.add_argument('--filenameSIM')
-    
+
     parser.add_argument('--driverFile')
-    
+
     parser.add_argument('--method', default="LHS")
     parser.add_argument('--samples', type=int, default=None)
     parser.add_argument('--seed', type=int, default=randrange(1,1000))
@@ -46,12 +58,13 @@ def main(args):
     parser.add_argument('--ismethod', default=None)
     parser.add_argument('--dataMethod', default=None)
     parser.add_argument('--dataMethod2', default=None)
-    
+
     parser.add_argument('--type')
     parser.add_argument('--concurrency', type=int, default=None)
-    parser.add_argument('--keepSamples', default="True")
+    parser.add_argument('--keepSamples', default=True, type=str2bool)
+    parser.add_argument('--detailedLog', default=False, type=str2bool)
     parser.add_argument('--runType')
-    
+
     args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
@@ -64,7 +77,7 @@ def main(args):
 
     uqData = dict(
         method = args.method,
-        
+
         samples = args.samples,
         samples2 = args.samples2,
         seed = args.seed,
@@ -74,7 +87,7 @@ def main(args):
         dataMethod2 = args.dataMethod2,
 
         concurrency = args.concurrency,
-        keepSamples = args.keepSamples not in ["False", 'False', "false", 'false', False]
+        keepSamples = args.keepSamples
     )
 
     if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the BIM file
@@ -102,7 +115,7 @@ def main(args):
     st = os.stat(workflowDriverName)
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
     #shutil.copy(workflowDriverName, "templatedir")
-    shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
+    #shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
     shutil.move(bimName, "bim.j")
     shutil.move(evtName, "evt.j")
     if os.path.isfile(samName): shutil.move(samName, "sam.j")
@@ -125,9 +138,13 @@ def main(args):
         except subprocess.CalledProcessError as e:
             result = e.output
             returncode = e.returncode
-        
-        #result = result.decode(sys.stdout.encoding)
-        #print(result, returncode)
+
+        if args.detailedLog: # print detailed output if detailed log is requested
+
+            if platform.system() == 'Windows':
+                result = result.decode(sys.stdout.encoding)
+
+            print(result, returncode)
 
 if __name__ == '__main__':
 

@@ -3,7 +3,7 @@ import os
 
 class simCenterBackendApps(ConanFile):
     name = "SimCenterBackendApplications"
-    version = "1.1.0"
+    version = "1.2.2"
     description = "Backend applications for SimCenter software"
     license = "BSD 3-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
@@ -13,13 +13,14 @@ class simCenterBackendApps(ConanFile):
     default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True}    
     generators = "cmake"
     build_policy = "missing"
-    requires = "jansson/2.11@bincrafters/stable", \
+    requires = "jansson/2.13.1", \
+               "zlib/1.2.11", \
+               "libcurl/7.72.0", \
                "smelt/1.2.0@simcenter/stable", \
-               "libcurl/7.64.1@bincrafters/stable", \
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
-               "mkl-static/2019.4@simcenter/testing", \
+               "mkl-static/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.0@simcenter/stable"
 
@@ -35,16 +36,16 @@ class simCenterBackendApps(ConanFile):
         "revision": "auto"
     }
 
-    
-    # def source(self):
-    #    git = tools.Git(folder=self._source_subfolder)
-    #    git.clone("https://github.com/shellshocked2003/SimCenterBackendApplications", "stable/1.1.0")
 
     def configure(self):
         self.options.shared = False
-       
+
+        if self.settings.os == "Windows":
+            self.options["libcurl"].with_winssl = True
+            self.options["libcurl"].with_openssl = False
+
     def configure_cmake(self):
-        cmake = CMake(self, msbuild_verbosity='detailed')
+        cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)
         return cmake
     

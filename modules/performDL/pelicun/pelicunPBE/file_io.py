@@ -37,6 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 # Pouria Kourehpaz
+# Kuanshi Zhong
 
 """
 This module has classes and methods that handle file input and output.
@@ -50,6 +51,7 @@ This module has classes and methods that handle file input and output.
     read_population_distribution
     read_component_DL_data
     write_SimCenter_DL_output
+    write_SimCenter_EDP_output
     write_SimCenter_DM_output
     write_SimCenter_DV_output
 
@@ -60,6 +62,9 @@ from pathlib import Path
 from .db import convert_Series_to_dict
 
 import json, posixpath
+
+from tables.exceptions import HDF5ExtError
+from time import sleep
 
 
 import warnings
@@ -169,7 +174,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     log_msg('\t\t\tDamage Model')
     damage = DL_input.get('DamageModel',None)
     if damage is not None:
-        irrep_res_drift = damage.get('IrrepairableResidualDrift', None)
+        irrep_res_drift = damage.get('IrreparableResidualDrift', None)
         coll_prob = damage.get('CollapseProbability', None)
         coll_lims = damage.get('CollapseLimits', None)
         design_lvl = damage.get('DesignLevel', None)
@@ -262,8 +267,6 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
 
     # general information
     GI = jd.get("GeneralInformation", None)
-    if GI is None:
-        GI = jd.get("GI", None)
 
     # units
     if (GI is not None) and ('units' in GI.keys()):
@@ -309,13 +312,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
     # other attributes that can be used by a P58 assessment
     if AT == 'P58':
         for target_att, source_att, f_conv, unit_kind, dv_req in [
-            ['plan_area', 'planArea', float, 'area', 'injuries'],
-            ['stories', 'stories', int, '', 'all'],
-            # The following lines are commented out for now, because we do not
-            # use these pieces of data anyway.
-            #['building_type', 'type', str, ''],
-            #['height', 'height', float, 'length'],
-            #['year_built', 'year', int, ''],
+            ['plan_area', 'PlanArea', float, 'area', 'injuries'],
+            ['stories', 'NumberOfStories', int, '', 'all'],
         ]:
             if (GI is not None) and (source_att in GI.keys()):
                 if unit_kind != '':
@@ -331,7 +329,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                         "estimate {} decision variable(s).".format(source_att,
                                                                    dv_req))
     elif AT.startswith('HAZUS'):
-        data['general'].update({'stories': int(GI['stories'])})
+        data['general'].update({'stories': int(GI['NumberOfStories'])})
 
     # is this a coupled assessment?
     if res_description is not None:
@@ -648,13 +646,13 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             if key not in data['general']['collapse_limits'].keys():
                 data['general']['collapse_limits'].update({key: None})
 
-        # irrepairable drift
+        # irreparable drift
         if ((damage is not None) and (irrep_res_drift is not None)):
             data['general'].update({
-                'irrepairable_res_drift':
+                'irreparable_res_drift':
                     dict([(key, float_or_None(value)) for key, value in
                           irrep_res_drift.items()])})
-            # TODO: move this in the irrepairable part of general
+            # TODO: move this in the irreparable part of general
             yield_drift = irrep_res_drift.get("YieldDriftRatio", None)
             if yield_drift is not None:
                 data['general'].update({
@@ -665,10 +663,13 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
 
         elif ((data['decision_variables']['rec_cost']) or
               (data['decision_variables']['rec_time'])):
-            show_warning(
-                "Residual drift limits corresponding to irrepairable "
-                "damage were not defined in the input file. We assume that "
-                "damage is repairable regardless of the residual drift.")
+            pass
+            #TODO: show this warning in the log file instead
+
+            # show_warning(
+            #     "Residual drift limits corresponding to irreparable "
+            #     "damage were not defined in the input file. We assume that "
+            #     "damage is repairable regardless of the residual drift.")
             # we might need to have a default yield drift here
 
         # collapse probability
@@ -800,7 +801,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         if ((depends is not None) and (source_att in depends.keys())):
             data['dependencies'].update({
                 target_att:dependency_to_acronym[depends[source_att]]})
-        elif dv_req == '' or data['decision_variables'][dv_req]:
+        #elif dv_req == '' or data['decision_variables'][dv_req]:
+        else:
             if target_att != 'fragilities':
                 data['dependencies'].update({target_att: 'IND'})
             else:
@@ -990,11 +992,28 @@ def read_population_distribution(path_POP, occupancy, assessment_type='P58',
     # else if an HDF5 file is provided
     elif path_POP.endswith('hdf'):
 
-        store = pd.HDFStore(path_POP)
-        store.open()
-        pop_table = store.select('pop', where = f'index in {[occupancy,]}')
-        data = convert_Series_to_dict(pop_table.loc[occupancy,:])
-        store.close()
+        # this for loop is needed to avoid issues from race conditions on HPC
+        for i in range(1000):
+            try:
+                store = pd.HDFStore(path_POP)
+                store.open()
+
+            except HDF5ExtError:
+                pop_table = None
+                sleep(0.01)
+                continue
+
+            else:
+                pop_table = store.select('pop',
+                                         where=f'index in {[occupancy, ]}')
+                store.close()
+                break
+
+        if pop_table is not None:
+            data = convert_Series_to_dict(pop_table.loc[occupancy, :])
+        else:
+            raise IOError("Couldn't read the HDF file for POP data after 20 "
+                          "tries because it was blocked by other processes.")
 
     # convert peak population to persons/m2
     if 'peak' in data.keys():
@@ -1080,12 +1099,29 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
     # else if an HDF5 file is provided we assume it contains the DL data
     elif path_CMP.endswith('hdf'):
 
-        store = pd.HDFStore(path_CMP)
-        store.open()
-        CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
-        for c_id in s_cmp_keys:
-            DL_data_dict.update({c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
-        store.close()
+        # this for loop is needed to avoid issues from race conditions on HPC
+        for i in range(1000):
+            try:
+                store = pd.HDFStore(path_CMP)
+                store.open()
+
+            except HDF5ExtError:
+                CMP_table = None
+                sleep(0.1)
+                continue
+
+            else:
+                CMP_table = store.select('data', where=f'index in {s_cmp_keys}')
+                store.close()
+                break
+
+        if CMP_table is not None:
+            for c_id in s_cmp_keys:
+                DL_data_dict.update(
+                    {c_id: convert_Series_to_dict(CMP_table.loc[c_id, :])})
+        else:
+            raise IOError("Couldn't read the HDF file for DL data after 20 "
+                          "tries because it was blocked by other processes.")
 
     else:
         raise ValueError(
@@ -1256,89 +1292,90 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58',
                 DS_data = {'description': DS_i['Description'],
                            'weight'     : DS_i['Weight']}
 
-                DS_C = DS_i['Consequences']
-                if 'ReconstructionCost' in DS_C.keys():
-                    DS_CC = DS_C['ReconstructionCost']
-                    if isinstance(DS_CC['Amount'], list):
-                        DS_data.update({'repair_cost': {
-                            'medians'          : np.array([float(a) for a in DS_CC['Amount']]),
-                            'quantities'       : np.array(DS_CC['Quantity']),
-                            'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
-                            'cov'              : DS_CC.get('Beta',None),
-                        }})
+                DS_C = DS_i.get('Consequences', None)
+                if DS_C is not None:
+                    if 'ReconstructionCost' in DS_C.keys():
+                        DS_CC = DS_C['ReconstructionCost']
+                        if isinstance(DS_CC['Amount'], list):
+                            DS_data.update({'repair_cost': {
+                                'medians'          : np.array([float(a) for a in DS_CC['Amount']]),
+                                'quantities'       : np.array(DS_CC['Quantity']),
+                                'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
+                                'cov'              : DS_CC.get('Beta',None),
+                            }})
 
-                        # convert the quantity units to standard ones
-                        DS_data['repair_cost']['quantities'] *= data_unit
-                        DS_data['repair_cost']['quantities'] = DS_data['repair_cost']['quantities'].tolist()
-                    else:
-                        DS_data.update({'repair_cost': {
-                            'medians': np.array([float(DS_CC['Amount']),]),
-                            'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
-                            'cov'              : DS_CC.get('Beta',None),
-                        }})
+                            # convert the quantity units to standard ones
+                            DS_data['repair_cost']['quantities'] *= data_unit
+                            DS_data['repair_cost']['quantities'] = DS_data['repair_cost']['quantities'].tolist()
+                        else:
+                            DS_data.update({'repair_cost': {
+                                'medians': np.array([float(DS_CC['Amount']),]),
+                                'distribution_kind': curve_type[DS_CC.get('CurveType','N/A')],
+                                'cov'              : DS_CC.get('Beta',None),
+                            }})
 
-                    # convert the median units to standard ones
-                    DS_data['repair_cost']['medians'] /= data_unit
-                    DS_data['repair_cost']['medians'] = DS_data['repair_cost']['medians'].tolist()
+                        # convert the median units to standard ones
+                        DS_data['repair_cost']['medians'] /= data_unit
+                        DS_data['repair_cost']['medians'] = DS_data['repair_cost']['medians'].tolist()
 
-                if 'ReconstructionTime' in DS_C.keys():
-                    DS_CT = DS_C['ReconstructionTime']
-                    if isinstance(DS_CT['Amount'], list):
-                        DS_data.update({'repair_time': {
-                            'medians'          : np.array([float(a) for a in DS_CT['Amount']]),
-                            'quantities'       : np.array(DS_CT['Quantity']),
-                            'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
-                            'cov'              : DS_CT.get('Beta',None),
-                        }})
+                    if 'ReconstructionTime' in DS_C.keys():
+                        DS_CT = DS_C['ReconstructionTime']
+                        if isinstance(DS_CT['Amount'], list):
+                            DS_data.update({'repair_time': {
+                                'medians'          : np.array([float(a) for a in DS_CT['Amount']]),
+                                'quantities'       : np.array(DS_CT['Quantity']),
+                                'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
+                                'cov'              : DS_CT.get('Beta',None),
+                            }})
 
-                        # convert the quantity units to standard ones
-                        DS_data['repair_time']['quantities'] *= data_unit
-                        DS_data['repair_time']['quantities'] = DS_data['repair_time']['quantities'].tolist()
-                    else:
-                        DS_data.update({'repair_time': {
-                            'medians': np.array([float(DS_CT['Amount']),]),
-                            'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
-                            'cov'              : DS_CT.get('Beta',None),
-                        }})
+                            # convert the quantity units to standard ones
+                            DS_data['repair_time']['quantities'] *= data_unit
+                            DS_data['repair_time']['quantities'] = DS_data['repair_time']['quantities'].tolist()
+                        else:
+                            DS_data.update({'repair_time': {
+                                'medians': np.array([float(DS_CT['Amount']),]),
+                                'distribution_kind': curve_type[DS_CT.get('CurveType','N/A')],
+                                'cov'              : DS_CT.get('Beta',None),
+                            }})
 
-                    # convert the median units to standard ones
-                    DS_data['repair_time']['medians'] /= data_unit
-                    DS_data['repair_time']['medians'] = DS_data['repair_time']['medians'].tolist()
+                        # convert the median units to standard ones
+                        DS_data['repair_time']['medians'] /= data_unit
+                        DS_data['repair_time']['medians'] = DS_data['repair_time']['medians'].tolist()
 
-                if 'RedTag' in DS_C.keys():
-                    DS_CR = DS_C['RedTag']
-                    DS_data.update({'red_tag': {
-                        'theta': DS_CR['Amount'],
-                        # 'distribution_kind': curve_type[DS_CR['CurveType']],
-                        'cov'  : DS_CR['Beta'],
-                    }})
-
-                if 'Injuries' in DS_C.keys():
-                    DS_CI = DS_C['Injuries']
-                    if DS_CI[0].get('Beta') is not None:
-                        DS_data.update({'injuries': {
-                            'theta': [float(I_i['Amount']) for I_i in DS_CI],
+                    if 'RedTag' in DS_C.keys():
+                        DS_CR = DS_C['RedTag']
+                        DS_data.update({'red_tag': {
+                            'theta': DS_CR['Amount'],
                             # 'distribution_kind': curve_type[DS_CR['CurveType']],
-                            'cov'  : [I_i['Beta'] for I_i in DS_CI],
+                            'cov'  : DS_CR['Beta'],
                         }})
-                    else:
-                        DS_data.update({
-                            'injuries': [I_i['Amount'] for I_i in DS_CI]})
 
-                    # if there is a chance of injuries, load the affected floor area
-                    affected_area, unit = DS_i.get('AffectedArea',
-                                                   [0.0, 'SF'])
-                    if unit == 'SF':
-                        affected_area = affected_area * SF
-                    else: # pragma: no cover
-                        warnings.warn(UserWarning(
-                            'Unknown unit for affected floor area: {}'.format(
-                                unit)))
-                        affected_area = 0.
-                    DS_data.update({'affected_area': affected_area})
+                    if 'Injuries' in DS_C.keys():
+                        DS_CI = DS_C['Injuries']
+                        if DS_CI[0].get('Beta') is not None:
+                            DS_data.update({'injuries': {
+                                'theta': [float(I_i['Amount']) for I_i in DS_CI],
+                                # 'distribution_kind': curve_type[DS_CR['CurveType']],
+                                'cov'  : [I_i['Beta'] for I_i in DS_CI],
+                            }})
+                        else:
+                            DS_data.update({
+                                'injuries': [I_i['Amount'] for I_i in DS_CI]})
 
-                    # convert the units to standard ones
-                    DS_data['affected_area'] /= data_unit
+                        # if there is a chance of injuries, load the affected floor area
+                        affected_area, unit = DS_i.get('AffectedArea',
+                                                       [0.0, 'SF'])
+                        if unit == 'SF':
+                            affected_area = affected_area * SF
+                        else: # pragma: no cover
+                            warnings.warn(UserWarning(
+                                'Unknown unit for affected floor area: {}'.format(
+                                    unit)))
+                            affected_area = 0.
+                        DS_data.update({'affected_area': affected_area})
+
+                        # convert the units to standard ones
+                        DS_data['affected_area'] /= data_unit
 
                 DSG_data['DS_set'].update({'DS-' + str(DS_id + 1): DS_data})
 
@@ -1432,6 +1469,9 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
     for comp_type in ['S', 'NS', 'NSA', 'NSD']:
         if np.sum([fg.startswith(comp_type) for fg in FG_list]) > 0:
             comp_types.append(comp_type)
+    if np.sum([np.any([fg.startswith(comp_type) for comp_type in comp_types])
+                       for fg in FG_list]) != len(FG_list):
+        comp_types.append('other')
 
     # second, get the damage state likelihoods
     df_res_l = pd.DataFrame(
@@ -1441,23 +1481,28 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         index=[0, ])
 
     # third, get the damage quantities conditioned on damage state
-    df_res_q = pd.DataFrame(
-        columns=pd.MultiIndex.from_product([comp_types,
-                                            ['1_1', '2_1', '3_1', '4_1', '4_2']],
-                                           names=['comp_type', 'DSG_DS']),
-        index=[0, ])
+    # we do not do that for now
+    # df_res_q = pd.DataFrame(
+    #     columns=pd.MultiIndex.from_product([comp_types,
+    #                                         ['1_1', '2_1', '3_1', '4_1', '4_2']],
+    #                                        names=['comp_type', 'DSG_DS']),
+    #     index=[0, ])
 
-    for comp_type in ['NSA', 'NSD', 'NS']:
+    for comp_type in ['NSA', 'NSD', 'NS', 'other']:
         if comp_type in comp_types:
             del df_res_l[(comp_type, '4_2')]
-            del df_res_q[(comp_type, '4_2')]
+            # del df_res_q[(comp_type, '4_2')]
 
     # for each type of component...
     for comp_type in comp_types:
 
         # select the corresponding subset of columns
-        type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
-                     if c.startswith(comp_type)]
+        if comp_type == 'other':
+            type_cols = [fg for fg in FG_list
+                         if np.all([~fg.startswith(comp_type) for comp_type in comp_types])]
+        else:
+            type_cols = [c for c in DMG_agg.columns.get_level_values('FG').unique()
+                         if c.startswith(comp_type)]
 
         df_sel = DMG_agg.loc[:, type_cols].groupby(level='DSG_DS',axis=1).sum()
         df_sel = df_sel / len(type_cols)
@@ -1482,7 +1527,9 @@ def write_SimCenter_DM_output(output_dir, DM_filename, SUMMARY_df, DMG_df):
         df_sel_exc = df_sel_exc.sort_index()
 
         # store the results in the output DF
-        df_res_l.loc[:, idx[comp_type, :]] = df_sel_exc.values
+        for dsg_i in df_sel_exc.index:
+            if df_sel_exc[dsg_i] > 0.0:
+                df_res_l.loc[:, idx[comp_type, dsg_i]] = df_sel_exc[dsg_i]
 
         # get the quantity of components in the highest damage state
         # skip this part for now to reduce file size
@@ -1578,9 +1625,9 @@ def write_SimCenter_DM_output_old(output_dir, DM_filename, DMG_df):
 
 def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
 
-    DV_cost = 0
-    DV_time = 0
-    DV_inj = [0,]*4
+    DV_cost = None
+    DV_time = None
+    DV_inj = [None,]*4
 
     for DV_name, DV_mod in DV_dict.items():
         if 'rec_cost' in DV_name:
@@ -1598,7 +1645,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
 
     DVs = SUMMARY_df.columns.get_level_values(1)
 
-    if DV_cost is not 0:
+    if DV_cost is not None:
 
         comp_types = []
         FG_list = [c for c in DV_cost.columns.get_level_values('FG').unique()]
@@ -1645,7 +1692,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
             if comp_type in comp_types:
                 del df_res_C[('Repair Cost', comp_type, '4_2')]
 
-    if DV_time is not 0:
+    if DV_time is not None:
 
         repl_time = GI['replacement_time']
 
@@ -1660,10 +1707,10 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
         df_res_Tagg = pd.DataFrame(columns=MI, index=[0, ])
         df_res_Tagg.fillna(0, inplace=True)
 
-    if DV_inj[0] is not 0:
+    if DV_inj[0] is not None:
 
         lvls = []
-        [lvls.append(f'sev{i+1}') for i in range(4) if DV_inj[i] is not 0]
+        [lvls.append(f'sev{i+1}') for i in range(4) if DV_inj[i] is not None]
 
         headers = [['Injuries',],
                    lvls,
@@ -1679,7 +1726,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
     dfs_to_join = []
 
     # start with the disaggregated costs...
-    if DV_cost is not 0:
+    if DV_cost is not None:
         for type_ID in comp_types:
 
             DV_res = DV_cost.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
@@ -1721,7 +1768,7 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
         df_res_Cagg = df_res_Cagg.astype(float) #.round(0)
         dfs_to_join = dfs_to_join + [df_res_Cagg, df_res_Cimp, df_res_C]
 
-    if DV_time is not 0:
+    if DV_time is not None:
         DV_res = describe(SUMMARY_df[('reconstruction','time')])
 
         df_res_Tagg.loc[:, idx['Repair Time', ' ', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values
@@ -1729,9 +1776,9 @@ def write_SimCenter_DV_output(output_dir, DV_filename, GI, SUMMARY_df, DV_dict):
         df_res_Tagg = df_res_Tagg.astype(float) #.round(1)
         dfs_to_join.append(df_res_Tagg)
 
-    if DV_inj[0] is not 0:
+    if DV_inj[0] is not None:
         for i in range(4):
-            if DV_inj[i] is not 0:
+            if DV_inj[i] is not None:
                 DV_res = describe(SUMMARY_df[('injuries',f'sev{i+1}')])
 
                 df_res_Iagg.loc[:, idx['Injuries', f'sev{i+1}', 'aggregate', ['mean', 'std','10%','median','90%']]] = DV_res[['mean', 'std','10%','50%','90%']].values

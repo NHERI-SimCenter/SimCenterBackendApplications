@@ -36,7 +36,7 @@
 #
 # Contributors:
 # Adam Zsarnóczay
-# 
+#
 
 import os, sys, posixpath
 import argparse, json
@@ -44,13 +44,15 @@ import string
 import numpy as np
 
 def write_RV(EVENT_input_path):
-    
+
     # open the event file and get the list of events
     with open(EVENT_input_path, 'r') as f:
         EVENT_in = json.load(f)
     event_list = EVENT_in['randomVariables'][0]['elements']
 
-    data_dir = EVENT_in['Events'][0]['data_dir']
+    evt = EVENT_in['Events'][0]
+    data_dir = evt['data_dir']
+    f_scale = evt['unitScaleFactor']
 
     file_sample_dict = {}
 
@@ -63,12 +65,26 @@ def write_RV(EVENT_input_path):
         file_sample_dict[filename][0].append(e_i)
         file_sample_dict[filename][1].append(int(sample_id))
 
-    EDP_output = None 
+    EDP_output = None
 
     for filename in file_sample_dict.keys():
 
-        data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', skip_header=1)
+        # get the header
+        header_data = np.genfromtxt(posixpath.join(data_dir, filename),
+                                    delimiter=',', names=True, max_rows=1)
+        header = header_data.dtype.names
 
+        data = np.genfromtxt(posixpath.join(data_dir, filename),
+                             delimiter=',', skip_header=1)
+
+        # get the number of columns and reshape the data
+        col_count = len(header)
+        if col_count > 1:
+            data = data.reshape((data.size // col_count, col_count))
+        else:
+            data = np.atleast_1d(data)
+
+        # choose the right samples
         samples = data[file_sample_dict[filename][1]]
 
         if EDP_output is None:
@@ -77,14 +93,12 @@ def write_RV(EVENT_input_path):
             else:
                 EDP_output = np.zeros(len(event_list))
 
-            # get the header
-            header_data = np.genfromtxt(posixpath.join(data_dir, filename), delimiter=',', names=True)
-            header = header_data.dtype.names
-
         EDP_output[file_sample_dict[filename][0]] = samples
 
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
+
+    EDP_output = EDP_output * f_scale
 
     index = np.reshape(np.arange(EDP_output.shape[0]), (EDP_output.shape[0],1))
 
@@ -107,12 +121,12 @@ def write_RV(EVENT_input_path):
         else:
             header_out.append(f'1-{h_label.strip()}-1-1')
 
-    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',', 
+    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',',
         header=','+', '.join(header_out), comments='')
 
 # TODO: consider removing this function
 def create_EDP(EVENT_input_path, EDP_input_path):
-    
+
     # load the EDP file
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)

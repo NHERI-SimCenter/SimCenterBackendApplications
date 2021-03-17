@@ -43,7 +43,7 @@
 
 name = "whale"
 
-__version__ = '0.9.2'
+__version__ = '0.9.8'
 
 __copyright__ = """Copyright (c) 2018 The Regents of the University of 
 California and Leland Stanford Junior University"""

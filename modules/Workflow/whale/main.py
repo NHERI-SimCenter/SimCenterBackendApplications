@@ -4,34 +4,34 @@
 # Copyright (c) 2019 Leland Stanford Junior University
 #
 # This file is part of whale.
-# 
-# Redistribution and use in source and binary forms, with or without 
+#
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, 
+# 1. Redistributions of source code must retain the above copyright notice,
 # this list of conditions and the following disclaimer.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice, 
-# this list of conditions and the following disclaimer in the documentation 
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
 #
-# 3. Neither the name of the copyright holder nor the names of its contributors 
-# may be used to endorse or promote products derived from this software without 
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
 # specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-# 
-# You should have received a copy of the BSD 3-Clause License along with 
+#
+# You should have received a copy of the BSD 3-Clause License along with
 # whale. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
@@ -189,8 +189,8 @@ def run_command(command):
 
     """
 
-    # If it is a python script, we do not run it, but rather import the main 
-    # function. This ensures that the script is run using the same python 
+    # If it is a python script, we do not run it, but rather import the main
+    # function. This ensures that the script is run using the same python
     # interpreter that this script uses and it is also faster because we do not
     # need to run multiple python interpreters simultaneously.
     Frank_trusts_this_approach = False
@@ -226,7 +226,7 @@ def run_command(command):
 
         if returncode != 0:
             log_error('return code: {}'.format(returncode))
-        
+
         if platform.system() == 'Windows':
             return result.decode(sys.stdout.encoding), returncode
         else:
@@ -284,7 +284,7 @@ class WorkflowApplication(object):
                 input_type = self.app_spec_inputs[input_id]['type']
 
                 if input_type == 'path':
-                    self.pref[preference] = posixpath.join(ref_path, 
+                    self.pref[preference] = posixpath.join(ref_path,
                                                          self.pref[preference])
 
     def get_command_list(self, app_path):
@@ -322,11 +322,14 @@ class WorkflowApplication(object):
                 else:
                     arg_list.append(u'{}'.format(out_arg['default']))
 
+        ASI_list =  [inp['id'] for inp in self.app_spec_inputs]
         for pref_name, pref_value in self.pref.items():
-            pref_id = u'--{}'.format(pref_name)
-            if pref_id not in arg_list:
-                arg_list.append(pref_id)
-                arg_list.append(u'{}'.format(pref_value))
+            # only pass those input arguments that are in the registry
+            if pref_name in ASI_list:
+                pref_id = u'--{}'.format(pref_name)
+                if pref_id not in arg_list:
+                    arg_list.append(pref_id)
+                    arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
@@ -334,7 +337,7 @@ class WorkflowApplication(object):
 
 class Workflow(object):
     """
-    A class that collects methods common to all workflows developed by the 
+    A class that collects methods common to all workflows developed by the
     SimCenter. Child-classes will be introduced later if needed.
 
     Parameters
@@ -346,11 +349,12 @@ class Workflow(object):
         Explain...
     app_registry: string
         Explain...
-    
+
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None, units=None, outputs=None):
+        reference_dir=None, working_dir=None, app_dir=None,
+        units=None, outputs=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -358,19 +362,20 @@ class Workflow(object):
         log_msg('\trun type: {}'.format(run_type))
         log_msg(log_div)
 
-        self.optional_apps = ['Modeling', 'EDP', 'UQ'] 
+        self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL']
 
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
         self.reference_dir = reference_dir
         self.working_dir = working_dir
+        self.app_dir_local = app_dir
         self.app_type_list = app_type_list
         self.units = units
         self.outputs = outputs
 
         # initialize app registry
-        self._init_app_registry()        
+        self._init_app_registry()
 
         # parse the application registry
         self._parse_app_registry()
@@ -405,7 +410,7 @@ class Workflow(object):
 
         log_msg('\tCollecting application data...')
         # for each application type
-        for app_type in sorted(self.app_registry.keys()):            
+        for app_type in sorted(self.app_registry.keys()):
 
             # if the registry contains information about it
             app_type_long = app_type+'Applications'
@@ -416,7 +421,7 @@ class Workflow(object):
                 api_info = app_registry_data[app_type_long]['API']
 
                 # and store their name and executable location
-                for app in available_apps:                    
+                for app in available_apps:
                     self.app_registry[app_type][app['Name']] = WorkflowApplication(
                          app_type=app_type, app_info=app, api_info=api_info)
 
@@ -463,14 +468,14 @@ class Workflow(object):
             self.run_dir = self.working_dir
         elif 'runDir' in input_data:
             self.run_dir = input_data['runDir']
-        else:
-            raise WorkFlowInputError('Need a runDir entry in the input file')
+        #else:
+        #    raise WorkFlowInputError('Need a runDir entry in the input file')
 
         # parse the location(s) of the applications directory
         if 'localAppDir' in input_data:
             self.app_dir_local = input_data['localAppDir']
-        else:
-            raise WorkFlowInputError('Need a localAppDir entry in the input file')
+        #else:
+        #    raise WorkFlowInputError('Need a localAppDir entry in the input file')
 
         if 'remoteAppDir' in input_data:
             self.app_dir_remote = input_data['remoteAppDir']
@@ -486,17 +491,18 @@ class Workflow(object):
 
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
-             'Reference dir'], 
+             'Reference dir'],
             [self.run_dir, self.app_dir_local, self.app_dir_remote,
              self.reference_dir]):
             log_msg('\t{} : {}'.format(loc_name, loc_val))
 
         if 'Building' in self.app_type_list:
-            if 'buildingFile' in input_data:
-                self.building_file_name = input_data['buildingFile']
-            else:
-                self.building_file_name = "buildings.json"
-            log_msg('\tbuilding file name: {}'.format(self.building_file_name))
+            self.building_file_name = "buildings.json"
+            #if 'buildingFile' in input_data:
+            #    self.building_file_name = input_data['buildingFile']
+            #else:
+            #    self.building_file_name = "buildings.json"
+            #log_msg('\tbuilding file name: {}'.format(self.building_file_name))
 
 
         # get the list of requested applications
@@ -514,7 +520,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Wind'] :
+                    if eventClassification in ['Earthquake', 'Hurricane', 'Flood','Hydro'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
@@ -523,19 +529,19 @@ class Workflow(object):
                             raise WorkFlowInputError(
                                 'Application entry missing for {}'.format('Events'))
 
-                        app_object.set_pref(event['ApplicationData'], 
+                        app_object.set_pref(event['ApplicationData'],
                                             self.reference_dir)
                         self.workflow_apps['Event'] = app_object
-                      
-                    else: 
+
+                    else:
                         raise WorkFlowInputError(
                             ('Currently, only earthquake and wind events are supported. '
                              'EventClassification must be Earthquake, not {}'
                              ).format(eventClassification))
-                else: 
+                else:
                     raise WorkFlowInputError('Need Event Classification')
-        else: 
-            raise WorkFlowInputError('Need an Events Entry in Applications')               
+        else:
+            raise WorkFlowInputError('Need an Events Entry in Applications')
 
         for app_type in self.app_type_list:
             if app_type != 'Event':
@@ -549,10 +555,10 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'], 
+                    app_object.set_pref(requested_apps[app_type]['ApplicationData'],
                                         self.reference_dir)
                     self.workflow_apps[app_type] = app_object
-              
+
                 else:
                     if app_type in self.optional_apps:
                         self.app_registry.pop(app_type, None)
@@ -560,9 +566,9 @@ class Workflow(object):
                     else:
                         raise WorkFlowInputError(
                             f'Need {app_type} entry in Applications')
-                        
+
         for app_type in self.optional_apps:
-            if app_type not in self.app_registry:
+            if (app_type not in self.app_registry) and (app_type in self.app_type_list):
                 self.app_type_list.remove(app_type)
 
         log_msg('\tRequested workflow:')
@@ -592,8 +598,12 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        building_file = building_file.replace('.json', 
-            '{}-{}.json'.format(bldg_app.pref['Min'], bldg_app.pref['Max'])) 
+        if bldg_app.pref.get('filter', None) is not None:
+            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+
+            building_file = building_file.replace('.json',
+                '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
+
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
@@ -605,11 +615,11 @@ class Workflow(object):
 
         bldg_command_list.append(u'--getRV')
 
-        command = create_command(bldg_command_list)        
+        command = create_command(bldg_command_list)
 
         log_msg('Creating initial building files...')
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
-        
+
         result, returncode = run_command(command)
 
         log_msg('\tOutput: ')
@@ -620,7 +630,7 @@ class Workflow(object):
 
         return building_file
 
-    def create_regional_event(self, building_file):
+    def perform_regional_mapping(self, building_file):
         """
         Short description
 
@@ -631,9 +641,9 @@ class Workflow(object):
 
         """
 
-        log_msg('Creating regional event...')
+        log_msg('Creating regional mapping...')
 
-        reg_event_app = self.workflow_apps['RegionalEvent']
+        reg_event_app = self.workflow_apps['RegionalMapping']
 
         # TODO: not elegant code, fix later
         for input_ in reg_event_app.inputs:
@@ -646,13 +656,13 @@ class Workflow(object):
         command = create_command(reg_event_command_list)
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
-        
+
         result, returncode = run_command(command)
 
         log_msg('\tOutput: ')
         log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
-        log_msg('Regional event successfully created.')
+        log_msg('Regional mapping successfully created.')
         log_msg(log_div)
 
     def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):
@@ -685,7 +695,7 @@ class Workflow(object):
             shutil.copy(
                 src = posixpath.join(self.run_dir, BIM_file),
                 dst = posixpath.join(
-                    self.run_dir, 
+                    self.run_dir,
                     '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
             # Open the BIM file and add the unit information to it
@@ -694,7 +704,7 @@ class Workflow(object):
                     BIM_data = json.load(f)
 
                 BIM_data.update({'units': self.units})
-                
+
                 with open(BIM_file, 'w') as f:
                     json.dump(BIM_data, f, indent=2)
 
@@ -710,7 +720,7 @@ class Workflow(object):
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
 
             # Make a copy of the input file and rename it to BIM.json
-            # This is a temporary fix, will be removed eventually.            
+            # This is a temporary fix, will be removed eventually.
             dst = posixpath.join(os.getcwd(),BIM_file)
             if BIM_file != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
@@ -733,7 +743,7 @@ class Workflow(object):
         os.chdir(self.run_dir)
 
         if bldg_id is not None:
-            os.chdir(bldg_id) 
+            os.chdir(bldg_id)
 
         workdirs = os.listdir(os.getcwd())
         for workdir in workdirs:
@@ -810,8 +820,8 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        if bldg_id is not None:            
-            os.chdir(bldg_id)       
+        if bldg_id is not None:
+            os.chdir(bldg_id)
 
         os.chdir('templatedir')
 
@@ -836,10 +846,10 @@ class Workflow(object):
             command_list.append(u'--getRV')
 
             command = create_command(command_list)
-            
+
             log_msg('\tRunning {} app for RV...'.format(app_type))
             log_msg('\n{}\n'.format(command), prepend_timestamp=False)
-            
+
             result, returncode = run_command(command)
 
             log_msg('\tOutput: ')
@@ -865,7 +875,7 @@ class Workflow(object):
             os.chdir(self.run_dir)
 
             if bldg_id is not None:
-                os.chdir(bldg_id)       
+                os.chdir(bldg_id)
 
             os.chdir('templatedir')
 
@@ -918,7 +928,7 @@ class Workflow(object):
             os.chdir(self.run_dir)
 
             if bldg_id is not None:
-                os.chdir(bldg_id)       
+                os.chdir(bldg_id)
 
             os.chdir('templatedir')
 
@@ -952,7 +962,7 @@ class Workflow(object):
             if bldg_id is not None:
                 os.chdir(bldg_id)
             dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
-            
+
             # if the DL is coupled with response estimation, we need to sort the results
             DL_app = self.workflow_apps.get('DL', None)
             if DL_app is not None:
@@ -966,7 +976,7 @@ class Workflow(object):
                         dakota_out.index = np.arange(dakota_out.shape[0])
 
             dakota_out.to_csv('response.csv')
-            
+
             if self.run_type == 'run':
                 log_msg('Response simulation finished successfully.')
             elif self.run_type in ['set_up', 'runningRemote']:
@@ -995,57 +1005,102 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Running damage and loss assessment')
+        if 'DL' in self.workflow_apps.keys():
+            log_msg('Running damage and loss assessment')
 
-        os.chdir(self.run_dir)
+            os.chdir(self.run_dir)
 
-        if 'Building' not in self.app_type_list:
-            # Copy the dakota.json file from the templatedir to the run_dir so that
-            # all the required inputs are in one place.
-            input_file = ntpath.basename(input_file)
-            shutil.copy(
-                src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
-                dst = posixpath.join(self.run_dir,BIM_file))
-        else:            
-            # copy the BIM file from the main dir to the building dir
-            shutil.copy(
-                src = posixpath.join(self.run_dir, BIM_file),
-                dst = posixpath.join(self.run_dir, 
-                                     '{}/{}'.format(bldg_id, BIM_file)))
-            os.chdir(str(bldg_id))
-
-        workflow_app = self.workflow_apps['DL']
-
-        # TODO: not elegant code, fix later
-        if BIM_file is not None:
-            for input_var in workflow_app.inputs:
-                if input_var['id'] == 'filenameDL':
-                    input_var['default'] = BIM_file     
-
-        command_list = self.workflow_apps['DL'].get_command_list(
-            app_path=self.app_dir_local)     
-
-        command = create_command(command_list)
-
-        log_msg('\tDamage and loss assessment command:')
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
-
-        result, returncode = run_command(command)
-
-        log_msg(result, prepend_timestamp=False)
-
-        # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
-        if 'Building' in self.app_type_list:
-
-            try:
+            if 'Building' not in self.app_type_list:
+                # Copy the dakota.json file from the templatedir to the run_dir so that
+                # all the required inputs are in one place.
+                input_file = ntpath.basename(input_file)
                 shutil.copy(
-                    src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
-                    dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
-            except:
-                pass
+                    src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
+                    dst = posixpath.join(self.run_dir,BIM_file))
+            else:
+                # copy the BIM file from the main dir to the building dir
+                shutil.copy(
+                    src = posixpath.join(self.run_dir, BIM_file),
+                    dst = posixpath.join(self.run_dir,
+                                         '{}/{}'.format(bldg_id, BIM_file)))
+                os.chdir(str(bldg_id))
 
-        log_msg('Damage and loss assessment finished successfully.')
-        log_msg(log_div)
+            workflow_app = self.workflow_apps['DL']
+
+            # TODO: not elegant code, fix later
+            if BIM_file is not None:
+                for input_var in workflow_app.inputs:
+                    if input_var['id'] == 'filenameDL':
+                        input_var['default'] = BIM_file
+
+            command_list = self.workflow_apps['DL'].get_command_list(
+                app_path=self.app_dir_local)
+
+            command = create_command(command_list)
+
+            log_msg('\tDamage and loss assessment command:')
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+
+            result, returncode = run_command(command)
+
+            log_msg(result, prepend_timestamp=False)
+
+            # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+            if 'Building' in self.app_type_list:
+
+                try:
+                    shutil.copy(
+                        src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                        dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+                except:
+                    pass
+
+            log_msg('Damage and loss assessment finished successfully.')
+            log_msg(log_div)
+
+        else:
+            log_msg('')
+            log_msg('No DL requested, loss assessment step is skipped.')
+            log_msg('')
+
+            EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+
+            col_info = []
+            for col in EDP_df.columns:
+                try:
+                    split_col = col.split('-')
+                    if len(split_col[1]) == 3:
+                        col_info.append(split_col[1:])
+                except:
+                    continue
+
+            col_info = np.transpose(col_info)
+
+            EDP_types = np.unique(col_info[0])
+            EDP_locs = np.unique(col_info[1])
+            EDP_dirs = np.unique(col_info[2])
+
+            MI = pd.MultiIndex.from_product(
+                [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+                names=['type', 'loc', 'dir', 'stat'])
+
+            df_res = pd.DataFrame(columns=MI, index=[0, ])
+            if ('PID', '0') in df_res.columns:
+                del df_res[('PID', '0')]
+
+            # store the EDP statistics in the output DF
+            for col in np.transpose(col_info):
+                df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+                    '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+                df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                    EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+
+            df_res.dropna(axis=1, how='all', inplace=True)
+
+            df_res = df_res.astype(float)
+
+            # save the output
+            df_res.to_csv('EDP.csv')
 
     def aggregate_results(self, bldg_data):
         """
@@ -1060,7 +1115,7 @@ class Workflow(object):
         log_msg('Collecting damage and loss results')
 
         os.chdir(self.run_dir)
- 
+
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
@@ -1076,33 +1131,59 @@ class Workflow(object):
 
                 if out_type == 'every_realization':
 
-                    realizations = None
+                        realizations_EDP = None
+                        realizations_DL = None
 
-                    for bldg in bldg_data:
-                        bldg_id = bldg['id']
-                        min_id = min(int(bldg_id), min_id)
-                        max_id = max(int(bldg_id), max_id)
+                        for bldg in bldg_data:
+                            bldg_id = bldg['id']
+                            min_id = min(int(bldg_id), min_id)
+                            max_id = max(int(bldg_id), max_id)
 
-                        #try:
-                        if True:
-                            df_i = pd.read_csv(bldg_id+f'/DL_summary.csv', 
-                                               header=0, index_col=0)
-                            if realizations == None:
-                                realizations = dict([(col, []) for col in df_i.columns])
-                            
+                            # save all EDP realizations
+
+                            df_i = pd.read_csv(bldg_id+'/response.csv', header=0, index_col=0)
+
+                            if realizations_EDP == None:
+                                realizations_EDP = dict([(col, []) for col in df_i.columns])
+
                             for col in df_i.columns:
                                 vals = df_i.loc[:,col].to_frame().T
                                 vals.index = [bldg_id,]
-                                realizations[col].append(vals)
+                                realizations_EDP[col].append(vals)
 
-                        #except:
-                        #    log_msg(f'Error reading realization data for building {bldg_id}')
+                            # If damage and loss assessment is part of the workflow
+                            # then save the DL outputs too
+                            if 'DL' in self.workflow_apps.keys():
 
-                    for d_type in realizations.keys():
-                        d_agg = pd.concat(realizations[d_type], axis=0, sort=False)
-                        #d_agg.sort_index(axis=0, inplace=True)
-                        
-                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hd5', d_type, mode='a', format='fixed')
+                                try:
+                                #if True:
+                                    df_i = pd.read_csv(bldg_id+f'/DL_summary.csv',
+                                                       header=0, index_col=0)
+
+                                    if realizations_DL == None:
+                                        realizations_DL = dict([(col, []) for col in df_i.columns])
+
+                                    for col in df_i.columns:
+                                        vals = df_i.loc[:,col].to_frame().T
+                                        vals.index = [bldg_id,]
+                                        realizations_DL[col].append(vals)
+
+                                except:
+                                    log_msg(f'Error reading DL realization data for building {bldg_id}')
+
+                        for d_type in realizations_EDP.keys():
+                            d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
+
+                            d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+
+                        if 'DL' in self.workflow_apps.keys():
+                            for d_type in realizations_DL.keys():
+                                d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
+                                #d_agg.sort_index(axis=0, inplace=True)
+
+                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
+
+
 
                 else:
                     out_list = []
@@ -1115,7 +1196,7 @@ class Workflow(object):
                         try:
                         #if True:
                             # EDP data
-                            df_i = pd.read_csv(bldg_id+f'/{out_type}.csv', 
+                            df_i = pd.read_csv(bldg_id+f'/{out_type}.csv',
                                                header=headers[out_type], index_col=0)
                             df_i.index = [bldg_id,]
                             out_list.append(df_i)
@@ -1131,17 +1212,3 @@ class Workflow(object):
 
         log_msg('Damage and loss results collected successfully.')
         log_msg(log_div)
-
-
-        
-
-
-
-
-
-
-
-
-
-
-

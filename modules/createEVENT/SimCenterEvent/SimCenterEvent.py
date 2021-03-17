@@ -36,121 +36,301 @@
 #
 # Contributors:
 # Adam Zsarnóczay
-# 
+#
 
-import argparse, posixpath, json, sys
+import argparse, json, sys, os
 import numpy as np
+from pathlib import Path
 
-def write_RV(BIM_file, EVENT_file, data_dir):
-	
-	with open(BIM_file, 'r') as f:
-		bim_data = json.load(f)
+# import the common constants and methods
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
 
-	event_file = {
-		'randomVariables': [],
-		'Events': []
-	}
+sys.path.insert(0, str(main_dir / 'common'))
 
-	events = bim_data['Events']['Events']
+from simcenter_common import *
 
-	if len(events) > 1:
-		event_file['randomVariables'].append({
-			'distribution': 'discrete_design_set_string',
-			'name': 'eventID',
-			'value': 'RV.eventID',
-			'elements': []
-		})
-		event_file['Events'].append({
-			'type': 'Seismic',
-			'subtype': bim_data['Events']['Events'][0]['type'],
-			'event_id': 'RV.eventID',
-			'data_dir': data_dir
-			})
-	else:
-		event_file['Events'].append({
-			'type': 'Seismic',
-			'subtype': bim_data['Events']['Events'][0]['type'],
-			'event_id': 0,
-			'data_dir': data_dir
-			})
 
-	RV_elements = []
-	for event in events:
-		if event['EventClassification'] == 'Earthquake':
-			RV_elements.append(event['fileName'])
+def get_scale_factors(input_unit, output_units, event_class):
+    """
+    Determine the scale factor to convert input event to internal event data
 
-	event_file['randomVariables'][0]['elements'] = RV_elements
+    """
 
-	# if time histories are used, then load the first event
-	if events[0]['type'] == 'timeHistory':
-		event_file['Events'][0].update(load_record(events[0]['fileName'], 
-									               data_dir, empty=True))
+    # special case: if the input unit is "as-is" then do not do any scaling
+    if input_unit != 'as-is':
 
-	with open(EVENT_file, 'w') as f:
-		json.dump(event_file, f, indent=2)
+        if input_unit is not None:
+            # if the inputs are not in the SimCenter's standard units
 
-def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
+            # get the scale factor to standard units
+            f_in = globals().get(input_unit, None)
+            if f_in is None:
+                raise ValueError(
+                    f"Input unit for event files not recognized: {input_unit}")
 
-	fileName = fileName.split('x')[0]
+        else:
+            # if the inputs are in the SimCenter's standard units then convert
+            # from those to the SI units
+            # SimCenter standard units:
+            #
+            #  ground motion acceleration: g
+            #  wind speed: mph
+            #  inundation height: ft
 
-	with open(posixpath.join(data_dir,'{}.json'.format(fileName)), 'r') as f:
-		event_data = json.load(f)
+            if event_class == 'Earthquake':
+                f_in = globals()['g']
+            elif event_class == 'Hurricane':
+                f_in = globals()['mph']
+            elif event_class == 'Flood':
+                f_in = globals()['ft']
+            else:
+                raise ValueError(f"Event class not recognized: {event_class}")
 
-	event_dic = {
-		'name': fileName,
-		'dT' : event_data['dT'],
-		'numSteps': len(event_data['data_x']),
-		'timeSeries': [],
-		'pattern': []
-	}
+        # if no length unit is specified, 'inch' is assumed
+        unit_length = output_units.get('length', 'inch')
+        f_length = globals().get(unit_length, None)
+        if f_length is None:
+            raise ValueError(
+                f"Specified length unit not recognized: {unit_length}")
 
-	if not empty:
-		for i, (src_label, tar_label) in enumerate(zip(['data_x', 'data_y'],
-													   ['accel_X', 'accel_Y'])):
-			if src_label in event_data.keys():
+        # if no time unit is specified, 'sec' is assumed
+        unit_time = output_units.get('time', 'sec')
+        f_time = globals().get(unit_time, None)
+        if f_time is None:
+            raise ValueError(
+                f"Specified time unit not recognized: {unit_time}")
 
-				event_dic['timeSeries'].append({
-					'name': tar_label,
-					'type': 'Value',
-					'dT': event_data['dT'],
-					'data': list(np.array(event_data[src_label])*scale_factor)
-				})
-				event_dic['pattern'].append({
-					'type': 'UniformAcceleration',
-					'timeSeries': tar_label,
-					'dof': i+1
-					})
+        # the output unit depends on the event class
+        if event_class == 'Earthquake':
+            # acceleration
+            f_out = f_time ** 2.0 / f_length
 
-	return event_dic
+        elif event_class == 'Hurricane':
+            # velocity
+            f_out = f_time / f_length
 
-def get_records(BIM_file, EVENT_file, data_dir):
-	
-	with open(BIM_file, 'r') as f:
-		bim_file = json.load(f)
+        elif event_class == 'Flood':
+            # depth
+            f_out = 1.0 / f_length
 
-	with open(EVENT_file, 'r') as f:
-		event_file = json.load(f)
+        else:
+            raise ValueError(f"Event class not recognized: {event_class}")
 
-	event_id = event_file['Events'][0]['event_id']
+        # the scale factor is the product of input and output scaling
+        f_scale = f_in * f_out
 
-	scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
+    else:
+        f_scale = 1.0
 
-	event_file['Events'][0].update(
-		load_record(event_id, data_dir, scale_factor))
+    return f_scale
 
-	with open(EVENT_file, 'w') as f:
-		json.dump(event_file, f, indent=2)
+def write_RV(BIM_file, EVENT_file, input_unit):
+
+    # load the BIM file to get information about the assigned events
+    with open(BIM_file, 'r') as f:
+        bim_data = json.load(f)
+
+    event_class = bim_data['Events']['Events'][0]['EventClassification']
+
+    # scale the input data to the event unit used internally
+    f_scale_units = get_scale_factors(input_unit,
+        output_units=bim_data['GeneralInformation'].get('units',None),
+        event_class=event_class)
+
+    # get the location of the event input files
+    data_dir = Path(bim_data['Events']['EventFolderPath'])
+
+    # get the list of events assigned to this asset
+    events = bim_data['Events']['Events']
+
+    # initialize the dictionary that will become EVENT.json
+    event_file = {
+        'randomVariables': [],
+        'Events': []
+    }
+
+    if len(events) > 1:
+        # if there is more than one event then we need random variables
+
+        # initialize the randomVariables part of the EVENT file
+        event_file['randomVariables'].append({
+            'distribution': 'discrete_design_set_string',
+            'name': 'eventID',
+            'value': 'RV.eventID',
+            'elements': []
+        })
+
+        # initialize the Events part of the EVENT file
+        event_file['Events'].append({
+            'type': 'Seismic',
+            'subtype': bim_data['Events']['Events'][0]['type'],
+            'event_id': 'RV.eventID',
+            'unitScaleFactor': f_scale_units,
+            'data_dir': str(data_dir)
+            })
+
+        # collect the filenames
+        RV_elements = []
+        for event in events:
+            if event['EventClassification'] in ['Earthquake', 'Hurricane',
+                                                'Flood']:
+                RV_elements.append(event['fileName'])
+
+        # and add them to the list of randomVariables
+        event_file['randomVariables'][0]['elements'] = RV_elements
+
+    else:
+        # if there is only one event, then we do not need random variables
+
+        # initialize the Events part of the EVENT file
+        event_file['Events'].append({
+            'type': 'Seismic',
+            'subtype': bim_data['Events']['Events'][0]['type'],
+            'event_id': events[0]['fileName'],
+            'unitScaleFactor': f_scale_units,
+            'data_dir': str(data_dir)
+            })
+
+    # if time histories are used, then load the first event
+    # TODO: this is needed by some other code that should be fixed and this
+    #  part should be removed.
+    if events[0]['type'] == 'timeHistory':
+        event_file['Events'][0].update(
+            load_record(events[0]['fileName'], data_dir,
+                        empty=len(events) > 1, event_class = event_class))
+
+    # save the EVENT dictionary to a json file
+    with open(EVENT_file, 'w') as f:
+        json.dump(event_file, f, indent=2)
+
+def load_record(file_name, data_dir, f_scale=1.0, empty=False,
+                event_class=None):
+
+    #just in case
+    data_dir = Path(data_dir)
+
+    # extract the file name (the part after "x" is only for bookkeeping)
+    file_name = file_name.split('x')[0]
+
+    # open the input event data file
+    # (the SimCenter json format is assumed here)
+    with open(data_dir / '{}.json'.format(file_name), 'r') as f:
+        event_data = json.load(f)
+
+    # initialize the internal EVENT file structure
+    event_dic = {
+        'name': file_name,
+        'dT' : event_data['dT'],
+        'numSteps': len(event_data['data_x']),
+        'timeSeries': [],
+        'pattern': []
+    }
+
+    # (empty is used when generating only random variables in write_RV)
+    if not empty:
+
+        # generate the event files
+        # TODO: add 'z' later
+        for i, dir_ in enumerate(['x', 'y']):
+
+            src_label = 'data_'+dir_
+
+            # the target label depends on the event class
+            # TODO: it seems much easier to use the data_ labels and keep the
+            #  event_class as an attribute in the EVENT file
+            # TODO: it also does not make any sense to use capital letters
+            #  for the dir in internal labels and small ones for the inputs
+            if event_class == 'Earthquake':
+                tar_label = 'accel_'+dir_.capitalize()
+
+            elif event_class == 'Hurricane':
+                tar_label = 'speed_'+dir_.capitalize()
+
+            elif event_class == 'Flood':
+                tar_label = 'height'
+            else:
+                raise ValueError(f"Event class not recognized: {event_class}")
+
+            # if there is data in the given direction in the input file
+            if src_label in event_data.keys():
+
+                # then load that data into the output EVENT file and scale it
+                event_dic['timeSeries'].append({
+                    'name': tar_label,
+                    'type': 'Value',
+                    'dT': event_data['dT'],
+                    'data': list(np.array(event_data[src_label]) * f_scale)
+                })
+
+                event_dic['pattern'].append({
+                    'type': 'UniformAcceleration',
+                    'timeSeries': tar_label,
+                    'dof': i + 1
+                })
+
+    return event_dic
+
+def get_records(BIM_file, EVENT_file, input_unit):
+
+    # load the BIM file
+    with open(BIM_file, 'r') as f:
+        bim_file = json.load(f)
+
+    # load the EVENT file
+    with open(EVENT_file, 'r') as f:
+        event_file = json.load(f)
+
+    event_class = bim_file['Events']['Events'][0]['EventClassification']
+
+    # get the event_id to identify which event to load
+    # (the event id might have been randomly generated earlier)
+    event_id = event_file['Events'][0]['event_id']
+
+    # get the scale factor to convert input data to the internal even unit
+    f_scale_units = event_file['Events'][0]['unitScaleFactor']
+
+    # get the scale factor if a user specified it
+    f_scale_user = dict([(evt['fileName'], evt.get('factor', 1.0))
+                         for evt in bim_file["Events"]["Events"]])[event_id]
+
+    # get the location of the event data
+    data_dir = Path(bim_file['Events']['EventFolderPath'])
+
+    # load the event data and scale it
+    event_file['Events'][0].update(
+        load_record(event_id, data_dir, f_scale_user * f_scale_units,
+                    event_class = event_class))
+
+    # save the updated EVENT file
+    with open(EVENT_file, 'w') as f:
+        json.dump(event_file, f, indent=2)
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
-    parser.add_argument('--filenameEVENT')
-    parser.add_argument('--pathEventData')
-    parser.add_argument('--getRV', nargs='?', const=True, default=False)
+    parser = argparse.ArgumentParser(
+        "Read event input files (e.g. time history data, intensity measure "
+        "fields and convert them to standard SimCenter EVENT.json files",
+        allow_abbrev=False
+    )
+
+    parser.add_argument('--filenameBIM',
+        help = "Name of the BIM file")
+    parser.add_argument('--filenameEVENT',
+        help = "Name of the EVENT file")
+    parser.add_argument('--inputUnit',
+        help = "Units of the data in the input file",
+        default = None)
+    parser.add_argument('--getRV',
+        help = "If True, the application prepares on the RandomVariables in "
+               "the EVENT file; otherwise it loads the appropriate EVENT data.",
+        default=False,
+        nargs='?', const=True)
+
     args = parser.parse_args()
 
     if args.getRV:
-    	sys.exit(write_RV(args.filenameBIM, args.filenameEVENT, args.pathEventData))
+        sys.exit(write_RV(args.filenameBIM, args.filenameEVENT, args.inputUnit))
     else:
-    	sys.exit(get_records(args.filenameBIM, args.filenameEVENT, args.pathEventData))
+        sys.exit(get_records(args.filenameBIM, args.filenameEVENT,
+                             args.inputUnit))

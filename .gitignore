@@ -47,6 +47,9 @@ qrc_images.cpp
 qrc_images1.cpp
 qrc_styles.cpp
 
+# PyCharm
+.idea
+
 # OTHER
 applications
 build
@@ -81,3 +84,12 @@ MDOF_BuildingModelToSAM
 #SAM.json
 #edp.json
 #input.json
+applications.tar
+DEDM_HRP
+LowRiseTPU
+MultiplePEER
+WindTunnelExperiment
+preprocessDakota
+simCenterDprepro
+simCenterSub
+.DS_Store

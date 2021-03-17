@@ -205,9 +205,9 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       
       json_error_t error;
       json_t *tapData = json_load_file(testFile, 0, &error);
-      
+
       if (tapData == NULL) {
-	std::cerr << "FATAL ERROR - json file  does not exist\n";
+	std::cerr << "FATAL ERROR - json file: " << testFile << " does not exist\n";
 	return -3;
       }
 
@@ -225,6 +225,8 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       json_t *roofTypeT = json_object_get(tapData,"roofType");
       if (roofTypeT == NULL)
+	roofTypeT = json_object_get(tapData,"shape");
+      if (roofTypeT == NULL)
 	roofTypeT = json_object_get(tapData,"modelShape");
 
       json_t *modelHeightT = json_object_get(tapData,"height");
@@ -234,9 +236,27 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       json_t *frequencyT = json_object_get(tapData,"frequency");
       json_t *periodT = json_object_get(tapData,"period");
 
-      if (roofTypeT == NULL || modelHeightT == NULL || modelDepthT == NULL || modelBreadthT == NULL
-	  || periodT == NULL || frequencyT == NULL) {
-	std::cerr << "FATAL ERROR - json file does not contain roofType, height, depth or breadth data \n";
+      if (periodT == NULL)
+	periodT = json_object_get(tapData,"duration");
+      
+      if (roofTypeT == NULL || 
+	  modelHeightT == NULL || 
+	  modelDepthT == NULL || 
+	  modelBreadthT == NULL || 
+	  periodT == NULL || 
+	  windSpeedT == NULL ||
+	  frequencyT == NULL) {
+
+	std::cerr << "FATAL ERROR - json file " << testFile;
+
+	if (roofTypeT == NULL) std::cerr << " missing shape\n";
+	if (modelHeightT == NULL) std::cerr << " missing height\n";
+	if (modelDepthT == NULL) std::cerr << " missing depth\n";
+	if (modelBreadthT == NULL) std::cerr << " missing breadth\n";
+	if (frequencyT == NULL) std::cerr << " missing frequency\n";
+	if (periodT == NULL) std::cerr << " missing period\n";
+	if (windSpeedT == NULL) std::cerr << " missing wind speed\n";
+
 	return -3;
       }
 
@@ -249,27 +269,20 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
       double modelFrequency = json_number_value(frequencyT);
       int numSteps = round(modelPeriod*modelFrequency);
 
-
       if ((strcmp(roofType,"Flat") != 0) && (strcmp(roofType,"Cuboid") != 0)) { 
 	std::cerr << "FATAL ERROR - WndTunnelExperiment - only Cuboid building shape currently supported\n";
 	return -4;
       }
 
-      //      double airDensity = 1.225 * 9.81 / 1000.0;  // 1.225kg/m^3 to kN/m^3
       double airDensity = 1.225;  // 1.225kg/m^3
       double lambdaL = modelHeight/height;
       double lambdaU = modelWindSpeed/windSpeed;
       double lambdaT = lambdaL/lambdaU;
       double dT = 1.0/(modelFrequency*lambdaT);
 
-      std::cerr << "mH, mWS, mB, mD, mP: " << modelHeight << " " << modelWindSpeed << " " << modelBreadth << " " << modelDepth << " " << modelPeriod << "\n";
-      std::cerr << "H, WS, B, D: " << height << " " << windSpeed << " " << breadth << " " << depth << "\n";
+      std::cerr << "dT : " << dT << "frequency: " << modelFrequency << " lambdaT " << lambdaT << " lambdaU: " << lambdaU << " lambdaL: " << lambdaL << "\n";
 
-      std::cerr << "lU, lT: " << lambdaU << " " << lambdaT << "\n";;
-      std::cerr << "dT: " << dT << "numSteps: " << numSteps << " " << modelFrequency << " " << lambdaT << "\n";
-
-      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.;
-      std::cerr << "\n LOAD FACTOR: " << loadFactor << "\n";
+      double loadFactor = airDensity*0.5*windSpeed*windSpeed / 1000.; // N to kN
 
       //
       // for each tap we want to calculate some factors for applying loads at the floors
@@ -644,12 +657,6 @@ int addForcesFace(TAP *theTaps, int numTaps,
       double Rabove = locY*A/heightStory;
       double Rbelow = (heightStory-locY)*A/heightStory;
       
-      for (int k=0; k<numTaps; k++) {
-	TAP *theTap = &theTaps[k];
-	if (theTap->face == 1)
-	  std::cerr << theTap->id << " " << theTap->forces[0] << "\n";
-      }
-            
       for (int k=0; k<numDivisionX; k++) {
 	
 	double Mabove = Rabove*(locX-centerLine);
@@ -677,9 +684,6 @@ int addForcesFace(TAP *theTaps, int numTaps,
 	    theTap->forces[i] = theTap->forces[i] - Rabove;
 	  
 	  theTap->moments[i] = theTap->moments[i] + Mabove;
-	  
-	  std::cerr << theTap->id << " " << locX << " " << locY << " " << theTap->locX << " " << theTap->locY << " " << theTap->forces[i] << " " << i << " " << j << "\n";
-	  
 	}	    
 	locX += dX;
       }
