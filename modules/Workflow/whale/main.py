@@ -520,7 +520,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Hurricane', 'Flood','Hydro'] :
+                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
