@@ -178,12 +178,6 @@
     },
     "Applications": [
       {
-        "Name": "SimCenterEvent",
-        "ExecutablePath": "applications/createEVENT/SimCenterEvent.py",
-        "ApplicationSpecificInputs": [
-	]
-      },
-      {
         "Name": "ExistingSimCenterEvents",
         "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
         "ApplicationSpecificInputs": [
@@ -326,7 +320,13 @@
       {
         "Name": "SimCenterEvent",
         "ExecutablePath": "applications/createEVENT/SimCenterEvent/SimCenterEvent.py",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "inputUnit",
+            "type": "string",
+            "description": "Units of the data in the input file"
+          }
+        ]
       },
       {
         "Name": "ASCE7_WindSpeed",
