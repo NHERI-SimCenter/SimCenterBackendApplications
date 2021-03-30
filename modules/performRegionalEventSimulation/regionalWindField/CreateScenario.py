@@ -88,12 +88,15 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             terrain_data = []
         # Parsing storm properties
         param = []
-        param.append(scenario_info['Storm']['Landfall']['Latitude'])
-        param.append(scenario_info['Storm']['Landfall']['Longitude'])
-        param.append(scenario_info['Storm']['LandingAngle'])
-        param.append(scenario_info['Storm']['Pressure'])
-        param.append(scenario_info['Storm']['Speed'])
-        param.append(scenario_info['Storm']['Radius'])
+        try:
+            param.append(scenario_info['Storm']['Landfall']['Latitude'])
+            param.append(scenario_info['Storm']['Landfall']['Longitude'])
+            param.append(scenario_info['Storm']['Landfall']['LandingAngle'])
+            param.append(scenario_info['Storm']['Landfall']['Pressure'])
+            param.append(scenario_info['Storm']['Landfall']['Speed'])
+            param.append(scenario_info['Storm']['Landfall']['Radius'])
+        except:
+            print('CreateScenario: please provide all needed landfall properties.')
         # Monte-Carlo
         #del_par = [0, 0, 0] # default
         # Parsing mesh configurations
