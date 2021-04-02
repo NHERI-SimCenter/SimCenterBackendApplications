@@ -199,9 +199,20 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
         else:
             tmploc = dist2land.index(0) # the first landing point in case the storm sway back and forth
         # simulation track
-        tmp = track_lat
-        track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
-        print(track_simu)
+        track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
+        if track_simu_file:         
+            try:
+                df = pd.read_csv(os.path.join(data_dir, track_simu_file), header = None, index_col = None)
+                track_simu = df.iloc[:, 0].values.tolist()
+            except:
+                print('CreateScenario: warning - TrackSimu file not found, using the full track.')
+                track_simu = track_lat
+        else:
+            print('CreateScenario: warning - no truncation defined, using the full track.')
+            #tmp = track_lat
+            #track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
+            #print(track_simu)
+            track_simu = track_lat
         # Reading data
         try:
             landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
