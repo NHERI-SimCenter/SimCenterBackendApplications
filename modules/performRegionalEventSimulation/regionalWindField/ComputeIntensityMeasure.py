@@ -131,10 +131,11 @@ def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, mode
             scenario_info['Storm']['Landfall'] = {}
             scenario_info['Storm']['Landfall']['Latitude'] = scenario_data[0]['CycloneParam'][0]
             scenario_info['Storm']['Landfall']['Longitude'] = scenario_data[0]['CycloneParam'][1]
-            scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
-            scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
-            scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
-            scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
+        # updating landfall properties
+        scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
+        scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
+        scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
+        scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
 
         config = {
             "Scenario": scenario_info,
