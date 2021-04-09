@@ -155,7 +155,14 @@ def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, mode
             })
             df.to_csv(abs_path_track, sep=',', header=False, index=False) 
         # lat_w file
-        abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
+        if scenario_info['Storm'].get('TrackSimu', None):
+            abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
+        else:
+            abs_path_latw = os.path.abspath(os.path.join(input_dir, 'TrackSimu_populated.csv'))
+            df = pd.DataFrame.from_dict({
+                'Lat': scenario_data[0]['TrackSimu'],
+            })
+            df.to_csv(abs_path_latw, sep=',', header=False, index=False)
         if scenario_info['Generator'] == 'SimulationHist':
             df = pd.DataFrame.from_dict({
                 'Lat': scenario_data[0]['TrackSimu'],
