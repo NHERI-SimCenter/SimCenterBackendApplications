@@ -17,12 +17,12 @@ class simCenterBackendApps(ConanFile):
                "zlib/1.2.11", \
                "libcurl/7.72.0", \
                "smelt/1.2.0@simcenter/stable", \
-               "eigen/3.3.7@conan/stable", \
-               "clara/1.1.5@bincrafters/stable", \
-               "jsonformoderncpp/3.7.0@vthiery/stable", \
+               "eigen/3.3.7", \
+               "clara/1.1.5", \
+               "jsonformoderncpp/3.7.0", \
                "mkl-static/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
-               "nanoflann/1.3.0@simcenter/stable"
+               "nanoflann/1.3.2"
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
