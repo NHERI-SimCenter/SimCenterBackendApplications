@@ -118,12 +118,24 @@ def simulate_storm(scenarios, event_info, model_type):
     return res
 
 
-def simulate_storm_cpp(site_info, scenario_info, event_info, model_type, dir_info):
+def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, model_type, dir_info):
 
     if (model_type == 'LinearAnalytical'):
         # save configuration file
         input_dir = dir_info['Input']
         output_dir = dir_info['Output']
+        # for SimulationHist, need to populate csv files as the inputs to the executable
+        if scenario_info['Generator'] == 'SimulationHist':
+            scenario_info['Storm']['Track'] = 'Track_populated.csv'
+            scenario_info['Storm']['TrackSimu'] = 'TrackSimu_populated.csv'
+            scenario_info['Storm']['Landfall'] = {}
+            scenario_info['Storm']['Landfall']['Latitude'] = scenario_data[0]['CycloneParam'][0]
+            scenario_info['Storm']['Landfall']['Longitude'] = scenario_data[0]['CycloneParam'][1]
+            scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
+            scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
+            scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
+            scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
+
         config = {
             "Scenario": scenario_info,
             "Event": event_info
@@ -135,8 +147,19 @@ def simulate_storm_cpp(site_info, scenario_info, event_info, model_type, dir_inf
         abs_path_site = os.path.abspath(os.path.join(input_dir, site_info['input_file']))
         # track file
         abs_path_track = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['Track']))
+        if scenario_info['Generator'] == 'SimulationHist':
+            df = pd.DataFrame.from_dict({
+                'Lat': scenario_data[0]['StormTrack']['Latitude'],
+                'Lon': scenario_data[0]['StormTrack']['Longitude']
+            })
+            df.to_csv(abs_path_track, sep=',', header=False, index=False) 
         # lat_w file
         abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
+        if scenario_info['Generator'] == 'SimulationHist':
+            df = pd.DataFrame.from_dict({
+                'Lat': scenario_data[0]['TrackSimu'],
+            })
+            df.to_csv(abs_path_latw, sep=',', header=False, index=False) 
         # terrain file
         if ('Terrain' in scenario_info.keys()):
             abs_path_terrain = os.path.abspath(os.path.join(input_dir, scenario_info['Terrain']))
@@ -222,10 +245,12 @@ def simulate_storm_cpp(site_info, scenario_info, event_info, model_type, dir_inf
                 args_list.append(args)
                 odir_list.append(output_subdir)
             ## running
+            print('ComputeIntensityMeaure: running analysis.')
             procs_list = [subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for cmd in args_list]
             for proc in procs_list:
-                proc.wait()
+                proc.communicate()
             ## loading output
+            print('ComputeIntensityMeaure: postprocessing simulation data.')
             for j in range(num_per_site):
                 os.remove(pert_list[j])
                 station_res = {
