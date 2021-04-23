@@ -111,7 +111,7 @@ Building::readBIM(const char *event, const char *bim)
   json_t *GI = json_object_get(rootBIM,"GeneralInformation");
   json_t *sType = json_object_get(GI,"StructureType");
   json_t *aType = json_object_get(GI,"PlanArea");
-  json_t *nType = json_object_get(GI,"NumberofStories");
+  json_t *nType = json_object_get(GI,"NumberOfStories");
   json_t *yType = json_object_get(GI,"YearBuilt");
 
   // optional
@@ -162,7 +162,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *GI = json_object_get(rootBIM,"GeneralInformation");
   json_t *sType = json_object_get(GI,"StructureType");
   json_t *aType = json_object_get(GI,"PlanArea");
-  json_t *nType = json_object_get(GI,"NumberofStories");
+  json_t *nType = json_object_get(GI,"NumberOfStories");
   json_t *yType = json_object_get(GI,"YearBuilt");
 
   // optional

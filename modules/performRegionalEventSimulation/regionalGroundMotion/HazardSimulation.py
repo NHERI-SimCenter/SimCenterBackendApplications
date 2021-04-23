@@ -130,7 +130,8 @@ if __name__ == '__main__':
         # Computing log mean Sa
         ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
                                                     event_info['NumberPerSite'],
-                                                    event_info['CorrelationModel'])
+                                                    event_info['CorrelationModel'],
+                                                    event_info['IntensityMeasure'])
         print('HazardSimulation: correlated response spectra computed.')
         if event_info['SaveIM']:
             print('HazardSimulation: saving simulated intensity measures.')
@@ -152,6 +153,9 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Selecting records
         target_T = event_info['IntensityMeasure']['Periods']
+        if event_info['IntensityMeasure']['Type'] =='PGA':
+            # PGA only
+            target_T = [0.0]
         data_source = event_info.get('Database',0)
         if data_source:
             print('HazardSimulation: selecting ground motion records.')
