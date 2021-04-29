@@ -1,0 +1,6 @@
+numpy
+pytest-shutil
+meshio
+Shapely
+triangle
+matplotlib
