@@ -16,7 +16,9 @@ from GenUtilities import genUtilities # General utilities
 
 ####################################################################
 def install(package):
-    """Install all the requirements."""
+    '''
+    Install all the requirements.
+    '''
 
     # Install all python libraries required
     # python3 -m pip3 install --user -r requirements.txt
@@ -28,7 +30,17 @@ def install(package):
 
 ####################################################################
 def main():
-    """This is the main routine which controls the flow of program."""
+    '''
+    This is the main routine which controls the flow of program.
+
+    Objects:
+        hydro_parser: Parse CLI arguments
+        hydroutil: General utilities
+
+    Variables:
+        projname: Name of the project as given by the user
+        logID: Integer ID for the log file
+    '''
 
     # Get the system argument
     # Create the parser
@@ -52,6 +64,24 @@ def main():
 
     # Create the objects
     hydroutil = genUtilities() # General utilities
+
+    #***********************************
+    # HYDRO-UQ LOG FILE: INITIALIZE
+    #***********************************
+    # Get the project name
+    projname = hydroutil.extract_element_from_json(data, ["Events","ProjectName"])
+    projname = ', '.join(projname)
+    logID = 0
+
+    # Initialize the log
+    hydroutil.hydrolog(projname)
+
+    # Start the log file with header and time and date
+    logfiletext = hydroutil.general_header()
+    hydroutil.flog.write(logfiletext)
+    logID += 1
+    hydroutil.flog.write('%d (%s): This log has started.\n' % (logID,datetime.datetime.now()))
+
 
 ####################################################################
 if __name__ == "__main__":
