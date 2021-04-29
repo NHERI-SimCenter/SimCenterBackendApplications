@@ -92,6 +92,13 @@ def main():
     logID += 1
     hydroutil.flog.write('%d (%s): Following solver directories have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(foldwrite)))
 
+    #***********************************
+    # SUPPLEMENTARY SOLVER SPECIFIC FILES
+    #***********************************
+    fileswrite = hydrosolver.filecreate(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following required files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
 
 ####################################################################
 if __name__ == "__main__":
