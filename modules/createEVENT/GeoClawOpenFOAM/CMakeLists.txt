@@ -1,2 +1,4 @@
 simcenter_add_python_script(SCRIPT GeoClawOpenFOAM.py)
 simcenter_add_python_script(SCRIPT Processor.py)
+simcenter_add_python_script(SCRIPT GenUtilities.py)
+simcenter_add_python_script(SCRIPT OpenFOAM.py)

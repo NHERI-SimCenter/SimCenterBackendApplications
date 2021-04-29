@@ -6,7 +6,8 @@ class genUtilities(object):
     This class includes all the general utilities that are
     required for the Hydro-UQ.
     
-    Methods:
+    Methods
+    --------
         extract: Extracts an element from a nested json 
         extract_element_from_json: Extracts an element from a nested json
         hydrolog: Initializes the log file
@@ -19,7 +20,8 @@ class genUtilities(object):
         Extracts an element from a nested dictionary
         along a specified path and returns a list.
         
-        Arguments:
+        Arguments
+        -----------
             obj: A dict - input dictionary
             path: A list - list of strings that form the JSON path
             ind: An int - starting index
@@ -63,7 +65,8 @@ class genUtilities(object):
         If the input is a dictionary, a list is returned.
         If the input is a list of dictionary, a list of lists is returned.
 
-        Arguments:
+        Arguments
+        -----------
             obj: A list or dict - input dictionary or list of dictionaries
             path: A list - list of strings that form the path to the desired element
         '''
@@ -81,10 +84,12 @@ class genUtilities(object):
         '''
         Used to initialize the log file for the Hydro-UQ program
 
-        Arguments:
+        Arguments
+        -----------
             projname: Name of the project as given by the user
 
-        Variables:
+        Variables
+        -----------
             flog: File pointer to the log file
         '''
 
@@ -101,7 +106,8 @@ class genUtilities(object):
         '''
         Used to create a general header for Hydro-UQ related files
 
-        Variables:
+        Variables
+        -----------
             header: Stores the general header for the Hydro-UQ files
         '''
 

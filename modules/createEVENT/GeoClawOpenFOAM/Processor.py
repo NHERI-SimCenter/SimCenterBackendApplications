@@ -13,6 +13,7 @@ import pip
 
 # Import user-defined classes
 from GenUtilities import genUtilities # General utilities
+from OpenFOAM import solver # OpenFOAM class
 
 ####################################################################
 def install(package):
@@ -64,6 +65,7 @@ def main():
 
     # Create the objects
     hydroutil = genUtilities() # General utilities
+    hydrosolver = solver() # Solver object
 
     #***********************************
     # HYDRO-UQ LOG FILE: INITIALIZE
@@ -81,6 +83,14 @@ def main():
     hydroutil.flog.write(logfiletext)
     logID += 1
     hydroutil.flog.write('%d (%s): This log has started.\n' % (logID,datetime.datetime.now()))
+
+    #***********************************
+    # REQUIRED DIRECTORIES
+    #***********************************
+    # Create the OpenFOAM directories
+    foldwrite = hydrosolver.dircreate()
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following solver directories have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(foldwrite)))
 
 
 ####################################################################
