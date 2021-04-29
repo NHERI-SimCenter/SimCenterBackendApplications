@@ -306,6 +306,103 @@ FoamFile
         fileID.close()
 
     ####################################################################
+    def transportProperties(self,data):
+        '''
+        Method creates the transportProperties file for the OpenFOAM. There can be potential issues when turbulence is used
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+            nuwater: Kinematic viscosity of water
+            nuair: Exponent in kinematic viscosity of water
+            rhoair: Density of water
+            nuair: Kinematic viscosity of air
+            nuair: Exponent in kinematic viscosity of air
+            rhoair: Density of air
+            sigma: Surface tension between water and air
+        '''
+
+        # Create the transportProperties file
+        fileID = open("constant/transportProperties","w")
+
+        # Get the turbulence model
+        hydroutil = genUtilities()
+
+        # Get the properties necessary to print
+        nuwater = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterViscosity"]))
+        nuwaterexp = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterViscosityExp"]))
+        rhowater = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterDensity"]))
+        nuair = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirViscosity"]))
+        nuairexp = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirViscosityExp"]))
+        rhoair = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirDensity"]))
+        sigma = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SurfaceTension"]))
+
+        # Write the constants to the file
+        var = np.array([['nuwater', nuwater+'e'+nuwaterexp], ['rhowater', rhowater], ['nuair', nuair+'e'+nuairexp], ['rhoair', rhoair], ['sigma',sigma]])
+        self.constvarfileOF(var,"transportProperties")
+
+        # Write the dictionary file
+        # Header
+        ofheader = self.headerOF("dictionary","constant","transportProperties")
+        fileID.write(ofheader)
+        # Include the constant file
+        fileID.write('#include\t"../constantsFile"\n')
+        # Water properties
+        fileID.write('\nphases (water air);\n\n')
+        fileID.write('water\n{\n\ttransportModel\tNewtonian;\n')
+        fileID.write('\tnu\t[0 2 -1 0 0 0 0]\t$nuwater;\n')
+        fileID.write('\trho\t[1 -3 0 0 0 0 0]\t$rhowater;\n}\n\n')
+        # Air properties
+        fileID.write('air\n{\n\ttransportModel\tNewtonian;\n')
+        fileID.write('\tnu\t[0 2 -1 0 0 0 0]\t$nuair;\n')
+        fileID.write('\trho\t[1 -3 0 0 0 0 0]\t$rhoair;\n}\n\n')
+        # Surface tension
+        fileID.write('sigma\t[1 0 -2 0 0 0 0]\t$sigma;\n')
+
+        # Close the transportProperties file
+        fileID.close()
+
+    ####################################################################
+    def turbProperties(self,data):
+        '''
+        Method is used to create the necessary files for turbulence properties
+
+        Variables
+        ------------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+            turb: Turbulence model
+        '''
+
+        # Create the turbulenceProperties file
+        fileID = open("constant/turbulenceProperties","w")
+
+        # Get the turbulence model
+        hydroutil = genUtilities()
+        turb = ', '.join(hydroutil.extract_element_from_json(data, ["Events","TurbulenceModel"]))
+
+        # Write the dictionary file
+        # Header
+        ofheader = self.headerOF("dictionary","constant","turbulenceProperties")
+        fileID.write(ofheader)
+        # Other content
+        if int(turb) == 0:
+            fileID.write('\nsimulationType\tlaminar;\n\n')
+        else:
+            fileID.write('\nsimulationType\tRAS;\n\n')
+            fileID.write('RAS\n{\n\tRASModel\t')
+            if int(turb) == 1:
+                fileID.write('kEpsilon;\n\n')
+            elif int(turb) == 2:
+                fileID.write('kOmegaSST;\n\n')
+            fileID.write('\tturbulence\ton;\n\n')
+            fileID.write('\tprintCoeffs\ton;\n}')
+            
+        # Close the turbulenceProperties file
+        fileID.close()
+
+    ####################################################################
     def dircreate(self):
         '''
         Method creates all the necessary directories for the solver being used.
@@ -378,3 +475,23 @@ FoamFile
 
         return filewritten
 
+    ####################################################################
+    def matmodel(self,data):
+        '''
+        Method creates all necessary files related to the material model that is used
+
+        Variables
+        ------------
+            filewritten: Files being created
+        '''
+
+        # Write the transportProperties file
+        self.transportProperties(data)
+
+        # Write the turbulenceProperties file
+        self.turbProperties(data)
+
+        # Files written: required for log files
+        filewritten = np.array(['transportProperties','turbulenceProperties'])
+
+        return filewritten

@@ -37,6 +37,7 @@ def main():
     Objects:
         hydro_parser: Parse CLI arguments
         hydroutil: General utilities
+        hydrosolver: Solver related file generation
 
     Variables:
         projname: Name of the project as given by the user
@@ -98,6 +99,13 @@ def main():
     fileswrite = hydrosolver.filecreate(data)
     logID += 1
     hydroutil.flog.write('%d (%s): Following required files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    #***********************************
+    # MATERIAL MODEL RELATED FILES
+    #***********************************
+    fileswrite = hydrosolver.matmodel(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following material-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
 
 ####################################################################
