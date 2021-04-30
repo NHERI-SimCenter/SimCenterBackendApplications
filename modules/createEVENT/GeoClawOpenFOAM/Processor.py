@@ -107,6 +107,20 @@ def main():
     logID += 1
     hydroutil.flog.write('%d (%s): Following material-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
+    #***********************************
+    # SIMULATION CONTROL RELATED FILES
+    #***********************************
+    fileswrite = hydrosolver.solvecontrol(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following solver-control related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    #***********************************
+    # PARALLELIZATION CONTROL RELATED FILES
+    #***********************************
+    fileswrite = hydrosolver.parallel(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following parallel-compute related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
 
 ####################################################################
 if __name__ == "__main__":

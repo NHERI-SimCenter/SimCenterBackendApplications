@@ -15,12 +15,23 @@ class solver(object):
     ----------------
         dircreate: Method to create necessary directories for the solver
         filecreate: Method to create supplementary files
+        matmodel: Method for material models
+        solvecontrol: Method for solver control
+        parallel: Method for parallelization
+        geometry: Method for creating STL files
+        meshing:
+        boundary:
+        initial:
 
     Secondary methods
     -------------------
         gfileOF: Method creates the gravity file for the OpenFOAM
         fvSchemesOF: Method to create the fvSchemes file
         fvSolutionOF: Method to create the fvSolution file
+        transportProperties: Method for material properties of water & air
+        turbProperties: Method for turbulence properties
+        solvecontrol: Method for creation of control dictionary
+        decomposepar: Method for decomposparDict / Parallelization dictionary
     
     Tertiary methods
     --------------------
@@ -403,6 +414,118 @@ FoamFile
         fileID.close()
 
     ####################################################################
+    def controlDict(self,data):
+        '''
+        Method to create the control dictionary for the solver
+
+        Variables
+        ------------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+            startT: Start time of simulation
+            endT: End of simulation
+            deltaT: Time interval for simulation
+            writeT: Write interval
+            simtype: Type of simulation
+            solver: Solver used for CFD simulation
+        '''
+
+        # Create the transportProperties file
+        fileID = open("system/controldict","w")
+
+        # Get the turbulence model
+        hydroutil = genUtilities()
+
+        # Get required data
+        startT = ''.join(hydroutil.extract_element_from_json(data, ["Events","StartTime"]))
+        endT = ''.join(hydroutil.extract_element_from_json(data, ["Events","EndTime"]))
+        deltaT = ''.join(hydroutil.extract_element_from_json(data, ["Events","TimeInterval"]))
+        writeT = ''.join(hydroutil.extract_element_from_json(data, ["Events","WriteInterval"]))
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+        if(int(simtype) == 4):
+            solver = "olaDyMFlow"
+        else:
+            solver = "olaFlow"
+
+        # Write the constants to the file
+        var = np.array([['startT', startT], ['endT', endT], ['deltaT', deltaT],['deltaT2', 1], ['writeT', writeT], ['solver', '"'+solver+'"']])
+        self.constvarfileOF(var,"ControlDict")
+
+        # Write the dictionary file
+        ofheader = self.headerOF("dictionary","system","controlDict")
+        fileID.write(ofheader)
+        fileID.write('\napplication \t $solver;\n\n')
+        fileID.write('startFrom \t latestTime;\n\n')
+        fileID.write('startTime \t $startT;\n\n')
+        fileID.write('stopAt \t endTime;\n\n')
+        fileID.write('endTime \t $endT;\n\n')
+        fileID.write('deltaT \t $deltaT2;\n\n')
+        fileID.write('writeControl \t adjustableRunTime;\n\n')
+        fileID.write('writeInterval \t $writeT;\n\n')
+        fileID.write('purgeWrite \t 0;\n\n')
+        fileID.write('writeFormat \t ascii;\n\n')
+        fileID.write('writePrecision \t t;\n\n')
+        fileID.write('writeCompression \t uncompressed;\n\n')
+        fileID.write('timeFormat \t general;\n\n')
+        fileID.write('timePrecision \t 6;\n\n')
+        fileID.write('runTimeModifiable \t yes;\n\n')
+        fileID.write('adjustTimeStep \t yes;\n\n')
+        fileID.write('maxCo \t 1.0;\n\n')
+        fileID.write('maxAlphaCo \t 1.0;\n\n')
+        fileID.write('maxDeltaT \t 1;\n\n')
+        fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
+
+        # Add post-processing stuff
+
+        # Close the controlDict file
+        fileID.close()
+
+    ####################################################################
+    def decomposepar(self,data):
+        '''
+        Method to create the decomposeparDict dictionary
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+            procs: Array of number of processors
+            nums: Number of processors along x, y, z-directions
+            totalprocs: Total number of processors
+        '''
+
+        # Create the transportProperties file
+        fileID = open("system/decomposeParDict","w")
+
+        # Get the turbulence model
+        hydroutil = genUtilities()
+
+        # Get required data
+        procs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
+        method = ''.join(hydroutil.extract_element_from_json(data, ["Events","DecompositionMethod"]))
+
+        # Find total number of processors
+        procs = procs.replace(',', ' ')
+        nums = [int(n) for n in procs.split()]
+        totalprocs = nums[0]*nums[1]*nums[2]
+
+        # Write the constants to the file
+        var = np.array([['procX', str(nums[0])], ['procX', str(nums[1])], ['procX', str(nums[2])], ['procTotal', str(totalprocs)], ['decMeth', '"'+method+'"']])
+        self.constvarfileOF(var,"decomposeParDict")
+
+        # Write the dictionary file
+        ofheader = self.headerOF("dictionary","system","decomposeParDict")
+        fileID.write(ofheader)
+        # Write the dictionary file
+        fileID.write('\nnumberOfSubdomains \t $procTotal;\n\n')
+        fileID.write('method \t $decMeth;\n\n')
+        fileID.write('simpleCoeffs \n{\n\tn\t($procX\t$procY\t$procZ); \n\tdelta\t0.001;\n}\n\n')
+        fileID.write('hierarchicalCoeffs \n{\n\tn\t($procX\t$procY\t$procZ); \n\tdelta\t0.001;\n\torder\txyz;\n}\n')
+
+        # Close the controlDict file
+        fileID.close()
+
+    ####################################################################
     def dircreate(self):
         '''
         Method creates all the necessary directories for the solver being used.
@@ -495,3 +618,48 @@ FoamFile
         filewritten = np.array(['transportProperties','turbulenceProperties'])
 
         return filewritten
+
+    ####################################################################
+    def solvecontrol(self,data):
+        '''
+        Method creates all necessary files for the control of program - here OpenFOAM
+
+        Variables
+        ------------
+            filewritten: Files being created
+        '''
+        
+        # Write the controlDict file
+        self.controlDict(data)
+
+        # Files written: required for log files
+        filewritten = np.array(['controlDict'])
+
+        return filewritten
+
+    ####################################################################
+    def parallel(self,data):
+        '''
+        Method creates the necessary file for decomposition of the domain
+
+        Variables
+        ------------
+            filewritten: Files being created
+        '''
+        
+        # Write the controlDict file
+        self.decomposepar(data)
+
+        # Files written: required for log files
+        filewritten = np.array(['decomposeParDict'])
+
+        return filewritten
+
+    ####################################################################
+    def geometry(self,data):
+        '''
+        Method creates the relevant STL files from the bathymetry
+        definitions provided by the user
+        '''
+
+
