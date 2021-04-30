@@ -121,6 +121,26 @@ def main():
     logID += 1
     hydroutil.flog.write('%d (%s): Following parallel-compute related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
+    #***********************************
+    # GEOMETRY RELATED FILES
+    # Call this only if we are using Hydro mesher
+    #***********************************
+    mesher = hydroutil.extract_element_from_json(data, ["Events","MeshType"])
+    if int(mesher[0]) == 0:
+        fileswrite = hydrosolver.geometry(data)
+        logID += 1
+        hydroutil.flog.write('%d (%s): Following geometry-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    else:
+        hydroutil.flog.write('%d (%s): No gemoetric files have been created since the user is providing the mesh\n' % (logID,datetime.datetime.now()))
+
+    #***********************************
+    # MESHING RELATED FILES
+    #***********************************
+    # fileswrite = hydrosolver.meshing(data)
+    # logID += 1
+    # hydroutil.flog.write('%d (%s): Following meshing-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
 
 ####################################################################
 if __name__ == "__main__":

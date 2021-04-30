@@ -5,6 +5,7 @@ import numpy as np
 import os
 import shutil
 from GenUtilities import genUtilities # General utilities
+from Flume import OSUWaveFlume # Wave flume utilities
 
 class solver(object):
     '''
@@ -660,6 +661,108 @@ FoamFile
         '''
         Method creates the relevant STL files from the bathymetry
         definitions provided by the user
+
+        Variables
+        ------------
+            filewritten: Files being created
+            hydroutil: Utilities object
+            simtype: Type of simulation
+            bathyfiletype: Type of bathymetry file (if applicable)
+            flumedeftype: Definition of wave flume (if applicable)
+            breadth: Breadth of flume (if applicable)
+        '''
+        
+        # Get an object for utilities
+        hydroutil = genUtilities()
+
+        # Get the simulation type
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+        # If SW-CFD coupling
+        if (int(simtype) == 1) or (int(simtype) == 3):
+            # Get the type of bathymetry
+            bathyfiletype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BathymetryFileType"]))
+
+            # Create an object for the bathymetry 
+            if int(bathyfiletype) == 0:
+                # Create object for simcenter format
+                print(0)
+
+            elif ((int(bathyfiletype) == 1) or (int(bathyfiletype) == 2)) \
+                or (int(bathyfiletype) == 3):
+                # Create the GeoClaw object
+                print(0)
+
+            elif int(bathyfiletype) == 4:
+                # Create the AdCirc object
+                # Files written: required for log files
+                #filewritten = np.array(['ERROR: AdCirc not supported. Contact developer.'])
+                #return filewritten
+                print(0)
+
+        elif int(simtype) == 4:
+            # Get the way the flume is defined
+            flumedeftype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","FlumeInfoType"]))
+
+            if int(flumedeftype) == 0:
+                # Create the object for the Flume
+                flume = OSUWaveFlume()
+                # Initialize the input file
+                IpPTFile = 'templatedir/FlumeData.txt'
+                # Breadth of the flume
+                breadth = ''.join(hydroutil.extract_element_from_json(data, ["Events","FlumeBreadth"]))
+                flume.breadth = float(breadth)
+                # Generate the flume STL files
+                extreme = flume.generateflume(IpPTFile)
+                # Write the Max-Min values for the blockMesh
+                # into the constants file
+                BMXmin = extreme[0] - 0.25*(extreme[1] - extreme[0])
+                BMXmax = extreme[1] + 0.25*(extreme[1] - extreme[0])
+                BMYmin = -0.625*flume.breadth
+                BMYmax = 0.625*flume.breadth
+                BMZmin = extreme[2] - 0.25*(extreme[3] - extreme[2])
+                BMZmax = extreme[3] + 0.25*(extreme[3] - extreme[2])
+                var = np.array([['BMXmin', BMXmin], ['BMXmax', BMXmax], ['BMYmin', BMYmin],['BMYmax', BMYmax], ['BMZmin', BMZmin], ['BMZmax', BMZmax]])
+                self.constvarfileOF(var,"blockMeshDict")
+                # Move the STL files
+                shutil.move("Front.stl", "constant/triSurface/Front.stl")
+                shutil.move("Back.stl", "constant/triSurface/Back.stl")
+                shutil.move("Left.stl", "constant/triSurface/Left.stl")
+                shutil.move("Right.stl", "constant/triSurface/Right.stl")
+                shutil.move("Top.stl", "constant/triSurface/Top.stl")
+                shutil.move("Bottom.stl", "constant/triSurface/Bottom.stl")
+
+                # Files written: required for log files
+                filewritten = np.array(['STL files'])
+                return filewritten
+
+            else:
+                # Error in simulation type. Return error
+                filewritten = np.array(['ERROR: Flume info type not supported. Contact developer.'])
+                return filewritten
+        
+        else:
+            filewritten = np.array(['ERROR: Simulation type not supported. Contact developer.'])
+            return filewritten
+
+        # Files written: required for log files
+        filewritten = np.array(['None'])
+        return filewritten
+
+    ####################################################################
+    def meshing(self,data):
+        '''
+        Method creates the relevant STL files from the bathymetry
+        definitions provided by the user
+
+        Variables
+        ------------
+            filewritten: Files being created
+            hydroutil: Utilities object
+            simtype: Type of simulation
+            
         '''
 
+        # Get the meshing type
 
+        # If hydro-mesher used
