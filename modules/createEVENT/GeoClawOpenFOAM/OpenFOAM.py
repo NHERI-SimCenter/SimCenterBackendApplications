@@ -21,9 +21,9 @@ class solver(object):
         solvecontrol: Method for solver control
         parallel: Method for parallelization
         geometry: Method for creating STL files
-        meshing:
-        boundary:
-        initial:
+        meshing: Method for creating relevant mesh files
+        boundary: Method for creating boundary condition files
+        initial: Method for creating initial condition files
 
     Secondary methods
     -------------------
@@ -34,6 +34,9 @@ class solver(object):
         turbProperties: Method for turbulence properties
         solvecontrol: Method for creation of control dictionary
         decomposepar: Method for decomposparDict / Parallelization dictionary
+        bMeshDictOF: Creates the blockMesh dictionary
+        surffeatureextDictOF: Creates the surfaceFeatureExtract dictionary
+        snappyhexmeshDictOF: Create the snappyHexMesh dictionary
     
     Tertiary methods
     --------------------
@@ -646,6 +649,7 @@ FoamFile
         elif flag == 2:
             fileID.write('\tBuilding.stl {type triSurfaceMesh; name Building;}\n')
             fileID.write('\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n')
+        fileID.write('\tFull.stl {type triSurfaceMesh; name Full;}\n')
         fileID.write('};\n\n')
 
         # Castellated mesh generation
