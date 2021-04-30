@@ -132,14 +132,24 @@ def main():
         hydroutil.flog.write('%d (%s): Following geometry-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
     else:
-        hydroutil.flog.write('%d (%s): No gemoetric files have been created since the user is providing the mesh\n' % (logID,datetime.datetime.now()))
+        hydroutil.flog.write('%d (%s): No gemoetric files have not been created since the user is providing the mesh\n' % (logID,datetime.datetime.now()))
 
     #***********************************
     # MESHING RELATED FILES
+    # Call this only if we are using Hydro mesher
     #***********************************
-    # fileswrite = hydrosolver.meshing(data)
-    # logID += 1
-    # hydroutil.flog.write('%d (%s): Following meshing-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+    if int(mesher[0]) == 0:
+        fileswrite = hydrosolver.meshing(data)
+        logID += 1
+        hydroutil.flog.write('%d (%s): Following meshing-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    elif int(mesher[0]) == 2:
+        filewritten = np.array(['blockMeshDict','surfaceFeatureExtractDict','snappyHexMeshDict'])
+        # Copy the dictionaries to the right place
+        hydroutil.flog.write('%d (%s): Following mesh dictionaries provided by the user have been copied to system folder: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    else:
+        hydroutil.flog.write('%d (%s): Mesh files are provided by the user and thus mesh-dictionary creation has been skipped\n' % (logID,datetime.datetime.now()))
 
 
 ####################################################################

@@ -4,6 +4,7 @@
 import numpy as np
 import os
 import shutil
+import math
 from GenUtilities import genUtilities # General utilities
 from Flume import OSUWaveFlume # Wave flume utilities
 
@@ -527,6 +528,59 @@ FoamFile
         fileID.close()
 
     ####################################################################
+    def bMeshDictOF(self,data):
+        '''
+        Method to create the blockmesh dictionary 
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+            procs: Array of number of processors
+            nums: Number of processors along x, y, z-directions
+            totalprocs: Total number of processors
+        '''
+
+        # Open the blockmeshDict file
+        fileID = open("system/blockMeshDict","w")
+
+        # Add the header
+        ofheader = self.headerOF("dictionary","system","blockMeshDict")
+        fileID.write(ofheader)
+
+        # Include the constant file
+        fileID.write('#include\t"../constantsFile"\n\n')
+        # Add the units
+        fileID.write('convertToMeters\t1;\n\n')
+        # Add vertices
+        fileID.write('vertices\n(\n\t')
+        fileID.write('($BMXmin\t$BMYmin\t$BMZmin)\n\t')
+        fileID.write('($BMXmax\t$BMYmin\t$BMZmin)\n\t')
+        fileID.write('($BMXmax\t$BMYmax\t$BMZmin)\n\t')
+        fileID.write('($BMXmin\t$BMYmax\t$BMZmin)\n\t')
+        fileID.write('($BMXmin\t$BMYmin\t$BMZmax)\n\t')
+        fileID.write('($BMXmax\t$BMYmin\t$BMZmax)\n\t')
+        fileID.write('($BMXmax\t$BMYmax\t$BMZmax)\n\t')
+        fileID.write('($BMXmin\t$BMYmax\t$BMZmax)\n);\n\n')
+        # Add blocks
+        fileID.write('blocks\n(\n\t')
+        fileID.write('hex (0 1 2 3 4 5 6 7) ($nx $ny $nz) simpleGrading (1 1 1)\n);\n\n')
+        # Add edges
+        fileID.write('edges\n(\n);\n\n')
+        # Add patches
+        fileID.write('patches\n(\n\t')
+        fileID.write('patch maxY\n\t(\n\t\t(3 7 6 2)\n\t)\n\t')
+        fileID.write('patch minX\n\t(\n\t\t(0 4 7 3)\n\t)\n\t')
+        fileID.write('patch maxX\n\t(\n\t\t(2 6 5 1)\n\t)\n\t')
+        fileID.write('patch minY\n\t(\n\t\t(1 5 4 0)\n\t)\n\t')
+        fileID.write('patch minZ\n\t(\n\t\t(0 3 2 1)\n\t)\n\t')
+        fileID.write('patch maxZ\n\t(\n\t\t(4 5 6 7)\n\t)\n')
+        fileID.write(');\n\n')
+        # Add merge patch pairs
+        fileID.write('mergePatchPairs\n(\n);\n')
+
+
+    ####################################################################
     def dircreate(self):
         '''
         Method creates all the necessary directories for the solver being used.
@@ -732,6 +786,11 @@ FoamFile
                 shutil.move("Top.stl", "constant/triSurface/Top.stl")
                 shutil.move("Bottom.stl", "constant/triSurface/Bottom.stl")
 
+                # Write extreme values to temporary file for later usage
+                tempfileID = open("temp_geometry","w")
+                tempfileID.write(str(BMXmin)+"\n"+str(BMXmax)+"\n"+str(BMYmin)+"\n"+str(BMYmax)+"\n"+str(BMZmin)+"\n"+str(BMZmax)+"\n")
+                tempfileID.close
+
                 # Files written: required for log files
                 filewritten = np.array(['STL files'])
                 return filewritten
@@ -758,11 +817,34 @@ FoamFile
         Variables
         ------------
             filewritten: Files being created
-            hydroutil: Utilities object
-            simtype: Type of simulation
             
         '''
+        # Get an object for utilities
+        hydroutil = genUtilities()
 
-        # Get the meshing type
+        # Get required data
+        meshsize = ''.join(hydroutil.extract_element_from_json(data, ["Events","MeshSize"]))
 
-        # If hydro-mesher used
+        # Read the temporary geometry file with extreme values
+        data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
+
+        # Get the mesh sizes
+        nx = 100*int(meshsize)
+        if(data_geoext[1] != data_geoext[0]):
+            ny = math.ceil(5*nx*((data_geoext[3]-data_geoext[2])/(data_geoext[1]-data_geoext[0])))
+            nz = math.ceil(5*nx*((data_geoext[5]-data_geoext[4])/(data_geoext[1]-data_geoext[0])))
+
+        else:
+            filewritten = np.array(['Error in length definition of geometry (max = min). Please check geometry'])
+            return filewritten
+
+        # Write the constants to the file
+        var = np.array([['nx', nx], ['ny', ny], ['nz', nz]])
+        self.constvarfileOF(var,"blockMeshDict")
+
+        # Create the blockMeshDict
+        self.bMeshDictOF(data)
+
+        # Files written: required for log files
+        filewritten = np.array(['blockMeshDict','surfaceFeatureExtractDict','snappyHexMeshDict'])
+        return filewritten
