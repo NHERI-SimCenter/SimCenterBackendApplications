@@ -759,6 +759,44 @@ FoamFile
         fileID.write('mergeTolerance\t1E-6;\n')
 
     ####################################################################
+    def setFieldsDictOF(self,numalpharegion):
+        '''
+        Method to create the setFields dictionary 
+
+        Arguments
+        -------------
+            numalpharegion: Number of regions for alpha
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+        '''
+
+        # Open the blockmeshDict file
+        fileID = open("system/setFieldsDict","w")
+
+        # Add the header
+        ofheader = self.headerOF("dictionary","system","setFieldsDict")
+        fileID.write(ofheader)
+
+        # Include the constant file
+        fileID.write('#include\t"../constantsFile"\n\n')
+
+        # Initialize the global field value of alpha
+        #fileinfo = '{\ndefaultFieldValues\n(\n\tvolScalarFieldValue\talpha.water\t$alphaglobal\n);\n\n'
+        fileID.write('defaultFieldValues\n(\n\tvolScalarFieldValue\talpha.water\t$alphaglobal\n);\n\n')
+
+        # Initialize the local field value of alpha
+        fileinf = 'regions\n(\n'
+        for ii in range(numalpharegion):
+            fileinf = fileinf + '\tboxToCell\n\t{\n\t\t'
+            fileinf = fileinf + 'box\t($alpha'+str(ii)+'x1\t$alpha'+str(ii)+'y1\t$alpha'+str(ii)+'z1)\t($alpha'+str(ii)+'x2\t$alpha'+str(ii)+'y2\t$alpha'+str(ii)+'z2);\n\n\t\t'
+            fileinf = fileinf + 'fieldValues\n\t\t(\n\t\t\tvolScalarFieldValue\talpha.water\t$alpha' + str(ii) + '\n\t\t);\n\t}\n\n'
+        fileID.write('%s' % (fileinf))
+        fileID.write('\n);')
+
+    ####################################################################
     def dircreate(self):
         '''
         Method creates all the necessary directories for the solver being used.
@@ -992,13 +1030,18 @@ FoamFile
     ####################################################################
     def meshing(self,data):
         '''
-        Method creates the relevant STL files from the bathymetry
-        definitions provided by the user
+        Method creates the relevant mesh files / dictionaries 
 
         Variables
         ------------
             filewritten: Files being created
-            
+            meshsize: Goes from 1 - 5 (Points to slider on UI)
+            data_geoext: Data from temporary geometry file
+            nx, ny, nz: Number of elements in x-, y- and z- directions
+            flag: Indicates presence of one or more buildings
+            maxLocalCells: Number of local cells for SHM
+            maxGlobalCells: Number of global cells for SHM
+            px,py,pz: A point inside the domain
         '''
         # Get an object for utilities
         hydroutil = genUtilities()
@@ -1050,4 +1093,134 @@ FoamFile
 
         # Files written: required for log files
         filewritten = np.array(['blockMeshDict','surfaceFeatureExtractDict','snappyHexMeshDict'])
+        return filewritten
+
+    ####################################################################
+    def initcond(self,data):
+        '''
+        Method creates the relevant files for the initial condition
+
+        Variables
+        ------------
+            filewritten: Files being created
+            
+        '''
+
+        # Get an object for utilities
+        hydroutil = genUtilities()
+
+        # Get the simulation type
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+        if int(simtype) == 1:
+            filewritten = np.array(['ERROR: Initialization from SW solutions. Contact developer for help.'])
+            return filewritten
+
+        elif int(simtype) == 3:
+            # Get the global value of alpha
+            alphaglobal = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaGlobal"]))
+            var = np.array([['alphaglobal',str(alphaglobal)]])
+
+            # Get each local value 
+            numalpharegion = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumAlphaRegion"]))
+
+            # Get each local region
+            for ii in range(int(numalpharegion)):
+                regionalpha = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaRegion"+str(ii)]))
+                regions = regionalpha.replace(',', ' ')
+                nums = [int(n) for n in regions.split()]
+                var = np.append(var,[['alpha'+str(ii)+'x1',str(nums[0])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii)+'y1',str(nums[1])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii)+'z1',str(nums[2])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii)+'x2',str(nums[3])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii)+'y2',str(nums[4])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii)+'z2',str(nums[5])]],axis=0)
+                var = np.append(var,[['alpha'+str(ii),str(nums[6])]],axis=0)
+
+            # Write the constants file
+            self.constvarfileOF(var,"setFieldsDict")
+
+            # Create the setFields dictionary
+            self.setFieldsDictOF(int(numalpharegion))
+            filewritten = np.array(['setFieldsDict'])
+            return filewritten
+
+        elif int(simtype) == 4:
+            # Initialize water depth
+            waterdepth = 0
+            # Check first if flume file exists.
+            if os.path.isfile("templateDir/wmwg.txt"):
+                # Get water height from this
+                # Read the temporary geometry file with extreme values
+                filewm = open('templateDir/wmwg.txt','r')
+                Lines = filewm.readlines()
+                count = 0
+                for line in Lines:
+                    count += 1
+                    if count == 61:
+                        stra=line.replace('% StillWaterDepth: ','')
+                        waterdepth = float(stra)
+                        break
+
+            elif os.path.isfile("templateDir/wmdisp.txt"):
+                # Read the temporary geometry file with extreme values
+                filewm = open('templateDir/wmdisp.txt','r')
+                Lines = filewm.readlines()
+                count = 0
+                for line in Lines:
+                    count += 1
+                    if count == 61:
+                        stra=line.replace('% StillWaterDepth: ','')
+                        waterdepth = float(stra)
+                        break
+
+            # If water depth has been read, then 
+            if waterdepth > 0:
+                # Initialize global value to zero
+                var = np.array([['alphaglobal',str(0)]])
+                numalpharegion = '1'
+
+                # Read the temp geometry file
+                data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
+
+                # Set the variables for one region
+                var = np.append(var,[['alpha'+str(0)+'x1',str(data_geoext[0])]],axis=0)
+                var = np.append(var,[['alpha'+str(0)+'y1',str(data_geoext[2])]],axis=0)
+                var = np.append(var,[['alpha'+str(0)+'z1',str(data_geoext[4])]],axis=0)
+                var = np.append(var,[['alpha'+str(0)+'x2',str(data_geoext[1])]],axis=0)
+                var = np.append(var,[['alpha'+str(0)+'y2',str(data_geoext[3])]],axis=0)
+                var = np.append(var,[['alpha'+str(0)+'z2',str(data_geoext[5])]],axis=0)
+                var = np.append(var,[['alpha'+str(0),str(1)]],axis=0)
+
+            else:
+                # Get the global value of alpha
+                alphaglobal = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaGlobal"]))
+                var = np.array([['alphaglobal',str(alphaglobal)]])
+
+                # Get each local value 
+                numalpharegion = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumAlphaRegion"]))
+
+                # Get each local region
+                for ii in range(int(numalpharegion)):
+                    regionalpha = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaRegion"+str(ii)]))
+                    regions = regionalpha.replace(',', ' ')
+                    nums = [int(n) for n in regions.split()]
+                    var = np.append(var,[['alpha'+str(ii)+'x1',str(nums[0])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii)+'y1',str(nums[1])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii)+'z1',str(nums[2])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii)+'x2',str(nums[3])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii)+'y2',str(nums[4])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii)+'z2',str(nums[5])]],axis=0)
+                    var = np.append(var,[['alpha'+str(ii),str(nums[6])]],axis=0)
+
+            # Write the constants file
+            self.constvarfileOF(var,"setFieldsDict")
+
+            # Create the setFields dictionary
+            self.setFieldsDictOF(int(numalpharegion))
+            filewritten = np.array(['setFieldsDict'])
+            return filewritten
+
+        # Files written: required for log files
+        filewritten = np.array(['ERROR: Simulation type likely not supported for initial conditions. Contact developer'])
         return filewritten

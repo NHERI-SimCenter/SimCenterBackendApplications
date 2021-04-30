@@ -172,9 +172,9 @@ def main():
     # INITIAL CONDITIONS RELATED FILES
     # Presently only supports alpha
     #***********************************
-    # fileswrite = hydrosolver.initcond(data)
-    # logID += 1
-    # hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+    fileswrite = hydrosolver.initcond(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
     #***********************************
     # BOUNDARY CONDITIONS RELATED FILES
