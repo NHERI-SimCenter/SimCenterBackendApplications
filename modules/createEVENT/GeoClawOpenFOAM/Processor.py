@@ -144,9 +144,27 @@ def main():
         hydroutil.flog.write('%d (%s): Following meshing-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
     elif int(mesher[0]) == 2:
-        filewritten = np.array(['blockMeshDict','surfaceFeatureExtractDict','snappyHexMeshDict'])
-        # Copy the dictionaries to the right place
-        hydroutil.flog.write('%d (%s): Following mesh dictionaries provided by the user have been copied to system folder: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+        fileswrite = np.array([])
+        # Check if OF mesh dictionary exists then move to system
+        if os.path.isfile("templateDir/blockMeshDict"):
+            shutil.move("templateDir/blockMeshDict", "system/blockMeshDict")
+            fileswrite = np.append(filewritten,['blockMeshDict'])
+
+        if os.path.isfile("templateDir/surfaceFeatureExtractDict"):
+            shutil.move("templateDir/surfaceFeatureExtractDict", "system/surfaceFeatureExtractDict")
+            fileswrite = np.append(filewritten,['surfaceFeatureExtractDict'])
+
+        if os.path.isfile("templateDir/snappyHexMeshDict"):
+            shutil.move("templateDir/snappyHexMeshDict", "system/snappyHexMeshDict")
+            fileswrite = np.append(filewritten,['snappyHexMeshDict'])
+        
+        if fileswrite.size != 0:
+            # Confirm the copy
+            hydroutil.flog.write('%d (%s): Following mesh dictionaries provided by the user have been copied to system folder: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+        else:
+            hydroutil.flog.write('%d (%s): WARNING: Mesh dictionaries not found\n' % (logID,datetime.datetime.now()))
 
     else:
         hydroutil.flog.write('%d (%s): Mesh files are provided by the user and thus mesh-dictionary creation has been skipped\n' % (logID,datetime.datetime.now()))

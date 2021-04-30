@@ -528,7 +528,7 @@ FoamFile
         fileID.close()
 
     ####################################################################
-    def bMeshDictOF(self,data):
+    def bMeshDictOF(self):
         '''
         Method to create the blockmesh dictionary 
 
@@ -536,9 +536,6 @@ FoamFile
         -----------
             fileID: FileID for the fvSchemes file
             ofheader: Header for the Hydro-UQ input dictionary
-            procs: Array of number of processors
-            nums: Number of processors along x, y, z-directions
-            totalprocs: Total number of processors
         '''
 
         # Open the blockmeshDict file
@@ -579,6 +576,183 @@ FoamFile
         # Add merge patch pairs
         fileID.write('mergePatchPairs\n(\n);\n')
 
+    ####################################################################
+    def surffeatureextDictOF(self,flag):
+        '''
+        Method to create the surfacefeature extract dictionary 
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+        '''
+
+        # Open the blockmeshDict file
+        fileID = open("system/surfaceFeatureExtractDict","w")
+
+        # Add the header
+        ofheader = self.headerOF("dictionary","system","surfaceFeatureExtractDict")
+        fileID.write(ofheader)
+        stlinfo = '{\n\textractionMethod\textractFromSurface;\n'
+        stlinfo = stlinfo + '\textractFromSurfaceCoeffs\n'
+        stlinfo = stlinfo + '\t{includedAngle\t150;}\n'
+        stlinfo = stlinfo + '\twriteObj\tyes;\n}'
+        fileID.write('Front.stl\n%s\n\n' % (stlinfo))
+        fileID.write('Back.stl\n%s\n\n' % (stlinfo))
+        fileID.write('Right.stl\n%s\n\n' % (stlinfo))
+        fileID.write('Left.stl\n%s\n\n' % (stlinfo))
+        fileID.write('Top.stl\n%s\n\n' % (stlinfo))
+        fileID.write('Bottom.stl\n%s\n\n' % (stlinfo))
+        if flag == 1:
+            fileID.write('Building.stl\n%s\n\n' % (stlinfo))
+        elif flag == 2:
+            fileID.write('Building.stl\n%s\n\n' % (stlinfo))
+            fileID.write('OtherBuilding.stl\n%s\n\n' % (stlinfo))
+
+    ####################################################################
+    def snappyhexmeshDictOF(self,flag):
+        '''
+        Method to create the snappyHexMesh dictionary 
+
+        Variables
+        -----------
+            fileID: FileID for the fvSchemes file
+            ofheader: Header for the Hydro-UQ input dictionary
+        '''
+
+        # Open the snappyHexMeshDict file
+        fileID = open("system/snappyHexMeshDict","w")
+
+        # Add the header
+        ofheader = self.headerOF("dictionary","system","snappyHexMeshDict")
+        fileID.write(ofheader)
+
+        # Include the constant file
+        fileID.write('#include\t"../constantsFile"\n\n')
+        # Which of the steps to run
+        fileID.write('castellatedMesh\ttrue;\n\n')
+        fileID.write('snap\ttrue;\n\n')
+        fileID.write('addLayers\tfalse;\n\n')
+        # Geometry. Definition of all surfaces. 
+        fileID.write('geometry\n{\n\t')
+        fileID.write('Front.stl {type triSurfaceMesh; name Front;}\n\t')
+        fileID.write('Back.stl {type triSurfaceMesh; name Back;}\n\t')
+        fileID.write('Top.stl {type triSurfaceMesh; name Top;}\n\t')
+        fileID.write('Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t')
+        fileID.write('Left.stl {type triSurfaceMesh; name Left;}\n\t')
+        fileID.write('Right.stl {type triSurfaceMesh; name Right;}\n')
+        if flag == 1:
+            fileID.write('\tBuilding.stl {type triSurfaceMesh; name Building;}\n')
+        elif flag == 2:
+            fileID.write('\tBuilding.stl {type triSurfaceMesh; name Building;}\n')
+            fileID.write('\tOtherBuilding.stl {type triSurfaceMesh; name OtherBuilding;}\n')
+        fileID.write('};\n\n')
+
+        # Castellated mesh generation
+        fileID.write('castellatedMeshControls\n{\n\t')
+        fileID.write('maxLocalCells\t$maxLocalCells;\n\t')
+        fileID.write('maxGlobalCells\t$maxGlobalCells;\n\t')
+        fileID.write('minRefinementCells\t10;\n\t')
+        fileID.write('maxLoadUnbalance\t0.1;\n\t')
+        fileID.write('nCellsBetweenLevels\t1;\n\n')
+
+        # Explicit feature edge refinement
+        fileID.write('\tfeatures\n\t(\n\t\t')
+        fileID.write('{file "Front.eMesh"; level 3;}\n\t\t')
+        fileID.write('{file "Back.eMesh"; level 3;}\n\t\t')
+        fileID.write('{file "Top.eMesh"; level 3;}\n\t\t')
+        fileID.write('{file "Bottom.eMesh"; level 3;}\n\t\t')
+        fileID.write('{file "Left.eMesh"; level 3;}\n\t\t')
+        fileID.write('{file "Right.eMesh"; level 3;}\n')
+        if flag == 1:
+            fileID.write('\t\t{file "Building.eMesh"; level 3;}\n')
+        elif flag == 2:
+            fileID.write('\t\t{file "Building.eMesh"; level 3;}\n')
+            fileID.write('\t\t{file "OtherBuilding.eMesh"; level 3;}\n')
+        fileID.write('\t);\n\n')
+
+        # Surface based refinement
+        fileID.write('\trefinementSurfaces\n\t{\n\t\t')
+        fileID.write('Front {level (0 0);}\n\t\t')
+        fileID.write('Back {level (0 0);}\n\t\t')
+        fileID.write('Top {level (0 0);}\n\t\t')
+        fileID.write('Bottom {level (2 2);}\n\t\t')
+        fileID.write('Left {level (2 2);}\n\t\t')
+        fileID.write('Right {level (2 2);}\n')
+        if flag == 1:
+            fileID.write('\t\tBuilding {level (2 2);}\n')
+        elif flag == 2:
+            fileID.write('\t\tBuilding {level (2 2);}\n')
+            fileID.write('\t\tOtherBuilding {level (2 2);}\n')
+        fileID.write('\t};\n\n')
+
+        # Resolve sharp angles
+        fileID.write('\tresolveFeatureAngle 80;\n\n')
+
+        # Regional refinement 
+        # This needs to be added and corrected
+        fileID.write('\trefinementRegions\n\t{\n\t\t//Nothing here for now\n\t}\n\n')
+
+        # Mesh selection
+        fileID.write('\tlocationInMesh ($Inposx $Inposy $Inposz);\n\n')
+
+        # Free-standring zone faces
+        fileID.write('\tallowFreeStandingZoneFaces\tfalse;\n')
+        fileID.write('}\n\n')
+
+        # Snapping settings
+        fileID.write('snapControls\n{\n\t')
+        fileID.write('nSmoothPatch\t3;\n\t')
+        fileID.write('tolerance\t4.0;\n\t')
+        fileID.write('nSolveIter\t30;\n\t')
+        fileID.write('nRelaxIter\t5;\n')
+        fileID.write('}\n\n')
+
+        # Settings for layer addition 
+        # This is presently not being used
+        fileID.write('addLayersControls\n{\n\t')
+        fileID.write('relativeSizes\ttrue;\n\t')
+
+        fileID.write('expansionRatio\t1;\n\t')
+        fileID.write('finalLayerThickness\t0.3;\n\t')
+        fileID.write('minThickness\t0.1;\n\t')
+        fileID.write('nGrow\t0;\n\t')
+
+        # Advanced settings for layer addition
+        fileID.write('featureAngle\t80;\n\t')
+        fileID.write('nRelaxIter\t3;\n\t')
+        fileID.write('nSmoothSurfaceNormals\t1;\n\t')
+        fileID.write('nSmoothNormals\t3;\n\t')
+        fileID.write('nSmoothThickness\t10;\n\t')
+        fileID.write('maxFaceThicknessRatio\t0.5;\n\t')
+        fileID.write('maxThicknessToMedialRatio\t0.3;\n\t')
+        fileID.write('minMedianAxisAngle\t130;\n\t')
+        fileID.write('nBufferCellsNoExtrude\t0;\n\t')
+        fileID.write('nLayerIter\t50;\n')
+        fileID.write('}\n\n')
+
+        # Mesh quality settings
+        fileID.write('meshQualityControls\n{\n\t')
+        fileID.write('maxNonOrtho\t180;\n\t')
+        fileID.write('maxBoundarySkewness\t20;\n\t')
+        fileID.write('maxInternalSkewness\t4;\n\t')
+        fileID.write('maxConcave\t80;\n\t')
+        fileID.write('minFlatness\t0.5;\n\t')
+        fileID.write('minVol\t1e-13;\n\t')
+        fileID.write('minTetQuality\t1e-30;\n\t')
+        fileID.write('minArea\t-1;\n\t')
+        fileID.write('minTwist\t0.02;\n\t')
+        fileID.write('minDeterminant\t0.001;\n\t')
+        fileID.write('minFaceWeight\t0.02;\n\t')
+        fileID.write('minVolRatio\t0.01;\n\t')
+        fileID.write('minTriangleTwist\t-1;\n\t')
+        fileID.write('nSmoothScale\t4;\n\t')
+        fileID.write('errorReduction\t0.75;\n')
+        fileID.write('}\n\n')
+
+        # Advanced
+        fileID.write('debug\t0;\n')
+        fileID.write('mergeTolerance\t1E-6;\n')
 
     ####################################################################
     def dircreate(self):
@@ -786,9 +960,12 @@ FoamFile
                 shutil.move("Top.stl", "constant/triSurface/Top.stl")
                 shutil.move("Bottom.stl", "constant/triSurface/Bottom.stl")
 
+                # Get information about building
+                flag = 0
+
                 # Write extreme values to temporary file for later usage
                 tempfileID = open("temp_geometry","w")
-                tempfileID.write(str(BMXmin)+"\n"+str(BMXmax)+"\n"+str(BMYmin)+"\n"+str(BMYmax)+"\n"+str(BMZmin)+"\n"+str(BMZmax)+"\n")
+                tempfileID.write(str(BMXmin)+"\n"+str(BMXmax)+"\n"+str(BMYmin)+"\n"+str(BMYmax)+"\n"+str(BMZmin)+"\n"+str(BMZmax)+"\n"+str(flag)+"\n")
                 tempfileID.close
 
                 # Files written: required for log files
@@ -843,7 +1020,29 @@ FoamFile
         self.constvarfileOF(var,"blockMeshDict")
 
         # Create the blockMeshDict
-        self.bMeshDictOF(data)
+        self.bMeshDictOF()
+
+        # Create the surface feature extract
+        flag = int(data_geoext[6])
+        self.surffeatureextDictOF(flag)
+
+        # Read the refinement regions
+        # For now this is not considered
+        # This should be added in next update
+
+        # Get required data related to mesh
+        maxLocalCells = int(meshsize)*2000000
+        maxGlobalCells = int(meshsize)*10000000
+        px = 0.5*(data_geoext[1]+data_geoext[0])
+        py = 0.5*(data_geoext[3]+data_geoext[2])
+        pz = 0.5*(data_geoext[5]+data_geoext[4])
+
+        # Write the constants to the file
+        var = np.array([['maxLocalCells', str(maxLocalCells)], ['maxGlobalCells', str(maxGlobalCells)],['Inposx', str(px)],['Inposy', str(py)],['Inposz', str(pz)]])
+        self.constvarfileOF(var,"snappyHexMeshDict")
+
+        # Create the snappyHexMesh
+        self.snappyhexmeshDictOF(flag)
 
         # Files written: required for log files
         filewritten = np.array(['blockMeshDict','surfaceFeatureExtractDict','snappyHexMeshDict'])
