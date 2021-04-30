@@ -89,6 +89,35 @@ FoamFile
         return header
 
     ####################################################################
+    def header2OF(self,OFclass,filename):
+        '''
+        Method to create a header for the input dictionaries.
+
+        Variables
+        -----------
+            header: FileID for the file being created
+        '''
+
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+|       | H |
+|       | Y | HydroUQ: Water-based Natural Hazards Modeling Application
+|=======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
+|       | R | Version: 1.00
+|       | O |
+\*---------------------------------------------------------------------------*/ 
+FoamFile
+{{
+    version   2.0;
+    format    ascii;
+    class     {};
+    object    {};
+}}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n""".format(OFclass,filename)
+
+        return header
+
+
+    ####################################################################
     def constvarfileOF(self,var,file):
         '''
         Method adds information into the constants file
@@ -784,7 +813,6 @@ FoamFile
         fileID.write('#include\t"../constantsFile"\n\n')
 
         # Initialize the global field value of alpha
-        #fileinfo = '{\ndefaultFieldValues\n(\n\tvolScalarFieldValue\talpha.water\t$alphaglobal\n);\n\n'
         fileID.write('defaultFieldValues\n(\n\tvolScalarFieldValue\talpha.water\t$alphaglobal\n);\n\n')
 
         # Initialize the local field value of alpha
@@ -795,6 +823,257 @@ FoamFile
             fileinf = fileinf + 'fieldValues\n\t\t(\n\t\t\tvolScalarFieldValue\talpha.water\t$alpha' + str(ii) + '\n\t\t);\n\t}\n\n'
         fileID.write('%s' % (fileinf))
         fileID.write('\n);')
+
+    ####################################################################
+    def dynmeshFlumeOF(self):
+        '''
+        This method is used to write the dynamic mesh dictionary
+        particularly aimed at the moving wall in the flume
+        '''
+        # Get the file ID
+        fileID = self.openfileOF("constant/dynamicMeshDict","w")
+        # Header
+        ofheader = self.headerOF("dictionary","constant","dynamicMeshDict")
+        fileID.write(ofheader)
+        # Other data
+        fileID.write('\ndynamicFvMesh\tdynamicMotionSolverFvMesh;\n\n')
+        fileID.write('motionSolverLibs\t("libfvMotionSolvers.so");\n\n')
+        fileID.write('solver\tdisplacementLaplacian;\n\n')
+        fileID.write('displacementLaplacianCoeffs\n{\n\tdiffusivity uniform;\n}\n');
+        # Close the file
+        fileID.close()
+
+    ####################################################################
+    def wavemakerOF(self):
+        '''
+        This method is used to write the wavemaker dictionary
+        particularly aimed at the moving wall in the flume
+        '''
+        # Get the file ID
+        fileID = self.openfileOF("constant/wavemakerMovementDict","w")
+        # Header
+        ofheader = self.headerOF("dictionary","constant","wavemakerMovementDict")
+        fileID.write(ofheader)
+        # Other data
+        fileID.write('\nreread\tfalse;\n\n')
+        fileID.write('#include\t"wavemakerMovement.txt"\n')
+        # Close the file
+        fileID.close()
+
+    ####################################################################
+    def alpha0OF(self,flag):
+        '''
+        This method is used to write the alpha file for the 0-folder
+        '''
+        # Open the blockmeshDict file
+        fileID = open("0.org/alpha.water","w")
+
+        # Add the header
+        ofheader = self.header2OF("volScalarField","alpha.water")
+        fileID.write(ofheader)
+        stlinfo = '{\ndimensions\t[0 0 0 0 0 0 0];\n\n'
+        stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
+        stlinfo = stlinfo + 'boundaryField\n{\n\t'
+        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
+        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\tinletOutlet;\n\t\t'
+        stlinfo = stlinfo + 'inletValue\tuniform\t0;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
+        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
+        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
+        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
+        if flag == 1:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
+        elif flag == 2:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
+            stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        stlinfo = stlinfo + '}\n'
+        fileID.write('%s' % (stlinfo))
+
+    ####################################################################
+    def U0OF(self,flag):
+        '''
+        This method is used to write the U file for the 0-folder
+        '''
+        # Open the blockmeshDict file
+        fileID = open("0.org/U","w")
+
+        # Add the header
+        ofheader = self.header2OF("volVectorField","U")
+        fileID.write(ofheader)
+        stlinfo = '{\ndimensions\t[0 1 -1 0 0 0 0];\n\n'
+        stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
+        stlinfo = stlinfo + 'boundaryField\n{\n\t'
+        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tmovingWallVelocity;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\tpressureInletOutletVelocity;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tnoSlip;\n\t}\n\t'
+        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tnoSlip;\n\t}\n\t'
+        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tnoSlip;\n\t}\n\t'
+        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        if flag == 1:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        elif flag == 2:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+            stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        stlinfo = stlinfo + '}\n'
+        fileID.write('%s' % (stlinfo))
+
+
+    ####################################################################
+    def prgh0OF(self,flag):
+        '''
+        This method is used to write the p_rgh file for the 0-folder
+        '''
+        # Open the blockmeshDict file
+        fileID = open("0.org/p_rgh","w")
+
+        # Add the header
+        ofheader = self.header2OF("volScalarField","p_rgh")
+        fileID.write(ofheader)
+        stlinfo = '{\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
+        stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
+        stlinfo = stlinfo + 'boundaryField\n{\n\t'
+        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\ttotalPressure;\n\t\t'
+        stlinfo = stlinfo + 'U\tU;\n\t\t'
+        stlinfo = stlinfo + 'phi\tphi;\n\t\t'
+        stlinfo = stlinfo + 'rho\trho;\n\t\t'
+        stlinfo = stlinfo + 'psi\tnone;\n\t\t'
+        stlinfo = stlinfo + 'gamma\t1;\n\t\t'
+        stlinfo = stlinfo + 'p0\tuniform\t0;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        if flag == 1:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
+        elif flag == 2:
+            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
+            stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tnoSlip;\n'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n'
+        stlinfo = stlinfo + '}\n'
+        fileID.write('%s' % (stlinfo))
+
+    ####################################################################
+    def pdisp0OF(self,flag):
+        '''
+        This method is used to write the U file for the 0-folder
+        '''
+        # Open the blockmeshDict file
+        fileID = open("0.org/pointDisplacement","w")
+
+        # Add the header
+        ofheader = self.headerOF("volVectorField","0.01","U")
+        fileID.write(ofheader)
+        stlinfo = '{\ndimensions\t[0 1 0 0 0 0 0];\n\n'
+        stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
+        stlinfo = stlinfo + 'boundaryField\n{\n\t'
+        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\twavemakerMovement;\n\t\t'
+        stlinfo = stlinfo + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+
+        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\tfixedNormalSlip;\n\t\t'
+        stlinfo = stlinfo + 'n\t(0 0 1);\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+
+        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+
+        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        if flag == 1:
+            stlinfo = stlinfo + 'Building\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        elif flag == 2:
+            stlinfo = stlinfo + 'Building\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+            stlinfo = stlinfo + 'OtherBuilding\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n'
+        stlinfo = stlinfo + '}\n'
+        fileID.write('%s' % (stlinfo))
+
+    ####################################################################
+    def wavemakerfile(self):
+        '''
+        This method is used to write the wavemaker movement file
+        '''
+        # Open the wavemaker movement file
+        fileID = open("constant/wavemakerMovement.txt","w")
+        fileID.write('wavemakerType\tPiston;\n')
+        fileID.write('tSmooth\t1.5;\n')
+        fileID.write('genAbs\t0;\n\n')
+
+        # Create the wavemaker movement file
+        # Get the frequency of the wavemaker
+        frequency = 0
+        waterdepth = 0
+        filewm = open('wmdisp.txt','r')
+        Lines = filewm.readlines()
+        count = 0
+        for line in Lines:
+            count += 1
+            if count == 37:
+                stra=line.replace('% SampleRate: ','')
+                stra2=stra.replace(' Hz','')
+                frequency = 1/float(stra2)
+                break
+        count = 0
+        for line in Lines:
+            count += 1
+            if count == 61:
+                stra=line.replace('% StillWaterDepth: ','')
+                waterdepth = float(stra)
+                break
+
+        # Count the number of lines
+        countlines = sum(1 for line in open('wmdisp.txt')) - 72
+
+        # Create the timeseries
+        time = 0
+        fileID.write('timeSeries\t'+str(countlines)+'(\n')
+        for ii in range(countlines):
+            fileID.write(str(time)+'\n')
+            time = time + frequency
+        fileID.write(');\n\n')
+
+        # Create the paddle position
+        fileID.write('paddlePosition 1(\n'+str(countlines)+'(\n')
+        count = 0
+        for line in Lines:
+            count += 1
+            if count > 72:
+                data = float(line)
+                fileID.write(str(data)+'\n')
+        fileID.write(')\n);\n\n')
+
+        # Write the paddle Eta
+        fileID.write('paddleEta 1(\n'+str(countlines)+'(\n')
+        filewmg = open('wmwg.txt','r')
+        Lines2 = filewmg.readlines()
+        count = 0
+        for line in Lines2:
+            count += 1
+            if count > 72:
+                data = float(line)+waterdepth
+                fileID.write(str(data)+'\n')
+        fileID.write(')\n);')
 
     ####################################################################
     def dircreate(self):
@@ -1149,10 +1428,10 @@ FoamFile
             # Initialize water depth
             waterdepth = 0
             # Check first if flume file exists.
-            if os.path.isfile("templateDir/wmwg.txt"):
+            if os.path.isfile("wmwg.txt"):
                 # Get water height from this
                 # Read the temporary geometry file with extreme values
-                filewm = open('templateDir/wmwg.txt','r')
+                filewm = open('wmwg.txt','r')
                 Lines = filewm.readlines()
                 count = 0
                 for line in Lines:
@@ -1162,9 +1441,9 @@ FoamFile
                         waterdepth = float(stra)
                         break
 
-            elif os.path.isfile("templateDir/wmdisp.txt"):
+            elif os.path.isfile("wmdisp.txt"):
                 # Read the temporary geometry file with extreme values
-                filewm = open('templateDir/wmdisp.txt','r')
+                filewm = open('wmdisp.txt','r')
                 Lines = filewm.readlines()
                 count = 0
                 for line in Lines:
@@ -1222,5 +1501,55 @@ FoamFile
             return filewritten
 
         # Files written: required for log files
-        filewritten = np.array(['ERROR: Simulation type likely not supported for initial conditions. Contact developer'])
+        filewritten = np.array(['ERROR: Simulation type likely not supported. Contact developer'])
+        return filewritten
+
+    ####################################################################
+    def bouncond(self,data):
+        '''
+        Method creates the relevant files for the initial condition
+
+        Variables
+        ------------
+            filewritten: Files being created
+            
+        '''
+
+        # Get an object for utilities
+        hydroutil = genUtilities()
+
+        # Get the simulation type
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+        if int(simtype) == 4:
+
+            # Get the building flag
+            data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
+            flag = int(data_geoext[6])
+
+            # Write the dynamic mesh dictionary for the moving wall
+            self.dynmeshFlumeOF()
+
+            # Write the dynamic mesh dictionary for the moving wall
+            self.wavemakerOF()
+
+            # Write the  files for the 0-folder
+            self.alpha0OF(flag)
+            self.U0OF(flag)
+            self.prgh0OF(flag)
+            self.pdisp0OF(flag)
+
+            # Write the wavemaker file
+            self.wavemakerfile()
+
+            # Give the confirmation that the files have been created
+            filewritten = np.array(['0.org/alpha.water','0.org/U','0.org/p_rgh','0.org/point_Displacement','wavemakerMovementDict','dynamicMeshDict','waveMakerMovement.txt'])
+            return filewritten
+
+        else:
+            filewritten = np.array(['ERROR: Initialization from boundary conditions. Contact developer for help.'])
+            return filewritten
+
+        # Files written: required for log files
+        filewritten = np.array(['ERROR: Likely your boundary condition is not yet supported. Contact developer'])
         return filewritten

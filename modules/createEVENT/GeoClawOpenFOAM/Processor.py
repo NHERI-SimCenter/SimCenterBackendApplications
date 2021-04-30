@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import argparse
 import pip
+from zipfile36 import ZipFile
 
 # Import user-defined classes
 from GenUtilities import genUtilities # General utilities
@@ -67,6 +68,10 @@ def main():
     # Create the objects
     hydroutil = genUtilities() # General utilities
     hydrosolver = solver() # Solver object
+
+    # Need to unzip the file
+    zip = ZipFile('templatedir/wm.zip')
+    zip.extractall()
 
     #***********************************
     # HYDRO-UQ LOG FILE: INITIALIZE
@@ -179,6 +184,9 @@ def main():
     #***********************************
     # BOUNDARY CONDITIONS RELATED FILES
     #***********************************
+    fileswrite = hydrosolver.bouncond(data)
+    logID += 1
+    hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
     #***********************************
     # RUNCASE SCRIPT FOR TACC
@@ -216,7 +224,6 @@ def main():
         fileIDrun.write('rm -fr 1 2\n')
         # Create new controlDict
         fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b $BIM\n\n')
-
     
     elif int(mesher[0]) == 1:
         # blockMesh
@@ -256,6 +263,10 @@ def main():
             fileIDrun.write('gambitToFoam $MESHFILE > gambitToFoam.log\n\n')
         elif int(meshsoftware[0]) == 4:
             fileIDrun.write('gmshToFoam $MESHFILE > gmshToFoam.log\n\n')
+
+    # Add patches for building forces
+    fileIDrun.write('patches="Building"\n')
+    fileIDrun.write('python3 $HYDROBRAIN/AddBuildingForces.py -c $(pwd) -b ${inputDirectory}/templatedir/dakota.json -p $patches\n\n')
 
     # Check the mesh
     fileIDrun.write('echo Checking mesh...\n')
