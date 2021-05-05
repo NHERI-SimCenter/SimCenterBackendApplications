@@ -185,6 +185,8 @@ FoamFile
         # Header
         ofheader = self.headerOF("uniformDimensionedVectorField","constant","g")
         fileID.write(ofheader)
+        # Add the constants file
+        fileID.write('#include\t"../constantsFile"\n\n')
         # Other content
         fileID.write('dimensions\t[0 1 -2 0 0 0 0];\n')
         fileID.write('value\t($gx $gy $gz);\n')
@@ -458,6 +460,8 @@ FoamFile
         # Header
         ofheader = self.headerOF("dictionary","constant","turbulenceProperties")
         fileID.write(ofheader)
+        # Add the constants file
+        fileID.write('#include\t"../constantsFile"\n\n')
         # Other content
         if int(turb) == 0:
             fileID.write('\nsimulationType\tlaminar;\n\n')
@@ -492,7 +496,7 @@ FoamFile
         '''
 
         # Create the transportProperties file
-        fileID = open("system/controldict","w")
+        fileID = open("system/controlDict","w")
 
         # Get the turbulence model
         hydroutil = genUtilities()
@@ -515,6 +519,8 @@ FoamFile
         # Write the dictionary file
         ofheader = self.headerOF("dictionary","system","controlDict")
         fileID.write(ofheader)
+        # Add the constants file
+        fileID.write('#include\t"../constantsFile"\n\n')
         fileID.write('\napplication \t $solver;\n\n')
         fileID.write('startFrom \t latestTime;\n\n')
         fileID.write('startTime \t $startT;\n\n')
@@ -577,6 +583,8 @@ FoamFile
         # Write the dictionary file
         ofheader = self.headerOF("dictionary","system","decomposeParDict")
         fileID.write(ofheader)
+        # Add the constants file
+        fileID.write('#include\t"../constantsFile"\n\n')
         # Write the dictionary file
         fileID.write('\nnumberOfSubdomains \t $procTotal;\n\n')
         fileID.write('method \t $decMeth;\n\n')

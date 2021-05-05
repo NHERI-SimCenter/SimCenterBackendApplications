@@ -158,8 +158,9 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
 
-    fileID = open("system/controldict","w")
+    fileID = open("system/controlDict","w")
     fileID.write(header)
+    fileID.write('#include\t"../constantsFile"\n\n')
     fileID.write('\napplication \t $solver;\n\n')
     fileID.write('startFrom \t latestTime;\n\n')
     fileID.write('startTime \t $startT;\n\n')
