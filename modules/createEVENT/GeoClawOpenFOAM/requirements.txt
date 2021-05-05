@@ -1,0 +1,8 @@
+numpy
+pytest-shutil
+meshio
+Shapely
+triangle
+argparse
+math
+zipfile36

@@ -11,6 +11,7 @@ cmake --build . --config Release
 status=$?; if [[ $status != 0 ]]; then echo "make failed"; exit $status; fi
 cmake --install .
 status=$?; if [[ $status != 0 ]]; then echo "make install failed"; exit $status; fi
+make install .
 cd ..
 
 
