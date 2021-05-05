@@ -5,6 +5,7 @@ import numpy as np
 import os
 import shutil
 import math
+from zipfile36 import ZipFile
 from GenUtilities import genUtilities # General utilities
 from Flume import OSUWaveFlume # Wave flume utilities
 
@@ -349,6 +350,32 @@ FoamFile
         fileID.write('fields\n\t{\n\t}\n\t')
         fileID.write('equations\n\t{\n\t\t".*"\t1;\n\t}\n}')
         fileID.close()
+
+    ####################################################################
+    def OSUwavemakerfileunzip(self,data,fpath):
+
+        '''
+        Method is used to unzip the wavemaker files if exist
+
+        Variables
+        -----------
+            simtype: Type of simulation
+            fpath: Path to dakota.json file folder
+        '''
+
+        # Get the simulation type
+        hydroutil = genUtilities()
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+        # If the simulation type is digital wave flume
+        # Then get the filename
+        # Unzip the file
+        zipfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWall_Entry"]))
+
+        # Need to unzip the file
+        #zip = ZipFile('templatedir/wm.zip')
+        zip = ZipFile(os.path.join(fpath,"wm.zip"))
+        zip.extractall()
 
     ####################################################################
     def transportProperties(self,data):
@@ -1121,7 +1148,7 @@ FoamFile
         return foldwritten
 
     ####################################################################
-    def filecreate(self,data):
+    def filecreate(self,data,fpath):
         '''
         Method creates all necessary supplementary files required by the solver.
 
@@ -1129,6 +1156,7 @@ FoamFile
         -----------
             filewritten: Files being created
             cnstfile: File pointer for the constants file
+            fpath: Path to the dakota.json folder
         '''
 
         # Initialize the constant file
@@ -1142,6 +1170,9 @@ FoamFile
 
         # Write the fvSolution (variable solvers)
         self.fvSolutionOF(data)
+
+        # Unzip wavemaker file if required
+        self.OSUwavemakerfileunzip(data,fpath)
 
         # Files written: required for log files
         filewritten = np.array(['g','fvScheme','fvSolution'])
@@ -1256,8 +1287,23 @@ FoamFile
             if int(flumedeftype) == 0:
                 # Create the object for the Flume
                 flume = OSUWaveFlume()
+
+                # Read flume data from the JSON file and
+                # Create a FlumeData.txt file
+                flumesegs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","FlumeSegments"]))
+
+                # Separate to numbers
+                # Find total number of processors
+                flumesegs = flumesegs.replace(',', ' ')
+                nums = [int(n) for n in flumesegs.split()]
+                #totalprocs = nums[0]*nums[1]*nums[2]
+                for ii in range(nums[0]):
+                    f = open("FlumeData.txt", "a")
+                    f.write(str(nums[2*ii+1]) + ',' + str(nums[2*ii+2]) + '\n' )
+                    f.close()
+
                 # Initialize the input file
-                IpPTFile = 'templatedir/FlumeData.txt'
+                IpPTFile = 'FlumeData.txt'
                 # Breadth of the flume
                 breadth = ''.join(hydroutil.extract_element_from_json(data, ["Events","FlumeBreadth"]))
                 flume.breadth = float(breadth)

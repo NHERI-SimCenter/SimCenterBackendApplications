@@ -4,5 +4,4 @@ meshio
 Shapely
 triangle
 argparse
-math
 zipfile36
