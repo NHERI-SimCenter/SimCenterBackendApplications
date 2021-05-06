@@ -281,7 +281,7 @@ FoamFile
         fileID.write('nAlphaCorr\t1;\n\t\t')
         fileID.write('nAlphaSubCycles\t2;\n\t\t')
         fileID.write('alphaOuterCorrectors\tyes;\n\t\t')
-        fileID.write('cAlpha\tyes;\n\t\t')
+        fileID.write('cAlpha\t1;\n\t\t')
         fileID.write('MULESCorr\tno;\n\t\t')
         fileID.write('nLimiterIter\t3;\n\t\t')
         fileID.write('solver\tsmoothSolver;\n\t\t')
@@ -577,7 +577,7 @@ FoamFile
         totalprocs = nums[0]*nums[1]*nums[2]
 
         # Write the constants to the file
-        var = np.array([['procX', str(nums[0])], ['procX', str(nums[1])], ['procX', str(nums[2])], ['procTotal', str(totalprocs)], ['decMeth', '"'+method+'"']])
+        var = np.array([['procX', str(nums[0])], ['procY', str(nums[1])], ['procZ', str(nums[2])], ['procTotal', str(totalprocs)], ['decMeth', '"'+method+'"']])
         self.constvarfileOF(var,"decomposeParDict")
 
         # Write the dictionary file
@@ -909,7 +909,7 @@ FoamFile
         # Add the header
         ofheader = self.header2OF("volScalarField","alpha.water")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 0 0 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 0 0 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
@@ -925,7 +925,7 @@ FoamFile
         elif flag == 2:
             stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
             stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tzaroGradient;\n\t}\n'
         stlinfo = stlinfo + '}\n'
         fileID.write('%s' % (stlinfo))
 
@@ -940,7 +940,7 @@ FoamFile
         # Add the header
         ofheader = self.header2OF("volVectorField","U")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 1 -1 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 1 -1 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tmovingWallVelocity;\n\t\t'
@@ -972,7 +972,7 @@ FoamFile
         # Add the header
         ofheader = self.header2OF("volScalarField","p_rgh")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
@@ -992,7 +992,7 @@ FoamFile
         stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
         stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
         stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n'
         if flag == 1:
             stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
         elif flag == 2:
@@ -1012,9 +1012,9 @@ FoamFile
         fileID = open("0.org/pointDisplacement","w")
 
         # Add the header
-        ofheader = self.headerOF("volVectorField","0.01","U")
+        ofheader = self.headerOF("pointVectorField","0.01","pointDisplacement")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 1 0 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 1 0 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\twavemakerMovement;\n\t\t'
@@ -1042,7 +1042,7 @@ FoamFile
             stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
             stlinfo = stlinfo + 'OtherBuilding\n\t{\n\t\ttype\tfixedValue;\n\t\t'
             stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'default\n\t{\n\t\ttype\tfixedValue;\n\t\t'
         stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n'
         stlinfo = stlinfo + '}\n'
         fileID.write('%s' % (stlinfo))
