@@ -275,13 +275,13 @@ FoamFile
         ofheader = self.headerOF("dictionary","system","fvSolution")
         fileID.write(ofheader)
         # Other data
-        fileID.write('solver\n{\n\t')
+        fileID.write('solvers\n{\n\t')
         # solvers: alpha
         fileID.write('"alpha.water.*"\n\t{\n\t\t')
         fileID.write('nAlphaCorr\t1;\n\t\t')
         fileID.write('nAlphaSubCycles\t2;\n\t\t')
         fileID.write('alphaOuterCorrectors\tyes;\n\t\t')
-        fileID.write('cAlpha\tyes;\n\t\t')
+        fileID.write('cAlpha\t1;\n\t\t')
         fileID.write('MULESCorr\tno;\n\t\t')
         fileID.write('nLimiterIter\t3;\n\t\t')
         fileID.write('solver\tsmoothSolver;\n\t\t')
@@ -531,7 +531,7 @@ FoamFile
         fileID.write('writeInterval \t $writeT;\n\n')
         fileID.write('purgeWrite \t 0;\n\n')
         fileID.write('writeFormat \t ascii;\n\n')
-        fileID.write('writePrecision \t t;\n\n')
+        fileID.write('writePrecision \t 6;\n\n')
         fileID.write('writeCompression \t uncompressed;\n\n')
         fileID.write('timeFormat \t general;\n\n')
         fileID.write('timePrecision \t 6;\n\n')
@@ -540,7 +540,7 @@ FoamFile
         fileID.write('maxCo \t 1.0;\n\n')
         fileID.write('maxAlphaCo \t 1.0;\n\n')
         fileID.write('maxDeltaT \t 1;\n\n')
-        fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
+        #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
 
         # Add post-processing stuff
 
@@ -577,7 +577,7 @@ FoamFile
         totalprocs = nums[0]*nums[1]*nums[2]
 
         # Write the constants to the file
-        var = np.array([['procX', str(nums[0])], ['procX', str(nums[1])], ['procX', str(nums[2])], ['procTotal', str(totalprocs)], ['decMeth', '"'+method+'"']])
+        var = np.array([['procX', str(nums[0])], ['procY', str(nums[1])], ['procZ', str(nums[2])], ['procTotal', str(totalprocs)], ['decMeth', '"'+method+'"']])
         self.constvarfileOF(var,"decomposeParDict")
 
         # Write the dictionary file
@@ -780,7 +780,10 @@ FoamFile
         # This is presently not being used
         fileID.write('addLayersControls\n{\n\t')
         fileID.write('relativeSizes\ttrue;\n\t')
-
+        fileID.write('layers\n\t{\n\t')
+        fileID.write('Bottom\n\t\t{nSurfaceLayers\t3;}\n\t')
+        fileID.write('Left\n\t\t{nSurfaceLayers\t3;}\n\t')
+        fileID.write('Right\n\t\t{nSurfaceLayers\t3;}\n\t}\n\n\t')
         fileID.write('expansionRatio\t1;\n\t')
         fileID.write('finalLayerThickness\t0.3;\n\t')
         fileID.write('minThickness\t0.1;\n\t')
@@ -906,7 +909,7 @@ FoamFile
         # Add the header
         ofheader = self.header2OF("volScalarField","alpha.water")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 0 0 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 0 0 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
@@ -922,7 +925,7 @@ FoamFile
         elif flag == 2:
             stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
             stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
+        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tzaroGradient;\n\t}\n'
         stlinfo = stlinfo + '}\n'
         fileID.write('%s' % (stlinfo))
 
@@ -931,13 +934,13 @@ FoamFile
         '''
         This method is used to write the U file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the U-dof file
         fileID = open("0.org/U","w")
 
         # Add the header
         ofheader = self.header2OF("volVectorField","U")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 1 -1 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 1 -1 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tmovingWallVelocity;\n\t\t'
@@ -963,13 +966,13 @@ FoamFile
         '''
         This method is used to write the p_rgh file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the pressure-dof file
         fileID = open("0.org/p_rgh","w")
 
         # Add the header
         ofheader = self.header2OF("volScalarField","p_rgh")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
@@ -989,7 +992,7 @@ FoamFile
         stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
         stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
         stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
+        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n'
         if flag == 1:
             stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
         elif flag == 2:
@@ -1005,13 +1008,13 @@ FoamFile
         '''
         This method is used to write the U file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the pointDisplacement-dof file
         fileID = open("0.org/pointDisplacement","w")
 
         # Add the header
-        ofheader = self.headerOF("volVectorField","0.01","U")
+        ofheader = self.headerOF("pointVectorField","0.01","pointDisplacement")
         fileID.write(ofheader)
-        stlinfo = '{\ndimensions\t[0 1 0 0 0 0 0];\n\n'
+        stlinfo = '\ndimensions\t[0 1 0 0 0 0 0];\n\n'
         stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
         stlinfo = stlinfo + 'boundaryField\n{\n\t'
         stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\twavemakerMovement;\n\t\t'
@@ -1039,7 +1042,7 @@ FoamFile
             stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
             stlinfo = stlinfo + 'OtherBuilding\n\t{\n\t\ttype\tfixedValue;\n\t\t'
             stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tfixedValue;\n\t\t'
+        stlinfo = stlinfo + 'default\n\t{\n\t\ttype\tfixedValue;\n\t\t'
         stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n'
         stlinfo = stlinfo + '}\n'
         fileID.write('%s' % (stlinfo))
@@ -1387,7 +1390,7 @@ FoamFile
 
         # Get the mesh sizes
         nx = 100*int(meshsize)
-        if(data_geoext[1] != data_geoext[0]):
+        if( abs(data_geoext[1] - data_geoext[0]) > 0.000001):
             ny = math.ceil(5*nx*((data_geoext[3]-data_geoext[2])/(data_geoext[1]-data_geoext[0])))
             nz = math.ceil(5*nx*((data_geoext[5]-data_geoext[4])/(data_geoext[1]-data_geoext[0])))
 
