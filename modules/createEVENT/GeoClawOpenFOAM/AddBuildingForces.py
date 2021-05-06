@@ -79,12 +79,13 @@ def AddBuildingsForces(caseDir, floorsCount, patches):
     """
     First, we need to validate the case directory structure
     """
-    if not validateCaseDirectoryStructure(caseDir):
-        print("Invalid OpenFOAM Case Directory!")
-        sys.exit(-1)
+    # if not validateCaseDirectoryStructure(caseDir):
+    #     print("Invalid OpenFOAM Case Directory!")
+    #     sys.exit(-1)
 
 
-    controlDictPath = os.path.join(caseDir, "system/controlDict")
+    #controlDictPath = os.path.join(caseDir, "system/controlDict")
+    controlDictPath = "system/controlDict"
     with open(controlDictPath, 'r') as controlDict:
         controlDictLines = controlDict.readlines()
 
@@ -113,7 +114,7 @@ def GetFloorsCount(BIMFilePath):
 if __name__ == "__main__":
     #CLI parser
     parser = argparse.ArgumentParser(description="Add forces postprocessing to OpenFOAM controlDict")
-    parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
+    #parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
     parser.add_argument('-f', '--floors', help= "Number of Floors", type=int, required=False)
     parser.add_argument('-b', '--bim', help= "path to BIM file", required=False)
     parser.add_argument('-p', '--patches', help= "Patches used for extracting forces on building", required=False)
@@ -129,4 +130,5 @@ if __name__ == "__main__":
         patches = "Building"
 
     #Add building forces to post-processing
-    AddBuildingsForces(arguments.case, floors, patches)
+    # AddBuildingsForces(arguments.case, floors, patches)
+    AddBuildingsForces(floors, patches)
