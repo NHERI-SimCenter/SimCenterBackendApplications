@@ -75,7 +75,8 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
         controlDictLines.insert(lineIndex, "\t\t\t" + key + "\t" + str(value)+ ";\n")
         lineIndex += 1
 
-def AddBuildingsForces(caseDir, floorsCount, patches):
+#def AddBuildingsForces(caseDir, floorsCount, patches):
+def AddBuildingsForces(floorsCount, patches):
     """
     First, we need to validate the case directory structure
     """
