@@ -275,7 +275,7 @@ FoamFile
         ofheader = self.headerOF("dictionary","system","fvSolution")
         fileID.write(ofheader)
         # Other data
-        fileID.write('solver\n{\n\t')
+        fileID.write('solvers\n{\n\t')
         # solvers: alpha
         fileID.write('"alpha.water.*"\n\t{\n\t\t')
         fileID.write('nAlphaCorr\t1;\n\t\t')
