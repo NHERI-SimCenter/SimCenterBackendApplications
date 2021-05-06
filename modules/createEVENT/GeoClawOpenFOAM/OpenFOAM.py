@@ -531,7 +531,7 @@ FoamFile
         fileID.write('writeInterval \t $writeT;\n\n')
         fileID.write('purgeWrite \t 0;\n\n')
         fileID.write('writeFormat \t ascii;\n\n')
-        fileID.write('writePrecision \t t;\n\n')
+        fileID.write('writePrecision \t 6;\n\n')
         fileID.write('writeCompression \t uncompressed;\n\n')
         fileID.write('timeFormat \t general;\n\n')
         fileID.write('timePrecision \t 6;\n\n')
@@ -540,7 +540,7 @@ FoamFile
         fileID.write('maxCo \t 1.0;\n\n')
         fileID.write('maxAlphaCo \t 1.0;\n\n')
         fileID.write('maxDeltaT \t 1;\n\n')
-        fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
+        #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
 
         # Add post-processing stuff
 
@@ -780,7 +780,10 @@ FoamFile
         # This is presently not being used
         fileID.write('addLayersControls\n{\n\t')
         fileID.write('relativeSizes\ttrue;\n\t')
-
+        fileID.write('layers\n\t{\n\t')
+        fileID.write('Bottom\n\t\t{nSurfaceLayers\t3;}\n\t')
+        fileID.write('Left\n\t\t{nSurfaceLayers\t3;}\n\t')
+        fileID.write('Right\n\t\t{nSurfaceLayers\t3;}\n\t}\n\n\t')
         fileID.write('expansionRatio\t1;\n\t')
         fileID.write('finalLayerThickness\t0.3;\n\t')
         fileID.write('minThickness\t0.1;\n\t')
@@ -931,7 +934,7 @@ FoamFile
         '''
         This method is used to write the U file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the U-dof file
         fileID = open("0.org/U","w")
 
         # Add the header
@@ -963,7 +966,7 @@ FoamFile
         '''
         This method is used to write the p_rgh file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the pressure-dof file
         fileID = open("0.org/p_rgh","w")
 
         # Add the header
@@ -1005,7 +1008,7 @@ FoamFile
         '''
         This method is used to write the U file for the 0-folder
         '''
-        # Open the blockmeshDict file
+        # Open the pointDisplacement-dof file
         fileID = open("0.org/pointDisplacement","w")
 
         # Add the header
@@ -1387,7 +1390,7 @@ FoamFile
 
         # Get the mesh sizes
         nx = 100*int(meshsize)
-        if(data_geoext[1] != data_geoext[0]):
+        if( abs(data_geoext[1] - data_geoext[0]) > 0.000001):
             ny = math.ceil(5*nx*((data_geoext[3]-data_geoext[2])/(data_geoext[1]-data_geoext[0])))
             nz = math.ceil(5*nx*((data_geoext[5]-data_geoext[4])/(data_geoext[1]-data_geoext[0])))
 
