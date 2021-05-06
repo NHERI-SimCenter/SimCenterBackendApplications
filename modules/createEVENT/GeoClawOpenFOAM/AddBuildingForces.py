@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     patches = arguments.patches
     if not patches:
-    patches = "Building"
+        patches = "Building"
 
     #Add building forces to post-processing
     # AddBuildingsForces(arguments.case, floors, patches)
