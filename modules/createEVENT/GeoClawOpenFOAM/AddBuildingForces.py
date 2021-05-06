@@ -118,7 +118,7 @@ if __name__ == "__main__":
     #parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
     parser.add_argument('-f', '--floors', help= "Number of Floors", type=int, required=False)
     parser.add_argument('-b', '--bim', help= "path to BIM file", required=False)
-    #parser.add_argument('-p', '--patches', help= "Patches used for extracting forces on building", required=False)
+    parser.add_argument('-p', '--patches', help= "Patches used for extracting forces on building", required=False)
 
     #Parsing arguments
     arguments, unknowns = parser.parse_known_args()
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     if not floors:
         floors = GetFloorsCount(arguments.bim)
 
-    #patches = arguments.patches
-    #if not patches:
+    patches = arguments.patches
+    if not patches:
     patches = "Building"
 
     #Add building forces to post-processing
