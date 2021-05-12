@@ -69,8 +69,8 @@ def run_opensees(BIM_file, EVENT_file, event_path, model_script, model_script_pa
     with open(BIM_file, 'r') as f:
         BIM_in = json.load(f)
 
-    model_params = BIM_in['GI']
-    model_units = BIM_in['units']
+    model_params = BIM_in['GeneralInformation']
+    model_units = BIM_in['GeneralInformation']['units']
 
     # convert units if necessary
     if model_units['length'] in ['inch', 'in']:
