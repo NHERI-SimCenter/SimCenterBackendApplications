@@ -571,6 +571,7 @@ FoamFile
 
         # Close the controlDict file
         fileID.close()
+        fileID2.close()
 
     ####################################################################
     def decomposepar(self,data):
