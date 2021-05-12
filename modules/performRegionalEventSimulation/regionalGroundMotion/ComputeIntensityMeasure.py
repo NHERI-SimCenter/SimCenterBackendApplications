@@ -71,13 +71,36 @@ def compute_spectra(scenarios, stations, gmpe_info, im_info):
 	station_info = {'Type': 'SiteList',
 					'SiteList': station_list}
 	# Configuring site properties
-	siteSpec, sites, site_prop = get_site_prop(gmpe_info['Type'], station_list)
+	siteSpec = []
+	sites = []
+	site_prop = []
+	if gmpe_info['Type'] == 'NGAWest2 2014 Averaged':
+		gmpe_list = ["Abrahamson, Silva & Kamai (2014)", "Boore, Stewart, Seyhan & Atkinson (2014)", 
+					 "Campbell & Bozorgnia (2014)", "Chiou & Youngs (2014)"]
+		gmpe_weights = [0.25, 0.25, 0.25, 0.25]
+	else:
+		gmpe_list = [gmpe_info['Type']]
+	for cur_gmpe in gmpe_list:
+		x, y, z = get_site_prop(cur_gmpe, station_list)
+		siteSpec.append(x)
+		sites.append(y)
+		site_prop.append(z)
 	# Loop over scenarios
 	for i, s in enumerate(tqdm(scenarios, desc='Scenarios')):
 		# Rupture
 		source_info = scenarios[i]
 		# Computing IM
-		res, station_info = get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info, im_info)
+		res_list = []
+		curgmpe_info = {}
+		for j, cur_gmpe in enumerate(gmpe_list):
+			curgmpe_info['Type'] = cur_gmpe
+			curgmpe_info['Parameters'] = gmpe_info['Parameters']
+			x, station_info = get_IM(curgmpe_info, erf, sites[j], siteSpec[j], site_prop[j], source_info, station_info, im_info)
+			res_list.append(x)
+		if gmpe_info['Type'] == 'NGAWest2 2014 Averaged':
+			res = compute_weighted_res(res_list, gmpe_weights)
+		else:
+			res = res_list[0]
 		# Collecting outputs
 		psa_raw.append(res)
 
@@ -95,7 +118,7 @@ def compute_inter_event_residual(sa_inter_cm, periods, num_simu):
 	num_periods = len(periods)
 	if sa_inter_cm == 'Baker & Jayaram (2008)':
 		rho = np.array([CorrelationModel.baker_jayaram_correlation_2008(T1, T2)
-		                for T1 in periods for T2 in periods]).reshape([num_periods, num_periods])
+						for T1 in periods for T2 in periods]).reshape([num_periods, num_periods])
 	else:
 		# TODO: extending this to more inter-event correlation models
 		print('ComputeIntensityMeaure: currently only supporting Baker & Jayaram (2008)')
@@ -112,24 +135,24 @@ def compute_intra_event_residual(sa_intra_cm, periods, station_data, num_simu):
 	num_stations = len(station_data)
 	num_periods = len(periods)
 	if sa_intra_cm == 'Jayaram & Baker (2009)':
-	    rho = np.zeros((num_stations, num_stations, num_periods))
-	    for i in range(num_stations):
-		    loc_i = np.array([station_data[i]['Latitude'],
-			                  station_data[i]['Longitude']])
-		    for j in range(num_stations):
-			    loc_j = np.array([station_data[j]['Latitude'],
-				                  station_data[j]['Longitude']])
-			    # Computing station-wise distances
-			    stn_dist = np.linalg.norm(loc_i - loc_j) * 111.0
-			    for k in range(num_periods):
-			        rho[i, j, k] = \
-					    CorrelationModel.jayaram_baker_correlation_2009(periods[k],
-						    stn_dist, flag_clustering = False)
-        # Simulating residuals
-	    residuals = np.zeros((num_stations, num_periods, num_simu))
-	    for k in range(num_periods):
-		    residuals[:, k, :] = np.random.multivariate_normal(np.zeros(num_stations),
-			                                                   rho[:, :, k], num_simu).T
+		rho = np.zeros((num_stations, num_stations, num_periods))
+		for i in range(num_stations):
+			loc_i = np.array([station_data[i]['Latitude'],
+							  station_data[i]['Longitude']])
+			for j in range(num_stations):
+				loc_j = np.array([station_data[j]['Latitude'],
+								  station_data[j]['Longitude']])
+				# Computing station-wise distances
+				stn_dist = np.linalg.norm(loc_i - loc_j) * 111.0
+				for k in range(num_periods):
+					rho[i, j, k] = \
+						CorrelationModel.jayaram_baker_correlation_2009(periods[k],
+							stn_dist, flag_clustering = False)
+		# Simulating residuals
+		residuals = np.zeros((num_stations, num_periods, num_simu))
+		for k in range(num_periods):
+			residuals[:, k, :] = np.random.multivariate_normal(np.zeros(num_stations),
+															   rho[:, :, k], num_simu).T
 	elif sa_intra_cm == 'Loth & Baker (2013)':
 		residuals = CorrelationModel.loth_baker_correlation_2013(station_data, periods, num_simu)
 
@@ -137,14 +160,14 @@ def compute_intra_event_residual(sa_intra_cm, periods, station_data, num_simu):
 		num_pc = 19
 		residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(station_data, periods, num_simu, num_pc)
 
-    # return
+	# return
 	return residuals
 
 
 def export_im(stations, T, im_data, eq_data, output_dir, filename):
 
 	#try:
-	    # Station number
+		# Station number
 		num_stations = len(stations)
 		# Scenario number
 		num_scenarios = len(eq_data)
@@ -188,8 +211,8 @@ def export_im(stations, T, im_data, eq_data, output_dir, filename):
 			res = []
 			for i in range(num_stations):
 				tmp = {'Location': {
-				           'Latitude': stations[i]['Latitude'],
-					       'Longitude': stations[i]['Longitude']
+						   'Latitude': stations[i]['Latitude'],
+						   'Longitude': stations[i]['Longitude']
 						   },
 					   'Vs30': int(stations[i]['Vs30'])
 					  }
@@ -205,10 +228,10 @@ def export_im(stations, T, im_data, eq_data, output_dir, filename):
 			maf_out = []
 			for cur_eq in eq_data:
 				tmp = {'Magnitdue': cur_eq[0],
-				       'MeanAnnualRate': cur_eq[1]}
+					   'MeanAnnualRate': cur_eq[1]}
 				maf_out.append(tmp)
 			res = {'Station_lnSa': res,
-			       'Earthquake_MAF': maf_out}
+				   'Earthquake_MAF': maf_out}
 			# save
 			with open(os.path.join(output_dir, filename), "w") as f:
 				json.dump(res, f, indent=2)
@@ -221,7 +244,7 @@ def export_im(stations, T, im_data, eq_data, output_dir, filename):
 
 def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_info):
 
-    # Sa inter-event model
+	# Sa inter-event model
 	sa_inter_cm = correlation_info['SaInterEvent']
 	# Sa intra-event model
 	sa_intra_cm = correlation_info['SaIntraEvent']
@@ -240,7 +263,7 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 	for cur_psa_raw in tqdm(psa_raw, desc='Scenarios'):
 		# Spectral data (median and dispersions)
 		sa_data = cur_psa_raw['GroundMotions']
-	    # Combining inter- and intra-event residuals
+		# Combining inter- and intra-event residuals
 		if 'SA' in im_info['Type']:
 			ln_sa = [sa_data[i]['lnSA']['Mean'] for i in range(len(sa_data))]
 			ln_sa = [sa_data[i]['lnSA']['Mean'] for i in range(len(sa_data))]
@@ -260,7 +283,7 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 
 		ln_psa_mr.append(ln_psa)
 		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw['MeanAnnualRate']])
-    # return
+	# return
 	return ln_psa_mr, mag_maf
 
 
@@ -286,6 +309,66 @@ def simulate_storm(app_dir, input_dir, output_dir):
 
 	print([app_dir + app, '--input_dir', input_dir, '--output_dir', output_dir])
 	_ = subprocess.call([app_dir + app, '--input_dir', input_dir,
-	                     '--output_dir', output_dir])
+						 '--output_dir', output_dir])
 
 	return output_dir
+
+
+def compute_weighted_res(res_list, gmpe_weights):
+
+	# compute weighted average of gmpe results
+	# initialize the return res (these three attributes are identical in different gmpe results)
+	res = {'Magnitude': res_list[0]['Magnitude'],
+		   'MeanAnnualRate': res_list[0]['MeanAnnualRate'],
+		   'Periods': res_list[0]['Periods']}
+	# number of gmpe
+	num_gmpe = len(res_list)
+	# check number of weights
+	if not (num_gmpe == len(gmpe_weights)):
+		print('ComputeIntensityMeasure: please check the weights of different GMPEs.')
+		return 1
+	# site number
+	num_site = len(res_list[0]['GroundMotions'])
+	# loop over different sites
+	gm_collector = []
+	for site_tag in range(num_site):
+		# loop over different GMPE
+		tmp_res = {}
+		for i, cur_res in enumerate(res_list):
+			cur_gmResults = cur_res['GroundMotions'][site_tag]
+			# get keys
+			im_keys = list(cur_gmResults.keys())
+			for cur_im in im_keys:
+				if not (cur_im in list(tmp_res.keys())):
+					if cur_im in ['Location','SiteData']:
+						tmp_res.update({cur_im: cur_gmResults[cur_im]})
+					else:
+						tmp_res.update({cur_im: {}})
+				if not (cur_im in ['Location','SiteData']):
+					# get components
+					comp_keys = list(cur_gmResults[cur_im].keys())
+					# loop over differen components
+					for cur_comp in comp_keys:
+						if not (cur_comp in list(tmp_res[cur_im].keys())):
+							tmp_res[cur_im].update({cur_comp: []})
+							for cur_value in cur_gmResults[cur_im][cur_comp]:
+								if 'StdDev' in cur_comp:
+									# standard deviation
+									tmp_res[cur_im][cur_comp].append(np.sqrt(cur_value ** 2.0 * gmpe_weights[i]))
+								else:
+									# mean
+									tmp_res[cur_im][cur_comp].append(cur_value * gmpe_weights[i])
+						else:
+							for j, cur_value in enumerate(cur_gmResults[cur_im][cur_comp]):
+								if 'StdDev' in cur_comp:
+									# standard deviation
+									tmp_res[cur_im][cur_comp][j] = np.sqrt(tmp_res[cur_im][cur_comp][j] ** 2.0 + cur_value ** 2.0 * gmpe_weights[i])
+								else:
+									# mean
+									tmp_res[cur_im][cur_comp][j] = tmp_res[cur_im][cur_comp][j] + cur_value * gmpe_weights[i]
+		# collector
+		gm_collector.append(tmp_res)
+	# res
+	res.update({'GroundMotions': gm_collector})
+	# return
+	return res
