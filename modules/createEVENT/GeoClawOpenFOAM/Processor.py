@@ -50,20 +50,23 @@ def main():
     hydro_parser = argparse.ArgumentParser(description='Get the Dakota.json file')
 
     # Add the arguments
-    hydro_parser.add_argument('-b',
-                       metavar='path',
-                       type=str,
-                       help='the path to dakota.json file',
-                       required=True)
+    hydro_parser.add_argument('-b', metavar='path to input file', type=str, help='the path to dakota.json file', required=True)
+    hydro_parser.add_argument('-I', metavar='path to input directory', type=str, help='the path to input directory', required=True)
+    hydro_parser.add_argument('-L', metavar='path to library', type=str, help='the path to library', required=True)
+    hydro_parser.add_argument('-P', metavar='path to user bin', type=str, help='the path to user app bin', required=True)
+    hydro_parser.add_argument('-i', metavar='input file', type=str, help='input file', required=True)
+    hydro_parser.add_argument('-d', metavar='driver file', type=str, help='driver file', required=True)
 
     # Execute the parse_args() method
     args = hydro_parser.parse_args()
 
+    # print(args.b)
+    # print(args.I)
+    # print(args.L)
+    # print(args.P)
+
     # Get the path
     fipath = args.b.replace('/dakota.json', '')
-    # print('path is: \n')
-    # print(path)
-    # print(args.b)
 
     # bimfile = os.path.join(args.b,"dakota.json")
     # with open(bimfile) as f:
@@ -159,15 +162,15 @@ def main():
         # Check if OF mesh dictionary exists then move to system
         if os.path.isfile("templateDir/blockMeshDict"):
             shutil.move("templateDir/blockMeshDict", "system/blockMeshDict")
-            fileswrite = np.append(filewritten,['blockMeshDict'])
+            fileswrite = np.append(fileswrite,['blockMeshDict'])
 
         if os.path.isfile("templateDir/surfaceFeatureExtractDict"):
             shutil.move("templateDir/surfaceFeatureExtractDict", "system/surfaceFeatureExtractDict")
-            fileswrite = np.append(filewritten,['surfaceFeatureExtractDict'])
+            fileswrite = np.append(fileswrite,['surfaceFeatureExtractDict'])
 
         if os.path.isfile("templateDir/snappyHexMeshDict"):
             shutil.move("templateDir/snappyHexMeshDict", "system/snappyHexMeshDict")
-            fileswrite = np.append(filewritten,['snappyHexMeshDict'])
+            fileswrite = np.append(fileswrite,['snappyHexMeshDict'])
         
         if fileswrite.size != 0:
             # Confirm the copy
@@ -190,7 +193,7 @@ def main():
     #***********************************
     # BOUNDARY CONDITIONS RELATED FILES
     #***********************************
-    fileswrite = hydrosolver.bouncond(data)
+    fileswrite = hydrosolver.bouncond(data,fipath)
     logID += 1
     hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
@@ -200,18 +203,37 @@ def main():
     if(os.path.exists("FlumeData.txt")):
         os.remove("FlumeData.txt")
 
-    if(os.path.exists("wmwg.txt")):
-        os.remove("wmwg.txt")
+    # if(os.path.exists("wmwg.txt")):
+    #     os.remove("wmwg.txt")
     
-    if(os.path.exists("wmdisp.txt")):
-        os.remove("wmdisp.txt")
+    # if(os.path.exists("wmdisp.txt")):
+    #     os.remove("wmdisp.txt")
 
     #***********************************
     # RUNCASE SCRIPT FOR TACC
     #***********************************
+    #print(hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])[0])
     
     # Create the case run script
     fileIDrun = open("caserun.sh","w")
+
+    # Add all variables
+    fileIDrun.write('echo Setting up variables')
+    fileIDrun.write('export BIM='+args.b+'\n')
+    fileIDrun.write('export HYDROPATH='+fipath+'\n')
+    fileIDrun.write('export LD_LIBRARY_PATH='+args.L+'\n')
+    fileIDrun.write('export PATH='+args.P+'\n')
+    fileIDrun.write('export inputFile='+args.i+'\n')
+    fileIDrun.write('export idriverFile='+args.d+'\n')
+    fileIDrun.write('export inputDirectory='+fipath+'\n\n')
+
+    # Load all modules
+    fileIDrun.write('echo Loading modules on Stampede2\n')
+    fileIDrun.write('module load intel/18.0.2\n')
+    fileIDrun.write('module load impi/18.0.2\n')
+    fileIDrun.write('module load openfoam/7.0\n')
+    fileIDrun.write('dakota/6.8.0\n')
+    fileIDrun.write('module load python3\n\n')
 
     # Start with meshing
     if int(mesher[0]) == 0:
@@ -330,7 +352,6 @@ def main():
     fileIDrun.write('echo "driver is ${driverFile}"\n')
     fileIDrun.write('DRIVERFILE=\'${driverFile}\'\n')
     fileIDrun.write('DRIVERFILE="${DRIVERFILE##*/}"\n')
-    fileIDrun.write('Change script permissions...\n')
     fileIDrun.write('cd templatedir\n')
     fileIDrun.write('chmod \'a+x\' $DRIVERFILE\n')
     fileIDrun.write('chmod \'a+x\' dpreproSimCenter\n')
@@ -346,6 +367,9 @@ def main():
     fileIDrun.write('cp templatedir/dakota.json ./\n')
     fileIDrun.write('rm -fr templatedir\n')
     fileIDrun.write('rm temp_geometry\n\n')
+
+    # # Temporarily halt progress here
+    # sys.exit()
 
 ####################################################################
 if __name__ == "__main__":
