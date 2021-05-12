@@ -211,11 +211,13 @@ def main():
 
     #***********************************
     # RUNCASE SCRIPT FOR TACC
-    #***********************************
-    #print(hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])[0])
-    
+    #***********************************  
     # Create the case run script
     fileIDrun = open("caserun.sh","w")
+
+    # Get information
+    #print(hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])[0])
+    hydrobrain = ', '.join(hydroutil.extract_element_from_json(data, ["remoteAppDir"]))
 
     # Add all variables
     fileIDrun.write('echo Setting up variables')
@@ -224,15 +226,16 @@ def main():
     fileIDrun.write('export LD_LIBRARY_PATH='+args.L+'\n')
     fileIDrun.write('export PATH='+args.P+'\n')
     fileIDrun.write('export inputFile='+args.i+'\n')
-    fileIDrun.write('export idriverFile='+args.d+'\n')
-    fileIDrun.write('export inputDirectory='+fipath+'\n\n')
+    fileIDrun.write('export driverFile='+args.d+'\n')
+    fileIDrun.write('export inputDirectory='+fipath+'\n')
+    fileIDrun.write('export HYDROBRAIN='+hydrobrain+'/applications/createEVENT/GeoClawOpenFOAM\n\n')
 
     # Load all modules
     fileIDrun.write('echo Loading modules on Stampede2\n')
     fileIDrun.write('module load intel/18.0.2\n')
     fileIDrun.write('module load impi/18.0.2\n')
     fileIDrun.write('module load openfoam/7.0\n')
-    fileIDrun.write('dakota/6.8.0\n')
+    fileIDrun.write('module load dakota/6.8.0\n')
     fileIDrun.write('module load python3\n\n')
 
     # Start with meshing
@@ -263,7 +266,7 @@ def main():
         # Remove folder 1 and 2
         fileIDrun.write('rm -fr 1 2\n')
         # Create new controlDict
-        fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b $BIM\n\n')
+        fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b '+args.b+'\n\n')
     
     elif int(mesher[0]) == 1:
         # blockMesh
@@ -283,7 +286,7 @@ def main():
             # Remove folder 1 and 2
             fileIDrun.write('rm -fr 1 2\n')
             # Create new controlDict
-            fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b $BIM\n\n')
+            fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b '+args.b+'\n\n')
 
     elif int(mesher[0]) == 2:
         # Get the mesh software
@@ -336,7 +339,7 @@ def main():
 
     # Call building forces to run Dakota
     fileIDrun.write('echo Starting Dakota preparation...\n')
-    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b $BIM\n')
+    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+' -f 1\n') # Change to number of floors
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/templatedir/EVENT.json\n')
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/templatedir/evt.j\n\n')
 
@@ -352,7 +355,7 @@ def main():
     fileIDrun.write('echo "driver is ${driverFile}"\n')
     fileIDrun.write('DRIVERFILE=\'${driverFile}\'\n')
     fileIDrun.write('DRIVERFILE="${DRIVERFILE##*/}"\n')
-    fileIDrun.write('cd templatedir\n')
+    fileIDrun.write('cd ${inputDirectory}/templatedir\n')
     fileIDrun.write('chmod \'a+x\' $DRIVERFILE\n')
     fileIDrun.write('chmod \'a+x\' dpreproSimCenter\n')
     fileIDrun.write('cp $DRIVERFILE ../\n')
