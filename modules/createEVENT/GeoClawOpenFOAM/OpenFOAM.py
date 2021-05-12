@@ -5,6 +5,7 @@ import numpy as np
 import os
 import shutil
 import math
+from numpy.lib.function_base import disp
 from zipfile36 import ZipFile
 from GenUtilities import genUtilities # General utilities
 from Flume import OSUWaveFlume # Wave flume utilities
@@ -138,7 +139,7 @@ FoamFile
         self.cnstfile.write('\n')
 
     ####################################################################
-    def gfileOF(self,data):
+    def gfileOF(self,data,simtype):
         '''
         Method creates the gravity file for the OpenFOAM.
 
@@ -161,21 +162,26 @@ FoamFile
         gy = 0.0
         gz = 0.0
 
-        # Get the gravity from dakota.json file
-        gravity = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Gravity"]))
-        # Depending on the inputs, initialize gravity in the right direction
-        if int(gravity) == 11:
-            gx = 9.81
-        elif int(gravity) == 12:
-            gy = 9.81
-        elif int(gravity) == 13:
-            gz = 9.81
-        elif int(gravity) == 21:
-            gx = -9.81
-        elif int(gravity) == 22:
-            gy = -9.81
-        elif int(gravity) == 23:
+        # Get the simulation type
+        # simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+        if int(simtype) == 4:
             gz = -9.81
+        else:
+            # Get the gravity from dakota.json file
+            gravity = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Gravity"]))
+            # Depending on the inputs, initialize gravity in the right direction
+            if int(gravity) == 11:
+                gx = 9.81
+            elif int(gravity) == 12:
+                gy = 9.81
+            elif int(gravity) == 13:
+                gz = 9.81
+            elif int(gravity) == 21:
+                gx = -9.81
+            elif int(gravity) == 22:
+                gy = -9.81
+            elif int(gravity) == 23:
+                gz = -9.81
 
         # Write to constants file
         var =  np.array([['gx', str(gx)], ['gy', str(gy)], ['gz', str(gz)]])
@@ -354,7 +360,7 @@ FoamFile
         fileID.close()
 
     ####################################################################
-    def OSUwavemakerfileunzip(self,data,fpath):
+    def OSUwavemakerfileunzip(self,data,fpath,simtype):
 
         '''
         Method is used to unzip the wavemaker files if exist
@@ -364,20 +370,20 @@ FoamFile
             simtype: Type of simulation
             fpath: Path to dakota.json file folder
         '''
+        print('Function is not being used')
+        # Declare the utilities object
+        # hydroutil = genUtilities()
+        #simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
 
-        # Get the simulation type
-        hydroutil = genUtilities()
-        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
-
-        # If the simulation type is digital wave flume
+        
         # Then get the filename
         # Unzip the file
-        zipfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWall_Entry"]))
+        # zipfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWall_Entry"]))
 
         # Need to unzip the file
         #zip = ZipFile('templatedir/wm.zip')
-        zip = ZipFile(os.path.join(fpath,"wm.zip"))
-        zip.extractall()
+        # zip = ZipFile(os.path.join(fpath,"wm.zip"))
+        # zip.extractall()
 
     ####################################################################
     def transportProperties(self,data):
@@ -400,7 +406,7 @@ FoamFile
         # Create the transportProperties file
         fileID = open("constant/transportProperties","w")
 
-        # Get the turbulence model
+        # Get the general utilities
         hydroutil = genUtilities()
 
         # Get the properties necessary to print
@@ -540,9 +546,28 @@ FoamFile
         fileID.write('maxCo \t 1.0;\n\n')
         fileID.write('maxAlphaCo \t 1.0;\n\n')
         fileID.write('maxDeltaT \t 1;\n\n')
+        fileID.write('functions\n{\n\t')
+        fileID.write('#includeFunc\tQ\n\t')
+        fileID.write('#includeFunc\t"surfaces"\n\t')
+        fileID.write('#includeFunc\t"forces"\n}\n')
         #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
 
-        # Add post-processing stuff
+        # Create the transportProperties file
+        fileID2 = open("system/forces","w")
+        fileID2.write('buildingsForces\n{\n\t')
+        fileID2.write('libs\t("libforces.so");\n\t')
+        fileID2.write('writeControl\ttimeStep;\n\t')
+        fileID2.write('writeInterval\t$writeT;\n\t')
+        fileID2.write('timeInterval\t1;\n\t')
+        fileID2.write('patches\t("Back")\n\t')
+        fileID2.write('rho\trhoInf;\n\t')
+        fileID2.write('log\ttrue;\n\t')
+        fileID2.write('rhoInf\t1;\n\t')
+        fileID2.write('CofR\t(0 0 0);\n\n\t')
+        fileID2.write('binData\n\t{\n\t\t')
+        fileID2.write('nBin\t1;\n\t\t')
+        fileID2.write('direction\t(1 0 0);\n\t\t')
+        fileID2.write('cumulative\tno;\n\t}\n}')
 
         # Close the controlDict file
         fileID.close()
@@ -1048,7 +1073,7 @@ FoamFile
         fileID.write('%s' % (stlinfo))
 
     ####################################################################
-    def wavemakerfile(self):
+    def wavemakerfile(self,dispfilename,heightfilename):
         '''
         This method is used to write the wavemaker movement file
         '''
@@ -1062,7 +1087,7 @@ FoamFile
         # Get the frequency of the wavemaker
         frequency = 0
         waterdepth = 0
-        filewm = open('wmdisp.txt','r')
+        filewm = open(dispfilename,'r')
         Lines = filewm.readlines()
         count = 0
         for line in Lines:
@@ -1081,7 +1106,13 @@ FoamFile
                 break
 
         # Count the number of lines
-        countlines = sum(1 for line in open('wmdisp.txt')) - 72
+        #countlines = sum(1 for line in open(dispfilename)) - 72
+        countlines = 0
+        with open(dispfilename) as fdisp:
+            for line2 in fdisp:
+                if line2.strip():
+                    countlines += 1
+        countlines = countlines - 72
 
         # Create the timeseries
         time = 0
@@ -1097,20 +1128,22 @@ FoamFile
         for line in Lines:
             count += 1
             if count > 72:
-                data = float(line)
-                fileID.write(str(data)+'\n')
+                if not line:
+                    data = float(line)
+                    fileID.write(str(data)+'\n')
         fileID.write(')\n);\n\n')
 
         # Write the paddle Eta
         fileID.write('paddleEta 1(\n'+str(countlines)+'(\n')
-        filewmg = open('wmwg.txt','r')
+        filewmg = open(heightfilename,'r')
         Lines2 = filewmg.readlines()
         count = 0
         for line in Lines2:
             count += 1
             if count > 72:
-                data = float(line)+waterdepth
-                fileID.write(str(data)+'\n')
+                if not line:
+                    data = float(line)+waterdepth
+                    fileID.write(str(data)+'\n')
         fileID.write(')\n);')
 
     ####################################################################
@@ -1170,11 +1203,15 @@ FoamFile
             fpath: Path to the dakota.json folder
         '''
 
+        # Get the simulation type
+        hydroutil = genUtilities()
+        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
         # Initialize the constant file
         self.cnstfile = self.openfileOF("constantsFile","w")
       
         # Write the gravity-file
-        self.gfileOF(data)
+        self.gfileOF(data,simtype)
 
         # Write the fvSchemes (interpolation schemes)
         self.fvSchemesOF(data)
@@ -1183,7 +1220,8 @@ FoamFile
         self.fvSolutionOF(data)
 
         # Unzip wavemaker file if required
-        self.OSUwavemakerfileunzip(data,fpath)
+        # if int(simtype) == 4:
+        #     self.OSUwavemakerfileunzip(data,fpath,simtype)
 
         # Files written: required for log files
         filewritten = np.array(['g','fvScheme','fvSolution'])
@@ -1270,31 +1308,32 @@ FoamFile
         simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
 
         # If SW-CFD coupling
-        if (int(simtype) == 1) or (int(simtype) == 3):
-            # Get the type of bathymetry
+        if (int(simtype) == 1) or (int(simtype) == 2):
+            # # Get the type of bathymetry
             bathyfiletype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BathymetryFileType"]))
 
-            # Create an object for the bathymetry 
-            if int(bathyfiletype) == 0:
-                # Create object for simcenter format
-                print(0)
+            # # Create an object for the bathymetry 
+            # if int(bathyfiletype) == 0:
+            #     # Create object for simcenter format
+            #     print(0)
 
-            elif ((int(bathyfiletype) == 1) or (int(bathyfiletype) == 2)) \
-                or (int(bathyfiletype) == 3):
-                # Create the GeoClaw object
-                print(0)
+            # elif ((int(bathyfiletype) == 1) or (int(bathyfiletype) == 2)) \
+            #     or (int(bathyfiletype) == 3):
+            #     # Create the GeoClaw object
+            #     print(0)
 
-            elif int(bathyfiletype) == 4:
-                # Create the AdCirc object
-                # Files written: required for log files
-                #filewritten = np.array(['ERROR: AdCirc not supported. Contact developer.'])
-                #return filewritten
-                print(0)
+            # elif int(bathyfiletype) == 4:
+            #     # Create the AdCirc object
+            #     # Files written: required for log files
+            #     #filewritten = np.array(['ERROR: AdCirc not supported. Contact developer.'])
+            #     #return filewritten
+            #     print(0)
 
         elif int(simtype) == 4:
             # Get the way the flume is defined
             flumedeftype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","FlumeInfoType"]))
 
+            # For flume being defined using coordinates
             if int(flumedeftype) == 0:
                 # Create the object for the Flume
                 flume = OSUWaveFlume()
@@ -1302,15 +1341,20 @@ FoamFile
                 # Read flume data from the JSON file and
                 # Create a FlumeData.txt file
                 flumesegs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","FlumeSegments"]))
+                # Get the number of flume segments
+                numflumesegs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumFlumeSegments"]))
 
                 # Separate to numbers
-                # Find total number of processors
+                # Replace the comma by spaces in segments list
                 flumesegs = flumesegs.replace(',', ' ')
-                nums = [int(n) for n in flumesegs.split()]
-                #totalprocs = nums[0]*nums[1]*nums[2]
-                for ii in range(nums[0]):
+                # Convert the flume segment to list of floats
+                nums = [float(n) for n in flumesegs.split()]
+                # Remove the first item
+                nums.pop(0) 
+                # Convert to a Flume data text file
+                for ii in range(int(numflumesegs)):
                     f = open("FlumeData.txt", "a")
-                    f.write(str(nums[2*ii+1]) + ',' + str(nums[2*ii+2]) + '\n' )
+                    f.write(str(nums[2*ii]) + ',' + str(nums[2*ii+1]) + '\n' )
                     f.close()
 
                 # Initialize the input file
@@ -1450,9 +1494,9 @@ FoamFile
 
         if int(simtype) == 1:
             filewritten = np.array(['ERROR: Initialization from SW solutions. Contact developer for help.'])
-            return filewritten
+            #return filewritten
 
-        elif int(simtype) == 3:
+        else:
             # Get the global value of alpha
             alphaglobal = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaGlobal"]))
             var = np.array([['alphaglobal',str(alphaglobal)]])
@@ -1464,7 +1508,7 @@ FoamFile
             for ii in range(int(numalpharegion)):
                 regionalpha = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaRegion"+str(ii)]))
                 regions = regionalpha.replace(',', ' ')
-                nums = [int(n) for n in regions.split()]
+                nums = [float(n) for n in regions.split()]
                 var = np.append(var,[['alpha'+str(ii)+'x1',str(nums[0])]],axis=0)
                 var = np.append(var,[['alpha'+str(ii)+'y1',str(nums[1])]],axis=0)
                 var = np.append(var,[['alpha'+str(ii)+'z1',str(nums[2])]],axis=0)
@@ -1479,90 +1523,14 @@ FoamFile
             # Create the setFields dictionary
             self.setFieldsDictOF(int(numalpharegion))
             filewritten = np.array(['setFieldsDict'])
-            return filewritten
-
-        elif int(simtype) == 4:
-            # Initialize water depth
-            waterdepth = 0
-            # Check first if flume file exists.
-            if os.path.isfile("wmwg.txt"):
-                # Get water height from this
-                # Read the temporary geometry file with extreme values
-                filewm = open('wmwg.txt','r')
-                Lines = filewm.readlines()
-                count = 0
-                for line in Lines:
-                    count += 1
-                    if count == 61:
-                        stra=line.replace('% StillWaterDepth: ','')
-                        waterdepth = float(stra)
-                        break
-
-            elif os.path.isfile("wmdisp.txt"):
-                # Read the temporary geometry file with extreme values
-                filewm = open('wmdisp.txt','r')
-                Lines = filewm.readlines()
-                count = 0
-                for line in Lines:
-                    count += 1
-                    if count == 61:
-                        stra=line.replace('% StillWaterDepth: ','')
-                        waterdepth = float(stra)
-                        break
-
-            # If water depth has been read, then 
-            if waterdepth > 0:
-                # Initialize global value to zero
-                var = np.array([['alphaglobal',str(0)]])
-                numalpharegion = '1'
-
-                # Read the temp geometry file
-                data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
-
-                # Set the variables for one region
-                var = np.append(var,[['alpha'+str(0)+'x1',str(data_geoext[0])]],axis=0)
-                var = np.append(var,[['alpha'+str(0)+'y1',str(data_geoext[2])]],axis=0)
-                var = np.append(var,[['alpha'+str(0)+'z1',str(data_geoext[4])]],axis=0)
-                var = np.append(var,[['alpha'+str(0)+'x2',str(data_geoext[1])]],axis=0)
-                var = np.append(var,[['alpha'+str(0)+'y2',str(data_geoext[3])]],axis=0)
-                var = np.append(var,[['alpha'+str(0)+'z2',str(data_geoext[5])]],axis=0)
-                var = np.append(var,[['alpha'+str(0),str(1)]],axis=0)
-
-            else:
-                # Get the global value of alpha
-                alphaglobal = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaGlobal"]))
-                var = np.array([['alphaglobal',str(alphaglobal)]])
-
-                # Get each local value 
-                numalpharegion = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumAlphaRegion"]))
-
-                # Get each local region
-                for ii in range(int(numalpharegion)):
-                    regionalpha = ', '.join(hydroutil.extract_element_from_json(data, ["Events","InitialAlphaRegion"+str(ii)]))
-                    regions = regionalpha.replace(',', ' ')
-                    nums = [int(n) for n in regions.split()]
-                    var = np.append(var,[['alpha'+str(ii)+'x1',str(nums[0])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii)+'y1',str(nums[1])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii)+'z1',str(nums[2])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii)+'x2',str(nums[3])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii)+'y2',str(nums[4])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii)+'z2',str(nums[5])]],axis=0)
-                    var = np.append(var,[['alpha'+str(ii),str(nums[6])]],axis=0)
-
-            # Write the constants file
-            self.constvarfileOF(var,"setFieldsDict")
-
-            # Create the setFields dictionary
-            self.setFieldsDictOF(int(numalpharegion))
-            filewritten = np.array(['setFieldsDict'])
-            return filewritten
+            #return filewritten
 
         # Files written: required for log files
-        filewritten = np.array(['ERROR: Simulation type likely not supported. Contact developer'])
+        #filewritten = np.array(['ERROR: Simulation type likely not supported. Contact developer'])
         return filewritten
 
     ####################################################################
-    def bouncond(self,data):
+    def bouncond(self,data,fpath):
         '''
         Method creates the relevant files for the initial condition
 
@@ -1576,19 +1544,28 @@ FoamFile
         hydroutil = genUtilities()
 
         # Get the simulation type
-        simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+        #simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
 
-        if int(simtype) == 4:
+        # Get boundary patch name
+        bpatchname = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BounPatch0"]))
+
+        # Type of velocity bc
+        entry = ', '.join(hydroutil.extract_element_from_json(data, ["Events","VelocityType_Entry"]))
+
+        if int(entry) == 3: #OSU Moving wall
+
+            # Get the displacement file name
+            dispfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallDisp_Entry"]))
+            dispfilename = os.path.join(fpath,dispfilename)
+
+            # Get the water height file name
+            heightfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallHeight_Entry"]))
+            heightfilename = os.path.join(fpath,heightfilename)
 
             # Get the building flag
+            # 0 = no building 1 = building
             data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
             flag = int(data_geoext[6])
-
-            # Write the dynamic mesh dictionary for the moving wall
-            self.dynmeshFlumeOF()
-
-            # Write the dynamic mesh dictionary for the moving wall
-            self.wavemakerOF()
 
             # Write the  files for the 0-folder
             self.alpha0OF(flag)
@@ -1596,17 +1573,22 @@ FoamFile
             self.prgh0OF(flag)
             self.pdisp0OF(flag)
 
+            # Write the dynamic mesh dictionary for the moving wall
+            self.dynmeshFlumeOF()
+
+            # Write the dynamic mesh dictionary for the moving wall
+            self.wavemakerOF()
+
             # Write the wavemaker file
-            self.wavemakerfile()
+            self.wavemakerfile(dispfilename,heightfilename)
 
             # Give the confirmation that the files have been created
             filewritten = np.array(['0.org/alpha.water','0.org/U','0.org/p_rgh','0.org/point_Displacement','wavemakerMovementDict','dynamicMeshDict','waveMakerMovement.txt'])
-            return filewritten
 
-        else:
-            filewritten = np.array(['ERROR: Initialization from boundary conditions. Contact developer for help.'])
-            return filewritten
+        # else:
+        #     filewritten = np.array(['ERROR: Initialization from boundary conditions. Contact developer for help.'])
+        #     return filewritten
 
         # Files written: required for log files
-        filewritten = np.array(['ERROR: Likely your boundary condition is not yet supported. Contact developer'])
+        # filewritten = np.array(['ERROR: Likely your boundary condition is not yet supported. Contact developer'])
         return filewritten
