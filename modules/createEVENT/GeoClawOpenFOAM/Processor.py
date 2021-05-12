@@ -305,8 +305,8 @@ def main():
             fileIDrun.write('gmshToFoam $MESHFILE > gmshToFoam.log\n\n')
 
     # Add patches for building forces
-    fileIDrun.write('patches="Building"\n')
-    fileIDrun.write('python3 $HYDROBRAIN/AddBuildingForces.py -c $(pwd) -b ${inputDirectory}/templatedir/dakota.json -p $patches\n\n')
+    #fileIDrun.write('patches="Building"\n')
+    #fileIDrun.write('python3 $HYDROBRAIN/AddBuildingForces.py -c $(pwd) -b ${inputDirectory}/templatedir/dakota.json -p $patches\n\n')
 
     # Check the mesh
     fileIDrun.write('echo Checking mesh...\n')
