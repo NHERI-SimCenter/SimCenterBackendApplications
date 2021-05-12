@@ -31,7 +31,7 @@ def findFunctionsDictionary(controlDictLines):
         if line.startswith("functions"):
             return (True, controlDictLines.index(line) + 2)
 
-    return [False, controlDictLines.count]
+    return [False, len(controlDictLines)]
 
 
 def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):

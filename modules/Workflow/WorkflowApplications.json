@@ -196,7 +196,7 @@
 	]
       },
       {
-        "Name": "Regional Site Response",
+        "Name": "RegionalSiteResponse",
         "ExecutablePath": "applications/createEVENT/siteResponse/RegionalSiteResponse.py",
         "ApplicationSpecificInputs": [
           {
