@@ -158,8 +158,9 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
 
-    fileID = open("system/controldict","w")
+    fileID = open("system/controlDict","w")
     fileID.write(header)
+    fileID.write('#include\t"../constantsFile"\n\n')
     fileID.write('\napplication \t $solver;\n\n')
     fileID.write('startFrom \t latestTime;\n\n')
     fileID.write('startTime \t $startT;\n\n')
@@ -170,7 +171,7 @@ FoamFile
     fileID.write('writeInterval \t $writeT;\n\n')
     fileID.write('purgeWrite \t 0;\n\n')
     fileID.write('writeFormat \t ascii;\n\n')
-    fileID.write('writePrecision \t t;\n\n')
+    fileID.write('writePrecision \t 6;\n\n')
     fileID.write('writeCompression \t uncompressed;\n\n')
     fileID.write('timeFormat \t general;\n\n')
     fileID.write('timePrecision \t 6;\n\n')
@@ -178,7 +179,7 @@ FoamFile
     fileID.write('adjustTimeStep \t yes;\n\n')
     fileID.write('maxCo \t 1.0;\n\n')
     fileID.write('maxAlphaCo \t 1.0;\n\n')
-    fileID.write('maxDeltaT \t 1;\n\n')
-    fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
+    fileID.write('maxDeltaT \t 0.025;\n\n')
+    #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
     # Close the controlDict file
     fileID.close()

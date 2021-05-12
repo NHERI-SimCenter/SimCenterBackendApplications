@@ -59,19 +59,25 @@ def main():
     # Execute the parse_args() method
     args = hydro_parser.parse_args()
 
+    # Get the path
+    fipath = args.b.replace('/dakota.json', '')
+    # print('path is: \n')
+    # print(path)
+    # print(args.b)
+
+    # bimfile = os.path.join(args.b,"dakota.json")
+    # with open(bimfile) as f:
+    #     data = json.load(f)
+
     # Open the JSON file
     # Load all the objects to the data variable
     # with open('dakota.json') as f:
     with open(args.b) as f:
-        data = json.load(f)
+       data = json.load(f)
 
     # Create the objects
     hydroutil = genUtilities() # General utilities
-    hydrosolver = solver() # Solver object
-
-    # Need to unzip the file
-    zip = ZipFile('templatedir/wm.zip')
-    zip.extractall()
+    hydrosolver = solver() # Solver object 
 
     #***********************************
     # HYDRO-UQ LOG FILE: INITIALIZE
@@ -101,7 +107,7 @@ def main():
     #***********************************
     # SUPPLEMENTARY SOLVER SPECIFIC FILES
     #***********************************
-    fileswrite = hydrosolver.filecreate(data)
+    fileswrite = hydrosolver.filecreate(data,fipath)
     logID += 1
     hydroutil.flog.write('%d (%s): Following required files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
@@ -187,6 +193,18 @@ def main():
     fileswrite = hydrosolver.bouncond(data)
     logID += 1
     hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+
+    #***********************************
+    # CLEANUP TEMP FILES
+    #***********************************
+    if(os.path.exists("FlumeData.txt")):
+        os.remove("FlumeData.txt")
+
+    if(os.path.exists("wmwg.txt")):
+        os.remove("wmwg.txt")
+    
+    if(os.path.exists("wmdisp.txt")):
+        os.remove("wmdisp.txt")
 
     #***********************************
     # RUNCASE SCRIPT FOR TACC
