@@ -554,6 +554,7 @@ FoamFile
 
         # Create the transportProperties file
         fileID2 = open("system/forces","w")
+        fileID2.write('#include\t"../constantsFile"\n\n')
         fileID2.write('buildingsForces\n{\n\t')
         fileID2.write('libs\t("libforces.so");\n\t')
         fileID2.write('writeControl\ttimeStep;\n\t')
@@ -571,6 +572,7 @@ FoamFile
 
         # Close the controlDict file
         fileID.close()
+        fileID2.close()
 
     ####################################################################
     def decomposepar(self,data):

@@ -472,7 +472,7 @@
       {
           "id": "filenameEDP",
           "type": "string",
-          "description": "name of file containing the EDP to be determined from the analysis",
+	  "description": "name of file containing the EDP to be determined from the analysis",
           "default": "EDP.json"
       }
       ]
@@ -493,6 +493,11 @@
         "ExecutablePath": "applications/createEDP/standardWindEDP/StandardWindEDP",
         "ApplicationSpecificInputs": []
       },
+      {
+        "Name": "StandardEDP",
+        "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
+        "ApplicationSpecificInputs": []
+      },	
       {
         "Name": "StandardGMT_EDP",
         "ExecutablePath": "applications/createEDP/gmtEDP/StandardGMT_EDP",
