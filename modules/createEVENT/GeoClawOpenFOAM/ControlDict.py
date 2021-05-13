@@ -180,6 +180,10 @@ FoamFile
     fileID.write('maxCo \t 1.0;\n\n')
     fileID.write('maxAlphaCo \t 1.0;\n\n')
     fileID.write('maxDeltaT \t 0.025;\n\n')
+    fileID.write('functions\n{\n\t')
+    fileID.write('#includeFunc\tQ\n\t')
+    fileID.write('#includeFunc\t"surfaces"\n\t')
+    fileID.write('#includeFunc\t"forces"\n}\n')
     #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
     # Close the controlDict file
     fileID.close()
