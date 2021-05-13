@@ -547,8 +547,8 @@ FoamFile
         fileID.write('maxAlphaCo \t 1.0;\n\n')
         fileID.write('maxDeltaT \t 1;\n\n')
         fileID.write('functions\n{\n\t')
-        fileID.write('#includeFunc\tQ\n\t')
-        fileID.write('#includeFunc\t"surfaces"\n\t')
+        #fileID.write('#includeFunc\tQ\n\t')
+        #fileID.write('#includeFunc\t"surfaces"\n\t')
         fileID.write('#includeFunc\t"forces"\n}\n')
         #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
 
@@ -556,6 +556,7 @@ FoamFile
         fileID2 = open("system/forces","w")
         fileID2.write('#include\t"../constantsFile"\n\n')
         fileID2.write('buildingsForces\n{\n\t')
+        fileID2.write('type\tforces;\n\t')
         fileID2.write('libs\t("libforces.so");\n\t')
         fileID2.write('writeControl\ttimeStep;\n\t')
         fileID2.write('writeInterval\t$writeT;\n\t')
