@@ -141,8 +141,8 @@ def writeEVENT(forces, deltaT):
     patternsArray = []
     pressureArray = []
     windEventJson = {
-        "type" : "Wind",
-        "subtype": "OpenFOAM CFD Expert Event",
+        "type" : "Hydro",
+        "subtype": "OpenFOAM CFD Hydro Event",
         "timeSeries": timeSeriesArray,
         "pattern": patternsArray,
         "pressure": pressureArray,
@@ -169,20 +169,16 @@ def writeEVENT(forces, deltaT):
         json.dump(eventDict, eventsFile)
 
 
-# def GetOpenFOAMEvent(caseDir, floorsCount, startTime):
 def GetOpenFOAMEvent(floorsCount, startTime):
     """
     Read OpenFOAM output and generate an EVENT file for the building
     """
     forcesOutputName = "buildingsForces"
-    # if not validateCaseDirectoryStructure(caseDir):
-    #     print("Invalid OpenFOAM Case Directory!")
-    #     sys.exit(-1)
 
     if floorsCount == 1:        
-        buildingForcesPath = os.path.join(caseDir, "postProcessing", forcesOutputName, "0", "forces.dat")
+        buildingForcesPath = os.path.join("postProcessing", forcesOutputName, "0", "forces.dat")
     else:
-        buildingForcesPath = os.path.join(caseDir, "postProcessing", forcesOutputName, "0", "forces_bins.dat")
+        buildingForcesPath = os.path.join("postProcessing", forcesOutputName, "0", "forces_bins.dat")
 
     [deltaT, forces] = ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime)
 
@@ -195,7 +191,7 @@ def ReadBIM(BIMFilePath):
     with open(BIMFilePath,'r') as BIMFile:
 	    bim = json.load(BIMFile)
 
-    return [int(bim["GeneralInformation"]["stories"]), float(bim["Events"][0]["start"])]
+    return [int(bim["GeneralInformation"]["stories"]), float(bim["Events"][0]["StartTime"])]
 
 if __name__ == "__main__":
     """
@@ -203,15 +199,11 @@ if __name__ == "__main__":
     """
     #CLI parser
     parser = argparse.ArgumentParser(description="Get EVENT file from OpenFOAM output")
-    # parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
-    parser.add_argument('-f', '--floors', help= "Number of Floors", type=int, required=False)
     parser.add_argument('-b', '--bim', help= "path to BIM file", required=False)
 
     #parsing arguments
     arguments, unknowns = parser.parse_known_args()
-    floors = arguments.floors
-    if not floors:
-        [floors, startTime] = ReadBIM(arguments.bim)
+    [floors, startTime] = ReadBIM(arguments.bim)
 
-    # GetOpenFOAMEvent(arguments.case, floors, startTime)
+
     GetOpenFOAMEvent(floors, startTime)
