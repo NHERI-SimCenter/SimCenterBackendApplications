@@ -60,11 +60,6 @@ def main():
     # Execute the parse_args() method
     args = hydro_parser.parse_args()
 
-    # print(args.b)
-    # print(args.I)
-    # print(args.L)
-    # print(args.P)
-
     # Get the path
     fipath = args.b.replace('/dakota.json', '')
 
@@ -220,7 +215,7 @@ def main():
     hydrobrain = ', '.join(hydroutil.extract_element_from_json(data, ["remoteAppDir"]))
 
     # Add all variables
-    fileIDrun.write('echo Setting up variables')
+    fileIDrun.write('echo Setting up variables\n')
     fileIDrun.write('export BIM='+args.b+'\n')
     fileIDrun.write('export HYDROPATH='+fipath+'\n')
     fileIDrun.write('export LD_LIBRARY_PATH='+args.L+'\n')
@@ -339,7 +334,8 @@ def main():
 
     # Call building forces to run Dakota
     fileIDrun.write('echo Starting Dakota preparation...\n')
-    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+' -f 1\n') # Change to number of floors
+    #fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+' -f 1\n') # Change to number of floors
+    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n') # Change to number of floors
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/templatedir/EVENT.json\n')
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/templatedir/evt.j\n\n')
 
