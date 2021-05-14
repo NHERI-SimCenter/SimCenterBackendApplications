@@ -100,7 +100,7 @@ def addFloorForceToEvent(timeSeriesArray, patternsArray, force, direction, floor
     """
     Add force (one component) time series and pattern in the event file
     """
-    seriesName = "WindForceSeries_" + str(floor) + direction
+    seriesName = "WaterForceSeries_" + str(floor) + direction
     timeSeries = {
                 "name": seriesName,
                 "dT": dT,
@@ -110,11 +110,11 @@ def addFloorForceToEvent(timeSeriesArray, patternsArray, force, direction, floor
     
     timeSeriesArray.append(timeSeries)
     
-    patternName = "WindForcePattern_" + str(floor) + direction
+    patternName = "WaterForcePattern_" + str(floor) + direction
     pattern = {
         "name": patternName,
         "timeSeries": seriesName,
-        "type": "WindFloorLoad",
+        "type": "WaterFloorLoad",
         "floor": str(floor),
         "dof": directionToDof(direction)
     }
@@ -140,7 +140,7 @@ def writeEVENT(forces, deltaT):
     timeSeriesArray = []
     patternsArray = []
     pressureArray = []
-    windEventJson = {
+    waterEventJson = {
         "type" : "Hydro",
         "subtype": "OpenFOAM CFD Hydro Event",
         "timeSeries": timeSeriesArray,
@@ -156,7 +156,7 @@ def writeEVENT(forces, deltaT):
     }
 
     #Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {"randomVariables":[], "Events": [windEventJson]}
+    eventDict = {"randomVariables":[], "Events": [waterEventJson]}
 
     #Adding floor forces
     for floorForces in forces:
