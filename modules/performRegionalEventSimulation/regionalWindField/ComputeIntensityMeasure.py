@@ -402,7 +402,7 @@ def export_pws(stations, pws, output_dir, filename = 'EventGrid.csv'):
     station_num = len(lat)
     csv_file = [str(x + 1)+'.csv' for x in range(station_num)]
     d = {
-        'Station': csv_file,
+        'GP_file': csv_file,
         'Latitude': lat,
         'Longitude': lon
     }
