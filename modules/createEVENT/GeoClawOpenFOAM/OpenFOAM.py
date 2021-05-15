@@ -546,28 +546,6 @@ FoamFile
         fileID.write('maxCo \t 1.0;\n\n')
         fileID.write('maxAlphaCo \t 1.0;\n\n')
         fileID.write('maxDeltaT \t 1;\n\n')
-        fileID.write('functions\n{\n\t')
-        fileID.write('#includeFunc\tQ\n\t')
-        fileID.write('#includeFunc\t"surfaces"\n\t')
-        fileID.write('#includeFunc\t"forces"\n}\n')
-        #fileID.write('libs\n(\n\t"libwaves.so"\n)\n')
-
-        # Create the transportProperties file
-        fileID2 = open("system/forces","w")
-        fileID2.write('buildingsForces\n{\n\t')
-        fileID2.write('libs\t("libforces.so");\n\t')
-        fileID2.write('writeControl\ttimeStep;\n\t')
-        fileID2.write('writeInterval\t$writeT;\n\t')
-        fileID2.write('timeInterval\t1;\n\t')
-        fileID2.write('patches\t("Back")\n\t')
-        fileID2.write('rho\trhoInf;\n\t')
-        fileID2.write('log\ttrue;\n\t')
-        fileID2.write('rhoInf\t1;\n\t')
-        fileID2.write('CofR\t(0 0 0);\n\n\t')
-        fileID2.write('binData\n\t{\n\t\t')
-        fileID2.write('nBin\t1;\n\t\t')
-        fileID2.write('direction\t(1 0 0);\n\t\t')
-        fileID2.write('cumulative\tno;\n\t}\n}')
 
         # Close the controlDict file
         fileID.close()
@@ -616,7 +594,7 @@ FoamFile
         fileID.write('simpleCoeffs \n{\n\tn\t($procX\t$procY\t$procZ); \n\tdelta\t0.001;\n}\n\n')
         fileID.write('hierarchicalCoeffs \n{\n\tn\t($procX\t$procY\t$procZ); \n\tdelta\t0.001;\n\torder\txyz;\n}\n')
 
-        # Close the controlDict file
+        # Close the decomposepardict file
         fileID.close()
 
     ####################################################################
@@ -1128,7 +1106,7 @@ FoamFile
         for line in Lines:
             count += 1
             if count > 72:
-                if not line:
+                if line != "\n":
                     data = float(line)
                     fileID.write(str(data)+'\n')
         fileID.write(')\n);\n\n')
@@ -1141,7 +1119,7 @@ FoamFile
         for line in Lines2:
             count += 1
             if count > 72:
-                if not line:
+                if line != "\n":
                     data = float(line)+waterdepth
                     fileID.write(str(data)+'\n')
         fileID.write(')\n);')

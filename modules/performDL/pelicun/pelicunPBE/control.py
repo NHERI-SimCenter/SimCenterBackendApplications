@@ -277,8 +277,9 @@ class Assessment(object):
                 verbose=verbose)
         elif self._hazard == 'HU':
             self._EDP_in = read_SimCenter_EDP_input(
-                path_EDP_input, EDP_kinds=('PWS',),
-                units=dict(PWS=self._AIM_in['units']['speed']),
+                path_EDP_input, EDP_kinds=('PWS','PIH',),
+                units=dict(PWS=self._AIM_in['units']['speed'],
+                           PIH=self._AIM_in['units']['length']),
                 verbose=verbose)
 
         data = self._EDP_in
@@ -360,7 +361,7 @@ class Assessment(object):
             elif (('PFV' in col) or ('PGV' in col) or ('SV' in col) or
                   ('PWS' in col)):
                 scale_factor = self._AIM_in['units']['speed']
-            elif ('PGD' in col):
+            elif ('PGD', 'PIH' in col):
                 scale_factor = self._AIM_in['units']['length']
             else:
                 scale_factor = 1.0
@@ -467,9 +468,14 @@ class Assessment(object):
             # create the DM file
             if self._assessment_type.startswith('HAZUS'):
                 log_msg('\t\tSimCenter DM file')
-                write_SimCenter_DM_output(
-                    output_path, suffix+DM_file, self._SUMMARY,
-                    DMG_mod)
+                if self._hazard == 'HU':
+                    write_SimCenter_DM_output_hu(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
+                else:
+                    write_SimCenter_DM_output(
+                        output_path, suffix+DM_file, self._SUMMARY,
+                        DMG_mod)
 
             # create the DV file
             if self._assessment_type.startswith('HAZUS'):
@@ -493,30 +499,42 @@ class Assessment(object):
         GI = self._AIM_in['general']
         s_edp_keys = sorted(self._EDP_in.keys())
 
+        # For each EDP type... (e.g., PID, PFA)
         for d_id in s_edp_keys:
+
+            # load the list of raw data
             d_list = self._EDP_in[d_id]
+
+            # For each EDP... (i.e., same type of EDP at various locations and
+            # directions in the structure)
             for i in range(len(d_list)):
+
                 demand_data.append(d_list[i]['raw_data'])
                 d_tags.append(f"EDP-{d_id}-LOC-{d_list[i]['location']}" +
                               f"-DIR-{d_list[i]['direction']}")
 
-                det_lim = GI['detection_limits'].get(d_id, None)
+                # Use np.inf if there are no det limits specified
+                det_lim = GI['detection_limits'].get(d_id, np.inf)
                 if det_lim is None:
                     det_lim = np.inf
 
                 if GI['response']['EDP_dist_basis'] == 'non-collapse results':
-                    coll_lim = GI['collapse_limits'][d_id]
+                    # Use np.inf if there are no collapse limits specified
+                    coll_lim = GI['collapse_limits'].get(d_id, np.inf)
                     if coll_lim is None:
                         coll_lim = np.inf
+
                 elif GI['response']['EDP_dist_basis'] == 'all results':
+                    # Use np.inf if all results are needed -> i.e., no collapse
                     coll_lim = np.inf
 
+                # Note: the "None" lower limits are converted to the lowest
+                # possible bounds of the given distribution. (i.e., -np.inf for
+                # Normal and 0 for Lognormal)
                 detection_limits.append([None, det_lim])
                 collapse_limits.append([None, coll_lim])
 
-        # detection_limits = np.transpose(np.asarray(detection_limits))
-        # collapse_limits = np.transpose(np.asarray(collapse_limits))
-        # demand_data = np.transpose(np.asarray(demand_data))
+        # convert the assembled lists to numpy arrays
         detection_limits = np.asarray(detection_limits)
         collapse_limits = np.asarray(collapse_limits)
         demand_data = np.atleast_2d(demand_data)
@@ -524,25 +542,21 @@ class Assessment(object):
         # In a coupled assessment only the raw data needs to be stored
         if GI['coupled_assessment']:
 
-            # Create the random variable
-            # demand_RV = RandomVariable(ID=200, dimension_tags=d_tags,
-            #                            raw_data=np.transpose(demand_data))
-            [self._RV_reg.add_RV(
-                RandomVariable(name=d_tag, distribution='coupled_empirical',
-                               raw_samples=demand_data[i]))
-                for i,d_tag in enumerate(d_tags)]
+            # Create the random variables
+            for i, d_tag in enumerate(d_tags):
+                self._RV_reg.add_RV(
+                    RandomVariable(name=d_tag,
+                                   distribution='coupled_empirical',
+                                   raw_samples=demand_data[i]))
 
         # Otherwise, a distribution is fit to the raw data
         else:
-            # If more than one sample is available...
+            # If more than one sample is available... (i.e., in most cases)
             if demand_data.shape[1] > 1:
 
-                # Second, we discard the collapsed EDPs if the fitted
-                # distribution shall represent non-collapse EDPs.
+                # First, we discard the collapsed EDPs if the fitted
+                # distribution shall represent only non-collapse EDPs.
                 demand_data_T = demand_data.T
-                # EDP_filter = np.all(
-                #     [np.all(demand_data_T > collapse_limits.T[0], axis=1),
-                #      np.all(demand_data_T < collapse_limits.T[1], axis=1)], axis=0)
                 EDP_filter = np.all(demand_data_T < collapse_limits.T[1], axis=1)
                 demand_data_T = demand_data_T[EDP_filter]
 
@@ -550,10 +564,9 @@ class Assessment(object):
                     '\t\t{} considered collapsed out of {} raw samples'.format(
                         list(EDP_filter).count(False), len(EDP_filter)))
 
-                # Third, we censor the EDPs that are beyond the detection limit.
-                # EDP_filter = np.all(
-                #     [np.all(demand_data_T > detection_limits.T[0], axis=1),
-                #      np.all(demand_data_T < detection_limits.T[1], axis=1)], axis=0)
+                # TODO: catch the case when no samples remain after filtering
+
+                # Second, we censor the EDPs that are beyond the detection limit.
                 EDP_filter = np.all(demand_data_T < detection_limits.T[1], axis=1)
 
                 log_msg(
@@ -565,12 +578,17 @@ class Assessment(object):
                 demand_data_T = demand_data_T[EDP_filter]
                 demand_data = demand_data_T.T
 
+                # TODO: catch the case when no samples remain after filtering
+
                 log_msg('\t\tNumber of EDP dimensions: {}'.format(len(d_tags)))
 
-                # Fourth, if requested, we fit a multivariate lognormal
-                # distribution to the data and create the random variables
+                # Third, if requested, we fit a probability distribution to the
+                # data and create the random variables
                 target_dist = GI['response']['EDP_distribution']
 
+                # TODO: enable mixed distributions with either normal or lognormal
+
+                # Fit a multivariate lognormal distribution...
                 if target_dist == 'lognormal':
                     if censored_count > 0:
                         log_msg('\t\tFitting a censored multivariate lognormal '
@@ -594,10 +612,12 @@ class Assessment(object):
                             theta=theta_d
                         ))
 
+                    # Create an RV set to consider the correlation btw EDPs
                     self._RV_reg.add_RV_set(RandomVariableSet(
                         'EDP_set', list(self._RV_reg.RVs(d_tags).values()),
                         EDP_rho))
 
+                # Fit a multivariate truncated lognormal distribution...
                 elif target_dist == 'truncated lognormal':
                     if censored_count > 0:
                         log_msg('\t\tFitting a censored truncated multivariate '
@@ -621,80 +641,88 @@ class Assessment(object):
                             truncation_limits=collapse_limits[d]
                         ))
 
+                    # Create an RV set to consider the correlation btw EDPs
                     self._RV_reg.add_RV_set(RandomVariableSet(
                         'EDP_set', list(self._RV_reg.RVs(d_tags).values()),
                         EDP_rho))
 
-                else: # this is when fitting is not requested (i.e. empirical)
-                    [self._RV_reg.add_RV(
-                        RandomVariable(name=d_tag,
-                                       distribution='empirical',
-                                       raw_samples=demand_data[i]))
-                        for i, d_tag in enumerate(d_tags)]
+                # Fit a multivariate normal distribution...
+                elif target_dist == 'normal':
+                    if censored_count > 0:
+                        log_msg('\t\tFitting a censored multivariate normal '
+                                'distribution to EDP samples...')
+                        EDP_theta, EDP_rho = fit_distribution(
+                            demand_data, 'normal',
+                            censored_count = censored_count,
+                            detection_limits = detection_limits)
 
-                # demand_RV = RandomVariable(ID=200, dimension_tags=d_tags,
-                #                            raw_data=demand_data,
-                #                            detection_limits=detection_limits,
-                #                            censored_count=censored_count
-                #                            )
+                    else:
+                        log_msg('\t\tFitting a multivariate normal '
+                                'distribution to EDP samples...')
+                        EDP_theta, EDP_rho = fit_distribution(
+                            demand_data, 'normal')
+
+                    # Create the RVs
+                    for d, (d_tag, theta_d) in enumerate(
+                            zip(d_tags, EDP_theta)):
+                        self._RV_reg.add_RV(RandomVariable(
+                            name=d_tag, distribution='normal',
+                            theta=theta_d
+                        ))
+
+                    # Create an RV set to consider the correlation btw EDPs
+                    self._RV_reg.add_RV_set(RandomVariableSet(
+                        'EDP_set', list(self._RV_reg.RVs(d_tags).values()),
+                        EDP_rho))
+
+                # Do not fit anything if the empirical option is requested...
+                else:
+
+                    for i, d_tag in enumerate(d_tags):
+                        self._RV_reg.add_RV(RandomVariable(
+                            name=d_tag,
+                            distribution='empirical',
+                            raw_samples=demand_data[i]))
 
             # This is a special case when only a one sample is provided.
             else:
-                # TODO: what to do when the sample is larger than the collapse or detection limit and when truncated distribution is prescribed
+                # TODO: what to do when the sample is larger than the collapse
+                #  or detection limit and when truncated distribution is
+                #  prescribed
 
                 # Since we only have one data point, the best we can do is assume
                 # it is the median of the multivariate distribution. The dispersion
                 # is assumed to be negligible.
 
-                # dim = demand_data.shape[0]
-                # if dim > 1:
-                #     sig = np.abs(demand_data.T[0])*1e-6
-                #     rho = np.zeros((dim,dim))
-                #     np.fill_diagonal(rho, 1.0)
-                # else:
-                #     COV = np.abs(demand_data[0][0])*(1e-6)**2.0
-
-                [self._RV_reg.add_RV(
-                    RandomVariable(name=d_tag, distribution='lognormal',
-                                   theta=[demand_data[i,0],
-                                          demand_data[i,0]*1e-6]))
-                    for i, d_tag in enumerate(d_tags)]
-
-                # demand_RV = RandomVariable(ID=200, dimension_tags=d_tags,
-                #                            distribution_kind='lognormal',
-                #                            theta=demand_data[0],
-                #                            COV=COV)
+                for i, d_tag in enumerate(d_tags):
+                    self._RV_reg.add_RV(RandomVariable(
+                        name=d_tag,
+                        distribution='lognormal',
+                        theta=[
+                            demand_data[i,0],
+                            demand_data[i,0]*1e-6]))
 
             # To consider additional uncertainty in EDPs, we need to increase
-            # the log standard deviation of the lognormal RVs. If the EDP
-            # distribution is set to 'empirical' then we do not consider the
-            # prescribed additional uncertainty
+            # their dispersion (i.e., log std for Lognormal and std for Normal
+            # distributions. If the EDP distribution is set to 'empirical' then
+            # we do not consider the prescribed additional uncertainty.
             if ((self.beta_tot is not None) and
                 (GI['response']['EDP_distribution'] != 'empirical')):
                 log_msg('Considering additional sources of uncertainty...')
 
+                # TODO: allow custom beta values for each EDP
+
                 for d_tag in d_tags:
                     RV = self._RV_reg.RV[d_tag]
 
+                    # Note that the expressions below work for both normal and
+                    # lognormal distributions. When normal distribution is
+                    # assumed, beta_tot increases the standard deviation, when
+                    # lognormal is assumed, it increases the log-standard
+                    # deviation.
                     theta_0 = RV.theta
                     theta_0[1] = np.sqrt(theta_0[1] ** 2. + self.beta_tot ** 2.)
                     RV.theta = theta_0
-
-                # determine the covariance matrix with added uncertainty
-                # if demand_RV.COV.shape != ():
-                #     sig_mod = np.sqrt(demand_RV.sig ** 2. + self.beta_tot ** 2.)
-                #     COV_mod = np.outer(sig_mod, sig_mod) * demand_RV.corr
-                # else:
-                #     COV_mod = np.sqrt(demand_RV.COV**2. + self.beta_tot**2.)
-                #
-                # # redefine the random variable
-                # demand_RV = RandomVariable(
-                #     ID=200,
-                #     dimension_tags=demand_RV.dimension_tags,
-                #     distribution_kind=demand_RV.distribution_kind,
-                #     theta=demand_RV.theta,
-                #     COV=COV_mod,
-                #     truncation_limits=demand_RV.tr_limits_pre)
 
         return d_tags
 
@@ -2254,7 +2282,7 @@ class FEMA_P58_Assessment(Assessment):
             s_edp_keys = sorted(self._EDP_dict.keys())
             for demand_ID in s_edp_keys:
                 demand = self._EDP_dict[demand_ID]
-                kind = demand_ID[4:7]
+                kind = demand_ID.split('-')[1]
                 collapse_limit = self._AIM_in['general']['collapse_limits'][kind]
                 if collapse_limit is not None:
                     EDP_samples = demand.samples_DF
@@ -2312,7 +2340,8 @@ class FEMA_P58_Assessment(Assessment):
                     demand_ID_list = []
 
                     for demand_ID in self._EDP_dict.keys():
-                        if demand_ID[4:7] == FG._demand_type:
+                        demand_kind = demand_ID.split('-')[1]
+                        if demand_kind == FG._demand_type:
                             demand_data = demand_ID.split('-')
                             if int(demand_data[3]) == PG._location + FG._demand_location_offset:
                                 demand_ID_list.append(demand_ID)
@@ -2494,7 +2523,7 @@ class FEMA_P58_Assessment(Assessment):
         s_edp_keys = sorted(self._EDP_dict.keys())
         for demand_ID in s_edp_keys:
             demand = self._EDP_dict[demand_ID]
-            kind = demand_ID[4:7]
+            kind = demand_ID.split('-')[1]
             if kind == 'RID':
                 r_max = demand.samples_DF.loc[ncID].values
                 if RID_max is None:
@@ -2556,6 +2585,8 @@ class FEMA_P58_Assessment(Assessment):
         DVs = self._AIM_in['decision_variables']
 
         DMG_by_FG_and_DS = self._DMG.groupby(level=[0, 2], axis=1).sum()
+        DMG_by_FG = self._DMG.groupby(level=[0,], axis=1).sum()
+        DMG_by_FG_and_PG = self._DMG.groupby(level=[0, 1], axis=1).sum()
 
         repID = self._ID_dict['repairable']
         REP_samples = len(repID)
@@ -2583,6 +2614,9 @@ class FEMA_P58_Assessment(Assessment):
                     DS = PG._DSG_set[dsg_i]._DS_set[ds_i]
 
                     TOT_qnt = DMG_by_FG_and_DS.loc[repID, (FG._ID, d_tag)]
+                    #TOT_qnt = DMG_by_FG.loc[repID, FG._ID]
+                    #TOT_qnt = self._DMG.loc[repID, (FG._ID, PG_ID, d_tag)]
+                    #TOT_qnt = DMG_by_FG_and_PG.loc[repID, (FG._ID, PG_ID)]
                     PG_qnt = self._DMG.loc[repID,
                                            (FG._ID, PG_ID, d_tag)]
 
@@ -2788,6 +2822,14 @@ class HAZUS_Assessment(Assessment):
         log_msg('\t\tAvailable Fragility Groups:')
         for key, val in data.items():
             log_msg('\t\t\t{} demand:{} PGs: {}'.format(key, val['demand_type'], len(val['locations'])))
+
+        # HAZUS combination rules for hurricane
+        if self._hazard == 'HU':
+            log_msg('\tLoss combination files...')
+            self._LC_in = read_combination_DL_data(
+                self._AIM_in['data_sources']['path_combination_data'],
+                BIM['loss_combination'],
+                assessment_type=self._assessment_type, verbose=verbose)
 
         # population (if needed)
         if self._AIM_in['decision_variables']['injuries']:
@@ -3204,8 +3246,24 @@ class HAZUS_Assessment(Assessment):
 
         # reconstruction cost
         if DVs['rec_cost']:
-            SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
-                self._DV_dict['rec_cost'].sum(axis=1)
+            if self._hazard == 'HU':
+                # individual losses
+                indiv_loss = self._DV_dict['rec_cost'].groupby(level=[0], axis=1).sum()
+                # loss weight from HAZUS HU (now just default coupled at
+                # the entire building level)
+                loss_weight = []
+                for i, tag in enumerate(self._LC_in.keys()):
+                    loss_weight.append(self._calc_loss_composition(self._LC_in[tag],indiv_loss.iloc[:,i]))
+                # combining losses
+                combined_loss = []
+                for i, rlz in enumerate(zip(indiv_loss.iloc[:,0], indiv_loss.iloc[:,1])):
+                    tmp1 = (loss_weight[0][i] * rlz[0]) / 100.
+                    tmp2 = (loss_weight[1][i] * rlz[1]) / 100.
+                    combined_loss.append(np.min([100., (np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))* 100.]))
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
+            else:
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
+                    self._DV_dict['rec_cost'].sum(axis=1)
 
             repl_cost = self._AIM_in['general']['replacement_cost']
             SUMMARY.loc[colID, ('reconstruction', 'cost')] = repl_cost
@@ -4053,7 +4111,8 @@ class HAZUS_Assessment(Assessment):
                     demand_ID_list = []
 
                     for demand_ID in self._EDP_dict.keys():
-                        if demand_ID[4:7] == FG._demand_type:
+                        demand_kind = demand_ID.split('-')[1]
+                        if demand_kind == FG._demand_type:
                             demand_data = demand_ID.split('-')
                             if int(demand_data[3]) == PG._location + FG._demand_location_offset:
                                 demand_ID_list.append(demand_ID)
@@ -4181,8 +4240,11 @@ class HAZUS_Assessment(Assessment):
 
             for d_i, d_tag in enumerate(DS_list):
 
-                dsg_i = int(d_tag[0]) - 1
-                ds_i = int(d_tag[-1]) - 1
+                #dsg_i = int(d_tag[0]) - 1
+                #ds_i = int(d_tag[-1]) - 1
+
+                dsg_i = int(d_tag.split('_')[0]) - 1
+                ds_i = int(d_tag.split('_')[-1]) - 1
 
                 TOT_qnt = DMG_by_FG_and_DS.loc[repID, (FG._ID, d_tag)]
 
@@ -4271,8 +4333,11 @@ class HAZUS_Assessment(Assessment):
             for i in range(self._inj_lvls):
 
                 for d_i, d_tag in enumerate(DS_list):
-                    dsg_i = int(d_tag[0]) - 1
-                    ds_i = int(d_tag[-1]) - 1
+                    #dsg_i = int(d_tag[0]) - 1
+                    #ds_i = int(d_tag[-1]) - 1
+
+                    dsg_i = int(d_tag.split('_')[0]) - 1
+                    ds_i = int(d_tag.split('_')[-1]) - 1
 
                     # check what can we expect later
                     # pull the DS from the first PG
@@ -4316,3 +4381,29 @@ class HAZUS_Assessment(Assessment):
             DV_INJ_dict[i] = DV_INJ_dict[i].sort_index(axis=1, ascending=True)
 
         return DV_INJ_dict
+
+    def _calc_loss_composition(self, comb_data, loss_ratio):
+        """
+        _calc_loss_composition: this method processes the HAZUS loss ratio
+        combination rules given a total loss ratio, and returns a list of
+        loss compositions of 7 different building subassemblies.
+        Input:
+          comb_data: a dict of HAZUS loss ratio combination rules
+          loss_ratio: a float of total loss ratio
+        Output:
+          loss_weight: a list of loss compositions
+        """
+
+        comb_rule = comb_data['LossRatio']
+        ref_ratio = []
+        ref_comp = []
+        for level in comb_rule:
+            ref_ratio.append(level['Total'])
+            ref_comp.append(level['Composition'])
+        ref_comp = np.array(ref_comp)
+        res_comp = np.empty(shape = (len(loss_ratio), ref_comp.shape[1]))
+        for assm in range(ref_comp.shape[1]):
+            res_comp[:, assm] = np.interp(loss_ratio, ref_ratio,
+                                          ref_comp[:, assm].tolist())
+
+        return res_comp
