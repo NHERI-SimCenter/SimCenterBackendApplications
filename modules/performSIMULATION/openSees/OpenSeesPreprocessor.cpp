@@ -629,17 +629,10 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     const char *eventType = json_string_value(json_object_get(event,"type"));
 
     bool seismicEventType = true;
-    bool windEventType = false;
-    if (strcmp(eventType,"Wind") == 0) {
+    if (strcmp(eventType,"Wind") == 0 || strcmp(eventType,"Hydro") == 0) {
       seismicEventType = false;
-      windEventType = true;
     }
-
-    else if (strcmp(eventType,"Seismic") == 0) {
-      seismicEventType = true;
-      windEventType = false;
-    }
-
+    
     // create recorder foreach EDP
     // loop through EDPs and find corresponding EDP
 
@@ -970,10 +963,12 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   const char *eventType = json_string_value(json_object_get(event,"type"));
   //  std::cerr << "Processing Event type: " << eventType << "\n";
 
-  if (strcmp(eventType,"Seismic") == 0 || strcmp(eventType,"Wind") == 0) {
+  if (strcmp(eventType,"Seismic") == 0 ||
+      strcmp(eventType,"Wind") == 0    ||
+      strcmp(eventType,"Hydro") == 0      ) {
     analysisType = 1;
 
-    if (strcmp(eventType,"Wind") == 0) 
+    if ((strcmp(eventType,"Wind") == 0) || (strcmp(eventType,"Hydro") == 0))
       analysisType = 2;
 
     json_t*numStepJO = json_object_get(event,"numSteps");
@@ -1147,7 +1142,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
     }
 
 
-    else if (strcmp(patternType,"WindFloorLoad") == 0) {
+    else if ((strcmp(patternType,"WindFloorLoad") == 0) ||
+	     (strcmp(patternType,"WaterFloorLoad") == 0)) {
 
       int dof = json_integer_value(json_object_get(pattern,"dof"));
       string floor = json_string_value(json_object_get(pattern,"floor"));
@@ -1185,7 +1181,6 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
         else
           s << " 0.0 ";
       }
-
 	  
       s << "\n}\n";
 
@@ -1200,7 +1195,6 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   return 0;
 }
-
 
 int
 OpenSeesPreprocessor:: getNode(const char * cline,const char * floor){
