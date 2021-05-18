@@ -2,11 +2,13 @@
 import numpy as np
 import json
 import os
-
+import shutil
 
 def postProcess(evtName):
+    #acc = np.loadtxt("acceleration.out")
+    #os.remove("acceleration.out")  # remove acceleration file to save space
     acc = np.loadtxt("out_tcl/acceleration.out")
-    os.remove("out_tcl/acceleration.out")  # remove acceleration file to save space
+    shutil.rmtree("out_tcl")  # remove output files to save space
     time = acc[:,0]
     acc_surf = acc[:,-2] / 9.81
     dT = time[1] - time[0]

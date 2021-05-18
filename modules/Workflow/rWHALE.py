@@ -43,7 +43,6 @@
 
 import sys, os, json
 import argparse
-import json
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -58,6 +57,7 @@ def main(run_type, input_file, app_registry,
     # initialize the log file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
+
     if working_dir is not None:
         runDir = working_dir
     else:
@@ -65,12 +65,13 @@ def main(run_type, input_file, app_registry,
 
     if not os.path.exists(runDir):
         os.mkdir(runDir)
+
     if log_file == 'log.txt':
         whale.log_file = runDir + '/log.txt'
     else:
         whale.log_file = log_file
     with open(whale.log_file, 'w') as f:
-        f.write('RDT workflow\n')
+        f.write('rWHALE workflow\n')
 
     whale.print_system_info()
 
@@ -78,6 +79,7 @@ def main(run_type, input_file, app_registry,
     log_msg(log_div)
     log_msg('Started running the workflow script')
     log_msg(log_div)
+
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
 
@@ -148,7 +150,7 @@ if __name__ == '__main__':
     #Defining the command line arguments
 
     workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter workflow for a set of assets.",
+        "Run the NHERI SimCenter rWHALE workflow for a set of assets.",
         allow_abbrev=False)
 
     workflowArgParser.add_argument("configuration",
