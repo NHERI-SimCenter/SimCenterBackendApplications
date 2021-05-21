@@ -954,7 +954,7 @@ class Workflow(object):
 
             result, returncode = run_command(command)
 
-            if self.run_type == 'run':
+            if self.run_type in ['run', 'runningLocal']:
 
                 log_msg('\tOutput: ')
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False)

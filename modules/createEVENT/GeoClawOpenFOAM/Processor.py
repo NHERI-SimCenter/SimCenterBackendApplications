@@ -330,7 +330,7 @@ def main():
     nums = [int(n) for n in procs.split()]
     totalprocs = nums[0]*nums[1]*nums[2]
     fileIDrun.write('echo Starting CFD simulation...\n')
-    fileIDrun.write('olaDyMFlow > olaDyMFlow.log\n\n')
+    fileIDrun.write('ibrun olaDyMFlow -parallel > olaDyMFlow.log\n\n')
 
     # Call building forces to run Dakota
     fileIDrun.write('echo Starting Dakota preparation...\n')
