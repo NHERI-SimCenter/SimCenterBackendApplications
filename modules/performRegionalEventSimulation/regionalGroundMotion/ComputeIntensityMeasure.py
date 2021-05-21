@@ -48,7 +48,7 @@ from gmpe import CorrelationModel
 from FetchOpenSHA import *
 from tqdm import tqdm
 import time
-
+from pathlib import Path
 
 def compute_spectra(scenarios, stations, gmpe_info, im_info):
 
@@ -164,9 +164,11 @@ def compute_intra_event_residual(sa_intra_cm, periods, station_data, num_simu):
 	return residuals
 
 
-def export_im(stations, T, im_data, eq_data, output_dir, filename):
+def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_flag):
 
 	#try:
+		imType = im_info['Type']
+		T = im_info['Periods']
 		# Station number
 		num_stations = len(stations)
 		# Scenario number
@@ -235,6 +237,58 @@ def export_im(stations, T, im_data, eq_data, output_dir, filename):
 			# save
 			with open(os.path.join(output_dir, filename), "w") as f:
 				json.dump(res, f, indent=2)
+
+		# export the event grid and station csv files
+		if csv_flag:
+			# output EventGrid.csv
+			station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
+			lat = [stations[j]['Latitude'] for j in range(len(stations))]
+			lon = [stations[j]['Longitude'] for j in range(len(stations))]
+			df = pd.DataFrame({
+				'GP_file': station_name,
+				'Longitude': lon,
+				'Latitude': lat
+			})
+			output_dir = os.path.join(os.path.dirname(Path(output_dir)),
+									os.path.basename(Path(output_dir)))
+			# seperate directory for IM
+			output_dir = os.path.join(output_dir, 'IMs')
+			try:
+				os.makedirs(output_dir)
+			except:
+				print('HazardSimulation: output folder already exists.')
+			# save the csv
+			df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index = False)
+			# output station#.csv
+			for cur_scen in range(len(im_data)):
+				if len(im_data) > 1:
+					cur_scen_folder = 'scenario'+str(cur_scen+1)
+					try:
+						os.mkdir(os.path.join(output_dir, cur_scen_folder))
+					except:
+						print('SelectGroundMotion: scenario folder already exists.')
+					cur_output_dir = os.path.join(output_dir, cur_scen_folder)
+				else:
+					cur_output_dir = output_dir
+				# current IM data
+				cur_im_data = im_data[cur_scen]
+				# csv header
+				csvHeader = []
+				if imType == 'SA':
+					for cur_T in T:
+						csvHeader.append(imType + '(' + str(cur_T) + ')')
+				else:
+					csvHeader = [imType]
+				for i, site_id in enumerate(station_name):
+					df = dict()
+					# Loop over all intensity measures
+					for cur_im_tag in range(len(csvHeader)):
+						df.update({
+							csvHeader[cur_im_tag]: np.exp(cur_im_data[i, cur_im_tag, :])
+						})
+					df = pd.DataFrame(df)
+					df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
+
 		# return
 		return 0
 	#except:
@@ -274,6 +328,11 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 			ln_sa = [sa_data[i]['lnPGA']['Mean'] for i in range(len(sa_data))]
 			inter_sigma_sa = [sa_data[i]['lnPGA']['InterEvStdDev'] for i in range(len(sa_data))]
 			intra_sigma_sa = [sa_data[i]['lnPGA']['IntraEvStdDev'] for i in range(len(sa_data))]
+		elif 'PGV' in im_info['Type']:
+			ln_sa = [sa_data[i]['lnPGV']['Mean'] for i in range(len(sa_data))]
+			ln_sa = [sa_data[i]['lnPGV']['Mean'] for i in range(len(sa_data))]
+			inter_sigma_sa = [sa_data[i]['lnPGV']['InterEvStdDev'] for i in range(len(sa_data))]
+			intra_sigma_sa = [sa_data[i]['lnPGV']['IntraEvStdDev'] for i in range(len(sa_data))]
 		else:
 			print('ComputeInensityMeasure: currently supporing spatial correlated SA and PGA.')
 		ln_psa = np.zeros((len(sa_data), len(periods), num_simu))

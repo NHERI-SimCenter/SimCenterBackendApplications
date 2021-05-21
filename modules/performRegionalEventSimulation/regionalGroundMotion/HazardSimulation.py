@@ -135,8 +135,8 @@ if __name__ == '__main__':
         print('HazardSimulation: correlated response spectra computed.')
         if event_info['SaveIM']:
             print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations['Stations'], event_info['IntensityMeasure']['Periods'],
-                          ln_psa_mr, mag_maf, output_dir, 'SiteIM.json')
+            _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
+                          ln_psa_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
         #print(np.exp(ln_psa_mr[0][0, :, 1]))
         #print(np.exp(ln_psa_mr[0][1, :, 1]))
