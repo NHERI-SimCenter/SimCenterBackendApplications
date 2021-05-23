@@ -17,20 +17,6 @@ from GenUtilities import genUtilities # General utilities
 from OpenFOAM import solver # OpenFOAM class
 
 ####################################################################
-def install(package):
-    '''
-    Install all the requirements.
-    '''
-
-    # Install all python libraries required
-    # python3 -m pip3 install --user -r requirements.txt
-
-    # if hasattr(pip, 'main'):
-    #     pip.main(['install', package])
-    # else:
-    #     pip._internal.main(['install', package])
-
-####################################################################
 def main():
     '''
     This is the main routine which controls the flow of program.
@@ -62,10 +48,6 @@ def main():
 
     # Get the path
     fipath = args.b.replace('/dakota.json', '')
-
-    # bimfile = os.path.join(args.b,"dakota.json")
-    # with open(bimfile) as f:
-    #     data = json.load(f)
 
     # Open the JSON file
     # Load all the objects to the data variable
@@ -193,18 +175,6 @@ def main():
     hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
 
     #***********************************
-    # CLEANUP TEMP FILES
-    #***********************************
-    if(os.path.exists("FlumeData.txt")):
-        os.remove("FlumeData.txt")
-
-    # if(os.path.exists("wmwg.txt")):
-    #     os.remove("wmwg.txt")
-    
-    # if(os.path.exists("wmdisp.txt")):
-    #     os.remove("wmdisp.txt")
-
-    #***********************************
     # RUNCASE SCRIPT FOR TACC
     #***********************************  
     # Create the case run script
@@ -213,6 +183,7 @@ def main():
     # Get information
     #print(hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])[0])
     hydrobrain = ', '.join(hydroutil.extract_element_from_json(data, ["remoteAppDir"]))
+    simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
 
     # Add all variables
     fileIDrun.write('echo Setting up variables\n')
@@ -302,10 +273,6 @@ def main():
         elif int(meshsoftware[0]) == 4:
             fileIDrun.write('gmshToFoam $MESHFILE > gmshToFoam.log\n\n')
 
-    # Add patches for building forces
-    #fileIDrun.write('patches="Building"\n')
-    #fileIDrun.write('python3 $HYDROBRAIN/AddBuildingForces.py -c $(pwd) -b ${inputDirectory}/templatedir/dakota.json -p $patches\n\n')
-
     # Check the mesh
     fileIDrun.write('echo Checking mesh...\n')
     fileIDrun.write('checkMesh > Meshcheck.log\n\n')
@@ -319,23 +286,35 @@ def main():
     fileIDrun.write('echo Setting fields...\n')
     fileIDrun.write('setFields > setFields.log\n\n')
 
-    # Decompose the domain
-    fileIDrun.write('echo Decomposing domain...\n')
-    fileIDrun.write('decomposePar > decomposePar.log\n\n')
-
-    # Start the CFD simulation
     # Get the number of processors required
     procs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
     procs = procs.replace(',', ' ')
     nums = [int(n) for n in procs.split()]
     totalprocs = nums[0]*nums[1]*nums[2]
-    fileIDrun.write('echo Starting CFD simulation...\n')
-    fileIDrun.write('ibrun olaDyMFlow -parallel > olaDyMFlow.log\n\n')
+
+    if totalprocs > 1:
+        # Decompose the domain
+        fileIDrun.write('echo Decomposing domain...\n')
+        fileIDrun.write('decomposePar > decomposePar.log\n\n')
+
+        # Start the CFD simulation
+        fileIDrun.write('echo Starting CFD simulation in parallel...\n')
+        if(int(simtype) == 4):
+            fileIDrun.write('ibrun olaDyMFlow -parallel > olaDyMFlow.log\n\n')
+        else:
+            fileIDrun.write('ibrun olaFlow -parallel > olaFlow.log\n\n')        
+
+    else:
+        # Start the CFD simulation
+        fileIDrun.write('echo Starting CFD simulation in serial...\n')
+        if(int(simtype) == 4):
+            fileIDrun.write('ibrun olaDyMFlow -parallel > olaDyMFlow.log\n\n')
+        else:
+            fileIDrun.write('ibrun olaFlow -parallel > olaFlow.log\n\n')     
 
     # Call building forces to run Dakota
     fileIDrun.write('echo Starting Dakota preparation...\n')
-    #fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+' -f 1\n') # Change to number of floors
-    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n') # Change to number of floors
+    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n')
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/EVENT.json\n')
     fileIDrun.write('cp -f EVENT.json ${inputDirectory}/evt.j\n\n')
 
@@ -360,14 +339,17 @@ def main():
     fileIDrun.write('echo Cleaning up...\n')
     fileIDrun.write('cp templatedir/dakota.json ./\n')
 
-    # # Temporarily halt progress here
-    # sys.exit()
+    #***********************************
+    # CLEANUP TEMP FILES
+    #***********************************
+    if(os.path.exists("FlumeData.txt")):
+        os.remove("FlumeData.txt")
+
+    if(os.path.exists("temp_geometry")):
+        os.remove("temp_geometry")
 
 ####################################################################
 if __name__ == "__main__":
-    
-    # Install the requirements
-    # install('requirements.txt')
     
     # Call the main routine
     main()
