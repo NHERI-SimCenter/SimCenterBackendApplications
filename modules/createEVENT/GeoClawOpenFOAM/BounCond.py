@@ -361,8 +361,141 @@ FoamFile
             patchtext = "\t"+patchname+"\n\t{\n\t\t"
             patchtext = patchtext+"type\tnoSlip;\n\t}"
 
+        elif int(velbountype) == -2: # Default
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tnoSlip;\n\t}"
+
         else: # Empty (0 and -1)
             patchtext = "\t"+patchname+"\n\t{\n\t\t"
             patchtext = patchtext+"type\tempty;\n\t}"
 
+        # Return text
+        return patchtext
+
+    ####################################################################
+    def presboun(self,data,presbountype,velbountype,patchname):
+
+        # Get an object for utilities
+        hydroutil = genUtilities()
+
+        # Fill pressure boundary condition
+        if int(presbountype) == 0: # default
+            if int(velbountype) == -2:
+                newpresbountype = -2
+            elif int(velbountype) == -1:
+                newpresbountype = -1
+            elif int(velbountype) == 0:
+                newpresbountype = -1
+            elif int(velbountype) == 1:
+                newpresbountype = 1
+            elif int(velbountype) == 2:
+                newpresbountype = 1
+            elif int(velbountype) == 3:
+                newpresbountype = 2
+            elif int(velbountype) == 4:
+                newpresbountype = 2
+            elif int(velbountype) == 5:
+                newpresbountype = 1
+            elif int(velbountype) == 6:
+                newpresbountype = 1
+            elif int(velbountype) == 7:
+                newpresbountype = 1
+        else:
+            newpresbountype = int(presbountype)
+
+        # Give options based on new pressure boundary condition
+        if newpresbountype == 1: # zeroGradient
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tzeroGradient;\n\t}"
+
+        elif newpresbountype == 2: # fixedValue
+            # Get value of velocity
+            press = hydroutil.extract_element_from_json(data, ["Events","Pressure_"+patchname])
+            if press == [None]:
+                presvalues = str(0)
+            else:
+                presvalues = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Pressure_"+patchname]))
+
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tfixedValue;\n\t\t"
+            patchtext = patchtext+"value\tuniform\t"+presvalues+";\n\t}"
+
+        elif newpresbountype == -2: #default
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tzeroGradient;\n\t}"
+
+        elif newpresbountype == -1: #empty
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tempty;\n\t}"
+
+        # Return text
+        return patchtext
+
+    ####################################################################
+    def pdispboun(self,velbountype,patchname):
+        
+        if int(velbountype) == 3 or int(velbountype) == 4: #Moving wall
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext +'type\twavemakerMovement;\n\t\t'
+            patchtext = patchtext + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'
+            patchtext = patchtext + 'value\tuniform\t(0 0 0);\n\t}\n'
+
+        elif patchname == "Top": #Patch is top
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext+'type\tfixedNormalSlip;\n\t\t'
+            patchtext = patchtext + 'n\t(0 0 1);\n\t\t'
+            patchtext = patchtext + 'value\tuniform\t(0 0 0);\n\t}\n'
+
+        else: #All other patches
+            patchtext = "\t"+patchname+"\n\t{\n\t\t"
+            patchtext = patchtext + 'type\tfixedValue;\n\t\t'
+            patchtext = patchtext + 'value\tuniform\t(0 0 0);\n\t}\n'
+
+        # Return text
+        return patchtext
+
+    ####################################################################
+    def alphaboun(self,flag):
+
+        # Entry
+        patchtext = "Entry"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Exit
+        patchtext = patchtext+"\t"+"Exit"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Top
+        patchtext = patchtext+"\t"+"Top"+"\n\t{\n\t\t"
+        patchtext = patchtext+"inletOutlet;\n\t\t"
+        patchtext = patchtext+"inletValue\tuniform\t0;\n\t\t"
+        patchtext = patchtext+"value\tuniform\t0;\n\t}\n\n"
+
+        # Bottom
+        patchtext = patchtext+"\t"+"Bottom"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Left
+        patchtext = patchtext+"\t"+"Left"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Right
+        patchtext = patchtext+"\t"+"Right"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Building and OtherBuilding
+        if flag == 1:
+            patchtext = patchtext+"\t"+"Building"+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+        elif flag == 2:
+            patchtext = patchtext+"\t"+"Building"+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+            patchtext = patchtext+"\t"+"OtherBuilding"+"\n\t{\n\t\t"
+            patchtext = patchtext+"type\tzeroGradient;\n\t}\n\n"
+
+        # Default
+        patchtext = patchtext+"\t"+"Default"+"\n\t{\n\t\t"
+        patchtext = patchtext+"type\tzeroGradient;\n\t}"
+
+        # Return
         return patchtext

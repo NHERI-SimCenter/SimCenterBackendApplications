@@ -866,122 +866,9 @@ FoamFile
         fileID.write('%s' % (fileinf))
         fileID.write('\n);')
 
-    ####################################################################
-    def alpha0OF(self,flag):
-        '''
-        This method is used to write the alpha file for the 0-folder
-        '''
-        # Open the blockmeshDict file
-        fileID = open("0.org/alpha.water","w")
+    
 
-        # Add the header
-        ofheader = self.header2OF("volScalarField","alpha.water")
-        fileID.write(ofheader)
-        stlinfo = '\ndimensions\t[0 0 0 0 0 0 0];\n\n'
-        stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
-        stlinfo = stlinfo + 'boundaryField\n{\n\t'
-        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
-        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\tinletOutlet;\n\t\t'
-        stlinfo = stlinfo + 'inletValue\tuniform\t0;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
-        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
-        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tzeroGradient;\n\t}\n\t'
-        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-        if flag == 1:
-            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-        elif flag == 2:
-            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-            stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tzeroGradient;\n\t}\n'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tzaroGradient;\n\t}\n'
-        stlinfo = stlinfo + '}\n'
-        fileID.write('%s' % (stlinfo))
-
-    ####################################################################
-    def prgh0OF(self,flag):
-        '''
-        This method is used to write the p_rgh file for the 0-folder
-        '''
-        # Open the pressure-dof file
-        fileID = open("0.org/p_rgh","w")
-
-        # Add the header
-        ofheader = self.header2OF("volScalarField","p_rgh")
-        fileID.write(ofheader)
-        stlinfo = '\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
-        stlinfo = stlinfo + 'internalField\tuniform\t0;\n\n'
-        stlinfo = stlinfo + 'boundaryField\n{\n\t'
-        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\ttotalPressure;\n\t\t'
-        stlinfo = stlinfo + 'U\tU;\n\t\t'
-        stlinfo = stlinfo + 'phi\tphi;\n\t\t'
-        stlinfo = stlinfo + 'rho\trho;\n\t\t'
-        stlinfo = stlinfo + 'psi\tnone;\n\t\t'
-        stlinfo = stlinfo + 'gamma\t1;\n\t\t'
-        stlinfo = stlinfo + 'p0\tuniform\t0;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n\t'
-        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n'
-        if flag == 1:
-            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
-        elif flag == 2:
-            stlinfo = stlinfo + '\tBuilding\n\t{\n\t\ttype\tnoSlip;\n'
-            stlinfo = stlinfo + '\tOtherBuilding\n\t{\n\t\ttype\tnoSlip;\n'
-        stlinfo = stlinfo + '\tdefault\n\t{\n\t\ttype\tfixedFluxPressure;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t0;\n\t}\n'
-        stlinfo = stlinfo + '}\n'
-        fileID.write('%s' % (stlinfo))
-
-    ####################################################################
-    def pdisp0OF(self,flag):
-        '''
-        This method is used to write the U file for the 0-folder
-        '''
-        # Open the pointDisplacement-dof file
-        fileID = open("0.org/pointDisplacement","w")
-
-        # Add the header
-        ofheader = self.headerOF("pointVectorField","0.01","pointDisplacement")
-        fileID.write(ofheader)
-        stlinfo = '\ndimensions\t[0 1 0 0 0 0 0];\n\n'
-        stlinfo = stlinfo + 'internalField\tuniform\t(0 0 0);\n\n'
-        stlinfo = stlinfo + 'boundaryField\n{\n\t'
-        stlinfo = stlinfo + 'Front\n\t{\n\t\ttype\twavemakerMovement;\n\t\t'
-        stlinfo = stlinfo + 'wavemakerDictName\twavemakerMovementDict;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-
-        stlinfo = stlinfo + 'Top\n\t{\n\t\ttype\tfixedNormalSlip;\n\t\t'
-        stlinfo = stlinfo + 'n\t(0 0 1);\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-
-        stlinfo = stlinfo + 'Bottom\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-
-        stlinfo = stlinfo + 'Back\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        stlinfo = stlinfo + 'Right\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        stlinfo = stlinfo + 'Left\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        if flag == 1:
-            stlinfo = stlinfo + 'Building\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        elif flag == 2:
-            stlinfo = stlinfo + 'Building\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-            stlinfo = stlinfo + 'OtherBuilding\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-            stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n\t'
-        stlinfo = stlinfo + 'default\n\t{\n\t\ttype\tfixedValue;\n\t\t'
-        stlinfo = stlinfo + 'value\tuniform\t(0 0 0);\n\t}\n'
-        stlinfo = stlinfo + '}\n'
-        fileID.write('%s' % (stlinfo))
+    
 
     ####################################################################
     def dircreate(self):
@@ -1226,8 +1113,8 @@ FoamFile
                 var = np.array([['BMXmin', BMXmin], ['BMXmax', BMXmax], ['BMYmin', BMYmin],['BMYmax', BMYmax], ['BMZmin', BMZmin], ['BMZmax', BMZmax]])
                 self.constvarfileOF(var,"blockMeshDict")
                 # Move the STL files
-                shutil.move("Front.stl", "constant/triSurface/Front.stl")
-                shutil.move("Back.stl", "constant/triSurface/Back.stl")
+                shutil.move("Entry.stl", "constant/triSurface/Entry.stl")
+                shutil.move("Exit.stl", "constant/triSurface/Exit.stl")
                 shutil.move("Left.stl", "constant/triSurface/Left.stl")
                 shutil.move("Right.stl", "constant/triSurface/Right.stl")
                 shutil.move("Top.stl", "constant/triSurface/Top.stl")
@@ -1406,38 +1293,74 @@ FoamFile
         Upatchtext = Upatchtext + 'internalField\tuniform\t(0 0 0);\n\n'
         Upatchtext = Upatchtext + 'boundaryField\n{\n\t'
 
-        # p-file
-
-        # p-rgh file
+        # pressure file
+        presfileID = open("0.org/p_rgh","w")
+        prespatchtext = self.header2OF("volScalarField","p_rgh")
+        prespatchtext = prespatchtext + '\ndimensions\t[1 -1 -2 0 0 0 0];\n\n'
+        prespatchtext = prespatchtext + 'internalField\tuniform\t0;\n\n'
+        prespatchtext = prespatchtext + 'boundaryField\n{\n\t'
 
         # pointDisplacement file
         movewallexist = 0
+        pdispfileID = open("0.org/pointDisplacement","w")
+        pdisppatchtext = self.headerOF("pointVectorField","0.01","pointDisplacement")
+        pdisppatchtext = pdisppatchtext + '\ndimensions\t[0 1 0 0 0 0 0];\n\n'
+        pdisppatchtext = pdisppatchtext + 'internalField\tuniform\t(0 0 0);\n\n'
+        pdisppatchtext = pdisppatchtext + 'boundaryField\n{\n\t'
 
         # ENTRY
         velbountype = hydroboun.bountypenum(data,"Entry","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Entry",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Entry","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Entry") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Entry")
         if int(velbountype) == 3 or int(velbountype) == 4:
             movewallexist = 1
 
         # Exit
         velbountype = hydroboun.bountypenum(data,"Exit","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Exit",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Exit","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Exit") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Exit")
+        if int(velbountype) == 3 or int(velbountype) == 4:
+            movewallexist = 1
 
         # Top
         velbountype = hydroboun.bountypenum(data,"Top","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Top",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Top","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Top") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Top")
+        if int(velbountype) == 3 or int(velbountype) == 4:
+            movewallexist = 1
 
         # Bottom
         velbountype = hydroboun.bountypenum(data,"Bottom","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Bottom",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Bottom","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Bottom") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Bottom")
+        if int(velbountype) == 3 or int(velbountype) == 4:
+            movewallexist = 1
 
         # Left
         velbountype = hydroboun.bountypenum(data,"Left","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Left",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Left","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Left") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Left")
+        if int(velbountype) == 3 or int(velbountype) == 4:
+            movewallexist = 1
 
         # Right
         velbountype = hydroboun.bountypenum(data,"Right","Velocity")
         Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,velbountype,"Right",fpath) + "\n"
+        presbountype = hydroboun.bountypenum(data,"Right","Pressure")
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Right") + "\n"
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Right")
+        if int(velbountype) == 3 or int(velbountype) == 4:
+            movewallexist = 1
 
         # Building
         # Get the building flag 0 = no building 1 = building 2 = Other building too
@@ -1445,14 +1368,45 @@ FoamFile
         flag = int(data_geoext[6])
         if flag == 1:
             Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,7,"Building",fpath) + "\n"
+            presbountype = hydroboun.bountypenum(data,"Building","Pressure")
+            prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Building") + "\n"
+            pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Building")
         elif flag == 2:
             Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,7,"Building",fpath) + "\n"
+            presbountype = hydroboun.bountypenum(data,"Building","Pressure")
+            prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"Building") + "\n"
+            pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"Building")
             Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,7,"OtherBuilding",fpath) + "\n"
+            presbountype = hydroboun.bountypenum(data,"OtherBuilding","Pressure")
+            prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,presbountype,velbountype,"OtherBuilding") + "\n"
+            pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(velbountype,"OtherBuilding")
 
-        # Close the boundary files
-        Upatchtext = Upatchtext + '\n\tdefault\n\t{\n\t\ttype\tnoSlip;\n\t}\n'
-        Upatchtext = Upatchtext + '}\n'
+        # Close the displacement boundary files
+        Upatchtext = Upatchtext + "\n" + hydroboun.Uboun(data,-2,"Default",fpath) + "\n"
+        Upatchtext = Upatchtext + '\n}\n'
         UfileID.write('%s' % (Upatchtext))
+
+        # Close the p-rgh files
+        prespatchtext = prespatchtext + "\n" + hydroboun.presboun(data,-2,-2,"Default") + "\n"
+        prespatchtext = prespatchtext + '\n}\n'
+        presfileID.write('%s' % (prespatchtext))
+
+        # Close the point-displacement files
+        # Write if there is atleast one moving wall
+        pdisppatchtext = pdisppatchtext + "\n" + hydroboun.pdispboun(-2,"Default") + "\n"
+        pdisppatchtext = pdisppatchtext + '\n}\n'
+        if movewallexist == 1:
+            pdispfileID.write('%s' % (pdisppatchtext))
+
+        # alpha-water-file
+        AlphafileID = open("0.org/alpha.water","w")
+        Alphapatchtext = self.header2OF("volScalarField","alpha.water")
+        Alphapatchtext = Alphapatchtext + '\ndimensions\t[0 0 0 0 0 0 0];\n\n'
+        Alphapatchtext = Alphapatchtext + 'internalField\tuniform\t0;\n\n'
+        Alphapatchtext = Alphapatchtext + 'boundaryField\n{\n\t'
+        Alphapatchtext = Alphapatchtext + hydroboun.alphaboun(flag)
+        Alphapatchtext = Alphapatchtext + '\n}\n'
+        AlphafileID.write('%s' % (Alphapatchtext))
 
         # Give the confirmation that the files have been created
         filewritten = np.array(['0.org/alpha.water','0.org/U','0.org/p_rgh'])
