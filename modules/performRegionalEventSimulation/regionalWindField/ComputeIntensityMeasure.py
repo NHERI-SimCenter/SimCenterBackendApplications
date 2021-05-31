@@ -131,10 +131,11 @@ def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, mode
             scenario_info['Storm']['Landfall'] = {}
             scenario_info['Storm']['Landfall']['Latitude'] = scenario_data[0]['CycloneParam'][0]
             scenario_info['Storm']['Landfall']['Longitude'] = scenario_data[0]['CycloneParam'][1]
-            scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
-            scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
-            scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
-            scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
+        # updating landfall properties
+        scenario_info['Storm']['LandingAngle'] = scenario_data[0]['CycloneParam'][2]
+        scenario_info['Storm']['Pressure'] = scenario_data[0]['CycloneParam'][3]
+        scenario_info['Storm']['Speed'] = scenario_data[0]['CycloneParam'][4]
+        scenario_info['Storm']['Radius'] = scenario_data[0]['CycloneParam'][5]
 
         config = {
             "Scenario": scenario_info,
@@ -154,7 +155,14 @@ def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, mode
             })
             df.to_csv(abs_path_track, sep=',', header=False, index=False) 
         # lat_w file
-        abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
+        if scenario_info['Storm'].get('TrackSimu', None):
+            abs_path_latw = os.path.abspath(os.path.join(input_dir, scenario_info['Storm']['TrackSimu']))
+        else:
+            abs_path_latw = os.path.abspath(os.path.join(input_dir, 'TrackSimu_populated.csv'))
+            df = pd.DataFrame.from_dict({
+                'Lat': scenario_data[0]['TrackSimu'],
+            })
+            df.to_csv(abs_path_latw, sep=',', header=False, index=False)
         if scenario_info['Generator'] == 'SimulationHist':
             df = pd.DataFrame.from_dict({
                 'Lat': scenario_data[0]['TrackSimu'],
@@ -394,7 +402,7 @@ def export_pws(stations, pws, output_dir, filename = 'EventGrid.csv'):
     station_num = len(lat)
     csv_file = [str(x + 1)+'.csv' for x in range(station_num)]
     d = {
-        'Station': csv_file,
+        'GP_file': csv_file,
         'Latitude': lat,
         'Longitude': lon
     }

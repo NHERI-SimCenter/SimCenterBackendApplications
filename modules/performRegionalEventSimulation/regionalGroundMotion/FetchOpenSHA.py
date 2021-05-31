@@ -517,8 +517,8 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
             pgvResult = {'Mean': [],
                         'TotalStdDev': []}
             if hasIEStats:
-                pgaResult.update({'InterEvStdDev': []})
-                pgaResult.update({'IntraEvStdDev': []})
+                pgvResult.update({'InterEvStdDev': []})
+                pgvResult.update({'IntraEvStdDev': []})
             imr.setIntensityMeasure("PGV")
             mean = imr.getMean()
             pgvResult['Mean'].append(float(mean))
