@@ -254,10 +254,10 @@ def generate_workflow_tasks_siteresponse(bldg_filter, config_file, out_dir, task
                           f'--filter {filter} && ')
 
             # copy the results from the task for aggregation
-            file_name = f"surface_motions/{subfolder}/EVENT-*.json"
+            file_name = f"surface_motions/*"
             task_list += (f'mkdir -p {out_dir}/results/surface_motions'
                           f'/{subfolder}/ && ')
-            task_list += (f'cp -f {run_dir}/{file_name} {out_dir}/results'
+            task_list += (f'cp -Rf {run_dir}/{file_name} {out_dir}/results'
                               f'/surface_motions/{subfolder}/ && ')
 
             task_list += f"echo 'cmd generated. Currend dir: '$PWD \n"
