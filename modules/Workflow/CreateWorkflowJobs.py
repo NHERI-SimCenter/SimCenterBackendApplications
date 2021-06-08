@@ -203,6 +203,8 @@ def generate_workflow_tasks_siteresponse(bldg_filter, config_file, out_dir, task
 
     tasksCount = int(math.ceil(count/task_size))
 
+    print(f"tasksCount = {tasksCount}")
+
     workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/SiteResponse_workflow.py"
 
     subfolder = 0
