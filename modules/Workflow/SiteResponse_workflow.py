@@ -1,45 +1,4 @@
-# -*- coding: utf-8 -*-
-#
-# Copyright (c) 2019 The Regents of the University of California
-# Copyright (c) 2019 Leland Stanford Junior University
-#
-# This file is part of the RDT Application.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice,
-# this list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation
-# and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its contributors
-# may be used to endorse or promote products derived from this software without
-# specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-#
-# You should have received a copy of the BSD 3-Clause License along with the
-# RDT Application. If not, see <http://www.opensource.org/licenses/>.
-#
-# Contributors:
-# Frank McKenna
-# Adam Zsarnóczay
-# Wael Elhaddad
-# Michael Gardner
-# Chaofeng Wang
+# Site response workflow 
 
 import sys, os, json
 import argparse
@@ -146,15 +105,12 @@ def main(run_type, input_file, app_registry,
         # clean up intermediate files from the working directory
         WF.cleanup_workdir()
 
-    #runDir = '/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/results' # WF.run_dir
     surfaceMoDir = collect_surface_motion(WF.run_dir,bldg_data)
-
-
 
 def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):
 
     if surfaceMoDir == '': surfaceMoDir = f"{runDir}/surface_motions/" 
-    print(surfaceMoDir, type(surfaceMoDir))
+
 
     for bldg in bldg_data: #[:1]:
         log_msg(bldg)
@@ -165,32 +121,33 @@ def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):
 
             mPaths = glob(f"{runDir}/{bldg_id}/workdir.*/EVENT.json")
 
-            print(mPaths)
 
-            #surfMoTmpDir = f"{runDir}/surface_motions/{bldg_id}/"
             surfMoTmpDir = f"{surfaceMoDir}/{bldg_id}/"
-            print('surfMoTmpDir: ', surfMoTmpDir)
+
             if not os.path.exists(surfMoTmpDir): os.makedirs(surfMoTmpDir) 
 
             for p in mPaths:
                 simID = p.split('/')[-2].split('.')[-1]
-                shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
+                #shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
+                newEVENT = {}
+                # load the event file
+                with open(p, 'r') as f:
+                    EVENT_in_All = json.load(f)
+                    
+                    newEVENT['name'] = EVENT_in_All['Events'][0]['event_id']
+                    newEVENT['location'] = EVENT_in_All['Events'][0]['location']
+                    newEVENT['dT'] = EVENT_in_All['Events'][0]['dT']
+                    
+                    newEVENT['data_x'] = EVENT_in_All['Events'][0]['timeSeries'][0]['data']
+                    newEVENT['PGA_x'] = max(newEVENT['data_x'])
 
-    '''
-    surfMoTmpDir = '/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/surface_motions'
-    if not os.path.exists(surfMoTmpDir): os.makedirs(surfMoTmpDir) 
-    shutil.copytree(f"{runDir}/surface_motions/", surfMoTmpDir, dirs_exist_ok=True)
+                    if len(EVENT_in_All['Events'][0]['timeSeries'])>0: # two-way shaking
+                        newEVENT['data_y'] = EVENT_in_All['Events'][0]['timeSeries'][1]['data']
+                        newEVENT['PGA_y'] = max(newEVENT['data_y'])
+                    
+                    with open(f"{surfMoTmpDir}/EVENT-{newEVENT['name']}.json", "w") as outfile:
+                        json.dump(newEVENT, outfile)
 
-    olddir = "/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/records/"
-    shutil.copyfile(f'{olddir}/EventGrid.csv', f'{surfMoTmpDir}/EventGrid.csv')
-    oldfiles = glob("{olddir}/site*.csv")
-    for s in oldfiles:
-
-        n = s.split('/')[-1]
-        shutil.copyfile(s, '{surfMoTmpDir}/{n}')
-
-    #print(f"Surface motions saved in {surfaceMoDir}")
-    '''
 
     return surfaceMoDir
 

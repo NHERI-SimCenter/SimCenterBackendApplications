@@ -319,13 +319,13 @@ results.out \
 
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
-/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/performUQ/dakota/DakotaFEM.py \
+/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/v2.3.1/applications/performUQ/dakota/DakotaFEM.py \
 --filenameBIM 1-BIM.json \
 --filenameSAM SAM.json \
 --filenameEVENT EVENT.json \
 --filenameEDP EDP.json \
 --filenameSIM SIM.json \
---driverFile driver \
+--driverFile workflow_driver \
 --method LHS \
 --samples 5 \
 --type UQ \
