@@ -3261,8 +3261,15 @@ class HAZUS_Assessment(Assessment):
                     tmp1 = (loss_weight[0][i] * rlz[0]) / 100.
                     tmp2 = (loss_weight[1][i] * rlz[1]) / 100.
                     combined_loss.append(np.min([100., (np.sum(tmp1 + tmp2) - tmp1.T.dot(tmp2))* 100.]))
-                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = combined_loss
+                # convert to loss ratio
+                # combined
+                SUMMARY.loc[ncID, ('reconstruction', 'cost')] = [x / 100.0 for x in combined_loss]
+                # individual
+                self._DV_dict['rec_cost'] = self._DV_dict['rec_cost'] / 100.0
             else:
+                # convert to loss ratio
+                if self._hazard == 'HU':
+                    self._DV_dict['rec_cost'] = self._DV_dict['rec_cost'] / 100.0
                 SUMMARY.loc[ncID, ('reconstruction', 'cost')] = \
                     self._DV_dict['rec_cost'].sum(axis=1)
 
