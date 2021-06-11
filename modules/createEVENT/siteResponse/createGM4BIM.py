@@ -79,6 +79,9 @@ def main(surfaceGMDir):
         GP_file.append(f"site{siteID}.csv")
 
     griddf = pd.DataFrame(list(zip(GP_file, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
+
+    if not os.path.exists(f"{surfaceGMDir}"): 
+        os.makedirs(f"{surfaceGMDir}")
     griddf.to_csv(f"{surfaceGMDir}/EventGrid.csv", index=False)
 
     # remove original files

@@ -4,7 +4,7 @@ Run the following command to perform regional site response analysis workflow.
 
 ```
 python \
-/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/Workflow/R2DTool_workflow.py \
+/Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/Workflow/SiteResponse_workflow.py \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/rWHALE_config_srt.json \
 -r /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/Workflow/WorkflowApplications.json \
 --referenceDir /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/ \
