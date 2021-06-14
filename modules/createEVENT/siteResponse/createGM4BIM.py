@@ -53,8 +53,8 @@ def main(surfaceGMDir):
     Longitude = []
     Latitude = []
 
-    for siteID,siteDir in enumerate(dirList):
 
+    for siteID,siteDir in enumerate(dirList):
 
         gmlist = glob(f"{siteDir}/*.json")
 
@@ -71,7 +71,7 @@ def main(surfaceGMDir):
             newFileName = gm.split('EVENT-')[-1]
             TH_file.append(newFileName[:-5])
             factor.append(1.0)
-            shutil.move(gm, f"{surfaceGMDir}/{newFileName}")
+            shutil.copy(gm, f"{surfaceGMDir}/{newFileName}")
 
         sitedf = pd.DataFrame(list(zip(TH_file, factor)), columns =['TH_file', 'factor'])
         sitedf.to_csv(f"{surfaceGMDir}/site{siteID}.csv", index=False)
@@ -84,9 +84,11 @@ def main(surfaceGMDir):
         os.makedirs(f"{surfaceGMDir}")
     griddf.to_csv(f"{surfaceGMDir}/EventGrid.csv", index=False)
 
+    
     # remove original files
     for mDir in originalDirs:
-        shutil.rmtree(mDir)
+        if os.path.isdir(mDir): 
+            shutil.rmtree(mDir)
 
     return 0
 
