@@ -293,15 +293,12 @@ def get_vs30_thompson(lat, lon):
     with open(cwd+'/database/site/thompson_vs30_4km.pkl', 'rb') as f:
         vs30_thompson = pickle.load(f)
     # Interpolation function (linear)
+    # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default
+    print('CreateStation: Warning - approximate 760 m/s for sites not supported by Thompson Vs30 map (water/outside CA).')
+    vs30_thompson['Vs30'][vs30_thompson['Vs30']<0.1] = 760
     interpFunc = interpolate.interp2d(vs30_thompson['Longitude'], vs30_thompson['Latitude'], vs30_thompson['Vs30'])
-    print(lon)
-    print(lat)
     vs30 = [float(interpFunc(x, y)) for x,y in zip(lon, lat)]
-    if any(vs30) <= 100:
-        print('CreateStation: Warning - approximate 760 m/s for sites not supported by Thompson Vs30 map (water/outside CA).')
-    for i in range(len(vs30)):
-        if vs30[i] <= 100:
-            vs30[i] = 760.0
+    
     # return
     return vs30
 
