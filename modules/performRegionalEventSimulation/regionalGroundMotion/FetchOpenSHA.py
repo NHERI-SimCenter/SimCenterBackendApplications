@@ -368,7 +368,7 @@ def get_site_prop(gmpe_name, siteSpec):
             else:
                 newParam.setValue(siteParam.getDefaultValue())
                 siteDataResults.append({'Type': str(siteParam.getName()),
-                                        'Value': float(siteParam.getDefaultValue()),
+                                        'Value': siteParam.getDefaultValue(),
                                         'Source': 'Default'})
             site.addParameter(newParam)
             # End for j
