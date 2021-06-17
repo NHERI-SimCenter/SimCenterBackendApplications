@@ -122,6 +122,19 @@ def getERF(erf_name, update_flag):
     return erf
 
 
+def get_source_distance(erf, source_index, lat, lon):
+
+    rupSource = erf.getSource(source_index)
+    sourceSurface = rupSource.getSourceSurface()
+    print(lon)
+    print(lat)
+    distToSource = []
+    for i in range(len(lat)):
+        distToSource.append(float(sourceSurface.getDistanceRup(Location(lat[i], lon[i]))))
+
+    return distToSource
+
+
 def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0, maxSources = 500):
 
     # Initializing
@@ -539,6 +552,7 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
     # Final results
     res = {'Magnitude': magnitude,
            'MeanAnnualRate': meanAnnualRate,
+           'SiteSourceDistance': source_info.get('SiteSourceDistance',None),
            'Periods': cur_T,
            'GroundMotions': gm_collector}
     # return

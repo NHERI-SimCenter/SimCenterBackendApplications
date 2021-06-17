@@ -177,7 +177,7 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 		if num_scenarios > 10:
 			# Pandas DataFrame
 			h_scenarios = ['Scenario-'+str(x) for x in range(1, num_scenarios + 1)]
-			h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate']
+			h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate','SiteSourceDistance']
 			for x in range(len(T)):
 				h_eq.append('Period-{0}'.format(x+1))
 			for x in range(1, im_data[0][0, :, :].shape[1]+1):
@@ -195,6 +195,7 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 					tmp.append(int(stations[i]['Vs30']))
 					tmp.append(eq_data[j][0])
 					tmp.append(eq_data[j][1])
+					tmp.append(eq_data[j][2])
 					for x in T:
 						tmp.append(x)
 					for x in np.ndarray.tolist(im_data[j][i, :, :].T):
@@ -230,7 +231,8 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 			maf_out = []
 			for cur_eq in eq_data:
 				tmp = {'Magnitdue': cur_eq[0],
-					   'MeanAnnualRate': cur_eq[1]}
+					   'MeanAnnualRate': cur_eq[1],
+					   'SiteSourceDistance': cur_eq[2]}
 				maf_out.append(tmp)
 			res = {'Station_lnSa': res,
 				   'Earthquake_MAF': maf_out}
@@ -244,11 +246,17 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 			station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
 			lat = [stations[j]['Latitude'] for j in range(len(stations))]
 			lon = [stations[j]['Longitude'] for j in range(len(stations))]
+			vs30 = [stations[j]['Vs30'] for j in range(len(stations))]
+			zTR = [stations[j]['zTR'] for j in range(len(stations))]
 			df = pd.DataFrame({
 				'GP_file': station_name,
 				'Longitude': lon,
-				'Latitude': lat
+				'Latitude': lat,
+				'Vs30': vs30,
+				'zTR': zTR
 			})
+			if cur_eq[2]:
+				df['SiteSourceDistance'] = cur_eq[2]
 			output_dir = os.path.join(os.path.dirname(Path(output_dir)),
 									os.path.basename(Path(output_dir)))
 			# seperate directory for IM
@@ -341,7 +349,7 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 			ln_psa[:, :, i] = ln_sa + inter_sigma_sa * epsilon_m + intra_sigma_sa * eta[:, :, i]
 
 		ln_psa_mr.append(ln_psa)
-		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw['MeanAnnualRate']])
+		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw['MeanAnnualRate'], cur_psa_raw.get('SiteSourceDistance',None)])
 	# return
 	return ln_psa_mr, mag_maf
 
@@ -379,6 +387,7 @@ def compute_weighted_res(res_list, gmpe_weights):
 	# initialize the return res (these three attributes are identical in different gmpe results)
 	res = {'Magnitude': res_list[0]['Magnitude'],
 		   'MeanAnnualRate': res_list[0]['MeanAnnualRate'],
+		   'SiteSourceDistance': res_list[0].get('SiteSourceDistance',None),
 		   'Periods': res_list[0]['Periods']}
 	# number of gmpe
 	num_gmpe = len(res_list)

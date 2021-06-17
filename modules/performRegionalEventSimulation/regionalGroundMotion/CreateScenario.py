@@ -68,44 +68,59 @@ def create_earthquake_scenarios(scenario_info, stations):
             lat.append(s['Latitude'])
             lon.append(s['Longitude'])
         # Reference location
-        lat = np.mean(lat)
-        lon = np.mean(lon)
-        ref_station = [lat, lon]
+        mlat = np.mean(lat)
+        mlon = np.mean(lon)
+        ref_station = [mlat, mlon]
         # Getting earthquake rupture forecast data
         source_type = scenario_info['EqRupture']['Type']
         if source_type == 'ERF':
-            source_model = scenario_info['EqRupture']['Model']
-            source_name = scenario_info['EqRupture'].get('Name', None)
-            min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)
-            max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
-            max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
-            eq_source = getERF(source_model, True)
-            erf_data = export_to_json(eq_source, ref_station, outfile = None, \
-                                      EqName = source_name, minMag = min_M, \
-                                      maxMag = max_M, maxDistance = max_R, \
-                                      maxSources = np.max([500, source_num]))
-            # Parsing data
-            feat = erf_data['features']
-            tag = []
-            for i, cur_f in enumerate(feat):
-                if source_name and (source_name not in cur_f['properties']['Name']):
-                    continue
-                if min_M > cur_f['properties']['Magnitude']:
-                    continue
-                tag.append(i)
-            # Abstracting desired ruptures
-            s_tag = random.sample(tag, min(source_num, len(tag)))
-            erf_data['features'] = list(feat[i] for i in s_tag)
-            scenario_data = dict()
-            for i, rup in enumerate(erf_data['features']):
-                scenario_data.update({i: {
+            if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
+                source_model = scenario_info['EqRupture']['Model']
+                eq_source = getERF(source_model, True)
+                distToSource = get_source_distance(eq_source, scenario_info['EqRupture']['SourceIndex'], lat, lon)
+                scenario_data = dict()
+                scenario_data.update({0: {
                     'Type': source_type,
                     'RuptureForecast': source_model,
-                    'SourceIndex': rup['properties']['Source'],
-                    'RuptureIndex': rup['properties']['Rupture']
+                    'SourceIndex': scenario_info['EqRupture']['SourceIndex'],
+                    'RuptureIndex': scenario_info['EqRupture']['RuptureIndex'],
+                    'SiteSourceDistance': distToSource
                 }})
-            # Cleaning tmp outputs
-            del erf_data
+                
+                return scenario_data
+            else:
+                source_model = scenario_info['EqRupture']['Model']
+                source_name = scenario_info['EqRupture'].get('Name', None)
+                min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)
+                max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
+                max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
+                eq_source = getERF(source_model, True)
+                erf_data = export_to_json(eq_source, ref_station, outfile = None, \
+                                        EqName = source_name, minMag = min_M, \
+                                        maxMag = max_M, maxDistance = max_R, \
+                                        maxSources = np.max([500, source_num]))
+                # Parsing data
+                feat = erf_data['features']
+                tag = []
+                for i, cur_f in enumerate(feat):
+                    if source_name and (source_name not in cur_f['properties']['Name']):
+                        continue
+                    if min_M > cur_f['properties']['Magnitude']:
+                        continue
+                    tag.append(i)
+                # Abstracting desired ruptures
+                s_tag = random.sample(tag, min(source_num, len(tag)))
+                erf_data['features'] = list(feat[i] for i in s_tag)
+                scenario_data = dict()
+                for i, rup in enumerate(erf_data['features']):
+                    scenario_data.update({i: {
+                        'Type': source_type,
+                        'RuptureForecast': source_model,
+                        'SourceIndex': rup['properties']['Source'],
+                        'RuptureIndex': rup['properties']['Rupture']
+                    }})
+                # Cleaning tmp outputs
+                del erf_data
         elif source_type == 'PointSource':
             scenario_data = dict()
             try:

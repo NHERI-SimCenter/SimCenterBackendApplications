@@ -63,6 +63,14 @@ from CreateScenario import *
 from ComputeIntensityMeasure import *
 from SelectGroundMotion import *
 
+# untar site databases
+site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+import subprocess
+print('HazardSimulation: Extracting site databases.')
+cwd = os.path.dirname(os.path.realpath(__file__))
+for cur_database in site_database:
+    subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -92,7 +100,19 @@ if __name__ == '__main__':
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID)
+        z1_tag = 0
+        z25_tag = 0
+        if 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']:
+            z1_tag = 1
+            z25_tag = 1
+        if 'Global Vs30' in site_info['Vs30']['Type']:
+            vs30_tag = 1
+        elif 'Thompson' in site_info['Vs30']['Type']:
+            vs30_tag = 2
+        else:
+            vs30_tag = 0
+        # Creating stations from the csv input file
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
     if stations:
         print('HazardSimulation: stations created.')
     else:
