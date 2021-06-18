@@ -269,8 +269,6 @@ def get_vs30_global(lat, lon):
         vs30_global = pickle.load(f)
     # Interpolation function (linear)
     interpFunc = interpolate.interp2d(vs30_global['Longitude'], vs30_global['Latitude'], vs30_global['Vs30'])
-    print(lon)
-    print(lat)
     vs30 = [float(interpFunc(x, y)) for x,y in zip(lon, lat)]
     # return
     return vs30
