@@ -126,10 +126,14 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
     station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
     lat = [stations[j]['Latitude'] for j in range(len(stations))]
     lon = [stations[j]['Longitude'] for j in range(len(stations))]
+    vs30 = [stations[j]['Vs30'] for j in range(len(stations))]
+    zTR = [stations[j]['zTR'] for j in range(len(stations))]
     df = pd.DataFrame({
         'GP_file': station_name,
         'Longitude': lon,
-        'Latitude': lat
+        'Latitude': lat,
+		'Vs30': vs30,
+		'zTR': zTR
     })
     output_dir = os.path.join(os.path.dirname(Path(output_dir)),
                               os.path.basename(Path(output_dir)))
