@@ -170,7 +170,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         else:
             if z1_tag:
                 if not tmp.get('Vs30'):
-                    tmp.update({'Vs30': get_vs30_global(stn[lat_label], stn[lon_label])[0]})
+                    tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
 
         if stn.get(z2p5_label):
@@ -179,7 +179,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
             if z25_tag:
                 if not tmp.get('z1pt0'):
                     if not tmp.get('Vs30'):
-                        tmp.update({'Vs30': get_vs30_global(stn[lat_label], stn[lon_label])[0]})
+                        tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
                     tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
 
@@ -198,8 +198,20 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         #})
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:
-            json.dump(stn_file, f, indent=2)
+        if '.json' in output_file:
+            with open(output_file, 'w') as f:
+                json.dump(stn_file, f, indent=2)
+        if 'OpenQuake' in output_file:
+            df_csv = {
+                'lon': [x['Longitude'] for x in stn_file['Stations']],
+                'lat': [x['Latitude'] for x in stn_file['Stations']],
+                'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
+                'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
+                'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
+                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
+                'backarc': [x.get('backarc',0) for x in stn_file['Stations']],
+            }
+            pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
 

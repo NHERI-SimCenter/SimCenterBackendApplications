@@ -96,7 +96,7 @@ if __name__ == '__main__':
         input_file = os.path.join(input_dir,site_info['input_file'])
         output_file = site_info.get('output_file',False)
         if output_file:
-            output_file = os.path.join(output_dir, output_file)
+            output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
         # Creating stations from the csv input file
