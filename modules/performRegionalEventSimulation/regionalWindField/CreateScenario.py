@@ -71,7 +71,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
                 'Longitude': df.iloc[:, 1].values.tolist()
             }
         except:
-            print('CreateScenario: no storm track provided or file format not accepted.')
+            print('CreateScenario: error - no storm track provided or file format not accepted.')
         # Save Lat_w.csv
         track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
         if track_simu_file:         
@@ -142,16 +142,38 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             storm_name = scenario_info['Storm'].get('Name')
             storm_year = scenario_info['Storm'].get('Year')
         except:
-            print('CreateScenario: no storm name or year is provided.')
+            print('CreateScenario: error - no storm name or year is provided.')
         # Searching the storm
         try:
             df_chs = df_hs[df_hs[('NAME', ' ')] == storm_name]
             df_chs = df_chs[df_chs[('SEASON', 'Year')] == storm_year]
         except:
-            print('CreateScenario: the storm is not found.')
+            print('CreateScenario: error - the storm is not found.')
+        if len(df_chs.values) == 0:
+            print('CreateScenario: error - the storm is not found.')
+            return 1
         # Collecting storm properties
-        track_lat = [float(x) for x in df_chs[('USA_LAT', 'degrees_north')].values.tolist() if x != ' ']
-        track_lon = [float(x) for x in df_chs[('USA_LON', 'degrees_east')].values.tolist() if x != ' ']
+        track_lat = []
+        track_lon = []
+        for x in df_chs[('USA_LAT', 'degrees_north')].values.tolist():
+            if x != ' ':
+                track_lat.append(float(x))
+        for x in df_chs[('USA_LON', 'degrees_east')].values.tolist():
+            if x != ' ':
+                track_lon.append(float(x))
+        # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
+        if len(track_lat) == 0:
+            print('CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.')
+            for x in df_chs[('LAT', 'degrees_north')].values.tolist():
+                if x != ' ':
+                    track_lat.append(float(x))
+            for x in df_chs[('LON', 'degrees_east')].values.tolist():
+                if x != ' ':
+                    track_lon.append(float(x))
+        if len(track_lat) == 0:
+            print('CreateScenario: error - no track data is found.')
+            return 1
+        # Saving the track
         track = {
             'Latitude': track_lat,
             'Longitude': track_lon
@@ -164,24 +186,61 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
         else:
             terrain_data = []
         # Storm characteristics at the landfall
-        dist2land = [float(x) for x in df_chs[('DIST2LAND', 'km')]]
+        dist2land = []
+        for x in df_chs[('DIST2LAND', 'km')]:
+            if x != ' ':
+                dist2land.append(x)
+        if len(track_lat) == 0:
+            print('CreateScenario: error - no landing information is found.')
+            return 1
         if (0 not in dist2land):
-            print('CreateScenario: no landing fall is found, using the closest location.')
+            print('CreateScenario: warning - no landing fall is found, using the closest location.')
             tmploc = dist2land.index(min(dist2land))
         else:
             tmploc = dist2land.index(0) # the first landing point in case the storm sway back and forth
         # simulation track
-        tmp = [float(x) for x in df_chs[('USA_LAT', 'degrees_north')].values.tolist()]
-        track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
+        track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
+        if track_simu_file:         
+            try:
+                df = pd.read_csv(os.path.join(data_dir, track_simu_file), header = None, index_col = None)
+                track_simu = df.iloc[:, 0].values.tolist()
+            except:
+                print('CreateScenario: warning - TrackSimu file not found, using the full track.')
+                track_simu = track_lat
+        else:
+            print('CreateScenario: warning - no truncation defined, using the full track.')
+            #tmp = track_lat
+            #track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
+            #print(track_simu)
+            track_simu = track_lat
         # Reading data
-        landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
-        landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])
-        landfall_ang = float(df_chs[('STORM_DIR', 'degrees')].iloc[tmploc])
+        try:
+            landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
+            landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])
+        except:
+            # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
+            landfall_lat = float(df_chs[('LAT', 'degrees_north')].iloc[tmploc])
+            landfall_lon = float(df_chs[('LON', 'degrees_east')].iloc[tmploc])
+        try:
+            landfall_ang = float(df_chs[('STORM_DIR', 'degrees')].iloc[tmploc])
+        except:
+            print('CreateScenario: error - no landing angle is found.')
         if landfall_ang > 180.0:
             landfall_ang = landfall_ang - 360.0
         landfall_prs = 1013.0 - np.min([float(x) for x in df_chs[('USA_PRES', 'mb')].iloc[tmploc - 5: ].values.tolist() if x != ' '])
         landfall_spd = float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444 # convert knots/s to km/s
-        landfall_rad = float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934 # convert nmile to km
+        try:
+            landfall_rad = float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934 # convert nmile to km
+        except:
+            # No available radius of maximum wind is found
+            print('CreateScenario: warning - swithcing to REUNION_RMW.')
+            try:
+                # If the default option (USA_RMW) is not available, swithcing to REUNION_RMW
+                landfall_rad = float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934 # convert nmile to km
+            except:
+                # No available radius of maximum wind is found
+                print('CreateScenario: warning - no available radius of maximum wind is found, using a default 50 km.')
+                landfall_rad = 50
         param = []
         param.append(landfall_lat)
         param.append(landfall_lon)

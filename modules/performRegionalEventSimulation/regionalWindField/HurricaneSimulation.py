@@ -43,11 +43,18 @@ import sys
 import argparse, posixpath, json
 import numpy as np
 import pandas as pd
+import logging
 from CreateStation import *
 from CreateScenario import *
 from ComputeIntensityMeasure import *
 
 if __name__ == '__main__':
+
+    logger = logging.getLogger()
+    handlerStream = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handlerStream.setFormatter(formatter)
+    logger.addHandler(handlerStream)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')

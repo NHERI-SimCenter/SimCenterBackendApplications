@@ -5,7 +5,7 @@ OBJS=WindFieldModel.o
 all: WindFieldSimulation
 
 WindFieldSimulation: $(OBJS)
-	$(CXX) $(LDFLAGS) -o WindFieldSimulation $(OBJ) $(LDLIBS)
+	$(CXX) $(LDFLAGS) -o WindFieldSimulation $(OBJS) $(LDLIBS)
 
 clean:
 	$(RM) *~ \#* *.o *.out
