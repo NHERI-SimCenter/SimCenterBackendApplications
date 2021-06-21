@@ -109,6 +109,8 @@ if __name__ == '__main__':
             vs30_tag = 1
         elif 'Thompson' in site_info['Vs30']['Type']:
             vs30_tag = 2
+        elif 'NCM' in site_info['Vs30']['Type']:
+            vs30_tag = 3
         else:
             vs30_tag = 0
         # Creating stations from the csv input file
