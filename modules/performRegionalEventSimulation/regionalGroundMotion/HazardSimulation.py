@@ -96,7 +96,7 @@ if __name__ == '__main__':
         input_file = os.path.join(input_dir,site_info['input_file'])
         output_file = site_info.get('output_file',False)
         if output_file:
-            output_file = os.path.join(output_dir, output_file)
+            output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
         # Creating stations from the csv input file
@@ -109,6 +109,8 @@ if __name__ == '__main__':
             vs30_tag = 1
         elif 'Thompson' in site_info['Vs30']['Type']:
             vs30_tag = 2
+        elif 'NCM' in site_info['Vs30']['Type']:
+            vs30_tag = 3
         else:
             vs30_tag = 0
         # Creating stations from the csv input file
@@ -125,7 +127,8 @@ if __name__ == '__main__':
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # Creating earthquake scenarios
-        scenarios = create_earthquake_scenarios(scenario_info, stations)
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            scenarios = create_earthquake_scenarios(scenario_info, stations)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -140,9 +143,25 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
-        psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
-                                           event_info['GMPE'],
-                                           event_info['IntensityMeasure'])
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
+                                               event_info['GMPE'],
+                                               event_info['IntensityMeasure'])
+        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:
+            # import FetchOpenQuake
+            from FetchOpenQuake import *
+            # Preparing config ini for OpenQuake
+            filePath_ini = openquake_config(site_info, scenario_info, event_info, input_dir)
+            if not filePath_ini:
+                # Error in ini file
+                print('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
+                exit()
+            # Creating and conducting OpenQuake calculations
+            oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info)
+            oq_calc.run_calc()
+            psa_raw = [oq_calc.eval_calc()]
+            stn_new = stations['Stations']
+            
         # Updating station information
         stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')

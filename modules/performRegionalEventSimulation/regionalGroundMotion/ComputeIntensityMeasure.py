@@ -230,9 +230,17 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 				res.append(tmp)
 			maf_out = []
 			for cur_eq in eq_data:
-				tmp = {'Magnitdue': cur_eq[0],
-					   'MeanAnnualRate': cur_eq[1],
-					   'SiteSourceDistance': cur_eq[2]}
+				if cur_eq[1]:
+					mar = cur_eq[1]
+				else:
+					mar = 'N/A'
+				if cur_eq[2]:
+					ssd = cur_eq[2]
+				else:
+					ssd = 'N/A'
+				tmp = {'Magnitdue': float(cur_eq[0]),
+					   'MeanAnnualRate': mar,
+					   'SiteSourceDistance': ssd}
 				maf_out.append(tmp)
 			res = {'Station_lnSa': res,
 				   'Earthquake_MAF': maf_out}
@@ -349,7 +357,7 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 			ln_psa[:, :, i] = ln_sa + inter_sigma_sa * epsilon_m + intra_sigma_sa * eta[:, :, i]
 
 		ln_psa_mr.append(ln_psa)
-		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw['MeanAnnualRate'], cur_psa_raw.get('SiteSourceDistance',None)])
+		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw.get('MeanAnnualRate',None), cur_psa_raw.get('SiteSourceDistance',None)])
 	# return
 	return ln_psa_mr, mag_maf
 
