@@ -50,6 +50,18 @@ import stat
 import subprocess
 import time
 
+install_requires = [
+    'setuptools',
+    'h5py >=2.10, <2.11',
+    'pyzmq <20.0',
+    'psutil >=2.0, <5.7',
+    'docutils >=0.11',
+    'django >=1.11, <2.3',
+    'pyshp ==1.2.3',
+    'toml',
+    'pyproj >=1.9',
+]
+
 # handleError for permission denied
 def handleError(func, path, exc_info):
     print('Handling Error for file ' , path)
