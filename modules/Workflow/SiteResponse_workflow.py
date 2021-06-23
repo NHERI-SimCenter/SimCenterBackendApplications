@@ -134,7 +134,7 @@ def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):
                 with open(p, 'r') as f:
                     EVENT_in_All = json.load(f)
                     
-                    newEVENT['name'] = EVENT_in_All['Events'][0]['event_id']
+                    newEVENT['name'] = EVENT_in_All['Events'][0]['event_id'].replace('x','-')
                     newEVENT['location'] = EVENT_in_All['Events'][0]['location']
                     newEVENT['dT'] = EVENT_in_All['Events'][0]['dT']
                     
