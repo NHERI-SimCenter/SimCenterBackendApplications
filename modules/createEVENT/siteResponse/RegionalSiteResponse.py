@@ -71,6 +71,7 @@ def run_opensees(BIM_file, EVENT_file, event_path, model_script, model_script_pa
 
     model_params = BIM_in['GeneralInformation']
     model_units = BIM_in['GeneralInformation']['units']
+    location = BIM_in['GeneralInformation']['location']
 
     # convert units if necessary
     if model_units['length'] in ['inch', 'in']:
@@ -125,6 +126,8 @@ def run_opensees(BIM_file, EVENT_file, event_path, model_script, model_script_pa
         if int(ndm) == 3:
             acc_surf_z = acc[:, -1] / gravityG
             EVENT_in_All['Events'][0]['timeSeries'][1]['data'] = acc_surf_z.tolist()
+
+        EVENT_in_All['Events'][0]['location'] = location
 
         # EVENT_file2 = 'EVENT2.json' for debug
         with open(EVENT_file, 'w') as f:
