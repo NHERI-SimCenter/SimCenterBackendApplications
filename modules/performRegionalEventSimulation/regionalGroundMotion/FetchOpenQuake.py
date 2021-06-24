@@ -92,7 +92,7 @@ if not os.path.isdir(os.path.dirname(os.path.realpath(__file__))+'/openquake'):
         except:
             shutil.rmtree('oq-engine', onerror=handleError)
             print('FetchOpenQuake: could not clone https://github.com/gem/oq-engine.git')
-    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake')
+    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake',symlinks=True)
     shutil.rmtree('oq-engine', onerror=handleError)
 
 from openquake.baselib import config, version, performance, general, zeromq, hdf5, parallel
