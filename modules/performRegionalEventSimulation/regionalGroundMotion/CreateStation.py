@@ -41,7 +41,6 @@
 import json
 import numpy as np
 import pandas as pd
-import requests
 
 
 def get_label(options, labels, label_name):
@@ -407,6 +406,8 @@ def get_zTR_ncm(lat, lon):
     Output:
         zTR: list of depth to bedrock
     """
+    import requests
+
     zTR = []
 
     # Looping over sites
@@ -439,6 +440,8 @@ def get_vsp_ncm(lat, lon, depth):
     Output:
         vsp: list of shear-wave velocity profile
     """
+    import requests
+
     vsp = []
     depthMin, depthInc, depthMax = [abs(x) for x in depth]
 
