@@ -1,6 +1,7 @@
 simcenter_add_executable(NAME WindFieldSimulation
-                         FILES WindFieldModel.cpp
-                         DEPENDS CONAN_PKG::jansson CONAN_PKG::Eigen3)
+			 DEPENDS CONAN_PKG::jansson
+			 DEPENDS CONAN_PKG::eigen			 
+                         FILES WindFieldModel.cpp)
 simcenter_add_python_script(SCRIPT ComputeIntensityMeasure.py)
 simcenter_add_python_script(SCRIPT CreateScenario.py)
 simcenter_add_python_script(SCRIPT CreateStation.py)

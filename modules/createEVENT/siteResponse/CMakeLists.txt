@@ -10,3 +10,5 @@ simcenter_add_python_script(SCRIPT Gauss1D.py)
 simcenter_add_python_script(SCRIPT RegionalSiteResponse.py)
 
 simcenter_add_python_script(SCRIPT postProcess.py)
+
+simcenter_add_python_script(SCRIPT createGM4BIM.py)

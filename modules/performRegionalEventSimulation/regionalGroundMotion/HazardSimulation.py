@@ -63,6 +63,14 @@ from CreateScenario import *
 from ComputeIntensityMeasure import *
 from SelectGroundMotion import *
 
+# untar site databases
+site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+import subprocess
+print('HazardSimulation: Extracting site databases.')
+cwd = os.path.dirname(os.path.realpath(__file__))
+for cur_database in site_database:
+    subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -88,11 +96,25 @@ if __name__ == '__main__':
         input_file = os.path.join(input_dir,site_info['input_file'])
         output_file = site_info.get('output_file',False)
         if output_file:
-            output_file = os.path.join(output_dir, output_file)
+            output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID)
+        z1_tag = 0
+        z25_tag = 0
+        if 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']:
+            z1_tag = 1
+            z25_tag = 1
+        if 'Global Vs30' in site_info['Vs30']['Type']:
+            vs30_tag = 1
+        elif 'Thompson' in site_info['Vs30']['Type']:
+            vs30_tag = 2
+        elif 'NCM' in site_info['Vs30']['Type']:
+            vs30_tag = 3
+        else:
+            vs30_tag = 0
+        # Creating stations from the csv input file
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
     if stations:
         print('HazardSimulation: stations created.')
     else:
@@ -105,7 +127,8 @@ if __name__ == '__main__':
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # Creating earthquake scenarios
-        scenarios = create_earthquake_scenarios(scenario_info, stations)
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            scenarios = create_earthquake_scenarios(scenario_info, stations)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -120,9 +143,28 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
-        psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
-                                           event_info['GMPE'],
-                                           event_info['IntensityMeasure'])
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
+                                               event_info['GMPE'],
+                                               event_info['IntensityMeasure'])
+        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:           
+            # import FetchOpenQuake
+            from FetchOpenQuake import *
+            # install packages used by OpenQuake
+            for p in install_requires:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", p])
+            # Preparing config ini for OpenQuake
+            filePath_ini = openquake_config(site_info, scenario_info, event_info, input_dir)
+            if not filePath_ini:
+                # Error in ini file
+                print('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
+                exit()
+            # Creating and conducting OpenQuake calculations
+            oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info)
+            oq_calc.run_calc()
+            psa_raw = [oq_calc.eval_calc()]
+            stn_new = stations['Stations']
+            
         # Updating station information
         stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
@@ -135,8 +177,8 @@ if __name__ == '__main__':
         print('HazardSimulation: correlated response spectra computed.')
         if event_info['SaveIM']:
             print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations['Stations'], event_info['IntensityMeasure']['Periods'],
-                          ln_psa_mr, mag_maf, output_dir, 'SiteIM.json')
+            _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
+                          ln_psa_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
         #print(np.exp(ln_psa_mr[0][0, :, 1]))
         #print(np.exp(ln_psa_mr[0][1, :, 1]))
