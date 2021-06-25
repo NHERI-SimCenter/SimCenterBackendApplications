@@ -80,16 +80,19 @@ if not os.path.isdir(os.path.dirname(os.path.realpath(__file__))+'/openquake'):
     if not os.path.isdir('./oq-engine'):
         try:
             os.system('git clone https://github.com/gem/oq-engine.git')
-            # switch to the stable version
-            owd = os.getcwd()
-            os.chdir('./oq-engine')
-            os.system('git clean -d -f')
-            os.system('git checkout '+oq_version)
-            os.chdir(owd)
+            try:
+                # switch to the stable version
+                owd = os.getcwd()
+                os.chdir('./oq-engine')
+                os.system('git clean -d -f')
+                os.system('git checkout '+oq_version)
+                os.chdir(owd)
+            except:
+                print('FetchOpenQuake: failed to switch to the OpenQuake commit '+oq_version)
         except:
             shutil.rmtree('oq-engine', onerror=handleError)
             print('FetchOpenQuake: could not clone https://github.com/gem/oq-engine.git')
-    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake')
+    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake',symlinks=True)
     shutil.rmtree('oq-engine', onerror=handleError)
 
 from openquake.baselib import config, version, performance, general, zeromq, hdf5, parallel
