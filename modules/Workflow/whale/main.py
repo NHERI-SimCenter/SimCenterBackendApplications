@@ -1208,7 +1208,8 @@ class Workflow(object):
                         except:
                             log_msg(f'Error reading {out_type} data for building {bldg_id}')
 
-                    out_agg = pd.concat(out_list, axis=0, sort=False)
+                    #out_agg = pd.concat(out_list, axis=0, sort=False)
+                    out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
                     #out_agg.sort_index(axis=0, inplace=True)
 
                     # save the collected DataFrames as csv files
