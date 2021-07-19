@@ -1,0 +1,195 @@
+####################################################################
+# LICENSING INFORMATION
+####################################################################
+"""
+	LICENSE INFORMATION:
+	
+	Copyright (c) 2020-2030, The Regents of the University of California (Regents).
+
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+	1. Redistributions of source code must retain the above copyright notice, this 
+		list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+		this list of conditions and the following disclaimer in the documentation
+		and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+	The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+
+	REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+	
+"""
+####################################################################
+# AUTHOR INFORMATION
+####################################################################
+# 2020 - 2021: Ajay B Harish (ajaybh@berkeley.edu)
+
+####################################################################
+# Import all necessary modules
+####################################################################
+# Standard python modules
+import os
+import shutil
+
+# Other custom modules
+from hydroUtils import hydroUtils
+from of7Uboundary import of7Uboundary
+from of7Prboundary import of7Prboundary
+
+####################################################################
+# OpenFOAM7 solver class
+####################################################################
+class openfoam7():
+	"""
+	This class includes the methods related to openfoam7.
+
+	Methods
+	--------
+		extract: 
+	"""
+
+	#############################################################
+	def createfolder(self,data,path):
+		'''
+		Creates the necessary folders for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the new folder needs to be created
+		'''
+
+		# Create directories for openfoam dictionaries
+		# Access: Only owner can read and write
+		access_rights = 0o700
+
+		# Create 0-directory
+		pathF = os.path.join(path,"0.org")
+		if(os.path.exists(pathF)):
+			shutil.rmtree(pathF)
+			os.mkdir(pathF,access_rights)
+		else:
+			os.mkdir(pathF,access_rights)
+	
+		#Create constant-directory
+		pathF = os.path.join(path,"constant")
+		if(os.path.exists(pathF)):
+			shutil.rmtree(pathF)
+			os.mkdir(pathF,access_rights)
+		else:
+			os.mkdir(pathF,access_rights)
+
+		# Create the triSurface directory
+		pathF = os.path.join(path,"constant/triSurface")
+		if(os.path.exists(pathF)):
+			shutil.rmtree(pathF)
+			os.mkdir(pathF,access_rights)
+		else:
+			os.mkdir(pathF,access_rights)
+
+		#Create system-directory
+		pathF = os.path.join(path,"system")
+		if(os.path.exists(pathF)):
+			shutil.rmtree(pathF)
+			os.mkdir(pathF,access_rights)
+		else:
+			os.mkdir(pathF,access_rights) 
+		
+		# Return completion flag
+		return 0
+
+#############################################################
+	def creategeometry(self,data,path):
+		'''
+		Creates the necessary folders for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		print("Geometry and building files are created here")
+
+		# Create directories for openfoam dictionaries
+		# Access: Only owner can read and write
+
+		return 0
+
+#############################################################
+	def createmesh(self,data,path):
+		'''
+		Creates the mesh dictionaries for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		print("Mesher files are created here")
+		# Create directories for openfoam dictionaries
+		# Access: Only owner can read and write
+
+		return 0
+
+#############################################################
+	def boundary(self,data,path):
+		'''
+		Creates the bc condition files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Initialize the patches
+		patches = ['Entry', 'Exit', 'Top', 'Bottom', 'Right', 'Left']
+
+		# Create object for velocity boundary condition
+		# Get the text for the velocity boundary
+		# Write the U-file in 0.org
+		Uboundary = of7Uboundary()
+		utext = Uboundary.Utext(data,path,patches)
+		# Check for boundary conditions here
+		ecode = Uboundary.Uchecks(data,path,patches)
+		if ecode == -1:
+			return -1
+		else:
+			# Write the U-file if no errors
+			# Path to the file
+			fname = "U"
+			filepath = os.path.join(path, "0.org", fname)
+			Ufile = open(filepath, "w")
+			Ufile.write(utext)
+			Ufile.close()
+
+		# Create object for pressure boundary condition
+		# Get the text for the pressure boundary
+		# Write the p_rgh-file in 0.org
+		Prboundary = of7Prboundary()
+		prtext = Prboundary.Prtext(data,patches)
+		# print(prtext)
+		fname = "p_rgh"
+		filepath = os.path.join(path, "0.org", fname)
+		prfile = open(filepath, "w")
+		prfile.write(prtext)
+		prfile.close()
+
+		# Loop over all the velocity type to see if any 
+		# has a moving wall. If so initialize the 
+		# ptDisptext = ''
+
+		# Check for velocity type of entry
+		# patch = hydroutil.extract_element_from_json(data, ["Events",bcfield+"Type_"+patchname])
+		# if patch == [None]:
+		#	 # Default if none is selected - this is wall
+		#	 patchtype = -1 
+		
+
+		return 0
