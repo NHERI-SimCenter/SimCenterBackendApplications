@@ -65,6 +65,9 @@ class of7Uboundary():
 		# Create a utilities object
 		hydroutil = hydroUtils()
 
+		# Number of moving walls
+		numMovWall = 0
+
 		# Get the header text for the U-file
 		utext = self.Uheader()
 
@@ -79,7 +82,9 @@ class of7Uboundary():
 				Utype = -1
 			else:
 				Utype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname]))
-			utext = utext + self.Upatchtext(data,Utype,patchname,fipath)
+				if int(Utype) == 103 or int(Utype) == 104:
+					numMovWall += 1
+			utext = utext + self.Upatchtext(data,Utype,patchname,fipath,numMovWall)
 
 		# Close the outside
 		utext = utext + "}\n\n"
@@ -115,7 +120,7 @@ FoamFile
 		return header
 
 	#############################################################
-	def Upatchtext(self,data,Utype,patchname,fipath):
+	def Upatchtext(self,data,Utype,patchname,fipath,numMovWall):
 		'''
 		Creates the text the velocity boundary condition
 
@@ -172,11 +177,26 @@ FoamFile
 			Utext = Utext + "value\tuniform (0 0 0);\n\t}\n"
 			# Create the files required
 			# Moving wall file
-			self.OSUwavemakerText(data,fipath)
-			# Wavemakermovement dictionary
-			self.of7wavemakerdict(fipath)
-			# Dynamic mesh dictionary
-			self.of7dynamicMeshdict(fipath)
+			# Get the displacement and waterheight file name
+			dispfilename = hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallDisp_"+patchname])
+			if dispfilename != [None]:
+				dispfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallDisp_"+patchname]))
+				dispfilepath = os.path.join(fipath,dispfilename)
+				if os.path.exists(dispfilepath):
+					heightfilename = hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallHeight_"+patchname])
+					if heightfilename != [None]:
+						heightfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallHeight_"+patchname]))
+						heightfilepath = os.path.join(fipath,heightfilename)
+						if not os.path.exists(heightfilepath):
+							heightfilepath = "None"
+					else:
+						heightfilepath = "None"
+					# Wave maker text file
+					self.OSUwavemakerText(fipath,dispfilepath,heightfilepath,numMovWall)
+					# Wavemakermovement dictionary
+					self.of7wavemakerdict(fipath)
+					# Dynamic mesh dictionary
+					self.of7dynamicMeshdict(fipath)
 
 		elif int(Utype) == 104:
 			# Inlet Moving wall (Gen flume)
@@ -185,11 +205,27 @@ FoamFile
 			Utext = Utext + "value\tuniform (0 0 0);\n\t}\n"
 			# Create the files required
 			# Moving wall file
-			# self.GenwavemakerText(data,fipath)
-			# Wavemakermovement dictionary
-			self.of7wavemakerdict(fipath)
-			# Dynamic mesh dictionary
-			self.of7dynamicMeshdict(fipath)
+			# Get the displacement and waterheight file name
+			# # Get the displacement and waterheight file name
+			dispfilename = hydroutil.extract_element_from_json(data, ["Events","MovingWallDisp_"+patchname])
+			if dispfilename != [None]:
+				dispfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWallDisp_"+patchname]))
+				dispfilepath = os.path.join(fipath,dispfilename)
+				if os.path.exists(dispfilepath):
+					heightfilename = hydroutil.extract_element_from_json(data, ["Events","MovingWallHeight_"+patchname])
+					if heightfilename != [None]:
+						heightfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWallHeight_"+patchname]))
+						heightfilepath = os.path.join(fipath,heightfilename)
+						if not os.path.exists(heightfilepath):
+							heightfilepath = "None"
+					else:
+						heightfilepath = "None"
+					# Wave maker text file
+					self.GenwavemakerText(fipath,dispfilepath,heightfilepath,numMovWall)
+					# Wavemakermovement dictionary
+					self.of7wavemakerdict(fipath)
+					# Dynamic mesh dictionary
+					self.of7dynamicMeshdict(fipath)
 
 		elif int(Utype) == 201:
 			# Outlet zero gradient
@@ -273,9 +309,7 @@ FoamFile
 				else:
 					dispfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","OSUMovingWallDisp_" + patchname]))
 				pathF = os.path.join(fipath,dispfilename)
-				if(os.path.exists(pathF)):
-					print('Displacement file exists')
-				else: 
+				if not os.path.exists(pathF):
 					return -1
 
 			elif int(Utype) == 104:
@@ -286,10 +320,12 @@ FoamFile
 				
 				# Check for existing moving wall files
 				dispfilename = hydroutil.extract_element_from_json(data, ["Events","MovingWallDisp_" + patchname])
+				if dispfilename == [None]:
+					return -1
+				else:
+					dispfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MovingWallDisp_" + patchname]))
 				pathF = os.path.join(fipath,dispfilename)
-				if(os.path.exists(pathF)):
-					print('Displacement file exists')
-				else: 
+				if not os.path.exists(pathF):
 					return -1
 
 		# If all checks passes
@@ -348,7 +384,7 @@ FoamFile
 		fileID.close()
 
 	#############################################################
-	def OSUwavemakerText(self,fipath):
+	def OSUwavemakerText(self,fipath,dispfilepath,heightfilepath,numMovWall):
 		'''
 		Creates the wavemaker text file for the OSU moving wall
 
@@ -357,5 +393,154 @@ FoamFile
 			fipath: Path to the dakota.json file location
 		'''
 
-		# Create a utilities object
-		hydroutil = hydroUtils()
+		# Get the file ID
+		filepath = os.path.join(fipath,"constant","wavemakerMovement.txt")
+		fileID = open(filepath, "w")
+
+		# Start writing the file
+		fileID.write('tSmooth\t1.5;\n')
+		fileID.write('genAbs\t0;\n\n')
+
+		# Create the wavemaker movement file
+		# Get the frequency of the wavemaker
+		frequency = 0
+		waterdepth = 0
+		filewm = open(dispfilepath,'r')
+		Lines = filewm.readlines()
+		count = 0
+		for line in Lines:
+			count += 1
+			if count == 37:
+				stra=line.replace('% SampleRate: ','')
+				stra2=stra.replace(' Hz','')
+				frequency = 1/float(stra2)
+				break
+		count = 0
+		for line in Lines:
+			count += 1
+			if count == 61:
+				stra=line.replace('% StillWaterDepth: ','')
+				waterdepth = float(stra)
+				break
+
+		# Count the number of lines
+		countlines = 0
+		with open(dispfilepath) as fdisp:
+			for line2 in fdisp:
+				if line2.strip():
+					countlines += 1
+		countlines = countlines - 72
+
+		# Create the timeseries
+		time = 0
+		fileID.write('timeSeries\t'+str(countlines)+'(\n')
+		for ii in range(countlines):
+			fileID.write(str(time)+'\n')
+			time = time + frequency
+		fileID.write(');\n\n')
+
+		# Create the paddle position
+		fileID.write('paddlePosition 1(\n'+str(countlines)+'(\n')
+		count = 0
+		for line in Lines:
+			count += 1
+			if count > 72:
+				if line != "\n":
+					data = float(line)
+					fileID.write(str(data)+'\n')
+		fileID.write(')\n);\n\n')
+
+		# Write the paddle Eta
+		if heightfilepath != "None":
+			# Write the paddle Eta
+			fileID.write('paddleEta 1(\n'+str(countlines)+'(\n')
+			filewmg = open(heightfilepath,'r')
+			Lines2 = filewmg.readlines()
+			count = 0
+			for line in Lines2:
+				count += 1
+				if count > 72:
+					if line != "\n":
+						data = float(line)+waterdepth
+						fileID.write(str(data)+'\n')
+			fileID.write(')\n);')
+		
+
+	#############################################################
+	def GenwavemakerText(self,fipath,dispfilepath,heightfilepath,numMovWall):
+		'''
+		Creates the wavemaker text file for a general moving wall
+
+		Arguments
+		-----------
+			fipath: Path to the dakota.json file location
+		'''
+
+		# Get the file ID
+		filepath = os.path.join(fipath,"constant","wavemakerMovement.txt")
+		fileID = open(filepath, "w")
+
+		# Start writing the file
+		fileID.write('tSmooth\t1.5;\n')
+		fileID.write('genAbs\t0;\n\n')
+
+		# Create the wavemaker movement file
+		# Get the frequency of the wavemaker
+		filewm = open(dispfilepath,'r') 
+		Lines = filewm.readlines()
+		count = 0
+		for line in Lines:
+			count += 1
+			if count == 1:
+				frequency = float(line)
+				break
+
+		# Count the number of lines
+		countlines = 0
+		with open(dispfilepath) as fdisp:
+			for line2 in fdisp:
+				if line2.strip():
+					countlines += 1
+		countlines = countlines - 1
+
+		# Create the timeseries
+		time = 0
+		fileID.write('timeSeries\t'+str(countlines)+'(\n')
+		for ii in range(countlines):
+			fileID.write(str(time)+'\n')
+			time = time + frequency
+		fileID.write(');\n\n')
+
+		# Create the paddle position
+		fileID.write('paddlePosition 1(\n'+str(countlines)+'(\n')
+		count = 0
+		for line in Lines:
+			count += 1
+			if count > 1:
+				if line != "\n":
+					data = float(line)
+					fileID.write(str(data)+'\n')
+		fileID.write(')\n);\n\n')
+
+		# Get the water depth and paddle eta
+		if heightfilepath != "None":
+			# Get the height
+			filewmg = open(heightfilepath,'r')
+			Lines2 = filewmg.readlines()
+			count = 0
+			for line in Lines2:
+				count += 1
+				if count == 1:
+					waterdepth = float(line)
+					break
+
+			# Get the paddle eta
+			fileID.write('paddleEta 1(\n'+str(countlines)+'(\n')
+			count = 0
+			for line in Lines2:
+				count += 1
+				if count > 1:
+					if line != "\n":
+						data = float(line)+waterdepth
+						fileID.write(str(data)+'\n')
+			fileID.write(')\n);')
