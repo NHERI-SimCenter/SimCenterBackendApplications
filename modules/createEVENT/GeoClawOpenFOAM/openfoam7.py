@@ -42,6 +42,7 @@ from of7Prboundary import of7Prboundary
 from of7PtDboundary import of7PtDboundary
 from of7Materials import of7Materials
 from of7Decomp import of7Decomp
+from of7Solve import of7Solve
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -105,7 +106,7 @@ class openfoam7():
 		# Return completion flag
 		return 0
 
-#############################################################
+	#############################################################
 	def creategeometry(self,data,path):
 		'''
 		Creates the necessary folders for openfoam7
@@ -123,7 +124,7 @@ class openfoam7():
 
 		return 0
 
-#############################################################
+	#############################################################
 	def createmesh(self,data,path):
 		'''
 		Creates the mesh dictionaries for openfoam7
@@ -140,7 +141,33 @@ class openfoam7():
 
 		return 0
 
-#############################################################
+	#############################################################
+	def materials(self,data,path):
+		'''
+		Creates the material files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the transportProperties file
+		Materials = of7Materials()
+		matcode = Materials.matcheck(data)
+		if matcode == -1:
+			return -1
+		else:
+			mattext = Materials.mattext(data)
+			fname = "transportProperties"
+			filepath = os.path.join(path, "constant", fname)
+			matfile = open(filepath, "w")
+			matfile.write(mattext)
+			matfile.close()
+
+		return 0
+
+	#############################################################
 	def boundary(self,data,path):
 		'''
 		Creates the bc condition files for openfoam7
@@ -199,32 +226,6 @@ class openfoam7():
 		return 0
 
 	#############################################################
-	def materials(self,data,path):
-		'''
-		Creates the material files for openfoam7
-
-		Arguments
-		-----------
-			data: all the JSON data
-			path: Path where the geometry files (STL) needs to be created
-		'''
-
-		# Create the transportProperties file
-		Materials = of7Materials()
-		matcode = Materials.matcheck(data)
-		if matcode == -1:
-			return -1
-		else:
-			mattext = Materials.mattext(data)
-			fname = "transportProperties"
-			filepath = os.path.join(path, "constant", fname)
-			matfile = open(filepath, "w")
-			matfile.write(mattext)
-			matfile.close()
-
-		return 0
-
-	#############################################################
 	def parallelize(self,data,path):
 		'''
 		Creates the domain decomposition files for openfoam7
@@ -235,7 +236,7 @@ class openfoam7():
 			path: Path where the geometry files (STL) needs to be created
 		'''
 
-		# Create the transportProperties file
+		# Create the domain decomposition file
 		Decomp = of7Decomp()
 		decomptext = Decomp.decomptext(data)
 		fname = "decomposeParDict"
@@ -243,5 +244,33 @@ class openfoam7():
 		decompfile = open(filepath, "w")
 		decompfile.write(decomptext)
 		decompfile.close()
+
+		return 0
+
+	#############################################################
+	def solve(self,data,path):
+		'''
+		Creates the solver related files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the solver files
+		Solve = of7Solve()
+		# fvSchemes
+		fvschemetext = Solve.fvSchemetext(data)
+		fname = "fvSchemes"
+		filepath = os.path.join(path, "system", fname)
+		fvschemefile = open(filepath,"w")
+		fvschemefile.write(fvschemetext)
+		fvschemefile.close()
+
+		#fvSolutions
+
+		# controlDict
+
 
 		return 0
