@@ -94,7 +94,7 @@ FoamFile
 		# grad 
 		fvSchemetext = fvSchemetext + 'gradSchemes\n{\n\tdefault\tGauss linear;\n}\n'
 
-        # div 
+		# div 
 		fvSchemetext = fvSchemetext + '\ndivSchemes\n{\n\t'
 		fvSchemetext = fvSchemetext + 'div(rhoPhi,U)\tGauss limitedLinearV 1;\n\t'
 		fvSchemetext = fvSchemetext + 'div(U)\tGauss linear;\n\t'
@@ -135,4 +135,214 @@ FoamFile
 
 		return fvSchemetext
 
-	
+	#############################################################
+	def fvSolntext(self,data):
+		'''
+		Creates the necessary text for fvSolution for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Get the simulation type
+		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+		# Get the turbulence model
+		turb = ', '.join(hydroutil.extract_element_from_json(data, ["Events","TurbulenceModel"]))
+
+		# Get the header text for the U-file
+		fvSolntext = self.solverheader("fvSolution")
+
+		# Other data
+		fvSolntext = fvSolntext + 'solvers\n{\n\t'
+
+		# solvers: alpha
+		fvSolntext = fvSolntext + '"alpha.water.*"\n\t{\n\t\t'
+		fvSolntext = fvSolntext + 'nAlphaCorr\t1;\n\t\t'
+		fvSolntext = fvSolntext + 'nAlphaSubCycles\t2;\n\t\t'
+		fvSolntext = fvSolntext + 'alphaOuterCorrectors\tyes;\n\t\t'
+		fvSolntext = fvSolntext + 'cAlpha\t1;\n\t\t'
+		fvSolntext = fvSolntext + 'MULESCorr\tno;\n\t\t'
+		fvSolntext = fvSolntext + 'nLimiterIter\t3;\n\t\t'
+		fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
+		fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
+		fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+
+		# solvers: pcorr
+		fvSolntext = fvSolntext + '"pcorr.*"\n\t{\n\t\t'
+		fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'
+		fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'
+		fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+
+		# solvers: pcorrFinal
+		fvSolntext = fvSolntext + 'pcorrFinal\n\t{\n\t\t'
+		fvSolntext = fvSolntext + '$pcorr;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+
+		# solvers: p_rgh
+		fvSolntext = fvSolntext + 'p_rgh\n\t{\n\t\t'
+		fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'
+		fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'
+		fvSolntext = fvSolntext + 'tolerance\t1e-07;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0.05;\n\t}\n\n\t'
+
+		# solvers: p_rghFinal
+		fvSolntext = fvSolntext + 'p_rghFinal\n\t{\n\t\t'
+		fvSolntext = fvSolntext + '$p_rgh;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'
+
+		# solvers: U
+		fvSolntext = fvSolntext + 'U\n\t{\n\t\t'
+		fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
+		fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
+		fvSolntext = fvSolntext + 'tolerance\t1e-06;\n\t\t'
+		fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+
+		# Turbulece variables (if exist)
+		if (int(turb) == 1) or (int(turb) == 2):
+			fvSolntext = fvSolntext + '\n\t'
+			fvSolntext = fvSolntext + '"(k|epsilon|omega|B|nuTilda).*"\n\t{\n\t\t'
+			fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'
+			fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'
+			fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'
+			fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+
+		# solvers: cellDisplacement (for flume)
+		if int(simtype) == 4:
+			# solvers: cellDisplacement (for flume)
+			fvSolntext = fvSolntext + '\n\t'
+			fvSolntext = fvSolntext + 'cellDisplacement\n\t{\n\t\t'
+			fvSolntext = fvSolntext + 'solver\tGAMG;\n\t\t'
+			fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'
+			fvSolntext = fvSolntext + 'relTol\t0;\n\t\t'
+			fvSolntext = fvSolntext + 'smoother\tGaussSeidel;\n\t\t'
+			fvSolntext = fvSolntext + 'cacheAgglomeration\tfalse;\n\t\t'
+			fvSolntext = fvSolntext + 'nCellsInCoarsestLevel\t10;\n\t\t'
+			fvSolntext = fvSolntext + 'agglomerator\tfaceAreaPair;\n\t\t'
+			fvSolntext = fvSolntext + 'mergeLevels\t1;\n\t}\n\n\t'
+			
+			# solvers: cellDisplacementFinal(for flume)
+			fvSolntext = fvSolntext + 'cellDisplacementFinal\n\t{\n\t\t'
+			fvSolntext = fvSolntext + '$cellDisplacement;\n\t\t'
+			fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n'
+			
+		# Close solvers
+		fvSolntext = fvSolntext + '}\n\n'
+
+		# PIMPLE
+		fvSolntext = fvSolntext + 'PIMPLE\n{\n\t'
+		fvSolntext = fvSolntext + 'momentumPredictor\tno;\n\t'
+		fvSolntext = fvSolntext + 'nOuterCorrectors\t1;\n\t'
+		fvSolntext = fvSolntext + 'nCorrectors\t3;\n\t'
+		fvSolntext = fvSolntext + 'nNonOrthogonalCorrectors\t0;\n}\n\n'
+
+		# Relaxation factors
+		fvSolntext = fvSolntext + 'relaxationFactors\n{\n\t'
+		fvSolntext = fvSolntext + 'fields\n\t{\n\t}\n\t' 
+		fvSolntext = fvSolntext + 'equations\n\t{\n\t\t".*"\t1;\n\t}\n}'
+
+		return fvSolntext
+
+	#############################################################
+	def cdicttext(self,data):
+		'''
+		Creates the necessary text for controlDict for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Get the header text for the U-file
+		cdicttext = self.solverheader("controlDict")
+
+		# Get the simulation type: Solver
+		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+		if int(simtype) == 4:
+			cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
+		else:
+			cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
+
+		# Check restart situation and give start time
+		restart = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Restart"]))
+		if restart == "Yes":
+			cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
+		elif restart == "No":
+			# Start time
+			startT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","StartTime"]))
+			cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
+			cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
+
+		# End time
+		endT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","EndTime"]))
+		cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
+		cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
+
+		# Time interval (modified file needs to be made later)
+		cdicttext = cdicttext + 'deltaT \t 1;\n\n'
+
+		# Write control
+		cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
+
+		# Write interval (modified file needs to be made later)
+		cdicttext = cdicttext + 'writeInterval \t 1;\n\n'
+
+		# All others	
+		cdicttext = cdicttext + 'purgeWrite \t 0;\n\n'
+		cdicttext = cdicttext + 'writeFormat \t ascii;\n\n'
+		cdicttext = cdicttext + 'writePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'writeCompression \t uncompressed;\n\n'
+		cdicttext = cdicttext + 'timeFormat \t general;\n\n'
+		cdicttext = cdicttext + 'timePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'runTimeModifiable \t yes;\n\n'
+		cdicttext = cdicttext + 'adjustTimeStep \t yes;\n\n'
+		cdicttext = cdicttext + 'maxCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
+
+		return cdicttext
+
+	#############################################################
+	def cdictcheck(self,data):
+		'''
+		Creates the check for controlDict for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Start time
+		startT = hydroutil.extract_element_from_json(data, ["Events","StartTime"])
+		if startT == [None]:
+			return -1
+		
+		# End time
+		endT = hydroutil.extract_element_from_json(data, ["Events","EndTime"])
+		if endT == [None]:
+			return -1
+
+		# deltaT
+		deltaT = hydroutil.extract_element_from_json(data, ["Events","TimeInterval"])
+		if deltaT == [None]:
+			return -1
+
+		# WriteT
+		writeT = hydroutil.extract_element_from_json(data, ["Events","WriteInterval"])
+		if writeT == [None]:
+			return -1
+
+		# Return 0 if all available
+		return 0

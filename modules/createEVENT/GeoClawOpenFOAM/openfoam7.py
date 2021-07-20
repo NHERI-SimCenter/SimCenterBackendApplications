@@ -269,8 +269,23 @@ class openfoam7():
 		fvschemefile.close()
 
 		#fvSolutions
+		fvsolntext = Solve.fvSolntext(data)
+		fname = "fvSolution"
+		filepath = os.path.join(path, "system", fname)
+		fvsolnfile = open(filepath,"w")
+		fvsolnfile.write(fvsolntext)
+		fvsolnfile.close()
 
 		# controlDict
-
+		ecode = Solve.cdictcheck(data)
+		if ecode == -1:
+			return -1
+		else:
+			cdicttext = Solve.cdicttext(data)
+			fname = "controlDict"
+			filepath = os.path.join(path, "system", fname)
+			cdictfile = open(filepath,"w")
+			cdictfile.write(cdicttext)
+			cdictfile.close()
 
 		return 0
