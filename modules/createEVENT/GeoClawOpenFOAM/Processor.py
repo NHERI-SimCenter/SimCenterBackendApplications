@@ -184,8 +184,22 @@ def main():
 		hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 		
 	# Material
+	ecode = solver.materials(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with material parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Turbulence
+	# ecode = solver.turbulence(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with turbulence parameters in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with turbulence parameters in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for turbulence definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Solver
 

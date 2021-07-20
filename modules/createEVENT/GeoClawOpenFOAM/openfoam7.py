@@ -39,6 +39,8 @@ import shutil
 from hydroUtils import hydroUtils
 from of7Uboundary import of7Uboundary
 from of7Prboundary import of7Prboundary
+from of7PtDboundary import of7PtDboundary
+from of7Materials import of7Materials
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -174,7 +176,6 @@ class openfoam7():
 		# Write the p_rgh-file in 0.org
 		Prboundary = of7Prboundary()
 		prtext = Prboundary.Prtext(data,patches)
-		# print(prtext)
 		fname = "p_rgh"
 		filepath = os.path.join(path, "0.org", fname)
 		prfile = open(filepath, "w")
@@ -183,13 +184,41 @@ class openfoam7():
 
 		# Loop over all the velocity type to see if any 
 		# has a moving wall. If so initialize the 
-		# ptDisptext = ''
+		# pointDisplacement file
+		PtDboundary = of7PtDboundary()
+		ptDcode = PtDboundary.PtDcheck(data,patches)
+		if ptDcode == 1:
+			pdtext = PtDboundary.PtDtext(data,path,patches)
+			fname = "pointDisplacement"
+			filepath = os.path.join(path, "0.org", fname)
+			ptDfile = open(filepath, "w")
+			ptDfile.write(pdtext)
+			ptDfile.close()
 
-		# Check for velocity type of entry
-		# patch = hydroutil.extract_element_from_json(data, ["Events",bcfield+"Type_"+patchname])
-		# if patch == [None]:
-		#	 # Default if none is selected - this is wall
-		#	 patchtype = -1 
-		
+		return 0
+
+	#############################################################
+	def materials(self,data,path):
+		'''
+		Creates the material files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the transportProperties file
+		Materials = of7Materials()
+		matcode = Materials.matcheck(data)
+		if matcode == -1:
+			return -1
+		else:
+			mattext = Materials.mattext(data)
+			fname = "transportProperties"
+			filepath = os.path.join(path, "constant", fname)
+			matfile = open(filepath, "w")
+			matfile.write(mattext)
+			matfile.close()
 
 		return 0
