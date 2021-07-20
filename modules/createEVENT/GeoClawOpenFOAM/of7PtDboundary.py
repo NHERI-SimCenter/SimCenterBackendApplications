@@ -129,8 +129,6 @@ class of7PtDboundary():
 			patches: List of boundary patches
 		'''
 
-		print("Entered here")
-
 		# Create a utilities object
 		hydroutil = hydroUtils()
 
