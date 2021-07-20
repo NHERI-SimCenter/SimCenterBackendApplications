@@ -132,6 +132,12 @@ def main():
 	logID += 1
 	hydroutil.flog.write('%d (%s): This log has started.\n' % (logID,datetime.datetime.now()))
 
+	# Get the simulation type
+	simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+	if int(simtype) == 0:
+		hydroutil.flog.write('%d (%s): No simulation type selected in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('No simulation type selected in EVT.')
+
 	# Get the solver type from the dakota file
 	hydrosolver = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SolverChoice"]))
 		
