@@ -225,7 +225,14 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Files required for solver successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Post-processing
+	# Other files
+	ecode = solver.others(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with creating auxillary files in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with creating auxillary files in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Create run script
 

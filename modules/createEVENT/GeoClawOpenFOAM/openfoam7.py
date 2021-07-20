@@ -43,6 +43,7 @@ from of7PtDboundary import of7PtDboundary
 from of7Materials import of7Materials
 from of7Decomp import of7Decomp
 from of7Solve import of7Solve
+from of7Others import of7Others
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -287,5 +288,28 @@ class openfoam7():
 			cdictfile = open(filepath,"w")
 			cdictfile.write(cdicttext)
 			cdictfile.close()
+
+		return 0
+
+	#############################################################
+	def others(self,data,path):
+		'''
+		Creates the other auxillary files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the auxillary files
+		Others = of7Others()
+		# g-file
+		gfiletext = Others.gfiletext(data)
+		fname = "g"
+		filepath = os.path.join(path, "constant", fname)
+		gfile = open(filepath,"w")
+		gfile.write(gfiletext)
+		gfile.close()
 
 		return 0
