@@ -188,6 +188,13 @@ def main():
 		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Create initial condition
+	ecode = solver.initial(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Issues with definition of initial condition in EVT')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Create boundary condition
 	ecode = solver.boundary(data,fipath)
@@ -235,6 +242,7 @@ def main():
 		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# Create run script
+	solver.scripts(args,fipath)
 
 	# Cleanup script
 

@@ -37,10 +37,11 @@ import shutil
 
 # Other custom modules
 from hydroUtils import hydroUtils
+from of7Materials import of7Materials
+from of7Initial import of7Initial
 from of7Uboundary import of7Uboundary
 from of7Prboundary import of7Prboundary
 from of7PtDboundary import of7PtDboundary
-from of7Materials import of7Materials
 from of7Decomp import of7Decomp
 from of7Solve import of7Solve
 from of7Others import of7Others
@@ -165,6 +166,32 @@ class openfoam7():
 			matfile = open(filepath, "w")
 			matfile.write(mattext)
 			matfile.close()
+
+		return 0
+
+	#############################################################
+	def initial(self,data,path):
+		'''
+		Creates the initial condition files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files dakota.json lies
+		'''
+
+		# Create the setFields file
+		Inicond = of7Initial()
+		initcode = Inicond.alphacheck(data,path)
+		if initcode == -1:
+			return -1
+		else:
+			alphatext = Inicond.alphatext(data,path)
+			fname = "setFieldsDict"
+			filepath = os.path.join(path, "system", fname)
+			alphafile = open(filepath, "w")
+			alphafile.write(alphatext)
+			alphafile.close()
 
 		return 0
 
@@ -311,5 +338,28 @@ class openfoam7():
 		gfile = open(filepath,"w")
 		gfile.write(gfiletext)
 		gfile.close()
+
+		return 0
+
+	#############################################################
+	def scripts(self,args,path):
+		'''
+		Creates the scripts required to run for openfoam7
+
+		Arguments
+		-----------
+			args: User input arguments
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the auxillary files
+		hpc = TACCdesignsafe()
+		# # g-file
+		# gfiletext = Others.gfiletext(data)
+		# fname = "g"
+		# filepath = os.path.join(path, "constant", fname)
+		# gfile = open(filepath,"w")
+		# gfile.write(gfiletext)
+		# gfile.close()
 
 		return 0
