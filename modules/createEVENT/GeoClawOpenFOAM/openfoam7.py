@@ -41,6 +41,7 @@ from of7Uboundary import of7Uboundary
 from of7Prboundary import of7Prboundary
 from of7PtDboundary import of7PtDboundary
 from of7Materials import of7Materials
+from of7Decomp import of7Decomp
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -220,5 +221,27 @@ class openfoam7():
 			matfile = open(filepath, "w")
 			matfile.write(mattext)
 			matfile.close()
+
+		return 0
+
+	#############################################################
+	def parallelize(self,data,path):
+		'''
+		Creates the domain decomposition files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the transportProperties file
+		Decomp = of7Decomp()
+		decomptext = Decomp.decomptext(data)
+		fname = "decomposeParDict"
+		filepath = os.path.join(path, "system", fname)
+		decompfile = open(filepath, "w")
+		decompfile.write(decomptext)
+		decompfile.close()
 
 		return 0
