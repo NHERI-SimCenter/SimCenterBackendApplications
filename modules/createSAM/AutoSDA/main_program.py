@@ -109,11 +109,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
 
-    # Number of dimensions
-    root_SAM['ndm'] = '2'
+    # Number of dimensions (KZ & AZ: changed to integer)
+    root_SAM['ndm'] = 2
 
-    # Number of degrees of freedom at each node
-    root_SAM['ndf'] = '3'
+    # Number of degrees of freedom at each node (KZ & AZ: changed to integer)
+    root_SAM['ndf'] = 3
 
     # Get the number of stories
     numStories = rootSIM['numStories']
@@ -142,6 +142,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
         node_entry['cline'] = 'response'
         node_entry['floor'] = '{}'.format(i-1)
         node_map.append(node_entry)
+
+        ## KZ & AZ: Add centroid for roof drift
+        node_entry_c = {}
+        node_entry_c['node'] = nodeTagBot
+        node_entry_c['cline'] = 'centroid'
+        node_entry_c['floor'] = '{}'.format(i-1)
+        node_map.append(node_entry_c)
 
     root_SAM['NodeMapping'] = node_map
     root_SAM['numStory'] = numStories
