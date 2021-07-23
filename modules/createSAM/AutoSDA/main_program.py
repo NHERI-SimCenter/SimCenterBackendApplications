@@ -130,8 +130,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
             # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)
             nodeTagBot = 1010 + 100*i
         else:
-            # Node tag at upper stories (1, i, 1, 1)
-            nodeTagBot = 1011 + 100*i
+            # KZ & AZ: minor patch for story numbers greater than 10
+            if i > 9:
+                nodeTagBot = 10011 + 100*i
+            else:
+                nodeTagBot = 1011 + 100*i
 
         # Create the node and add it to the node mapping array
         node_entry = {}
