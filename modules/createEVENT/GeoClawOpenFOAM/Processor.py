@@ -147,7 +147,6 @@ def main():
 	# default - OpenFoam7 (+ olaFlow)
 	# Create related object
 	if int(hydrosolver) == 0:
-		# OpenFoam 7 + olaFlow
 		solver = openfoam7()
 
 	elif int(hydrosolver) == 1:
@@ -163,49 +162,57 @@ def main():
 	# Create folders
 	ecode = solver.createfolder(data,fipath)
 	logID += 1
-	if ecode == 0:
-		hydroutil.flog.write('%d (%s): Folders required for EVT solver created.\n' % (logID,datetime.datetime.now()))
-	else:
+	if ecode < 0:
 		hydroutil.flog.write('%d (%s): Error creating folders required for EVT solver.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error creating folders required for EVT solver.')
+	else:
+		hydroutil.flog.write('%d (%s): Folders required for EVT solver created.\n' % (logID,datetime.datetime.now()))
 
-	# Create Geometry (only is hydro mesher is used)
-	mesher = hydroutil.extract_element_from_json(data, ["Events","MeshType"])
-	if int(mesher[0]) == 0:
-		print("Creating geometry and mesh")
-		# Create the geometry
-		#ecode = solver.geometry(data,fipath)
-
-		# Create mesh
-		#ecode = solver.meshing(data,fipath)
-
-	# Material
-	ecode = solver.materials(data,fipath)
+	# Create Geometry 
+	ecode = solver.creategeometry(data,fipath)
 	logID += 1
 	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Error with material parameters in EVT.')
+		hydroutil.flog.write('%d (%s): Error creating geometry required for EVT solver.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error creating geometry required for EVT solver')
 	else:
-		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
-
-	# Create initial condition
-	ecode = solver.initial(data,fipath)
-	logID += 1
-	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Issues with definition of initial condition in EVT')
-	else:
-		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
-
-	# Create boundary condition
-	ecode = solver.boundary(data,fipath)
-	logID += 1
-	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with boundary condition definition in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Issues with definition of boundary condition in EVT')
-	else:
-		hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+		hydroutil.flog.write('%d (%s): Geometry required for EVT solver created.\n' % (logID,datetime.datetime.now()))
 		
-	# Turbulence
+	# # Create meshing - to complete
+	# ecode = solver.createmesh(data,fipath)
+	# logID += 1
+	# if ecode == 0:
+	# 	hydroutil.flog.write('%d (%s): Files required for EVT meshing created.\n' % (logID,datetime.datetime.now()))
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Error in Files required for EVT meshing.\n' % (logID,datetime.datetime.now()))
+
+	# # Material
+	# ecode = solver.materials(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with material parameters in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
+
+	# # Create initial condition
+	# ecode = solver.initial(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Issues with definition of initial condition in EVT')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+
+	# # Create boundary condition
+	# ecode = solver.boundary(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with boundary condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Issues with definition of boundary condition in EVT')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+		
+	# Turbulence-TO DO
 	# ecode = solver.turbulence(data,fipath)
 	# logID += 1
 	# if ecode < 0:
@@ -214,38 +221,52 @@ def main():
 	# else:
 	# 	hydroutil.flog.write('%d (%s): Files required for turbulence definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Parallelization
-	ecode = solver.parallelize(data,fipath)
-	logID += 1
-	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with parallelization parameters in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Error with parallelization parameters in EVT.')
-	else:
-		hydroutil.flog.write('%d (%s): Files required for parallelization successfully created.\n' % (logID,datetime.datetime.now()))
+	# # Parallelization
+	# ecode = solver.parallelize(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with parallelization parameters in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with parallelization parameters in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for parallelization successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Solver settings
-	ecode = solver.solve(data,fipath)
-	logID += 1
-	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with solver parameters in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Error with solver parameters in EVT.')
-	else:
-		hydroutil.flog.write('%d (%s): Files required for solver successfully created.\n' % (logID,datetime.datetime.now()))
+	# # Solver settings
+	# ecode = solver.solve(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with solver parameters in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with solver parameters in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Files required for solver successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Other files
-	ecode = solver.others(data,fipath)
-	logID += 1
-	if ecode < 0:
-		hydroutil.flog.write('%d (%s): Error with creating auxillary files in EVT.\n' % (logID,datetime.datetime.now()))
-		sys.exit('Error with creating auxillary files in EVT.')
-	else:
-		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
+	# # Other files
+	# ecode = solver.others(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with creating auxillary files in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with creating auxillary files in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Create run script
-	solver.scripts(args,fipath)
+	# # Event post processing - to complete
+	# ecode = solver.postprocessing(data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with creating postprocessing files in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with creating postprocessing files in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Postprocessing files required for EVT successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# Cleanup script
+	# # Create all scripts - to complete
+	# ecode = solver.scripts(args,data,fipath)
+	# logID += 1
+	# if ecode < 0:
+	# 	hydroutil.flog.write('%d (%s): Error with creating solver scripts files in EVT.\n' % (logID,datetime.datetime.now()))
+	# 	sys.exit('Error with creating solver scripts files in EVT.')
+	# else:
+	# 	hydroutil.flog.write('%d (%s): Solver scripts successfully created.\n' % (logID,datetime.datetime.now()))
 
+	
 
 ####################################################################
 # Primary function call
