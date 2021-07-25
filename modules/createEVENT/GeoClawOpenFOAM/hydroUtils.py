@@ -191,3 +191,33 @@ FoamFile
 		filepath = os.path.join(fipath, fname)
 		print(filepath)
 		self.flog = open(filepath, "w")
+
+	#############################################################
+	def getlist(self,data):
+		'''
+		Used to get the float from a list of negative string
+
+		Arguments
+		-----------
+			userlist: Name of the project as given by the user
+
+		'''
+
+		# results = []
+
+		# for line in data: 
+		# 	entry = [] 
+		# 	for num in line.split(' '): 
+		# 		if num.replace('-', '').strip().isdigit(): 
+		# 				entry.append(int(num)) 
+		# 		else: 
+		# 			try: 
+		# 					entry.append(float(num)) 
+		# 			except Exception: 
+		# 					pass 
+		# 	results.append(entry) 
+
+		data = data.replace(',',' ')
+		results = [float(n) for n in data.split()]
+
+		return results
