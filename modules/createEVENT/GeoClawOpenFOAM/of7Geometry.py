@@ -33,6 +33,7 @@
 ####################################################################
 # Standard python modules
 import os
+import numpy as np 
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -244,3 +245,54 @@ class of7Geometry():
 					return -1
 	
 		return 0
+
+	#############################################################
+	def scripts(self,data):
+		'''
+		Add to caserun.sh
+
+		Arguments
+		-----------
+			NONE
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Get the mesher
+		mesher = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MeshType"]))
+
+		# Combine STL files for Hydro mesh or using mesh dict
+		if int(mesher[0]) == 0 or int(mesher[0]) == 2:
+			# Get building flag from temp-geometry file
+			geofile = 'temp_geometry.txt'
+			data_geoext = np.genfromtxt(geofile, dtype=(float))
+			flag = int(data_geoext[6])
+
+			# Join all paths
+			entryf = os.path.join('constant','triSurface' , 'Entry.stl')
+			exitf = os.path.join('constant' , 'triSurface' , 'Exit.stl')
+			topf = os.path.join('constant' , 'triSurface' , 'Top.stl')
+			bottomf = os.path.join('constant' , 'triSurface' , 'Bottom.stl')
+			leftf = os.path.join('constant' , 'triSurface' , 'Left.stl')
+			rightf = os.path.join('constant' , 'triSurface' , 'Right.stl')
+			buildingf = os.path.join('constant' , 'triSurface' , 'Building.stl')
+			otherbuildingf = os.path.join('constant' , 'triSurface' , 'OtherBuilding.stl')
+			all01 = 'cat '+ entryf + ' ' + exitf + ' ' + topf + ' ' + bottomf + ' ' + leftf + ' ' + rightf 
+			full = os.path.join('constant' , 'triSurface' , 'Full.stl')
+
+			print(entryf)
+
+			caseruntext = 'echo Combining STL files for usage...\n'
+			if flag == 0:
+				caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'
+			elif flag == 1:
+				caseruntext = caseruntext + all01 + ' ' + buildingf + ' > ' + full + '\n\n'
+			elif flag == 2:
+				caseruntext = caseruntext + all01 + ' ' + buildingf + ' ' + otherbuildingf + ' > ' + full + '\n\n'
+			elif flag == 3:
+				caseruntext = caseruntext + all01 + ' ' + otherbuildingf + ' > ' + full + '\n\n'			
+			# Write to caserun file
+			scriptfile = open('caserun.sh',"a")
+			scriptfile.write(caseruntext)
+			scriptfile.close()
