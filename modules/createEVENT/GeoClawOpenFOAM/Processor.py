@@ -159,8 +159,8 @@ def main():
 		solver = openfoam7()
 
 	# Call the important routines
-	# Create folders
-	ecode = solver.createfolder(data,fipath)
+	# Create folders and files
+	ecode = solver.createfolder(data,fipath,args)
 	logID += 1
 	if ecode < 0:
 		hydroutil.flog.write('%d (%s): Error creating folders required for EVT solver.\n' % (logID,datetime.datetime.now()))
