@@ -269,6 +269,15 @@ class of7Geometry():
 			data_geoext = np.genfromtxt(geofile, dtype=(float))
 			flag = int(data_geoext[6])
 
+			# If translate file exists, use it
+			if os.path.exists('translate.sh'):
+				caseruntext = 'echo Translating building STL files...\n'
+				caseruntext = caseruntext + 'chmod +x translate.sh\n'
+				caseruntext = caseruntext + './translate.sh\n\n'
+				caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
+			else:
+				caseruntext = 'echo Combining STL files for usage...\n'
+
 			# Join all paths
 			entryf = os.path.join('constant','triSurface' , 'Entry.stl')
 			exitf = os.path.join('constant' , 'triSurface' , 'Exit.stl')
@@ -281,7 +290,7 @@ class of7Geometry():
 			all01 = 'cat '+ entryf + ' ' + exitf + ' ' + topf + ' ' + bottomf + ' ' + leftf + ' ' + rightf 
 			full = os.path.join('constant' , 'triSurface' , 'Full.stl')
 
-			caseruntext = 'echo Combining STL files for usage...\n'
+			# For different building cases
 			if flag == 0:
 				caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'
 			elif flag == 1:

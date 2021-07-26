@@ -101,25 +101,44 @@ class of7Building():
 					if int(buildtype) == -2 or int(buildtype) == -1:
 						numbuildres += 1
 						# Check GI
+						depth = hydroutil.extract_element_from_json(data, ["GeneralInformation","depth"])
+						if str(depth[0]) == '[None]':
+							return -1
+
+						width = hydroutil.extract_element_from_json(data, ["GeneralInformation","width"])
+						if str(width[0]) == '[None]':
+							return -1
+
+						height = hydroutil.extract_element_from_json(data, ["GeneralInformation","height"])
+						if str(height[0]) == '[None]':
+							return -1
+
+						# xbuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","xbuild"])
+						# if str(xbuild[0]) == '[None]':
+						# 	return -1
+
+						# ybuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","ybuild"])
+						# if str(ybuild[0]) == '[None]':
+						# 	return -1
 						geninfo = hydroutil.extract_element_from_json(data, ["GeneralInformation"])
 						geninfo = str(geninfo[0])
-						depth = geninfo.partition("'depth': ")[2].partition(", 'height':")[0]
-						width = geninfo.partition("'width': ")[2].partition("}")[0]
-						height = geninfo.partition("'height': ")[2].partition(", 'location':")[0]
+						# depth = geninfo.partition("'depth': ")[2].partition(", 'height':")[0]
+						# width = geninfo.partition("'width': ")[2].partition("}")[0]
+						# height = geninfo.partition("'height': ")[2].partition(", 'location':")[0]
 						xbuild = geninfo.partition("'location': {'latitude': ")[1].partition(", 'longitude':")[0]
 						ybuild = geninfo.partition("'longitude': ")[2].partition("},")[0]
-						if not depth:
-							return -1
-						# else:
-						# 	depth = float(depth)
-						if not width:
-							return -1
-						# else:
-						# 	width = float(width)
-						if not height:
-							return -1
-						# else:
-						# 	height = float(height)
+						# if not depth:
+						# 	return -1
+						# # else:
+						# # 	depth = float(depth)
+						# if not width:
+						# 	return -1
+						# # else:
+						# # 	width = float(width)
+						# if not height:
+						# 	return -1
+						# # else:
+						# # 	height = float(height)
 						if not xbuild:
 							return -1
 						# else:
@@ -291,11 +310,17 @@ class of7Building():
 		# Get GI
 		geninfo = hydroutil.extract_element_from_json(data, ["GeneralInformation"])
 		geninfo = str(geninfo[0])
-		depth = float(geninfo.partition("'depth': ")[2].partition(", 'height':")[0])
-		width = float(geninfo.partition("'width': ")[2].partition("}")[0])
-		height = float(geninfo.partition("'height': ")[2].partition(", 'location':")[0])
+		# depth = float(geninfo.partition("'depth': ")[2].partition(", 'height':")[0])
+		# width = float(geninfo.partition("'width': ")[2].partition("}")[0])
+		# height = float(geninfo.partition("'height': ")[2].partition(", 'location':")[0])
 		xbuild = float(geninfo.partition("'location': {'latitude': ")[2].partition(", 'longitude':")[0])
 		ybuild = float(geninfo.partition("'longitude': ")[2].partition("},")[0])
+		depth = hydroutil.extract_element_from_json(data, ["GeneralInformation","depth"])
+		depth = int(depth[0])
+		width = hydroutil.extract_element_from_json(data, ["GeneralInformation","width"])
+		width = int(width[0])
+		height = hydroutil.extract_element_from_json(data, ["GeneralInformation","height"])
+		height = int(height[0])
 
 		# Scale the STL model
 		mesh.points[:,0] = mesh.points[:,0]*depth
