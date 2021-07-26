@@ -34,6 +34,7 @@
 # Standard python modules
 import os
 import numpy as np
+import math
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -120,7 +121,7 @@ FoamFile
 		return header
 
 	#############################################################
-	def bmeshtext(self):
+	def bmeshtext(self,data):
 		'''
 		Creates the necessary files for blockMeshDict for openfoam7
 
@@ -132,6 +133,16 @@ FoamFile
 		# Read the geometry data file
 		data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
+		# Create a utilities object
+		hydroutil = hydroUtils()
+		meshsize = ''.join(hydroutil.extract_element_from_json(data, ["Events","MeshSize"]))
+
+		# Get the mesh sizes
+		nx = 100*int(meshsize)
+		if( abs(data_geoext[1] - data_geoext[0]) > 0.000001):
+			ny = math.ceil(5*nx*((data_geoext[3]-data_geoext[2])/(data_geoext[1]-data_geoext[0])))
+			nz = math.ceil(5*nx*((data_geoext[5]-data_geoext[4])/(data_geoext[1]-data_geoext[0])))
+
 		# Get the header text for the blockMeshDict
 		bmeshtext = self.meshheader('blockMeshDict')
 
@@ -139,6 +150,7 @@ FoamFile
 		bmeshtext = bmeshtext + 'convertToMeters\t1;\n\n'
 
 		# Add vertices
+		bmeshtext = bmeshtext + 'vertices\n(\n\t'
 		bmeshtext = bmeshtext+'('+str(data_geoext[0])+'\t'+str(data_geoext[2])+'\t'+ str(data_geoext[4])+')\n\t'
 		bmeshtext = bmeshtext+'('+str(data_geoext[1])+'\t'+str(data_geoext[2])+'\t'+ str(data_geoext[4])+')\n\t'
 		bmeshtext = bmeshtext+'('+str(data_geoext[1])+'\t'+str(data_geoext[3])+'\t'+ str(data_geoext[4])+')\n\t'
@@ -150,7 +162,7 @@ FoamFile
 
 		# Add blocks
 		bmeshtext = bmeshtext + 'blocks\n(\n\t'
-		bmeshtext = bmeshtext + 'hex (0 1 2 3 4 5 6 7) ($nx $ny $nz) simpleGrading (1 1 1)\n);\n\n'
+		bmeshtext = bmeshtext + 'hex (0 1 2 3 4 5 6 7) (' + str(nx) + '\t' + str(ny) + '\t' + str(nz) + ') simpleGrading (1 1 1)\n);\n\n'
 
 		# Add edges
 		bmeshtext = bmeshtext + 'edges\n(\n);\n\n'
@@ -208,7 +220,7 @@ FoamFile
 		return sfetext
 
 	#############################################################
-	def shmtext(self):
+	def shmtext(self,data):
 		'''
 		Creates the necessary files for new controldict for post-processing for openfoam7
 
@@ -220,6 +232,10 @@ FoamFile
 		# Read the geometry data file
 		data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
+		# Create a utilities object
+		hydroutil = hydroUtils()
+		meshsize = ''.join(hydroutil.extract_element_from_json(data, ["Events","MeshSize"]))
+
 		# Get the header text for the blockMeshDict
 		shmtext = self.meshheader('snappyHexMeshDict')
 
@@ -227,10 +243,11 @@ FoamFile
 		shmtext = shmtext + 'castellatedMesh\ttrue;\n\n'
 		shmtext = shmtext + 'snap\ttrue;\n\n'
 		shmtext = shmtext + 'addLayers\tfalse;\n\n'
+
 		# Geometry. Definition of all surfaces. 
 		shmtext = shmtext + 'geometry\n{\n\t'
-		shmtext = shmtext + 'Front.stl {type triSurfaceMesh; name Front;}\n\t'
-		shmtext = shmtext + 'Back.stl {type triSurfaceMesh; name Back;}\n\t'
+		shmtext = shmtext + 'Entry.stl {type triSurfaceMesh; name Entry;}\n\t'
+		shmtext = shmtext + 'Exit.stl {type triSurfaceMesh; name Exit;}\n\t'
 		shmtext = shmtext + 'Top.stl {type triSurfaceMesh; name Top;}\n\t'
 		shmtext = shmtext + 'Bottom.stl {type triSurfaceMesh; name Bottom;}\n\t'
 		shmtext = shmtext + 'Left.stl {type triSurfaceMesh; name Left;}\n\t'
@@ -246,17 +263,19 @@ FoamFile
 		shmtext = shmtext + '};\n\n'
 
 		# Castellated mesh generation
+		maxLocalCells = int(meshsize)*2000000
+		maxGlobalCells = int(meshsize)*10000000
 		shmtext = shmtext + 'castellatedMeshControls\n{\n\t'
-		shmtext = shmtext + 'maxLocalCells\t$maxLocalCells;\n\t'
-		shmtext = shmtext + 'maxGlobalCells\t$maxGlobalCells;\n\t'
+		shmtext = shmtext + 'maxLocalCells\t' + str(maxLocalCells) + ';\n\t'
+		shmtext = shmtext + 'maxGlobalCells\t' + str(maxGlobalCells) + ';\n\t'
 		shmtext = shmtext + 'minRefinementCells\t10;\n\t'
 		shmtext = shmtext + 'maxLoadUnbalance\t0.1;\n\t'
 		shmtext = shmtext + 'nCellsBetweenLevels\t1;\n\n'
 
 		# Explicit feature edge refinement
 		shmtext = shmtext + '\tfeatures\n\t(\n\t\t'
-		shmtext = shmtext + '{file "Front.eMesh"; level 3;}\n\t\t'
-		shmtext = shmtext + '{file "Back.eMesh"; level 3;}\n\t\t'
+		shmtext = shmtext + '{file "Entry.eMesh"; level 3;}\n\t\t'
+		shmtext = shmtext + '{file "Exit.eMesh"; level 3;}\n\t\t'
 		shmtext = shmtext + '{file "Top.eMesh"; level 3;}\n\t\t'
 		shmtext = shmtext + '{file "Bottom.eMesh"; level 3;}\n\t\t'
 		shmtext = shmtext + '{file "Left.eMesh"; level 3;}\n\t\t'
@@ -272,8 +291,8 @@ FoamFile
 
 		# Surface based refinement
 		shmtext = shmtext + '\trefinementSurfaces\n\t{\n\t\t'
-		shmtext = shmtext + 'Front {level (0 0);}\n\t\t'
-		shmtext = shmtext + 'Back {level (0 0);}\n\t\t'
+		shmtext = shmtext + 'Entry {level (0 0);}\n\t\t'
+		shmtext = shmtext + 'Exit {level (0 0);}\n\t\t'
 		shmtext = shmtext + 'Top {level (0 0);}\n\t\t'
 		shmtext = shmtext + 'Bottom {level (2 2);}\n\t\t'
 		shmtext = shmtext + 'Left {level (2 2);}\n\t\t'
@@ -445,8 +464,16 @@ FoamFile
 				caseruntext = caseruntext + 'cp -r ' + path2c + ' constant\n'
 				caseruntext = caseruntext + 'rm -fr 1 2\n'
 
+		# All other items
+		caseruntext = caseruntext + 'echo Checking mesh...\n'
+		caseruntext = caseruntext + 'checkMesh > Meshcheck.log\n\n'
+
+		# Create 0-folder
+		caseruntext = caseruntext + 'echo Creating 0-folder...\n'
+		caseruntext = caseruntext + 'rm -fr 0\n'
+		caseruntext = caseruntext + 'cp -r 0.org 0\n\n'
+
 		# Write to caserun file
 		scriptfile = open('caserun.sh',"a")
 		scriptfile.write(caseruntext)
 		scriptfile.close()
-

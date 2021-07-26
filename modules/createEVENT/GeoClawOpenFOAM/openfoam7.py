@@ -234,7 +234,7 @@ class openfoam7():
 			# Hydro mesher
 			if int(mesher[0]) == 0:
 				# blockMesh
-				bmeshtext = Meshing.bmeshtext()
+				bmeshtext = Meshing.bmeshtext(data)
 				fname = 'blockMeshDict'
 				filepath = os.path.join(path, 'system', fname)
 				bmeshfile = open(filepath, "w")
@@ -248,7 +248,7 @@ class openfoam7():
 				sfefile.write(sfetext)
 				sfefile.close()
 				# snappyHexMesh
-				shmtext = Meshing.shmtext()
+				shmtext = Meshing.shmtext(data)
 				fname = 'snappyHexMeshDict'
 				filepath = os.path.join(path, 'system', fname)
 				shmfile = open(filepath, "w")
@@ -264,7 +264,6 @@ class openfoam7():
 		
 		# Scripts
 		Meshing.scripts(data,path)
-
 
 		return 0
 
