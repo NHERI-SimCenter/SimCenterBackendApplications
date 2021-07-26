@@ -140,6 +140,7 @@ class of7PtDboundary():
 
 		# Loop over all patch
 		for patchname in patches:
+			ptdtext = ptdtext + "\t" + patchname + "\n"
 			# Get the type of velocity bc
 			patch = hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname])
 			if patch == [None]:
@@ -148,6 +149,12 @@ class of7PtDboundary():
 				Utype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname]))
 
 			ptdtext = ptdtext + self.PtDpatchtext(data,Utype,patchname,fipath)
+
+		# Check for building and other building
+		ptdtext = ptdtext + '\tBuilding\n'
+		ptdtext = ptdtext + self.PtDpatchtext(data,'301','Building',fipath)
+		ptdtext = ptdtext + '\tOtherBuilding\n'
+		ptdtext = ptdtext + self.PtDpatchtext(data,'301','OtherBuilding',fipath)
 
 		# Close the outside
 		ptdtext = ptdtext + "}\n\n"
@@ -253,5 +260,7 @@ FoamFile
 			normal = "0 1 0"
 		elif (patchname == "Bottom") or (patchname == "Top"):
 			normal = "0 0 1"
+		elif (patchname == "Building") or (patchname == "OtherBuilding"):
+			normal = "1 0 0"
 
 		return normal

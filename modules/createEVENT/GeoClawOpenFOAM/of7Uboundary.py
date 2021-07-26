@@ -86,6 +86,12 @@ class of7Uboundary():
 					numMovWall += 1
 			utext = utext + self.Upatchtext(data,Utype,patchname,fipath,numMovWall)
 
+		# Check for building and other building
+		utext = utext + '\tBuilding\n'
+		utext = utext + self.Upatchtext(data,'301','Building',fipath,numMovWall)
+		utext = utext + '\tOtherBuilding\n'
+		utext = utext + self.Upatchtext(data,'301','OtherBuilding',fipath,numMovWall)
+
 		# Close the outside
 		utext = utext + "}\n\n"
 		

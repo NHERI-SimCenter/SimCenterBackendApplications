@@ -79,6 +79,12 @@ class of7Prboundary():
 				prtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PressureType_" + patchname]))
 			prtext = prtext + self.Prpatchtext(data,prtype,patchname)
 
+		# Check for building and other building
+		prtext = prtext + '\tBuilding\n'
+		prtext = prtext + self.Prpatchtext(data,'201','Building')
+		prtext = prtext + '\tOtherBuilding\n'
+		prtext = prtext + self.Prpatchtext(data,'201','OtherBuilding')
+
 		# Close the outside
 		prtext = prtext + "}\n\n"
 		

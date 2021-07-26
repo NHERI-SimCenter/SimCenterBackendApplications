@@ -203,14 +203,14 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Create boundary condition - to do (alpha, k, omega, nut, nuTilda)
-	# ecode = solver.boundary(data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with boundary condition definition in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Issues with definition of boundary condition in EVT')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+	# Create boundary condition - to do (alpha, k, omega, nut, nuTilda)
+	ecode = solver.boundary(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with boundary condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Issues with definition of boundary condition in EVT')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 		
 	# Turbulence
 	ecode = solver.turbulence(data,fipath)
