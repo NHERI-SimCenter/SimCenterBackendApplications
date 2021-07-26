@@ -45,6 +45,7 @@ from of7Initial import of7Initial
 from of7Uboundary import of7Uboundary
 from of7Prboundary import of7Prboundary
 from of7PtDboundary import of7PtDboundary
+from of7Turbulence import of7Turbulence
 from of7Decomp import of7Decomp
 from of7Solve import of7Solve
 from of7Others import of7Others
@@ -377,6 +378,28 @@ class openfoam7():
 			ptDfile = open(filepath, "w")
 			ptDfile.write(pdtext)
 			ptDfile.close()
+
+		return 0
+
+	#############################################################
+	def turbulence(self,data,path):
+		'''
+		Creates the turbulenceDict and other files for openfoam7
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where the geometry files (STL) needs to be created
+		'''
+
+		# Create the domain decomposition file
+		Turb = of7Turbulence()
+		turbtext = Turb.turbtext(data)
+		fname = 'turbulenceProperties'
+		filepath = os.path.join(path, 'constant', fname)
+		turbfile = open(filepath, "w")
+		turbfile.write(turbtext)
+		turbfile.close()
 
 		return 0
 
