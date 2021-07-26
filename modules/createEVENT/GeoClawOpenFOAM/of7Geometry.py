@@ -281,8 +281,6 @@ class of7Geometry():
 			all01 = 'cat '+ entryf + ' ' + exitf + ' ' + topf + ' ' + bottomf + ' ' + leftf + ' ' + rightf 
 			full = os.path.join('constant' , 'triSurface' , 'Full.stl')
 
-			print(entryf)
-
 			caseruntext = 'echo Combining STL files for usage...\n'
 			if flag == 0:
 				caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'

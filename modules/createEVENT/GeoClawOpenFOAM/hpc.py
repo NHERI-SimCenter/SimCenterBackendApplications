@@ -72,125 +72,125 @@ class OlaFlowDakota():
 		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
 
 		# Add all variables
-		caseruntext = 'echo Setting up variables\n\n'
-		caseruntext = caseruntext + 'export BIM='+args.b+'\n\n'
-		caseruntext = caseruntext + 'export HYDROPATH='+fipath+'\n\n'
-		# caseruntext = caseruntext + 'export LD_LIBRARY_PATH='+args.L+'\n\n'
-		# caseruntext = caseruntext + 'export PATH='+args.P+'\n\n'
-		# caseruntext = caseruntext + 'export inputFile='+args.i+'\n\n'
-		# caseruntext = caseruntext + 'export driverFile='+args.d+'\n\n'
-		caseruntext = caseruntext + 'export inputDirectory='+fipath+'\n\n'	
-		caseruntext = caseruntext + 'export HYDROBRAIN='+os.path.join(hydrobrain,'applications','createEVENT','GeoClawOpenFOAM')+'\n\n'
+		# caseruntext = 'echo Setting up variables\n\n'
+		# caseruntext = caseruntext + 'export BIM='+args.b+'\n\n'
+		# caseruntext = caseruntext + 'export HYDROPATH='+fipath+'\n\n'
+		# # caseruntext = caseruntext + 'export LD_LIBRARY_PATH='+args.L+'\n\n'
+		# # caseruntext = caseruntext + 'export PATH='+args.P+'\n\n'
+		# # caseruntext = caseruntext + 'export inputFile='+args.i+'\n\n'
+		# # caseruntext = caseruntext + 'export driverFile='+args.d+'\n\n'
+		# caseruntext = caseruntext + 'export inputDirectory='+fipath+'\n\n'	
+		# caseruntext = caseruntext + 'export HYDROBRAIN='+os.path.join(hydrobrain,'applications','createEVENT','GeoClawOpenFOAM')+'\n\n'
 	
 		# Load all modules
-		caseruntext = caseruntext + 'echo Loading modules on Stampede2\n'
-		caseruntext = caseruntext + 'module load intel/18.0.2\n'
-		caseruntext = caseruntext + 'module load impi/18.0.2\n'
-		caseruntext = caseruntext + 'module load openfoam/7.0\n'
-		caseruntext = caseruntext + 'module load dakota/6.8.0\n'
-		caseruntext = caseruntext + 'module load python3\n\n'
+		# caseruntext = caseruntext + 'echo Loading modules on Stampede2\n'
+		# caseruntext = caseruntext + 'module load intel/18.0.2\n'
+		# caseruntext = caseruntext + 'module load impi/18.0.2\n'
+		# caseruntext = caseruntext + 'module load openfoam/7.0\n'
+		# caseruntext = caseruntext + 'module load dakota/6.8.0\n'
+		# caseruntext = caseruntext + 'module load python3\n\n'
 
 		# Move the case files to the present folder
-		zerofldr = os.path.join(fipath, '0.org')
-		zero2fldr = os.path.join(fipath, '0')
-		cstfldr = os.path.join(fipath, 'constant')
-		systfldr = os.path.join(fipath, 'system')
-		caseruntext = caseruntext + 'cp -r ' + zerofldr + ' .\n'
-		caseruntext = caseruntext + 'cp -r ' + zerofldr + ' ' + zero2fldr + ' .\n'
-		caseruntext = caseruntext + 'cp -r ' + cstfldr + ' .\n'
-		caseruntext = caseruntext + 'cp -r ' + systfldr + ' .\n'
+		# zerofldr = os.path.join(fipath, '0.org')
+		# zero2fldr = os.path.join(fipath, '0')
+		# cstfldr = os.path.join(fipath, 'constant')
+		# systfldr = os.path.join(fipath, 'system')
+		# caseruntext = caseruntext + 'cp -r ' + zerofldr + ' .\n'
+		# caseruntext = caseruntext + 'cp -r ' + zerofldr + ' ' + zero2fldr + ' .\n'
+		# caseruntext = caseruntext + 'cp -r ' + cstfldr + ' .\n'
+		# caseruntext = caseruntext + 'cp -r ' + systfldr + ' .\n'
 
 		# Start with meshing
 		# Start with meshing
-		if int(mesher[0]) == 0:
+		# if int(mesher[0]) == 0:
 			# Join all the STL files
 			# Read the temporary geometry file with extreme values
-			geofile = os.path.join(fipath,'temp_geometry')
-			data_geoext = np.genfromtxt(geofile, dtype=(float))
-			flag = int(data_geoext[6])
+			# geofile = os.path.join(fipath,'temp_geometry')
+			# data_geoext = np.genfromtxt(geofile, dtype=(float))
+			# flag = int(data_geoext[6])
 			
-			entryf = os.path.join('constant' + 'triSurface' + 'Entry.stl')
-			exitf = os.path.join('constant' + 'triSurface' + 'Exit.stl')
-			topf = os.path.join('constant' + 'triSurface' + 'Top.stl')
-			bottomf = os.path.join('constant' + 'triSurface' + 'Bottom.stl')
-			leftf = os.path.join('constant' + 'triSurface' + 'Left.stl')
-			rightf = os.path.join('constant' + 'triSurface' + 'Right.stl')
-			buildingf = os.path.join('constant' + 'triSurface' + 'Building.stl')
-			otherbuildingf = os.path.join('constant' + 'triSurface' + 'OtherBuilding.stl')
-			all01 = 'cat '+ entryf + ' ' + exitf + ' ' + topf + ' ' + bottomf + ' ' + leftf + ' ' + rightf 
-			full = fipath + os.path.join('constant' + 'triSurface' + 'Full.stl')
+			# entryf = os.path.join('constant' + 'triSurface' + 'Entry.stl')
+			# exitf = os.path.join('constant' + 'triSurface' + 'Exit.stl')
+			# topf = os.path.join('constant' + 'triSurface' + 'Top.stl')
+			# bottomf = os.path.join('constant' + 'triSurface' + 'Bottom.stl')
+			# leftf = os.path.join('constant' + 'triSurface' + 'Left.stl')
+			# rightf = os.path.join('constant' + 'triSurface' + 'Right.stl')
+			# buildingf = os.path.join('constant' + 'triSurface' + 'Building.stl')
+			# otherbuildingf = os.path.join('constant' + 'triSurface' + 'OtherBuilding.stl')
+			# all01 = 'cat '+ entryf + ' ' + exitf + ' ' + topf + ' ' + bottomf + ' ' + leftf + ' ' + rightf 
+			# full = fipath + os.path.join('constant' + 'triSurface' + 'Full.stl')
 
-			caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
-			if flag == 0:
-				caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'
-			elif flag == 1:
-				caseruntext = caseruntext + all01 + ' ' + buildingf + ' > ' + full + '\n\n'
-			elif flag == 2:
-				caseruntext = caseruntext + all01 + ' ' + buildingf + ' ' + otherbuildingf + ' > ' + full + '\n\n'
+			# caseruntext = caseruntext + 'echo Combining STL files for usage...\n'
+			# if flag == 0:
+			# 	caseruntext = caseruntext + all01 + ' > ' + full + '\n\n'
+			# elif flag == 1:
+			# 	caseruntext = caseruntext + all01 + ' ' + buildingf + ' > ' + full + '\n\n'
+			# elif flag == 2:
+			# 	caseruntext = caseruntext + all01 + ' ' + buildingf + ' ' + otherbuildingf + ' > ' + full + '\n\n'
 
 			# blockmesh
-			caseruntext = caseruntext + 'echo blockMesh running...\n'
-			caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
-			# surfaceFeatureExtract
-			caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
-			caseruntext = caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
-			# snappyHexMesh
-			caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
-			caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
-			# Copy polyMesh folder
-			path2c = os.path.join('2','polyMesh')
-			caseruntext = caseruntext + 'cp -r ' + path2c + 'constant\n'
-			caseruntext = caseruntext + 'rm -fr 1 2\n'
+			# caseruntext = caseruntext + 'echo blockMesh running...\n'
+			# caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
+			# # surfaceFeatureExtract
+			# caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
+			# caseruntext = caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
+			# # snappyHexMesh
+			# caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
+			# caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
+			# # Copy polyMesh folder
+			# path2c = os.path.join('2','polyMesh')
+			# caseruntext = caseruntext + 'cp -r ' + path2c + 'constant\n'
+			# caseruntext = caseruntext + 'rm -fr 1 2\n'
 
-		elif int(mesher[0]) == 1:
+		# elif int(mesher[0]) == 1:
 
-			# Get the mesh software
-			meshsoftware = hydroutil.extract_element_from_json(data, ["Events","MeshSoftware"])
-			# Get the mesh file name
-			meshfile = hydroutil.extract_element_from_json(data, ["Events","MeshFile"])
-			# Get the mesh file name
-			caseruntext = caseruntext + 'MESHFILE=${inputDirectory}/templatedir/'+meshfile[0]+'\n'
-			# Write out the appropriate commands
-			if int(meshsoftware[0]) == 0:
-				caseruntext = caseruntext + 'fluentMeshToFoam $MESHFILE > fluentMeshToFoam.log\n\n'
-			elif int(meshsoftware[0]) == 1:
-				caseruntext = caseruntext + 'ideasToFoam $MESHFILE > ideasToFoam.log\n\n'
-			elif int(meshsoftware[0]) == 2:
-				caseruntext = caseruntext + 'cfx4ToFoam $MESHFILE > cfx4ToFoam.log\n\n'
-			elif int(meshsoftware[0]) == 3:
-				caseruntext = caseruntext + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
-			elif int(meshsoftware[0]) == 4:
-				caseruntext = caseruntext + 'gmshToFoam $MESHFILE > gmshToFoam.log\n\n'
+		# 	# Get the mesh software
+		# 	meshsoftware = hydroutil.extract_element_from_json(data, ["Events","MeshSoftware"])
+		# 	# Get the mesh file name
+		# 	meshfile = hydroutil.extract_element_from_json(data, ["Events","MeshFile"])
+		# 	# Get the mesh file name
+		# 	caseruntext = caseruntext + 'MESHFILE=${inputDirectory}/templatedir/'+meshfile[0]+'\n'
+		# 	# Write out the appropriate commands
+		# 	if int(meshsoftware[0]) == 0:
+		# 		caseruntext = caseruntext + 'fluentMeshToFoam $MESHFILE > fluentMeshToFoam.log\n\n'
+		# 	elif int(meshsoftware[0]) == 1:
+		# 		caseruntext = caseruntext + 'ideasToFoam $MESHFILE > ideasToFoam.log\n\n'
+		# 	elif int(meshsoftware[0]) == 2:
+		# 		caseruntext = caseruntext + 'cfx4ToFoam $MESHFILE > cfx4ToFoam.log\n\n'
+		# 	elif int(meshsoftware[0]) == 3:
+		# 		caseruntext = caseruntext + 'gambitToFoam $MESHFILE > gambitToFoam.log\n\n'
+		# 	elif int(meshsoftware[0]) == 4:
+		# 		caseruntext = caseruntext + 'gmshToFoam $MESHFILE > gmshToFoam.log\n\n'
 		
-		elif int(mesher[0]) == 2:
+		# elif int(mesher[0]) == 2:
 
-			# COPY THE FILES TO THE RIGHT LOCATION
-			# blockMesh
-			bmfile = os.path.join(fipath,'blockMeshDict')
-			if os.path.isfile(bmfile):
-				bmfilenew = os.path.join('system','blockMeshDict')
-				caseruntext = caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
-				caseruntext = caseruntext + 'echo blockMesh running...\n'
-				caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
+		# 	# COPY THE FILES TO THE RIGHT LOCATION
+		# 	# blockMesh
+		# 	bmfile = os.path.join(fipath,'blockMeshDict')
+		# 	if os.path.isfile(bmfile):
+		# 		bmfilenew = os.path.join('system','blockMeshDict')
+		# 		caseruntext = caseruntext + 'cp ' + bmfile + ' ' + bmfilenew + '\n'
+		# 		caseruntext = caseruntext + 'echo blockMesh running...\n'
+		# 		caseruntext = caseruntext + 'blockMesh > blockMesh.log\n\n'
 
-			#surfaceFeatureExtract
-			sfdfile = os.path.join(fipath,'surfaceFeatureExtractDict')
-			if os.path.isfile(sfdfile):
-				sfdfilenew = os.path.join('system','surfaceFeatureExtractDict')
-				caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
-				caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
-				caseruntext = caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
+		# 	#surfaceFeatureExtract
+		# 	sfdfile = os.path.join(fipath,'surfaceFeatureExtractDict')
+		# 	if os.path.isfile(sfdfile):
+		# 		sfdfilenew = os.path.join('system','surfaceFeatureExtractDict')
+		# 		caseruntext = caseruntext + 'cp ' + sfdfile + ' ' + sfdfilenew + '\n'
+		# 		caseruntext = caseruntext + 'echo surfaceFeatureExtract running...\n'
+		# 		caseruntext = caseruntext + 'surfaceFeatureExtract -force > sFeatureExt.log\n\n'
 
-			# snappyHexMesh
-			shmfile = os.path.join(fipath,'snappyHexMeshDict')
-			if os.path.isfile(shmfile):
-				shmfilenew = os.path.join('system','snappyHexMeshDict')
-				caseruntext = caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
-				caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
-				caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
-				path2c = os.path.join('2','polyMesh')
-				caseruntext = caseruntext + 'cp -r ' + path2c + 'constant\n'
-				caseruntext = caseruntext + 'rm -fr 1 2\n'
+		# 	# snappyHexMesh
+		# 	shmfile = os.path.join(fipath,'snappyHexMeshDict')
+		# 	if os.path.isfile(shmfile):
+		# 		shmfilenew = os.path.join('system','snappyHexMeshDict')
+		# 		caseruntext = caseruntext + 'cp ' + shmfile + ' ' + shmfilenew + '\n'
+		# 		caseruntext = caseruntext + 'echo snappyHexMesh running...\n'
+		# 		caseruntext = caseruntext + 'snappyHexMesh > snappyHexMesh.log\n'
+		# 		path2c = os.path.join('2','polyMesh')
+		# 		caseruntext = caseruntext + 'cp -r ' + path2c + 'constant\n'
+		# 		caseruntext = caseruntext + 'rm -fr 1 2\n'
 			
 		# Copy the new controlDict with actual deltaT and writeT
 		newcdictpath = os.path.join('system','controlDict')
@@ -357,7 +357,7 @@ class OlaFlowDakota():
 	# 	'''
 
 	# clearnertext = cleanertext + 'rm ' + os.path.join(fipath,temp_geometry)
-	# clearnertext = cleanertext + 'rm FlumeData.txt temp_geometry.txt'
+	# clearnertext = cleanertext + 'rm FlumeData.txt temp_geometry.txt translate.sh'
 
 	# 	return cleanertext
 		

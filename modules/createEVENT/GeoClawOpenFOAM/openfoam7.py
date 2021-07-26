@@ -234,26 +234,26 @@ class openfoam7():
 			# Hydro mesher
 			if int(mesher[0]) == 0:
 				# blockMesh
-				bmeshtext = Meshing.bmeshtext(data,path)
+				bmeshtext = Meshing.bmeshtext()
 				fname = 'blockMeshDict'
 				filepath = os.path.join(path, 'system', fname)
 				bmeshfile = open(filepath, "w")
 				bmeshfile.write(bmeshtext)
 				bmeshfile.close()
 				# surfaceFeatureExtract
-				sfetext = Meshing.sfetext(data,path)
+				sfetext = Meshing.sfetext()
 				fname = 'surfaceFeatureExtractDict'
 				filepath = os.path.join(path, 'system', fname)
 				sfefile = open(filepath, "w")
 				sfefile.write(sfetext)
 				sfefile.close()
-				# # snappyHexMesh
-				# shmtext = Meshing.shmtext(data,path)
-				# fname = 'snappyHexMeshDict'
-				# filepath = os.path.join(path, 'system', fname)
-				# shmfile = open(filepath, "w")
-				# shmfile.write(shmtext)
-				# shmfile.close()
+				# snappyHexMesh
+				shmtext = Meshing.shmtext()
+				fname = 'snappyHexMeshDict'
+				filepath = os.path.join(path, 'system', fname)
+				shmfile = open(filepath, "w")
+				shmfile.write(shmtext)
+				shmfile.close()
 
 			# Mesh files from other softwares (1) 
 			# Do nothing here. Add to caserun.sh
@@ -261,6 +261,9 @@ class openfoam7():
 			# User mesh dictionaries (2)
 			# Do nothing here. Copy files to relevant place
 			# in caserun.sh
+		
+		# Scripts
+		Meshing.scripts(data,path)
 
 
 		return 0

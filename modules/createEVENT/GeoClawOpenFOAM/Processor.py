@@ -177,22 +177,22 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Geometry required for EVT solver created.\n' % (logID,datetime.datetime.now()))
 		
-	# # Create meshing - to complete
-	# ecode = solver.createmesh(data,fipath)
-	# logID += 1
-	# if ecode == 0:
-	# 	hydroutil.flog.write('%d (%s): Files required for EVT meshing created.\n' % (logID,datetime.datetime.now()))
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Error in Files required for EVT meshing.\n' % (logID,datetime.datetime.now()))
+	# Create meshing
+	ecode = solver.createmesh(data,fipath)
+	logID += 1
+	if ecode == 0:
+		hydroutil.flog.write('%d (%s): Files required for EVT meshing created.\n' % (logID,datetime.datetime.now()))
+	else:
+		hydroutil.flog.write('%d (%s): Error in Files required for EVT meshing.\n' % (logID,datetime.datetime.now()))
 
-	# # Material
-	# ecode = solver.materials(data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Error with material parameters in EVT.')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
+	# Material
+	ecode = solver.materials(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with material parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# # Create initial condition
 	# ecode = solver.initial(data,fipath)
