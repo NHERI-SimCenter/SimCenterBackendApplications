@@ -98,3 +98,48 @@ FoamFile
 
 		# Return the header for U file
 		return header
+
+	#############################################################
+	def scripts(self,data,path):
+		'''
+		Create the scripts for caserun.sh
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where dakota.json file is located
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Get number of subdomains
+		totalprocs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
+
+		# Get simulation type
+		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+
+		# Decompose for parallel, else serial
+		if int(totalprocs) > 1:
+			# Decompose the domain
+			caseruntext = 'echo Decomposing domain...\n'
+			caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'
+
+			# Start the CFD simulation
+			caseruntext = caseruntext + 'echo Starting CFD simulation in parallel...\n'
+			if int(simtype) == 4:
+				caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaDyMFlow -parallel > olaDyMFlow.log\n\n'
+			else:
+				caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaFlow -parallel > olaFlow.log\n\n'
+
+		else:
+			caseruntext = 'echo Starting CFD simulation in serial...\n'
+			if int(simtype) == 4:
+				caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
+			else:
+				caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
+
+		# Write to caserun file
+		scriptfile = open('caserun.sh',"a")
+		scriptfile.write(caseruntext)
+		scriptfile.close()

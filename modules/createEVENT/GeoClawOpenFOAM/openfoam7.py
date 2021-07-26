@@ -317,6 +317,9 @@ class openfoam7():
 			alphafile.write(alphatext)
 			alphafile.close()
 
+		# Scripts
+		Inicond.scripts(data,path)
+
 		return 0
 
 	#############################################################
@@ -397,6 +400,9 @@ class openfoam7():
 		decompfile.write(decomptext)
 		decompfile.close()
 
+		# Scripts
+		Decomp.scripts(data,path)
+
 		return 0
 
 	#############################################################
@@ -439,6 +445,13 @@ class openfoam7():
 			cdictfile = open(filepath,"w")
 			cdictfile.write(cdicttext)
 			cdictfile.close()
+
+			# Create CdictForce
+			cdictFtext = Solve.cdictFtext(data)
+			fname = 'cdictforce'
+			cdictFfile = open(fname,"w")
+			cdictFfile.write(cdictFtext)
+			cdictFfile.close()
 
 		return 0
 

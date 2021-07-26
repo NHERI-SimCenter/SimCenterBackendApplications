@@ -199,3 +199,23 @@ FoamFile
 
 		# Return 0 if all is right
 		return 0
+
+	#############################################################
+	def scripts(self,data,path):
+		'''
+		Create the scripts for caserun.sh
+
+		Arguments
+		-----------
+			data: all the JSON data
+			path: Path where dakota.json file is located
+		'''
+
+		# Setfields
+		caseruntext = 'echo Setting fields...\n'
+		caseruntext = caseruntext + 'setFields > setFields.log\n\n'
+
+		# Write to caserun file
+		scriptfile = open('caserun.sh',"a")
+		scriptfile.write(caseruntext)
+		scriptfile.close()

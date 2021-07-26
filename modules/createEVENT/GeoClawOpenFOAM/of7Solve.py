@@ -345,3 +345,88 @@ FoamFile
 
 		# Return 0 if all available
 		return 0
+
+	#############################################################
+	def cdictFtext(self,data):
+		'''
+		Creates the necessary text for controlDict for openfoam7
+		This is used for force computation with Dakota
+
+		Arguments
+		-----------
+			data: all the JSON data
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		# Get the header text for the U-file
+		cdicttext = self.solverheader("controlDict")
+
+		# Get the simulation type: Solver
+		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+		if int(simtype) == 4:
+			cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
+		else:
+			cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
+
+		# Check restart situation and give start time
+		restart = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Restart"]))
+		if restart == "Yes":
+			cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
+		elif restart == "No":
+			# Start time
+			startT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","StartTime"]))
+			cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
+			cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
+
+		# End time
+		endT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","EndTime"]))
+		cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
+		cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
+
+		# Time interval
+		deltaT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","TimeInterval"]))
+		cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
+
+		# Write control
+		cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
+
+		# Write interval
+		writeT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WriteInterval"]))
+		cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
+
+		# All others	
+		cdicttext = cdicttext + 'purgeWrite \t 0;\n\n'
+		cdicttext = cdicttext + 'writeFormat \t ascii;\n\n'
+		cdicttext = cdicttext + 'writePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'writeCompression \t uncompressed;\n\n'
+		cdicttext = cdicttext + 'timeFormat \t general;\n\n'
+		cdicttext = cdicttext + 'timePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'runTimeModifiable \t yes;\n\n'
+		cdicttext = cdicttext + 'adjustTimeStep \t yes;\n\n'
+		cdicttext = cdicttext + 'maxCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
+
+		cdicttext = cdicttext + 'functions\n{\n\t'
+		cdicttext = cdicttext + 'buildingsForces\n\t{\n\t\t'
+		cdicttext = cdicttext + 'type\tforces;\n\t\t'
+		cdicttext = cdicttext + 'functionObjectLibs\t("libforces.so");\n\t\t'
+		cdicttext = cdicttext + 'writeControl\ttimeStep;\n\t\t'
+		cdicttext = cdicttext + 'writeInterval\t1;\n\t\t'
+		cdicttext = cdicttext + 'patches\t("Building");\n\t\t' # This needs to be changed to Building
+		cdicttext = cdicttext + 'rho\trhoInf;\n\t\t'
+		cdicttext = cdicttext + 'log\ttrue;\n\t\t'
+		cdicttext = cdicttext + 'rhoInf\t1;\n\t\t'
+		cdicttext = cdicttext + 'CofR\t(0 0 0);\n\t\t'
+
+		# Get the number of stories
+		stories = hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])
+
+		cdicttext = cdicttext + 'binData\n\t\t{\n\t\t\t'
+		cdicttext = cdicttext + 'nBin\t'+str(stories[0])+';\n\t\t\t'
+		cdicttext = cdicttext + 'direction\t(1 0 0);\n\t\t\t'
+		cdicttext = cdicttext + 'cumulative\tno;\n\t\t}\n\t}\n}'
+
+		return cdicttext
