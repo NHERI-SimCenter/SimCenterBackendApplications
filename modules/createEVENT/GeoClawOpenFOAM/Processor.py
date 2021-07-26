@@ -194,14 +194,14 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Create initial condition
-	# ecode = solver.initial(data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Issues with definition of initial condition in EVT')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+	# Create initial condition
+	ecode = solver.initial(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Issues with definition of initial condition in EVT')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# # Create boundary condition
 	# ecode = solver.boundary(data,fipath)
@@ -221,14 +221,14 @@ def main():
 	# else:
 	# 	hydroutil.flog.write('%d (%s): Files required for turbulence definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Parallelization
-	# ecode = solver.parallelize(data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with parallelization parameters in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Error with parallelization parameters in EVT.')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Files required for parallelization successfully created.\n' % (logID,datetime.datetime.now()))
+	# Parallelization
+	ecode = solver.parallelize(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with parallelization parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with parallelization parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for parallelization successfully created.\n' % (logID,datetime.datetime.now()))
 
 	# # Solver settings
 	# ecode = solver.solve(data,fipath)

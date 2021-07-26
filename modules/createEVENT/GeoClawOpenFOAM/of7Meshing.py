@@ -473,6 +473,10 @@ FoamFile
 		caseruntext = caseruntext + 'rm -fr 0\n'
 		caseruntext = caseruntext + 'cp -r 0.org 0\n\n'
 
+		# Copy new force-based controldict
+		caseruntext = caseruntext + 'echo Copying force-based controlDict...\n'
+		caseruntext = caseruntext + 'cp cdictforce ' + os.path.join('system','controlDict') + '\n\n'
+
 		# Write to caserun file
 		scriptfile = open('caserun.sh',"a")
 		scriptfile.write(caseruntext)
