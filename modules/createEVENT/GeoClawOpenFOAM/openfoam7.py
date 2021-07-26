@@ -492,24 +492,29 @@ class openfoam7():
 		# Create the solver files
 		pprocess = of7Process()
 		# controlDict
-		ecode = pprocess.pprocesscheck(data)
+		ecode = pprocess.pprocesscheck(data,path)
 		if ecode == -1:
 			return -1
+		elif ecode == 0:
+			return 0
 		else:
 			# sample file
-			pprocesstext = pprocess.pprocesstext(data)
+			pprocesstext = pprocess.pprocesstext(data,path)
 			fname = 'sample'
 			filepath = os.path.join(fname)
 			samplefile = open(filepath,"w")
 			samplefile.write(pprocesstext)
 			samplefile.close()
 			# Controldict
-			pprocesstext = pprocess.pprocesscdict(data)
+			pprocesstext = pprocess.pprocesscdict(data,path)
 			fname = 'cdictpp'
 			filepath = os.path.join(fname)
 			samplefile = open(filepath,"w")
 			samplefile.write(pprocesstext)
 			samplefile.close()
+
+		# Scripts
+		pprocess.scripts(data,path)
 
 		return 0
 

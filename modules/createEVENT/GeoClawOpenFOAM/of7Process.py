@@ -33,9 +33,11 @@
 ####################################################################
 # Standard python modules
 import os
+import numpy as np
 
 # Other custom modules
 from hydroUtils import hydroUtils
+from of7Solve import of7Solve
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -51,7 +53,7 @@ class of7Process():
 	"""
 
 	#############################################################
-	def pprocesstext(self,data):
+	def pprocesstext(self,data,path):
 		'''
 		Creates the necessary files for post-processing for openfoam7
 
@@ -62,50 +64,59 @@ class of7Process():
 
 		# Create a utilities object
 		hydroutil = hydroUtils()
+		solver = of7Solve()
 
-		# # Get the header text for the U-file
-		# mattext = self.matheader()
+		# Point data from file
+		pprocessfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PProcessFile"]))
+		pprocesspath = os.path.join(path,pprocessfile)
+		pp_data = np.genfromtxt(pprocesspath, delimiter=',')
+		num_points = np.shape(pp_data)[0]
+		ptext = '\t\t(\n'
+		for ii in range(num_points):
+			ptext = ptext + '\t\t\t(' + str(pp_data[ii,0]) + '\t' + str(pp_data[ii,1]) + '\t' + str(pp_data[ii,2]) + ')\n'
+		ptext = ptext + '\t\t);\n'
 
-		# # Start by stating phases
-		# mattext = mattext + "phases (water air);\n\n"
+		# Fields required
+		value = 0
+		pprocessV = hydroutil.extract_element_from_json(data, ["Events","PPVelocity"])
+		if pprocessV != [None]:
+			pprocessV = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPVelocity"]))
+			if pprocessV == 'Yes':
+				value += 1
+		pprocessP = hydroutil.extract_element_from_json(data, ["Events","PPPressure"])
+		if pprocessP != [None]:
+			pprocessP = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPPressure"]))
+			if pprocessP == 'Yes':
+				value += 2
+		if value == 1:
+			fieldtext = '(U)'
+		elif value == 2:
+			fieldtext = '(p_rgh)'
+		else:
+			fieldtext = '(U p_rgh)'
 
-		# # Water phase
-		# # Viscosity
-		# nuwater = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterViscosity"]))
-		# # Exponent
-		# nuwaterexp = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterViscosityExp"]))
-		# # Density
-		# rhowater = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WaterDensity"]))
+		# Get the header text for the U-file
+		sampletext = solver.solverheader("sample")
 
-		# mattext = mattext + "water\n{\n"
-		# mattext = mattext + "\ttransportModel\tNewtonian;\n"
-		# mattext = mattext + "\tnu\t[0 2 -1 0 0 0 0]\t" + nuwater + "e" + nuwaterexp + ";\n"
-		# mattext = mattext + "\trho\t[1 -3 0 0 0 0 0]\t" + rhowater + ";\n"
-		# mattext = mattext + "}\n\n"
+		# Other information
+		sampletext = sampletext + '\ntype sets;\n'
+		sampletext = sampletext + 'libs\t("libsampling.so");\n\n'
+		sampletext = sampletext + 'interpolationScheme\tcellPoint;\n\n'
+		sampletext = sampletext + 'setFormat\traw;\n\n'
+		sampletext = sampletext + 'sets\n(\n\tdata\n\t{\n'
+		sampletext = sampletext + '\t\ttype\tpoints;\n'
+		sampletext = sampletext + '\t\tpoints\n'
+		sampletext = sampletext + ptext
+		sampletext = sampletext + '\t\tordered\tyes;\n'
+		sampletext = sampletext + '\t\taxis\tx;\n'
+		sampletext = sampletext + '\t}\n'
+		sampletext = sampletext + ');\n\n'
+		sampletext = sampletext + 'fields\t' + fieldtext + ';\n'
 
-		# # Air properties
-		# # Viscosity
-		# nuair = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirViscosity"]))
-		# # Exponent
-		# nuairexp = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirViscosityExp"]))
-		# # Density
-		# rhoair = ', '.join(hydroutil.extract_element_from_json(data, ["Events","AirDensity"]))
-
-		# mattext = mattext + "air\n{\n"
-		# mattext = mattext + "\ttransportModel\tNewtonian;\n"
-		# mattext = mattext + "\tnu\t[0 2 -1 0 0 0 0]\t" + nuair + "e" + nuairexp + ";\n"
-		# mattext = mattext + "\trho\t[1 -3 0 0 0 0 0]\t" + rhoair + ";\n"
-		# mattext = mattext + "}\n\n"
-
-		# # Surface tension between water and air
-		# sigma = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SurfaceTension"]))
-
-		# mattext = mattext + "sigma\t[1 0 -2 0 0 0 0]\t"+sigma +";\n"
-
-		return "0" #mattext
+		return sampletext 
 
 	#############################################################
-	def pprocesscdict(self,data):
+	def pprocesscdict(self,data,path):
 		'''
 		Creates the necessary files for new controldict for post-processing for openfoam7
 
@@ -116,13 +127,152 @@ class of7Process():
 
 		# Create a utilities object
 		hydroutil = hydroUtils()
+		solver = of7Solve()
 
-		
+		# Get the header text for the U-file
+		cdicttext = solver.solverheader("controlDict")
 
-		return "0" #mattext
+		# Get the simulation type: Solver
+		simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+		if int(simtype) == 4:
+			cdicttext = cdicttext + '\napplication \t olaDyMFlow;\n\n'
+		else:
+			cdicttext = cdicttext + '\napplication \t olaFlow;\n\n'
+
+		# Check restart situation and give start time
+		restart = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Restart"]))
+		if restart == "Yes":
+			cdicttext = cdicttext + 'startFrom \t latestTime;\n\n'
+		elif restart == "No":
+			# Start time
+			startT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","StartTime"]))
+			cdicttext = cdicttext + 'startFrom \t startTime;\n\n'
+			cdicttext = cdicttext + 'startTime \t' + startT + ';\n\n'
+
+		# End time
+		endT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","EndTime"]))
+		cdicttext = cdicttext + 'stopAt \t endTime;\n\n'
+		cdicttext = cdicttext + 'endTime \t' + endT + ';\n\n'
+
+		# Time interval
+		deltaT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","TimeInterval"]))
+		cdicttext = cdicttext + 'deltaT \t' + deltaT + ';\n\n'
+
+		# Write control
+		cdicttext = cdicttext + 'writeControl \t adjustableRunTime;\n\n'
+
+		# Write interval
+		writeT = ', '.join(hydroutil.extract_element_from_json(data, ["Events","WriteInterval"]))
+		cdicttext = cdicttext + 'writeInterval \t' + writeT + ';\n\n'
+
+		# All others	
+		cdicttext = cdicttext + 'purgeWrite \t 0;\n\n'
+		cdicttext = cdicttext + 'writeFormat \t ascii;\n\n'
+		cdicttext = cdicttext + 'writePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'writeCompression \t uncompressed;\n\n'
+		cdicttext = cdicttext + 'timeFormat \t general;\n\n'
+		cdicttext = cdicttext + 'timePrecision \t 6;\n\n'
+		cdicttext = cdicttext + 'runTimeModifiable \t yes;\n\n'
+		cdicttext = cdicttext + 'adjustTimeStep \t yes;\n\n'
+		cdicttext = cdicttext + 'maxCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
+		cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
+
+		# Point data from file
+		pprocessfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PProcessFile"]))
+		pprocesspath = os.path.join(path,pprocessfile)
+		pp_data = np.genfromtxt(pprocesspath, delimiter=',')
+		num_points = np.shape(pp_data)[0]
+		ptext = '\t\t\t\t(\n'
+		for ii in range(num_points):
+			ptext = ptext + '\t\t\t\t\t(' + str(pp_data[ii,0]) + '\t' + str(pp_data[ii,1]) + '\t' + str(pp_data[ii,2]) + ')\n'
+		ptext = ptext + '\t\t\t\t);\n'
+
+		# Fields required
+		value = 0
+		pprocessV = hydroutil.extract_element_from_json(data, ["Events","PPVelocity"])
+		if pprocessV != [None]:
+			pprocessV = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPVelocity"]))
+			if pprocessV == 'Yes':
+				value += 1
+		pprocessP = hydroutil.extract_element_from_json(data, ["Events","PPPressure"])
+		if pprocessP != [None]:
+			pprocessP = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPPressure"]))
+			if pprocessP == 'Yes':
+				value += 2
+		if value == 1:
+			fieldtext = '(U)'
+		elif value == 2:
+			fieldtext = '(p_rgh)'
+		else:
+			fieldtext = '(U p_rgh)'
+
+		# Get the library data
+		cdicttext = cdicttext + 'function\n{\n\tlinesample\n\t{\n'
+		cdicttext = cdicttext + '\t\ttype\tsets;\n'
+		cdicttext = cdicttext + '\t\tfunctionObjectLibs\t("libsampling.so");\n'
+		cdicttext = cdicttext + '\t\twriteControl\ttimeStep;\n'
+		cdicttext = cdicttext + '\t\toutputInterval\t1;\n'
+		cdicttext = cdicttext + '\t\tinterpolationScheme\tcellPoint;\n'
+		cdicttext = cdicttext + '\t\tsetFormat\traw;\n\n'
+		cdicttext = cdicttext + '\t\tsets\n\t\t(\n'
+		cdicttext = cdicttext + '\t\t\tdata\n\t\t\t{\n'
+		cdicttext = cdicttext + '\t\t\t\ttype\tpoints;\n'
+		cdicttext = cdicttext + '\t\t\t\tpoints\n'
+		cdicttext = cdicttext + ptext
+		cdicttext = cdicttext + '\t\t\t\tordered\tyes;\n'
+		cdicttext = cdicttext + '\t\t\t\taxis\tx;\n'
+		cdicttext = cdicttext + '\t\t\t}\n\t\t);\n'
+		cdicttext = cdicttext + '\t\tfields\t' + fieldtext + ';\n'
+		cdicttext = cdicttext + '\t}\n}'	
+
+		return cdicttext
 
 	#############################################################
-	def pprocesscheck(self,data):
+	def scripts(self,data,path):
+		'''
+		Creates the necessary postprocessing in scripts
+
+		Arguments
+		-----------
+			data: all the JSON data
+		'''
+
+		# Create a utilities object
+		hydroutil = hydroUtils()
+
+		pprocess = hydroutil.extract_element_from_json(data, ["Events","Postprocessing"])
+		if pprocess == [None]:
+			return 0
+		else:
+			pprocess = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Postprocessing"]))
+			if pprocess == 'No':
+				caseruntext = 'echo no postprocessing for EVT\n'
+			elif pprocess == 'Yes':
+				caseruntext = 'echo postprocessing for EVT\n'
+				# Reconstruct case
+				caseruntext = caseruntext + 'reconstructPar > reconstruct.log \n'
+				# Move new controlDict
+				cdictpppath = os.path.join('system','controlDict')
+				caseruntext = caseruntext + 'cp cdictpp ' + cdictpppath + '\n'
+				# Move the wavemakerfile (if exists)
+				if os.path.exists(os.path.join('constant','wavemakerMovement.txt')):
+					caseruntext = caseruntext + 'mkdir extras\n'
+					wavepath = os.path.join('constant','wavemakerMovement.txt')
+					wavepathnew = os.path.join('extras','wavemakerMovement.txt')
+					caseruntext = caseruntext + 'mv ' + wavepath + ' ' + wavepathnew + '\n'
+				# Copy sample file
+				caseruntext = caseruntext + 'cp sample ' + os.path.join('system','sample') + '\n'
+				# Start the postprocessing
+				caseruntext = caseruntext + 'postProcess -func sample \n\n'
+
+		# Write to caserun file
+		scriptfile = open('caserun.sh',"a")
+		scriptfile.write(caseruntext)
+		scriptfile.close()
+
+	#############################################################
+	def pprocesscheck(self,data,path):
 		'''
 		Checks for material properties for openfoam7
 
@@ -134,38 +284,24 @@ class of7Process():
 		# Create a utilities object
 		hydroutil = hydroUtils()
 
-		# # Check water properties
-		# # Viscosity
-		# nuwater = hydroutil.extract_element_from_json(data, ["Events","WaterViscosity"])
-		# if nuwater == [None]:
-		# 	return -1
-		# # Exponent
-		# nuwaterexp = hydroutil.extract_element_from_json(data, ["Events","WaterViscosityExp"])
-		# if nuwaterexp == [None]:
-		# 	return -1
-		# # Density
-		# rhowater = hydroutil.extract_element_from_json(data, ["Events","WaterDensity"])
-		# if rhowater == [None]:
-		# 	return -1
+		# Find if pprocess is required
+		pprocess = ', '.join(hydroutil.extract_element_from_json(data, ["Events","Postprocessing"]))
 
-		# # Check air properties
-		# # Viscosity
-		# nuair = hydroutil.extract_element_from_json(data, ["Events","AirViscosity"])
-		# if nuair == [None]:
-		# 	return -1
-		# # Exponent
-		# nuairexp = hydroutil.extract_element_from_json(data, ["Events","AirViscosityExp"])
-		# if nuairexp == [None]:
-		# 	return -1
-		# # Density
-		# rhoair = hydroutil.extract_element_from_json(data, ["Events","AirDensity"])
-		# if rhoair == [None]:
-		# 	return -1
-
-		# # Surface tension between water and air
-		# sigma = hydroutil.extract_element_from_json(data, ["Events","SurfaceTension"])
-		# if sigma == [None]:
-		# 	return -1
+		if pprocess == 'No':
+			return 0
+		else:
+			pprocessV = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPVelocity"]))
+			pprocessP = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PPPressure"]))
+			if pprocessV == 'Yes' or pprocessP == 'Yes':
+				pprocessfile = hydroutil.extract_element_from_json(data, ["Events","PProcessFile"])
+				if pprocessfile == [None]:
+					return -1
+				else:
+					pprocessfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","PProcessFile"]))
+					if not os.path.exists(os.path.join(path,pprocessfile)):
+						return -1
+			else:
+				return 0
 
 		# Return 0 if all is right
-		return 0
+		return 1

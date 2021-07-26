@@ -248,16 +248,18 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Event post processing - to complete
-	# ecode = solver.postprocessing(data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with creating postprocessing files in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Error with creating postprocessing files in EVT.')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Postprocessing files required for EVT successfully created.\n' % (logID,datetime.datetime.now()))
+	## DAKOTA SCRIPTS
 
-	# # Create all scripts - to complete
+	# Event post processing
+	ecode = solver.postprocessing(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with creating postprocessing files in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with creating postprocessing files in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Postprocessing files required for EVT successfully created.\n' % (logID,datetime.datetime.now()))
+
+	# # Cleaning script
 	# ecode = solver.scripts(args,data,fipath)
 	# logID += 1
 	# if ecode < 0:
@@ -265,8 +267,6 @@ def main():
 	# 	sys.exit('Error with creating solver scripts files in EVT.')
 	# else:
 	# 	hydroutil.flog.write('%d (%s): Solver scripts successfully created.\n' % (logID,datetime.datetime.now()))
-
-	
 
 ####################################################################
 # Primary function call

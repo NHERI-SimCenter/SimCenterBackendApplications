@@ -409,6 +409,7 @@ FoamFile
 		cdicttext = cdicttext + 'maxAlphaCo \t 1.0;\n\n'
 		cdicttext = cdicttext + 'maxDeltaT \t 1;\n\n'
 
+		# Function for building
 		cdicttext = cdicttext + 'functions\n{\n\t'
 		cdicttext = cdicttext + 'buildingsForces\n\t{\n\t\t'
 		cdicttext = cdicttext + 'type\tforces;\n\t\t'

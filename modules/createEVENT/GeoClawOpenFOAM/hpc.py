@@ -1,34 +1,4 @@
 ####################################################################
-# LICENSING INFORMATION
-####################################################################
-"""
-	LICENSE INFORMATION:
-	
-	Copyright (c) 2020-2030, The Regents of the University of California (Regents).
-
-	All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-	1. Redistributions of source code must retain the above copyright notice, this 
-		list of conditions and the following disclaimer.
-	2. Redistributions in binary form must reproduce the above copyright notice,
-		this list of conditions and the following disclaimer in the documentation
-		and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
-
-	REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
-	
-"""
-####################################################################
-# AUTHOR INFORMATION
-####################################################################
-# 2020 - 2021: Ajay B Harish (ajaybh@berkeley.edu)
-
-####################################################################
 # Import all necessary modules
 ####################################################################
 # Standard python modules
@@ -192,44 +162,44 @@ class OlaFlowDakota():
 		# 		caseruntext = caseruntext + 'cp -r ' + path2c + 'constant\n'
 		# 		caseruntext = caseruntext + 'rm -fr 1 2\n'
 			
-		# Copy the new controlDict with actual deltaT and writeT
-		newcdictpath = os.path.join('system','controlDict')
-		caseruntext = caseruntext + ' mv cdictreal ' + newcdictpath + '\n\n'
+		# # Copy the new controlDict with actual deltaT and writeT
+		# newcdictpath = os.path.join('system','controlDict')
+		# caseruntext = caseruntext + ' mv cdictreal ' + newcdictpath + '\n\n'
 
-		# Check the mesh
-		caseruntext = caseruntext + 'echo Checking mesh...\n'
-		caseruntext = caseruntext + 'checkMesh > Meshcheck.log\n\n'
+		# # Check the mesh
+		# caseruntext = caseruntext + 'echo Checking mesh...\n'
+		# caseruntext = caseruntext + 'checkMesh > Meshcheck.log\n\n'
 
-		# Create the 0-folder
-		caseruntext = caseruntext + 'echo Creating 0-folder...\n'
-		caseruntext = caseruntext + 'rm -fr 0\n'
-		caseruntext = caseruntext + 'cp -r 0.org 0\n\n'
+		# # Create the 0-folder
+		# caseruntext = caseruntext + 'echo Creating 0-folder...\n'
+		# caseruntext = caseruntext + 'rm -fr 0\n'
+		# caseruntext = caseruntext + 'cp -r 0.org 0\n\n'
 
-		caseruntext = caseruntext + 'echo Setting fields...\n'
-		caseruntext = caseruntext + 'setFields > setFields.log\n\n'
+		# caseruntext = caseruntext + 'echo Setting fields...\n'
+		# caseruntext = caseruntext + 'setFields > setFields.log\n\n'
 
-		# Get the number of processors required
-		totalprocs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
+		# # Get the number of processors required
+		# totalprocs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
 
-		# Start the CFD run with n-processors
-		if int(totalprocs) > 1:
-			# Decompose the domain
-			caseruntext = caseruntext + 'echo Decomposing domain...\n'
-			caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'
+		# # Start the CFD run with n-processors
+		# if int(totalprocs) > 1:
+		# 	# Decompose the domain
+		# 	caseruntext = caseruntext + 'echo Decomposing domain...\n'
+		# 	caseruntext = caseruntext + 'decomposePar > decomposePar.log\n\n'
 
-			# Start the CFD simulation
-			caseruntext = caseruntext + 'echo Starting CFD simulation in parallel...\n'
-			if int(simtype) == 4:
-				caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaDyMFlow -parallel > olaDyMFlow.log\n\n'
-			else:
-				caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaFlow -parallel > olaFlow.log\n\n'
+		# 	# Start the CFD simulation
+		# 	caseruntext = caseruntext + 'echo Starting CFD simulation in parallel...\n'
+		# 	if int(simtype) == 4:
+		# 		caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaDyMFlow -parallel > olaDyMFlow.log\n\n'
+		# 	else:
+		# 		caseruntext = caseruntext + 'ibrun -n ' + totalprocs + ' -o 0 olaFlow -parallel > olaFlow.log\n\n'
 						
-		else:
-			caseruntext = caseruntext + 'echo Starting CFD simulation in serial...\n'
-			if int(simtype) == 4:
-				caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
-			else:
-				caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
+		# else:
+		# 	caseruntext = caseruntext + 'echo Starting CFD simulation in serial...\n'
+		# 	if int(simtype) == 4:
+		# 		caseruntext = caseruntext + 'olaDyMFlow > olaDyMFlow.log\n\n'
+		# 	else:
+		# 		caseruntext = caseruntext + 'olaFlow > olaFlow.log\n\n'
 
 		# Call building forces to run Dakota
 		caseruntext = caseruntext + 'echo Starting Dakota preparation...\n'
@@ -265,128 +235,37 @@ class OlaFlowDakota():
 		# Return the text
 		return caseruntext
 
-	#############################################################
-	def caseruncheck(self,data,path):
-		'''
-		This checks that the necessary data is available in the json file.
-
-		Arguments
-		-----------
-			args: User input arguments
-			data: Entire json file
-		'''
-
-		# Create a utilities object
-		hydroutil = hydroUtils()
-
-		# # Check for the mesher type
-		# mesher = ', '.join(hydroutil.extract_element_from_json(data, ["Events","MeshType"]))
-
-		# # For using mesh dictionaries
-		# if int(mesher[0]) == 1:
-
-
-
-		# # For external meshes
-		# elif int(mesher[0]) == 2:
-
-		# 	# Get the mesh file name
-		# 	
-
-		# 	# Check if file exists
-
-
-		# # For postprocessing file
-		# # Get the information from json file
-		# pprocess = hydroutil.extract_element_from_json(data, ["Events","Postprocessing"])
-		# pprocess = ', '.join(pprocess)
-		# if pprocess == 'Yes':
-		# 	pprocessfile = hydroutil.extract_element_from_json(data, ["Events","PProcessFile"])
-		# 	# If no file name is given
-		# 	if pprocessfile == [None]:
-		# 		return -1
-		# 	# If file does not exist
-
-
-		# Return 0 if all is well
-		return 0
-			
-	#############################################################
-	def pprocesstext(self,data):
-		'''
-		This generates the script to postprocess.
-
-		Arguments
-		-----------
-			args: User input arguments
-			data: Entire json file
-			path: Path where the dakota.json file exists
-		'''
-
-		# Create a utilities object
-		hydroutil = hydroUtils()
-
-		# Get the information from json file
-		pprocess = hydroutil.extract_element_from_json(data, ["Events","Postprocessing"])
-		pprocess = ', '.join(pprocess)
-		print(pprocess)
-		if pprocess == 'No':
-			pproruntext = 'echo no postprocessing for EVT'
-		elif pprocess == 'Yes':
-			pproruntext = 'echo postprocessing starting for EVT'
-			pproruntext = pproruntext + 'reconstructPar \n\n'
-			cdictpppath = os.path.join('system','controlDict')
-			pproruntext = pproruntext + 'mv cdictpp ' + cdictpppath 
-			samplepath = os.path.join('system','sample')
-			pproruntext = pproruntext + 'mv sample ' + samplepath 
-			pproruntext = pproruntext + 'postProcess -func sample'
-
-		return pproruntext
-
+	
 	# #############################################################
-	# def cleanertext(self,data,fipath):
+	# def pprocesstext(self,data):
 	# 	'''
-	# 	This generates the first script to be run before completion of the job.
+	# 	This generates the script to postprocess.
 
 	# 	Arguments
 	# 	-----------
-	# 		obj: A dict - input dictionary
-	# 		path: A list - list of strings that form the JSON path
-	# 		ind: An int - starting index
-	# 		arr: A list - output list
+	# 		args: User input arguments
+	# 		data: Entire json file
+	# 		path: Path where the dakota.json file exists
 	# 	'''
 
-	# clearnertext = cleanertext + 'rm ' + os.path.join(fipath,temp_geometry)
-	# clearnertext = cleanertext + 'rm FlumeData.txt temp_geometry.txt translate.sh'
+	# 	# Create a utilities object
+	# 	hydroutil = hydroUtils()
 
-	# 	return cleanertext
-		
-	# #############################################################
-	# def newCDictForce(self,obj,path,ind,arr):
-	# 	'''
-	# 	This generates the first script to be run before completion of the job.
+	# 	# Get the information from json file
+	# 	pprocess = hydroutil.extract_element_from_json(data, ["Events","Postprocessing"])
+	# 	pprocess = ', '.join(pprocess)
+	# 	print(pprocess)
+	# 	if pprocess == 'No':
+	# 		pproruntext = 'echo no postprocessing for EVT'
+	# 	elif pprocess == 'Yes':
+	# 		pproruntext = 'echo postprocessing starting for EVT'
+	# 		pproruntext = pproruntext + 'reconstructPar \n\n'
+	# 		cdictpppath = os.path.join('system','controlDict')
+	# 		pproruntext = pproruntext + 'mv cdictpp ' + cdictpppath 
+	# 		samplepath = os.path.join('system','sample')
+	# 		pproruntext = pproruntext + 'mv sample ' + samplepath 
+	# 		pproruntext = pproruntext + 'postProcess -func sample'
 
-	# 	Arguments
-	# 	-----------
-	# 		obj: A dict - input dictionary
-	# 		path: A list - list of strings that form the JSON path
-	# 		ind: An int - starting index
-	# 		arr: A list - output list
-	# 	'''
+	# 	return pproruntext
 
-	# 	return 0
-
-	# #############################################################
-	# def newCDictPP(self,obj,path,ind,arr):
-	# 	'''
-	# 	This generates the first script to be run before completion of the job.
-
-	# 	Arguments
-	# 	-----------
-	# 		obj: A dict - input dictionary
-	# 		path: A list - list of strings that form the JSON path
-	# 		ind: An int - starting index
-	# 		arr: A list - output list
-	# 	'''
-
-	# 	return 0
+	
