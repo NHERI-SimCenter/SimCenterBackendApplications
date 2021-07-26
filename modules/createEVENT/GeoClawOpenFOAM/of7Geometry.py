@@ -78,7 +78,7 @@ class of7Geometry():
 			
 			# Get the number of bathymetry files
 			numbathy = hydroutil.extract_element_from_json(data, ["Events","NumBathymetryFiles"])
-			if numbathy == '[None]':
+			if numbathy == [None]:
 				return -1
 			else:
 				numbathy = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumBathymetryFiles"]))
@@ -88,7 +88,7 @@ class of7Geometry():
 				for ii in range(int(numbathy)):
 					# Get the file name
 					bathyfilename = hydroutil.extract_element_from_json(data, ["Events","BathymetryFile"+str(ii)])
-					if bathyfilename == '[None]':
+					if bathyfilename == [None]:
 						return -1
 					else:
 						bathyfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BathymetryFile"+str(ii)]))
@@ -100,7 +100,7 @@ class of7Geometry():
 
 				# Get the number of solution files
 				numsoln = hydroutil.extract_element_from_json(data, ["Events","NumSolutionFiles"])
-				if numsoln == '[None]':
+				if numsoln == [None]:
 					return -1
 				else:
 					numsoln = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumSolutionFiles"]))
@@ -110,7 +110,7 @@ class of7Geometry():
 				for ii in range(int(numsoln)):
 					# Get the file name
 					solnfilename = hydroutil.extract_element_from_json(data, ["Events","SWSolutionFile"+str(ii)])
-					if solnfilename == '[None]':
+					if solnfilename == [None]:
 						return -1
 					else:
 						solnfilename = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SWSolutionFile"+str(ii)]))
@@ -120,7 +120,7 @@ class of7Geometry():
 					
 				# Check the SW-CFD interface file
 				swcfdfile = hydroutil.extract_element_from_json(data, ["Events","SWCFDInteFile"])
-				if swcfdfile == '[None]':
+				if swcfdfile == [None]:
 					return -1
 				else:
 					swcfdfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SWCFDInteFile"]))
@@ -171,14 +171,14 @@ class of7Geometry():
 			if int(flumetype) == 0:
 				# Get the number of segments
 				numsegs = hydroutil.extract_element_from_json(data, ["Events","NumFlumeSegments"])
-				if numsegs == '[None]':
+				if numsegs == [None]:
 					return -1
 				else:
 					numsegs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumFlumeSegments"]))
 					if int(numsegs) < 4:
 						return -1
 					flumesegs = hydroutil.extract_element_from_json(data, ["Events","FlumeSegments"])
-					if flumesegs == '[None]':
+					if flumesegs == [None]:
 						return -1
 			# Standard flume
 			elif int(flumetype) == 1:

@@ -91,7 +91,7 @@ class of7Building():
 					buildtype = nums[0]
 					if int(buildtype) == -1 or int(buildtype) == 2:
 						stlfile = hydroutil.extract_element_from_json(data, ["Events","BuildingSTLFile"])
-						if stlfile == '[None]':
+						if stlfile == [None]:
 							return -1
 						else:
 							stlfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BuildingSTLFile"]))
@@ -102,23 +102,23 @@ class of7Building():
 						numbuildres += 1
 						# Check GI
 						depth = hydroutil.extract_element_from_json(data, ["GeneralInformation","depth"])
-						if str(depth[0]) == '[None]':
+						if str(depth[0]) == [None]:
 							return -1
 
 						width = hydroutil.extract_element_from_json(data, ["GeneralInformation","width"])
-						if str(width[0]) == '[None]':
+						if str(width[0]) == [None]:
 							return -1
 
 						height = hydroutil.extract_element_from_json(data, ["GeneralInformation","height"])
-						if str(height[0]) == '[None]':
+						if str(height[0]) == [None]:
 							return -1
 
 						# xbuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","xbuild"])
-						# if str(xbuild[0]) == '[None]':
+						# if str(xbuild[0]) == [None]:
 						# 	return -1
 
 						# ybuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","ybuild"])
-						# if str(ybuild[0]) == '[None]':
+						# if str(ybuild[0]) == [None]:
 						# 	return -1
 						geninfo = hydroutil.extract_element_from_json(data, ["GeneralInformation"])
 						geninfo = str(geninfo[0])
@@ -157,7 +157,7 @@ class of7Building():
 				return -1
 			elif int(buildshape) == 1:
 				stlfile = hydroutil.extract_element_from_json(data, ["Events","BuildingSTLFile"])
-				if stlfile == '[None]':
+				if stlfile == [None]:
 					return -1
 				else:
 					stlfile = ', '.join(hydroutil.extract_element_from_json(data, ["Events","BuildingSTLFile"]))
