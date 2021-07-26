@@ -203,7 +203,7 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Create boundary condition
+	# # Create boundary condition - to do (alpha, k, omega, nut, nuTilda)
 	# ecode = solver.boundary(data,fipath)
 	# logID += 1
 	# if ecode < 0:
@@ -212,7 +212,7 @@ def main():
 	# else:
 	# 	hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 		
-	# Turbulence-TO DO
+	# Turbulence
 	ecode = solver.turbulence(data,fipath)
 	logID += 1
 	if ecode < 0:
@@ -248,7 +248,8 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
-	## DAKOTA SCRIPTS
+	# Dakota scripts
+	solver.dakota(args)
 
 	# Event post processing
 	ecode = solver.postprocessing(data,fipath)
@@ -259,14 +260,14 @@ def main():
 	else:
 		hydroutil.flog.write('%d (%s): Postprocessing files required for EVT successfully created.\n' % (logID,datetime.datetime.now()))
 
-	# # Cleaning script
-	# ecode = solver.scripts(args,data,fipath)
-	# logID += 1
-	# if ecode < 0:
-	# 	hydroutil.flog.write('%d (%s): Error with creating solver scripts files in EVT.\n' % (logID,datetime.datetime.now()))
-	# 	sys.exit('Error with creating solver scripts files in EVT.')
-	# else:
-	# 	hydroutil.flog.write('%d (%s): Solver scripts successfully created.\n' % (logID,datetime.datetime.now()))
+	# Cleaning scripts
+	solver.cleaning(args,fipath)
+
+	# Write to caserun file
+	caseruntext = 'echo HydroUQ complete'
+	scriptfile = open('caserun.sh',"a")
+	scriptfile.write(caseruntext)
+	scriptfile.close()
 
 ####################################################################
 # Primary function call

@@ -49,8 +49,9 @@ from of7Turbulence import of7Turbulence
 from of7Decomp import of7Decomp
 from of7Solve import of7Solve
 from of7Others import of7Others
+from of7Dakota import of7Dakota
 from of7Process import of7Process
-from hpc import OlaFlowDakota
+# from hpc import OlaFlowDakota
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -502,6 +503,24 @@ class openfoam7():
 		return 0
 
 	#############################################################
+	def dakota(self,args):
+		'''
+		Creates the dakota scripts for openfoam7
+
+		Arguments
+		-----------
+			args: all arguments
+		'''
+
+		# Create the solver files
+		dakota = of7Dakota()
+		
+		# Dakota Scripts
+		dakota.dakotascripts(args)
+
+		return 0
+
+	#############################################################
 	def postprocessing(self,data,path):
 		'''
 		Creates the postprocessing related files for openfoam7
@@ -542,42 +561,19 @@ class openfoam7():
 		return 0
 
 	#############################################################
-	def scripts(self,args,data,path):
+	def cleaning(self,args,path):
 		'''
-		Creates the scripts required to run for openfoam7
+		Creates the cleaning scripts for openfoam7
 
 		Arguments
 		-----------
-			args: User input arguments
-			data: Entire json file
-			path: Path where the dakota.json file exists
+			args: all arguments
 		'''
 
-		# Create run scripts
-		scriptgen = OlaFlowDakota()
-		caseruntext = scriptgen.caseruntext(args,data,path)
-		# Create script file (caserun.sh)
-		fname = 'caserun.sh'
-		scriptfile = open(fname,"w")
-		scriptfile.write(caseruntext)
-		scriptfile.close()
-
-		# Create script for postprocessing
-		pproruntext = scriptgen.pprocesstext(data)
-		# Create script file (pprocessrun.sh)
-		fname = 'pprocessrun.sh'
-		ppscriptfile = open(fname,"w")
-		ppscriptfile.write(pproruntext)
-		ppscriptfile.close()
-
-		# Create the new controldict
-		# if post-processing is Yes, then create new controldict & sample
-
-		# # Create a cleaner script
-		# cleanertext = scriptgen.cleanertext(args,data,fipath)
-		# fname = 'cleanrun.sh'
-		# cleanerfile = open(fname,"w")
-		# cleanerfile.write(cleanertext)
-		# cleanerfile.close()
+		# Create the solver files
+		cleaner = of7Dakota()
+		
+		# Dakota Scripts
+		cleaner.cleaning(args,path)
 
 		return 0
