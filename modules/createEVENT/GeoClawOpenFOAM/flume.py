@@ -82,12 +82,12 @@ class flume():
 		# Front face
 		self.front() # Front faces
 		self.fronttri() # Front triangles
-		self.writeSTL("Front",self.npa_front,self.npt_front,path) # Write front STL file
+		self.writeSTL("Entry",self.npa_front,self.npt_front,path) # Write front STL file
 
 		# Back face
 		self.back() # Back vertices
 		self.backtri() # Back triangles
-		self.writeSTL("Back",self.npa_back,self.npt_back,path) # Write back STL file
+		self.writeSTL("Exit",self.npa_back,self.npt_back,path) # Write back STL file
 
 		# Top face
 		self.top() # Top vertices
