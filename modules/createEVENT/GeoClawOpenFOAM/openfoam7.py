@@ -44,6 +44,7 @@ from of7Materials import of7Materials
 from of7Initial import of7Initial
 from of7Uboundary import of7Uboundary
 from of7Prboundary import of7Prboundary
+from of7Alpboundary import of7Alpboundary
 from of7PtDboundary import of7PtDboundary
 from of7Turbulence import of7Turbulence
 from of7Decomp import of7Decomp
@@ -51,7 +52,6 @@ from of7Solve import of7Solve
 from of7Others import of7Others
 from of7Dakota import of7Dakota
 from of7Process import of7Process
-# from hpc import OlaFlowDakota
 
 ####################################################################
 # OpenFOAM7 solver class
@@ -367,6 +367,17 @@ class openfoam7():
 		prfile.write(prtext)
 		prfile.close()
 
+		# Create object for alpha boundary condition
+		# Get the text for the alpha boundary
+		# Write the alpha-file in 0.org
+		Alpboundary = of7Alpboundary()
+		Alptext = Alpboundary.Alptext(data,patches)
+		fname = 'alpha.water'
+		filepath = os.path.join(path, '0.org', fname)
+		Alpfile = open(filepath, "w")
+		Alpfile.write(Alptext)
+		Alpfile.close()
+
 		# Loop over all the velocity type to see if any 
 		# has a moving wall. If so initialize the 
 		# pointDisplacement file
@@ -379,6 +390,8 @@ class openfoam7():
 			ptDfile = open(filepath, "w")
 			ptDfile.write(pdtext)
 			ptDfile.close()
+
+		
 
 		return 0
 
