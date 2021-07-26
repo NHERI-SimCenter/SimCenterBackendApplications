@@ -71,6 +71,18 @@ class of7Turbulence():
 
 		if int(turbmodel) == 0:
 			turbtext = turbtext + '\nsimulationType\tlaminar;\n'
+		elif int(turbmodel) == 1:
+			turbtext = turbtext + 'simulationType\tRAS;\n\n'
+			turbtext = turbtext + 'RAS\n{\n'
+			turbtext = turbtext + '\tRASModel\tkEpsilon;\n'
+			turbtext = turbtext + '\tturbulence\ton;\n'
+			turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'
+		elif int(turbmodel) == 2:
+			turbtext = turbtext + 'simulationType\tRAS;\n\n'
+			turbtext = turbtext + 'RAS\n{\n'
+			turbtext = turbtext + '\tRASModel\tkOmegaSST;\n'
+			turbtext = turbtext + '\tturbulence\ton;\n'
+			turbtext = turbtext + '\tprintCoeffs\ton;\n}\n'
 
 		return turbtext
 
