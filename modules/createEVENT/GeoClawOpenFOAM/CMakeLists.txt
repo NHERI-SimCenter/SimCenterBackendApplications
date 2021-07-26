@@ -1,7 +1,7 @@
 simcenter_add_python_script(SCRIPT flume.py)
 simcenter_add_python_script(SCRIPT GeoClaw.py)
 simcenter_add_python_script(SCRIPT GeoClawBathy.py)
-simcenter_add_python_script(SCRIPT GeoOpenFOAMEvent.py)
+simcenter_add_python_script(SCRIPT GetOpenFOAMEvent.py)
 simcenter_add_python_script(SCRIPT hydroUtils.py)
 simcenter_add_python_script(SCRIPT of7Alpboundary.py)
 simcenter_add_python_script(SCRIPT of7Building.py)
