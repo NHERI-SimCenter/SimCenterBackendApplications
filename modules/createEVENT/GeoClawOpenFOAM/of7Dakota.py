@@ -82,6 +82,24 @@ class of7Dakota():
 		caseruntext = caseruntext + 'echo Running dakota...\n'
 		caseruntext = caseruntext + 'ibrun dakota -in dakota.in -out dakota.out -err dakota.err\n\n'
 
+		# Cleanup
+		caseruntext = caseruntext + 'if [ -d ./workdir.1 ]\n'
+		caseruntext = caseruntext + 'then\n'
+		caseruntext = caseruntext + '\tmkdir ./workdir\n'
+		caseruntext = caseruntext + '\tmv workdir.* workdir\n'
+		caseruntext = caseruntext + '\ttar zcBf workdir.tar.gz workdir\n'
+		caseruntext = caseruntext + '\trm -fr workdir\n'
+		caseruntext = caseruntext + 'fi\n'
+		caseruntext = caseruntext + 'cp templatedir/dakota.json ./\n'
+		caseruntext = caseruntext + 'tar zcBf templatedir.tar.gz templatedir\n'
+		caseruntext = caseruntext + 'rm -fr templatedir\n\n'
+		caseruntext = caseruntext + 'cd ..\n\n'
+		caseruntext = caseruntext + 'if [ ! $? ]; then\n'
+		caseruntext = caseruntext + '\techo "dakota exited with an error status. $?" >&2\n'
+		caseruntext = caseruntext + '\t${AGAVE_JOB_CALLBACK_FAILURE}\n'
+		caseruntext = caseruntext + '\texit\n'
+		caseruntext = caseruntext + 'fi\n\n'
+
 		# Write to caserun file
 		scriptfile = open('caserun.sh',"a")
 		scriptfile.write(caseruntext)
@@ -97,28 +115,30 @@ class of7Dakota():
 			args: all the arguments
 		'''
 
-# tar -c -f trial.tar $(readlink -e a b c d)
-# tar -xvf trial.tar
+		print('No OF cleaning')
 
-		caseruntext = 'echo Starting cleaning...\n'
+# # tar -c -f trial.tar $(readlink -e a b c d)
+# # tar -xvf trial.tar
 
-		# Move all log files
-		caseruntext = caseruntext + 'mkdir ./logfiles\n'
-		caseruntext = caseruntext + 'find . -name "*.log" -exec mv "{}" ./logfiles \;' + '\n'
+# 		caseruntext = 'echo Starting cleaning...\n'
 
-		# Tar all files and folder
-		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles ' + path + ')\n'
+# 		# Move all log files
+# 		caseruntext = caseruntext + 'mkdir ./logfiles\n'
+# 		caseruntext = caseruntext + 'find . -name "*.log" -exec mv "{}" ./logfiles \;' + '\n'
 
-		# Remove all folders 
-		caseruntext = caseruntext + 'rm -rf ./*/' + '\n'
+# 		# Tar all files and folder
+# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles ' + path + ')\n'
 
-		# Untar
-		caseruntext = caseruntext + 'tar -xvf Files.tar\n'
+# 		# Remove all folders 
+# 		caseruntext = caseruntext + 'rm -rf ./*/' + '\n'
 
-		# Tar all other EVT files
-		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles)\n'
+# 		# Untar
+# 		caseruntext = caseruntext + 'tar -xvf Files.tar\n'
 
-		# Write to caserun file
-		scriptfile = open('caserun.sh',"a")
-		scriptfile.write(caseruntext)
-		scriptfile.close()
+# 		# Tar all other EVT files
+# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles)\n'
+
+# 		# Write to caserun file
+# 		scriptfile = open('caserun.sh',"a")
+# 		scriptfile.write(caseruntext)
+# 		scriptfile.close()
