@@ -78,7 +78,6 @@ class of7Alpboundary():
 			else:
 				Alptype = 0
 			Alptext = Alptext + self.Alppatchtext(Alptype,patchname)
-			print(patchname)
 
 		# Check for building and other building
 		Alptext = Alptext + '\tBuilding\n'

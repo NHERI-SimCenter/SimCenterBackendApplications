@@ -67,41 +67,41 @@ def main():
 		type=str,
 		help='the path to Dakota.json file',
 		required=True)
-	# # Input directory - templateDir
-	# h2oparser.add_argument(
-	# 	'-I',
-	# 	metavar='path to input directory',
-	# 	type=str,
-	# 	help='the path to input directory',
-	# 	required=True)
-	# # Library
-	# h2oparser.add_argument(
-	# 	'-L',
-	# 	metavar='path to library',
-	# 	type=str,
-	# 	help='the path to library',
-	# 	required=True)
-	# # User bin
-	# h2oparser.add_argument(
-	# 	'-P',
-	# 	metavar='path to user bin',
-	# 	type=str,
-	# 	help='the path to user app bin',
-	# 	required=True)
-	# # Input file
-	# h2oparser.add_argument(
-	# 	'-i',
-	# 	metavar='input file',
-	# 	type=str,
-	# 	help='input file',
-	# 	required=True)
-	# # Driver file
-	# h2oparser.add_argument(
-	# 	'-d',
-	# 	metavar='driver file',
-	# 	type=str,
-	# 	help='driver file',
-	# 	required=True)
+	# Input directory - templateDir
+	h2oparser.add_argument(
+		'-I',
+		metavar='path to input directory',
+		type=str,
+		help='the path to input directory',
+		required=True)
+	# Library
+	h2oparser.add_argument(
+		'-L',
+		metavar='path to library',
+		type=str,
+		help='the path to library',
+		required=True)
+	# User bin
+	h2oparser.add_argument(
+		'-P',
+		metavar='path to user bin',
+		type=str,
+		help='the path to user app bin',
+		required=True)
+	# Input file
+	h2oparser.add_argument(
+		'-i',
+		metavar='input file',
+		type=str,
+		help='input file',
+		required=True)
+	# Driver file
+	h2oparser.add_argument(
+		'-d',
+		metavar='driver file',
+		type=str,
+		help='driver file',
+		required=True)
 		
 	# Execute the parse_args() method
 	args = h2oparser.parse_args()

@@ -189,7 +189,6 @@ FoamFile
 
 		# Path to the file
 		filepath = os.path.join(fipath, fname)
-		print(filepath)
 		self.flog = open(filepath, "w")
 
 	#############################################################
