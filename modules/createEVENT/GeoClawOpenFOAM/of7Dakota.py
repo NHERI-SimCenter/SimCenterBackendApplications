@@ -94,11 +94,27 @@ class of7Dakota():
 		caseruntext = caseruntext + 'tar zcBf templatedir.tar.gz templatedir\n'
 		caseruntext = caseruntext + 'rm -fr templatedir\n\n'
 		caseruntext = caseruntext + 'cd ..\n\n'
-		caseruntext = caseruntext + 'if [ ! $? ]; then\n'
-		caseruntext = caseruntext + '\techo "dakota exited with an error status. $?" >&2\n'
-		caseruntext = caseruntext + '\t${AGAVE_JOB_CALLBACK_FAILURE}\n'
-		caseruntext = caseruntext + '\texit\n'
-		caseruntext = caseruntext + 'fi\n\n'
+		# caseruntext = caseruntext + 'if [ ! $? ]; then\n'
+		# caseruntext = caseruntext + '\techo "dakota exited with an error status. $?" >&2\n'
+		# caseruntext = caseruntext + '\t${AGAVE_JOB_CALLBACK_FAILURE}\n'
+		# caseruntext = caseruntext + '\texit\n'
+		# caseruntext = caseruntext + 'fi\n\n'
+
+		# Openfoam cleanup
+		caseruntext = caseruntext + 'rm -fr processor*\n'
+		caseruntext = caseruntext + 'rm -fr 0\n'
+		caseruntext = caseruntext + 'mkdir EVTfiles\n'
+		caseruntext = caseruntext + 'mv 0.org '+os.path.join('EVTfiles','0.org')+'\n'
+		caseruntext = caseruntext + 'mv constant '+os.path.join('EVTfiles','constant')+'\n'
+		caseruntext = caseruntext + 'mv system '+os.path.join('EVTfiles','system')+'\n'
+		caseruntext = caseruntext + 'mv postProcessing '+os.path.join('EVTfiles','postProcessing')+'\n'
+		caseruntext = caseruntext + 'mv *.log EVTfiles\n'
+		caseruntext = caseruntext + 'mv *.stl EVTfiles\n'
+		caseruntext = caseruntext + 'mv *.sh EVTfiles\n'
+		caseruntext = caseruntext + 'mv *.txt EVTfiles\n'
+		caseruntext = caseruntext + 'mv cdict* EVTfiles\n'
+		caseruntext = caseruntext + 'tar zcBf EVTfiles.tar.gz EVTfiles\n'
+		caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'
 
 		# Write to caserun file
 		scriptfile = open('caserun.sh',"a")
