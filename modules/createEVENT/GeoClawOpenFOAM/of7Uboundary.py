@@ -404,6 +404,7 @@ FoamFile
 		fileID = open(filepath, "w")
 
 		# Start writing the file
+		fileID.write('wavemakerType\tPiston;\n')
 		fileID.write('tSmooth\t1.5;\n')
 		fileID.write('genAbs\t0;\n\n')
 
@@ -487,6 +488,7 @@ FoamFile
 		fileID = open(filepath, "w")
 
 		# Start writing the file
+		fileID.write('wavemakerType\tPiston;\n')
 		fileID.write('tSmooth\t1.5;\n')
 		fileID.write('genAbs\t0;\n\n')
 

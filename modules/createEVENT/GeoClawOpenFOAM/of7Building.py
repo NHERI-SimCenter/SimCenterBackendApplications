@@ -35,7 +35,6 @@
 import os
 import meshio
 import numpy as np
-import re
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -113,18 +112,8 @@ class of7Building():
 						if str(height[0]) == [None]:
 							return -1
 
-						# xbuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","xbuild"])
-						# if str(xbuild[0]) == [None]:
-						# 	return -1
-
-						# ybuild = hydroutil.extract_element_from_json(data, ["GeneralInformation","ybuild"])
-						# if str(ybuild[0]) == [None]:
-						# 	return -1
 						geninfo = hydroutil.extract_element_from_json(data, ["GeneralInformation"])
 						geninfo = str(geninfo[0])
-						# depth = geninfo.partition("'depth': ")[2].partition(", 'height':")[0]
-						# width = geninfo.partition("'width': ")[2].partition("}")[0]
-						# height = geninfo.partition("'height': ")[2].partition(", 'location':")[0]
 						xbuild = geninfo.partition("'location': {'latitude': ")[1].partition(", 'longitude':")[0]
 						ybuild = geninfo.partition("'longitude': ")[2].partition("},")[0]
 						# if not depth:
@@ -214,6 +203,9 @@ class of7Building():
 		numresbuild = 0
 		numotherbuild = 0
 
+		# Get the coordinate and dimension data
+
+
 		# Find number of buildings
 		numbuild = ', '.join(hydroutil.extract_element_from_json(data, ["Events","NumBuild"]))
 		if int(numbuild) > 0:
@@ -225,14 +217,12 @@ class of7Building():
 				buildtype = nums[0]
 
 				if int(buildtype) == -2:
-					print('response + cuboid + GI')
 					# Create a temporary file using GI information (Response)
 					self.buildcubeGI(data,path)
-					# Call flume to build an STL
 					# Increment response buildign number
 					numresbuild += 1
 				elif int(buildtype) == -1:
-					# Check if STL file exists (Response)
+					# Move the STL file to OF folder and change name to Building (Response)
 					self.readResSTL(data,path,nums[3])
 					# Increment response buildign number
 					numresbuild += 1
@@ -282,6 +272,65 @@ class of7Building():
 		# Create a utilities object
 		hydroutil = hydroUtils()
 
+		# Create the building STL file
+		base_filename = 'Building'
+		filename = base_filename + ".stl"
+		# Define coordinates
+		npa = np.array([\
+			[-1, -1, -1],
+			[+1, -1, -1],
+			[+1, +1, -1],
+			[-1, +1, -1],
+			[-1, -1, +1],
+			[+1, -1, +1],
+			[+1, +1, +1],
+			[-1, +1, +1]])
+		npt = np.array([\
+			[0,3,1],
+			[1,3,2],
+			[0,4,7],
+			[0,7,3],
+			[4,5,6],
+			[4,6,7],
+			[5,1,2],
+			[5,2,6],
+			[2,3,6],
+			[3,7,6],
+			[0,1,5],
+			[0,5,4]])
+		# Scaling
+		npa = 0.5*npa
+		npa[:,2] = 0.5+npa[:,2]
+		# Temporary
+		npa[:,0] = npa[:,0]*3
+		npa[:,2] = npa[:,2]*1.2474
+		npa[:,0] = npa[:,0] + 47
+		npa[:,2] = npa[:,2] + 1.7526
+		
+		# Create the STL file
+		cells = [("triangle", npt)]
+		meshio.write_points_cells(filename, npa, cells)
+		# Modify first and last line
+		with open(filename) as f:
+			lines = f.readlines()
+			lines[0] = 'solid '+ base_filename + '\n'
+			lines[len(lines)-1] = 'endsolid ' + base_filename + '\n'
+		# Write the updated file    
+		with open(filename, "w") as f:
+			f.writelines(lines)
+		
+		# Create the translation script
+		if os.path.exists('translate.sh'):
+			with open('translate.sh','a') as f:
+				buildpath = os.path.join('constant','triSurface','Building.stl')
+				lines = 'cp Building.stl ' + buildpath + '\n'
+				f.writelines(lines)
+		else:
+			with open('translate.sh','w') as f:
+				buildpath = os.path.join('constant','triSurface','Building.stl')
+				lines = 'cp Building.stl ' + buildpath + '\n'
+				f.writelines(lines)
+
 	#############################################################
 	def readResSTL(self,data,path,ztrans):
 		'''
@@ -302,7 +351,9 @@ class of7Building():
 
 		# Read the stlfile
 		stlfilepath = os.path.join(path,stlfile)
+		print(stlfilepath)
 		mesh = meshio.read(stlfilepath,file_format="stl")
+
 		mesh.points[:,0] = mesh.points[:,0]/(max(abs(mesh.points[:,0])))
 		mesh.points[:,1] = mesh.points[:,1]/(max(abs(mesh.points[:,1])))
 		mesh.points[:,2] = mesh.points[:,2]/(max(abs(mesh.points[:,2])))
@@ -316,11 +367,11 @@ class of7Building():
 		xbuild = float(geninfo.partition("'location': {'latitude': ")[2].partition(", 'longitude':")[0])
 		ybuild = float(geninfo.partition("'longitude': ")[2].partition("},")[0])
 		depth = hydroutil.extract_element_from_json(data, ["GeneralInformation","depth"])
-		depth = int(depth[0])
+		depth = float(depth[0])
 		width = hydroutil.extract_element_from_json(data, ["GeneralInformation","width"])
-		width = int(width[0])
+		width = float(width[0])
 		height = hydroutil.extract_element_from_json(data, ["GeneralInformation","height"])
-		height = int(height[0])
+		height = float(height[0])
 
 		# Scale the STL model
 		mesh.points[:,0] = mesh.points[:,0]*depth

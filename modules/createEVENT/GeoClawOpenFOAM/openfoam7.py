@@ -124,10 +124,10 @@ class openfoam7():
 		caseruntext = 'echo Setting up variables\n\n'
 		caseruntext = caseruntext + 'export BIM='+args.b+'\n\n'
 		caseruntext = caseruntext + 'export HYDROPATH='+path+'\n\n'
-		# caseruntext = caseruntext + 'export LD_LIBRARY_PATH='+args.L+'\n\n'
-		# caseruntext = caseruntext + 'export PATH='+args.P+'\n\n'
-		# caseruntext = caseruntext + 'export inputFile='+args.i+'\n\n'
-		# caseruntext = caseruntext + 'export driverFile='+args.d+'\n\n'
+		caseruntext = caseruntext + 'export LD_LIBRARY_PATH='+args.L+'\n\n'
+		caseruntext = caseruntext + 'export PATH='+args.P+'\n\n'
+		caseruntext = caseruntext + 'export inputFile='+args.i+'\n\n'
+		caseruntext = caseruntext + 'export driverFile='+args.d+'\n\n'
 		caseruntext = caseruntext + 'export inputDirectory='+path+'\n\n'	
 		caseruntext = caseruntext + 'export HYDROBRAIN='+os.path.join(hydrobrain,'applications','createEVENT','GeoClawOpenFOAM')+'\n\n'
 
@@ -192,7 +192,7 @@ class openfoam7():
 		# Building related files
 		Building = of7Building()
 		if int(mesher[0]) == 1:
-			return 0	
+			return 0
 		elif int(mesher[0]) == 0 or int(mesher[0]) == 2:
 			buildcode = Building.buildcheck(data,path)
 			if buildcode == -1:

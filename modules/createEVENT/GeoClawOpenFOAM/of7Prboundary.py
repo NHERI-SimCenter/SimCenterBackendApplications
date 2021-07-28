@@ -152,7 +152,7 @@ FoamFile
 			if (int(Utype) > 100) and (int(Utype) < 200):
 				Prtype2 = "102"
 			elif (int(Utype) > 200) and (int(Utype) < 300):
-				Prtype2 = "201"
+				Prtype2 = "202"
 			elif int(Utype) > 300:
 				Prtype2 = "201"
 			else:
@@ -184,6 +184,11 @@ FoamFile
 			# Outlet zero gradient
 			Prtext = "\t{\n\t\t"
 			Prtext = Prtext + "type\tzeroGradient;\n\t}\n"
+		elif int(Prtype2) == 202:
+			Prtext = "\t{\n\t\t"
+			Prtext = Prtext + "type\tfixedValue;\n\t\t"
+			Prtext = Prtext + "value\t0;\n"
+			Prtext = Prtext + "\t}\n"
 		else:
 			# Default: Empty
 			Prtext = "\t{\n\t\t"
