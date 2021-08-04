@@ -856,7 +856,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
       s << "\n# Perform the analysis\n";
       json_t *fileScript = json_object_get(rootSIM,"fileName");
       if (fileScript != NULL) {
-	s << "source " << json_string_value(fileScript);
+	s << "source " << json_string_value(fileScript) << "\n";
       } else {
 
 	// if wind we need to perform 1 static load step
@@ -920,7 +920,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
     if (postprocessingScript != NULL) {
       if(strstr(postprocessingScript, ".py") != NULL) {
-	s <<  "remove recorders\n proc call_python {} {\n set output [exec python " <<
+	s <<  "\n remove recorders\n proc call_python {} {\n set output [exec python " <<
 	  postprocessingScript;
 
 	for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != \
