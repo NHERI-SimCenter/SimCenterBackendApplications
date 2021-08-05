@@ -1,373 +1,279 @@
-############################################################################
-# This python routine forms the backend where all the files are generated
-# to run the Hydro-UQ simulation
-#############################################################################
-import json
-import datetime
-import os
-import shutil
-import sys
-import numpy as np
-import argparse
-import pip
-from zipfile36 import ZipFile
+####################################################################
+# LICENSING INFORMATION
+####################################################################
+"""
+	LICENSE INFORMATION:
 
-# Import user-defined classes
-from GenUtilities import genUtilities # General utilities
-from OpenFOAM import solver # OpenFOAM class
+	Copyright (c) 2020-2030, The Regents of the University of California (Regents).
+
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+	1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+	The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of the FreeBSD Project.
+
+	REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+"""
+####################################################################
+# AUTHOR INFORMATION
+####################################################################
+# 2020 - 2021: Ajay B Harish (ajaybh@berkeley.edu)
 
 ####################################################################
-def install(package):
-    '''
-    Install all the requirements.
-    '''
+# Import all necessary modules
+####################################################################
+# Standard python modules
+import argparse
+import json
+import sys
+import datetime
 
-    # Install all python libraries required
-    # python3 -m pip3 install --user -r requirements.txt
+# Other custom modules
+from hydroUtils import hydroUtils
+from openfoam7 import openfoam7
 
-    # if hasattr(pip, 'main'):
-    #     pip.main(['install', package])
-    # else:
-    #     pip._internal.main(['install', package])
-
+####################################################################
+# Main function
 ####################################################################
 def main():
-    '''
-    This is the main routine which controls the flow of program.
+	"""
+	This is the primary function
 
-    Objects:
-        hydro_parser: Parse CLI arguments
-        hydroutil: General utilities
-        hydrosolver: Solver related file generation
+	Objects:
+		h2oparser: Parser for CLI arguments
 
-    Variables:
-        projname: Name of the project as given by the user
-        logID: Integer ID for the log file
-    '''
+	Functions:
+		main(): All necessary calls are made from this routine
 
-    # Get the system argument
-    # Create the parser
-    hydro_parser = argparse.ArgumentParser(description='Get the Dakota.json file')
+	Variables:
+		fipath: Path to dakota.json
+	"""
 
-    # Add the arguments
-    hydro_parser.add_argument('-b', metavar='path to input file', type=str, help='the path to dakota.json file', required=True)
-    hydro_parser.add_argument('-I', metavar='path to input directory', type=str, help='the path to input directory', required=True)
-    hydro_parser.add_argument('-L', metavar='path to library', type=str, help='the path to library', required=True)
-    hydro_parser.add_argument('-P', metavar='path to user bin', type=str, help='the path to user app bin', required=True)
-    hydro_parser.add_argument('-i', metavar='input file', type=str, help='input file', required=True)
-    hydro_parser.add_argument('-d', metavar='driver file', type=str, help='driver file', required=True)
+	# Get the system argument
+	# Create a parser Object
+	h2oparser = argparse.ArgumentParser(description='Get the Dakota.json file')
 
-    # Execute the parse_args() method
-    args = hydro_parser.parse_args()
+	# Add the arguments
+	# Path to dakota.json input file
+	h2oparser.add_argument(
+		'-b',
+		metavar='path to input file',
+		type=str,
+		help='the path to Dakota.json file',
+		required=True)
+	# Input directory - templateDir
+	h2oparser.add_argument(
+		'-I',
+		metavar='path to input directory',
+		type=str,
+		help='the path to input directory',
+		required=True)
+	# Library
+	h2oparser.add_argument(
+		'-L',
+		metavar='path to library',
+		type=str,
+		help='the path to library',
+		required=True)
+	# User bin
+	h2oparser.add_argument(
+		'-P',
+		metavar='path to user bin',
+		type=str,
+		help='the path to user app bin',
+		required=True)
+	# Input file
+	h2oparser.add_argument(
+		'-i',
+		metavar='input file',
+		type=str,
+		help='input file',
+		required=True)
+	# Driver file
+	h2oparser.add_argument(
+		'-d',
+		metavar='driver file',
+		type=str,
+		help='driver file',
+		required=True)
+		
+	# Execute the parse_args() method
+	args = h2oparser.parse_args()
 
-    # Get the path
-    fipath = args.b.replace('/dakota.json', '')
+	# Get the path
+	fipath = args.b.replace('/dakota.json','')
+	
+	# Open the JSON file and load all objects
+	with open(args.b) as f:
+		data = json.load(f)
 
-    # bimfile = os.path.join(args.b,"dakota.json")
-    # with open(bimfile) as f:
-    #     data = json.load(f)
+	# Create a utilities object
+	hydroutil = hydroUtils()
 
-    # Open the JSON file
-    # Load all the objects to the data variable
-    # with open('dakota.json') as f:
-    with open(args.b) as f:
-       data = json.load(f)
+	# Get the project name
+	projname = hydroutil.extract_element_from_json(data, ["Events","ProjectName"])
+	projname = ', '.join(projname)
 
-    # Create the objects
-    hydroutil = genUtilities() # General utilities
-    hydrosolver = solver() # Solver object 
+	# Initialize a log ID number
+	logID = 0
 
-    #***********************************
-    # HYDRO-UQ LOG FILE: INITIALIZE
-    #***********************************
-    # Get the project name
-    projname = hydroutil.extract_element_from_json(data, ["Events","ProjectName"])
-    projname = ', '.join(projname)
-    logID = 0
+	# Initialize the log
+	hydroutil.hydrolog(projname,fipath)
 
-    # Initialize the log
-    hydroutil.hydrolog(projname)
+	# Start the log file with header and time and date
+	logfiletext = hydroutil.general_header()
+	hydroutil.flog.write(logfiletext)
+	logID += 1
+	hydroutil.flog.write('%d (%s): This log has started.\n' % (logID,datetime.datetime.now()))
 
-    # Start the log file with header and time and date
-    logfiletext = hydroutil.general_header()
-    hydroutil.flog.write(logfiletext)
-    logID += 1
-    hydroutil.flog.write('%d (%s): This log has started.\n' % (logID,datetime.datetime.now()))
+	# Get the simulation type
+	simtype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SimulationType"]))
+	if int(simtype) == 0:
+		hydroutil.flog.write('%d (%s): No simulation type selected in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('No simulation type selected in EVT.')
 
-    #***********************************
-    # REQUIRED DIRECTORIES
-    #***********************************
-    # Create the OpenFOAM directories
-    foldwrite = hydrosolver.dircreate()
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following solver directories have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(foldwrite)))
+	# Get the solver type from the dakota file
+	hydrosolver = ', '.join(hydroutil.extract_element_from_json(data, ["Events","SolverChoice"]))
+		
+	# Find the solver
+	# 0 - OpenFoam7 (+ olaFlow)
+	# 1 - OpenFoam 8 (+ olaFlow)
+	# default - OpenFoam7 (+ olaFlow)
+	# Create related object
+	if int(hydrosolver) == 0:
+		solver = openfoam7()
 
-    #***********************************
-    # SUPPLEMENTARY SOLVER SPECIFIC FILES
-    #***********************************
-    fileswrite = hydrosolver.filecreate(data,fipath)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following required files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	elif int(hydrosolver) == 1:
+		print('This is not yet available')
+		# OpenFoam 8 + olaFlow
+		# solver = openfoam8()
+	
+	else:
+		# Default is Openfoam7 + olaFlow
+		solver = openfoam7()
 
-    #***********************************
-    # MATERIAL MODEL RELATED FILES
-    #***********************************
-    fileswrite = hydrosolver.matmodel(data)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following material-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Call the important routines
+	# Create folders and files
+	ecode = solver.createfolder(data,fipath,args)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error creating folders required for EVT solver.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error creating folders required for EVT solver.')
+	else:
+		hydroutil.flog.write('%d (%s): Folders required for EVT solver created.\n' % (logID,datetime.datetime.now()))
 
-    #***********************************
-    # SIMULATION CONTROL RELATED FILES
-    #***********************************
-    fileswrite = hydrosolver.solvecontrol(data)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following solver-control related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Create Geometry 
+	ecode = solver.creategeometry(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error creating geometry required for EVT solver.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error creating geometry required for EVT solver')
+	else:
+		hydroutil.flog.write('%d (%s): Geometry required for EVT solver created.\n' % (logID,datetime.datetime.now()))
+		
+	# Create meshing
+	ecode = solver.createmesh(data,fipath)
+	logID += 1
+	if ecode == 0:
+		hydroutil.flog.write('%d (%s): Files required for EVT meshing created.\n' % (logID,datetime.datetime.now()))
+	else:
+		hydroutil.flog.write('%d (%s): Error in Files required for EVT meshing.\n' % (logID,datetime.datetime.now()))
 
-    #***********************************
-    # PARALLELIZATION CONTROL RELATED FILES
-    #***********************************
-    fileswrite = hydrosolver.parallel(data)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following parallel-compute related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Material
+	ecode = solver.materials(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with material parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with material parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for materials definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-    #***********************************
-    # GEOMETRY RELATED FILES
-    # Call this only if we are using Hydro mesher
-    #***********************************
-    mesher = hydroutil.extract_element_from_json(data, ["Events","MeshType"])
-    if int(mesher[0]) == 0:
-        fileswrite = hydrosolver.geometry(data)
-        logID += 1
-        hydroutil.flog.write('%d (%s): Following geometry-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Create initial condition
+	ecode = solver.initial(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with initial condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Issues with definition of initial condition in EVT')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for initial condition definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-    else:
-        hydroutil.flog.write('%d (%s): No geometric files have not been created since the user is providing the mesh\n' % (logID,datetime.datetime.now()))
+	# Create boundary condition - to do (alpha, k, omega, nut, nuTilda)
+	ecode = solver.boundary(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with boundary condition definition in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Issues with definition of boundary condition in EVT')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for boundary condition definition successfully created.\n' % (logID,datetime.datetime.now()))
+		
+	# Turbulence
+	ecode = solver.turbulence(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with turbulence parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with turbulence parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for turbulence definition successfully created.\n' % (logID,datetime.datetime.now()))
 
-    #***********************************
-    # MESHING RELATED FILES
-    #***********************************
-    if int(mesher[0]) == 0:
-        fileswrite = hydrosolver.meshing(data)
-        logID += 1
-        hydroutil.flog.write('%d (%s): Following meshing-related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Parallelization
+	ecode = solver.parallelize(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with parallelization parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with parallelization parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for parallelization successfully created.\n' % (logID,datetime.datetime.now()))
 
-    elif int(mesher[0]) == 2:
+	# Solver settings
+	ecode = solver.solve(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with solver parameters in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with solver parameters in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Files required for solver successfully created.\n' % (logID,datetime.datetime.now()))
 
-        fileswrite = np.array([])
-        # Check if OF mesh dictionary exists then move to system
-        if os.path.isfile("templateDir/blockMeshDict"):
-            shutil.move("templateDir/blockMeshDict", "system/blockMeshDict")
-            fileswrite = np.append(fileswrite,['blockMeshDict'])
+	# Other files
+	ecode = solver.others(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with creating auxillary files in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with creating auxillary files in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Auxillary files required successfully created.\n' % (logID,datetime.datetime.now()))
 
-        if os.path.isfile("templateDir/surfaceFeatureExtractDict"):
-            shutil.move("templateDir/surfaceFeatureExtractDict", "system/surfaceFeatureExtractDict")
-            fileswrite = np.append(fileswrite,['surfaceFeatureExtractDict'])
+	# Dakota scripts
+	solver.dakota(args)
 
-        if os.path.isfile("templateDir/snappyHexMeshDict"):
-            shutil.move("templateDir/snappyHexMeshDict", "system/snappyHexMeshDict")
-            fileswrite = np.append(fileswrite,['snappyHexMeshDict'])
-        
-        if fileswrite.size != 0:
-            # Confirm the copy
-            hydroutil.flog.write('%d (%s): Following mesh dictionaries provided by the user have been copied to system folder: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
+	# Event post processing
+	ecode = solver.postprocessing(data,fipath)
+	logID += 1
+	if ecode < 0:
+		hydroutil.flog.write('%d (%s): Error with creating postprocessing files in EVT.\n' % (logID,datetime.datetime.now()))
+		sys.exit('Error with creating postprocessing files in EVT.')
+	else:
+		hydroutil.flog.write('%d (%s): Postprocessing files required for EVT successfully created.\n' % (logID,datetime.datetime.now()))
 
-        else:
-            hydroutil.flog.write('%d (%s): WARNING: Mesh dictionaries not found\n' % (logID,datetime.datetime.now()))
+	# Cleaning scripts
+	solver.cleaning(args,fipath)
 
-    else:
-        hydroutil.flog.write('%d (%s): Mesh files are provided by the user and thus mesh-dictionary creation has been skipped\n' % (logID,datetime.datetime.now()))
-
-    #***********************************
-    # INITIAL CONDITIONS RELATED FILES
-    # Presently only supports alpha
-    #***********************************
-    fileswrite = hydrosolver.initcond(data)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
-
-    #***********************************
-    # BOUNDARY CONDITIONS RELATED FILES
-    #***********************************
-    fileswrite = hydrosolver.bouncond(data,fipath)
-    logID += 1
-    hydroutil.flog.write('%d (%s): Following initial condition related files have been created: %s\n' % (logID,datetime.datetime.now(),', '.join(fileswrite)))
-
-    #***********************************
-    # CLEANUP TEMP FILES
-    #***********************************
-    if(os.path.exists("FlumeData.txt")):
-        os.remove("FlumeData.txt")
-
-    # if(os.path.exists("wmwg.txt")):
-    #     os.remove("wmwg.txt")
-    
-    # if(os.path.exists("wmdisp.txt")):
-    #     os.remove("wmdisp.txt")
-
-    #***********************************
-    # RUNCASE SCRIPT FOR TACC
-    #***********************************  
-    # Create the case run script
-    fileIDrun = open("caserun.sh","w")
-
-    # Get information
-    #print(hydroutil.extract_element_from_json(data, ["GeneralInformation","stories"])[0])
-    hydrobrain = ', '.join(hydroutil.extract_element_from_json(data, ["remoteAppDir"]))
-
-    # Add all variables
-    fileIDrun.write('echo Setting up variables\n')
-    fileIDrun.write('export BIM='+args.b+'\n')
-    fileIDrun.write('export HYDROPATH='+fipath+'\n')
-    fileIDrun.write('export LD_LIBRARY_PATH='+args.L+'\n')
-    fileIDrun.write('export PATH='+args.P+'\n')
-    fileIDrun.write('export inputFile='+args.i+'\n')
-    fileIDrun.write('export driverFile='+args.d+'\n')
-    fileIDrun.write('export inputDirectory='+fipath+'\n')
-    fileIDrun.write('export HYDROBRAIN='+hydrobrain+'/applications/createEVENT/GeoClawOpenFOAM\n\n')
-
-    # Load all modules
-    fileIDrun.write('echo Loading modules on Stampede2\n')
-    fileIDrun.write('module load intel/18.0.2\n')
-    fileIDrun.write('module load impi/18.0.2\n')
-    fileIDrun.write('module load openfoam/7.0\n')
-    fileIDrun.write('module load dakota/6.8.0\n')
-    fileIDrun.write('module load python3\n\n')
-
-    # Start with meshing
-    if int(mesher[0]) == 0:
-        # Join all the STL files
-        # Read the temporary geometry file with extreme values
-        data_geoext = np.genfromtxt("temp_geometry", dtype=(float))
-        flag = int(data_geoext[6])
-        fileIDrun.write('echo Combining STL files for usage...\n')
-        if flag == 0:
-            fileIDrun.write('cat constant/triSurface/Front.stl constant/triSurface/Back.stl constant/triSurface/Top.stl constant/triSurface/Bottom.stl constant/triSurface/Left.stl constant/triSurface/Right.stl > constant/triSurface/Full.stl\n\n')
-        elif flag == 1:
-            fileIDrun.write('cat constant/triSurface/Front.stl constant/triSurface/Back.stl constant/triSurface/Top.stl constant/triSurface/Bottom.stl constant/triSurface/Left.stl constant/triSurface/Right.stl constant/triSurface/Building.stl > constant/triSurface/Full.stl\n\n')
-        elif flag == 2:
-            fileIDrun.write('cat constant/triSurface/Front.stl constant/triSurface/Back.stl constant/triSurface/Top.stl constant/triSurface/Bottom.stl constant/triSurface/Left.stl constant/triSurface/Right.stl constant/triSurface/Building.stl constant/triSurface/OtherBuilding.stl> constant/triSurface/Full.stl\n\n')
-
-        # blockMesh
-        fileIDrun.write('echo blockMesh running...\n')
-        fileIDrun.write('blockMesh > blockMesh.log\n\n')
-        # surfaceFeatureExtract
-        fileIDrun.write('echo surfaceFeatureExtract running...\n')
-        fileIDrun.write('surfaceFeatureExtract -force > sFeatureExt.log\n\n')
-        # snappyHexMesh
-        fileIDrun.write('echo snappyHexMesh running...\n')
-        fileIDrun.write('snappyHexMesh > snappyHexMesh.log\n')
-        # Copy the polyMesh folder
-        fileIDrun.write('cp -r 2/polyMesh constant\n')
-        # Remove folder 1 and 2
-        fileIDrun.write('rm -fr 1 2\n')
-        # Create new controlDict
-        fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b '+args.b+'\n\n')
-    
-    elif int(mesher[0]) == 1:
-        # blockMesh
-        if os.path.isfile("templateDir/blockMeshDict"):
-            fileIDrun.write('echo blockMesh running...\n')
-            fileIDrun.write('blockMesh > blockMesh.log\n\n')
-        # surfaceFeatureExtract
-        if os.path.isfile("templateDir/surfaceFeatureExtractDict"):
-            fileIDrun.write('echo surfaceFeatureExtract running...\n')
-            fileIDrun.write('surfaceFeatureExtract -force > sFeatureExt.log\n\n')
-        # snappyHexMesh
-        if os.path.isfile("templateDir/snappyHexMeshDict"):
-            fileIDrun.write('echo snappyHexMesh running...\n')
-            fileIDrun.write('snappyHexMesh > snappyHexMesh.log\n')
-            # Copy the polyMesh folder
-            fileIDrun.write('cp -r 2/polyMesh constant\n')
-            # Remove folder 1 and 2
-            fileIDrun.write('rm -fr 1 2\n')
-            # Create new controlDict
-            fileIDrun.write('python3 $HYDROBRAIN/ControlDict.py -b '+args.b+'\n\n')
-
-    elif int(mesher[0]) == 2:
-        # Get the mesh software
-        meshsoftware = hydroutil.extract_element_from_json(data, ["Events","MeshSoftware"])
-        # Get the mesh file name
-        meshfile = hydroutil.extract_element_from_json(data, ["Events","MeshFile"])
-        # Add the file paths
-        fileIDrun.write('MESHFILE=${inputDirectory}/templatedir/'+meshfile[0]+'\n')
-        # Write out the appropriate commands
-        if int(meshsoftware[0]) == 0:
-            fileIDrun.write('fluentMeshToFoam $MESHFILE > fluentMeshToFoam.log\n\n')
-        elif int(meshsoftware[0]) == 1:
-            fileIDrun.write('ideasToFoam $MESHFILE > ideasToFoam.log\n\n')
-        elif int(meshsoftware[0]) == 2:
-            fileIDrun.write('cfx4ToFoam $MESHFILE > cfx4ToFoam.log\n\n')
-        elif int(meshsoftware[0]) == 3:
-            fileIDrun.write('gambitToFoam $MESHFILE > gambitToFoam.log\n\n')
-        elif int(meshsoftware[0]) == 4:
-            fileIDrun.write('gmshToFoam $MESHFILE > gmshToFoam.log\n\n')
-
-    # Add patches for building forces
-    #fileIDrun.write('patches="Building"\n')
-    #fileIDrun.write('python3 $HYDROBRAIN/AddBuildingForces.py -c $(pwd) -b ${inputDirectory}/templatedir/dakota.json -p $patches\n\n')
-
-    # Check the mesh
-    fileIDrun.write('echo Checking mesh...\n')
-    fileIDrun.write('checkMesh > Meshcheck.log\n\n')
-
-    # Create the 0-folder
-    fileIDrun.write('echo Creating 0-folder...\n')
-    fileIDrun.write('rm -fr 0\n')
-    fileIDrun.write('cp -r 0.org 0\n\n')
-
-    # Setting the fields
-    fileIDrun.write('echo Setting fields...\n')
-    fileIDrun.write('setFields > setFields.log\n\n')
-
-    # Decompose the domain
-    fileIDrun.write('echo Decomposing domain...\n')
-    fileIDrun.write('decomposePar > decomposePar.log\n\n')
-
-    # Start the CFD simulation
-    # Get the number of processors required
-    procs = ', '.join(hydroutil.extract_element_from_json(data, ["Events","DomainDecomposition"]))
-    procs = procs.replace(',', ' ')
-    nums = [int(n) for n in procs.split()]
-    totalprocs = nums[0]*nums[1]*nums[2]
-    fileIDrun.write('echo Starting CFD simulation...\n')
-    fileIDrun.write('ibrun olaDyMFlow -parallel > olaDyMFlow.log\n\n')
-
-    # Call building forces to run Dakota
-    fileIDrun.write('echo Starting Dakota preparation...\n')
-    #fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+' -f 1\n') # Change to number of floors
-    fileIDrun.write('python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n') # Change to number of floors
-    fileIDrun.write('cp -f EVENT.json ${inputDirectory}/EVENT.json\n')
-    fileIDrun.write('cp -f EVENT.json ${inputDirectory}/evt.j\n\n')
-
-    # Load necessary modules
-    fileIDrun.write('echo Loading necessary modules for Dakota...\n')
-    fileIDrun.write('module load intel/18.0.2  impi/18.0.2 dakota/6.8.0 python3\n\n')
-    
-    # Initialize file names and scripts
-    fileIDrun.write('echo Initializing file names and scripts...\n')
-    fileIDrun.write('echo "inputScript is ${inputFile}"\n')
-
-    fileIDrun.write('cd ${inputDirectory}\n')
-    fileIDrun.write('chmod \'a+x\' workflow_driver\n')
-    fileIDrun.write('cp workflow_driver ../\n')
-    fileIDrun.write('cd ..\n\n')
-
-    # Run Dakota
-    fileIDrun.write('echo Running dakota...\n')
-    fileIDrun.write('ibrun dakota -in dakota.in -out dakota.out -err dakota.err\n\n')
-
-    # Clean up all the directories
-    fileIDrun.write('echo Cleaning up...\n')
-    fileIDrun.write('cp templatedir/dakota.json ./\n')
-
-    # # Temporarily halt progress here
-    # sys.exit()
+	# Write to caserun file
+	caseruntext = 'echo HydroUQ complete'
+	scriptfile = open('caserun.sh',"a")
+	scriptfile.write(caseruntext)
+	scriptfile.close()
 
 ####################################################################
+# Primary function call
+####################################################################
 if __name__ == "__main__":
-    
-    # Install the requirements
-    # install('requirements.txt')
-    
-    # Call the main routine
-    main()
+
+	# Call the main routine
+	main()
+

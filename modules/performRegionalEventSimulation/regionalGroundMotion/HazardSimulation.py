@@ -147,9 +147,12 @@ if __name__ == '__main__':
             psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
                                                event_info['GMPE'],
                                                event_info['IntensityMeasure'])
-        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:
+        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:           
             # import FetchOpenQuake
             from FetchOpenQuake import *
+            # install packages used by OpenQuake
+            for p in install_requires:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", p])
             # Preparing config ini for OpenQuake
             filePath_ini = openquake_config(site_info, scenario_info, event_info, input_dir)
             if not filePath_ini:

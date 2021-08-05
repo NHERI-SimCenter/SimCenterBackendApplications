@@ -50,6 +50,20 @@ import stat
 import subprocess
 import time
 
+install_requires = [
+    'setuptools',
+    'h5py >=2.10, <2.11',
+    'pyzmq <20.0',
+    'psutil >=2.0, <5.7',
+    'docutils >=0.11',
+    'django >=1.11, <2.3',
+    'pyshp ==1.2.3',
+    'toml',
+    'pyproj >=1.9',
+]
+
+oq_version = 'df12fe9'
+
 # handleError for permission denied
 def handleError(func, path, exc_info):
     print('Handling Error for file ' , path)
@@ -66,9 +80,19 @@ if not os.path.isdir(os.path.dirname(os.path.realpath(__file__))+'/openquake'):
     if not os.path.isdir('./oq-engine'):
         try:
             os.system('git clone https://github.com/gem/oq-engine.git')
+            try:
+                # switch to the stable version
+                owd = os.getcwd()
+                os.chdir('./oq-engine')
+                os.system('git clean -d -f')
+                os.system('git checkout '+oq_version)
+                os.chdir(owd)
+            except:
+                print('FetchOpenQuake: failed to switch to the OpenQuake commit '+oq_version)
         except:
+            shutil.rmtree('oq-engine', onerror=handleError)
             print('FetchOpenQuake: could not clone https://github.com/gem/oq-engine.git')
-    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake')
+    shutil.copytree('./oq-engine/openquake',os.path.dirname(os.path.realpath(__file__))+'/openquake',symlinks=True)
     shutil.rmtree('oq-engine', onerror=handleError)
 
 from openquake.baselib import config, version, performance, general, zeromq, hdf5, parallel
