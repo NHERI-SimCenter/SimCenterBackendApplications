@@ -109,11 +109,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
 
-    # Number of dimensions
-    root_SAM['ndm'] = '2'
+    # Number of dimensions (KZ & AZ: changed to integer)
+    root_SAM['ndm'] = 2
 
-    # Number of degrees of freedom at each node
-    root_SAM['ndf'] = '3'
+    # Number of degrees of freedom at each node (KZ & AZ: changed to integer)
+    root_SAM['ndf'] = 3
 
     # Get the number of stories
     numStories = rootSIM['numStories']
@@ -130,8 +130,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
             # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)
             nodeTagBot = 1010 + 100*i
         else:
-            # Node tag at upper stories (1, i, 1, 1)
-            nodeTagBot = 1011 + 100*i
+            # KZ & AZ: minor patch for story numbers greater than 10
+            if i > 9:
+                nodeTagBot = 10011 + 100*i
+            else:
+                nodeTagBot = 1011 + 100*i
 
         # Create the node and add it to the node mapping array
         node_entry = {}
@@ -139,6 +142,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
         node_entry['cline'] = 'response'
         node_entry['floor'] = '{}'.format(i-1)
         node_map.append(node_entry)
+
+        ## KZ & AZ: Add centroid for roof drift
+        node_entry_c = {}
+        node_entry_c['node'] = nodeTagBot
+        node_entry_c['cline'] = 'centroid'
+        node_entry_c['floor'] = '{}'.format(i-1)
+        node_map.append(node_entry_c)
 
     root_SAM['NodeMapping'] = node_map
     root_SAM['numStory'] = numStories
