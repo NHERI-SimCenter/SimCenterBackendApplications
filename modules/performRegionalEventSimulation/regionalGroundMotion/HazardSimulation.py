@@ -154,37 +154,27 @@ if __name__ == '__main__':
             for p in install_requires:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", p])
             # Preparing config ini for OpenQuake
-            filePath_ini = openquake_config(site_info, scenario_info, event_info, dir_info)
+            filePath_ini = openquake_config(site_info, scenario_info, event_info, input_dir)
             if not filePath_ini:
                 # Error in ini file
                 print('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
                 exit()
-            if scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-                # Calling openquake to run classical PSHA
-                oq_flag = oq_run_classical_psha(filePath_ini, exports='csv')
-                if not oq_flag:
-                    print('HazardSimulation: OpenQuake Classical PSHA completed.')
-                ln_psa_mr, mag_maf = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
-                stn_new = stations['Stations']
-            else:                
-                # Creating and conducting OpenQuake calculations
-                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info)
-                oq_calc.run_calc()
-                psa_raw = [oq_calc.eval_calc()]
-                stn_new = stations['Stations']
+            # Creating and conducting OpenQuake calculations
+            oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info)
+            oq_calc.run_calc()
+            psa_raw = [oq_calc.eval_calc()]
+            stn_new = stations['Stations']
             
         # Updating station information
         stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
         #print(psa_raw)
-        if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-            # Computing correlated IMs
-            ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
-                                                        event_info['NumberPerSite'],
-                                                        event_info['CorrelationModel'],
-                                                        event_info['IntensityMeasure'])
-            print('HazardSimulation: correlated response spectra computed.')
-        print(ln_psa_mr)
+        # Computing log mean Sa
+        ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
+                                                    event_info['NumberPerSite'],
+                                                    event_info['CorrelationModel'],
+                                                    event_info['IntensityMeasure'])
+        print('HazardSimulation: correlated response spectra computed.')
         if event_info['SaveIM']:
             print('HazardSimulation: saving simulated intensity measures.')
             _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
