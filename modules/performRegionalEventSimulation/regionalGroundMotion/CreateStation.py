@@ -171,7 +171,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
 
         if stn.get(z1p0_label):
-            tmp.update({'z1pt0': stn.get(z2p5_label)})
+            tmp.update({'z1pt0': stn.get(z1p0_label)})
         else:
             if z1_tag:
                 if not tmp.get('Vs30'):
@@ -179,7 +179,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
 
         if stn.get(z2p5_label):
-            tmp.update({'z2.5': stn.get(z2p5_label)})
+            tmp.update({'z2pt5': stn.get(z2p5_label)})
         else:
             if z25_tag:
                 if not tmp.get('z1pt0'):
