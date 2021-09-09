@@ -152,6 +152,11 @@
             "id": "filter_label",
             "type": "string",
             "description": "Custom label to use for pre-selection of grid points"
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "Seed for the random generator"
           }
         ]
       }
@@ -220,7 +225,7 @@
             "description": "Defines the number of degrees of freedom in the numerical model."
           }
         ]
-      },	
+      },
       {
         "Name": "HazardBasedEvent",
         "ExecutablePath": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
@@ -497,7 +502,7 @@
         "Name": "StandardEDP",
         "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
         "ApplicationSpecificInputs": []
-      },	
+      },
       {
         "Name": "StandardGMT_EDP",
         "ExecutablePath": "applications/createEDP/gmtEDP/StandardGMT_EDP",
