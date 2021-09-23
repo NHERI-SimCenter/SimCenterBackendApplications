@@ -497,6 +497,11 @@
         "Name": "StandardEDP",
         "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "DummyEDP",
+        "ExecutablePath": "applications/createEDP/dummyEDP/DummyEDP",
+        "ApplicationSpecificInputs": []
       },	
       {
         "Name": "StandardGMT_EDP",
