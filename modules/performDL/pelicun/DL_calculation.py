@@ -40,6 +40,15 @@
 
 from time import gmtime, strftime
 
+DL_method_to_AT = {
+    'FEMA P58': 'FEMA_P58',
+    'HAZUS MH EQ': 'HAZUS_EQ',
+    'HAZUS MH': 'HAZUS_EQ',
+    'HAZUS MH EQ IM': 'HAZUS_EQ',
+    'HAZUS MH HU': 'HAZUS_HU',
+    'HAZUS MH FL': 'HAZUS_FL'
+}
+
 def log_msg(msg):
 
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
@@ -51,15 +60,14 @@ log_msg('First line of DL_calculation')
 import sys, os, json, ntpath, posixpath, argparse
 import numpy as np
 import pandas as pd
-
-from scipy.stats import norm, binom
-from scipy.optimize import minimize
+import shutil
 
 idx = pd.IndexSlice
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from pelicunPBE.base import str2bool
+from pelicunPBE.file_io import get_required_resources
 from pelicunPBE.control import FEMA_P58_Assessment, HAZUS_Assessment
 from pelicunPBE.auto import auto_populate
 
@@ -70,6 +78,8 @@ from pelicunPBE.auto import auto_populate
 # ------------------------------------------------------------------------------
 
 def neg_log_likelihood(params, IM, num_records, num_collapses):
+    from scipy.stats import norm, binom
+
     theta = params[0]
     beta = params[1]
 
@@ -91,11 +101,13 @@ def neg_log_likelihood(params, IM, num_records, num_collapses):
 # using dynamic structural analysis.” Earthquake Spectra, 31(1), 579-599.
 
 def lognormal_MLE(IM,num_records,num_collapses):
+    from scipy.optimize import minimize
+
     # initial guess for parameters
     params0 = [np.log(1.0), 0.4]
     #params = minimize(neg_log_likelihood, params0, args=(IM, num_records, num_collapses), method='Nelder-Mead',
-    #                    options={'maxfev': 400*2,
-    #                         'adaptive': True})
+    #               options={'maxfev': 400*2,
+    #                   'adaptive': True})
 
     params = minimize(neg_log_likelihood, params0, args=(IM, num_records, num_collapses), bounds=((None, None), (1e-10, None)))
     theta = np.exp(params.x[0])
@@ -108,6 +120,8 @@ def lognormal_MLE(IM,num_records,num_collapses):
 # ------------------------------------------------------------------------------
 
 def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
+    from scipy.stats import norm
+
     with open(BIMfile, 'r') as f:
         BIM = json.load(f)
         Pcol = norm.cdf(np.log(num_collapses/theta)/beta)
