@@ -87,7 +87,7 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
 
     tasksCount = int(math.ceil(count/task_size))
 
-    workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/R2DTool_workflow.py"
+    workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/rWHALE.py"
 
     subfolder = 0
     for i in range(0, tasksCount):
