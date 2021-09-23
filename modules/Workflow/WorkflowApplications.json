@@ -113,6 +113,22 @@
       ]
     },
     "Applications":[
+      {
+        "Name": "DummyEventApp",
+        "ExecutablePath": "applications/performRegionalEventSimulation/DummyEventApp/DEA.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "appSpecInput1",
+            "type": "string",
+            "description": "Description..."
+          },
+          {
+            "id": "appSpecInput2",
+            "type": "int",
+            "description": "Description..."
+          }
+        ]
+      }
     ]
   },
   "RegionalMappingApplications": {

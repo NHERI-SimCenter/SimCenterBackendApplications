@@ -104,6 +104,10 @@ def main(run_type, input_file, app_registry,
     # initialize the working directory
     WF.init_workdir()
 
+    # perform the event simulation (if needed)
+    if 'RegionalEvent' in WF.workflow_apps.keys():
+        WF.perform_regional_event()
+
     # prepare the basic inputs for individual buildings
     building_file = WF.create_building_files()
     WF.perform_regional_mapping(building_file)
