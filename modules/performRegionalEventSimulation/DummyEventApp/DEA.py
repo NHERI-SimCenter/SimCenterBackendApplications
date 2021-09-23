@@ -3,7 +3,7 @@
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
-# This file is part of pelicun.
+# This file is part of the SimCenter Backend Applications
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,22 +32,25 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with
-# pelicun. If not, see <http://www.opensource.org/licenses/>.
+# this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Adam Zsarnóczay
+#
 
-name = "pelicunPBE"
-
-__version__ = '2.6.1'
-
-__copyright__ = """Copyright (c) 2018 Leland Stanford Junior University and 
-The Regents of the University of California"""
-
-__license__ = "BSD 3-Clause License"
+import argparse
 
 
+def simulate_event(in1, in2):
+
+    print(f'SIMULATING EVENT: {in1}, {in2}')
 
 
+if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--appSpecInput1')
+    parser.add_argument('--appSpecInput2', type=int)
+    args = parser.parse_args()
 
+    simulate_event(args.appSpecInput1, args.appSpecInput2)
