@@ -130,7 +130,7 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
 
             # run the simulation
             task_list += (f'python3 {workflowScript} '
-                          f'/tmp/{rWHALE_dir}/{config_file} '                          
+                          f'/tmp/{rWHALE_dir}/{config_file} '
                           f'-d /tmp/{rWHALE_dir}/input_data '
                           f'-w {run_dir} -l {log_path} '
                           f'--filter {filter} && ')
@@ -140,7 +140,7 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
 
                 res_type = None
 
-                if out_type in ['EDP', 'DM', 'DV']:
+                if out_type in ['BIM', 'EDP', 'DM', 'DV']:
                     res_type = out_type
                     file_name = f'{res_type}*.csv'
                 elif out_type == 'every_realization':
@@ -248,7 +248,7 @@ def generate_workflow_tasks_siteresponse(bldg_filter, config_file, out_dir, task
 
             # run the simulation
             task_list += (f'python3 {workflowScript} '
-                          f'/tmp/{rWHALE_dir}/{config_file} '                          
+                          f'/tmp/{rWHALE_dir}/{config_file} '
                           f'-d /tmp/{rWHALE_dir}/input_data '
                           f'-w {run_dir} -l {log_path} '
                           f'--filter {filter} && ')

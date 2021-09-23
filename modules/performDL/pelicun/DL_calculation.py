@@ -123,7 +123,7 @@ def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
 # END temporary functions ----
 
 def run_pelicun(DL_input_path, EDP_input_path,
-    DL_method, realization_count, EDP_file, DM_file, DV_file,
+    DL_method, realization_count, BIM_file, EDP_file, DM_file, DV_file,
     output_path=None, detailed_results=True, coupled_EDP=False,
     log_file=True, event_time=None, ground_failure=False,
     auto_script_path=None):
@@ -266,7 +266,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
         A.aggregate_results()
 
-        A.save_outputs(output_path, EDP_file, DM_file, DV_file, stripe_str,
+        A.save_outputs(output_path, BIM_file, EDP_file, DM_file, DV_file, stripe_str,
                        detailed_results=detailed_results)
 
     return 0
@@ -278,6 +278,7 @@ def main(args):
     parser.add_argument('--filenameEDP')
     parser.add_argument('--DL_Method', default = None)
     parser.add_argument('--Realizations', default = None)
+    parser.add_argument('--outputBIM', default='BIM.csv')
     parser.add_argument('--outputEDP', default='EDP.csv')
     parser.add_argument('--outputDM', default = 'DM.csv')
     parser.add_argument('--outputDV', default = 'DV.csv')
@@ -300,7 +301,8 @@ def main(args):
     run_pelicun(
         args.filenameDL, args.filenameEDP,
         args.DL_Method, args.Realizations,
-        args.outputEDP, args.outputDM, args.outputDV,
+        args.outputBIM, args.outputEDP,
+        args.outputDM, args.outputDV,
         output_path = args.dirnameOutput,
         detailed_results = args.detailed_results,
         coupled_EDP = args.coupled_EDP,
