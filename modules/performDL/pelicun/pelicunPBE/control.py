@@ -258,9 +258,9 @@ class Assessment(object):
         if self._hazard == 'EQ':
             self._EDP_in = read_SimCenter_EDP_input(
                 path_EDP_input,
-                EDP_kinds=('PID', 'PRD', 'RID', 'PFA', 'PMD',
-                           'PGA', 'PGV', 'SA', 'SV', 'SD',
-                           'PGD','DWD', 'RDR'),
+                #EDP_kinds=('PID', 'PRD', 'RID', 'PFA', 'PMD',
+                #           'PGA', 'PGV', 'SA', 'SV', 'SD',
+                #           'PGD','DWD', 'RDR'),
                 units=dict(PID=1.,
                            PRD=1.,
                            RID=1.,
@@ -277,7 +277,8 @@ class Assessment(object):
                 verbose=verbose)
         elif self._hazard == 'HU':
             self._EDP_in = read_SimCenter_EDP_input(
-                path_EDP_input, EDP_kinds=('PWS','PIH',),
+                path_EDP_input,
+                #EDP_kinds=('PWS','PIH',),
                 units=dict(PWS=self._AIM_in['units']['speed'],
                            PIH=self._AIM_in['units']['length']),
                 verbose=verbose)
@@ -328,7 +329,7 @@ class Assessment(object):
         log_msg('Calculating losses...')
         self._DV_dict = {}
 
-    def save_outputs(self, output_path, EDP_file, DM_file, DV_file,
+    def save_outputs(self, output_path, BIM_file, EDP_file, DM_file, DV_file,
                      suffix="", detailed_results=True):
         """
         Export the results.
@@ -458,6 +459,11 @@ class Assessment(object):
                         stats_only=True)
 
             #if True:
+            # create the BIM file
+            log_msg('\t\tSimCenter BIM file')
+            write_SimCenter_BIM_output(
+                output_path, suffix + BIM_file, self._AIM_in['GI'])
+
             # create the EDP file
             if self._assessment_type.startswith('HAZUS'):
                 log_msg('\t\tSimCenter EDP file')
