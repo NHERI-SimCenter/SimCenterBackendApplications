@@ -126,7 +126,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
     DL_method, realization_count, BIM_file, EDP_file, DM_file, DV_file,
     output_path=None, detailed_results=True, coupled_EDP=False,
     log_file=True, event_time=None, ground_failure=False,
-    auto_script_path=None):
+    auto_script_path=None, resource_dir=None):
 
     DL_input_path = os.path.abspath(DL_input_path) # BIM file
     EDP_input_path = os.path.abspath(EDP_input_path) # dakotaTab
@@ -245,6 +245,53 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
         stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
 
+        # Copy the resources to the specified location - if needed
+        if resource_dir is not None:
+            resource_dir = os.path.abspath(resource_dir)
+
+            AT = DL_method_to_AT[DL_method]
+
+            resources = get_required_resources(DL_input_path, AT)
+
+            # take each resource file
+            for name, resource in resources.items():
+
+                resource_filename = os.path.basename(resource)
+
+                # copy it to the designated location
+                if ((AT == 'HAZUS_HU') and (name == 'component')):
+                    # hurricane assessments require two files
+                    temp_resource = resource.replace('.hdf','_FL.hdf')
+                    temp_filename = os.path.basename(temp_resource)
+                    new_path = os.path.join(resource_dir, temp_filename)
+                    if not os.path.exists(new_path):
+                        shutil.copy(temp_resource, new_path)
+
+                    temp_resource = resource.replace('.hdf','_HU.hdf')
+                    temp_filename = os.path.basename(temp_resource)
+                    new_path = os.path.join(resource_dir, temp_filename)
+                    if not os.path.exists(new_path):
+                        shutil.copy(temp_resource, new_path)
+
+                    new_path = new_path[:-7]+'.hdf'
+
+                else:
+                    new_path = os.path.join(resource_dir, resource_filename)
+                    if not os.path.exists(new_path):
+                        shutil.copy(resource, new_path)
+
+                # and update the DL config file to point to that location
+                if name == 'component':
+                    DL_input['DamageAndLoss']['ComponentDataFolder'] = new_path
+                elif name == 'population':
+                    DL_input['DamageAndLoss']['LossModel']['Inhabitants']['PopulationDataFile'] = new_path
+                elif name == 'combination':
+                    DL_input['DamageAndLoss']['CombinationDataFile'] = new_path
+
+            with open(DL_input_path, 'w') as f:
+                json.dump(DL_input, f, indent=2)
+
+        log_msg('Running damage and loss simulation...')
         if DL_method == 'FEMA P58':
             A = FEMA_P58_Assessment(log_file=log_file)
         elif DL_method in ['HAZUS MH EQ', 'HAZUS MH', 'HAZUS MH EQ IM']:
@@ -293,6 +340,7 @@ def main(args):
     parser.add_argument('--ground_failure', default = False,
         type = str2bool, nargs='?', const=False)
     parser.add_argument('--auto_script', default=None)
+    parser.add_argument('--resource_dir', default=None)
     args = parser.parse_args(args)
 
     log_msg('Initializing pelicun calculation...')
@@ -309,7 +357,8 @@ def main(args):
         log_file = args.log_file,
         event_time = args.event_time,
         ground_failure = args.ground_failure,
-        auto_script_path = args.auto_script)
+        auto_script_path = args.auto_script,
+        resource_dir = args.resource_dir)
 
     log_msg('pelicun calculation completed.')
 

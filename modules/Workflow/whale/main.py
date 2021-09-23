@@ -1029,7 +1029,8 @@ class Workflow(object):
             shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
 
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None,
+        input_file = None, copy_resources=False):
         """
         Short description
 
@@ -1069,6 +1070,10 @@ class Workflow(object):
 
             command_list = self.workflow_apps['DL'].get_command_list(
                 app_path=self.app_dir_local)
+
+            if copy_resources:
+                command_list.append('--resource_dir')
+                command_list.append(self.working_dir)
 
             command = create_command(command_list)
 

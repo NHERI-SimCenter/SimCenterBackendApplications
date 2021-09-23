@@ -136,7 +136,9 @@ def main(run_type, input_file, app_registry,
         WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
 
         # run dl engine to estimate losses
-        WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
+        WF.estimate_losses(
+            BIM_file = bldg['file'], bldg_id = bldg['id'],
+            copy_resources=True)
 
         if force_cleanup:
             #clean up intermediate files from the simulation
