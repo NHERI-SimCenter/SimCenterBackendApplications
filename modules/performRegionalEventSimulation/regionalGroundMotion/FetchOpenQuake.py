@@ -104,10 +104,8 @@ from openquake.server import dbserver
 from openquake.commands import dbserver as cdbs
 
 
-def openquake_config(site_info, scen_info, event_info, dir_info):
+def openquake_config(site_info, scen_info, event_info, dir_input):
 
-    dir_input = dir_info['Input']
-    dir_output = dir_info['Output']
     import configparser
     cfg = configparser.ConfigParser()
     # general section
@@ -117,15 +115,10 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
         cfg['general'] = {'description': 'Scenario Hazard Config File',
                           'calculation_mode': 'event_based',
-                          'ses_seed': scen_info['EqRupture'].get('Seed', 24)}
+                          'ses_seed': 24}
         cfg['logic_tree'] = {'number_of_logic_tree_samples': 0}
-    elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-        cfg['general'] = {'description': 'Scenario Hazard Config File',
-                          'calculation_mode': 'classical',
-                          'random_seed': scen_info['EqRupture'].get('Seed', 24)}
-        cfg['logic_tree'] = {'number_of_logic_tree_samples': 0} # 0 here indicates full logic tree realization
     else:
-        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased or OpenQuakeClassicalPSHA.')
+        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario or OpenQuakeEventBased.')
         return 0
     # sites
     tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
@@ -161,36 +154,17 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                               'gsim': mapGMPE[event_info['GMPE']['Type']],
                               'intensity_measure_types': imt, 
                               'random_seed': 42, 
-                              'trucation_level': event_info['IntensityMeasure'].get('Trucation', 3.0), 
+                              'trucation_level': 3.0, 
                               'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
                               'number_of_ground_motion_fields': event_info['NumberPerSite']}
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
         imt = ''
-        imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
-        imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
         if event_info['IntensityMeasure']['Type'] == 'SA':
             for curT in event_info['IntensityMeasure']['Periods']:
-                #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
-                if imt_scale == 'Log':
-                    imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                else:
-                    imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                    imt_strings = ''
-                    for imt_v in imt_values:
-                        imt_strings = imt_strings+str(imt_v)+', '
-                    imt_strings = imt_strings[:-2]
-                    imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
+                imt = imt + '"SA(' + str(curT) + ')": [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0], '
             imt = imt[:-2]
         elif event_info['IntensityMeasure']['Type'] == 'PGA':
-            if imt_scale == 'Log':
-                imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-            else:
-                imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                imt_strings = ''
-                for imt_v in imt_values:
-                    imt_strings = imt_strings+str(imt_v)+', '
-                imt_strings = imt_strings[:-2]
-                imt = 'PGA": [{}], '.format(imt_strings)
+            imt = '"PGA": [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0]'
         else:
             imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
         cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
@@ -198,52 +172,9 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                               'investigation_time': scen_info['EqRupture']['TimeSpan'],
                               'intensity_measure_types_and_levels': '{' + imt + '}', 
                               'random_seed': 42, 
-                              'trucation_level': event_info['IntensityMeasure'].get('Trucation', 3.0), 
-                              'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+                              'trucation_level': 3.0, 
+                              'maximum_distance': 500.0,
                               'number_of_ground_motion_fields': event_info['NumberPerSite']}
-    elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-        imt = ''
-        imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
-        imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
-        if event_info['IntensityMeasure']['Type'] == 'SA':
-            for curT in event_info['IntensityMeasure']['Periods']:
-                #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
-                if imt_scale == 'Log':
-                    imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                else:
-                    imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                    imt_strings = ''
-                    for imt_v in imt_values:
-                        imt_strings = imt_strings+str(imt_v)+', '
-                    imt_strings = imt_strings[:-2]
-                    imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
-            imt = imt[:-2]
-        elif event_info['IntensityMeasure']['Type'] == 'PGA':
-            if imt_scale == 'Log':
-                imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-            else:
-                imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                imt_strings = ''
-                for imt_v in imt_values:
-                    imt_strings = imt_strings+str(imt_v)+', '
-                imt_strings = imt_strings[:-2]
-                imt = '"PGA": [{}], '.format(imt_strings)
-        else:
-            imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
-        cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
-                              'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
-                              'investigation_time': scen_info['EqRupture']['TimeSpan'],
-                              'intensity_measure_types_and_levels': '{' + imt + '}', 
-                              'trucation_level': event_info['IntensityMeasure'].get('Trucation', 3.0), 
-                              'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0)}
-        cfg_quan = ''
-        cfg['output'] = {'export_dir': dir_output,
-                         'individual_curves': scen_info['EqRupture'].get('IndivHazCurv', False), 
-                         'mean': scen_info['EqRupture'].get('MeanHazCurv', True),
-                         'quantiles': ' '.join([str(x) for x in scen_info['EqRupture'].get('Quantiles', [0.05, 0.5, 0.95])]),
-                         'hazard_maps': scen_info['EqRupture'].get('HazMap', False),
-                         'uniform_hazard_spectra': scen_info['EqRupture'].get('UHS', False),
-                         'poes': 1.0/scen_info['EqRupture'].get('ReturnPeriod', 100)}
     else:
         print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario or OpenQuakeEventBased.')
         return 0
@@ -252,118 +183,11 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
     with open(filename_ini, 'w') as configfile:
         cfg.write(configfile)
 
-    # check if the datadir exists
-    user_name = getpass.getuser()
-    datadir = datastore.get_datadir()
-    if not os.path.exists(datadir):
-        os.makedirs(datadir)
-    #dbserver.ensure_on()
-    if dbserver.get_status() == 'not-running':
-        if config.dbserver.multi_user:
-            sys.exit('Please start the DbServer: '
-                    'see the documentation for details')
-        # otherwise start the DbServer automatically; NB: I tried to use
-        # multiprocessing.Process(target=run_server).start() and apparently
-        # it works, but then run-demos.sh hangs after the end of the first
-        # calculation, but only if the DbServer is started by oq engine (!?)
-        # Here is a trick to activate OpenQuake's dbserver
-        # We first cd to the openquake directory and invoke subprocess to open/hold on dbserver
-        # Then, we cd back to the original working directory 
-        owd = os.getcwd()
-        os.chdir(os.path.dirname(os.path.realpath(__file__)))
-        subprocess.Popen([sys.executable, '-m', 'openquake.commands', 'dbserver', 'start'])
-        os.chdir(owd)
-        # wait for the dbserver to start
-        waiting_seconds = 30
-        while dbserver.get_status() == 'not-running':
-            if waiting_seconds == 0:
-                sys.exit('The DbServer cannot be started after 30 seconds. '
-                        'Please check the configuration')
-            time.sleep(1)
-            waiting_seconds -= 1
-    # check if we are talking to the right server
-    err = dbserver.check_foreign()
-    if err:
-        sys.exit(err)
-
     print('FetchOpenQuake: OpenQuake configured.')
 
     # return
-    return filename_ini
-
-
-def oq_run_classical_psha(job_ini, exports='csv'):
-    """
-    Run a classical PSHA by OpenQuake
-
-    :param job_ini:
-        Path to configuration file/archive or
-        dictionary of parameters with at least a key "calculation_mode"
-    """
-
-    from openquake.commands import engine
-    try:
-        engine.main(run=[job_ini], exports='csv')
-        return 0
-    except:
-        print('FetchOpenQuake: Classical PSHA failed.')
-        return 1
-
-
-def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
-    """
-    Collect the UHS from a classical PSHA by OpenQuake
-    """
-    import glob
-    import random
-    # number of scenario
-    num_scen = scen_info['Number']
-    if num_scen > 1:
-        print('FetchOpenQuake: currently only supporting a single scenario for PHSA')
-        num_scen = 1
-    # number of realizations per site
-    num_rlz = event_info['NumberPerSite']
-    # directory of the UHS
-    res_dir = dir_info['Output']
-    # mean UHS
-    cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-mean_*.csv'))[0]
-    print(cur_uhs_file)
-    # read csv
-    tmp = pd.read_csv(cur_uhs_file,skiprows=1)
-    # number of stations
-    num_stn = len(tmp.index)
-    # number of IMs
-    num_IMs = len(tmp.columns) - 2
-    # IM list
-    list_IMs = tmp.columns.tolist()[2:]
-    ln_psa_mr = []
-    mag_maf = []
-    for i in range(num_scen):
-        # initialization
-        ln_psa = np.zeros((num_stn, num_IMs, num_rlz))
-        # collecting UHS
-        if num_rlz == 1:
-            ln_psa[:, :, 0] = np.log(tmp.iloc[:, 2:])
-        else:
-            num_r1 = np.min([len(glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))), num_rlz])
-            for i in range(num_r1):
-                cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))[i]
-                tmp = pd.read_csv(cur_uhs_file,skiprows=1)
-                ln_psa[:, :, i] = np.log(tmp.iloc[:, 2:])
-            if num_rlz > num_r1:
-                # randomly resampling available spectra
-                for i in range(num_rlz-num_r1):
-                    rnd_tag = random.randrange(num_r1)
-                    print(int(rnd_tag))
-                    cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))[int(rnd_tag)]
-                    tmp = pd.read_csv(cur_uhs_file,skiprows=1)
-                    ln_psa[:, :, i] = np.log(tmp.iloc[:, 2:])
-        ln_psa_mr.append(ln_psa)
-        mag_maf.append([0.0,float(list_IMs[0].split('~')[0]),0.0])
+    return filename_ini  
     
-    # return
-    return ln_psa_mr, mag_maf
-   
 
 class OpenQuakeHazardCalc:
 
@@ -376,7 +200,6 @@ class OpenQuakeHazardCalc:
             dictionary of parameters with at least a key "calculation_mode"
         """
 
-        """ This section has been moved into openquake_config 
         user_name = getpass.getuser()
 
         if no_distribute:
@@ -417,7 +240,6 @@ class OpenQuakeHazardCalc:
         err = dbserver.check_foreign()
         if err:
             sys.exit(err)
-        """
 
         # Copy the event_info
         self.event_info = event_info

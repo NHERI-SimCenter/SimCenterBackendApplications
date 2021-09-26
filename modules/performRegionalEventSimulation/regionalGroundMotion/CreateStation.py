@@ -423,16 +423,8 @@ def get_zTR_ncm(lat, lon):
             zTR.append(0.0)
             continue
         else:
-            # get the top bedrock elevation
-            z_bedrock = cur_res['response']['results'][0]['profiles'][0]['top']
-            # get site surface elevation
-            z_site = get_elev_epqs([cur_lat], [cur_lon])
-            print(z_site)
-            # the depth to bedrock (non-negative)
-            # Note: since the site evelation comes from USGS EPQS (different resolutions),
-            # the z_site might be smaller than the z_bedrock. Here 
-            # we assume that the site is a rock site, i.e., zTR = 0.
-            zTR.append(np.max(0, z_site-z_bedrock))
+            # get the top bedrock data
+            zTR.append(abs(cur_res['response']['results'][0]['profiles'][0]['top']))
     # return
     return zTR
 
@@ -516,32 +508,3 @@ def get_vs30_ncm(lat, lon):
             vs30.append(760.0)
     # return
     return vs30
-
-
-def get_elev_epqs(lat, lon, unit='Meters', output='json'):
-    """
-    Fetch elevation from the USGS Elevation Point Query Service
-    Input:
-        lat: list of latitude
-        lon: list of longitude
-    Output:
-        z: list of elevation
-    """
-
-    import requests
-    z = []
-    # Looping over sites
-    for cur_lat, cur_lon in zip(lat, lon):
-        url_epqs = 'https://nationalmap.gov/epqs/pqs.php?x={}&y={}&units={}&output={}'.format(cur_lon,cur_lat,unit,output)
-        r1 = requests.get(url_epqs)
-        cur_res = r1.json()
-        if cur_res['status'] == 'error':
-            print('CreateStation: Warning in EPQS API call - could not get the site elevation.')
-            z.append(None)
-            continue
-        else:
-            # get vs30 profile
-            z.append(float(cur_res['USGS_Elevation_Point_Query_Service']['Elevation_Query']['Elevation']))
-    
-    # return
-    return z
