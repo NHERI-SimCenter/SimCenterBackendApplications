@@ -150,36 +150,55 @@ if __name__ == '__main__':
         elif 'OpenQuake' in scenario_info['EqRupture']['Type']:           
             # import FetchOpenQuake
             from FetchOpenQuake import *
-            # install packages used by OpenQuake
-            for p in install_requires:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", p])
             # Preparing config ini for OpenQuake
-            filePath_ini = openquake_config(site_info, scenario_info, event_info, input_dir)
+            filePath_ini, oq_ver_loaded = openquake_config(site_info, scenario_info, event_info, dir_info)
             if not filePath_ini:
                 # Error in ini file
                 print('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
                 exit()
-            # Creating and conducting OpenQuake calculations
-            oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info)
-            oq_calc.run_calc()
-            psa_raw = [oq_calc.eval_calc()]
-            stn_new = stations['Stations']
+            if scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
+                # Calling openquake to run classical PSHA
+                #oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)
+                oq_flag = oq_run_classical_psha(filePath_ini, exports='csv', oq_version=oq_ver_loaded)
+                if not oq_flag:
+                    print('HazardSimulation: OpenQuake Classical PSHA completed.')
+                if scenario_info['EqRupture'].get('UHS', False):
+                    ln_psa_mr, mag_maf = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
+                else:
+                    ln_psa_mr = []
+                    mag_maf = []
+                stn_new = stations['Stations']
+
+            elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+                # Creating and conducting OpenQuake calculations
+                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded)
+                oq_calc.run_calc()
+                psa_raw = [oq_calc.eval_calc()]
+                stn_new = stations['Stations']
+                print('HazardSimulation: OpenQuake Scenario calculation completed.')
+
+            else:                
+                print('HazardSimulation: OpenQuakeClassicalPSHA and OpenQuakeScenario are supported.')
+                exit()
             
         # Updating station information
         stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
         #print(psa_raw)
-        # Computing log mean Sa
-        ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
-                                                    event_info['NumberPerSite'],
-                                                    event_info['CorrelationModel'],
-                                                    event_info['IntensityMeasure'])
-        print('HazardSimulation: correlated response spectra computed.')
-        if event_info['SaveIM']:
+        if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
+            # Computing correlated IMs
+            ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
+                                                        event_info['NumberPerSite'],
+                                                        event_info['CorrelationModel'],
+                                                        event_info['IntensityMeasure'])
+            print('HazardSimulation: correlated response spectra computed.')
+        if event_info['SaveIM'] and ln_psa_mr:
             print('HazardSimulation: saving simulated intensity measures.')
             _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
                           ln_psa_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
+        else:
+            print('HazardSimulation: IM is not required to saved or no IM is found.')
         #print(np.exp(ln_psa_mr[0][0, :, 1]))
         #print(np.exp(ln_psa_mr[0][1, :, 1]))
     elif scenario_info['Type'] == 'Wind':
