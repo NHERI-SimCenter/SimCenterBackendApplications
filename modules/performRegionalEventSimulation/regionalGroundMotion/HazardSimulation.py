@@ -41,21 +41,10 @@
 import os
 import sys
 import subprocess
-import psutil
 import argparse, posixpath, json
 import numpy as np
 import pandas as pd
 import time
-import jpype
-from jpype import imports
-from jpype.types import *
-jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-jpype.startJVM("-Xmx8G", convertStrings=False)
-
-from CreateStation import *
-from CreateScenario import *
-from ComputeIntensityMeasure import *
-from SelectGroundMotion import *
 
 R2D = True
 
@@ -63,11 +52,22 @@ if __name__ == '__main__':
 
     # local dependencies
     if R2D:
-        packages = ['JPype1', 'tqdm']
+        packages = ['JPype1', 'tqdm', 'psutil']
     else:
-        packages = ['JPype1', 'selenium', 'tqdm']
+        packages = ['JPype1', 'selenium', 'tqdm', 'psutil']
     for p in packages:
         subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+    
+    import jpype
+    from jpype import imports
+    from jpype.types import *
+    jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+    jpype.startJVM("-Xmx8G", convertStrings=False)
+    import psutil
+    from CreateStation import *
+    from CreateScenario import *
+    from ComputeIntensityMeasure import *
+    from SelectGroundMotion import *
 
     # untar site databases
     site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
