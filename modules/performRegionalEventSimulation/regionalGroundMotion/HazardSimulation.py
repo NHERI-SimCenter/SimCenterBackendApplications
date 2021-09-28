@@ -41,13 +41,7 @@
 import os
 import sys
 import subprocess
-R2D = True
-if R2D:
-    packages = ['JPype1', 'tqdm']
-else:
-    packages = ['JPype1', 'selenium', 'tqdm']
-for p in packages:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+import psutil
 import argparse, posixpath, json
 import numpy as np
 import pandas as pd
@@ -63,15 +57,28 @@ from CreateScenario import *
 from ComputeIntensityMeasure import *
 from SelectGroundMotion import *
 
-# untar site databases
-site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-import subprocess
-print('HazardSimulation: Extracting site databases.')
-cwd = os.path.dirname(os.path.realpath(__file__))
-for cur_database in site_database:
-    subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+R2D = True
 
 if __name__ == '__main__':
+
+    # local dependencies
+    if R2D:
+        packages = ['JPype1', 'tqdm']
+    else:
+        packages = ['JPype1', 'selenium', 'tqdm']
+    for p in packages:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+
+    # untar site databases
+    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+    import subprocess
+    print('HazardSimulation: Extracting site databases.')
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    for cur_database in site_database:
+        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+
+    # Initial process list
+    proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
@@ -256,3 +263,12 @@ if __name__ == '__main__':
                     print('HazardSimulation: No records to be parsed.')
         else:
             print('HazardSimulation: ground motion selection is not requested.')
+
+    # Final process list
+    proc_list_final = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+    # Closing processes created by this run
+    for i in proc_list_final:
+        if i not in proc_list_init:
+            os.kill(i['pid'],9)
+    # Closing the current process
+    sys.exit(0)
