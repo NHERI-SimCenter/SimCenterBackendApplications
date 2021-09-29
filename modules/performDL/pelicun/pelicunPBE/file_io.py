@@ -1477,7 +1477,12 @@ def write_SimCenter_BIM_output(output_dir, BIM_filename, BIM_dict):
 
     # create the output DF
     #BIM_flat_dict.update({"index": [0,]})
-    BIM_flat_dict.pop('geometry')
+    for header_to_remove in ['geometry', 'Footprint']:
+        try:
+            BIM_flat_dict.pop(header_to_remove)
+        except:
+            pass
+
     df_res = pd.DataFrame.from_dict(BIM_flat_dict)
 
     df_res.dropna(axis=1, how='all', inplace=True)
