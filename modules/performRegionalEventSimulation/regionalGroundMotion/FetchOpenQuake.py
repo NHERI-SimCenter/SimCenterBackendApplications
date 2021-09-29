@@ -468,7 +468,7 @@ class OpenQuakeHazardCalc:
             # Then, we cd back to the original working directory 
             owd = os.getcwd()
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
-            self.prc = subprocess.Popen([sys.executable, '-m', 'openquake.commands', 'dbserver', 'start'])
+            subprocess.Popen([sys.executable, '-m', 'openquake.commands', 'dbserver', 'start'])
             os.chdir(owd)
 
             # wait for the dbserver to start
@@ -882,9 +882,6 @@ class OpenQuakeHazardCalc:
             cdbs.main('stop')
         else:
             cdbs.dbserver('stop')
-        
-        # terminate the subprocess
-        self.prc.kill()
 
         # Final results
         res = {'Magnitude': mag,
