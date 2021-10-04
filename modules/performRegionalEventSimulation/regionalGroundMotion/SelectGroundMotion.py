@@ -167,10 +167,12 @@ def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):
     try:
         with open(os.path.join(output_dir, filename), 'w') as f:
             w = csv.writer(f)
-            w.writerow(gm_file)
+            if gm_file:
+                w.writerow(gm_file)
         with open(os.path.join(output_dir, 'RSN.csv'), 'w') as f:
             w = csv.writer(f)
-            w.writerow(gm_id)
+            if gm_id:
+                w.writerow(gm_id)
         return 1
     except:
         return 0

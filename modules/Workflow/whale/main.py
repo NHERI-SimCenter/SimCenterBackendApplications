@@ -630,6 +630,36 @@ class Workflow(object):
 
         return building_file
 
+    def perform_regional_event(self):
+        """
+        Run an application to simulate a regional-scale hazard event.
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Simulating regional event...')
+
+        reg_event_app = self.workflow_apps['RegionalEvent']
+
+        reg_event_command_list = reg_event_app.get_command_list(
+            app_path = self.app_dir_local)
+
+        command = create_command(reg_event_command_list)
+
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+
+        result, returncode = run_command(command)
+
+        log_msg('\tOutput: ')
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+
+        log_msg('Regional event successfully simulated.')
+        log_msg(log_div)
+
     def perform_regional_mapping(self, building_file):
         """
         Short description
@@ -643,17 +673,17 @@ class Workflow(object):
 
         log_msg('Creating regional mapping...')
 
-        reg_event_app = self.workflow_apps['RegionalMapping']
+        reg_mapping_app = self.workflow_apps['RegionalMapping']
 
         # TODO: not elegant code, fix later
-        for input_ in reg_event_app.inputs:
+        for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'buildingFile':
                 input_['default'] = building_file
 
-        reg_event_command_list = reg_event_app.get_command_list(
+        reg_mapping_command_list = reg_mapping_app.get_command_list(
             app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list)
+        command = create_command(reg_mapping_command_list)
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
@@ -999,7 +1029,8 @@ class Workflow(object):
             shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
 
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None,
+        input_file = None, copy_resources=False):
         """
         Short description
 
@@ -1039,6 +1070,10 @@ class Workflow(object):
 
             command_list = self.workflow_apps['DL'].get_command_list(
                 app_path=self.app_dir_local)
+
+            if copy_resources:
+                command_list.append('--resource_dir')
+                command_list.append(self.working_dir)
 
             command = create_command(command_list)
 
@@ -1123,9 +1158,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],
             DV = [0, 1, 2, 3])
