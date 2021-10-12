@@ -35,6 +35,7 @@
 #
 # Contributors:
 # Chaofeng Wang
+# fmk
 
 import numpy as np
 import json
@@ -44,52 +45,69 @@ from glob import glob
 import argparse
 import pandas as pd
 
-def main(surfaceGMDir):
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
-    originalDirs = glob(f"{surfaceGMDir}/*")
+    if not os.path.isdir(inputDir):
+        print(f"input dir: {inputDir} does not exist")
+        return 0
 
-    dirList = glob(f"{surfaceGMDir}/*/*")
+    
+    if not os.path.exists(outputDir):
+        os.mkdir(outputDir)
+    
+    siteFiles = glob(f"{inputDir}/*BIM.json")
+
     GP_file	= []
     Longitude = []
     Latitude = []
+    id = []
+    sites = []
+
+    for site in siteFiles:
+
+        with open(site, 'r') as f:
+
+            All_json = json.load(f)
+            generalInfo = All_json['GeneralInformation']
+            Longitude.append(generalInfo['Longitude'])
+            Latitude.append(generalInfo['Latitude'])
+            siteID = generalInfo['BIM_id']
+
+            id.append(siteID)
+            
+            siteFileName = f"Site_{siteID}.csv"
+            sites.append(siteFileName)
+            
+            workdirs = glob(f"{inputDir}/{siteID}/workdir.*")
+            siteEventFiles = []
+            siteEventFactors = []
+                        
+            for workdir in workdirs:
+
+                head, sep, sampleID = workdir.partition('workdir.')
+                print(sampleID)
+
+                eventName = f"Event_{siteID}_{sampleID}.json"
+                print(eventName)
+                shutil.copy(f"{workdir}/fmkEVENT", f"{outputDir}/{eventName}")
+
+                siteEventFiles.append(eventName)
+                siteEventFactors.append(1)
+
+            siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
+            siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
 
 
-    for siteID,siteDir in enumerate(dirList):
+    # create the EventFile
+    gridDF = pd.DataFrame(list(zip(sites, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
 
-        gmlist = glob(f"{siteDir}/*.json")
-
-        # get the location of this site
-        with open(gmlist[0], 'r') as f:
-            EVENT_json = json.load(f)
-            location = EVENT_json['location']
-            Longitude.append(location['longitude'])
-            Latitude.append(location['latitude'])
-
-        TH_file = []
-        factor = []
-        for gm in gmlist:
-            newFileName = gm.split('EVENT-')[-1]
-            TH_file.append(newFileName[:-5])
-            factor.append(1.0)
-            shutil.copy(gm, f"{surfaceGMDir}/{newFileName}")
-
-        sitedf = pd.DataFrame(list(zip(TH_file, factor)), columns =['TH_file', 'factor'])
-        sitedf.to_csv(f"{surfaceGMDir}/site{siteID}.csv", index=False)
-
-        GP_file.append(f"site{siteID}.csv")
-
-    griddf = pd.DataFrame(list(zip(GP_file, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
-
-    if not os.path.exists(f"{surfaceGMDir}"): 
-        os.makedirs(f"{surfaceGMDir}")
-    griddf.to_csv(f"{surfaceGMDir}/EventGrid.csv", index=False)
-
+    gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
     
-    # remove original files
-    for mDir in originalDirs:
-        if os.path.isdir(mDir): 
-            shutil.rmtree(mDir)
 
+    # remove original files
+    if removeInputDir:         
+        shutil.rmtree(inputDir)
+    
     return 0
 
 
@@ -100,12 +118,19 @@ if __name__ == "__main__":
         "Create ground motions for BIM.",
         allow_abbrev=False)
 
-    workflowArgParser.add_argument("-d", "--surfaceGMDir",
-        default='results/surface_motions',
-        help="Dir where the generated surface motions saved.")
+    workflowArgParser.add_argument("-i", "--inputDir",
+                                   help="Dir containing results of siteResponseWhale.")
+
+    workflowArgParser.add_argument("-o", "--outputDir",
+                                   help="Dir where results to be stored.")
+
+    workflowArgParser.add_argument("--removeInput", action='store_true')
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
 
-    #Calling the main function 
-    main(surfaceGMDir = wfArgs.surfaceGMDir)
+    print(wfArgs)
+    #Calling the main function
+    createFilesForEventGrid(wfArgs.inputDir, wfArgs.outputDir, wfArgs.removeInput)
+    
+
