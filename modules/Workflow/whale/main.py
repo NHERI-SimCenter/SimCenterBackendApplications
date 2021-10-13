@@ -100,7 +100,7 @@ def log_msg(msg, prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+        formatted_msg = '{} {}'.format(datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), msg)
     else:
         formatted_msg = msg
 
@@ -130,9 +130,10 @@ def log_error(msg):
 def print_system_info():
 
     log_msg('System information\n')
-    log_msg('\tpython: '+sys.version)
-    log_msg('\tnumpy: '+np.__version__)
-    log_msg('\tpandas: '+pd.__version__)
+    log_msg(f'\tlocal time zone: {datetime.utcnow().astimezone().tzinfo}')
+    log_msg(f'\tpython: {sys.version}')
+    log_msg(f'\tnumpy: {np.__version__}')
+    log_msg(f'\tpandas: {pd.__version__}')
 
     # additional info about numpy libraries
     if False:
