@@ -606,12 +606,19 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        if bldg_app.pref.get('filter', None) is not None:
-            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+        # filter buildings (if needed)
+        bldg_filter = bldg_app.pref.get('filter', None)
+        if bldg_filter == "":
+            del bldg_app.pref['filter']
+            bldg_filter = None
+
+        if bldg_filter is not None:
+            bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
 
             building_file = building_file.replace('.json',
                 '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
 
+        # store the path to the building file
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
