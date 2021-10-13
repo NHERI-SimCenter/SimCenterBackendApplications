@@ -53,6 +53,7 @@ This module has classes and methods that handle everything at the moment.
 """
 
 from time import gmtime, strftime
+from datetime import datetime
 from io import StringIO
 import sys, os, json
 import pprint
@@ -554,9 +555,17 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'],
-                                        self.reference_dir)
-                    self.workflow_apps[app_type] = app_object
+                    # only assign the app to the workflow if it has an executable
+                    if app_object.rel_path is None:
+                        log_msg(
+                            f'\t{requested_apps[app_type]["Application"]} is '
+                            'a passive application (i.e., it does not invoke '
+                            'any calculation within the workflow.')
+
+                    else:
+                        app_object.set_pref(requested_apps[app_type]['ApplicationData'],
+                                            self.reference_dir)
+                        self.workflow_apps[app_type] = app_object
 
                 else:
                     if app_type in self.optional_apps:
