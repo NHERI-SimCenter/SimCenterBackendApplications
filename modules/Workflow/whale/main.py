@@ -482,10 +482,8 @@ class Workflow(object):
             self.app_dir_remote = input_data['remoteAppDir']
         else:
             self.app_dir_remote = self.app_dir_local
-            show_warning('remoteAppDir not specified. Using the value provided '
-                'for localAppDir instead. This will lead to problems if you '
-                'want to run a simulation remotely.')
-            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
+            log_msg('\tremoteAppDir not specified. Using the value provided for '
+                'localAppDir instead.')
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
