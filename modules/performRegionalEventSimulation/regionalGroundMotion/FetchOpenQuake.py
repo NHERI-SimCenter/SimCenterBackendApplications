@@ -249,11 +249,11 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                     # pop the old version first
                     sys.modules.pop('openquake')
                     subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "openquake.engine"])
-                try:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
-                    oq_ver_loaded = version('openquake.engine')
-                except:
-                    print('FetchOpenQuake: Install of OpenQuake {} failed - please check local Python Roaming folder.'.format(scen_info['EqRupture'].get('OQVersion',default_oq_version)))
+                
+                # install the required version
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
+                oq_ver_loaded = version('openquake.engine')
+                
             else:
                 oq_ver_loaded = oq_ver
 
