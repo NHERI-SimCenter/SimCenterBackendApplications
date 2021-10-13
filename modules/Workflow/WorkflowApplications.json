@@ -107,7 +107,13 @@
   },
   "RegionalEventApplications": {
     "API": {
-      "Inputs": [
+       "Inputs": [
+        {
+          "id": "configFile",
+          "type": "path",
+          "description": "Name of JSON input file",
+          "default": "rWHALE.json"
+        }	    
       ],
       "Outputs": [
       ]
@@ -128,7 +134,13 @@
             "description": "Description..."
           }
         ]
-      }
+      },
+      {
+        "Name": "UserInputGM",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      }	
     ]
   },
   "RegionalMappingApplications": {
