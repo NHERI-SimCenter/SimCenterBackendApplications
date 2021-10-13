@@ -60,11 +60,55 @@ elementSize = 0.5  # m
 VsRock = 760 
 plotFlag = False
 
+def postProcess(evtName):
+
+    acc = np.loadtxt("acceleration.out")
+    #os.remove("acceleration.out")  # remove acceleration file to save space
+    #acc = np.loadtxt("out_tcl/acceleration.out")
+    #shutil.rmtree("out_tcl")  # remove output files to save space
+    time = acc[:,0]
+    acc_surf = acc[:,-2] / 9.81
+    dT = time[1] - time[0]
+
+    timeSeries = dict(
+        name = "accel_X",
+        type = "Value",
+        dT = dT,
+        data = acc_surf.tolist()
+    )
+
+    patterns = dict(
+        type = "UniformAcceleration",
+        timeSeries = "accel_X",
+        dof = 1
+    )
+
+    evts = dict(
+        RandomVariables = [],
+        name = "SiteResponseTool",
+        type = "Seismic",
+        description = "Surface acceleration",
+        dT = dT,
+        numSteps = len(acc_surf),
+        timeSeries = [timeSeries],
+        pattern = [patterns]
+    )
+
+    dataToWrite = dict(Events = [evts])
+
+    with open(evtName, "w") as outfile:
+        json.dump(dataToWrite, outfile, indent=4)
+
+    print("DONE postProcess")
+    
+    return 0
+
 
 def run_opensees(BIM_file, EVENT_file, event_path, model_script, model_script_path, ndm, getRV):
     
     sys.path.insert(0, os.getcwd())
 
+    print("**************** run_opensees ****************")
     # load the model builder script
     with open(BIM_file, 'r') as f:
         BIM_in = json.load(f)
@@ -119,20 +163,23 @@ def run_opensees(BIM_file, EVENT_file, event_path, model_script, model_script_pa
 
         subprocess.Popen('OpenSees ' + model_script, shell=True).wait()
 
+        # FMK
         # update Event file with acceleration recorded at surface 
-        acc = np.loadtxt('accelerationElasAct.out')
-        acc_surf_x = acc[:, -3] / gravityG
-        EVENT_in_All['Events'][0]['timeSeries'][0]['data'] = acc_surf_x.tolist()
-        if int(ndm) == 3:
-            acc_surf_z = acc[:, -1] / gravityG
-            EVENT_in_All['Events'][0]['timeSeries'][1]['data'] = acc_surf_z.tolist()
+        # acc = np.loadtxt('accelerationElasAct.out')
+        # acc_surf_x = acc[:, -3] / gravityG
+        # EVENT_in_All['Events'][0]['timeSeries'][0]['data'] = acc_surf_x.tolist()
+        # if int(ndm) == 3:
+        #    acc_surf_z = acc[:, -1] / gravityG
+        #    EVENT_in_All['Events'][0]['timeSeries'][1]['data'] = acc_surf_z.tolist()
 
-        EVENT_in_All['Events'][0]['location'] = location
+        # EVENT_in_All['Events'][0]['location'] = location
 
         # EVENT_file2 = 'EVENT2.json' for debug
-        with open(EVENT_file, 'w') as f:
-            json.dump(EVENT_in_All, f, indent=2)
-
+        # with open(EVENT_file, 'w') as f:
+        #    json.dump(EVENT_in_All, f, indent=2)
+        
+        postProcess("fmkEVENT")
+        
 
 def get_records(BIM_file, EVENT_file, data_dir):
 
