@@ -53,6 +53,7 @@ This module has classes and methods that handle everything at the moment.
 """
 
 from time import gmtime, strftime
+from datetime import datetime
 from io import StringIO
 import sys, os, json
 import pprint
@@ -100,7 +101,7 @@ def log_msg(msg, prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+        formatted_msg = '{} {}'.format(datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), msg)
     else:
         formatted_msg = msg
 
@@ -130,9 +131,10 @@ def log_error(msg):
 def print_system_info():
 
     log_msg('System information\n')
-    log_msg('\tpython: '+sys.version)
-    log_msg('\tnumpy: '+np.__version__)
-    log_msg('\tpandas: '+pd.__version__)
+    log_msg(f'\tlocal time zone: {datetime.utcnow().astimezone().tzinfo}')
+    log_msg(f'\tpython: {sys.version}')
+    log_msg(f'\tnumpy: {np.__version__}')
+    log_msg(f'\tpandas: {pd.__version__}')
 
     # additional info about numpy libraries
     if False:
@@ -481,10 +483,8 @@ class Workflow(object):
             self.app_dir_remote = input_data['remoteAppDir']
         else:
             self.app_dir_remote = self.app_dir_local
-            show_warning('remoteAppDir not specified. Using the value provided '
-                'for localAppDir instead. This will lead to problems if you '
-                'want to run a simulation remotely.')
-            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
+            log_msg('\tremoteAppDir not specified. Using the value provided for '
+                'localAppDir instead.')
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
@@ -555,9 +555,17 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'],
-                                        self.reference_dir)
-                    self.workflow_apps[app_type] = app_object
+                    # only assign the app to the workflow if it has an executable
+                    if app_object.rel_path is None:
+                        log_msg(
+                            f'\t{requested_apps[app_type]["Application"]} is '
+                            'a passive application (i.e., it does not invoke '
+                            'any calculation within the workflow.')
+
+                    else:
+                        app_object.set_pref(requested_apps[app_type]['ApplicationData'],
+                                            self.reference_dir)
+                        self.workflow_apps[app_type] = app_object
 
                 else:
                     if app_type in self.optional_apps:
@@ -598,12 +606,19 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        if bldg_app.pref.get('filter', None) is not None:
-            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+        # filter buildings (if needed)
+        bldg_filter = bldg_app.pref.get('filter', None)
+        if bldg_filter == "":
+            del bldg_app.pref['filter']
+            bldg_filter = None
+
+        if bldg_filter is not None:
+            bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
 
             building_file = building_file.replace('.json',
                 '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
 
+        # store the path to the building file
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
