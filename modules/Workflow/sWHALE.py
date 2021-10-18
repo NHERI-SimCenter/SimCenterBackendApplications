@@ -101,12 +101,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         # run uq engine to simulate response
         WF.simulate_response()
 
-    # Apps without Damage and Loss
-    flag_DL = False
-    if inputs.get('DamageAndLoss',None):
-        flag_DL = True
-
-    if WF.run_type != 'set_up' and flag_DL:
+    if WF.run_type != 'set_up':
 
         # run dl engine to estimate losses
         WF.estimate_losses(input_file = input_file)
