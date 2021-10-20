@@ -40,10 +40,6 @@ class simCenterBackendApps(ConanFile):
     def configure(self):
         self.options.shared = False
 
-        if self.settings.os == "Windows":
-            self.options["libcurl"].with_winssl = True
-            self.options["libcurl"].with_openssl = False
-
     def configure_cmake(self):
         cmake = CMake(self)
         cmake.configure(source_folder=self._source_subfolder)

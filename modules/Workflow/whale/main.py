@@ -1117,44 +1117,47 @@ class Workflow(object):
             log_msg('No DL requested, loss assessment step is skipped.')
             log_msg('')
 
-            EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+            # Only regional simulations send in a bldg id
+            if bldg_id != None:
 
-            col_info = []
-            for col in EDP_df.columns:
-                try:
-                    split_col = col.split('-')
-                    if len(split_col[1]) == 3:
-                        col_info.append(split_col[1:])
-                except:
-                    continue
+                EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
 
-            col_info = np.transpose(col_info)
+                col_info = []
+                for col in EDP_df.columns:
+                    try:
+                        split_col = col.split('-')
+                        if len(split_col[1]) == 3:
+                            col_info.append(split_col[1:])
+                    except:
+                        continue
 
-            EDP_types = np.unique(col_info[0])
-            EDP_locs = np.unique(col_info[1])
-            EDP_dirs = np.unique(col_info[2])
+                col_info = np.transpose(col_info)
 
-            MI = pd.MultiIndex.from_product(
-                [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
-                names=['type', 'loc', 'dir', 'stat'])
+                EDP_types = np.unique(col_info[0])
+                EDP_locs = np.unique(col_info[1])
+                EDP_dirs = np.unique(col_info[2])
 
-            df_res = pd.DataFrame(columns=MI, index=[0, ])
-            if ('PID', '0') in df_res.columns:
-                del df_res[('PID', '0')]
+                MI = pd.MultiIndex.from_product(
+                    [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+                    names=['type', 'loc', 'dir', 'stat'])
 
-            # store the EDP statistics in the output DF
-            for col in np.transpose(col_info):
-                df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
-                    '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
-                df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
-                    EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+                df_res = pd.DataFrame(columns=MI, index=[0, ])
+                if ('PID', '0') in df_res.columns:
+                    del df_res[('PID', '0')]
 
-            df_res.dropna(axis=1, how='all', inplace=True)
+                # store the EDP statistics in the output DF
+                for col in np.transpose(col_info):
+                    df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+                        '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+                    df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                        EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
 
-            df_res = df_res.astype(float)
+                df_res.dropna(axis=1, how='all', inplace=True)
 
-            # save the output
-            df_res.to_csv('EDP.csv')
+                df_res = df_res.astype(float)
+
+                # save the output
+                df_res.to_csv('EDP.csv')
 
     def aggregate_results(self, bldg_data):
         """

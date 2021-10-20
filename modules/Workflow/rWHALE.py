@@ -3,7 +3,7 @@
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
-# This file is part of the RDT Application.
+# This file is part of the SimCenter Backend Applications.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with the
-# RDT Application. If not, see <http://www.opensource.org/licenses/>.
+# SimCenter Backend Applications. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Frank McKenna
