@@ -105,7 +105,7 @@
       }
     ]
   },
-  "RegionalEventApplications": {
+  "RegionalEvent": {
     "API": {
        "Inputs": [
         {
