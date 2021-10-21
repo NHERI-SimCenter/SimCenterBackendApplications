@@ -105,14 +105,60 @@
       }
     ]
   },
-  "RegionalEventApplications": {
+  "RegionalEvent": {
     "API": {
-      "Inputs": [
+       "Inputs": [
+        {
+          "id": "configFile",
+          "type": "path",
+          "description": "Name of JSON input file",
+          "default": "rWHALE.json"
+        }	    
       ],
       "Outputs": [
       ]
     },
     "Applications":[
+      {
+        "Name": "DummyEventApp",
+        "ExecutablePath": "applications/performRegionalEventSimulation/DummyEventApp/DEA.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "appSpecInput1",
+            "type": "string",
+            "description": "Description..."
+          },
+          {
+            "id": "appSpecInput2",
+            "type": "int",
+            "description": "Description..."
+          }
+        ]
+      },
+      {
+        "Name": "UserInputGM",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },
+      {
+        "Name": "EQSS",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },	
+      {
+        "Name": "UserInputShakeMap",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },	
+      {
+        "Name": "UserInputHurricane",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      }
     ]
   },
   "RegionalMappingApplications": {
@@ -152,6 +198,11 @@
             "id": "filter_label",
             "type": "string",
             "description": "Custom label to use for pre-selection of grid points"
+          },
+          {
+            "id": "seed",
+            "type": "int",
+            "description": "Seed for the random generator"
           }
         ]
       }
@@ -220,7 +271,7 @@
             "description": "Defines the number of degrees of freedom in the numerical model."
           }
         ]
-      },	
+      },
       {
         "Name": "HazardBasedEvent",
         "ExecutablePath": "applications/createEVENT/hazardBasedEvent/HazardBasedEvent.py",
@@ -496,6 +547,11 @@
       {
         "Name": "StandardEDP",
         "ExecutablePath": "applications/createEDP/standardEDP/StandardEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "DummyEDP",
+        "ExecutablePath": "applications/createEDP/dummyEDP/DummyEDP",
         "ApplicationSpecificInputs": []
       },	
       {

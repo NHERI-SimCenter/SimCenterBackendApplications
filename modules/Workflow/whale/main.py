@@ -53,6 +53,7 @@ This module has classes and methods that handle everything at the moment.
 """
 
 from time import gmtime, strftime
+from datetime import datetime
 from io import StringIO
 import sys, os, json
 import pprint
@@ -100,7 +101,7 @@ def log_msg(msg, prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+        formatted_msg = '{} {}'.format(datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), msg)
     else:
         formatted_msg = msg
 
@@ -130,9 +131,10 @@ def log_error(msg):
 def print_system_info():
 
     log_msg('System information\n')
-    log_msg('\tpython: '+sys.version)
-    log_msg('\tnumpy: '+np.__version__)
-    log_msg('\tpandas: '+pd.__version__)
+    log_msg(f'\tlocal time zone: {datetime.utcnow().astimezone().tzinfo}')
+    log_msg(f'\tpython: {sys.version}')
+    log_msg(f'\tnumpy: {np.__version__}')
+    log_msg(f'\tpandas: {pd.__version__}')
 
     # additional info about numpy libraries
     if False:
@@ -481,10 +483,8 @@ class Workflow(object):
             self.app_dir_remote = input_data['remoteAppDir']
         else:
             self.app_dir_remote = self.app_dir_local
-            show_warning('remoteAppDir not specified. Using the value provided '
-                'for localAppDir instead. This will lead to problems if you '
-                'want to run a simulation remotely.')
-            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
+            log_msg('\tremoteAppDir not specified. Using the value provided for '
+                'localAppDir instead.')
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
@@ -555,9 +555,17 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'],
-                                        self.reference_dir)
-                    self.workflow_apps[app_type] = app_object
+                    # only assign the app to the workflow if it has an executable
+                    if app_object.rel_path is None:
+                        log_msg(
+                            f'\t{requested_apps[app_type]["Application"]} is '
+                            'a passive application (i.e., it does not invoke '
+                            'any calculation within the workflow.')
+
+                    else:
+                        app_object.set_pref(requested_apps[app_type]['ApplicationData'],
+                                            self.reference_dir)
+                        self.workflow_apps[app_type] = app_object
 
                 else:
                     if app_type in self.optional_apps:
@@ -598,12 +606,19 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        if bldg_app.pref.get('filter', None) is not None:
-            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+        # filter buildings (if needed)
+        bldg_filter = bldg_app.pref.get('filter', None)
+        if bldg_filter == "":
+            del bldg_app.pref['filter']
+            bldg_filter = None
+
+        if bldg_filter is not None:
+            bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
 
             building_file = building_file.replace('.json',
                 '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
 
+        # store the path to the building file
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
@@ -630,6 +645,36 @@ class Workflow(object):
 
         return building_file
 
+    def perform_regional_event(self):
+        """
+        Run an application to simulate a regional-scale hazard event.
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Simulating regional event...')
+
+        reg_event_app = self.workflow_apps['RegionalEvent']
+
+        reg_event_command_list = reg_event_app.get_command_list(
+            app_path = self.app_dir_local)
+
+        command = create_command(reg_event_command_list)
+
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+
+        result, returncode = run_command(command)
+
+        log_msg('\tOutput: ')
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+
+        log_msg('Regional event successfully simulated.')
+        log_msg(log_div)
+
     def perform_regional_mapping(self, building_file):
         """
         Short description
@@ -643,17 +688,17 @@ class Workflow(object):
 
         log_msg('Creating regional mapping...')
 
-        reg_event_app = self.workflow_apps['RegionalMapping']
+        reg_mapping_app = self.workflow_apps['RegionalMapping']
 
         # TODO: not elegant code, fix later
-        for input_ in reg_event_app.inputs:
+        for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'buildingFile':
                 input_['default'] = building_file
 
-        reg_event_command_list = reg_event_app.get_command_list(
+        reg_mapping_command_list = reg_mapping_app.get_command_list(
             app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list)
+        command = create_command(reg_mapping_command_list)
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False)
 
@@ -999,7 +1044,8 @@ class Workflow(object):
             shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
 
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None, input_file = None):
+    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None,
+        input_file = None, copy_resources=False):
         """
         Short description
 
@@ -1040,6 +1086,10 @@ class Workflow(object):
             command_list = self.workflow_apps['DL'].get_command_list(
                 app_path=self.app_dir_local)
 
+            if copy_resources:
+                command_list.append('--resource_dir')
+                command_list.append(self.working_dir)
+
             command = create_command(command_list)
 
             log_msg('\tDamage and loss assessment command:')
@@ -1067,44 +1117,47 @@ class Workflow(object):
             log_msg('No DL requested, loss assessment step is skipped.')
             log_msg('')
 
-            EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+            # Only regional simulations send in a bldg id
+            if bldg_id != None:
 
-            col_info = []
-            for col in EDP_df.columns:
-                try:
-                    split_col = col.split('-')
-                    if len(split_col[1]) == 3:
-                        col_info.append(split_col[1:])
-                except:
-                    continue
+                EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
 
-            col_info = np.transpose(col_info)
+                col_info = []
+                for col in EDP_df.columns:
+                    try:
+                        split_col = col.split('-')
+                        if len(split_col[1]) == 3:
+                            col_info.append(split_col[1:])
+                    except:
+                        continue
 
-            EDP_types = np.unique(col_info[0])
-            EDP_locs = np.unique(col_info[1])
-            EDP_dirs = np.unique(col_info[2])
+                col_info = np.transpose(col_info)
 
-            MI = pd.MultiIndex.from_product(
-                [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
-                names=['type', 'loc', 'dir', 'stat'])
+                EDP_types = np.unique(col_info[0])
+                EDP_locs = np.unique(col_info[1])
+                EDP_dirs = np.unique(col_info[2])
 
-            df_res = pd.DataFrame(columns=MI, index=[0, ])
-            if ('PID', '0') in df_res.columns:
-                del df_res[('PID', '0')]
+                MI = pd.MultiIndex.from_product(
+                    [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+                    names=['type', 'loc', 'dir', 'stat'])
 
-            # store the EDP statistics in the output DF
-            for col in np.transpose(col_info):
-                df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
-                    '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
-                df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
-                    EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+                df_res = pd.DataFrame(columns=MI, index=[0, ])
+                if ('PID', '0') in df_res.columns:
+                    del df_res[('PID', '0')]
 
-            df_res.dropna(axis=1, how='all', inplace=True)
+                # store the EDP statistics in the output DF
+                for col in np.transpose(col_info):
+                    df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+                        '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+                    df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                        EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
 
-            df_res = df_res.astype(float)
+                df_res.dropna(axis=1, how='all', inplace=True)
 
-            # save the output
-            df_res.to_csv('EDP.csv')
+                df_res = df_res.astype(float)
+
+                # save the output
+                df_res.to_csv('EDP.csv')
 
     def aggregate_results(self, bldg_data):
         """
@@ -1123,9 +1176,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],
             DV = [0, 1, 2, 3])

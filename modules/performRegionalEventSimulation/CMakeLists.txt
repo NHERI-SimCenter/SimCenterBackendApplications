@@ -1,2 +1,4 @@
 add_subdirectory(regionalGroundMotion)
 add_subdirectory(regionalWindField)
+add_subdirectory(siteResponse)
+add_subdirectory(DummyEventApp)

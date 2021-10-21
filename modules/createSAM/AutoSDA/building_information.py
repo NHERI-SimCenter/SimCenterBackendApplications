@@ -170,7 +170,10 @@ class Building(object):
         with open('Loads.csv', 'r') as csvfile:
             loads_data = pd.read_csv(csvfile, header=0)
 
-        for i in loads_data._iter_column_arrays():
+        #for i in loads_data._iter_column_arrays():
+        #KZ - a minor replacement avoiding pandas.DataFrame bug when running on stampede
+        for ii in loads_data.columns:
+            i = loads_data.loc[:,ii]
             for j in range(len(i)):
                 val = i[j]
                 try:

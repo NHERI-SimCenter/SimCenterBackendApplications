@@ -177,7 +177,11 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
             rupture = rupList.get(j)
             cur_dist = rupture.getRuptureSurface().getDistanceRup(site_loc)
             rup_tag.append(j)
-            rup_dist.append(cur_dist)
+            if (cur_dist < maxDistance):
+                rup_dist.append(cur_dist)
+            else:
+                # exceeding the maxDistance requirement
+                rup_dist.append(-1.0)
         df = pd.DataFrame.from_dict({
             'rupID': rup_tag,
             'rupDist': rup_dist
@@ -190,6 +194,9 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
             cur_dict.update({'type': 'Feature'})
             rup_index = rup_collection.iloc[j, 0]
             cur_dist = rup_collection.iloc[j, 1]
+            if cur_dist < 0:
+                # skipping ruptures with distance exceeding the maxDistance
+                continue
             rupture = rupList.get(rup_index)
             maf = rupture.getMeanAnnualRate(erf.getTimeSpan().getDuration())
             if maf <= 0.:

@@ -41,7 +41,6 @@
 import json
 import numpy as np
 import pandas as pd
-import requests
 
 
 def get_label(options, labels, label_name):
@@ -172,7 +171,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
 
         if stn.get(z1p0_label):
-            tmp.update({'z1pt0': stn.get(z2p5_label)})
+            tmp.update({'z1pt0': stn.get(z1p0_label)})
         else:
             if z1_tag:
                 if not tmp.get('Vs30'):
@@ -180,7 +179,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
 
         if stn.get(z2p5_label):
-            tmp.update({'z2.5': stn.get(z2p5_label)})
+            tmp.update({'z2pt5': stn.get(z2p5_label)})
         else:
             if z25_tag:
                 if not tmp.get('z1pt0'):
@@ -214,9 +213,13 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
                 'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
                 'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
-                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
-                'backarc': [x.get('backarc',0) for x in stn_file['Stations']],
+                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']]
             }
+            # no backarc by default
+            if stn_file['Stations'][0].get('backarc',None):
+                df_csv.update({
+                    'backarc': [x.get('backarc') for x in stn_file['Stations']]
+                })
             pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
@@ -407,6 +410,8 @@ def get_zTR_ncm(lat, lon):
     Output:
         zTR: list of depth to bedrock
     """
+    import requests
+
     zTR = []
 
     # Looping over sites
@@ -439,6 +444,8 @@ def get_vsp_ncm(lat, lon, depth):
     Output:
         vsp: list of shear-wave velocity profile
     """
+    import requests
+
     vsp = []
     depthMin, depthInc, depthMax = [abs(x) for x in depth]
 

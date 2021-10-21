@@ -4,6 +4,7 @@ all:
 	(cd standardWindEDP; make all)
 	(cd standardEDP; make all)
 	(cd userEDP; make all)
+	(cd dummyEDP; make all)
 	(cd gmtEDP; make all)
 
 clean: 
@@ -13,6 +14,7 @@ clean:
 	(cd standardWindEDP; make clean)
 	(cd standardEDP; make clean)
 	(cd userEDP; make clean)
+	(cd dummyEDP; make clean)
 	(cd gmtEDP; make clean)
 
 distclean: 
@@ -20,6 +22,7 @@ distclean:
 	(cd standardWindEDP; make distclean)
 	(cd standardEDP; make distclean)
 	(cd userEDP; make distclean)
+	(cd dummyEDP; make distclean)
 	(cd gmtEDP; make distclean)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
