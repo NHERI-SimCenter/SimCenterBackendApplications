@@ -121,7 +121,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         for p in terrain_info['features']:
             if (p['geometry']['type'] == 'Polygon'):
                 # creating a new polygon
-                new_poly = Polygon(p['geometry']['coordinates'])
+                new_poly = Polygon(p['geometry']['coordinates'][0])
                 self.terrain_poly.append(new_poly)
                 self.terrain_z0.append(p['properties']['z0'])
                 self.terrain_num += 1
