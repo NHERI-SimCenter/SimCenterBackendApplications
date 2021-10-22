@@ -52,21 +52,28 @@ This module has classes and methods that handle everything at the moment.
 
 """
 
-from time import gmtime, strftime
+from time import strftime
 from datetime import datetime
-from io import StringIO
 import sys, os, json
+
 import pprint
-import posixpath
-import ntpath
+
 import shutil
-import importlib
-from copy import deepcopy
 import subprocess
+
+from copy import deepcopy
+
 import warnings
+
 import numpy as np
 import pandas as pd
+
 import platform
+from pathlib import Path, PurePath
+
+#import posixpath
+#import ntpath
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -138,6 +145,8 @@ def print_system_info():
 
     # additional info about numpy libraries
     if False:
+        from io import StringIO  # only import this when actually needed
+
         old_stdout = sys.stdout
         result = StringIO()
         sys.stdout = result
@@ -197,6 +206,9 @@ def run_command(command):
     # need to run multiple python interpreters simultaneously.
     Frank_trusts_this_approach = False
     if command[:6] == 'python' and Frank_trusts_this_approach:
+
+        import importlib # only import this when it's needed
+
         command_list = command.split()[1:]
         #py_args = command_list[1:]
 
@@ -286,8 +298,18 @@ class WorkflowApplication(object):
                 input_type = self.app_spec_inputs[input_id]['type']
 
                 if input_type == 'path':
-                    self.pref[preference] = posixpath.join(ref_path,
-                                                         self.pref[preference])
+                    pref_path = Path(self.pref[preference])
+                    if not pref_path.is_file():
+                        pref_path = (Path(ref_path) / pref_path)
+
+                    if pref_path.is_file():
+                        self.pref[preference] = pref_path.resolve()
+                    else:
+                        raise ValueError(
+                            f"The path provided as the {preference} attribute "
+                            f"of the {self.name} app does not point to a valid "
+                            f"location: {self.pref[preference]}")
+                    #posixpath.join(ref_path,self.pref[preference])
 
     def get_command_list(self, app_path):
         """
@@ -295,11 +317,12 @@ class WorkflowApplication(object):
 
         Parameters
         ----------
-        app_path: string
+        app_path: Path
             Explain...
         """
 
-        abs_path = posixpath.join(app_path, self.rel_path)
+        abs_path = app_path / self.rel_path
+        #abs_path = posixpath.join(app_path, self.rel_path)
 
         arg_list = []
 
@@ -369,9 +392,22 @@ class Workflow(object):
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
-        self.reference_dir = reference_dir
-        self.working_dir = working_dir
-        self.app_dir_local = app_dir
+
+        if reference_dir is not None:
+            self.reference_dir = Path(reference_dir)
+        else:
+            self.reference_dir = None
+
+        if working_dir is not None:
+            self.working_dir = Path(working_dir)
+        else:
+            self.working_dir = None
+
+        if app_dir is not None:
+            self.app_dir_local = Path(app_dir)
+        else:
+            self.app_dir_local = None
+
         self.app_type_list = app_type_list
         self.units = units
         self.outputs = outputs
@@ -469,7 +505,7 @@ class Workflow(object):
         if self.working_dir is not None:
             self.run_dir = self.working_dir
         elif 'runDir' in input_data:
-            self.run_dir = input_data['runDir']
+            self.run_dir = Path(input_data['runDir'])
         #else:
         #    raise WorkFlowInputError('Need a runDir entry in the input file')
 
@@ -480,7 +516,7 @@ class Workflow(object):
         #    raise WorkFlowInputError('Need a localAppDir entry in the input file')
 
         if 'remoteAppDir' in input_data:
-            self.app_dir_remote = input_data['remoteAppDir']
+            self.app_dir_remote = Path(input_data['remoteAppDir'])
         else:
             self.app_dir_remote = self.app_dir_local
             log_msg('\tremoteAppDir not specified. Using the value provided for '
@@ -599,7 +635,8 @@ class Workflow(object):
 
         log_msg('Creating files for individual buildings')
 
-        building_file = posixpath.join(self.run_dir, self.building_file_name)
+        building_file = self.run_dir / self.building_file_name
+        #building_file = posixpath.join(self.run_dir, self.building_file_name)
 
         bldg_app = self.workflow_apps['Building']
 
@@ -738,10 +775,13 @@ class Workflow(object):
 
             # Make a copy of the BIM file
             shutil.copy(
-                src = posixpath.join(self.run_dir, BIM_file),
-                dst = posixpath.join(
-                    self.run_dir,
-                    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
+                src = self.run_dir / BIM_file,
+                dst = self.run_dir / f'{bldg_id}/templatedir/{BIM_file}')
+
+            #src = posixpath.join(self.run_dir, BIM_file),
+            #dst = posixpath.join(
+            #    self.run_dir,
+            #    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
             # Open the BIM file and add the unit information to it
             if self.units is not None:
@@ -766,7 +806,8 @@ class Workflow(object):
 
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
-            dst = posixpath.join(os.getcwd(),BIM_file)
+            dst = Path(os.getcwd()) / BIM_file
+            #dst = posixpath.join(os.getcwd(),BIM_file)
             if BIM_file != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
 
@@ -843,7 +884,8 @@ class Workflow(object):
 
         workdir_contents = os.listdir(self.run_dir)
         for file_or_dir in workdir_contents:
-            if os.path.isdir(posixpath.join(self.run_dir, file_or_dir)):
+            if (self.run_dir / file_or_dir).is_dir():
+            #if os.path.isdir(posixpath.join(self.run_dir, file_or_dir)):
                 shutil.rmtree(file_or_dir, ignore_errors=True)
 
         log_msg('Working directory successfully cleaned up.')
@@ -1063,16 +1105,21 @@ class Workflow(object):
             if 'Building' not in self.app_type_list:
                 # Copy the dakota.json file from the templatedir to the run_dir so that
                 # all the required inputs are in one place.
-                input_file = ntpath.basename(input_file)
+                input_file = PurePath(input_file).name
+                #input_file = ntpath.basename(input_file)
                 shutil.copy(
-                    src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
-                    dst = posixpath.join(self.run_dir,BIM_file))
+                    src = self.run_dir / f'templatedir/{input_file}',
+                    dst = self.run_dir / BIM_file)
+                #src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
+                #dst = posixpath.join(self.run_dir,BIM_file))
             else:
                 # copy the BIM file from the main dir to the building dir
                 shutil.copy(
-                    src = posixpath.join(self.run_dir, BIM_file),
-                    dst = posixpath.join(self.run_dir,
-                                         '{}/{}'.format(bldg_id, BIM_file)))
+                    src = self.run_dir / BIM_file,
+                    dst = self.run_dir / f'{bldg_id}/{BIM_file}')
+                #src = posixpath.join(self.run_dir, BIM_file),
+                #dst = posixpath.join(self.run_dir,
+                #                     '{}/{}'.format(bldg_id, BIM_file)))
                 os.chdir(str(bldg_id))
 
             workflow_app = self.workflow_apps['DL']
@@ -1104,8 +1151,10 @@ class Workflow(object):
 
                 try:
                     shutil.copy(
-                        src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
-                        dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+                        src = self.run_dir / f'{bldg_id}/{'pelicun_log.txt'}',
+                        dst = self.run_dir / f'pelicun_log_{bldg_id}.txt')
+                    #src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                    #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
                 except:
                     pass
 
