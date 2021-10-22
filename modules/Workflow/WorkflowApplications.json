@@ -140,7 +140,25 @@
         "ExecutablePath": null,
         "ApplicationSpecificInputs": [
         ]
-      }	
+      },
+      {
+        "Name": "EQSS",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },	
+      {
+        "Name": "UserInputShakeMap",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },	
+      {
+        "Name": "UserInputHurricane",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      }
     ]
   },
   "RegionalMappingApplications": {
