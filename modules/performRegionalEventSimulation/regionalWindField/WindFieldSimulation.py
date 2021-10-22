@@ -103,7 +103,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             # no reference terrain provided, using default reference z0 = 0.03
             z0 = 0.03
         else:
-            pt = Point(lat, lon)
+            #pt = Point(lat, lon)
+            pt = Point(lon, lat)
             for p, z in zip(self.terrain_poly, self.terrain_z0):
                 if pt.within(p):
                     z0 = z
