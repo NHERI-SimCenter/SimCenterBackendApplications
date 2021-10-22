@@ -54,9 +54,14 @@ def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file):
 
-    # initialize the log file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
+
+    # save the reference dir in the input file
+    inputs['refDir'] = reference_dir
+
+    with open(input_file, 'w') as f:
+        json.dump(inputs, f, indent=2)
 
     if working_dir is not None:
         runDir = working_dir
@@ -66,6 +71,7 @@ def main(run_type, input_file, app_registry,
     if not os.path.exists(runDir):
         os.mkdir(runDir)
 
+    # initialize the log file
     if log_file == 'log.txt':
         whale.log_file = runDir + '/log.txt'
     else:
