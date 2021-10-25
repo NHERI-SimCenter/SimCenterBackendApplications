@@ -80,6 +80,18 @@ def log_msg(msg='', prepend_timestamp=True):
 
 # Constants for unit conversion to standard units
 
+unit_types: {
+    'time'         : ['sec', 'minute', 'h', 'day']
+    'length'       : ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
+    'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
+    'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
+    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps'],
+    'acceleration' : ['mps2', 'inchps2', 'ftps2', 'g'],
+    'mass'         : ['kg', 'ton', 'lb'],
+    'force'        : ['N', 'kN', 'lbf', 'kip', 'kips'],
+    'pressure'     : ['Pa', 'kPa', 'MPa', 'GPa', 'psi', 'ksi', 'Mpsi']
+}
+
 # time
 sec = 1.
 
@@ -114,9 +126,13 @@ mile2 = mile**2.
 # volume
 m3 = m**3.
 
+mm3 = mm**3.
+cm3 = cm**3.
+km3 = km**3.
+
 inch3 = inch**3.
 ft3 = ft**3.
-
+mile3 = mile**3.
 
 # speed / velocity
 cmps = cm / sec
