@@ -181,11 +181,11 @@ def simulate_storm_cpp(site_info, scenario_info, scenario_data, event_info, mode
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [
-                        [[-90.0, -180.0],
-                        [90.0, -180.0],
-                        [90.0, 180.0],
-                        [-90.0, 180.0],
-                        [-90.0, -180.0]]]
+                        [[-180.0, -90.0],
+                        [-180.0, 90.0],
+                        [180.0, 90.0],
+                        [180.0, -90.0],
+                        [-180.0, -90.0]]]
                     },
                     "properties": {
                         "z0": 0.01
