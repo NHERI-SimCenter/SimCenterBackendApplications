@@ -285,12 +285,12 @@ int WindFieldModel::DefineTern(std::string refz0_file)
     {
         int jmax = int(this->Wr_sizes(i));
         json_t *tmpObj = json_object_get(json_array_get(feat, i), "geometry");
-        json_t *tmpAry = json_object_get(tmpObj, "coordinates");
+        json_t *tmpAry = json_array_get(json_object_get(tmpObj, "coordinates"),0);
         for (int j = 0; j < jmax; j++)
         {
             json_t *tmpVal = json_array_get(tmpAry, j);
-            this->Lat_wr(j, i) = json_number_value(json_array_get(tmpVal, 0));
-            this->Long_wr(j, i) = json_number_value(json_array_get(tmpVal, 1));
+            this->Lat_wr(j, i) = json_number_value(json_array_get(tmpVal, 1));
+            this->Long_wr(j, i) = json_number_value(json_array_get(tmpVal, 0));
         }
     }
 

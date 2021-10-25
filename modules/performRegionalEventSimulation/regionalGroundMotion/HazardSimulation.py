@@ -166,7 +166,7 @@ if __name__ == '__main__':
             if scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
                 # Calling openquake to run classical PSHA
                 #oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)
-                oq_flag = oq_run_classical_psha(filePath_ini, exports='csv', oq_version=oq_ver_loaded)
+                oq_flag = oq_run_classical_psha(filePath_ini, exports='csv', oq_version=oq_ver_loaded, dir_info=dir_info)
                 if not oq_flag:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')
                 if scenario_info['EqRupture'].get('UHS', False):
@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
             elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
                 # Creating and conducting OpenQuake calculations
-                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded)
+                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=dir_info)
                 oq_calc.run_calc()
                 psa_raw = [oq_calc.eval_calc()]
                 stn_new = stations['Stations']
