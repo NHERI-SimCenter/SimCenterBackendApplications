@@ -765,6 +765,9 @@ class Workflow(object):
             if input_['id'] == 'buildingFile':
                 input_['default'] = building_file
 
+            elif input_['id'] == 'filenameEVENTgrid':
+                input_['default'] = self.shared_data['RegionalEvent']['eventFile']
+
         reg_mapping_command_list = reg_mapping_app.get_command_list(
             app_path = self.app_dir_local)
 
