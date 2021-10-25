@@ -408,7 +408,6 @@ class Workflow(object):
             self.app_dir_local = None
 
         self.app_type_list = app_type_list
-        self.output_types = output_types
 
         # initialize app registry
         self._init_app_registry()
@@ -500,15 +499,22 @@ class Workflow(object):
             log_msg('\tNo units specified; using Standard units.')
 
         # store the specified output types
-        self.outputs = input_data.get('outputs', None)
+        self.output_types = input_data.get('outputs', None)
 
-        if self.outputs is None:
+        if self.output_types is None:
             raise ValueError("Missing output type specification.")
 
         log_msg("The following output_types were requested: ")
         for out_type, flag in self.outputs.items():
             if flag:
                 log_msg(f'\t\t{out_type}')
+
+        # parse the shared data in the input file
+        self.shared_data = {}
+        for shared_key in ['RegionalEvent']:
+            value = input_data.get(shared_key, None)
+            if value != None:
+                self.shared_data.update({key: value})
 
         # parse the location of the run_dir
         if self.working_dir is not None:
@@ -697,6 +703,9 @@ class Workflow(object):
             BIM_data.update({'units': self.units})
 
         BIM_data.update({'outputs': self.output_types})
+
+        for key, value in self.shared_data:
+            BIM_data.update({key, value})
 
         with open(BIM_file, 'w') as f:
             json.dump(BIM_data, f, indent=2)
