@@ -202,19 +202,21 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         # prepare a dictionary of events
         event_list_json = []
         for e_i, event in enumerate(event_list):
-            event_list_json.append({
-                "EventClassification": "Earthquake",
-                "fileName": f'{event}x{e_i:05d}',
-                "factor": scale_list[e_i],
-                "type": event_type
-                })
+            #event_list_json.append({
+            #    #"EventClassification": "Earthquake",
+            #    "fileName": f'{event}x{e_i:05d}',
+            #    "factor": scale_list[e_i],
+            #    #"type": event_type
+            #    })
+            event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the BIM
         bldg_data['Events'] = {
-            "EventClassification": "Earthquake",
+            #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
-            "type": "SimCenterEvents"
+            "type": event_type
+            #"type": "SimCenterEvents"
         }
 
         with open(bldg_file, 'w') as f:
