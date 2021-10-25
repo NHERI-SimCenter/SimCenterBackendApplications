@@ -39,16 +39,16 @@
 # Adam Zsarnóczay
 # Wael Elhaddad
 
-import sys, argparse, json
-import posixpath
-from pathlib import Path, PurePath
+import argparse
 
 def create_building_files(output_file, building_source_file, bldg_filter):
 
     # these imports are here to save time when the app is called without
     # the -getRV flag
+    import sys, json
     import numpy as np
     import pandas as pd
+    from pathlib import Path, PurePath
 
     # get the units
     main_dir = Path(PurePath(output_file).parent)
