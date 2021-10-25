@@ -94,9 +94,7 @@ def main(run_type, input_file, app_registry,
                          'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
-        app_dir = app_dir,
-        units = inputs.get('units', None),
-        outputs=inputs.get('outputs', None))
+        app_dir = app_dir)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)

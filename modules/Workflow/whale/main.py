@@ -378,8 +378,7 @@ class Workflow(object):
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None, app_dir=None,
-        units=None, outputs=None):
+        reference_dir=None, working_dir=None, app_dir=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -409,8 +408,7 @@ class Workflow(object):
             self.app_dir_local = None
 
         self.app_type_list = app_type_list
-        self.units = units
-        self.outputs = outputs
+        self.output_types = output_types
 
         # initialize app registry
         self._init_app_registry()
@@ -500,6 +498,17 @@ class Workflow(object):
         else:
             self.units = None
             log_msg('\tNo units specified; using Standard units.')
+
+        # store the specified output types
+        self.outputs = input_data.get('outputs', None)
+
+        if self.outputs is None:
+            raise ValueError("Missing output type specification.")
+
+        log_msg("The following output_types were requested: ")
+        for out_type, flag in self.outputs.items():
+            if flag:
+                log_msg(f'\t\t{out_type}')
 
         # parse the location of the run_dir
         if self.working_dir is not None:
@@ -677,6 +686,21 @@ class Workflow(object):
         log_msg('\tOutput: ')
         log_msg('\n{}\n'.format(result), prepend_timestamp=False)
 
+        # Append workflow settings to the BIM file
+        log_msg('Appending additional settings to the BIM files...')
+
+        # Open the BIM file and add the unit information to it
+        with open(BIM_file, 'r') as f:
+            BIM_data = json.load(f)
+
+        if self.units != None:
+            BIM_data.update({'units': self.units})
+
+        BIM_data.update({'outputs': self.output_types})
+
+        with open(BIM_file, 'w') as f:
+            json.dump(BIM_data, f, indent=2)
+
         log_msg('Building files successfully created.')
         log_msg(log_div)
 
@@ -783,16 +807,6 @@ class Workflow(object):
             #    self.run_dir,
             #    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
-            # Open the BIM file and add the unit information to it
-            if self.units is not None:
-                with open(BIM_file, 'r') as f:
-                    BIM_data = json.load(f)
-
-                BIM_data.update({'units': self.units})
-
-                with open(BIM_file, 'w') as f:
-                    json.dump(BIM_data, f, indent=2)
-
         else:
 
             for dir_or_file in os.listdir(os.getcwd()):
@@ -859,11 +873,6 @@ class Workflow(object):
                     shutil.rmtree(dir_or_file)
                 else:
                     os.remove(dir_or_file)
-
-        # add a json file with the units (if they were provided)
-        if self.units is not None:
-            with open('units.json', 'w') as f:
-                json.dump(self.units, f, indent=2)
 
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
@@ -1234,7 +1243,8 @@ class Workflow(object):
             DV = [0, 1, 2, 3])
 
         for out_type in out_types:
-            if (self.outputs is None) or (self.outputs.get(out_type, False)):
+            if ((self.output_types is None) or
+                (self.output_types.get(out_type, False))):
 
                 if out_type == 'every_realization':
 
