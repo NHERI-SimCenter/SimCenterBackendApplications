@@ -250,6 +250,27 @@ def run_command(command):
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
 
+def resolve_path(target_path, ref_path):
+
+    target_path = str(target_path)
+
+    while target_path.startswith('/') or target_path.startswith('\\'):
+        target_path = target_path[1:]
+
+    target_path = Path(target_path)
+    ref_path = Path(ref_path)
+
+    if not target_path.exists():
+        target_path = Path(ref_path) / target_path
+
+    if target_path.exists():
+        target_path = target_path.resolve()
+    else:
+        raise ValueError(
+            f"{target_path} does not point to a valid location")
+
+    return target_path
+
 class WorkFlowInputError(Exception):
     def __init__(self, value):
         self.value = value
@@ -298,18 +319,9 @@ class WorkflowApplication(object):
                 input_type = self.app_spec_inputs[input_id]['type']
 
                 if input_type == 'path':
-                    pref_path = Path(self.pref[preference])
-                    if not pref_path.is_file():
-                        pref_path = (Path(ref_path) / pref_path)
 
-                    if pref_path.is_file():
-                        self.pref[preference] = pref_path.resolve()
-                    else:
-                        raise ValueError(
-                            f"The path provided as the {preference} attribute "
-                            f"of the {self.name} app does not point to a valid "
-                            f"location: {self.pref[preference]}")
-                    #posixpath.join(ref_path,self.pref[preference])
+                    self.pref[preference] = resolve_path(
+                        self.pref[preference], ref_path)
 
     def get_command_list(self, app_path):
         """
@@ -763,10 +775,15 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'buildingFile':
-                input_['default'] = building_file
+                input_['default'] = str(building_file)
 
-            elif input_['id'] == 'filenameEVENTgrid':
-                input_['default'] = self.shared_data['RegionalEvent']['eventFile']
+        reg_mapping_app.inputs.append({
+            'id': 'filenameEVENTgrid',
+            'type': 'path',
+            'default': resolve_path(
+                self.shared_data['RegionalEvent']['eventFile'],
+                self.reference_dir)
+            })
 
         reg_mapping_command_list = reg_mapping_app.get_command_list(
             app_path = self.app_dir_local)
