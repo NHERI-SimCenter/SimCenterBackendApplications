@@ -707,20 +707,31 @@ class Workflow(object):
         # Append workflow settings to the BIM file
         log_msg('Appending additional settings to the BIM files...')
 
-        # Open the BIM file and add the unit information to it
-        with open(BIM_file, 'r') as f:
-            BIM_data = json.load(f)
+        with open(building_file, 'r') as f:
+            bldg_data = json.load(f)
 
-        if self.units != None:
-            BIM_data.update({'units': self.units})
+        for bldg in bldg_data:
 
-        BIM_data.update({'outputs': self.output_types})
+            BIM_file = bldg['file']
 
-        for key, value in self.shared_data:
-            BIM_data.update({key, value})
+            # Open the BIM file and add the unit information to it
+            with open(BIM_file, 'r') as f:
+                BIM_data = json.load(f)
 
-        with open(BIM_file, 'w') as f:
-            json.dump(BIM_data, f, indent=2)
+            if self.units != None:
+                BIM_data.update({'units': self.units})
+
+                # TODO: remove this after all apps have been updated to use the
+                # above location to get units
+                BIM_data['GeneralInformation'].update({'units': self.units})
+
+            BIM_data.update({'outputs': self.output_types})
+
+            for key, value in self.shared_data.items():
+                BIM_data[key] = value
+
+            with open(BIM_file, 'w') as f:
+                json.dump(BIM_data, f, indent=2)
 
         log_msg('Building files successfully created.')
         log_msg(log_div)
