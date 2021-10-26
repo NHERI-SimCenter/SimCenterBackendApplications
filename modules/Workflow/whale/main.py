@@ -333,7 +333,7 @@ class WorkflowApplication(object):
             Explain...
         """
 
-        abs_path = app_path / self.rel_path
+        abs_path = Path(app_path) / self.rel_path
         #abs_path = posixpath.join(app_path, self.rel_path)
 
         arg_list = []
