@@ -338,7 +338,7 @@ class WorkflowApplication(object):
 
         arg_list = []
 
-        if abs_path.endswith('.py'):
+        if str(abs_path).endswith('.py'):
             arg_list.append('python')
 
         arg_list.append(u'{}'.format(abs_path))
@@ -517,16 +517,16 @@ class Workflow(object):
             raise ValueError("Missing output type specification.")
 
         log_msg("The following output_types were requested: ")
-        for out_type, flag in self.outputs.items():
+        for out_type, flag in self.output_types.items():
             if flag:
                 log_msg(f'\t\t{out_type}')
 
         # parse the shared data in the input file
         self.shared_data = {}
-        for shared_key in ['RegionalEvent']:
+        for shared_key in ['RegionalEvent',]:
             value = input_data.get(shared_key, None)
             if value != None:
-                self.shared_data.update({key: value})
+                self.shared_data.update({shared_key: value})
 
         # parse the location of the run_dir
         if self.working_dir is not None:
@@ -679,8 +679,8 @@ class Workflow(object):
         if bldg_filter is not None:
             bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
 
-            building_file = building_file.replace('.json',
-                '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
+            building_file = Path(str(building_file).replace(
+                ".json", f"{bldgs[0][0]}-{bldgs[-1][-1]}.json"))
 
         # store the path to the building file
         self.building_file_path = building_file
@@ -1200,7 +1200,7 @@ class Workflow(object):
 
                 try:
                     shutil.copy(
-                        src = self.run_dir / f'{bldg_id}/{'pelicun_log.txt'}',
+                        src = self.run_dir / f'{bldg_id}/{"pelicun_log.txt"}',
                         dst = self.run_dir / f'pelicun_log_{bldg_id}.txt')
                     #src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
                     #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))

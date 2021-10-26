@@ -139,7 +139,7 @@ def write_RV(EVENT_input_path):
         else: # if none of the above is given, default to 1-1
             header_out.append(f'1-{h_label.strip()}-1-1')
 
-    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',',
+    np.savetxt(working_dir / 'response.csv', EDP_output, delimiter=',',
         header=','+', '.join(header_out), comments='')
 
 # TODO: consider removing this function

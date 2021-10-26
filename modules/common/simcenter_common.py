@@ -80,8 +80,8 @@ def log_msg(msg='', prepend_timestamp=True):
 
 # Constants for unit conversion to standard units
 
-unit_types: {
-    'time'         : ['sec', 'minute', 'h', 'day']
+unit_types = {
+    'time'         : ['sec', 'minute', 'h', 'day'],
     'length'       : ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
     'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
     'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],

@@ -84,37 +84,43 @@ def get_scale_factors(input_units, output_units):
 
         for input_name, input_unit in input_units.items():
 
-            # get the scale factor to standard units
-            f_in = globals().get(input_unit, None)
-            if f_in is None:
-                raise ValueError(
-                    f"Input unit for event files not recognized: {input_unit}")
-
-            unit_type = None
-            for base_unit_type, unit_set in globals()['unit_types'].items():
-                if input_unit in unit_set:
-                    unit_type = base_unit_type
-
-            if unit_type is None:
-                raise ValueError(f"Failed to identify unit type: {input_unit}")
-
-            # the output unit depends on the unit type
-            if unit_type == 'acceleration':
-                f_out = f_time ** 2.0 / f_length
-
-            elif unit_type == 'speed':
-                f_out = f_time / f_length
-
-            elif unit_type == 'length':
-                f_out = 1.0 / f_length
+            # exceptions
+            if input_name in ['factor', ]:
+                f_scale = 1.0
 
             else:
-                raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
 
-            # the scale factor is the product of input and output scaling
-            f_scale = f_in * f_out
+                # get the scale factor to standard units
+                f_in = globals().get(input_unit, None)
+                if f_in is None:
+                    raise ValueError(
+                        f"Input unit for event files not recognized: {input_unit}")
 
-            scale_factors.append(input_name, f_scale)
+                unit_type = None
+                for base_unit_type, unit_set in globals()['unit_types'].items():
+                    if input_unit in unit_set:
+                        unit_type = base_unit_type
+
+                if unit_type is None:
+                    raise ValueError(f"Failed to identify unit type: {input_unit}")
+
+                # the output unit depends on the unit type
+                if unit_type == 'acceleration':
+                    f_out = f_time ** 2.0 / f_length
+
+                elif unit_type == 'speed':
+                    f_out = f_time / f_length
+
+                elif unit_type == 'length':
+                    f_out = 1.0 / f_length
+
+                else:
+                    raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
+
+                # the scale factor is the product of input and output scaling
+                f_scale = f_in * f_out
+
+            scale_factors.update({input_name: f_scale})
 
     return scale_factors
 
@@ -161,14 +167,14 @@ def write_RV(BIM_file, EVENT_file):
             # 'type': 'Seismic', I am pretty sure we are not using this now
             # or we are using it incorrectly, so I removed it for the time being
             # and replaced it with the information that is actually used
-            'type': bim_data['Events']['Events']['type'],
+            'type': bim_data['Events']['type'],
             'event_id': 'RV.eventID',
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
             })
 
         # collect the filenames
-        RV_elements = np.array(events).T[0]
+        RV_elements = np.array(events).T[0].tolist()
         #for event in events:
         #    #if event['EventClassification'] in ['Earthquake', 'Hurricane',
         #    #                                    'Flood']:
@@ -184,7 +190,7 @@ def write_RV(BIM_file, EVENT_file):
         # initialize the Events part of the EVENT file
         event_file['Events'].append({
             #'type': 'Seismic',
-            'type': bim_data['Events']['Events']['type'],
+            'type': bim_data['Events']['type'],
             'event_id': events[0]['fileName'],
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
@@ -193,9 +199,9 @@ def write_RV(BIM_file, EVENT_file):
     # if time histories are used, then load the first event
     # TODO: this is needed by some other code that should be fixed and this
     #  part should be removed.
-    if events[0]['type'] == 'timeHistory':
+    if bim_data['Events']['type'] == 'timeHistory':
         event_file['Events'][0].update(
-            load_record(events[0]['fileName'], data_dir, empty=len(events) > 1))
+            load_record(events[0][0], data_dir, empty=len(events) > 1))
             #, event_class = event_class))
 
     # save the EVENT dictionary to a json file
@@ -228,11 +234,11 @@ def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=
     # (empty is used when generating only random variables in write_RV)
     if not empty:
 
-        f_scale_units.get('TH_file',f_scale_units.get('ALL', None))
+        f_scale_units = f_scale_units.get('TH_file',f_scale_units.get('ALL', None))
         if f_scale_units is None:
             raise ValueError("No unit scaling is defined for time history data.")
 
-        f_scale = f_scale_units * f_scale_user
+        f_scale = float(f_scale_units) * float(f_scale_user)
 
         # generate the event files
         # TODO: add 'z' later
@@ -288,9 +294,9 @@ def get_records(BIM_file, EVENT_file):
     f_scale_units = event_file['Events'][0]['unitScaleFactor']
 
     # get the scale factor if a user specified it
-    event_data = bim_file["Events"]["Events"].T
-    event_id = np.where(event_data == event_id)[0][0]
-    f_scale_user = event_data.T[event_id]
+    event_data = np.array(bim_file["Events"]["Events"]).T
+    event_loc = np.where(event_data == event_id)[0][0]
+    f_scale_user = event_data.T[event_loc][1]
 
     #f_scale_user = dict([(evt['fileName'], evt.get('factor', 1.0))
     #                     for evt in bim_file["Events"]["Events"]])[event_id]
