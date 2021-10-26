@@ -39,26 +39,15 @@
 # Adam Zsarnóczay
 # Wael Elhaddad
 
-import argparse
+import argparse, sys
 
 def create_building_files(output_file, building_source_file, bldg_filter):
 
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    import sys, json
+    import json
     import numpy as np
     import pandas as pd
-    from pathlib import Path, PurePath
-
-    # get the units
-    main_dir = Path(PurePath(output_file).parent)
-    #main_dir = posixpath.dirname(output_file)
-
-    with open(main_dir / 'units.json', 'r') as f:
-        units = json.load(f)
-
-    #with open(posixpath.join(main_dir, 'units.json'), 'r') as f:
-    #    units = json.load(f)
 
     # check if a filter is provided
     if bldg_filter is not None:
@@ -99,8 +88,7 @@ def create_building_files(output_file, building_source_file, bldg_filter):
                 location = {
                     'latitude': bldg["Latitude"],
                     'longitude': bldg["Longitude"]
-                },
-                units = units
+                }
             )
         }
 
