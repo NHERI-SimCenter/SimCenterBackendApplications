@@ -252,22 +252,27 @@ def show_warning(warning_msg):
 
 def resolve_path(target_path, ref_path):
 
-    target_path = str(target_path)
+    ref_path = Path(ref_path)
+
+    target_path = str(target_path).strip()
 
     while target_path.startswith('/') or target_path.startswith('\\'):
         target_path = target_path[1:]
 
-    target_path = Path(target_path)
-    ref_path = Path(ref_path)
+    if target_path == "":
+        target_path = ref_path
 
-    if not target_path.exists():
-        target_path = Path(ref_path) / target_path
-
-    if target_path.exists():
-        target_path = target_path.resolve()
     else:
-        raise ValueError(
-            f"{target_path} does not point to a valid location")
+        target_path = Path(target_path)
+
+        if not target_path.exists():
+            target_path = Path(ref_path) / target_path
+
+        if target_path.exists():
+            target_path = target_path.resolve()
+        else:
+            raise ValueError(
+                f"{target_path} does not point to a valid location")
 
     return target_path
 
