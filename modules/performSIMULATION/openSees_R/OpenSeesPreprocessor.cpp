@@ -1,6 +1,6 @@
 
 #include "OpenSeesPreprocessor.h"
-#include <jansson.h> 
+#include <jansson.h>
 #include <string.h>
 #include <string>
 #include <sstream>
@@ -28,7 +28,7 @@ OpenSeesPreprocessor::~OpenSeesPreprocessor(){
     delete [] filenameUQ;
 }
 
-int 
+int
 OpenSeesPreprocessor::writeRV(const char *BIM,
 			      const char *SAM,
 			      const char *EVENT,
@@ -36,7 +36,7 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
 {
   //
   // for now just assume earthquake, dynamic & write the RV
-  // 
+  //
 
     json_t *root = json_object();
     json_t *randomVariables = json_array();
@@ -65,7 +65,7 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
 	return 0;
 }
 
-int 
+int
 OpenSeesPreprocessor::createInputFile(const char *BIM,
 				      const char *SAM,
 				      const char *EVENT,
@@ -88,7 +88,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
     delete [] filenameTCL;
   if (filenameUQ != 0)
     delete [] filenameUQ;
-  
+
   filenameBIM=(char*)malloc((strlen(BIM)+1)*sizeof(char));
   filenameSAM=(char*)malloc((strlen(SAM)+1)*sizeof(char));
   filenameEVENT=(char*)malloc((strlen(EVENT)+1)*sizeof(char));
@@ -105,7 +105,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 
   //
   // open tcl script
-  // 
+  //
   printf("opening Tcl script\n");
   ofstream *s = new ofstream;
   s->open(filenameTCL, ios::out);
@@ -118,7 +118,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
   json_error_t error;
   rootSAM = json_load_file(filenameSAM, 0, &error);
 
-  mapping = json_object_get(rootSAM,"NodeMapping");  
+  mapping = json_object_get(rootSAM,"NodeMapping");
 
   processNodes(tclFile);
   processMaterials(tclFile);
@@ -137,7 +137,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 }
 
 
-int 
+int
 OpenSeesPreprocessor::createInputFile(const char *BIM,
 				      const char *SAM,
 				      const char *EVENT,
@@ -178,7 +178,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 
   //
   // open tcl script
-  // 
+  //
 
   ofstream *s = new ofstream;
   s->open(filenameTCL, ios::out);
@@ -191,7 +191,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
   json_error_t error;
   rootSAM = json_load_file(filenameSAM, 0, &error);
 
-  mapping = json_object_get(rootSAM,"NodeMapping");  
+  mapping = json_object_get(rootSAM,"NodeMapping");
 
   processNodes(tclFile);
   processMaterials(tclFile);
@@ -207,16 +207,16 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 }
 
 
-int 
+int
 OpenSeesPreprocessor::processMaterials(ofstream &s){
   int index;
   json_t *material;
 
-  json_t *propertiesObject = json_object_get(rootSAM,"Properties");  
+  json_t *propertiesObject = json_object_get(rootSAM,"Properties");
   json_t *materials = json_object_get(propertiesObject,"uniaxialMaterials");
   json_array_foreach(materials, index, material) {
     const char *type = json_string_value(json_object_get(material,"type"));
-    
+
     if (strcmp(type,"shear") == 0) {
       int tag = json_integer_value(json_object_get(material,"name"));
       double K0 = json_number_value(json_object_get(material,"K0"));
@@ -259,17 +259,17 @@ OpenSeesPreprocessor::processMaterials(ofstream &s){
   return 0;
 }
 
-int 
+int
 OpenSeesPreprocessor::processSections(ofstream &s) {
   return 0;
 }
 
-int 
+int
 OpenSeesPreprocessor::processNodes(ofstream &s){
   int index;
   json_t *node;
 
-  json_t *geometry = json_object_get(rootSAM,"Geometry");  
+  json_t *geometry = json_object_get(rootSAM,"Geometry");
   json_t *nodes = json_object_get(geometry,"nodes");
 
   NDM = 0;
@@ -288,7 +288,7 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
       NDF = ndf;
       // issue new model command if node size changes
       s << "model BasicBuilder -ndm " << NDM << " -ndf " << NDF << "\n";
-    } 
+    }
 
     s << "node " << tag << " ";
     json_t *crd;
@@ -317,12 +317,12 @@ OpenSeesPreprocessor::processNodes(ofstream &s){
   return 0;
 }
 
-int 
+int
 OpenSeesPreprocessor::processElements(ofstream &s){
   int index;
   json_t *element;
 
-  json_t *geometry = json_object_get(rootSAM,"Geometry");  
+  json_t *geometry = json_object_get(rootSAM,"Geometry");
   json_t *elements = json_object_get(geometry,"elements");
 
   json_array_foreach(elements, index, element) {
@@ -397,7 +397,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 }
 
 
-int 
+int
 OpenSeesPreprocessor::processEvents(ofstream &s){
 
   //
@@ -413,9 +413,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
   int index;
   json_t *event;
 
-  json_t *events = json_object_get(rootEVENT,"Events");  
-  json_t *edps = json_object_get(rootEDP,"EngineeringDemandParameters");  
-  
+  json_t *events = json_object_get(rootEVENT,"Events");
+  json_t *edps = json_object_get(rootEDP,"EngineeringDemandParameters");
+
   int numEvents = json_array_size(events);
   int numEDPs = json_array_size(edps);
 
@@ -444,20 +444,20 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
     		  json_t *response = json_array_get(eventEDP, k);
     		  const char *type = json_string_value(json_object_get(response, "type"));
-    	  
+
 			if (strcmp(type,"max_abs_acceleration") == 0) {
     			int cline = json_integer_value(json_object_get(response, "cline"));
     			int floor = json_integer_value(json_object_get(response, "floor"));
 
-    			int nodeTag = this->getNode(cline,floor);	
+    			int nodeTag = this->getNode(cline,floor);
     			//	    std::ostringstream fileString(string(edpEventName)+string(type));
     			string fileString;
     			ostringstream temp;  //temp as in temporary
     			temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-    			fileString=temp.str(); 
+    			fileString=temp.str();
 
     			const char *fileName = fileString.c_str();
-    	    
+
     			int startTimeSeries = numTimeSeries-NDF;
     			s << "recorder EnvelopeNode -file " << fileName;
     			s << " -timeSeries ";
@@ -469,14 +469,14 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     			s << " accel\n";
     		  }
 
-    		else if ((strcmp(type,"max_drift") == 0) || 
+    		else if ((strcmp(type,"max_drift") == 0) ||
                  (strcmp(type,"max_roof_drift") == 0)) {
     			int cline = json_integer_value(json_object_get(response, "cline"));
     			int floor1 = json_integer_value(json_object_get(response, "floor1"));
     			int floor2 = json_integer_value(json_object_get(response, "floor2"));
 
-    			int nodeTag1 = this->getNode(cline,floor1);	    
-    			int nodeTag2 = this->getNode(cline,floor2);	    
+    			int nodeTag1 = this->getNode(cline,floor1);
+    			int nodeTag2 = this->getNode(cline,floor2);
 
     			string fileString1;
     			string fileString2;
@@ -484,12 +484,12 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     			ostringstream temp2;  //temp as in temporary
     			temp1 << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "-1.out";
     			temp2 << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "-2.out";
-    			fileString1=temp1.str(); 
-    			fileString2=temp2.str(); 
+    			fileString1=temp1.str();
+    			fileString2=temp2.str();
 
     			const char *fileName1 = fileString1.c_str();
     			const char *fileName2 = fileString2.c_str();
-    	    
+
     			s << "recorder EnvelopeDrift -file " << fileName1;
     			s << " -iNode " << nodeTag1 << " -jNode " << nodeTag2;
     			s << " -dof 1 -perpDirn 1\n";
@@ -504,15 +504,15 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
     			int cline = json_integer_value(json_object_get(response, "cline"));
     			int floor = json_integer_value(json_object_get(response, "floor"));
 
-    			int nodeTag = this->getNode(cline,floor);	    
+    			int nodeTag = this->getNode(cline,floor);
 
     			string fileString;
     			ostringstream temp;  //temp as in temporary
     			temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-    			fileString=temp.str(); 
+    			fileString=temp.str();
 
     			const char *fileName = fileString.c_str();
-    	    
+
     			s << "recorder Node -file " << fileName;
     			s << " -node " << nodeTag << " -dof ";
     			for (int i=1; i<=NDF; i++)
@@ -529,7 +529,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
       s << "numberer RCM\n";
       s << "system BandSPD\n";
       s << "test NormDispIncr 1e-6 100\n";
-      s << "algorithm NewtonLineSearch\n";      
+      s << "algorithm NewtonLineSearch\n";
       s << "integrator Newmark 0.5 0.25\n";
 
 
@@ -538,32 +538,32 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	json_error_t error;
 	json_t *rootUQ = json_load_file(filenameUQ, 0, &error);
 	json_dump_file(rootUQ,"TEST",0);
-	
-	json_t *theRVs  = json_object_get(rootUQ,"RandomVariables");  
+
+	json_t *theRVs  = json_object_get(rootUQ,"RandomVariables");
 	json_t *theRV;
 	int index;
 
 	json_array_foreach(theRVs, index, theRV) {
 	  const char *type = json_string_value(json_object_get(theRV,"name"));
 	  printf("type: %s\n",type);
-	  if (strcmp(type,"integration_scheme") == 0) {    
+	  if (strcmp(type,"integration_scheme") == 0) {
 	    //	    const char *typeI = json_string_value(json_object_get(theRV,"value"));
 	    int typeI = json_integer_value(json_object_get(theRV,"value"));
-	    if (typeI == 1) {    
+	    if (typeI == 1) {
 	      s << "integrator Newmark 0.5 0.25\n";
-	    } else if (typeI == 2) {    
+	    } else if (typeI == 2) {
 	      s << "integrator Newmark 0.5 0.1667\n";
-	    } else if (typeI == 3) {    
+	    } else if (typeI == 3) {
 	      s << "integrator HHT .9\n";
 	    }
 	    //	  printf("type: %s\n",typeI);
 	    /*
 	    int typeI = json_integer_value(json_object_get(theRV,"value"));
-	    if (strcmp(typeI,"NewmarkLinear") == 0) {    
+	    if (strcmp(typeI,"NewmarkLinear") == 0) {
 	      //	      s << "integrator Newmark 0.5 0.25\n";
-	    } else if (strcmp(typeI,"NewmarkAverage") == 0) {    
+	    } else if (strcmp(typeI,"NewmarkAverage") == 0) {
 	      //	      s << "integrator Newmark 0.5 0.1667\n";
-	    } else if (strcmp(typeI,"HHTpt9") == 0) {    
+	    } else if (strcmp(typeI,"HHTpt9") == 0) {
 	      //	      s << "integrator HHT .9\n";
 	    }
 	    */
@@ -580,16 +580,18 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 
 // seperate for multi events
-int 
-OpenSeesPreprocessor::processEvent(ofstream &s, 
-				   json_t *event, 
-				   int &numPattern, 
+int
+OpenSeesPreprocessor::processEvent(ofstream &s,
+				   json_t *event,
+				   int &numPattern,
 				   int &numSeries){
   json_t *timeSeries;
   json_t *pattern;
 
-  const char *eventType = json_string_value(json_object_get(event,"type"));
-  if (strcmp(eventType,"Seismic") == 0) {
+  // for now, just assume that the event type is Seismic
+  //const char *eventType = json_string_value(json_object_get(event,"type"));
+  //if (strcmp(eventType,"Seismic") == 0) {
+  if (1) {
     analysisType = 1;
     numSteps = json_integer_value(json_object_get(event,"numSteps"));
     dT = json_number_value(json_object_get(event,"dT"));
@@ -602,7 +604,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   int index;
   json_t *timeSeriesArray = json_object_get(event,"timeSeries");
   json_array_foreach(timeSeriesArray, index, timeSeries) {
-    const char *subType = json_string_value(json_object_get(timeSeries,"type"));        
+    const char *subType = json_string_value(json_object_get(timeSeries,"type"));
     if (strcmp(subType,"Value")  == 0) {
       double dt = json_number_value(json_object_get(timeSeries,"dT"));
       json_t *data = json_object_get(timeSeries,"data");
@@ -624,7 +626,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   json_t *patternArray = json_object_get(event,"pattern");
   json_array_foreach(patternArray, index, pattern) {
-    const char *subType = json_string_value(json_object_get(pattern,"type"));        
+    const char *subType = json_string_value(json_object_get(pattern,"type"));
     if (strcmp(subType,"UniformAcceleration")  == 0) {
       int dirn = json_integer_value(json_object_get(pattern,"dof"));
 
@@ -643,7 +645,7 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   }
 
 
-  
+
   //  printf("%d %d %f\n",analysisType, numSteps, dT);
 
   return 0;
@@ -658,7 +660,7 @@ OpenSeesPreprocessor:: getNode(int cline, int floor){
 
   int numMapObjects = json_array_size(mapping);
   for (int i=0; i<numMapObjects; i++) {
-    json_t *mapObject = json_array_get(mapping, i); 
+    json_t *mapObject = json_array_get(mapping, i);
     int c = json_integer_value(json_object_get(mapObject,"cline"));
 	if (c == cline) {
 		int f = json_integer_value(json_object_get(mapObject, "floor"));
