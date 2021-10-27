@@ -249,11 +249,11 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                     # pop the old version first
                     sys.modules.pop('openquake')
                     subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "openquake.engine"])
-                try:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
-                    oq_ver_loaded = version('openquake.engine')
-                except:
-                    print('FetchOpenQuake: Install of OpenQuake {} failed - please check local Python Roaming folder.'.format(scen_info['EqRupture'].get('OQVersion',default_oq_version)))
+                
+                # install the required version
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
+                oq_ver_loaded = version('openquake.engine')
+
             else:
                 oq_ver_loaded = oq_ver
 
@@ -271,7 +271,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
     return filename_ini, oq_ver_loaded
 
 
-def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version):
+def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version, dir_info=None):
     """
     Run a classical PSHA by OpenQuake
 
@@ -307,7 +307,6 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version)
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
-            return 0
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
             return 1
@@ -333,7 +332,6 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version)
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
-            return 0
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
             return 1
@@ -359,9 +357,19 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version)
             path = os.path.join(logs.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
-            return 0
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
+    
+    # copy the calc file to output directory
+    if dir_info:
+        dir_output = dir_info['Output']
+        try:
+            shutil.copy2(path, dir_output)
+            print('FetchOpenQuake: calc hdf file saved.')
+        except:
+            print('FetchOpenQuake: failed to copy calc hdf file.')
+    
+    return 0
         
 
 
@@ -422,7 +430,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
 
 class OpenQuakeHazardCalc:
 
-    def __init__(self, job_ini, event_info, oq_version, no_distribute=False):
+    def __init__(self, job_ini, event_info, oq_version, dir_info=None, no_distribute=False):
         """
         Initialize a calculation (reinvented from openquake.engine.engine)
 
@@ -432,6 +440,7 @@ class OpenQuakeHazardCalc:
         """
 
         self.vtag = int(oq_version.split('.')[1])
+        self.dir_info = dir_info
 
         from openquake.baselib import config, performance, general, zeromq, hdf5, parallel
         from openquake.hazardlib import const, calc, gsim
@@ -634,6 +643,10 @@ class OpenQuakeHazardCalc:
         from openquake.commands import dbserver as cdbs
         if self.vtag >= 12:
             from openquake.hazardlib.const import StdDev
+        if self.vtag >= 12:
+            from openquake.commonlib import datastore
+        else:
+            from openquake.baselib import datastore
 
         cur_getter = getters.GmfGetter(self.args[0][0], calc.filters.SourceFilter(
             self.dstore['sitecol'], self.dstore['oqparam'].maximum_distance), 
@@ -886,6 +899,21 @@ class OpenQuakeHazardCalc:
         
         # terminate the subprocess
         self.prc.kill()
+
+        # copy calc hdf file
+        if self.vtag >= 11:
+            calc_id = datastore.get_last_calc_id()
+            path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
+        else:
+            path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % self.calc_id)
+
+        if self.dir_info:
+            dir_output = self.dir_info['Output']
+            try:
+                shutil.copy2(path, dir_output)
+                print('FetchOpenQuake: calc hdf file saved.')
+            except:
+                print('FetchOpenQuake: failed to copy calc hdf file.')
 
         # Final results
         res = {'Magnitude': mag,
