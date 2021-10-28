@@ -58,10 +58,11 @@ def main(run_type, input_file, app_registry,
     with open(input_file, 'r') as f:
         inputs = json.load(f)
 
-    inputs['refDir'] = reference_dir
-
-    with open(input_file, 'w') as f:
-        json.dump(inputs, f, indent=2)
+    # TODO: if the ref dir is needed, do NOT save it to the input file, store it
+    # somewhere else in a file that i not shared among processes
+    #inputs['refDir'] = reference_dir
+    #with open(input_file, 'w') as f:
+    #    json.dump(inputs, f, indent=2)
 
     # TODO: remove the commented section below, I only kept it for now to make
     # sure it is not needed
