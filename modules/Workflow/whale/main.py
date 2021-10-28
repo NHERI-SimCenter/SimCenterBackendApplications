@@ -52,20 +52,28 @@ This module has classes and methods that handle everything at the moment.
 
 """
 
-from time import gmtime, strftime
-from io import StringIO
+from time import strftime
+from datetime import datetime
 import sys, os, json
+
 import pprint
-import posixpath
-import ntpath
+
 import shutil
-import importlib
-from copy import deepcopy
 import subprocess
+
+from copy import deepcopy
+
 import warnings
+
 import numpy as np
 import pandas as pd
+
 import platform
+from pathlib import Path, PurePath
+
+#import posixpath
+#import ntpath
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -100,7 +108,7 @@ def log_msg(msg, prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+        formatted_msg = '{} {}'.format(datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), msg)
     else:
         formatted_msg = msg
 
@@ -130,12 +138,15 @@ def log_error(msg):
 def print_system_info():
 
     log_msg('System information\n')
-    log_msg('\tpython: '+sys.version)
-    log_msg('\tnumpy: '+np.__version__)
-    log_msg('\tpandas: '+pd.__version__)
+    log_msg(f'\tlocal time zone: {datetime.utcnow().astimezone().tzinfo}')
+    log_msg(f'\tpython: {sys.version}')
+    log_msg(f'\tnumpy: {np.__version__}')
+    log_msg(f'\tpandas: {pd.__version__}')
 
     # additional info about numpy libraries
     if False:
+        from io import StringIO  # only import this when actually needed
+
         old_stdout = sys.stdout
         result = StringIO()
         sys.stdout = result
@@ -195,6 +206,9 @@ def run_command(command):
     # need to run multiple python interpreters simultaneously.
     Frank_trusts_this_approach = False
     if command[:6] == 'python' and Frank_trusts_this_approach:
+
+        import importlib # only import this when it's needed
+
         command_list = command.split()[1:]
         #py_args = command_list[1:]
 
@@ -235,6 +249,32 @@ def run_command(command):
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
+
+def resolve_path(target_path, ref_path):
+
+    ref_path = Path(ref_path)
+
+    target_path = str(target_path).strip()
+
+    while target_path.startswith('/') or target_path.startswith('\\'):
+        target_path = target_path[1:]
+
+    if target_path == "":
+        target_path = ref_path
+
+    else:
+        target_path = Path(target_path)
+
+        if not target_path.exists():
+            target_path = Path(ref_path) / target_path
+
+        if target_path.exists():
+            target_path = target_path.resolve()
+        else:
+            raise ValueError(
+                f"{target_path} does not point to a valid location")
+
+    return target_path
 
 class WorkFlowInputError(Exception):
     def __init__(self, value):
@@ -284,8 +324,9 @@ class WorkflowApplication(object):
                 input_type = self.app_spec_inputs[input_id]['type']
 
                 if input_type == 'path':
-                    self.pref[preference] = posixpath.join(ref_path,
-                                                         self.pref[preference])
+
+                    self.pref[preference] = resolve_path(
+                        self.pref[preference], ref_path)
 
     def get_command_list(self, app_path):
         """
@@ -293,15 +334,16 @@ class WorkflowApplication(object):
 
         Parameters
         ----------
-        app_path: string
+        app_path: Path
             Explain...
         """
 
-        abs_path = posixpath.join(app_path, self.rel_path)
+        abs_path = Path(app_path) / self.rel_path
+        #abs_path = posixpath.join(app_path, self.rel_path)
 
         arg_list = []
 
-        if abs_path.endswith('.py'):
+        if str(abs_path).endswith('.py'):
             arg_list.append('python')
 
         arg_list.append(u'{}'.format(abs_path))
@@ -353,8 +395,7 @@ class Workflow(object):
     """
 
     def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None, app_dir=None,
-        units=None, outputs=None):
+        reference_dir=None, working_dir=None, app_dir=None):
 
         log_msg('Inputs provided:')
         log_msg('\tworkflow input file: {}'.format(input_file))
@@ -367,12 +408,23 @@ class Workflow(object):
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
-        self.reference_dir = reference_dir
-        self.working_dir = working_dir
-        self.app_dir_local = app_dir
+
+        if reference_dir is not None:
+            self.reference_dir = Path(reference_dir)
+        else:
+            self.reference_dir = None
+
+        if working_dir is not None:
+            self.working_dir = Path(working_dir)
+        else:
+            self.working_dir = None
+
+        if app_dir is not None:
+            self.app_dir_local = Path(app_dir)
+        else:
+            self.app_dir_local = None
+
         self.app_type_list = app_type_list
-        self.units = units
-        self.outputs = outputs
 
         # initialize app registry
         self._init_app_registry()
@@ -463,11 +515,29 @@ class Workflow(object):
             self.units = None
             log_msg('\tNo units specified; using Standard units.')
 
+        # store the specified output types
+        self.output_types = input_data.get('outputs', None)
+
+        if self.output_types is None:
+            raise ValueError("Missing output type specification.")
+
+        log_msg("The following output_types were requested: ")
+        for out_type, flag in self.output_types.items():
+            if flag:
+                log_msg(f'\t\t{out_type}')
+
+        # parse the shared data in the input file
+        self.shared_data = {}
+        for shared_key in ['RegionalEvent',]:
+            value = input_data.get(shared_key, None)
+            if value != None:
+                self.shared_data.update({shared_key: value})
+
         # parse the location of the run_dir
         if self.working_dir is not None:
             self.run_dir = self.working_dir
         elif 'runDir' in input_data:
-            self.run_dir = input_data['runDir']
+            self.run_dir = Path(input_data['runDir'])
         #else:
         #    raise WorkFlowInputError('Need a runDir entry in the input file')
 
@@ -478,13 +548,11 @@ class Workflow(object):
         #    raise WorkFlowInputError('Need a localAppDir entry in the input file')
 
         if 'remoteAppDir' in input_data:
-            self.app_dir_remote = input_data['remoteAppDir']
+            self.app_dir_remote = Path(input_data['remoteAppDir'])
         else:
             self.app_dir_remote = self.app_dir_local
-            show_warning('remoteAppDir not specified. Using the value provided '
-                'for localAppDir instead. This will lead to problems if you '
-                'want to run a simulation remotely.')
-            #raise WorkFlowInputError('Need a remoteAppDir entry in the input file')
+            log_msg('\tremoteAppDir not specified. Using the value provided for '
+                'localAppDir instead.')
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
@@ -555,9 +623,17 @@ class Workflow(object):
                         raise WorkFlowInputError(
                             'Application entry missing for {}'.format(app_type))
 
-                    app_object.set_pref(requested_apps[app_type]['ApplicationData'],
-                                        self.reference_dir)
-                    self.workflow_apps[app_type] = app_object
+                    # only assign the app to the workflow if it has an executable
+                    if app_object.rel_path is None:
+                        log_msg(
+                            f'\t{requested_apps[app_type]["Application"]} is '
+                            'a passive application (i.e., it does not invoke '
+                            'any calculation within the workflow.')
+
+                    else:
+                        app_object.set_pref(requested_apps[app_type]['ApplicationData'],
+                                            self.reference_dir)
+                        self.workflow_apps[app_type] = app_object
 
                 else:
                     if app_type in self.optional_apps:
@@ -591,19 +667,27 @@ class Workflow(object):
 
         log_msg('Creating files for individual buildings')
 
-        building_file = posixpath.join(self.run_dir, self.building_file_name)
+        building_file = self.run_dir / self.building_file_name
+        #building_file = posixpath.join(self.run_dir, self.building_file_name)
 
         bldg_app = self.workflow_apps['Building']
 
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
 
-        if bldg_app.pref.get('filter', None) is not None:
-            bldgs = [bs.split('-') for bs in bldg_app.pref['filter'].split(',')]
+        # filter buildings (if needed)
+        bldg_filter = bldg_app.pref.get('filter', None)
+        if bldg_filter == "":
+            del bldg_app.pref['filter']
+            bldg_filter = None
 
-            building_file = building_file.replace('.json',
-                '{}-{}.json'.format(bldgs[0][0], bldgs[-1][-1]))
+        if bldg_filter is not None:
+            bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
 
+            building_file = Path(str(building_file).replace(
+                ".json", f"{bldgs[0][0]}-{bldgs[-1][-1]}.json"))
+
+        # store the path to the building file
         self.building_file_path = building_file
 
         for output in bldg_app.outputs:
@@ -624,6 +708,35 @@ class Workflow(object):
 
         log_msg('\tOutput: ')
         log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+
+        # Append workflow settings to the BIM file
+        log_msg('Appending additional settings to the BIM files...')
+
+        with open(building_file, 'r') as f:
+            bldg_data = json.load(f)
+
+        for bldg in bldg_data:
+
+            BIM_file = bldg['file']
+
+            # Open the BIM file and add the unit information to it
+            with open(BIM_file, 'r') as f:
+                BIM_data = json.load(f)
+
+            if self.units != None:
+                BIM_data.update({'units': self.units})
+
+                # TODO: remove this after all apps have been updated to use the
+                # above location to get units
+                BIM_data['GeneralInformation'].update({'units': self.units})
+
+            BIM_data.update({'outputs': self.output_types})
+
+            for key, value in self.shared_data.items():
+                BIM_data[key] = value
+
+            with open(BIM_file, 'w') as f:
+                json.dump(BIM_data, f, indent=2)
 
         log_msg('Building files successfully created.')
         log_msg(log_div)
@@ -678,7 +791,15 @@ class Workflow(object):
         # TODO: not elegant code, fix later
         for input_ in reg_mapping_app.inputs:
             if input_['id'] == 'buildingFile':
-                input_['default'] = building_file
+                input_['default'] = str(building_file)
+
+        reg_mapping_app.inputs.append({
+            'id': 'filenameEVENTgrid',
+            'type': 'path',
+            'default': resolve_path(
+                self.shared_data['RegionalEvent']['eventFile'],
+                self.reference_dir)
+            })
 
         reg_mapping_command_list = reg_mapping_app.get_command_list(
             app_path = self.app_dir_local)
@@ -723,20 +844,13 @@ class Workflow(object):
 
             # Make a copy of the BIM file
             shutil.copy(
-                src = posixpath.join(self.run_dir, BIM_file),
-                dst = posixpath.join(
-                    self.run_dir,
-                    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
+                src = self.run_dir / BIM_file,
+                dst = self.run_dir / f'{bldg_id}/templatedir/{BIM_file}')
 
-            # Open the BIM file and add the unit information to it
-            if self.units is not None:
-                with open(BIM_file, 'r') as f:
-                    BIM_data = json.load(f)
-
-                BIM_data.update({'units': self.units})
-
-                with open(BIM_file, 'w') as f:
-                    json.dump(BIM_data, f, indent=2)
+            #src = posixpath.join(self.run_dir, BIM_file),
+            #dst = posixpath.join(
+            #    self.run_dir,
+            #    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
 
         else:
 
@@ -751,7 +865,8 @@ class Workflow(object):
 
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
-            dst = posixpath.join(os.getcwd(),BIM_file)
+            dst = Path(os.getcwd()) / BIM_file
+            #dst = posixpath.join(os.getcwd(),BIM_file)
             if BIM_file != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
 
@@ -804,11 +919,6 @@ class Workflow(object):
                 else:
                     os.remove(dir_or_file)
 
-        # add a json file with the units (if they were provided)
-        if self.units is not None:
-            with open('units.json', 'w') as f:
-                json.dump(self.units, f, indent=2)
-
         log_msg('Working directory successfully initialized.')
         log_msg(log_div)
 
@@ -828,7 +938,8 @@ class Workflow(object):
 
         workdir_contents = os.listdir(self.run_dir)
         for file_or_dir in workdir_contents:
-            if os.path.isdir(posixpath.join(self.run_dir, file_or_dir)):
+            if (self.run_dir / file_or_dir).is_dir():
+            #if os.path.isdir(posixpath.join(self.run_dir, file_or_dir)):
                 shutil.rmtree(file_or_dir, ignore_errors=True)
 
         log_msg('Working directory successfully cleaned up.')
@@ -1048,16 +1159,21 @@ class Workflow(object):
             if 'Building' not in self.app_type_list:
                 # Copy the dakota.json file from the templatedir to the run_dir so that
                 # all the required inputs are in one place.
-                input_file = ntpath.basename(input_file)
+                input_file = PurePath(input_file).name
+                #input_file = ntpath.basename(input_file)
                 shutil.copy(
-                    src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
-                    dst = posixpath.join(self.run_dir,BIM_file))
+                    src = self.run_dir / f'templatedir/{input_file}',
+                    dst = self.run_dir / BIM_file)
+                #src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
+                #dst = posixpath.join(self.run_dir,BIM_file))
             else:
                 # copy the BIM file from the main dir to the building dir
                 shutil.copy(
-                    src = posixpath.join(self.run_dir, BIM_file),
-                    dst = posixpath.join(self.run_dir,
-                                         '{}/{}'.format(bldg_id, BIM_file)))
+                    src = self.run_dir / BIM_file,
+                    dst = self.run_dir / f'{bldg_id}/{BIM_file}')
+                #src = posixpath.join(self.run_dir, BIM_file),
+                #dst = posixpath.join(self.run_dir,
+                #                     '{}/{}'.format(bldg_id, BIM_file)))
                 os.chdir(str(bldg_id))
 
             workflow_app = self.workflow_apps['DL']
@@ -1089,8 +1205,10 @@ class Workflow(object):
 
                 try:
                     shutil.copy(
-                        src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
-                        dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
+                        src = self.run_dir / f'{bldg_id}/{"pelicun_log.txt"}',
+                        dst = self.run_dir / f'pelicun_log_{bldg_id}.txt')
+                    #src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
+                    #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
                 except:
                     pass
 
@@ -1102,44 +1220,47 @@ class Workflow(object):
             log_msg('No DL requested, loss assessment step is skipped.')
             log_msg('')
 
-            EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
+            # Only regional simulations send in a bldg id
+            if bldg_id != None:
 
-            col_info = []
-            for col in EDP_df.columns:
-                try:
-                    split_col = col.split('-')
-                    if len(split_col[1]) == 3:
-                        col_info.append(split_col[1:])
-                except:
-                    continue
+                EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
 
-            col_info = np.transpose(col_info)
+                col_info = []
+                for col in EDP_df.columns:
+                    try:
+                        split_col = col.split('-')
+                        if len(split_col[1]) == 3:
+                            col_info.append(split_col[1:])
+                    except:
+                        continue
 
-            EDP_types = np.unique(col_info[0])
-            EDP_locs = np.unique(col_info[1])
-            EDP_dirs = np.unique(col_info[2])
+                col_info = np.transpose(col_info)
 
-            MI = pd.MultiIndex.from_product(
-                [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
-                names=['type', 'loc', 'dir', 'stat'])
+                EDP_types = np.unique(col_info[0])
+                EDP_locs = np.unique(col_info[1])
+                EDP_dirs = np.unique(col_info[2])
 
-            df_res = pd.DataFrame(columns=MI, index=[0, ])
-            if ('PID', '0') in df_res.columns:
-                del df_res[('PID', '0')]
+                MI = pd.MultiIndex.from_product(
+                    [EDP_types, EDP_locs, EDP_dirs, ['median', 'beta']],
+                    names=['type', 'loc', 'dir', 'stat'])
 
-            # store the EDP statistics in the output DF
-            for col in np.transpose(col_info):
-                df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
-                    '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
-                df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
-                    EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
+                df_res = pd.DataFrame(columns=MI, index=[0, ])
+                if ('PID', '0') in df_res.columns:
+                    del df_res[('PID', '0')]
 
-            df_res.dropna(axis=1, how='all', inplace=True)
+                # store the EDP statistics in the output DF
+                for col in np.transpose(col_info):
+                    df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
+                        '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
+                    df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
+                        EDP_df['1-{}-{}-{}'.format(col[0], col[1], col[2])]).std()
 
-            df_res = df_res.astype(float)
+                df_res.dropna(axis=1, how='all', inplace=True)
 
-            # save the output
-            df_res.to_csv('EDP.csv')
+                df_res = df_res.astype(float)
+
+                # save the output
+                df_res.to_csv('EDP.csv')
 
     def aggregate_results(self, bldg_data):
         """
@@ -1167,7 +1288,8 @@ class Workflow(object):
             DV = [0, 1, 2, 3])
 
         for out_type in out_types:
-            if (self.outputs is None) or (self.outputs.get(out_type, False)):
+            if ((self.output_types is None) or
+                (self.output_types.get(out_type, False))):
 
                 if out_type == 'every_realization':
 

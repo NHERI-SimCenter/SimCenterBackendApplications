@@ -38,10 +38,11 @@
 # Adam Zsarnóczay
 #
 
-import os, sys, posixpath
+import os, sys
 import argparse, json
 import string
 import numpy as np
+from pathlib import Path, PurePath
 
 def write_RV(EVENT_input_path):
 
@@ -51,7 +52,7 @@ def write_RV(EVENT_input_path):
     event_list = EVENT_in['randomVariables'][0]['elements']
 
     evt = EVENT_in['Events'][0]
-    data_dir = evt['data_dir']
+    data_dir = Path(evt['data_dir'])
     f_scale = evt['unitScaleFactor']
 
     file_sample_dict = {}
@@ -70,12 +71,12 @@ def write_RV(EVENT_input_path):
     for filename in file_sample_dict.keys():
 
         # get the header
-        header_data = np.genfromtxt(posixpath.join(data_dir, filename),
-                                    delimiter=',', names=True, max_rows=1)
+        header_data = np.genfromtxt(data_dir / filename, delimiter=',',
+                                    names=True, max_rows=1)
         header = header_data.dtype.names
 
-        data = np.genfromtxt(posixpath.join(data_dir, filename),
-                             delimiter=',', skip_header=1)
+        data = np.genfromtxt(data_dir / filename, delimiter=',',
+                             skip_header=1)
 
         # get the number of columns and reshape the data
         col_count = len(header)
@@ -98,33 +99,51 @@ def write_RV(EVENT_input_path):
     if len(EDP_output.shape) == 1:
         EDP_output = np.reshape(EDP_output, (EDP_output.shape[0], 1))
 
-    EDP_output = EDP_output * f_scale
+    EDP_output = EDP_output.T
+
+    for c_i, col in enumerate(header):
+        f_i = f_scale.get(col.strip(), f_scale.get('ALL', None))
+        if f_i is None:
+            raise ValueError("No units defined for {col}")
+
+        EDP_output[c_i] *= f_i
+
+    EDP_output = EDP_output.T
 
     index = np.reshape(np.arange(EDP_output.shape[0]), (EDP_output.shape[0],1))
 
     EDP_output = np.concatenate([index, EDP_output], axis=1)
 
-    working_dir = posixpath.dirname(EVENT_input_path)
+    working_dir = Path(PurePath(EVENT_input_path).parent)
+    #working_dir = posixpath.dirname(EVENT_input_path)
 
     # prepare the header
     header_out = []
     for h_label in header:
+        # remove leading and trailing whitespace
         h_label = h_label.strip()
-        if h_label.endswith('_h'):
+
+        # convert suffixes to the loc-dir format used by the SimCenter
+        if h_label.endswith('_h'): # horizontal
             header_out.append(f'1-{h_label[:-2]}-1-1')
-        elif h_label.endswith('_v'):
+
+        elif h_label.endswith('_v'): # vertical
             header_out.append(f'1-{h_label[:-2]}-1-3')
-        elif h_label.endswith('_x'):
+
+        elif h_label.endswith('_x'): # x direction
             header_out.append(f'1-{h_label[:-2]}-1-1')
-        elif h_label.endswith('_y'):
+
+        elif h_label.endswith('_y'): # y direction
             header_out.append(f'1-{h_label[:-2]}-1-2')
-        else:
+
+        else: # if none of the above is given, default to 1-1
             header_out.append(f'1-{h_label.strip()}-1-1')
 
-    np.savetxt(working_dir+'response.csv', EDP_output, delimiter=',',
+    np.savetxt(working_dir / 'response.csv', EDP_output, delimiter=',',
         header=','+', '.join(header_out), comments='')
 
 # TODO: consider removing this function
+# It is not used currently
 def create_EDP(EVENT_input_path, EDP_input_path):
 
     # load the EDP file

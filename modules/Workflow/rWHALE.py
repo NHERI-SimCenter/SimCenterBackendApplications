@@ -3,7 +3,7 @@
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
-# This file is part of the RDT Application.
+# This file is part of the SimCenter Backend Applications.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with the
-# RDT Application. If not, see <http://www.opensource.org/licenses/>.
+# SimCenter Backend Applications. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Frank McKenna
@@ -54,20 +54,30 @@ def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file):
 
-    # initialize the log file
+    # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
 
-    if working_dir is not None:
-        runDir = working_dir
-    else:
-        runDir = inputs['runDir']
+    # TODO: if the ref dir is needed, do NOT save it to the input file, store it
+    # somewhere else in a file that i not shared among processes
+    #inputs['refDir'] = reference_dir
+    #with open(input_file, 'w') as f:
+    #    json.dump(inputs, f, indent=2)
 
-    if not os.path.exists(runDir):
-        os.mkdir(runDir)
+    # TODO: remove the commented section below, I only kept it for now to make
+    # sure it is not needed
 
+    #if working_dir is not None:
+    #    runDir = working_dir
+    #else:
+    #    runDir = inputs['runDir']
+
+    if not os.path.exists(working_dir):
+        os.mkdir(working_dir)
+
+    # initialize the log file
     if log_file == 'log.txt':
-        whale.log_file = runDir + '/log.txt'
+        whale.log_file = working_dir + '/log.txt'
     else:
         whale.log_file = log_file
     with open(whale.log_file, 'w') as f:
@@ -88,9 +98,7 @@ def main(run_type, input_file, app_registry,
                          'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
-        app_dir = app_dir,
-        units = inputs.get('units', None),
-        outputs=inputs.get('outputs', None))
+        app_dir = app_dir)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
@@ -113,7 +121,7 @@ def main(run_type, input_file, app_registry,
     WF.perform_regional_mapping(building_file)
 
     # TODO: not elegant code, fix later
-    with open(WF.building_file_path, 'r') as f:
+    with open(building_file, 'r') as f:
         bldg_data = json.load(f)
 
     for bldg in bldg_data: #[:1]:
