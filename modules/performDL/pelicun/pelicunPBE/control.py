@@ -2830,7 +2830,7 @@ class HAZUS_Assessment(Assessment):
             log_msg('\t\t\t{} demand:{} PGs: {}'.format(key, val['demand_type'], len(val['locations'])))
 
         # HAZUS combination rules for hurricane
-        if self._hazard == 'HU':
+        if ((self._hazard == 'HU') and ('loss_combination' in BIM.keys())):
             log_msg('\tLoss combination files...')
             self._LC_in = read_combination_DL_data(
                 self._AIM_in['data_sources']['path_combination_data'],
