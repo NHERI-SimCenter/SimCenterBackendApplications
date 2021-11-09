@@ -34,7 +34,12 @@
 # You should have received a copy of the BSD 3-Clause License along with
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
+# The computation method of ground motion intensity map using Markhivida et al. and 
+# the Baker-Jayaram correlation models is contributed by Dr. Anne Husley's
+# seaturtles package (https://github.com/annehulsey/seaturtles). 
+#
 # Contributors:
+# Anne Husley
 # Kuanshi Zhong
 #
 
