@@ -178,7 +178,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
 
                     # append the scale factor (or 1.0) to the scale list
                     if len(event_df.columns) > 1:
-                        scale_list.append(event_df.iloc[event_j,1])
+                        scale_list.append(float(event_df.iloc[event_j,1]))
                     else:
                         scale_list.append(1.0)
 
