@@ -247,7 +247,7 @@ if __name__ == '__main__':
             # Downloading records
             user_name = event_info.get('UserName', None)
             user_password = event_info.get('UserPassword', None)
-            if (user_name is not None) and (user_password is not None) and (not RDT):
+            if (user_name is not None) and (user_password is not None) and (not R2D):
                 print('HazardSimulation: downloading ground motion records.')
                 raw_dir = download_ground_motion(gm_id, user_name,
                                                  user_password, output_dir)

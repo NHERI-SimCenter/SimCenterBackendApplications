@@ -54,6 +54,7 @@ from FetchOpenSHA import *
 from tqdm import tqdm
 import time
 from pathlib import Path
+import copy
 
 def compute_spectra(scenarios, stations, gmpe_info, im_info):
 
@@ -94,6 +95,7 @@ def compute_spectra(scenarios, stations, gmpe_info, im_info):
 	for i, s in enumerate(tqdm(scenarios, desc='Scenarios')):
 		# Rupture
 		source_info = scenarios[i]
+		print('ComputeIntensityMeasure: computing IM for the scenario #'+str(i)+': '+str(source_info['SourceIndex'])+'/'+str(source_info['RuptureIndex']))
 		# Computing IM
 		res_list = []
 		curgmpe_info = {}
@@ -107,7 +109,7 @@ def compute_spectra(scenarios, stations, gmpe_info, im_info):
 		else:
 			res = res_list[0]
 		# Collecting outputs
-		psa_raw.append(res)
+		psa_raw.append(copy.deepcopy(res))
 
 	# Collecting station_info updates to staitons
 	for j in range(len(stations)):
@@ -179,10 +181,10 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 		# Scenario number
 		num_scenarios = len(eq_data)
 		# Saving large files to HDF while small files to JSON
-		if num_scenarios > 10:
+		if num_scenarios > 100000:
 			# Pandas DataFrame
 			h_scenarios = ['Scenario-'+str(x) for x in range(1, num_scenarios + 1)]
-			h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate','SiteSourceDistance']
+			h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate','SiteSourceDistance','SiteRuptureDistance']
 			for x in range(len(T)):
 				h_eq.append('Period-{0}'.format(x+1))
 			for x in range(1, im_data[0][0, :, :].shape[1]+1):
@@ -201,6 +203,7 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 					tmp.append(eq_data[j][0])
 					tmp.append(eq_data[j][1])
 					tmp.append(eq_data[j][2])
+					tmp.append(eq_data[j][3])
 					for x in T:
 						tmp.append(x)
 					for x in np.ndarray.tolist(im_data[j][i, :, :].T):
@@ -243,9 +246,12 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 					ssd = cur_eq[2]
 				else:
 					ssd = 'N/A'
+				if cur_eq[3]:
+					srd = cur_eq[3]
 				tmp = {'Magnitdue': float(cur_eq[0]),
 					   'MeanAnnualRate': mar,
-					   'SiteSourceDistance': ssd}
+					   'SiteSourceDistance': ssd,
+					   'SiteRuputureDistance': srd}
 				maf_out.append(tmp)
 			res = {'Station_lnSa': res,
 				   'Earthquake_MAF': maf_out}
@@ -281,25 +287,25 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 			# save the csv
 			df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index = False)
 			# output station#.csv
+			# csv header
+			csvHeader = []
+			if imType == 'SA':
+				for cur_T in T:
+					csvHeader.append(imType + '(' + str(cur_T) + ')')
+			else:
+				csvHeader = [imType]
 			for cur_scen in range(len(im_data)):
 				if len(im_data) > 1:
 					cur_scen_folder = 'scenario'+str(cur_scen+1)
 					try:
 						os.mkdir(os.path.join(output_dir, cur_scen_folder))
 					except:
-						print('SelectGroundMotion: scenario folder already exists.')
+						print('ComputeIntensityMeasure: scenario folder already exists.')
 					cur_output_dir = os.path.join(output_dir, cur_scen_folder)
 				else:
 					cur_output_dir = output_dir
 				# current IM data
 				cur_im_data = im_data[cur_scen]
-				# csv header
-				csvHeader = []
-				if imType == 'SA':
-					for cur_T in T:
-						csvHeader.append(imType + '(' + str(cur_T) + ')')
-				else:
-					csvHeader = [imType]
 				for i, site_id in enumerate(station_name):
 					df = dict()
 					# Loop over all intensity measures
@@ -309,6 +315,23 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 						})
 					df = pd.DataFrame(df)
 					df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
+			
+			# output the site#.csv file including all scenarios
+			if len(im_data) > 1:
+				print('ComputeIntensityMeasure: saving all scenarios.')
+				# lopp over sites
+				for i, site_id in enumerate(station_name):
+					df = dict()
+					for cur_im_tag in range(len(csvHeader)):
+						tmp_list = []
+						# loop over all scenarios
+						for cur_scen in range(len(im_data)):
+							tmp_list = tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
+						df.update({
+							csvHeader[cur_im_tag]: np.exp(tmp_list)
+						})
+					df = pd.DataFrame(df)
+					df.to_csv(os.path.join(output_dir, site_id), index = False)
 
 		# return
 		return 0
@@ -362,7 +385,8 @@ def simulate_ground_motion(stations, psa_raw, num_simu, correlation_info, im_inf
 			ln_psa[:, :, i] = ln_sa + inter_sigma_sa * epsilon_m + intra_sigma_sa * eta[:, :, i]
 
 		ln_psa_mr.append(ln_psa)
-		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw.get('MeanAnnualRate',None), cur_psa_raw.get('SiteSourceDistance',None)])
+		mag_maf.append([cur_psa_raw['Magnitude'], cur_psa_raw.get('MeanAnnualRate',None), 
+		                cur_psa_raw.get('SiteSourceDistance',None), cur_psa_raw.get('SiteRuptureDistance',None)])
 	# return
 	return ln_psa_mr, mag_maf
 

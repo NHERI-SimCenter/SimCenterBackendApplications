@@ -126,13 +126,23 @@ def get_source_distance(erf, source_index, lat, lon):
 
     rupSource = erf.getSource(source_index)
     sourceSurface = rupSource.getSourceSurface()
-    print(lon)
-    print(lat)
+    #print(lon)
+    #print(lat)
     distToSource = []
     for i in range(len(lat)):
         distToSource.append(float(sourceSurface.getDistanceRup(Location(lat[i], lon[i]))))
 
     return distToSource
+
+def get_rupture_distance(erf, source_index, rupture_index, lat, lon):
+
+    rupSource = erf.getSource(source_index)
+    rupSurface = rupSource.getRuptureList().get(rupture_index).getRuptureSurface()
+    distToRupture = []
+    for i in range(len(lat)):
+        distToRupture.append(float(rupSurface.getDistanceRup(Location(lat[i], lon[i]))))
+
+    return distToRupture
 
 
 def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0, maxSources = 500):
@@ -194,7 +204,7 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
             cur_dict.update({'type': 'Feature'})
             rup_index = rup_collection.iloc[j, 0]
             cur_dist = rup_collection.iloc[j, 1]
-            if cur_dist < 0:
+            if cur_dist <= 0.:
                 # skipping ruptures with distance exceeding the maxDistance
                 continue
             rupture = rupList.get(rup_index)
@@ -560,6 +570,7 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
     res = {'Magnitude': magnitude,
            'MeanAnnualRate': meanAnnualRate,
            'SiteSourceDistance': source_info.get('SiteSourceDistance',None),
+           'SiteRuptureDistance': source_info.get('SiteRuptureDistance',None),
            'Periods': cur_T,
            'GroundMotions': gm_collector}
     # return
