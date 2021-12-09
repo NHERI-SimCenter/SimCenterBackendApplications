@@ -246,8 +246,10 @@ def export_im(stations, im_info, im_data, eq_data, output_dir, filename, csv_fla
 					ssd = cur_eq[2]
 				else:
 					ssd = 'N/A'
-				if cur_eq[3]:
+				if len(cur_eq)>3 and cur_eq[3]:
 					srd = cur_eq[3]
+				else:
+					srd = 'N/A'
 				tmp = {'Magnitdue': float(cur_eq[0]),
 					   'MeanAnnualRate': mar,
 					   'SiteSourceDistance': ssd,
