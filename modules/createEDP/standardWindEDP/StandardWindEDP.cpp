@@ -87,18 +87,22 @@ int main(int argc, char **argv)
     json_array_foreach(eventsArray, index, value) {
       
       // check for wind
-      json_t *type = json_object_get(value,"type");  
+      json_t *type = json_object_get(value,"type");
+      bool ok = true;
       if (type == NULL) {
 	printf("WARNING no event type in event object %d\n", index);
+	ok = false;
       }
       const char *eventType = json_string_value(type);
-      if (eventType == NULL) {
+      if (ok != true && eventType == NULL) {
 	printf("WARNING event type is not a string for event %d\n", index);
+	ok = false;
       }      
 
-      if (strcmp(eventType,"Wind") != 0) {
+      if (ok != true && strcmp(eventType,"Wind") != 0) {
 	json_object_clear(rootEVENT);
 	printf("WARNING event type %s not Wind NO OUTPUT", eventType);
+	ok = false;
       }
       
       // add the EDP for the event
@@ -138,7 +142,7 @@ int main(int argc, char **argv)
 	  }
 	}
       } else {
-	printf("ERROR no patterns with Wind event");
+	printf("ERROR no patterns");
 	exit(-1);
       }
       
