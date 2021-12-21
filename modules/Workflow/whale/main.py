@@ -519,12 +519,23 @@ class Workflow(object):
         self.output_types = input_data.get('outputs', None)
 
         if self.output_types is None:
-            raise ValueError("Missing output type specification.")
+            default_output_types = {
+                "BIM": false,
+                "EDP": true,
+                "DM": true,
+                "DV": true,
+                "every_realization": false
+            }
 
-        log_msg("The following output_types were requested: ")
-        for out_type, flag in self.output_types.items():
-            if flag:
-                log_msg(f'\t\t{out_type}')
+            log_msg("Missing output type specification, using default "
+                    "settings.")
+            self.output_types = default_output_types
+
+        else:
+            log_msg("The following output_types were requested: ")
+            for out_type, flag in self.output_types.items():
+                if flag:
+                    log_msg(f'\t\t{out_type}')
 
         # parse the shared data in the input file
         self.shared_data = {}
