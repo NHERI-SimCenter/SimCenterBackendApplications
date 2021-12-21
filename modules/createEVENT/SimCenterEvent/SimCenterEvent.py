@@ -185,6 +185,7 @@ def write_RV(BIM_file, EVENT_file):
         event_file['randomVariables'][0]['elements'] = RV_elements
 
     else:
+        
         # if there is only one event, then we do not need random variables
 
         # initialize the Events part of the EVENT file
@@ -199,6 +200,7 @@ def write_RV(BIM_file, EVENT_file):
     # if time histories are used, then load the first event
     # TODO: this is needed by some other code that should be fixed and this
     #  part should be removed.
+
     if bim_data['Events']['type'] == 'timeHistory':
         event_file['Events'][0].update(
             load_record(events[0][0], data_dir, empty=len(events) > 1))
@@ -222,17 +224,30 @@ def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=
     with open(data_dir / '{}.json'.format(file_name), 'r') as f:
         event_data = json.load(f)
 
-    # initialize the internal EVENT file structure
-    event_dic = {
-        'name': file_name,
-        'dT' : event_data['dT'],
-        'numSteps': len(event_data['data_x']),
-        'timeSeries': [],
-        'pattern': []
-    }
+    # check if Event File is already in EVENT format
+    isEventFile = False
+    if event_data.__contains__('Events'):
+        event_dic = event_data['Events'][0]
+        #event_dic['dT'] = event_data['Events'][0]['dT']
+        #event_dic['numSteps'] = event_data['Events'][0]['numSteps']
+        #event_dic['timeSeries'] = event_data['Events'][0]['timeSeries']
+        #event_dic['pattern'] = event_data['Events'][0]['pattern']
+        return event_dic
+
+        isEventFile = True
+
+    else:
+        # initialize the internal EVENT file structure
+        event_dic = {
+           'name': file_name,
+           'dT' : event_data['dT'],
+           'numSteps': len(event_data['data_x']),
+           'timeSeries': [],
+           'pattern': []
+         }
 
     # (empty is used when generating only random variables in write_RV)
-    if not empty:
+    if not empty and not isEventFile:
 
         f_scale_units = f_scale_units.get('TH_file',f_scale_units.get('ALL', None))
         if f_scale_units is None:

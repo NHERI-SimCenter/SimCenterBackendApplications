@@ -35,6 +35,15 @@
 // Kuanshi Zhong, SimCenter, Stanford
 // Dr. Frank McKenna, CTO of SimCenter, UC Berkeley
 // Prof. Sanjay Govindjee, Director of SimCenter, UC Berkeley
+// Special thanks to the original authors Snaiki and Wu for 
+// sharing the Matlab scripts
+// Reference:
+// 1. Snaiki, R. and Wu, T. (2017). Modeling tropical cyclone boundary layer: Height-
+// resolving pressure and wind fields. Journal of Wind Engineering and Industrial 
+// Aerodynamics, 170, pp. 18-27.
+// 2. Snaiki, R. and Wu, T. (2017). A linear height-resolving wind field model for 
+// tropical cyclone boundary layer. Journal of Wind Engineering and Industrial 
+// Aerodynamics, 171, pp. 248-260.
 
 #include <iostream>
 #include <fstream>
