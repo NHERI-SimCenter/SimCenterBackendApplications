@@ -35,6 +35,15 @@
 // Kuanshi Zhong, SimCenter, Stanford
 // Dr. Frank McKenna, CTO of SimCenter, UC Berkeley
 // Prof. Sanjay Govindjee, Director of SimCenter, UC Berkeley
+// Special thanks to the original authors Snaiki and Wu for 
+// sharing the Matlab scripts
+// Reference:
+// 1. Snaiki, R. and Wu, T. (2017). Modeling tropical cyclone boundary layer: Height-
+// resolving pressure and wind fields. Journal of Wind Engineering and Industrial 
+// Aerodynamics, 170, pp. 18-27.
+// 2. Snaiki, R. and Wu, T. (2017). A linear height-resolving wind field model for 
+// tropical cyclone boundary layer. Journal of Wind Engineering and Industrial 
+// Aerodynamics, 171, pp. 248-260.
 
 #include <iostream>
 #include <fstream>
@@ -285,12 +294,12 @@ int WindFieldModel::DefineTern(std::string refz0_file)
     {
         int jmax = int(this->Wr_sizes(i));
         json_t *tmpObj = json_object_get(json_array_get(feat, i), "geometry");
-        json_t *tmpAry = json_object_get(tmpObj, "coordinates");
+        json_t *tmpAry = json_array_get(json_object_get(tmpObj, "coordinates"),0);
         for (int j = 0; j < jmax; j++)
         {
             json_t *tmpVal = json_array_get(tmpAry, j);
-            this->Lat_wr(j, i) = json_number_value(json_array_get(tmpVal, 0));
-            this->Long_wr(j, i) = json_number_value(json_array_get(tmpVal, 1));
+            this->Lat_wr(j, i) = json_number_value(json_array_get(tmpVal, 1));
+            this->Long_wr(j, i) = json_number_value(json_array_get(tmpVal, 0));
         }
     }
 

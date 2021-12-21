@@ -648,11 +648,15 @@ interface_pointer = 'SimulationInterface'
                 edpAcronym = "PID"
                 floor = edp["id"]
                 known = True
+            elif(edp["type"] == "dummy"):
+                edpAcronym = "DUMMY"
+                known = False
+                f.write("'{}' ".format(edp["type"]))
             else:
                 edpAcronym = edp["type"]
                 floor = edp["id"]
-                known = True
-                #f.write("'{}' ".format(edp["type"]))
+                known = False
+                f.write("'{}' ".format(edp["type"]))
 
             if (known == True):
                 for dof in edp.get("dofs",[1,]):

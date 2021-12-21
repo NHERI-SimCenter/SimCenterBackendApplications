@@ -191,7 +191,8 @@ def get_records(BIM_file, EVENT_file, data_dir):
 
     event_id = event_file['Events'][0]['event_id']
 
-    scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
+    # FMK scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
+    scale_factor = 1.0
 
     event_file['Events'][0].update(
         load_record(event_id, data_dir, scale_factor))
@@ -221,33 +222,35 @@ def write_RV(BIM_file, EVENT_file, data_dir):
             'elements': []
         })
         event_file['Events'].append({
-            'type': 'Seismic',
-            'subtype': bim_data['Events']['Events'][0]['type'],
+            #'type': 'Seismic',
+            'type': bim_data['Events']['type'],
             'event_id': 'RV.eventID',
+            'unitScaleFactor': 1.0,            
             'data_dir': data_dir
             })
 
-        RV_elements = []
-        for event in events:
-            if event['EventClassification'] == 'Earthquake':
-                RV_elements.append(event['fileName'])
-            elif event['EventClassification'] == 'Hurricane':
-                RV_elements.append(event['fileName'])
-            elif event['EventClassification'] == 'Flood':
-                RV_elements.append(event['fileName'])
+        RV_elements = np.array(events).T[0].tolist()        
+        #RV_elements = []
+        #for event in events:
+        #    if event['EventClassification'] == 'Earthquake':
+        #        RV_elements.append(event['fileName'])
+        #    elif event['EventClassification'] == 'Hurricane':
+        #        RV_elements.append(event['fileName'])
+        #    elif event['EventClassification'] == 'Flood':
+        #        RV_elements.append(event['fileName'])
 
         event_file['randomVariables'][0]['elements'] = RV_elements
     else:
         event_file['Events'].append({
-            'type': 'Seismic',
-            'subtype': bim_data['Events']['Events'][0]['type'],
+            'type': bim_data['Events']['type'],
             'event_id': events[0]['fileName'],
-            'data_dir': data_dir
+            'unitScaleFactor': 1.0,
+            'data_dir': str(data_dir)
             })
 
     # if time histories are used, then load the first event
-    if events[0]['type'] == 'timeHistory':
-        event_file['Events'][0].update(load_record(events[0]['fileName'],
+    if bim_data['Events']['type'] == 'timeHistory':
+        event_file['Events'][0].update(load_record(events[0][0],
                                                    data_dir,
                                                    empty=len(events) > 1))
 
