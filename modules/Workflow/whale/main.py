@@ -520,14 +520,14 @@ class Workflow(object):
 
         if self.output_types is None:
             default_output_types = {
-                "BIM": false,
-                "EDP": true,
-                "DM": true,
-                "DV": true,
-                "every_realization": false
+                "BIM": False,
+                "EDP": True,
+                "DM": True,
+                "DV": True,
+                "every_realization": False
             }
 
-            log_msg("Missing output type specification, using default "
+            log_msg("\tMissing output type specification, using default "
                     "settings.")
             self.output_types = default_output_types
 
