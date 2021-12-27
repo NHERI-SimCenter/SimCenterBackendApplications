@@ -109,10 +109,10 @@
     "API": {
        "Inputs": [
         {
-          "id": "configFile",
+          "id": "input",
           "type": "path",
           "description": "Name of JSON input file",
-          "default": "rWHALE.json"
+          "default": "inputRWHALE.json"
         }	    
       ],
       "Outputs": [
@@ -158,7 +158,13 @@
         "ExecutablePath": null,
         "ApplicationSpecificInputs": [
         ]
-      }
+      },
+      {
+        "Name": "RegionalSiteResponse",
+        "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
+        "ApplicationSpecificInputs": [
+        ]
+      }	
     ]
   },
   "RegionalMappingApplications": {

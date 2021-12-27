@@ -3,7 +3,7 @@
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
-# This file is part of the RDT Application.
+# This file is part of the SimCenter Backend Applications.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with the
-# RDT Application. If not, see <http://www.opensource.org/licenses/>.
+# SimCenter Backend Applications. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Frank McKenna
@@ -44,6 +44,7 @@
 import sys, os, json
 import argparse
 from pathlib import Path
+from createGM4BIM import createFilesForEventGrid
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -54,20 +55,16 @@ def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file):
 
-    # initialize the log file
+    # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
+        
+    if not os.path.exists(working_dir):
+        os.mkdir(working_dir)
 
-    if working_dir is not None:
-        runDir = working_dir
-    else:
-        runDir = inputs['runDir']
-
-    if not os.path.exists(runDir):
-        os.mkdir(runDir)
-
+    # initialize the log file
     if log_file == 'log.txt':
-        whale.log_file = runDir + '/log.txt'
+        whale.log_file = working_dir + '/log.txt'
     else:
         whale.log_file = log_file
     with open(whale.log_file, 'w') as f:
@@ -83,14 +80,74 @@ def main(run_type, input_file, app_registry,
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
 
-    WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Building', 'RegionalMapping',
-                         'Event', 'EDP', 'UQ'],
+    #
+    # parse regionalEventAppData, create new input file 
+    # for the rWHALE workflow
+    #
+
+    randomVariables = []
+    if "randomVariables" in inputs.keys():
+        randomVariables = inputs["randomVariables"]
+
+    inputApplications = inputs["Applications"]
+    regionalApplication = inputApplications["RegionalEvent"]    
+    appData = regionalApplication["ApplicationData"]
+    regionalData = inputs["RegionalEvent"]    
+    regionalData["eventFile"]=appData["inputEventFilePath"]  + "/" + appData["inputEventFile"]
+    regionalData["eventFilePath"]=appData["inputEventFilePath"]
+
+    siteFilter = appData["filter"]
+
+    siteResponseInput = {
+        "units": inputs["units"],
+        "outputs": {
+            "EDP": True,
+            "DM": False,
+            "BIM": False,            
+            "DV": False,
+            "every_realization": False
+        },        
+        "RegionalEvent": regionalData,
+        "randomVariables" : randomVariables,
+        "Applications": {
+            "RegionalMapping": inputApplications["RegionalMapping"],
+            "UQ": inputApplications["UQ"],            
+            "Building": {
+                "Application": "CSV_to_BIM",
+                "ApplicationData": {
+                    "buildingSourceFile": appData["soilGridParametersFilePath"] + "/" + appData["soilGridParametersFile"],
+                    "filter": siteFilter 
+                }
+            },
+            "EDP": {
+                "Application": "DummyEDP",
+                "ApplicationData": {}
+            },
+            "Events": [
+                {
+                    "EventClassification": "Earthquake",
+                    "Application": "RegionalSiteResponse",
+                    "ApplicationData": {
+                        "pathEventData": "inputMotions",
+                        "mainScript": appData["siteResponseScript"],
+                        "modelPath": appData["siteResponseScriptPath"],
+                        "ndm": 3
+                    }
+                }
+            ]
+        }
+    }        
+
+    siteResponseInputFile = 'tmpSiteResponseInput.json'
+
+    with open(siteResponseInputFile, 'w') as json_file:
+        json_file.write(json.dumps(siteResponseInput, indent=2))    
+    
+    WF = whale.Workflow(run_type, siteResponseInputFile, app_registry,
+        app_type_list = ['Building', 'RegionalMapping', 'Event', 'EDP', 'UQ'],
         reference_dir = reference_dir,
         working_dir = working_dir,
-        app_dir = app_dir,
-        units = inputs.get('units', None),
-        outputs=inputs.get('outputs', None))
+        app_dir = app_dir)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
@@ -104,12 +161,16 @@ def main(run_type, input_file, app_registry,
     # initialize the working directory
     WF.init_workdir()
 
+    # perform the event simulation (if needed)
+    if 'RegionalEvent' in WF.workflow_apps.keys():
+        WF.perform_regional_event()
+
     # prepare the basic inputs for individual buildings
     building_file = WF.create_building_files()
     WF.perform_regional_mapping(building_file)
 
     # TODO: not elegant code, fix later
-    with open(WF.building_file_path, 'r') as f:
+    with open(building_file, 'r') as f:
         bldg_data = json.load(f)
 
     for bldg in bldg_data: #[:1]:
@@ -131,6 +192,11 @@ def main(run_type, input_file, app_registry,
         # run uq engine to simulate response
         WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
 
+        # run dl engine to estimate losses
+        #WF.estimate_losses(
+        #    BIM_file = bldg['file'], bldg_id = bldg['id'],
+        #    copy_resources=True)
+
         if force_cleanup:
             #clean up intermediate files from the simulation
             WF.cleanup_simdir(bldg['id'])
@@ -144,13 +210,38 @@ def main(run_type, input_file, app_registry,
 
 if __name__ == '__main__':
 
-    #Defining the command line arguments
+    #
+    # ADAM ADAM ADAM .. this app starts in Results dir
+    #
+    
+    pwd1 = os.getcwd()
+    print(pwd1)
+    os.chdir('..')
 
+    #
+    # little bit of preprocessing
+    #
+    
+    thisScriptPath = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+    registryFile = thisScriptPath / "WorkflowApplications.json"
+    applicationDir = Path(thisScriptPath).parents[1]    
+    pwd = os.getcwd()
+    currentDir = Path(pwd)
+    referenceDir = currentDir / "input_data"
+    siteResponseOutputDir = referenceDir / "siteResponseWorkingDir"
+    siteResponseAggregatedResultsDir = referenceDir / "siteResponseOutputMotions"
+
+
+    #
+    # parse command line
+    #
+    
     workflowArgParser = argparse.ArgumentParser(
         "Run the NHERI SimCenter rWHALE workflow for a set of assets.",
         allow_abbrev=False)
 
-    workflowArgParser.add_argument("configuration",
+    workflowArgParser.add_argument("-i", "--input",
+        default=None,
         help="Configuration file specifying the applications and data to be "
              "used")
     workflowArgParser.add_argument("-F", "--filter",
@@ -159,18 +250,20 @@ if __name__ == '__main__':
     workflowArgParser.add_argument("-c", "--check",
         help="Check the configuration file")
     workflowArgParser.add_argument("-r", "--registry",
-        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "WorkflowApplications.json"),
+        default = registryFile,
         help="Path to file containing registered workflow applications")
     workflowArgParser.add_argument("-f", "--forceCleanup",
         action="store_true",
         help="Remove working directories after the simulation is completed.")
     workflowArgParser.add_argument("-d", "--referenceDir",
-        default=os.path.join(os.getcwd(), 'input_data'),
+        default = str(referenceDir),
         help="Relative paths in the config file are referenced to this directory.")
     workflowArgParser.add_argument("-w", "--workDir",
-        default=os.path.join(os.getcwd(), 'results'),
+        default=str(siteResponseOutputDir),
         help="Absolute path to the working directory.")
+    workflowArgParser.add_argument("-o", "--outputDir",
+        default=str(siteResponseAggregatedResultsDir),
+        help="Absolute path to the working directory.")    
     workflowArgParser.add_argument("-a", "--appDir",
         default=None,
         help="Absolute path to the local application directory.")
@@ -180,7 +273,7 @@ if __name__ == '__main__':
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
-
+    
     # update the local app dir with the default - if needed
     if wfArgs.appDir is None:
         workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
@@ -191,9 +284,12 @@ if __name__ == '__main__':
     else:
         run_type = 'run'
 
-    #Calling the main workflow method and passing the parsed arguments
+    #
+    # Calling the main workflow method and passing the parsed arguments
+    #
+    
     main(run_type = run_type,
-         input_file = wfArgs.configuration,
+         input_file = wfArgs.input,
          app_registry = wfArgs.registry,
          force_cleanup = wfArgs.forceCleanup,
          bldg_id_filter = wfArgs.filter,
@@ -201,3 +297,15 @@ if __name__ == '__main__':
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,
          log_file = wfArgs.logFile)
+
+    #
+    # now create new event file, sites and record files
+    #
+    
+    createFilesForEventGrid(wfArgs.workDir,
+                            wfArgs.outputDir,
+                            wfArgs.forceCleanup)
+                            
+
+    # chdir again back to where ADAM starts!
+    os.chdir(pwd1)
