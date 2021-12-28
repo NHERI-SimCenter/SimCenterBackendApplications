@@ -406,3 +406,172 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
                 residuals = np.concatenate((residuals, Tmax_residuals), axis = 1)
     # return
     return residuals
+
+
+def load_du_ning_correlation_2021(datapath):
+    """
+    Loading the three matrices in the Du and Ning correlation model (2021)
+    Reference:
+        Du and Ning (2021) Modeling spatial cross-correlation of multiple 
+        ground motion intensity measures (SAs, PGA, PGV, Ia, CAV, and significant 
+        durations) based on principal component and geostatistical analyses
+    Input:
+        datapath: the path to the files (optional)
+    Output:
+        DN_model: model coeff.
+        DN_pca: pca coeff.
+        DN_var: var of pca
+    """
+    DN_model = pd.read_csv(datapath + 'du_ning_2021_model_coeff.csv',
+                            index_col = None, header = 0)
+    DN_pca = pd.read_csv(datapath + 'du_ning_2021_pca_coeff.csv',
+                            index_col = None, header = 0)
+    DN_var = pd.read_csv(datapath + 'du_ning_2021_var_scale.csv',
+                            index_col = None, header = 0)
+    return DN_model, DN_pca, DN_var
+
+
+def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
+    """
+    Simulating intra-event residuals
+    Reference:
+        Du and Ning (2021) Modeling spatial cross-correlation of multiple 
+        ground motion intensity measures (SAs, PGA, PGV, Ia, CAV, and significant 
+        durations) based on principal component and geostatistical analyses
+    Input:
+        stations: stations coordinates
+        periods: simulated pseudo periods
+        num_simu: number of realizations
+        num_pc: number of principle components
+    Output:
+        residuals: intra-event residuals
+    Note:
+        The valid range for T1 and T2 is 0.01s ~ 5.0s
+    """
+    # Loading factors
+    DN_model, DN_pca, DN_var = \
+        load_du_ning_correlation_2021(os.path.dirname(__file__) + '/data/')
+    c1 = DN_model.loc[DN_model['Type'] == 'c1']
+    c1 = c1[c1.keys()[1:]]
+    a1 = DN_model.loc[DN_model['Type'] == 'a1']
+    a1 = a1[a1.keys()[1:]]
+    b1 = DN_model.loc[DN_model['Type'] == 'b1']
+    b1 = b1[b1.keys()[1:]]
+    a2 = DN_model.loc[DN_model['Type'] == 'a2']
+    a2 = a2[a2.keys()[1:]]
+    b2 = DN_model.loc[DN_model['Type'] == 'b2']
+    b2 = b2[b2.keys()[1:]]
+    # model_periods is pseduo periods here: for T<=10, periods are used for Sa, for T>10,
+    # numbers indicate followings:
+    # 11-PGA, 12-PGV, 13-Ia, 14-CAV, 15-DS575, 16-DS595
+    model_periods = DN_pca['Pseudo Period']
+    model_coef = DN_pca.iloc[:, 1:num_pc + 1]
+    # Computing distance matrix
+    num_stations = len(stations)
+    stn_dist = np.zeros((num_stations, num_stations))
+    for i in range(num_stations):
+        loc_i = np.array([stations[i]['Latitude'],
+                          stations[i]['Longitude']])
+        for j in range(num_stations):
+            loc_j = np.array([stations[j]['Latitude'],
+                              stations[j]['Longitude']])
+            stn_dist[i, j] = np.linalg.norm(loc_i - loc_j) * 111.0
+    # Scaling variance if less than 23 principal components are used
+    c1 = c1 / DN_var.iloc[0, num_pc - 1]
+    a1 = a1 / DN_var.iloc[0, num_pc - 1]
+    a2 = a2 / DN_var.iloc[0, num_pc - 1]
+    # Creating a covariance matrices for each of the principal components
+    covMatrix = np.zeros((num_stations, num_stations, num_pc))
+    for i in range(num_pc):
+        if a1.iloc[0, i] == 0:
+            # nug
+            covMatrix[:, :, i] = np.eye(num_stations) * c1.iloc[0, i]
+        else:
+            # iso nest
+            covMatrix[:, :, i] = c1.iloc[0, i] + \
+                                 a1.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b1.iloc[0, i])) + \
+                                 a2.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b2.iloc[0, i]))
+    # Simulating residuals
+    residuals_pca = np.zeros((num_stations, num_simu, num_pc))
+    mu = np.zeros(num_stations)
+    for i in range(num_pc):
+        residuals_pca[:, :, i] = np.random.multivariate_normal(mu, covMatrix[:, :, i], num_simu).T
+    # Interpolating model_coef by periods
+    interp_fun = interp1d(model_periods, model_coef, axis = 0)
+    model_Tmax = 1
+    simu_periods = [i for i in periods if i <= model_Tmax]
+    if (len(simu_periods) == 1) and (simu_periods[0] == 0):
+        # for PGA only (using 0.01 sec as the approxiamate)
+        simu_coef = model_coef.iloc[0, :]
+    else:
+        simu_coef = interp_fun(simu_periods)
+    # Simulating residuals
+    num_periods = len(simu_periods)
+    residuals = np.empty([num_stations, num_periods, num_simu])
+    for i in range(num_simu):
+        residuals[:, :, i] = np.reshape(np.matmul(residuals_pca[:, i, :], simu_coef.T), residuals[:, :, i].shape)
+    # Appending residuals for periods greater than model_Tmax (fixing at 5.0)
+    if max(periods) > model_Tmax:
+        Tmax_coef = interp_fun(model_Tmax)
+        Tmax_residuals = np.empty([num_stations, 1, num_simu])
+        for i in range(num_simu):
+            Tmax_residuals[:, :, i] = np.matmul(residuals_pca[:, i, :], np.matrix(Tmax_coef).T)
+        for tmp_periods in periods:
+            if tmp_periods > model_Tmax:
+                residuals = np.concatenate((residuals, Tmax_residuals), axis = 1)
+    # return
+    return residuals
+
+
+def baker_bradley_correlation_2017(T, im_type=None):
+    """
+    Correlation between Sa and other IMs
+    Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
+    the NGA-West2 database, and dependence of correlations on rupture and site parameters.”
+    Based on the script: https://github.com/bakerjw/NGAW2_correlations/blob/master/corrPredictions.m
+    Input:
+        T: period of Sa
+        im_type: intensity measure type - 'DS575H', 'DS595H', 'PGA', 'PGV'
+    Output:
+        rho: correlation coefficient
+    """
+
+    # im map:
+    im_map = {'DS575H': 0, 'DS595H':1, 'PGA': 2, 'PGV': 3}
+    im_tag = im_map.get(im_type.upper(), None)
+    if im_tag is None:
+        print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for im_typ=None.")
+        return 0.0
+    
+    # modeling coefficients
+    a = [[0.00, -0.45, -0.39, -0.39, -0.06, 0.16],
+         [0.00, -0.41, -0.41, -0.38, -0.35, 0.02, 0.23],
+         [1.00, 0.97],
+         [0.73, 0.54, 0.80, 0.76]]
+    b = [[0.00, -0.39, -0.39, -0.06, 0.16, 0.00],
+         [0.00, -0.41, -0.38, -0.35, -0.02, 0.23, 0.02],
+         [0.895, 0.25],
+         [0.54, 0.81, 0.76, 0.70]]
+    c = [[],[],
+         [0.06, 0.80],
+         [0.045, 0.28, 1.10, 5.00]]
+    d = [[],[],
+         [1.6, 0.8],
+         [1.8, 1.5, 3.0, 3.2]]
+    e = [[0.01, 0.09, 0.30, 1.40, 6.50 ,10.00],
+         [0.01, 0.04, 0.08, 0.26, 1.40, 6.00, 10.00],
+         [0.20, 10.00],
+         [0.10, 0.75, 2.50, 10.00]]
+
+    # rho
+    if im_tag < 3:
+        for j in range(1,len(e[im_tag])):
+            if T <= e[im_tag][j]:
+                rho = a[im_tag][j]+(b[im_tag][j]-a[im_tag][j])/np.log(e[im_tag][j]/e[im_tag][j-1])*np.log(T/e[im_tag][j-1])
+    else:
+        for j in range(len(e[im_tag])):
+            if T <= e[im_tag][j]:
+                rho = (a[im_tag][j]+b[im_tag][j])/2-(a[im_tag][j]-b[im_tag][j])/2*np.tanh(d[im_tag][j]*np.log(T/c[im_tag][j]))
+    
+    # return
+    return rho
