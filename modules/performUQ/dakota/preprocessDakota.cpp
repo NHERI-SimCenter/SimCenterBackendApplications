@@ -99,35 +99,33 @@ int main(int argc, const char **argv) {
 
   json_t *rootSAM = json_load_file(samName, 0, &error);
   if (rootSAM == NULL) {
-  std::cerr << "parseFileForRV:: could not open SAM file with name: " << samName << "\n";
-    exit(801); // no random variables is allowed
-  } 
-  numRV = parseForRV(rootSAM, theRandomVariables);
-  //if (numRV > 0) {
-  if (rename(samName, "sam.j") != 0) {
-    std::cerr << "preprocessDakota - cound not rename bim file\n";
-    exit(802);
+    std::cerr << "parseFileForRV:: could not open SAM file with name: " << samName << "\n";
+    //    exit(801); // no random variables is allowed
+  } else {
+    numRV = parseForRV(rootSAM, theRandomVariables);
+    //if (numRV > 0) {
+    if (rename(samName, "sam.j") != 0) {
+      std::cerr << "preprocessDakota - cound not rename bim file\n";
+      exit(802);
+    }
+    
+    workflowDriverFile << dpreproCommand << " params.in sam.j " << samName << "\n";
   }
-  workflowDriverFile << dpreproCommand << " params.in sam.j " << samName << "\n";
-  //}
 
   // load sim, read random variables, if any rename file and add a dprepro to workflow
 
   json_t *rootSIM = json_load_file(simName, 0, &error);
   if (rootSIM == NULL) {
     std::cerr << "parseFileForRV:: could not open SIM file with name: " << simName << "\n";
-    exit(801); // no random variables is allowed
-  } 
-  numRV = parseForRV(rootSIM, theRandomVariables);
-  //if (numRV > 0) {
-  if (rename(simName, "sim.j") != 0) {
-    std::cerr << "preprocessDakota - cound not rename sim file\n";
-    exit(802);
+  }  else { 
+    numRV = parseForRV(rootSIM, theRandomVariables);
+    //if (numRV > 0) {
+    if (rename(simName, "sim.j") != 0) {
+      std::cerr << "preprocessDakota - cound not rename sim file\n";
+      exit(802);
+    }
+    workflowDriverFile << dpreproCommand << " params.in sim.j " << simName << "\n";
   }
-  workflowDriverFile << dpreproCommand << " params.in sim.j " << simName << "\n";
-  //}
-
-  // load edp, read random variables, if any rename file and add a dprepro to workflow
 
   json_t *rootEDP = json_load_file(edpName, 0, &error);
   if (rootEDP == NULL) {

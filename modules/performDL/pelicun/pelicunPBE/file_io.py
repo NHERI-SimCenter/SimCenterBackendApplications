@@ -343,8 +343,8 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             path_combination_data = DL_input.get('CombinationDataFile', None)
             if path_combination_data is None:
                 path_combination_data = pelicun_path + CMP_data_path['HAZUS_MISC']
-        data['data_sources'].update({'path_combination_data': path_combination_data})
-        data['loss_combination'] = comb
+            data['data_sources'].update({'path_combination_data': path_combination_data})
+            data['loss_combination'] = comb
 
     # The population data is only needed if we are interested in injuries
     if inhabitants is not None:
@@ -1470,8 +1470,9 @@ def write_SimCenter_BIM_output(output_dir, BIM_filename, BIM_dict):
     BIM_flat_dict = {}
     for key, item in BIM_dict.items():
         if isinstance(item, dict):
-            for sub_key, sub_item in item.items():
-                BIM_flat_dict.update({f'{key}_{sub_key}': sub_item})
+            if key not in ['units', 'location']:
+                for sub_key, sub_item in item.items():
+                    BIM_flat_dict.update({f'{key}_{sub_key}': sub_item})
         else:
             BIM_flat_dict.update({key: [item,]})
 
