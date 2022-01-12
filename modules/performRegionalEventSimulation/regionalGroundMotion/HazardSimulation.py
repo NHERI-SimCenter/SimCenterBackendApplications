@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--hazard_config')
     parser.add_argument('--filter', default=None)
     parser.add_argument('-d', '--referenceDir', default=None)
-    parser.add_argument('-w', 'workDir', default=None)
+    parser.add_argument('-w', '--workDir', default=None)
     parser.add_argument('--hcid', default=None)
     args = parser.parse_args()
 
