@@ -382,9 +382,9 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
             covMatrix[:, :, i] = np.eye(num_stations) * c0.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = c0.iloc[0, i] + \
-                                 c1.iloc[0, i] * np.exp(-3.0 * stn_dist) / a1.iloc[0, i] + \
-                                 c2.iloc[0, i] * np.exp(-3.0 * stn_dist) / a2.iloc[0, i]
+            covMatrix[:, :, i] = c0.iloc[0, i] * (stn_dist == 0)+ \
+                                 c1.iloc[0, i] * np.exp(-3.0 * stn_dist / a1.iloc[0, i]) + \
+                                 c2.iloc[0, i] * np.exp(-3.0 * stn_dist / a2.iloc[0, i])
     # Simulating residuals
     residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     mu = np.zeros(num_stations)
