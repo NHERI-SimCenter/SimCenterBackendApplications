@@ -440,7 +440,7 @@ def load_du_ning_correlation_2021(datapath):
     return DN_model, DN_pca, DN_var
 
 
-def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
+def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
     """
     Simulating intra-event residuals
     Reference:
@@ -449,7 +449,7 @@ def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
         durations) based on principal component and geostatistical analyses
     Input:
         stations: stations coordinates
-        periods: simulated pseudo periods
+        periods_ims: simulated pseudo periods and other ims PGA. PGV, Ia, CAV, DS575H, DS595H
         num_simu: number of realizations
         num_pc: number of principle components
     Output:
@@ -470,10 +470,13 @@ def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
     a2 = a2[a2.keys()[1:]]
     b2 = DN_model.loc[DN_model['Type'] == 'b2']
     b2 = b2[b2.keys()[1:]]
-    # model_periods is pseduo periods here: for T<=10, periods are used for Sa, for T>10,
-    # numbers indicate followings:
-    # 11-PGA, 12-PGV, 13-Ia, 14-CAV, 15-DS575, 16-DS595
-    model_periods = DN_pca['Pseudo Period']
+    # model_periods is pseduo periods and PGA, PGV, Ia, CAV, DS575H, DS595H
+    model_periods = DN_pca['Period&IM']
+    model_ims_list = ['PGA', 'PGV', 'Ia', 'CAV', 'DS575H', 'DS595H']
+    ims_map = {'PGA':11, 'PGV':12, 'Ia':13, 'CAV':14, 'DS575H':15, 'DS595H':16}
+    # convert periods to float
+    model_periods = [float(x) for x in model_periods if x not in model_ims_list]+ \
+        [x for x in model_periods if x in model_ims_list]
     model_coef = DN_pca.iloc[:, 1:num_pc + 1]
     # Computing distance matrix
     num_stations = len(stations)
@@ -497,7 +500,7 @@ def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
             covMatrix[:, :, i] = np.eye(num_stations) * c1.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = c1.iloc[0, i] + \
+            covMatrix[:, :, i] = c1.iloc[0, i] * (stn_dist == 0) + \
                                  a1.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b1.iloc[0, i])) + \
                                  a2.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b2.iloc[0, i]))
     # Simulating residuals
@@ -506,11 +509,14 @@ def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
     for i in range(num_pc):
         residuals_pca[:, :, i] = np.random.multivariate_normal(mu, covMatrix[:, :, i], num_simu).T
     # Interpolating model_coef by periods
-    interp_fun = interp1d(model_periods, model_coef, axis = 0)
-    model_Tmax = 1
-    simu_periods = [i for i in periods if i <= model_Tmax]
+    pseudo_periods = [x for x in model_periods if type(x)==float]+ \
+        [ims_map[x] for x in model_periods if type(x)==str]
+    interp_fun = interp1d(pseudo_periods, model_coef, axis = 0)
+    model_Tmax = 10.0
+    simu_periods = [min(i,model_Tmax) for i in periods_ims if type(i)==float]+ \
+        [ims_map[i] for i in periods_ims if type(i)==str]
     if (len(simu_periods) == 1) and (simu_periods[0] == 0):
-        # for PGA only (using 0.01 sec as the approxiamate)
+        # for PGA only (using 0.01 sec as the approximate)
         simu_coef = model_coef.iloc[0, :]
     else:
         simu_coef = interp_fun(simu_periods)
@@ -519,20 +525,12 @@ def du_ning_correlation_2021(stations, periods, num_simu, num_pc):
     residuals = np.empty([num_stations, num_periods, num_simu])
     for i in range(num_simu):
         residuals[:, :, i] = np.reshape(np.matmul(residuals_pca[:, i, :], simu_coef.T), residuals[:, :, i].shape)
-    # Appending residuals for periods greater than model_Tmax (fixing at 5.0)
-    if max(periods) > model_Tmax:
-        Tmax_coef = interp_fun(model_Tmax)
-        Tmax_residuals = np.empty([num_stations, 1, num_simu])
-        for i in range(num_simu):
-            Tmax_residuals[:, :, i] = np.matmul(residuals_pca[:, i, :], np.matrix(Tmax_coef).T)
-        for tmp_periods in periods:
-            if tmp_periods > model_Tmax:
-                residuals = np.concatenate((residuals, Tmax_residuals), axis = 1)
+    
     # return
     return residuals
 
 
-def baker_bradley_correlation_2017(T, im_type=None):
+def baker_bradley_correlation_2017(T, im_type=None, im2_type=None):
     """
     Correlation between Sa and other IMs
     Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
@@ -551,6 +549,18 @@ def baker_bradley_correlation_2017(T, im_type=None):
     if im_tag is None:
         print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for im_typ=None.")
         return 0.0
+    if im2_type is not None:
+        im2_tag = im_map.get(im2_type.upper(), None)
+        if im2_tag is None:
+            print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for im2_typ=None.")
+            return 0.0  
+        # rho matrix
+        rho_mat = [[1.000, 0.843, -0.442, -0.259],
+                   [0.843, 1.000, -0.405, -0.211],
+                   [-0.442, -0.405, 1.000, 0.733],
+                   [-0.259, -0.211, 0.733, 1.000]]
+        # return
+        return rho_mat[im_tag][im2_tag]
     
     # modeling coefficients
     a = [[0.00, -0.45, -0.39, -0.39, -0.06, 0.16],

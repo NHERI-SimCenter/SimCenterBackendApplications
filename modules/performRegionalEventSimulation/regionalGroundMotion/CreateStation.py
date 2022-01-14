@@ -41,6 +41,7 @@
 import json
 import numpy as np
 import pandas as pd
+from FetchOpenSHA import get_site_vs30_from_opensha
 
 
 def get_label(options, labels, label_name):
@@ -132,7 +133,8 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     stn_file = {
         'Stations': []
     }
-    # Interpolate Vs30
+    # Get Vs30
+    """
     if vs30_label not in selected_stn.keys() and vs30_tag == 1:
         print('CreateStation: Interpolating global Vs30 map for defined stations.')
         selected_stn.loc[:,vs30_label] = get_vs30_global(selected_stn[lat_label], selected_stn[lon_label])
@@ -142,11 +144,16 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     if vs30_label not in selected_stn.keys() and vs30_tag == 3:
         print('CreateStation: Fetch National Crustal Model Vs for defined stations.')
         selected_stn.loc[:,vs30_label] = get_vs30_ncm(selected_stn[lat_label], selected_stn[lon_label])
-    # Interpolate zTR
+    if vs30_label not in selected_stn.keys() and vs30_tag == 0:
+        print('CreateStation: Fetch National Crustal Model Vs for defined stations.')
+        selected_stn.loc[:,vs30_label] = get_site_vs30_from_opensha(selected_stn[lat_label], selected_stn[lon_label])
+    
+    # Get zTR
     if zTR_label not in selected_stn.keys():
         print('CreateStation: Interpolating global depth to rock map for defined stations.')
-        selected_stn.loc[:,zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn[lat_label], selected_stn[lon_label])]
-    
+        selected_stn[zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn[lat_label].tolist(), selected_stn[lon_label].tolist())]
+    """
+
     for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
         STN.append(Station(
@@ -169,6 +176,8 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'Vs30': get_vs30_thompson([stn[lat_label]], [stn[lon_label]])[0]})
             elif vs30_tag == 3:
                 tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
+            elif vs30_tag == 0:
+                tmp.update({'Vs30': get_site_vs30_from_opensha([stn[lat_label]], [stn[lon_label]])[0]})
 
         if stn.get(z1p0_label):
             tmp.update({'z1pt0': stn.get(z1p0_label)})

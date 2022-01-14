@@ -39,7 +39,6 @@
 # Based on the script by Baker Research Group: https://www.jackwbaker.com/GMMs_archive.html 
 
 import numpy as np
-from numpy import ma
 
 def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type='DS575H'):
     
@@ -53,7 +52,7 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     duration_type: 'DS575H': Ds5-75 (horizontal), 'DS575V': Ds5-75 (vertical)
                    'DS595H': Ds5-95 (horizontal), 'DS595V': Ds5-95 (vertical)
     Output:
-    ds_median: median significant duration prediction
+    log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
     """
 
@@ -92,7 +91,7 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     ds_sigma = sigma[dur_tag]
 
     # return
-    return ds_median, ds_sigma
+    return np.log(ds_median), ds_sigma
 
 
 def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, ztor=0.0, duration_type='DS575H'):
@@ -107,7 +106,7 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
     ztor: depth to top of rupture (km)
     duration_type: 'DS575H': Ds5-75 (horizontal), 'DS595H': Ds5-95 (horizontal)
     Output:
-    ds_median: median significant duration prediction
+    log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
@@ -143,7 +142,7 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
     ds_phi = phiCoeff[dur_tag]
 
     # return
-    return ds_median, ds_sigma, ds_tau, ds_phi
+    return np.log(ds_median), ds_sigma, ds_tau, ds_phi
 
 
 def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism='unknown', 
@@ -160,7 +159,7 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
     region: 'california', 'japan', 'other'
     duration_type: 'DS575H': Ds5-75 (horizontal), 'DS595H': Ds5-95 (horizontal), 'DS2080H': Ds20-80 (horizontal)
     Output:
-    ds_median: median significant duration prediction
+    log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
@@ -280,7 +279,7 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
     ds_sigma = np.sqrt(ds_phi^2+ds_tau^2)
 
     # return
-    return ds_median, ds_sigma, ds_tau, ds_phi
+    return np.log(ds_median), ds_sigma, ds_tau, ds_phi
     
     
 

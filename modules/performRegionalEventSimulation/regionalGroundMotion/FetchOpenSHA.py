@@ -42,6 +42,7 @@ import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from gmpe import SignificantDurationModel
 
 from java.io import *
 from java.lang import *
@@ -174,7 +175,7 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         distanceToSource = source_collection.iloc[i, 1]
         # Checking maximum distance
         if (distanceToSource > maxDistance):
-            break
+            continue
         # Getting rupture distances
         rupSource = erf.getSource(source_index)
         try:
@@ -562,6 +563,62 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
                 pgvResult['InterEvStdDev'].append(float(interEvStdDev))
                 pgvResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnPGV': pgvResult})
+
+        # durations
+        if tag_Ds575:
+            ds575Result = {'Mean': [],
+                           'TotalStdDev': [],
+                           'InterEvStdDev': [],
+                           'IntraEvStdDev': []}
+            R = get_rupture_distance(erf, source_info['RuptureIndex'], source_info['RuptureIndex'],
+                                     cur_site['Location']['Latitude'], cur_site['Location']['Longitude'])
+            M = eqRup.getMag()
+            Vs30 = cur_site['Vs30']
+            if gmpe_name == 'Bommer, Stafford & Alarcon (2009)':
+                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.bommer_stafford_alarcon_ds_2009(magnitude=M, 
+                    distance=R, vs30=Vs30,duration_type='DS575H')
+                ds575Result['Mean'].append(float(np.log(mean)))
+                ds575Result['TotalStdDev'].append(float(stdDev))
+                ds575Result['InterEvStdDev'].append(float(interEvStdDev))
+                ds575Result['IntraEvStdDev'].append(float(intraEvStdDev))
+            elif gmpe_name == 'Afshari & Stewart (2016)':
+                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.afshari_stewart_ds_2016(magnitude=M, 
+                    distance=R, vs30=Vs30, duration_type='DS575H')
+                ds575Result['Mean'].append(float(np.log(mean)))
+                ds575Result['TotalStdDev'].append(float(stdDev))
+                ds575Result['InterEvStdDev'].append(float(interEvStdDev))
+                ds575Result['IntraEvStdDev'].append(float(intraEvStdDev))
+            else:
+                print('FetchOpenSHA.get_IM: gmpe_name {} is not supported.'.format(gmpe_name))
+            gmResults.update({'lnDS575': ds575Result})
+
+        if tag_Ds595:
+            ds595Result = {'Mean': [],
+                           'TotalStdDev': [],
+                           'InterEvStdDev': [],
+                           'IntraEvStdDev': []}
+            R = get_rupture_distance(erf, source_info['RuptureIndex'], source_info['RuptureIndex'],
+                                     cur_site['Location']['Latitude'], cur_site['Location']['Longitude'])
+            M = eqRup.getMag()
+            Vs30 = cur_site['Vs30']
+            if gmpe_name == 'Bommer, Stafford & Alarcon (2009)':
+                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.bommer_stafford_alarcon_ds_2009(magnitude=M, 
+                    distance=R, vs30=Vs30,duration_type='DS595H')
+                ds595Result['Mean'].append(float(np.log(mean)))
+                ds595Result['TotalStdDev'].append(float(stdDev))
+                ds595Result['InterEvStdDev'].append(float(interEvStdDev))
+                ds595Result['IntraEvStdDev'].append(float(intraEvStdDev))
+            elif gmpe_name == 'Afshari & Stewart (2016)':
+                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.afshari_stewart_ds_2016(magnitude=M, 
+                    distance=R, vs30=Vs30, duration_type='DS595H')
+                ds595Result['Mean'].append(float(np.log(mean)))
+                ds595Result['TotalStdDev'].append(float(stdDev))
+                ds595Result['InterEvStdDev'].append(float(interEvStdDev))
+                ds595Result['IntraEvStdDev'].append(float(intraEvStdDev))
+            else:
+                print('FetchOpenSHA.get_IM: gmpe_name {} is not supported.'.format(gmpe_name))
+            gmResults.update({'lnDS595': ds595Result})
+
         gm_collector.append(gmResults)
     # Updating station information
     if station_info['Type'] == 'SiteList':
@@ -575,3 +632,35 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
            'GroundMotions': gm_collector}
     # return
     return res, station_info
+
+def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
+
+    # set up site java object
+    sites = ArrayList()
+    num_sites = len(lat)
+    for i in range(num_sites):
+        sites.add(Site(Location(lat[i], lon[i])))
+    
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+
+    # search name
+    vs30 = []
+    for i in range(int(siteData.size())):
+        cur_siteData = siteData.get(i)
+        if str(cur_siteData.getSourceName()) == vs30model:
+            vs30 = [float(cur_siteData.getValue(x).getValue()) for x in range(num_sites)]
+            break
+        else:
+            continue
+
+    # check if any nan (Wills Map return nan for offshore sites)
+    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+    if any([np.isnan(x) for x in vs30]):
+        non_list = np.where(np.isnan(vs30))[0].tolist()
+        for i in non_list:
+            vs30[i] = float(siteData.get(3).getValue(i).getValue())
+
+    # return
+    return vs30

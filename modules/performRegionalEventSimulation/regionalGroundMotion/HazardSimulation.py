@@ -202,9 +202,8 @@ if __name__ == '__main__':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
         if opensha_flag:
-            im_raw, stn_new = compute_im(scenarios, stations['Stations'],
-                                               event_info['GMPE'],
-                                               event_info['IntensityMeasure'])
+            im_raw = compute_im(scenarios, stations['Stations'],
+                                event_info['GMPE'], event_info['IntensityMeasure'])
         elif oq_flag:           
             # import FetchOpenQuake
             from FetchOpenQuake import *
@@ -225,14 +224,14 @@ if __name__ == '__main__':
                 else:
                     ln_im_mr = []
                     mag_maf = []
-                stn_new = stations['Stations']
+                #stn_new = stations['Stations']
 
             elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
                 # Creating and conducting OpenQuake calculations
                 oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=dir_info)
                 oq_calc.run_calc()
                 im_raw = [oq_calc.eval_calc()]
-                stn_new = stations['Stations']
+                #stn_new = stations['Stations']
                 print('HazardSimulation: OpenQuake Scenario calculation completed.')
 
             else:                
@@ -240,7 +239,7 @@ if __name__ == '__main__':
                 exit()
             
         # Updating station information
-        stations['Stations'] = stn_new
+        #stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
         #print(im_raw)
         if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
