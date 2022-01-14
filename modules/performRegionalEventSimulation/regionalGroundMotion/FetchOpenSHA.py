@@ -475,10 +475,6 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
         tag_PGA = True
     if 'PGV' in im_info['Type']:
         tag_PGV = True
-    if 'Ds575' in im_info['Type']:
-        tag_Ds575 = True
-    if 'Ds595' in im_info['Type']:
-        tag_Ds595 = True
     # Looping over sites
     gm_collector = []
     for i in range(len(siteSpec)):
@@ -563,61 +559,6 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
                 pgvResult['InterEvStdDev'].append(float(interEvStdDev))
                 pgvResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnPGV': pgvResult})
-
-        # durations
-        if tag_Ds575:
-            ds575Result = {'Mean': [],
-                           'TotalStdDev': [],
-                           'InterEvStdDev': [],
-                           'IntraEvStdDev': []}
-            R = get_rupture_distance(erf, source_info['RuptureIndex'], source_info['RuptureIndex'],
-                                     cur_site['Location']['Latitude'], cur_site['Location']['Longitude'])
-            M = eqRup.getMag()
-            Vs30 = cur_site['Vs30']
-            if gmpe_name == 'Bommer, Stafford & Alarcon (2009)':
-                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.bommer_stafford_alarcon_ds_2009(magnitude=M, 
-                    distance=R, vs30=Vs30,duration_type='DS575H')
-                ds575Result['Mean'].append(float(np.log(mean)))
-                ds575Result['TotalStdDev'].append(float(stdDev))
-                ds575Result['InterEvStdDev'].append(float(interEvStdDev))
-                ds575Result['IntraEvStdDev'].append(float(intraEvStdDev))
-            elif gmpe_name == 'Afshari & Stewart (2016)':
-                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.afshari_stewart_ds_2016(magnitude=M, 
-                    distance=R, vs30=Vs30, duration_type='DS575H')
-                ds575Result['Mean'].append(float(np.log(mean)))
-                ds575Result['TotalStdDev'].append(float(stdDev))
-                ds575Result['InterEvStdDev'].append(float(interEvStdDev))
-                ds575Result['IntraEvStdDev'].append(float(intraEvStdDev))
-            else:
-                print('FetchOpenSHA.get_IM: gmpe_name {} is not supported.'.format(gmpe_name))
-            gmResults.update({'lnDS575': ds575Result})
-
-        if tag_Ds595:
-            ds595Result = {'Mean': [],
-                           'TotalStdDev': [],
-                           'InterEvStdDev': [],
-                           'IntraEvStdDev': []}
-            R = get_rupture_distance(erf, source_info['RuptureIndex'], source_info['RuptureIndex'],
-                                     cur_site['Location']['Latitude'], cur_site['Location']['Longitude'])
-            M = eqRup.getMag()
-            Vs30 = cur_site['Vs30']
-            if gmpe_name == 'Bommer, Stafford & Alarcon (2009)':
-                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.bommer_stafford_alarcon_ds_2009(magnitude=M, 
-                    distance=R, vs30=Vs30,duration_type='DS595H')
-                ds595Result['Mean'].append(float(np.log(mean)))
-                ds595Result['TotalStdDev'].append(float(stdDev))
-                ds595Result['InterEvStdDev'].append(float(interEvStdDev))
-                ds595Result['IntraEvStdDev'].append(float(intraEvStdDev))
-            elif gmpe_name == 'Afshari & Stewart (2016)':
-                mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.afshari_stewart_ds_2016(magnitude=M, 
-                    distance=R, vs30=Vs30, duration_type='DS595H')
-                ds595Result['Mean'].append(float(np.log(mean)))
-                ds595Result['TotalStdDev'].append(float(stdDev))
-                ds595Result['InterEvStdDev'].append(float(interEvStdDev))
-                ds595Result['IntraEvStdDev'].append(float(intraEvStdDev))
-            else:
-                print('FetchOpenSHA.get_IM: gmpe_name {} is not supported.'.format(gmpe_name))
-            gmResults.update({'lnDS595': ds595Result})
 
         gm_collector.append(gmResults)
     # Updating station information
