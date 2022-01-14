@@ -290,8 +290,17 @@ def loth_baker_correlation_2013(stations, periods, num_simu):
                 compute_rho_loth_baker_correlation_2013(periods[i], periods[j], stn_dist, B1, B2, B3)
 
     mu = np.zeros(num_stations * num_periods)
-    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu).T
-    residuals = residuals_raw.reshape(num_simu, num_stations, num_periods).swapaxes(0,1).swapaxes(1,2)
+    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # reorder residual_raw [[period1],[period2],...,[]]-->[[site1],[site2],...,[]]
+    residuals_reorder = []
+    for i in range(num_simu):
+        tmp = []
+        for j in range(num_stations):
+            for k in range(num_periods):
+                tmp.append(residuals_raw[i,j+k*num_stations])
+        residuals_reorder.append(tmp)
+    residuals_reorder = np.array(residuals_reorder)
+    residuals = residuals_reorder.reshape(num_simu, num_stations, num_periods).swapaxes(0,1).swapaxes(1,2)
     # return
     return residuals
 
