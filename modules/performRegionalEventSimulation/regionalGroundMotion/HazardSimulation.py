@@ -186,7 +186,7 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Creating earthquake scenarios
         if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
-            scenarios = create_earthquake_scenarios(scenario_info, stations)
+            scenarios = create_earthquake_scenarios(scenario_info, stations, dir_info)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
