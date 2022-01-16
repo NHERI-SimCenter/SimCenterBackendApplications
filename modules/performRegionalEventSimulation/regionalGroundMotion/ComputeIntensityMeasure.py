@@ -733,7 +733,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 					   'SiteSourceDistance': ssd,
 					   'SiteRuputureDistance': srd}
 				maf_out.append(tmp)
-			res = {'Station_lnSa': res,
+			res = {'Station_lnIM': res,
 				   'Earthquake_MAF': maf_out}
 			# save
 			with open(os.path.join(output_dir, filename), "w") as f:
@@ -803,7 +803,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 						for cur_scen in range(len(im_data)):
 							tmp_list = tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
 						df.update({
-							csvHeader[cur_im_tag][2:]: np.exp(tmp_list)
+							csvHeader[cur_im_tag]: np.exp(tmp_list)
 						})
 					df = pd.DataFrame(df)
 					df.to_csv(os.path.join(output_dir, site_id), index = False)
