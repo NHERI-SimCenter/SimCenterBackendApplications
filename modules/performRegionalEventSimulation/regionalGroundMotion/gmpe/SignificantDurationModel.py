@@ -79,13 +79,13 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     # median
     if distance > rc[dur_tag]:
         ds_median = np.exp(np.log((np.exp(b1[dur_tag]+b2[dur_tag]* \
-                    (magnitude-m_star[dur_tag]))/(10^(1.5*magnitude+ \
-                    16.05)))^(-1/3)/(4.9e6*beta[dur_tag])+soil* \
+                    (magnitude-m_star[dur_tag]))/(10**(1.5*magnitude+ \
+                    16.05)))**(-1/3)/(4.9e6*beta[dur_tag])+soil* \
                     c1[dur_tag]+c2[dur_tag]*(distance-rc[dur_tag]))+Drat[dur_tag])
     else:
         ds_median = np.exp(np.log((np.exp(b1[dur_tag]+b2[dur_tag]* \
-                    (magnitude-m_star[dur_tag]))/(10^(1.5*magnitude+ \
-                    16.05)))^(-1/3)/(4.9e6*beta[dur_tag])+soil* \
+                    (magnitude-m_star[dur_tag]))/(10**(1.5*magnitude+ \
+                    16.05)))**(-1/3)/(4.9e6*beta[dur_tag])+soil* \
                     c1[dur_tag])+Drat[dur_tag])
     # sigma
     ds_sigma = sigma[dur_tag]
@@ -134,7 +134,7 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
 
     # median
     ds_median = np.exp(c0[dur_tag]+m1[dur_tag]*magnitude+(r1[dur_tag]+ \
-                r2[dur_tag]*magnitude)*np.log(np.sqrt(distance^2+h1[dur_tag]^2))+ \
+                r2[dur_tag]*magnitude)*np.log(np.sqrt(distance**2+h1[dur_tag]**2))+ \
                 v1[dur_tag]*np.log(vs30)+z1[dur_tag]*ztor)
     # standard deviations
     ds_sigma = sigma_Tgm[dur_tag]
@@ -218,9 +218,9 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
 
     # basin depth
     if reg_tag == 0:
-        mu_z1 = np.exp(-7.15/4*np.log((vs30^4+570.94^4)/(1360^4+570.94^4)))
+        mu_z1 = np.exp(-7.15/4*np.log((vs30**4+570.94**4)/(1360**4+570.94**4)))
     else:
-        mu_z1 = np.exp(-5.23/4*np.log((vs30^4+412.39^4)/(1360^4+412.39^4)))
+        mu_z1 = np.exp(-5.23/4*np.log((vs30**4+412.39**4)/(1360**4+412.39**4)))
     # differential basin depth
     if z1 is None or z1 < 0 or reg_tag == 2:
         dz1 = 0
@@ -237,8 +237,8 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
             deltaSigma = np.exp(b1[mech_tag][dur_tag]+b2[dur_tag]*(M2[dur_tag]-Mstar[dur_tag])+ \
                          b3[dur_tag]*(magnitude-M2[dur_tag]))
         
-        M_0 = 10^(1.5*magnitude+16.05)
-        f_0 = 4.9e6*3.2*(deltaSigma/M_0)^(1/3)
+        M_0 = 10**(1.5*magnitude+16.05)
+        f_0 = 4.9e6*3.2*(deltaSigma/M_0)**(1/3)
         F_E = 1/f_0
     # path term
     if distance < RR1[dur_tag]:
@@ -276,7 +276,7 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
     else:
         ds_tau = tau2[dur_tag]
     # total
-    ds_sigma = np.sqrt(ds_phi^2+ds_tau^2)
+    ds_sigma = np.sqrt(ds_phi**2+ds_tau**2)
 
     # return
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi

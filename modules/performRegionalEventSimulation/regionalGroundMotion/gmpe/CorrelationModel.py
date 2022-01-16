@@ -43,15 +43,15 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d, interp2d
 
-def baker_jayaram_correlation_2008(T1, T2, flag_orth = False):
+def baker_jayaram_correlation_2008(im1, im2, flag_orth = False):
     """
     Computing inter-event correlation coeffcieint between Sa of two periods
     Reference:
         Baker and Jayaram (2008) Correlation of Spectral Acceleration
         Values from NGA Ground Motion Models
     Input:
-        T1: period 1 in second
-        T2: period 2 in second
+        im1: 1st intensity measure name
+        im2: 2nd intensity measure name
         flag_orth: if the correlation coefficient is computed for the two
                    orthogonal components
     Output:
@@ -59,6 +59,13 @@ def baker_jayaram_correlation_2008(T1, T2, flag_orth = False):
     Note:
         The valid range of T1 and T2 is 0.01s ~ 10.0s
     """
+
+    # Parse periods from im1 and im2
+    if im1.startswith('SA') and im2.startswith('SA'):
+        T1 = float(im1[3:-1])
+        T2 = float(im2[3:-1])
+    else:
+        return 0.0
 
     # Compute Tmin and Tmax (lower bounds 0.01 for T < 0.01)
     Tmin = max(min([T1, T2]), 0.01)
@@ -175,20 +182,27 @@ def bradley_correlation_2011(IM, T = None, flag_Ds = True):
         return rho
 
 
-def jayaram_baker_correlation_2009(T, h, flag_clustering = False):
+def jayaram_baker_correlation_2009(im, h, flag_clustering = False):
     """
     Computing intra-event correlation coeffcieint between Sa(T) at two sites
     Reference:
         Jayaram and Baker (2009) Correlation model for spatially distributed
         ground-motion intensities
     Input:
-        T: Sa period
+        im: intensity measure name
         h: distance between the two sites
         flag_clustering: the geologic condition of the soil varies widely over
                          the region (default: false)
     Output:
         rho: correlation between normalized intra-event residuals
     """
+
+    # parse period form im
+    try:
+        # for Sa
+        T = float(im[3:-1])
+    except ValueError:
+        print('CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {}'.format(im))
 
     if T >= 1.0:
         b = 22.0 + 3.7 * T
@@ -254,7 +268,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
     return rho
 
 
-def loth_baker_correlation_2013(stations, periods, num_simu):
+def loth_baker_correlation_2013(stations, im_name_list, num_simu):
     """
     Simulating intra-event residuals
     Reference:
@@ -262,13 +276,20 @@ def loth_baker_correlation_2013(stations, periods, num_simu):
         accelerations at multiple periods (with the Erratum)
     Input:
         stations: stations coordinates
-        periods: simulated spectral periods
+        im_name_list: simulated intensity measure names
         num_simu: number of realizations
     Output:
         residuals: intra-event residuals
     Note:
         The valid range for T1 and T2 is 0.01s ~ 10.0s
     """
+    # Parse periods from intensity measure list
+    periods = []
+    for cur_im in im_name_list:
+        try:
+            periods.append(float(cur_im[3:-1]))
+        except ValueError:
+            print('CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(cur_im))
     # Loading modeling coefficients
     B1, B2, B3 = load_loth_baker_correlation_2013(os.path.dirname(__file__) + '/data/')
     # Computing distance matrix
@@ -328,7 +349,7 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
     return MCB_model, MCB_pca, MCB_var
 
 
-def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_pc):
+def markhvida_ceferino_baker_correlation_2017(stations, im_name_list, num_simu, num_pc=19):
     """
     Simulating intra-event residuals
     Reference:
@@ -337,7 +358,7 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
         and geostatistics
     Input:
         stations: stations coordinates
-        periods: simulated spectral periods
+        im_name_list: simulated intensity measure names
         num_simu: number of realizations
         num_pc: number of principle components
     Output:
@@ -345,6 +366,13 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
     Note:
         The valid range for T1 and T2 is 0.01s ~ 5.0s
     """
+    # Parse periods from intensity measure list
+    periods = []
+    for cur_im in im_name_list:
+        try:
+            periods.append(float(cur_im[3:-1]))
+        except ValueError:
+            print('CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(cur_im))
     # Loading factors
     MCB_model, MCB_pca, MCB_var = \
         load_markhvida_ceferino_baker_correlation_2017(os.path.dirname(__file__) + '/data/')
@@ -431,16 +459,16 @@ def load_du_ning_correlation_2021(datapath):
         DN_pca: pca coeff.
         DN_var: var of pca
     """
-    DN_model = pd.read_csv(datapath + 'du_ning_2021_model_coeff.csv',
+    DN_model = pd.read_csv(datapath + 'du_ning_correlation_2021_model_coeff.csv',
                             index_col = None, header = 0)
-    DN_pca = pd.read_csv(datapath + 'du_ning_2021_pca_coeff.csv',
+    DN_pca = pd.read_csv(datapath + 'du_ning_correlation_2021_pca_coeff.csv',
                             index_col = None, header = 0)
-    DN_var = pd.read_csv(datapath + 'du_ning_2021_var_scale.csv',
+    DN_var = pd.read_csv(datapath + 'du_ning_correlation_2021_var_scale.csv',
                             index_col = None, header = 0)
     return DN_model, DN_pca, DN_var
 
 
-def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
+def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     """
     Simulating intra-event residuals
     Reference:
@@ -449,7 +477,7 @@ def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
         durations) based on principal component and geostatistical analyses
     Input:
         stations: stations coordinates
-        periods_ims: simulated pseudo periods and other ims PGA. PGV, Ia, CAV, DS575H, DS595H
+        im_name_list: simulated intensity measure names
         num_simu: number of realizations
         num_pc: number of principle components
     Output:
@@ -457,6 +485,13 @@ def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
     Note:
         The valid range for T1 and T2 is 0.01s ~ 5.0s
     """
+    # Parse periods_ims from intensity measure list
+    periods_ims = []
+    for cur_im in im_name_list:
+        if cur_im.startswith('SA'):
+            periods_ims.append(float(cur_im[3:-1]))
+        else:
+            periods_ims.append(cur_im)
     # Loading factors
     DN_model, DN_pca, DN_var = \
         load_du_ning_correlation_2021(os.path.dirname(__file__) + '/data/')
@@ -501,8 +536,8 @@ def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
         else:
             # iso nest
             covMatrix[:, :, i] = c1.iloc[0, i] * (stn_dist == 0) + \
-                                 a1.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b1.iloc[0, i])) + \
-                                 a2.iloc[0, i] * (1-np.exp(-3.0 * stn_dist / b2.iloc[0, i]))
+                                 a1.iloc[0, i] * np.exp(-3.0 * stn_dist / b1.iloc[0, i]) + \
+                                 a2.iloc[0, i] * np.exp(-3.0 * stn_dist / b2.iloc[0, i])
     # Simulating residuals
     residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     mu = np.zeros(num_stations)
@@ -530,7 +565,7 @@ def du_ning_correlation_2021(stations, periods_ims, num_simu, num_pc):
     return residuals
 
 
-def baker_bradley_correlation_2017(T, im_type=None, im2_type=None):
+def baker_bradley_correlation_2017(im1=None, im2=None):
     """
     Correlation between Sa and other IMs
     Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
@@ -538,30 +573,55 @@ def baker_bradley_correlation_2017(T, im_type=None, im2_type=None):
     Based on the script: https://github.com/bakerjw/NGAW2_correlations/blob/master/corrPredictions.m
     Input:
         T: period of Sa
-        im_type: intensity measure type - 'DS575H', 'DS595H', 'PGA', 'PGV'
+        im1: 1st intensity measure name
+        im2: 2nd intensity measure name
     Output:
         rho: correlation coefficient
     """
 
     # im map:
     im_map = {'DS575H': 0, 'DS595H':1, 'PGA': 2, 'PGV': 3}
-    im_tag = im_map.get(im_type.upper(), None)
-    if im_tag is None:
-        print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for im_typ=None.")
-        return 0.0
-    if im2_type is not None:
-        im2_tag = im_map.get(im2_type.upper(), None)
-        if im2_tag is None:
-            print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for im2_typ=None.")
-            return 0.0  
+
+    period_list = []
+    im_list = []
+    if im1.startswith('SA'):
+        im_list.append('SA')
+        period_list.append(float(im1[3:-1]))
+    else:
+        tmp_tag = im_map.get(im1.upper(), None)
+        if tmp_tag is None:
+            print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {}".format(im1))
+            return 0.0
+        im_list.append(tmp_tag)
+        period_list.append(None)
+    if im2.startswith('SA'):
+        im_list.append('SA')
+        period_list.append(float(im2[3:-1]))
+    else:
+        tmp_tag = im_map.get(im2.upper(), None)
+        if tmp_tag is None:
+            print("CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {}".format(im2))
+            return 0.0
+        im_list.append(tmp_tag)
+
+    if im1.startswith('SA') and im2.startswith('SA'):
+        # two Sa intensities
+        return baker_jayaram_correlation_2008(im1, im2)
+    
+    if 'SA' not in im_list:
+        # two non-Sa intensities
         # rho matrix
         rho_mat = [[1.000, 0.843, -0.442, -0.259],
                    [0.843, 1.000, -0.405, -0.211],
                    [-0.442, -0.405, 1.000, 0.733],
                    [-0.259, -0.211, 0.733, 1.000]]
         # return
-        return rho_mat[im_tag][im2_tag]
-    
+        return rho_mat[im_list[0]][im_list[1]]
+
+    # one Sa + one non-Sa
+    im_list.remove('SA')
+    im_tag = im_list[0]
+    T = [x for x in period_list if x is not None][0]
     # modeling coefficients
     a = [[0.00, -0.45, -0.39, -0.39, -0.06, 0.16],
          [0.00, -0.41, -0.41, -0.38, -0.35, 0.02, 0.23],
@@ -583,14 +643,16 @@ def baker_bradley_correlation_2017(T, im_type=None, im2_type=None):
          [0.10, 0.75, 2.50, 10.00]]
 
     # rho
-    if im_tag < 3:
+    if im_tag < 2:
         for j in range(1,len(e[im_tag])):
             if T <= e[im_tag][j]:
                 rho = a[im_tag][j]+(b[im_tag][j]-a[im_tag][j])/np.log(e[im_tag][j]/e[im_tag][j-1])*np.log(T/e[im_tag][j-1])
+                break
     else:
         for j in range(len(e[im_tag])):
             if T <= e[im_tag][j]:
                 rho = (a[im_tag][j]+b[im_tag][j])/2-(a[im_tag][j]-b[im_tag][j])/2*np.tanh(d[im_tag][j]*np.log(T/c[im_tag][j]))
+                break
     
     # return
     return rho

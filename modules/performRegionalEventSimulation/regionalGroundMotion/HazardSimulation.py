@@ -244,14 +244,14 @@ if __name__ == '__main__':
         #print(im_raw)
         if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
             # Computing correlated IMs
-            ln_im_mr, mag_maf = simulate_ground_motion(stations['Stations'], im_raw,
-                                                        event_info['NumberPerSite'],
-                                                        event_info['CorrelationModel'],
-                                                        event_info['IntensityMeasure'])
+            ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations['Stations'], im_raw,
+                                                                event_info['NumberPerSite'],
+                                                                event_info['CorrelationModel'],
+                                                                event_info['IntensityMeasure'])
             print('HazardSimulation: correlated response spectra computed.')
         if event_info['SaveIM'] and ln_im_mr:
             print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
+            _ = export_im(stations['Stations'], im_list,
                           ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
         else:
@@ -270,13 +270,13 @@ if __name__ == '__main__':
     # Selecting ground motion records
     if scenario_info['Type'] == 'Earthquake':
         # Selecting records
-        target_T = event_info['IntensityMeasure']['Periods']
-        if event_info['IntensityMeasure']['Type'] =='PGA':
-            # PGA only
-            target_T = [0.0]
         data_source = event_info.get('Database',0)
         if data_source:
             print('HazardSimulation: selecting ground motion records.')
+            target_T = event_info['IntensityMeasure']['Periods']
+            if event_info['IntensityMeasure']['Type'] =='PGA':
+                # PGA only
+                target_T = [0.0]
             sf_max = event_info['ScalingFactor']['Maximum']
             sf_min = event_info['ScalingFactor']['Minimum']
             start_time = time.time()
