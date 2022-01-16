@@ -38,7 +38,7 @@
 # Kuanshi Zhong
 #
 
-import os
+import os, shutil
 import sys
 import subprocess
 import argparse, posixpath, json
@@ -94,6 +94,7 @@ if __name__ == '__main__':
 
     # parse job type for set up environment and constants
     opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['PointSource', 'ERF']
+    opensha_vs30_flag = hazard_info['Site']['Vs30']['Type'] == "CGS/Wills Vs30 (Wills et al., 2015)"
     oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
 
     # dependencies
@@ -106,7 +107,7 @@ if __name__ == '__main__':
             subprocess.check_call([sys.executable, "-m", "pip", "install", p])
 
     # set up environment
-    if opensha_flag:
+    if opensha_flag or opensha_vs30_flag:
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "JPype1"])
         import jpype
@@ -116,12 +117,13 @@ if __name__ == '__main__':
         jpype.startJVM("-Xmx8G", convertStrings=False)
     if oq_flag:
         # data dir
-        os.environ['OQ_DATADIR'] = os.path.join(os.path.dirname(output_dir), 'oqdata')
+        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(os.path.dirname(output_dir)), 'oqdata')
         print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
         try:
-            os.makedirs(os.path.join(args.workDir, 'oqdata'))
+            os.makedirs(os.environ.get('OQ_DATADIR'))
         except:
-            print('HazardSimulation: local OQ folder already exists.')
+            print('HazardSimulation: local OQ folder already exists, overwiting it now...')
+            shutil.rmtree(os.environ.get('OQ_DATADIR'))
     
     # import modules
     from CreateStation import *
@@ -220,10 +222,11 @@ if __name__ == '__main__':
                 if not oq_flag:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')
                 if scenario_info['EqRupture'].get('UHS', False):
-                    ln_im_mr, mag_maf = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
+                    ln_im_mr, mag_maf, im_list = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
                 else:
                     ln_im_mr = []
                     mag_maf = []
+                    im_list = []
                 #stn_new = stations['Stations']
 
             elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':

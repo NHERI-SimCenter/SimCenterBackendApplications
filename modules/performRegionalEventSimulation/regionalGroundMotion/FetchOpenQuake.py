@@ -470,6 +470,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     num_IMs = len(tmp.columns) - 2
     # IM list
     list_IMs = tmp.columns.tolist()[2:]
+    im_list = [x.split('~')[1] for x in list_IMs]
     ln_psa_mr = []
     mag_maf = []
     for i in range(num_scen):
@@ -496,7 +497,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
         mag_maf.append([0.0,float(list_IMs[0].split('~')[0]),0.0])
     
     # return
-    return ln_psa_mr, mag_maf
+    return ln_psa_mr, mag_maf, im_list
    
 
 class OpenQuakeHazardCalc:
@@ -560,6 +561,8 @@ class OpenQuakeHazardCalc:
                             'Please check the configuration')
                 time.sleep(1)
                 waiting_seconds -= 1
+        else:
+            self.prc = False
 
         # check if we are talking to the right server
         err = dbserver.check_foreign()
@@ -734,6 +737,7 @@ class OpenQuakeHazardCalc:
             eids_by_rlz = computer.ebrupture.get_eids_by_rlz(
                 cur_getter.rlzs_by_gsim)
             mag = computer.ebrupture.rupture.mag
+            im_list = []
             data = general.AccumDict(accum=[])
             cur_T = self.event_info['IntensityMeasure'].get('Periods', None)
             for cur_gs, rlzs in cur_getter.rlzs_by_gsim.items():
@@ -757,8 +761,11 @@ class OpenQuakeHazardCalc:
                     #print('eval_calc: imt = ', imt)
                     if str(imt) in ['PGA', 'PGV', 'PGD']:
                         cur_T = [0.0]
+                        im_list.append(str(imt))
                         imTag = 'ln' + str(imt)
                     else:
+                        if 'SA' not in im_list:
+                            im_list.append('SA')
                         imTag = 'lnSA'
                     if isinstance(cur_gs, gsim.multi.MultiGMPE):
                         gs = cur_gs[str(imt)]  # MultiGMPE
@@ -969,7 +976,8 @@ class OpenQuakeHazardCalc:
             cdbs.dbserver('stop')
         
         # terminate the subprocess
-        self.prc.kill()
+        if self.prc:
+            self.prc.kill()
 
         # copy calc hdf file
         if self.vtag >= 11:
@@ -989,6 +997,7 @@ class OpenQuakeHazardCalc:
         # Final results
         res = {'Magnitude': mag,
                'Periods': cur_T,
+               'IM': im_list,
                'GroundMotions': gm_collector}
         
         # return
