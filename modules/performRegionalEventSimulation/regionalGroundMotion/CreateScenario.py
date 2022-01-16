@@ -47,7 +47,7 @@ import pandas as pd
 from FetchOpenSHA import *
 
 
-def create_earthquake_scenarios(scenario_info, stations):
+def create_earthquake_scenarios(scenario_info, stations, dir_info):
 
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
@@ -96,7 +96,7 @@ def create_earthquake_scenarios(scenario_info, stations):
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
                 eq_source = getERF(source_model, True)
-                erf_data = export_to_json(eq_source, ref_station, outfile = 'rupFile.json', \
+                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(dir_info['Output'],'RupFile.json'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
                                         maxSources = np.max([500, source_num]))
