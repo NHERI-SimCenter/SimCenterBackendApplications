@@ -134,7 +134,6 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         'Stations': []
     }
     # Get Vs30
-    print(selected_stn)
     if vs30_label in selected_stn.keys():
         tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(vs30_label)].values.tolist()
         if len(tmp):
@@ -174,8 +173,6 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
             print('CreateStation: Interpolating global depth to rock map for defined stations.')
             selected_stn.loc[nan_loc, zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
                                                                                      selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())]
-
-    print(selected_stn)
 
     for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
