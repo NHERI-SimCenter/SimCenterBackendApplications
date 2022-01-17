@@ -38,7 +38,7 @@
 # Kuanshi Zhong
 #
 
-import json
+import json, copy
 import numpy as np
 import pandas as pd
 from FetchOpenSHA import get_site_vs30_from_opensha
@@ -108,7 +108,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         max_id = stn_ids_max
     min_id = np.max([stn_ids_min, min_id])
     max_id = np.min([stn_ids_max, max_id])
-    selected_stn = stn_df.loc[min_id:max_id, :]
+    selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])
     # Extracting data
     labels = selected_stn.columns.values
     lon_label, labels = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
@@ -134,25 +134,48 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         'Stations': []
     }
     # Get Vs30
-    """
-    if vs30_label not in selected_stn.keys() and vs30_tag == 1:
+    print(selected_stn)
+    if vs30_label in selected_stn.keys():
+        tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(vs30_label)].values.tolist()
+        if len(tmp):
+            nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+        else:
+            nan_loc = []
+    else:
+        nan_loc = list(range(len(selected_stn.index)))
+    if len(nan_loc) and vs30_tag == 1:
         print('CreateStation: Interpolating global Vs30 map for defined stations.')
-        selected_stn.loc[:,vs30_label] = get_vs30_global(selected_stn[lat_label], selected_stn[lon_label])
-    if vs30_label not in selected_stn.keys() and vs30_tag == 2:
+        selected_stn.loc[nan_loc,vs30_label] = get_vs30_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                               selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())
+    if len(nan_loc) and vs30_tag == 2:
         print('CreateStation: Interpolating Thompson Vs30 map for defined stations.')
-        selected_stn.loc[:,vs30_label] = get_vs30_thompson(selected_stn[lat_label], selected_stn[lon_label])
-    if vs30_label not in selected_stn.keys() and vs30_tag == 3:
+        selected_stn.loc[nan_loc,vs30_label] = get_vs30_thompson(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                                 selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())
+    if len(nan_loc) and vs30_tag == 3:
         print('CreateStation: Fetch National Crustal Model Vs for defined stations.')
-        selected_stn.loc[:,vs30_label] = get_vs30_ncm(selected_stn[lat_label], selected_stn[lon_label])
-    if vs30_label not in selected_stn.keys() and vs30_tag == 0:
-        print('CreateStation: Fetch National Crustal Model Vs for defined stations.')
-        selected_stn.loc[:,vs30_label] = get_site_vs30_from_opensha(selected_stn[lat_label], selected_stn[lon_label])
+        selected_stn.loc[nan_loc,vs30_label] = get_vs30_ncm(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                            selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())
+    if len(nan_loc) and vs30_tag == 0:
+        print('CreateStation: Fetch OpenSHA Vs30 map for defined stations.')
+        selected_stn.loc[nan_loc,vs30_label] = get_site_vs30_from_opensha(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                                          selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())
     
     # Get zTR
-    if zTR_label not in selected_stn.keys():
-        print('CreateStation: Interpolating global depth to rock map for defined stations.')
-        selected_stn[zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn[lat_label].tolist(), selected_stn[lon_label].tolist())]
-    """
+    if zTR_label in selected_stn.keys():
+        tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(zTR_label)].values.tolist()
+        nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+    else:
+        selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]
+        if len(tmp):
+            nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+        else:
+            nan_loc = []
+        if nan_loc:
+            print('CreateStation: Interpolating global depth to rock map for defined stations.')
+            selected_stn.loc[nan_loc, zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                                                     selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())]
+
+    print(selected_stn)
 
     for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
@@ -170,6 +193,8 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         if stn.get(vs30_label):
             tmp.update({'Vs30': stn.get(vs30_label)})
         else:
+            tmp.update({'Vs30': 760.0})
+            """
             if vs30_tag == 1:
                 tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
             elif vs30_tag == 2:
@@ -178,29 +203,25 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
             elif vs30_tag == 0:
                 tmp.update({'Vs30': get_site_vs30_from_opensha([stn[lat_label]], [stn[lon_label]])[0]})
+            """
 
         if stn.get(z1p0_label):
             tmp.update({'z1pt0': stn.get(z1p0_label)})
         else:
             if z1_tag:
-                if not tmp.get('Vs30'):
-                    tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
 
         if stn.get(z2p5_label):
             tmp.update({'z2pt5': stn.get(z2p5_label)})
         else:
             if z25_tag:
-                if not tmp.get('z1pt0'):
-                    if not tmp.get('Vs30'):
-                        tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
-                    tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
 
         if stn.get(zTR_label):
             tmp.update({'zTR': stn.get(zTR_label)})
         else:
-            tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})
+            #tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})
+            tmp.update({'zTR': 0.0})
         
         stn_file['Stations'].append(tmp)
         #stn_file['Stations'].append({
