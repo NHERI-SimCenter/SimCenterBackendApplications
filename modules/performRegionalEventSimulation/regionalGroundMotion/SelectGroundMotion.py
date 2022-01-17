@@ -109,7 +109,6 @@ class GM_Selector:
                     cur_im_table.iloc[:,i] = cur_im_table.iloc[:,i]*s
             err = np.linalg.norm(np.exp(self.target_im) - cur_im_table.to_numpy(), axis = 1)
             if np.min(err) < min_err:
-                print(np.min(err))
                 min_err = np.min(err)
                 tmp_tag = err.argmin()
                 sf = s
