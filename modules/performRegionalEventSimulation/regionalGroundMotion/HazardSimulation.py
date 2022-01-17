@@ -261,11 +261,6 @@ if __name__ == '__main__':
             print('HazardSimulation: IM is not required to saved or no IM is found.')
         #print(np.exp(ln_im_mr[0][0, :, 1]))
         #print(np.exp(ln_im_mr[0][1, :, 1]))
-    elif scenario_info['Type'] == 'Wind':
-        if scenario_info['Generator'] == 'Simulation':
-            storm_dir = simulate_storm(scenario_info['AppDir'], input_dir, output_dir)
-        else:
-            print('HazardSimulation: currently supporting Wind-Simulation')
     else:
         # TODO: extending this to other hazards
         print('HazardSimulation currently only supports earthquake simulations.')
@@ -276,14 +271,10 @@ if __name__ == '__main__':
         data_source = event_info.get('Database',0)
         if data_source:
             print('HazardSimulation: selecting ground motion records.')
-            target_T = event_info['IntensityMeasure']['Periods']
-            if event_info['IntensityMeasure']['Type'] =='PGA':
-                # PGA only
-                target_T = [0.0]
             sf_max = event_info['ScalingFactor']['Maximum']
             sf_min = event_info['ScalingFactor']['Minimum']
             start_time = time.time()
-            gm_id, gm_file = select_ground_motion(target_T, ln_im_mr, data_source,
+            gm_id, gm_file = select_ground_motion(im_list, ln_im_mr, data_source,
                                                   sf_max, sf_min, output_dir, 'EventGrid.csv',
                                                   stations['Stations'])
             print('HazardSimulation: ground motion records selected  ({0} s).'.format(time.time() - start_time))
