@@ -116,12 +116,12 @@ if __name__ == '__main__':
     jpype.startJVM("-Xmx8G", convertStrings=False)
     if oq_flag:
         # data dir
-        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(os.path.dirname(input_dir)), 'oqdata')
+        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
         print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
         if os.path.exists(os.environ.get('OQ_DATADIR')):
             print('HazardSimulation: local OQ folder already exists, overwiting it now...')
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
-        os.makedirs(os.environ.get('OQ_DATADIR'))    
+        os.makedirs(f"{os.environ.get('OQ_DATADIR')}")    
     
     # import modules
     from CreateStation import *
