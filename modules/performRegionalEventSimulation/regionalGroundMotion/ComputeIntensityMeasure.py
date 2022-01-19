@@ -636,7 +636,7 @@ class GM_Simulator:
 						rho[i, j, k] = CorrelationModel.jayaram_baker_correlation_2009(self.im_name_list[k], cur_stn_dist, 
 						                                                               flag_clustering = False)
 			# Simulating residuals
-			residuals = np.zeros((self.num_im, self.num_im, self.num_simu))
+			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
 			for k in range(self.num_im):
 				residuals[:, k, :] = np.random.multivariate_normal(np.zeros(self.num_sites), rho[:, :, k], self.num_simu).T
 
