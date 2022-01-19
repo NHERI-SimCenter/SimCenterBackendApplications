@@ -185,7 +185,7 @@ def write_RV(BIM_file, EVENT_file):
         event_file['randomVariables'][0]['elements'] = RV_elements
 
     else:
-        
+
         # if there is only one event, then we do not need random variables
 
         # initialize the Events part of the EVENT file
@@ -310,7 +310,7 @@ def get_records(BIM_file, EVENT_file):
 
     # get the scale factor if a user specified it
     event_data = np.array(bim_file["Events"]["Events"]).T
-    event_loc = np.where(event_data == event_id)[0][0]
+    event_loc = np.where(event_data == event_id)[1][0]
     f_scale_user = event_data.T[event_loc][1]
 
     #f_scale_user = dict([(evt['fileName'], evt.get('factor', 1.0))
