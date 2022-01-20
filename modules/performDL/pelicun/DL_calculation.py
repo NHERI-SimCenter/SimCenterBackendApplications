@@ -136,14 +136,14 @@ def update_collapsep(BIMfile, RPi, theta, beta, num_collapses):
 
 # END temporary functions ----
 
-def run_pelicun(DL_input_path, EDP_input_path,
+def run_pelicun(DL_input_path, demand_input_path,
     DL_method, realization_count, BIM_file, EDP_file, DM_file, DV_file,
     output_path=None, detailed_results=True, coupled_EDP=False,
     log_file=True, event_time=None, ground_failure=False,
     auto_script_path=None, resource_dir=None):
 
     DL_input_path = os.path.abspath(DL_input_path) # BIM file
-    EDP_input_path = os.path.abspath(EDP_input_path) # dakotaTab
+    demand_input_path = os.path.abspath(demand_input_path) # dakotaTab
 
     # If the output dir was not specified, results are saved in the directory of
     # the input file.
@@ -177,10 +177,10 @@ def run_pelicun(DL_input_path, EDP_input_path,
             df_event.iloc[evt_i] = [event['name'], event['stripe'], event['rate'], event['IM']]
 
         # Create a separate EDP input for each stripe
-        EDP_input_full = pd.read_csv(EDP_input_path, sep='\s+', header=0,
+        EDP_input_full = pd.read_csv(demand_input_path, sep='\s+', header=0,
                                      index_col=0)
 
-        # EDP_input_full.to_csv(EDP_input_path[:-4]+'_1.out', sep=' ')
+        # EDP_input_full.to_csv(demand_input_path[:-4]+'_1.out', sep=' ')
 
         stripes = df_event['stripe'].unique()
         EDP_files = []
@@ -192,7 +192,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
             EDP_input = EDP_input_full[EDP_input_full['MultipleEvent'].isin(events)]
 
-            EDP_files.append(EDP_input_path[:-4]+'_{}.out'.format(stripe))
+            EDP_files.append(demand_input_path[:-4]+'_{}.out'.format(stripe))
 
             EDP_input.to_csv(EDP_files[-1], sep=' ')
 
@@ -224,7 +224,7 @@ def run_pelicun(DL_input_path, EDP_input_path,
 
     except: # run analysis for single IM
         stripes = [1]
-        EDP_files = [EDP_input_path]
+        EDP_files = [demand_input_path]
         DL_files = [DL_input_path]
 
     # run the analysis and save results separately for each stripe
@@ -245,10 +245,10 @@ def run_pelicun(DL_input_path, EDP_input_path,
             # if the loss model is not defined, give a warning
             print('WARNING No loss model defined in the BIM file. Trying to auto-populate.')
 
-            EDP_input_path = EDP_files[s_i]
+            demand_input_path = EDP_files[s_i]
 
             # and try to auto-populate the loss model using the BIM information
-            DL_input, DL_input_path = auto_populate(DL_input_path, EDP_input_path,
+            DL_input, DL_input_path = auto_populate(DL_input_path, demand_input_path,
                                                     DL_method, realization_count,
                                                     coupled_EDP, event_time,
                                                     ground_failure,
@@ -336,7 +336,7 @@ def main(args):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameDL')
-    parser.add_argument('--filenameEDP')
+    parser.add_argument('--demandFile')
     parser.add_argument('--DL_Method', default = None)
     parser.add_argument('--Realizations', default = None)
     parser.add_argument('--outputBIM', default='BIM.csv')
@@ -361,7 +361,7 @@ def main(args):
 
     #print(args)
     run_pelicun(
-        args.filenameDL, args.filenameEDP,
+        args.filenameDL, args.demandFile,
         args.DL_Method, args.Realizations,
         args.outputBIM, args.outputEDP,
         args.outputDM, args.outputDV,

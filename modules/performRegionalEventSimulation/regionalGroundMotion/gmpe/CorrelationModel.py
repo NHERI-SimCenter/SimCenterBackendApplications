@@ -280,7 +280,7 @@ def loth_baker_correlation_2013(stations, periods, num_simu):
         for j in range(num_stations):
             loc_j = np.array([stations[j]['Latitude'],
                               stations[j]['Longitude']])
-            stn_dist[i, j] = np.linalg.norm(loc_i - loc_j) * 111.0
+            stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Creating a covariance matrices for each of the principal components
     num_periods = len(periods)
     covMatrix = np.zeros((num_stations * num_periods, num_stations * num_periods))
@@ -290,8 +290,17 @@ def loth_baker_correlation_2013(stations, periods, num_simu):
                 compute_rho_loth_baker_correlation_2013(periods[i], periods[j], stn_dist, B1, B2, B3)
 
     mu = np.zeros(num_stations * num_periods)
-    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu).T
-    residuals = residuals_raw.reshape(num_simu, num_stations, num_periods).swapaxes(0,1).swapaxes(1,2)
+    residuals_raw = np.random.multivariate_normal(mu, covMatrix, num_simu)
+    # reorder residual_raw [[period1],[period2],...,[]]-->[[site1],[site2],...,[]]
+    residuals_reorder = []
+    for i in range(num_simu):
+        tmp = []
+        for j in range(num_stations):
+            for k in range(num_periods):
+                tmp.append(residuals_raw[i,j+k*num_stations])
+        residuals_reorder.append(tmp)
+    residuals_reorder = np.array(residuals_reorder)
+    residuals = residuals_reorder.reshape(num_simu, num_stations, num_periods).swapaxes(0,1).swapaxes(1,2)
     # return
     return residuals
 
@@ -360,7 +369,7 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
         for j in range(num_stations):
             loc_j = np.array([stations[j]['Latitude'],
                               stations[j]['Longitude']])
-            stn_dist[i, j] = np.linalg.norm(loc_i - loc_j) * 111.0
+            stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 19 principal components are used
     c0 = c0 / MCB_var.iloc[0, num_pc - 1]
     c1 = c1 / MCB_var.iloc[0, num_pc - 1]
@@ -373,9 +382,9 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
             covMatrix[:, :, i] = np.eye(num_stations) * c0.iloc[0, i]
         else:
             # iso nest
-            covMatrix[:, :, i] = c0.iloc[0, i] + \
-                                 c1.iloc[0, i] * np.exp(-3.0 * stn_dist) / a1.iloc[0, i] + \
-                                 c2.iloc[0, i] * np.exp(-3.0 * stn_dist) / a2.iloc[0, i]
+            covMatrix[:, :, i] = c0.iloc[0, i] * (stn_dist == 0)+ \
+                                 c1.iloc[0, i] * np.exp(-3.0 * stn_dist / a1.iloc[0, i]) + \
+                                 c2.iloc[0, i] * np.exp(-3.0 * stn_dist / a2.iloc[0, i])
     # Simulating residuals
     residuals_pca = np.zeros((num_stations, num_simu, num_pc))
     mu = np.zeros(num_stations)
@@ -406,3 +415,23 @@ def markhvida_ceferino_baker_correlation_2017(stations, periods, num_simu, num_p
                 residuals = np.concatenate((residuals, Tmax_residuals), axis = 1)
     # return
     return residuals
+
+
+def get_distance_from_lat_lon(site_loc1, site_loc2):
+
+    # earth radius (km)
+    earth_radius_avg = 6371.0
+    # site lat and lon
+    lat1, lon1 = site_loc1
+    lat2, lon2 = site_loc2
+    # covert to radians
+    lat1 = np.radians(lat1)
+    lon1 = np.radians(lon1)
+    lat2 = np.radians(lat2)
+    lon2 = np.radians(lon2)
+    # calculate haversine
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    dist = 2.0*earth_radius_avg*np.arcsin(np.sqrt(np.sin(0.5*dlat)**2+np.cos(lat1)*np.cos(lat2)*np.sin(0.5*dlon)**2))
+    # return
+    return dist
