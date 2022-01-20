@@ -102,6 +102,36 @@
             "default": ""
           }
         ]
+      },
+      {
+        "Name": "GIS_to_BIM",
+        "ExecutablePath": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "Min",
+            "type": "int",
+            "description": "min id of building to obtain BIM for",
+            "default": 1
+          },
+          {
+            "id": "Max",
+            "type": "int",
+            "description": "max id of building to obtain BIM for",
+            "default": 10
+          },
+          {
+            "id": "filter",
+            "type": "string",
+            "description": "string with the building ids to run",
+            "default": ""
+          },
+          {
+            "id": "buildingSourceFile",
+            "type": "path",
+            "description": "path to buildings database file",
+            "default": ""
+          }
+        ]
       }
     ]
   },
@@ -160,6 +190,12 @@
         ]
       },
       {
+        "Name": "UserInputRasterHazard",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },
+      {
         "Name": "RegionalSiteResponse",
         "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
         "ApplicationSpecificInputs": [
@@ -209,6 +245,17 @@
             "id": "seed",
             "type": "int",
             "description": "Seed for the random generator"
+          }
+        ]
+      },
+      {
+        "Name": "SiteSpecifiedEvents",
+        "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "filenameEVENTgrid",
+            "type": "path",
+            "description": "Path to file containing location information on each event file"
           }
         ]
       }

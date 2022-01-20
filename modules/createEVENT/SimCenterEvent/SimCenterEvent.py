@@ -192,8 +192,8 @@ def write_RV(BIM_file, EVENT_file):
         event_file['Events'].append({
             #'type': 'Seismic',
             'type': bim_data['Events']['type'],
-            'event_id': events[0]['fileName'],
-            'unitScaleFactor': f_scale_units,
+            'event_id': events[0][0],
+            'unitScaleFactor': events[0][1],
             'data_dir': str(data_dir)
             })
 
