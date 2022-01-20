@@ -49,7 +49,7 @@ if 'stampede2' not in socket.gethostname():
 	from FetchOpenSHA import *
 
 
-def create_earthquake_scenarios(scenario_info, stations):
+def create_earthquake_scenarios(scenario_info, stations, dir_info):
 
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
@@ -86,7 +86,8 @@ def create_earthquake_scenarios(scenario_info, stations):
                     'RuptureForecast': source_model,
                     'SourceIndex': scenario_info['EqRupture']['SourceIndex'],
                     'RuptureIndex': scenario_info['EqRupture']['RuptureIndex'],
-                    'SiteSourceDistance': distToSource
+                    'SiteSourceDistance': distToSource,
+                    'SiteRuptureDistance': get_rupture_distance(eq_source, scenario_info['EqRupture']['SourceIndex'], scenario_info['EqRupture']['RuptureIndex'], lat, lon)
                 }})
                 
                 return scenario_data
@@ -97,7 +98,7 @@ def create_earthquake_scenarios(scenario_info, stations):
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
                 eq_source = getERF(source_model, True)
-                erf_data = export_to_json(eq_source, ref_station, outfile = None, \
+                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(dir_info['Output'],'RupFile.json'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
                                         maxSources = np.max([500, source_num]))
@@ -119,7 +120,9 @@ def create_earthquake_scenarios(scenario_info, stations):
                         'Type': source_type,
                         'RuptureForecast': source_model,
                         'SourceIndex': rup['properties']['Source'],
-                        'RuptureIndex': rup['properties']['Rupture']
+                        'RuptureIndex': rup['properties']['Rupture'],
+                        'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
+                        'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
                     }})
                 # Cleaning tmp outputs
                 del erf_data

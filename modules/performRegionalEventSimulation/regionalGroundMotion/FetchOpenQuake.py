@@ -76,129 +76,179 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                           'calculation_mode': 'classical',
                           'random_seed': scen_info['EqRupture'].get('Seed', 24)}
         cfg['logic_tree'] = {'number_of_logic_tree_samples': 0} # 0 here indicates full logic tree realization
-    else:
-        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased or OpenQuakeClassicalPSHA.')
-        return 0
-    # sites
-    tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
-    tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
-    tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
-    cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
-    # rupture
-    cfg['erf'] = {'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0), 
-                  'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
-                  'area_source_discretization': scen_info['EqRupture'].get('AreaMesh', 10.0)}
-    # site_params (saved in the output_file)
-    cfg['site_params'] = {'site_model_file': site_info['output_file']}
-    # hazard_calculation
-    mapGMPE = {'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
-               'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
-               'Boore, Stewart, Seyhan & Atkinson (2014)': 'BooreEtAl2014',
-               'BooreEtAl2014': 'BooreEtAl2014',
-               'Campbell & Bozorgnia (2014)': 'CampbellBozorgnia2014',
-               'CampbellBozorgnia2014': 'CampbellBozorgnia2014',
-               'Chiou & Youngs (2014)': 'ChiouYoungs2014',
-               'ChiouYoungs2014': 'ChiouYoungs2014'
-               }
-    
-    if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
-        imt = ''
-        if event_info['IntensityMeasure']['Type'] == 'SA':
-            for curT in event_info['IntensityMeasure']['Periods']:
-                imt = imt + 'SA(' + str(curT) + '), '
-            imt = imt[:-2]
+    elif scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
+        filename_ini = scen_info['EqRupture'].get('ConfigFile', None)
+        if filename_ini is None:
+            print('FetchOpenQuake: please specify Scenario[\'EqRupture\'][\'ConfigFile\'].')
+            return 0
         else:
-            imt = event_info['IntensityMeasure']['Type']
-        cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['Filename'], 
-                              'gsim': mapGMPE[event_info['GMPE']['Type']],
-                              'intensity_measure_types': imt, 
-                              'random_seed': 42, 
-                              'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                              'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
-                              'number_of_ground_motion_fields': event_info['NumberPerSite']}
-    elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
-        imt = ''
-        imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
-        imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
-        if event_info['IntensityMeasure']['Type'] == 'SA':
-            for curT in event_info['IntensityMeasure']['Periods']:
-                #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+            filename_ini = os.path.join(dir_input, filename_ini)
+            # updating the export_dir
+            cfg.read(filename_ini)
+            cfg['output']['export_dir'] = dir_output
+    else:
+        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig.')
+        return 0
+
+    if scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
+        # sites
+        tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
+        tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
+        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
+        if cfg.has_section('geometry'):
+            cfg['geometry']['sites_csv'] = 'sites_oq.csv'
+        else:
+            cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        if cfg.has_section('site_params'):
+            cfg['site_params']['site_model_file'] = site_info['output_file']
+        else:
+            cfg['site_params'] = {'site_model_file': site_info['output_file']}
+        # copy that file to the rundir
+        shutil.copy(os.path.join(dir_input,site_info['output_file']), os.path.join(dir_output,site_info['output_file']))
+
+        # im type and period
+        tmp0 = cfg['calculation'].get('intensity_measure_types_and_levels').split('"')
+        tmp = []
+        for jj, cur_tmp in enumerate(tmp0):
+            if jj%2:
+                tmp.append(cur_tmp)
+        im_type = []
+        tmp_T = []
+        for cur_tmp in tmp:
+            if 'PGA' in cur_tmp:
+                im_type = 'PGA'
+            elif 'SA' in cur_tmp:
+                im_type = 'SA'
+                tmp_T.append(float(cur_tmp.split('(')[-1].split(')')[0]))
+            else:
+                pass
+        event_info['IntensityMeasure']['Type'] = im_type
+        event_info['IntensityMeasure']['Periods'] = tmp_T
+        cfg['calculation']['source_model_logic_tree_file'] = os.path.join(cfg['calculation'].get('source_model_logic_tree_file'))
+        cfg['calculation']['gsim_logic_tree_file'] = os.path.join(cfg['calculation'].get('gsim_logic_tree_file'))
+    else:
+
+        # sites
+        tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
+        tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
+        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
+        cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        # rupture
+        cfg['erf'] = {'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0), 
+                    'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
+                    'area_source_discretization': scen_info['EqRupture'].get('AreaMesh', 10.0)}
+        # site_params (saved in the output_file)
+        cfg['site_params'] = {'site_model_file': site_info['output_file']}
+        # hazard_calculation
+        mapGMPE = {'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
+                'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
+                'Boore, Stewart, Seyhan & Atkinson (2014)': 'BooreEtAl2014',
+                'BooreEtAl2014': 'BooreEtAl2014',
+                'Campbell & Bozorgnia (2014)': 'CampbellBozorgnia2014',
+                'CampbellBozorgnia2014': 'CampbellBozorgnia2014',
+                'Chiou & Youngs (2014)': 'ChiouYoungs2014',
+                'ChiouYoungs2014': 'ChiouYoungs2014'
+                }
+        
+        if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+            imt = ''
+            if event_info['IntensityMeasure']['Type'] == 'SA':
+                for curT in event_info['IntensityMeasure']['Periods']:
+                    imt = imt + 'SA(' + str(curT) + '), '
+                imt = imt[:-2]
+            else:
+                imt = event_info['IntensityMeasure']['Type']
+            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['Filename'], 
+                                'gsim': mapGMPE[event_info['GMPE']['Type']],
+                                'intensity_measure_types': imt, 
+                                'random_seed': 42, 
+                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
+                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+                                'number_of_ground_motion_fields': event_info['NumberPerSite']}
+        elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
+            imt = ''
+            imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
+            imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
+            if event_info['IntensityMeasure']['Type'] == 'SA':
+                for curT in event_info['IntensityMeasure']['Periods']:
+                    #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+                    if imt_scale == 'Log':
+                        imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    else:
+                        imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt_strings = ''
+                        for imt_v in imt_values:
+                            imt_strings = imt_strings+str(imt_v)+', '
+                        imt_strings = imt_strings[:-2]
+                        imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
+                imt = imt[:-2]
+            elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
                 else:
                     imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
                     imt_strings = ''
                     for imt_v in imt_values:
                         imt_strings = imt_strings+str(imt_v)+', '
                     imt_strings = imt_strings[:-2]
-                    imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
-            imt = imt[:-2]
-        elif event_info['IntensityMeasure']['Type'] == 'PGA':
-            if imt_scale == 'Log':
-                imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = 'PGA": [{}], '.format(imt_strings)
             else:
-                imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                imt_strings = ''
-                for imt_v in imt_values:
-                    imt_strings = imt_strings+str(imt_v)+', '
-                imt_strings = imt_strings[:-2]
-                imt = 'PGA": [{}], '.format(imt_strings)
-        else:
-            imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
-        cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
-                              'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
-                              'investigation_time': scen_info['EqRupture']['TimeSpan'],
-                              'intensity_measure_types_and_levels': '{' + imt + '}', 
-                              'random_seed': 42, 
-                              'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                              'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
-                              'number_of_ground_motion_fields': event_info['NumberPerSite']}
-    elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-        imt = ''
-        imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
-        imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
-        if event_info['IntensityMeasure']['Type'] == 'SA':
-            for curT in event_info['IntensityMeasure']['Periods']:
-                #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+                imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
+            cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
+                                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
+                                'investigation_time': scen_info['EqRupture']['TimeSpan'],
+                                'intensity_measure_types_and_levels': '{' + imt + '}', 
+                                'random_seed': 42, 
+                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
+                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+                                'number_of_ground_motion_fields': event_info['NumberPerSite']}
+        elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
+            imt = ''
+            imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
+            imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
+            if event_info['IntensityMeasure']['Type'] == 'SA':
+                for curT in event_info['IntensityMeasure']['Periods']:
+                    #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+                    if imt_scale == 'Log':
+                        imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    else:
+                        imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt_strings = ''
+                        for imt_v in imt_values:
+                            imt_strings = imt_strings+str(imt_v)+', '
+                        imt_strings = imt_strings[:-2]
+                        imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
+                imt = imt[:-2]
+            elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
                 else:
                     imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
                     imt_strings = ''
                     for imt_v in imt_values:
                         imt_strings = imt_strings+str(imt_v)+', '
                     imt_strings = imt_strings[:-2]
-                    imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
-            imt = imt[:-2]
-        elif event_info['IntensityMeasure']['Type'] == 'PGA':
-            if imt_scale == 'Log':
-                imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = '"PGA": [{}], '.format(imt_strings)
             else:
-                imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
-                imt_strings = ''
-                for imt_v in imt_values:
-                    imt_strings = imt_strings+str(imt_v)+', '
-                imt_strings = imt_strings[:-2]
-                imt = '"PGA": [{}], '.format(imt_strings)
+                imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
+            cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
+                                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
+                                'investigation_time': scen_info['EqRupture']['TimeSpan'],
+                                'intensity_measure_types_and_levels': '{' + imt + '}', 
+                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
+                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0)}
+            cfg_quan = ''
+            cfg['output'] = {'export_dir': dir_output,
+                            'individual_curves': scen_info['EqRupture'].get('IndivHazCurv', False), 
+                            'mean': scen_info['EqRupture'].get('MeanHazCurv', True),
+                            'quantiles': ' '.join([str(x) for x in scen_info['EqRupture'].get('Quantiles', [0.05, 0.5, 0.95])]),
+                            'hazard_maps': scen_info['EqRupture'].get('HazMap', False),
+                            'uniform_hazard_spectra': scen_info['EqRupture'].get('UHS', False),
+                            'poes': np.round(1-np.exp(-float(scen_info['EqRupture']['TimeSpan'])*1.0/float(scen_info['EqRupture'].get('ReturnPeriod', 100))),decimals=3)}
         else:
-            imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
-        cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
-                              'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
-                              'investigation_time': scen_info['EqRupture']['TimeSpan'],
-                              'intensity_measure_types_and_levels': '{' + imt + '}', 
-                              'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                              'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0)}
-        cfg_quan = ''
-        cfg['output'] = {'export_dir': dir_output,
-                         'individual_curves': scen_info['EqRupture'].get('IndivHazCurv', False), 
-                         'mean': scen_info['EqRupture'].get('MeanHazCurv', True),
-                         'quantiles': ' '.join([str(x) for x in scen_info['EqRupture'].get('Quantiles', [0.05, 0.5, 0.95])]),
-                         'hazard_maps': scen_info['EqRupture'].get('HazMap', False),
-                         'uniform_hazard_spectra': scen_info['EqRupture'].get('UHS', False),
-                         'poes': np.round(1-np.exp(-float(scen_info['EqRupture']['TimeSpan'])*1.0/float(scen_info['EqRupture'].get('ReturnPeriod', 100))),decimals=3)}
-    else:
-        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario or OpenQuakeEventBased.')
-        return 0
+            print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig.')
+            return 0
+
     # Write the ini
     filename_ini = os.path.join(dir_input, 'oq_job.ini')
     with open(filename_ini, 'w') as configfile:
@@ -272,7 +322,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
     print('FetchOpenQuake: OpenQuake configured.')
 
     # return
-    return filename_ini, oq_ver_loaded
+    return filename_ini, oq_ver_loaded, event_info
 
 # this function writes a openquake.cfg for setting global configurations
 # tested while not used so far but might be useful in future if moving to 
@@ -503,6 +553,15 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             export_realizations('realizations', dstore)
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
+            return 1 
+
+    # h5 clear for stampede2 (this is somewhat inelegant...)
+    if 'stampede2' in socket.gethostname():
+        # h5clear
+        if oq_h5clear(path) == 0:
+            print('FetchOpenQuake.oq_run_classical_psha: h5clear completed')
+        else:
+            print('FetchOpenQuake.oq_run_classical_psha: h5clear failed')
     
     # copy the calc file to output directory
     if dir_info:
@@ -514,7 +573,19 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             print('FetchOpenQuake: failed to copy calc hdf file.')
     
     return 0
-        
+
+
+def oq_h5clear(hdf5_file):
+
+    #h5clear = os.path.join(os.path.dirname(os.path.abspath(__file__)),'lib/hdf5/bin/h5clear')
+    #print(h5clear)
+    print(hdf5_file)
+    #subprocess.run(["chmod", "a+rx", h5clear])
+    subprocess.run(["chmod", "a+rx", hdf5_file])
+    tmp = subprocess.run(["h5clear", "-s", hdf5_file])
+    print(tmp)
+    run_flag = tmp.returncode
+    return run_flag        
 
 
 def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
@@ -543,6 +614,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     num_IMs = len(tmp.columns) - 2
     # IM list
     list_IMs = tmp.columns.tolist()[2:]
+    im_list = [x.split('~')[1] for x in list_IMs]
     ln_psa_mr = []
     mag_maf = []
     for i in range(num_scen):
@@ -569,7 +641,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
         mag_maf.append([0.0,float(list_IMs[0].split('~')[0]),0.0])
     
     # return
-    return ln_psa_mr, mag_maf
+    return ln_psa_mr, mag_maf, im_list
    
 
 class OpenQuakeHazardCalc:
@@ -633,6 +705,8 @@ class OpenQuakeHazardCalc:
                             'Please check the configuration')
                 time.sleep(1)
                 waiting_seconds -= 1
+        else:
+            self.prc = False
 
         # check if we are talking to the right server
         err = dbserver.check_foreign()
@@ -807,6 +881,7 @@ class OpenQuakeHazardCalc:
             eids_by_rlz = computer.ebrupture.get_eids_by_rlz(
                 cur_getter.rlzs_by_gsim)
             mag = computer.ebrupture.rupture.mag
+            im_list = []
             data = general.AccumDict(accum=[])
             cur_T = self.event_info['IntensityMeasure'].get('Periods', None)
             for cur_gs, rlzs in cur_getter.rlzs_by_gsim.items():
@@ -830,8 +905,11 @@ class OpenQuakeHazardCalc:
                     #print('eval_calc: imt = ', imt)
                     if str(imt) in ['PGA', 'PGV', 'PGD']:
                         cur_T = [0.0]
+                        im_list.append(str(imt))
                         imTag = 'ln' + str(imt)
                     else:
+                        if 'SA' not in im_list:
+                            im_list.append('SA')
                         imTag = 'lnSA'
                     if isinstance(cur_gs, gsim.multi.MultiGMPE):
                         gs = cur_gs[str(imt)]  # MultiGMPE
@@ -1042,7 +1120,8 @@ class OpenQuakeHazardCalc:
             cdbs.dbserver('stop')
         
         # terminate the subprocess
-        self.prc.kill()
+        if self.prc:
+            self.prc.kill()
 
         # copy calc hdf file
         if self.vtag >= 11:
@@ -1062,6 +1141,7 @@ class OpenQuakeHazardCalc:
         # Final results
         res = {'Magnitude': mag,
                'Periods': cur_T,
+               'IM': im_list,
                'GroundMotions': gm_collector}
         
         # return
