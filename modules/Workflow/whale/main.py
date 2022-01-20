@@ -55,6 +55,7 @@ This module has classes and methods that handle everything at the moment.
 from time import strftime
 from datetime import datetime
 import sys, os, json
+import argparse
 
 import pprint
 
@@ -77,12 +78,113 @@ from pathlib import Path, PurePath
 
 pp = pprint.PrettyPrinter(indent=4)
 
-log_file = None
-
-log_div = '-' * (80-21)  # 21 to have a total length of 80 with the time added
-
 # get the absolute path of the whale directory
 whale_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def str2bool(v):
+    # courtesy of Maxim @ stackoverflow
+
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 'True', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'False', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+class Options(object):
+
+    def __init__(self):
+
+        self._log_show_ms = False
+        self._print_log = False
+
+        self.reset_log_strings()
+
+    @property
+    def log_show_ms(self):
+        return self._log_show_ms
+
+    @log_show_ms.setter
+    def log_show_ms(self, value):
+        self._log_show_ms = bool(value)
+
+        self.reset_log_strings()
+
+    @property
+    def log_pref(self):
+        return self._log_pref
+
+    @property
+    def log_div(self):
+        return self._log_div
+
+    @property
+    def log_time_format(self):
+        return self._log_time_format
+
+    @property
+    def log_file(self):
+        return globals()['log_file']
+
+    @log_file.setter
+    def log_file(self, value):
+
+        if value is None:
+            globals()['log_file'] = value
+
+        else:
+
+            filepath = Path(value).resolve()
+
+            try:
+                globals()['log_file'] = str(filepath)
+
+                with open(filepath, 'w') as f:
+                    f.write('')
+
+            except:
+                raise ValueError(f"The filepath provided does not point to a "
+                                 f"valid location: {filepath}")
+
+    @property
+    def print_log(self):
+        return self._print_log
+
+    @print_log.setter
+    def print_log(self, value):
+        self._print_log = str2bool(value)
+
+    def reset_log_strings(self):
+
+        if self._log_show_ms:
+            self._log_time_format = '%H:%M:%S:%f'
+            self._log_pref = ' ' * 16 # the length of the time string in the log file
+            self._log_div = '-' * (80 - 17) # to have a total length of 80 with the time added
+        else:
+            self._log_time_format = '%H:%M:%S'
+            self._log_pref = ' ' * 9
+            self._log_div = '-' * (80 - 9)
+
+options = Options()
+
+log_file = None
+
+def set_options(config_options):
+
+    if config_options is not None:
+
+        for key, value in config_options.items():
+
+            if key == "LogShowMS":
+                options.log_show_ms = value
+            elif key == "LogFile":
+                options.log_file = value
+            elif key == "PrintLog":
+                options.print_log = value
+
+
 
 # Monkeypatch warnings to get prettier messages
 def _warning(message, category, filename, lineno, file=None, line=None):
@@ -95,7 +197,26 @@ def _warning(message, category, filename, lineno, file=None, line=None):
 
 warnings.showwarning = _warning
 
-def log_msg(msg, prepend_timestamp=True):
+def log_div(prepend_timestamp=False, prepend_blank_space=True):
+    """
+    Print a divider line to the log file
+
+    """
+
+    if prepend_timestamp:
+        msg = options.log_div
+
+    elif prepend_blank_space:
+        msg = options.log_div
+
+    else:
+        msg = '-' * 80
+
+    log_msg(msg, prepend_timestamp = prepend_timestamp,
+            prepend_blank_space = prepend_blank_space)
+
+
+def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):
     """
     Print a message to the screen with the current time as prefix
 
@@ -107,18 +228,27 @@ def log_msg(msg, prepend_timestamp=True):
        Message to print.
 
     """
-    if prepend_timestamp:
-        formatted_msg = '{} {}'.format(datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'), msg)
-    else:
-        formatted_msg = msg
 
-    print(formatted_msg)
+    msg_lines = msg.split('\n')
 
-    global log_file
-    if log_file is not None:
-        with open(globals()['log_file'], 'a') as f:
-            f.write('\n'+formatted_msg)
+    for msg_i, msg_line in enumerate(msg_lines):
 
+        if (prepend_timestamp and (msg_i==0)):
+            formatted_msg = '{} {}'.format(
+                datetime.now().strftime(options.log_time_format), msg_line)
+        elif prepend_timestamp:
+            formatted_msg = options.log_pref + msg_line
+        elif prepend_blank_space:
+            formatted_msg = options.log_pref + msg_line
+        else:
+            formatted_msg = msg_line
+
+        if options.print_log:
+            print(formatted_msg)
+
+        if globals()['log_file'] is not None:
+            with open(globals()['log_file'], 'a') as f:
+                f.write('\n'+formatted_msg)
 
 def log_error(msg):
     """
@@ -130,29 +260,21 @@ def log_error(msg):
        Message to print.
     """
 
-    log_msg(log_div)
+    log_div()
     log_msg(''*(80-21-6) + ' ERROR')
     log_msg(msg)
-    log_msg(log_div)
+    log_div()
 
 def print_system_info():
 
-    log_msg('System information\n')
-    log_msg(f'\tlocal time zone: {datetime.utcnow().astimezone().tzinfo}')
-    log_msg(f'\tpython: {sys.version}')
-    log_msg(f'\tnumpy: {np.__version__}')
-    log_msg(f'\tpandas: {pd.__version__}')
-
-    # additional info about numpy libraries
-    if False:
-        from io import StringIO  # only import this when actually needed
-
-        old_stdout = sys.stdout
-        result = StringIO()
-        sys.stdout = result
-        np.show_config()
-        sys.stdout = old_stdout
-        log_msg(result.getvalue())
+    log_msg('System Information:',
+            prepend_timestamp=False, prepend_blank_space=False)
+    log_msg(f'  local time zone: {datetime.utcnow().astimezone().tzinfo}\n'
+            f'  start time: {datetime.now().strftime("%Y-%m-%dT%H:%M:%S")}\n'
+            f'  python: {sys.version}\n'
+            f'  numpy: {np.__version__}\n'
+            f'  pandas: {pd.__version__}\n',
+            prepend_timestamp=False, prepend_blank_space=False)
 
 def create_command(command_list, enforced_python=None):
     """
@@ -398,10 +520,13 @@ class Workflow(object):
         reference_dir=None, working_dir=None, app_dir=None):
 
         log_msg('Inputs provided:')
-        log_msg('\tworkflow input file: {}'.format(input_file))
-        log_msg('\tapplication registry file: {}'.format(app_registry))
-        log_msg('\trun type: {}'.format(run_type))
-        log_msg(log_div)
+        log_msg('workflow input file: {}'.format(input_file),
+            prepend_timestamp=False)
+        log_msg('application registry file: {}'.format(app_registry),
+            prepend_timestamp=False)
+        log_msg('run type: {}'.format(run_type),
+            prepend_timestamp=False)
+        log_div()
 
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL']
 
@@ -452,10 +577,10 @@ class Workflow(object):
         log_msg('Parsing application registry file')
 
         # open the registry file
-        log_msg('\tLoading the json file...')
+        log_msg('Loading the json file...', prepend_timestamp=False)
         with open(self.app_registry_file, 'r') as f:
             app_registry_data = json.load(f)
-        log_msg('\tOK')
+        log_msg('  OK', prepend_timestamp=False)
 
         # initialize the app registry
         self._init_app_registry()
@@ -477,18 +602,20 @@ class Workflow(object):
                     self.app_registry[app_type][app['Name']] = WorkflowApplication(
                          app_type=app_type, app_info=app, api_info=api_info)
 
-        log_msg('\tOK')
+        log_msg('  OK', prepend_timestamp=False)
 
-        log_msg('\tAvailable applications:')
+        log_msg('Available applications:', prepend_timestamp=False)
 
         for app_type, app_list in self.app_registry.items():
             for app_name, app_object in app_list.items():
-                log_msg('\t\t{} : {}'.format(app_type, app_name))
+                log_msg('  {} : {}'.format(app_type, app_name),
+                        prepend_timestamp=False)
 
         #pp.pprint(self.app_registry)
 
-        log_msg('Successfully parsed application registry')
-        log_msg(log_div)
+        log_msg('Successfully parsed application registry',
+                prepend_timestamp=False)
+        log_div()
 
     def _parse_inputs(self):
         """
@@ -499,21 +626,23 @@ class Workflow(object):
         log_msg('Parsing workflow input file')
 
         # open input file
-        log_msg('\tLoading the json file...')
+        log_msg('Loading the json file...', prepend_timestamp=False)
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
-        log_msg('\tOK')
+        log_msg('  OK', prepend_timestamp=False)
 
         # store the specified units (if available)
         if 'units' in input_data:
             self.units = input_data['units']
 
-            log_msg('\tThe following units were specified: ')
+            log_msg('The following units were specified: ',
+                prepend_timestamp=False)
             for key, unit in self.units.items():
-                log_msg('\t\t{}: {}'.format(key, unit))
+                log_msg('  {}: {}'.format(key, unit), prepend_timestamp=False)
         else:
             self.units = None
-            log_msg('\tNo units specified; using Standard units.')
+            log_msg('No units specified; using Standard units.',
+                    prepend_timestamp=False)
 
         # store the specified output types
         self.output_types = input_data.get('outputs', None)
@@ -527,15 +656,16 @@ class Workflow(object):
                 "every_realization": False
             }
 
-            log_msg("\tMissing output type specification, using default "
-                    "settings.")
+            log_msg("Missing output type specification, using default "
+                    "settings.", prepend_timestamp=False)
             self.output_types = default_output_types
 
         else:
-            log_msg("The following output_types were requested: ")
+            log_msg("The following output_types were requested: ",
+                prepend_timestamp=False)
             for out_type, flag in self.output_types.items():
                 if flag:
-                    log_msg(f'\t\t{out_type}')
+                    log_msg(f'  {out_type}', prepend_timestamp=False)
 
         # parse the shared data in the input file
         self.shared_data = {}
@@ -562,8 +692,8 @@ class Workflow(object):
             self.app_dir_remote = Path(input_data['remoteAppDir'])
         else:
             self.app_dir_remote = self.app_dir_local
-            log_msg('\tremoteAppDir not specified. Using the value provided for '
-                'localAppDir instead.')
+            log_msg('remoteAppDir not specified. Using the value provided for '
+                'localAppDir instead.', prepend_timestamp=False)
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
@@ -573,7 +703,8 @@ class Workflow(object):
              'Reference dir'],
             [self.run_dir, self.app_dir_local, self.app_dir_remote,
              self.reference_dir]):
-            log_msg('\t{} : {}'.format(loc_name, loc_val))
+            log_msg('{} : {}'.format(loc_name, loc_val),
+                    prepend_timestamp=False)
 
         if 'Building' in self.app_type_list:
             self.building_file_name = "buildings.json"
@@ -585,6 +716,8 @@ class Workflow(object):
 
 
         # get the list of requested applications
+        log_msg('\nParsing the requested list of applications...',
+                prepend_timestamp=False)
         if 'Applications' in input_data:
             requested_apps = input_data['Applications']
         else:
@@ -637,9 +770,10 @@ class Workflow(object):
                     # only assign the app to the workflow if it has an executable
                     if app_object.rel_path is None:
                         log_msg(
-                            f'\t{requested_apps[app_type]["Application"]} is '
+                            f'  {requested_apps[app_type]["Application"]} is '
                             'a passive application (i.e., it does not invoke '
-                            'any calculation within the workflow.')
+                            'any calculation within the workflow.',
+                            prepend_timestamp=False)
 
                     else:
                         app_object.set_pref(requested_apps[app_type]['ApplicationData'],
@@ -649,7 +783,8 @@ class Workflow(object):
                 else:
                     if app_type in self.optional_apps:
                         self.app_registry.pop(app_type, None)
-                        log_msg(f'\tNo {app_type} among requested applications.')
+                        log_msg(f'  No {app_type} among requested applications.',
+                                prepend_timestamp=False)
                     else:
                         raise WorkFlowInputError(
                             f'Need {app_type} entry in Applications')
@@ -658,12 +793,13 @@ class Workflow(object):
             if (app_type not in self.app_registry) and (app_type in self.app_type_list):
                 self.app_type_list.remove(app_type)
 
-        log_msg('\tRequested workflow:')
+        log_msg('\nRequested workflow:', prepend_timestamp=False)
         for app_type, app_object in self.workflow_apps.items():
-            log_msg('\t\t{} : {}'.format(app_type, app_object.name))
+            log_msg('  {} : {}'.format(app_type, app_object.name),
+                    prepend_timestamp=False)
 
-        log_msg('Successfully parsed workflow inputs')
-        log_msg(log_div)
+        log_msg('\nSuccessfully parsed workflow inputs', prepend_timestamp=False)
+        log_div()
 
     def create_building_files(self):
         """
@@ -712,13 +848,16 @@ class Workflow(object):
 
         command = create_command(bldg_command_list)
 
-        log_msg('Creating initial building files...')
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+        log_msg('Creating initial building files...',
+                prepend_timestamp=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                prepend_blank_space=False)
 
         result, returncode = run_command(command)
 
-        log_msg('\tOutput: ')
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                prepend_blank_space=False)
 
         # Append workflow settings to the BIM file
         log_msg('Appending additional settings to the BIM files...')
@@ -749,8 +888,8 @@ class Workflow(object):
             with open(BIM_file, 'w') as f:
                 json.dump(BIM_data, f, indent=2)
 
-        log_msg('Building files successfully created.')
-        log_msg(log_div)
+        log_msg('Building files successfully created.', prepend_timestamp=False)
+        log_div()
 
         return building_file
 
@@ -774,15 +913,18 @@ class Workflow(object):
 
         command = create_command(reg_event_command_list)
 
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                prepend_blank_space=False)
 
         result, returncode = run_command(command)
 
-        log_msg('\tOutput: ')
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                prepend_blank_space=False)
 
-        log_msg('Regional event successfully simulated.')
-        log_msg(log_div)
+        log_msg('Regional event successfully simulated.',
+                prepend_timestamp=False)
+        log_div()
 
     def perform_regional_mapping(self, building_file):
         """
@@ -817,15 +959,19 @@ class Workflow(object):
 
         command = create_command(reg_mapping_command_list)
 
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                prepend_blank_space=False)
 
         result, returncode = run_command(command)
 
-        log_msg('\tOutput: ')
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+        log_msg('Output: ', prepend_timestamp=False,
+                prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                prepend_blank_space=False)
 
-        log_msg('Regional mapping successfully created.')
-        log_msg(log_div)
+        log_msg('Regional mapping successfully created.',
+                prepend_timestamp=False)
+        log_div()
 
     def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):
         """
@@ -881,8 +1027,9 @@ class Workflow(object):
             if BIM_file != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
 
-        log_msg('Simulation directory successfully initialized.')
-        log_msg(log_div)
+        log_msg('Simulation directory successfully initialized.',
+                prepend_timestamp=False)
+        log_div()
 
     def cleanup_simdir(self, bldg_id):
         """
@@ -906,8 +1053,9 @@ class Workflow(object):
             if 'workdir' in workdir:
                 shutil.rmtree(workdir, ignore_errors=True)
 
-        log_msg('Simulation directory successfully cleaned up.')
-        log_msg(log_div)
+        log_msg('Simulation directory successfully cleaned up.',
+                prepend_timestamp=False)
+        log_div()
 
     def init_workdir(self):
         """
@@ -930,8 +1078,9 @@ class Workflow(object):
                 else:
                     os.remove(dir_or_file)
 
-        log_msg('Working directory successfully initialized.')
-        log_msg(log_div)
+        log_msg('Working directory successfully initialized.',
+                prepend_timestamp=False)
+        log_div()
 
     def cleanup_workdir(self):
         """
@@ -954,7 +1103,7 @@ class Workflow(object):
                 shutil.rmtree(file_or_dir, ignore_errors=True)
 
         log_msg('Working directory successfully cleaned up.')
-        log_msg(log_div)
+        log_div()
 
 
     def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
@@ -999,16 +1148,21 @@ class Workflow(object):
 
             command = create_command(command_list)
 
-            log_msg('\tRunning {} app for RV...'.format(app_type))
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+            log_msg('\nRunning {} app for RV...'.format(app_type),
+                    prepend_timestamp=False)
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
 
             result, returncode = run_command(command)
 
-            log_msg('\tOutput: ')
-            log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+            log_msg('Output: ', prepend_timestamp=False,
+                    prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                    prepend_blank_space=False)
 
-        log_msg('Files with random variables successfully created.')
-        log_msg(log_div)
+        log_msg('Files with random variables successfully created.',
+                prepend_timestamp=False)
+        log_div()
 
 
     def create_driver_file(self, app_sequence, bldg_id=None):
@@ -1051,18 +1205,19 @@ class Workflow(object):
 
                     driver_script += create_command(command_list) + u'\n'
 
-            log_msg('Workflow driver script:')
-            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False)
+            log_msg('Workflow driver script:', prepend_timestamp=False)
+            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False,
+                    prepend_blank_space=False)
 
             with open('driver','w') as f:
                 f.write(driver_script)
 
-            log_msg('Workflow driver file successfully created.')
-            log_msg(log_div)
+            log_msg('Workflow driver file successfully created.',
+                    prepend_timestamp=False)
+            log_div()
         else:
-            log_msg('')
             log_msg('No UQ requested, workflow driver is not needed.')
-            log_msg('')
+            log_div()
 
     def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
@@ -1101,15 +1256,18 @@ class Workflow(object):
 
             command = create_command(command_list)
 
-            log_msg('\tSimulation command:')
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+            log_msg('Simulation command:', prepend_timestamp=False)
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
 
             result, returncode = run_command(command)
 
             if self.run_type in ['run', 'runningLocal']:
 
-                log_msg('\tOutput: ')
-                log_msg('\n{}\n'.format(result), prepend_timestamp=False)
+                log_msg('Output: ', prepend_timestamp=False,
+                        prepend_blank_space=False)
+                log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                        prepend_blank_space=False)
 
                 # create the response.csv file from the dakotaTab.out file
                 os.chdir(self.run_dir)
@@ -1131,18 +1289,18 @@ class Workflow(object):
 
                 dakota_out.to_csv('response.csv')
 
-                log_msg('Response simulation finished successfully.')
+                log_msg('Response simulation finished successfully.',
+                        prepend_timestamp=False)
 
             elif self.run_type in ['set_up', 'runningRemote']:
 
-                log_msg('Response simulation set up successfully')
+                log_msg('Response simulation set up successfully',
+                        prepend_timestamp=False)
 
-            log_msg(log_div)
+            log_div()
 
         else:
-            log_msg('')
             log_msg('No UQ requested, response simulation step is skipped.')
-            log_msg('')
 
             # copy the response.csv from the templatedir to the run dir
             os.chdir(self.run_dir)
@@ -1150,6 +1308,7 @@ class Workflow(object):
                 os.chdir(bldg_id)
             shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
 
+            log_div()
 
     def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None,
         input_file = None, copy_resources=False):
@@ -1204,8 +1363,10 @@ class Workflow(object):
 
             command = create_command(command_list)
 
-            log_msg('\tDamage and loss assessment command:')
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False)
+            log_msg('Damage and loss assessment command:',
+                    prepend_timestamp=False)
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
 
             result, returncode = run_command(command)
 
@@ -1223,13 +1384,12 @@ class Workflow(object):
                 except:
                     pass
 
-            log_msg('Damage and loss assessment finished successfully.')
-            log_msg(log_div)
+            log_msg('Damage and loss assessment finished successfully.',
+                    prepend_timestamp=False)
+            log_div()
 
         else:
-            log_msg('')
             log_msg('No DL requested, loss assessment step is skipped.')
-            log_msg('')
 
             # Only regional simulations send in a bldg id
             if bldg_id != None:
@@ -1272,6 +1432,8 @@ class Workflow(object):
 
                 # save the output
                 df_res.to_csv('EDP.csv')
+
+            log_div()
 
     def aggregate_results(self, bldg_data):
         """
@@ -1342,7 +1504,8 @@ class Workflow(object):
                                         realizations_DL[col].append(vals)
 
                                 except:
-                                    log_msg(f'Error reading DL realization data for building {bldg_id}')
+                                    log_msg(f'Error reading DL realization data for building {bldg_id}',
+                                            prepend_timestamp=False)
 
                         for d_type in realizations_EDP.keys():
                             d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
@@ -1375,7 +1538,8 @@ class Workflow(object):
                             out_list.append(df_i)
 
                         except:
-                            log_msg(f'Error reading {out_type} data for building {bldg_id}')
+                            log_msg(f'Error reading {out_type} data for building {bldg_id}',
+                                    prepend_timestamp=False)
 
                     #out_agg = pd.concat(out_list, axis=0, sort=False)
                     out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
@@ -1384,5 +1548,6 @@ class Workflow(object):
                     # save the collected DataFrames as csv files
                     out_agg.to_csv(f'{out_type}_{min_id}-{max_id}.csv')
 
-        log_msg('Damage and loss results collected successfully.')
-        log_msg(log_div)
+        log_msg('Damage and loss results collected successfully.',
+                prepend_timestamp=False)
+        log_div()
