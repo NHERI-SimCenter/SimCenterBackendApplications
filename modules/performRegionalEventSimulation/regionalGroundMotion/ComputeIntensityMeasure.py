@@ -76,11 +76,13 @@ import numpy as np
 from numpy.lib.utils import source
 import pandas as pd
 from gmpe import CorrelationModel, SignificantDurationModel
-from FetchOpenSHA import *
 from tqdm import tqdm
 import time
 from pathlib import Path
 import copy
+import socket
+if 'stampede2' not in socket.gethostname():
+	from FetchOpenSHA import *
 
 class IM_Calculator:
 

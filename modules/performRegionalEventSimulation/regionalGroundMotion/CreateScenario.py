@@ -44,7 +44,9 @@ import json
 import random
 import numpy as np
 import pandas as pd
-from FetchOpenSHA import *
+import socket
+if 'stampede2' not in socket.gethostname():
+	from FetchOpenSHA import *
 
 
 def create_earthquake_scenarios(scenario_info, stations, dir_info):

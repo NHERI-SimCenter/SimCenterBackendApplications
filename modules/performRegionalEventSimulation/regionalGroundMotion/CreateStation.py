@@ -41,7 +41,9 @@
 import json, copy
 import numpy as np
 import pandas as pd
-from FetchOpenSHA import get_site_vs30_from_opensha
+import socket
+if 'stampede2' not in socket.gethostname():
+    from FetchOpenSHA import get_site_vs30_from_opensha
 
 
 def get_label(options, labels, label_name):
