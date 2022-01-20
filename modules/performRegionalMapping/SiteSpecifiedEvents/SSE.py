@@ -144,7 +144,7 @@ def create_event(building_file, event_grid_file):
             elif event_type == 'intensityMeasure':
 
                 # save the collection file name and the IM row id
-                event_list.append(grid_df.iloc[idx]['GP_file']+f'x{idx}')
+                event_list.append(grid_df.iloc[idx]['GP_file']+f'x{0}')
 
                 # IM collections are not scaled
                 scale_list.append(1.0)
