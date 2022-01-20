@@ -62,20 +62,27 @@ def main(run_type, input_file, app_registry,
     if not os.path.exists(working_dir):
         os.mkdir(working_dir)
 
-    # initialize the log file
+    # initialize log file
     if log_file == 'log.txt':
-        whale.log_file = working_dir + '/log.txt'
+        log_file_path = working_dir + '/log.txt'
     else:
-        whale.log_file = log_file
-    with open(whale.log_file, 'w') as f:
-        f.write('rWHALE workflow\n')
+        log_file_path = log_file
+
+    whale.set_options({
+        "LogFile": log_file_path,
+        "LogShowMS": False,
+        "PrintLog": True
+        })
+    log_msg('\nrWHALE workflow\n',
+            prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
 
     # echo the inputs
-    log_msg(log_div)
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
     log_msg('Started running the workflow script')
-    log_msg(log_div)
+    log_div()
 
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
@@ -174,7 +181,11 @@ def main(run_type, input_file, app_registry,
         bldg_data = json.load(f)
 
     for bldg in bldg_data: #[:1]:
-        log_msg(bldg)
+        log_msg('', prepend_timestamp=False)
+        log_div(prepend_blank_space=False)
+        log_div(prepend_blank_space=False)
+        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
+        log_div()
 
         # initialize the simulation directory
         WF.init_simdir(bldg['id'], bldg['file'])
@@ -207,6 +218,10 @@ def main(run_type, input_file, app_registry,
     if force_cleanup:
         # clean up intermediate files from the working directory
         WF.cleanup_workdir()
+
+    log_msg('Workflow completed.')
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
 
 if __name__ == '__main__':
 
