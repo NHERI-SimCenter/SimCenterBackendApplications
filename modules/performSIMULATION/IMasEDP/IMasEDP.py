@@ -49,7 +49,12 @@ def write_RV(EVENT_input_path):
     # open the event file and get the list of events
     with open(EVENT_input_path, 'r') as f:
         EVENT_in = json.load(f)
-    event_list = EVENT_in['randomVariables'][0]['elements']
+
+    # if there is a list of possible events, load all of them
+    if len(EVENT_in['randomVariables'])>0:
+        event_list = EVENT_in['randomVariables'][0]['elements']
+    else:
+        event_list = [EVENT_in['Events'][0]['event_id'],]
 
     evt = EVENT_in['Events'][0]
     data_dir = Path(evt['data_dir'])
