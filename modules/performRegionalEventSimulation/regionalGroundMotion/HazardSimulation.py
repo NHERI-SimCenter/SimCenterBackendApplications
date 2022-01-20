@@ -317,11 +317,5 @@ if __name__ == '__main__':
         else:
             print('HazardSimulation: ground motion selection is not requested.')
 
-    # Final process list
-    proc_list_final = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
-    # Closing processes created by this run
-    for i in proc_list_final:
-        if i not in proc_list_init:
-            os.kill(i['pid'],9)
     # Closing the current process
     sys.exit(0)
