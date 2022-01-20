@@ -426,6 +426,7 @@ class WorkflowApplication(object):
 
         self.inputs = api_info['Inputs']
         self.outputs = api_info['Outputs']
+        self.defaults = api_info['DefaultValues']
 
     def set_pref(self, preferences, ref_path):
         """
@@ -472,7 +473,21 @@ class WorkflowApplication(object):
 
         for in_arg in self.inputs:
             arg_list.append(u'--{}'.format(in_arg['id']))
-            if in_arg['id'] in self.pref.keys():
+            # Default values are protected, they cannot be overwritten simply
+            # by providing application specific inputs in the config file
+            if in_arg['type'] == 'workflowDefault':
+                arg_list.append(u'{}'.format(self.defaults[in_arg['id']]))
+
+                # If the user also provided an input, let them know that their
+                # input is invalid
+                if in_arg['id'] in self.pref.keys():
+                    log_msg('\nWARNING: Application specific parameters cannot '
+                            'overwrite default workflow\nparameters. See the '
+                            'documentation on how to edit workflowDefault '
+                            'inputs.\n', prepend_timestamp=False,
+                            prepend_blank_space=False)
+
+            elif in_arg['id'] in self.pref.keys():
                 arg_list.append(u'{}'.format(self.pref[in_arg['id']]))
             else:
                 arg_list.append(u'{}'.format(in_arg['default']))
@@ -481,7 +496,23 @@ class WorkflowApplication(object):
             out_id = u'--{}'.format(out_arg['id'])
             if out_id not in arg_list:
                 arg_list.append(out_id)
-                if out_arg['id'] in self.pref.keys():
+
+                # Default values are protected, they cannot be overwritten simply
+                # by providing application specific inputs in the config file
+                if out_arg['type'] == 'workflowDefault':
+                    arg_list.append(u'{}'.format(self.defaults[out_arg['id']]))
+
+                    # If the user also provided an input, let them know that
+                    # their input is invalid
+                    if out_arg['id'] in self.pref.keys():
+                        log_msg('\nWARNING: Application specific parameters '
+                                'cannot overwrite default workflow\nparameters. '
+                                'See the documentation on how to edit '
+                                'workflowDefault inputs.\n',
+                                prepend_timestamp=False,
+                                prepend_blank_space=False)
+
+                elif out_arg['id'] in self.pref.keys():
                     arg_list.append(u'{}'.format(self.pref[out_arg['id']]))
                 else:
                     arg_list.append(u'{}'.format(out_arg['default']))
@@ -585,7 +616,13 @@ class Workflow(object):
         # initialize the app registry
         self._init_app_registry()
 
-        log_msg('\tCollecting application data...')
+        log_msg('Loading default values...', prepend_timestamp=False)
+
+        self.default_values = app_registry_data.get('DefaultValues', None)
+
+        log_msg('  OK', prepend_timestamp=False)
+
+        log_msg('Collecting application data...', prepend_timestamp=False)
         # for each application type
         for app_type in sorted(self.app_registry.keys()):
 
@@ -596,6 +633,10 @@ class Workflow(object):
                 # get the list of available applications
                 available_apps = app_registry_data[app_type_long]['Applications']
                 api_info = app_registry_data[app_type_long]['API']
+
+                # add the default values to the API info
+                if self.default_values is not None:
+                    api_info.update({'DefaultValues': self.default_values})
 
                 # and store their name and executable location
                 for app in available_apps:
@@ -1135,11 +1176,11 @@ class Workflow(object):
 
             workflow_app = self.workflow_apps[app_type]
 
-            # TODO: not elegant code, fix later
             if BIM_file is not None:
-                for input_var in workflow_app.inputs:
-                    if input_var['id'] == 'filenameBIM':
-                        input_var['default'] = BIM_file
+                workflow_app.defaults['filenameBIM'] = BIM_file
+                #for input_var in workflow_app.inputs:
+                #    if input_var['id'] == 'filenameBIM':
+                #        input_var['default'] = BIM_file
 
             command_list = workflow_app.get_command_list(
                 app_path = self.app_dir_local)
@@ -1241,11 +1282,11 @@ class Workflow(object):
 
             workflow_app = self.workflow_apps['UQ']
 
-            # TODO: not elegant code, fix later
             if BIM_file is not None:
-                for input_var in workflow_app.inputs:
-                    if input_var['id'] == 'filenameBIM':
-                        input_var['default'] = BIM_file
+                workflow_app.defaults['filenameBIM'] = BIM_file
+                #for input_var in workflow_app.inputs:
+                #    if input_var['id'] == 'filenameBIM':
+                #        input_var['default'] = BIM_file
 
             command_list = workflow_app.get_command_list(
                 app_path=self.app_dir_local)
@@ -1348,11 +1389,11 @@ class Workflow(object):
 
             workflow_app = self.workflow_apps['DL']
 
-            # TODO: not elegant code, fix later
             if BIM_file is not None:
-                for input_var in workflow_app.inputs:
-                    if input_var['id'] == 'filenameDL':
-                        input_var['default'] = BIM_file
+                workflow_app.defaults['filenameDL'] = BIM_file
+                #for input_var in workflow_app.inputs:
+                #    if input_var['id'] == 'filenameDL':
+                #        input_var['default'] = BIM_file
 
             command_list = self.workflow_apps['DL'].get_command_list(
                 app_path=self.app_dir_local)

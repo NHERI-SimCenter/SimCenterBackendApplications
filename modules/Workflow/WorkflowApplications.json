@@ -1,4 +1,13 @@
 {
+  "DefaultValues": {
+    "filenameBIM": "BIM.json",
+    "filenameEVENT": "EVENT.json",
+    "filenameSAM": "SAM.json",
+    "filenameEDP": "EDP.json",
+    "filenameSIM": "SIM.json",
+    "driverFile": "driver",
+    "filenameDL": "BIM.json"
+  },
   "BuildingApplications": {
     "API": {
       "Inputs": [
@@ -20,26 +29,22 @@
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of building to obtain BIM for",
-            "default": 1
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of building to obtain BIM for",
-            "default": 10
+            "description": "max id of building to obtain BIM for"
           },
           {
             "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to buildings file",
-            "default": ""
+            "description": "path to buildings file"
           },
           {
             "id": "config",
             "type": "path",
-            "description": "path to buildings config file",
-            "default": ""
+            "description": "path to buildings config file"
           }
         ]
       },
@@ -50,26 +55,22 @@
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of building to obtain BIM for",
-            "default": 1
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of building to obtain BIM for",
-            "default": 10
+            "description": "max id of building to obtain BIM for"
           },
           {
             "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to buildings database file",
-            "default": ""
+            "description": "path to buildings database file"
           },
           {
             "id": "configFile",
             "type": "path",
-            "description": "path to workflow config file",
-            "default": ""
+            "description": "path to workflow config file"
           }
         ]
       },
@@ -80,26 +81,22 @@
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of building to obtain BIM for",
-            "default": 1
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of building to obtain BIM for",
-            "default": 10
+            "description": "max id of building to obtain BIM for"
           },
           {
             "id": "filter",
             "type": "string",
-            "description": "string with the building ids to run",
-            "default": ""
+            "description": "string with the building ids to run"
           },
           {
             "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to buildings database file",
-            "default": ""
+            "description": "path to buildings database file"
           }
         ]
       }
@@ -113,7 +110,7 @@
           "type": "path",
           "description": "Name of JSON input file",
           "default": "inputRWHALE.json"
-        }	    
+        }
       ],
       "Outputs": [
       ]
@@ -146,13 +143,13 @@
         "ExecutablePath": null,
         "ApplicationSpecificInputs": [
         ]
-      },	
+      },
       {
         "Name": "UserInputShakeMap",
         "ExecutablePath": null,
         "ApplicationSpecificInputs": [
         ]
-      },	
+      },
       {
         "Name": "UserInputHurricane",
         "ExecutablePath": null,
@@ -164,7 +161,7 @@
         "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
         "ApplicationSpecificInputs": [
         ]
-      }	
+      }
     ]
   },
   "RegionalMappingApplications": {
@@ -219,17 +216,15 @@
       "Inputs": [
       {
           "id": "filenameBIM",
-          "type": "string",
-          "description": "name of bim file",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of bim file"
       }
       ],
       "Outputs": [
       {
           "id": "filenameEVENT",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       }
       ]
     },
@@ -402,23 +397,20 @@
       "Inputs": [
       {
           "id": "filenameBIM",
-          "type": "string",
-          "description": "name of bim file",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of bim file"
       },
       {
           "id": "filenameEVENT",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       }
       ],
       "Outputs": [
       {
           "id": "filenameSAM",
-          "type": "string",
-          "description": "name of file containing the outputted SAM",
-          "default": "SAM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the outputted SAM"
       }
       ]
     },
@@ -508,29 +500,25 @@
       "Inputs": [
       {
           "id": "filenameBIM",
-          "type": "string",
-          "description": "name of bim file",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of bim file"
       },
       {
           "id": "filenameEVENT",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       },
       {
           "id": "filenameSAM",
-          "type": "string",
-          "description": "name of file containing the SAM",
-          "default": "SAM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the SAM"
       }
       ],
       "Outputs": [
       {
           "id": "filenameEDP",
-          "type": "string",
-	  "description": "name of file containing the EDP to be determined from the analysis",
-          "default": "EDP.json"
+          "type": "workflowDefault",
+	  "description": "name of file containing the EDP to be determined from the analysis"
       }
       ]
     },
@@ -559,7 +547,7 @@
         "Name": "DummyEDP",
         "ExecutablePath": "applications/createEDP/dummyEDP/DummyEDP",
         "ApplicationSpecificInputs": []
-      },	
+      },
       {
         "Name": "StandardGMT_EDP",
         "ExecutablePath": "applications/createEDP/gmtEDP/StandardGMT_EDP",
@@ -593,35 +581,30 @@
       "Inputs": [
       {
           "id": "filenameBIM",
-          "type": "string",
-          "description": "name of file containing the BIM",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the BIM"
       },
       {
           "id": "filenameSAM",
-          "type": "string",
-          "description": "name of file containing the SAM",
-          "default": "SAM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the SAM"
       },
       {
           "id": "filenameEVENT",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       }
       ],
       "Outputs": [
       {
           "id": "filenameEDP",
-          "type": "string",
-          "description": "name of EDP file to be added to",
-          "default": "EDP.json"
+          "type": "workflowDefault",
+          "description": "name of EDP file to be added to"
       },
       {
           "id": "filenameSIM",
-          "type": "string",
-          "description": "name of SIM file to be added to",
-          "default": "SIM.json"
+          "type": "workflowDefault",
+          "description": "name of SIM file to be added to"
       }
       ]
     },
@@ -653,47 +636,40 @@
       "Inputs": [
       {
           "id": "filenameBIM",
-          "type": "string",
-          "description": "name of file containing the BIM",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the BIM"
       },
       {
           "id": "filenameSAM",
-          "type": "string",
-          "description": "name of file containing the SAM",
-          "default": "SAM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the SAM"
       },
       {
           "id": "filenameEVENT",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EVENT.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       },
       {
           "id": "filenameEDP",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "EDP.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       },
       {
           "id": "filenameSIM",
-          "type": "string",
-          "description": "name of file containing the event data",
-          "default": "SIM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the event data"
       },
       {
           "id": "driverFile",
-          "type": "string",
-          "description": "name of file containing the simulation driver",
-          "default": "driver"
+          "type": "workflowDefault",
+          "description": "name of file containing the simulation driver"
       }
       ],
       "Outputs": [
       {
           "id": "filenameEDP",
-          "type": "string",
-          "description": "name of EDP file to be added to",
-          "default": "EDP.json"
+          "type": "workflowDefault",
+          "description": "name of EDP file to be added to"
       }
       ]
     },
@@ -783,9 +759,8 @@
       "Inputs": [
       {
           "id": "filenameDL",
-          "type": "string",
-          "description": "name of file containing the DL model information",
-          "default": "BIM.json"
+          "type": "workflowDefault",
+          "description": "name of file containing the DL model information"
       },
       {
           "id": "demandFile",
