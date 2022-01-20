@@ -151,7 +151,7 @@ def main(threads = 1):
             # save the results
             log_msg('Saving results')
             df_all.index = df_all.index.astype(np.int32)
-            df_all.to_hdf('{}.hdf'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:snappy')
+            df_all.to_hdf('{}.hdf'.format(res_type), 'data', mode='w', format='fixed', complevel=1, complib='blosc:blosclz')
             #df_all.to_csv('{}.csv'.format(res_type))
 
         else:
@@ -189,9 +189,9 @@ def main(threads = 1):
             df_all.sort_index(axis=0, inplace=True)
 
             try:
-                df_all.astype(np.float16).to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+                df_all.astype(np.float32).to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:blosclz')
             except:
-                df_all.to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:snappy')
+                df_all.to_hdf('realizations.hdf', key, mode='a', format='fixed', complevel=1, complib='blosc:blosclz')
 
             log_msg('\t\tResults saved for {key}.'.format(key=key))
 
