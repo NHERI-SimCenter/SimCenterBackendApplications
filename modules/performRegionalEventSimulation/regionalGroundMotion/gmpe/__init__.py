@@ -38,4 +38,4 @@
 # Kuanshi Zhong
 #
 
-__all__ = ['CorrelationModel','SignificantDurationModel']
+__all__ = ["CorrelationModel"]

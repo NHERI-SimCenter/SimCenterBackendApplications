@@ -52,7 +52,7 @@ from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
-    # initialize the log file
+    # update the runDir, if needed
     with open(input_file, 'r') as f:
         inputs = json.load(f)
     runDir = inputs['runDir']
@@ -62,16 +62,22 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     else:
         runDir = inputs['runDir']
 
-    whale.log_file = runDir + '/log.txt'
-    with open(whale.log_file, 'w') as f:
-        f.write('sWHALE workflow\n')
+    # initialize log file
+    whale.set_options({
+        "LogFile": runDir + '/log.txt',
+        "LogShowMS": False,
+        "PrintLog": True
+        })
+    log_msg('\nrWHALE workflow\n',
+            prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
 
     # echo the inputs
-    log_msg(log_div)
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
     log_msg('Started running the workflow script')
-    log_msg(log_div)
+    log_div()
 
     # If there is an external EDP file provided, change the run_type to loss_only
     try:
@@ -105,6 +111,10 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
         # run dl engine to estimate losses
         WF.estimate_losses(input_file = input_file)
+
+    log_msg('Workflow completed.')
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
 
 if __name__ == '__main__':
 

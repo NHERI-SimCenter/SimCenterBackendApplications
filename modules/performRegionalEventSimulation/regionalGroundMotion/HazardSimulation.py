@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022 Leland Stanford Junior University
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2018 Leland Stanford Junior University
+# Copyright (c) 2018 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications
 #
@@ -38,101 +38,32 @@
 # Kuanshi Zhong
 #
 
-import os, shutil
+import os
 import sys
 import subprocess
 import argparse, posixpath, json
 import numpy as np
 import pandas as pd
 import time
-import importlib
 
 R2D = True
 
 if __name__ == '__main__':
 
-    # parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--hazard_config')
-    parser.add_argument('--filter', default=None)
-    parser.add_argument('-d', '--referenceDir', default=None)
-    parser.add_argument('-w', '--workDir', default=None)
-    parser.add_argument('--hcid', default=None)
-    args = parser.parse_args()
-
-    # read the hazard configuration file
-    with open(args.hazard_config) as f:
-        hazard_info = json.load(f)
-
-    # directory (back compatibility here)
-    dir_info = hazard_info['Directory']
-    work_dir = dir_info['Work']
-    input_dir = dir_info['Input']
-    output_dir = dir_info['Output']
-    if args.referenceDir:
-        input_dir = args.referenceDir
-        dir_info['Input'] = input_dir
-    if args.workDir:
-        output_dir = args.workDir
-        dir_info['Output'] = output_dir
-        dir_info['Work'] = output_dir
-    try:
-        os.mkdir(f"{output_dir}")
-    except:
-        print('HazardSimulation: output folder already exists.')
-
-    # site filter (if explicitly defined)
-    minID = None
-    maxID = None
-    if args.filter:
-        tmp = [int(x) for x in args.filter.split('-')]
-        if len(tmp) == 1:
-            minID = tmp[0]
-            maxID = minID
-        else:
-            [minID, maxID] = tmp
-
-    # parse job type for set up environment and constants
-    opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['PointSource', 'ERF']
-    opensha_vs30_flag = hazard_info['Site']['Vs30']['Type'] == "CGS/Wills Vs30 (Wills et al., 2015)"
-    oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
-
-    # dependencies
+    # local dependencies
     if R2D:
-        packages = ['tqdm', 'psutil']
+        packages = ['JPype1', 'tqdm', 'psutil']
     else:
-        packages = ['selenium', 'tqdm', 'psutil']
+        packages = ['JPype1', 'selenium', 'tqdm', 'psutil']
     for p in packages:
-        if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
-
-    # set up environment
-    import socket
-    if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "JPype1"])
-        import jpype
-        from jpype import imports
-        from jpype.types import *
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM("-Xmx8G", convertStrings=False)
-    if oq_flag:
-        # clear up old db.sqlite3 if any
-        if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
-            new_db_sqlite3 = True
-            try:
-                os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
-            except:
-                new_db_sqlite3 = False
-        # data dir
-        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
-        print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
-        if os.path.exists(os.environ.get('OQ_DATADIR')):
-            print('HazardSimulation: local OQ folder already exists, overwiting it now...')
-            shutil.rmtree(os.environ.get('OQ_DATADIR'))
-        os.makedirs(f"{os.environ.get('OQ_DATADIR')}")    
+        subprocess.check_call([sys.executable, "-m", "pip", "install", p])
     
-    # import modules
+    import jpype
+    from jpype import imports
+    from jpype.types import *
+    jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+    jpype.startJVM("-Xmx8G", convertStrings=False)
+    import psutil
     from CreateStation import *
     from CreateScenario import *
     from ComputeIntensityMeasure import *
@@ -140,14 +71,30 @@ if __name__ == '__main__':
 
     # untar site databases
     site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+    import subprocess
     print('HazardSimulation: Extracting site databases.')
     cwd = os.path.dirname(os.path.realpath(__file__))
     for cur_database in site_database:
         subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
 
     # Initial process list
-    import psutil
     proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--hazard_config')
+    args = parser.parse_args()
+    with open(args.hazard_config) as f:
+        hazard_info = json.load(f)
+
+    # Directory
+    dir_info = hazard_info['Directory']
+    work_dir = dir_info['Work']
+    input_dir = dir_info['Input']
+    output_dir = dir_info['Output']
+    try:
+        os.mkdir(f"{output_dir}")
+    except:
+        print('HazardSimulation: output folder already exists.')
 
     # Sites and stations
     print('HazardSimulation: creating stations.')
@@ -159,13 +106,6 @@ if __name__ == '__main__':
             output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
-        # forward compatibility
-        if minID:
-            min_ID = minID
-            site_info['min_ID'] = minID
-        if maxID:
-            max_ID = maxID
-            site_info['max_ID'] = maxID
         # Creating stations from the csv input file
         z1_tag = 0
         z25_tag = 0
@@ -195,7 +135,7 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Creating earthquake scenarios
         if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
-            scenarios = create_earthquake_scenarios(scenario_info, stations, dir_info)
+            scenarios = create_earthquake_scenarios(scenario_info, stations)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -210,14 +150,15 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
-        if opensha_flag:
-            im_raw = compute_im(scenarios, stations['Stations'],
-                                event_info['GMPE'], event_info['IntensityMeasure'])
-        elif oq_flag:           
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
+                                               event_info['GMPE'],
+                                               event_info['IntensityMeasure'])
+        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:           
             # import FetchOpenQuake
             from FetchOpenQuake import *
             # Preparing config ini for OpenQuake
-            filePath_ini, oq_ver_loaded, event_info = openquake_config(site_info, scenario_info, event_info, dir_info)
+            filePath_ini, oq_ver_loaded = openquake_config(site_info, scenario_info, event_info, dir_info)
             if not filePath_ini:
                 # Error in ini file
                 sys.exit('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
@@ -234,44 +175,48 @@ if __name__ == '__main__':
                 else:
                     print('HazardSimulation: OpenQuake Classical PSHA completed.')
                 if scenario_info['EqRupture'].get('UHS', False):
-                    ln_im_mr, mag_maf, im_list = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
+                    ln_psa_mr, mag_maf = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
                 else:
-                    ln_im_mr = []
+                    ln_psa_mr = []
                     mag_maf = []
-                    im_list = []
-                #stn_new = stations['Stations']
+                stn_new = stations['Stations']
 
             elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
                 # Creating and conducting OpenQuake calculations
                 oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=dir_info)
                 oq_calc.run_calc()
-                im_raw = [oq_calc.eval_calc()]
-                #stn_new = stations['Stations']
+                psa_raw = [oq_calc.eval_calc()]
+                stn_new = stations['Stations']
                 print('HazardSimulation: OpenQuake Scenario calculation completed.')
 
             else:                
                 sys.exit('HazardSimulation: OpenQuakeClassicalPSHA, OpenQuakeUserConfig and OpenQuakeScenario are supported.')
             
         # Updating station information
-        #stations['Stations'] = stn_new
+        stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
-        #print(im_raw)
-        if not scenario_info['EqRupture']['Type'] in ['OpenQuakeClassicalPSHA','OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
+        #print(psa_raw)
+        if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
             # Computing correlated IMs
-            ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations['Stations'], im_raw,
-                                                                event_info['NumberPerSite'],
-                                                                event_info['CorrelationModel'],
-                                                                event_info['IntensityMeasure'])
+            ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
+                                                        event_info['NumberPerSite'],
+                                                        event_info['CorrelationModel'],
+                                                        event_info['IntensityMeasure'])
             print('HazardSimulation: correlated response spectra computed.')
-        if event_info['SaveIM'] and ln_im_mr:
+        if event_info['SaveIM'] and ln_psa_mr:
             print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations['Stations'], im_list,
-                          ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1)
+            _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
+                          ln_psa_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
         else:
             print('HazardSimulation: IM is not required to saved or no IM is found.')
-        #print(np.exp(ln_im_mr[0][0, :, 1]))
-        #print(np.exp(ln_im_mr[0][1, :, 1]))
+        #print(np.exp(ln_psa_mr[0][0, :, 1]))
+        #print(np.exp(ln_psa_mr[0][1, :, 1]))
+    elif scenario_info['Type'] == 'Wind':
+        if scenario_info['Generator'] == 'Simulation':
+            storm_dir = simulate_storm(scenario_info['AppDir'], input_dir, output_dir)
+        else:
+            print('HazardSimulation: currently supporting Wind-Simulation')
     else:
         # TODO: extending this to other hazards
         print('HazardSimulation currently only supports earthquake simulations.')
@@ -279,13 +224,17 @@ if __name__ == '__main__':
     # Selecting ground motion records
     if scenario_info['Type'] == 'Earthquake':
         # Selecting records
+        target_T = event_info['IntensityMeasure']['Periods']
+        if event_info['IntensityMeasure']['Type'] =='PGA':
+            # PGA only
+            target_T = [0.0]
         data_source = event_info.get('Database',0)
         if data_source:
             print('HazardSimulation: selecting ground motion records.')
             sf_max = event_info['ScalingFactor']['Maximum']
             sf_min = event_info['ScalingFactor']['Minimum']
             start_time = time.time()
-            gm_id, gm_file = select_ground_motion(im_list, ln_im_mr, data_source,
+            gm_id, gm_file = select_ground_motion(target_T, ln_psa_mr, data_source,
                                                   sf_max, sf_min, output_dir, 'EventGrid.csv',
                                                   stations['Stations'])
             print('HazardSimulation: ground motion records selected  ({0} s).'.format(time.time() - start_time))
@@ -300,7 +249,7 @@ if __name__ == '__main__':
             # Downloading records
             user_name = event_info.get('UserName', None)
             user_password = event_info.get('UserPassword', None)
-            if (user_name is not None) and (user_password is not None) and (not R2D):
+            if (user_name is not None) and (user_password is not None) and (not RDT):
                 print('HazardSimulation: downloading ground motion records.')
                 raw_dir = download_ground_motion(gm_id, user_name,
                                                  user_password, output_dir)
