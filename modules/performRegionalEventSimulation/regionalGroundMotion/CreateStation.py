@@ -41,7 +41,9 @@
 import json, copy
 import numpy as np
 import pandas as pd
-from FetchOpenSHA import get_site_vs30_from_opensha
+import socket
+if 'stampede2' not in socket.gethostname():
+    from FetchOpenSHA import get_site_vs30_from_opensha
 
 
 def get_label(options, labels, label_name):
@@ -163,16 +165,13 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     if zTR_label in selected_stn.keys():
         tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(zTR_label)].values.tolist()
         nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
-    else:
-        selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]
-        if len(tmp):
-            nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
-        else:
-            nan_loc = []
         if nan_loc:
             print('CreateStation: Interpolating global depth to rock map for defined stations.')
             selected_stn.loc[nan_loc, zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
                                                                                      selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())]
+    else:
+        print('CreateStation: Interpolating global depth to rock map for defined stations.')
+        selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]  
 
     for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object

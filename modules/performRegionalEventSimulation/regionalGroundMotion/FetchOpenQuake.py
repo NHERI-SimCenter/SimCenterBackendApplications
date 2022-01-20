@@ -50,6 +50,7 @@ import stat
 import subprocess
 import time
 import importlib
+import socket
 
 install_requires = []
 default_oq_version = '3.12.0'
@@ -75,7 +76,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                           'calculation_mode': 'classical',
                           'random_seed': scen_info['EqRupture'].get('Seed', 24)}
         cfg['logic_tree'] = {'number_of_logic_tree_samples': 0} # 0 here indicates full logic tree realization
-    elif scen_info['EqRupture']['Type'] == 'OpenQuakeUserConfig':
+    elif scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
         filename_ini = scen_info['EqRupture'].get('ConfigFile', None)
         if filename_ini is None:
             print('FetchOpenQuake: please specify Scenario[\'EqRupture\'][\'ConfigFile\'].')
@@ -89,11 +90,11 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
         print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig.')
         return 0
 
-    if scen_info['EqRupture']['Type'] == 'OpenQuakeUserConfig':
+    if scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
         # sites
         tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
         tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
-        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_output, 'sites_oq.csv'), header=False, index=False)
+        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
         if cfg.has_section('geometry'):
             cfg['geometry']['sites_csv'] = 'sites_oq.csv'
         else:
@@ -123,8 +124,8 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                 pass
         event_info['IntensityMeasure']['Type'] = im_type
         event_info['IntensityMeasure']['Periods'] = tmp_T
-        cfg['calculation']['source_model_logic_tree_file'] = os.path.join('../../',cfg['calculation'].get('source_model_logic_tree_file'))
-        cfg['calculation']['gsim_logic_tree_file'] = os.path.join('../../',cfg['calculation'].get('gsim_logic_tree_file'))
+        cfg['calculation']['source_model_logic_tree_file'] = os.path.join(cfg['calculation'].get('source_model_logic_tree_file'))
+        cfg['calculation']['gsim_logic_tree_file'] = os.path.join(cfg['calculation'].get('gsim_logic_tree_file'))
     else:
 
         # sites
@@ -255,7 +256,10 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
 
     # openquake module
     oq_ver_loaded = None
-    from importlib.metadata import version
+    try:
+        from importlib_metadata import version
+    except:
+        from importlib.metadata import version
     if scen_info['EqRupture'].get('OQLocal',None):
         # using user-specific local OQ
         # first to validate the path
@@ -320,6 +324,56 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
     # return
     return filename_ini, oq_ver_loaded, event_info
 
+# this function writes a openquake.cfg for setting global configurations
+# tested while not used so far but might be useful in future if moving to 
+# other os... 
+"""
+def get_cfg(job_ini):
+    # writing an openquake.cfg
+    import configparser
+    cfg = configparser.ConfigParser()
+    # distribution
+    cfg['distribution'] = {"oq_distribute": "processpool",
+                           "serialize_jobs": 1,
+                           "log_level": "info"}
+    # memory
+    cfg['memory'] = {"limit": "1_000_000_000_000",
+                     "soft_mem_limit": 90,
+                     "hard_mem_limit": 99}
+    # amqp
+    cfg['amqp'] = {"host": "localhost",
+                   "port": 5672,
+                   "user": "openquake",
+                   "password": "openquake",
+                   "vhost": "openquake",
+                   "celery_queue": "celery"}
+    # dbserver
+    cfg['dbserver'] = {"multi_user": "false",
+                       "file": os.path.join(os.environ.get('OQ_DATADIR'),'db.sqlit3').replace('\\','/'),
+                       "listen": "127.0.0.1",
+                       "host": "localhost",
+                       "port": 1908,
+                       "receiver_ports": "1912-1920",
+                       "authkey": "changeme"}
+    # webapi
+    cfg['webapi'] = {"server": "http://localhost:8800",
+                     "username": "",
+                     "password": ""}
+    # zworkers
+    cfg['zworkers'] = {"host_cores": "127.0.0.1 -1",
+                       "ctrl_port": 1909,
+                       "remote_python": "",
+                       "remote_user": ""}
+    # directory
+    cfg['directory'] = {"shared_dir": "",
+                        "custom_tmp": ""}
+    # path
+    oq_cfg = os.path.join(os.path.dirname(job_ini),'openquake.cfg')
+    with open(oq_cfg, 'w') as configfile:
+        cfg.write(configfile)
+    # return
+    return oq_cfg
+"""
 
 def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version, dir_info=None):
     """
@@ -339,20 +393,51 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
             # reloading 
             from openquake.commands.run import run
-            from openquake.baselib import datastore
             from openquake.calculators.export.hazard import export_realizations
 
-            # initialize database db.sqlite3 (version-sensitive data log)
-            path_sqlite3 = os.path.join(datastore.get_datadir(),'db.sqlite3')
-            if os.path.isfile(path_sqlite3):
-                # removing the previous data log
+            #run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with 
+            # the pylauncher on stampede2 for parallel runs...  
+            from openquake.baselib import datastore, performance, general
+            from openquake.server import dbserver
+            from openquake.calculators import base
+            from openquake.commonlib import readinput, logs
+            dbserver.ensure_on()
+            global calc_path
+            loglevel = 'info'
+            params = {}
+            reuse_input = False
+            concurrent_tasks = None
+            pdb = None
+            hc_id = None
+            for i in range(1000):
                 try:
-                    shutil.rmtree(datastore.get_datadir())
+                    calc_id = logs.init('nojob', getattr(logging, loglevel.upper()))
                 except:
-                    print('FetchOpenQuake: cannot remove {}'.format(datastore.get_datadir()))
-                    return 1
+                    time.sleep(0.01)
+                    continue
+                else:
+                    print('FetchOpenQuake: log created.')
+                    break
+            # disable gzip_input
+            base.BaseCalculator.gzip_inputs = lambda self: None
+            with performance.Monitor('total runtime', measuremem=True) as monitor:
+                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):
+                    os.environ['OQ_DISTRIBUTE'] = 'processpool'
+                oqparam = readinput.get_oqparam(job_ini, hc_id=hc_id)
+                if hc_id and hc_id < 0:  # interpret negative calculation ids
+                    calc_ids = datastore.get_calc_ids()
+                    try:
+                        hc_id = calc_ids[hc_id]
+                    except IndexError:
+                        raise SystemExit(
+                            'There are %d old calculations, cannot '
+                            'retrieve the %s' % (len(calc_ids), hc_id))
+                calc = base.calculators(oqparam, calc_id)
+                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb,
+                        exports=exports, hazard_calculation_id=hc_id,
+                        rlz_ids=())
 
-            run([job_ini], exports=exports)
             calc_id = datastore.get_last_calc_id()
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
@@ -365,26 +450,61 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
             # reloading 
             from openquake.commands import run
-            from openquake.baselib import datastore
             from openquake.calculators.export.hazard import export_realizations
-            
-            path_sqlite3 = os.path.join(datastore.get_datadir(),'db.sqlite3')
-            if os.path.isfile(path_sqlite3):
-                # removing the previous data log
-                try:
-                    shutil.rmtree(datastore.get_datadir())
-                except:
-                    print('FetchOpenQuake: cannot remove {}'.format(datastore.get_datadir()))
-                    return 1
 
-            run.main([job_ini], exports=exports)
+            #run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with 
+            # the pylauncher on stampede2 for parallel runs...  
+            from openquake.baselib import datastore, performance, general
+            from openquake.server import dbserver
+            from openquake.calculators import base
+            from openquake.commonlib import readinput, logs
+            dbserver.ensure_on()
+            global calc_path
+            loglevel = 'info'
+            params = {}
+            reuse_input = False
+            concurrent_tasks = None
+            pdb = False
+            for i in range(1000):
+                try:
+                    calc_id = logs.init('nojob', getattr(logging, loglevel.upper()))
+                except:
+                    time.sleep(0.01)
+                    continue
+                else:
+                    print('FetchOpenQuake: log created.')
+                    break
+            # disable gzip_input
+            base.BaseCalculator.gzip_inputs = lambda self: None
+            with performance.Monitor('total runtime', measuremem=True) as monitor:
+                if os.environ.get('OQ_DISTRIBUTE') not in ('no', 'processpool'):
+                    os.environ['OQ_DISTRIBUTE'] = 'processpool'
+                if 'hazard_calculation_id' in params:
+                    hc_id = int(params['hazard_calculation_id'])
+                else:
+                    hc_id = None
+                if hc_id and hc_id < 0:  # interpret negative calculation ids
+                    calc_ids = datastore.get_calc_ids()
+                    try:
+                        params['hazard_calculation_id'] = str(calc_ids[hc_id])
+                    except IndexError:
+                        raise SystemExit(
+                            'There are %d old calculations, cannot '
+                            'retrieve the %s' % (len(calc_ids), hc_id))
+                oqparam = readinput.get_oqparam(job_ini, kw=params)
+                calc = base.calculators(oqparam, calc_id)
+                if reuse_input:  # enable caching
+                    oqparam.cachedir = datastore.get_datadir()
+                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb,exports=exports)
+            
             calc_id = datastore.get_last_calc_id()
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
-            return 1
+            return 1                
     else:
         try:
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
@@ -393,31 +513,55 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             from openquake.commonlib import logs, datastore
             from openquake.calculators.export.hazard import export_realizations
 
-            path_sqlite3 = os.path.join(datastore.get_datadir(),'db.sqlite3')
-            if os.path.isfile(path_sqlite3):
-                # removing the previous data log
+            #run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with 
+            # the pylauncher on stampede2 for parallel runs...  
+            from openquake.baselib import performance, general
+            from openquake.server import dbserver
+            from openquake.calculators import base
+            dbserver.ensure_on()
+            global calc_path
+            loglevel = 'info'
+            params = {}
+            reuse_input = False
+            concurrent_tasks = None
+            pdb = False
+            for i in range(1000):
                 try:
-                    shutil.rmtree(datastore.get_datadir())
+                    log = logs.init("job", job_ini, getattr(logging, loglevel.upper()))
                 except:
-                    print('FetchOpenQuake: cannot remove {}'.format(datastore.get_datadir()))
-                    return 1
+                    time.sleep(0.01)
+                    continue
+                else:
+                    print('FetchOpenQuake: log created.')
+                    break
+            log.params.update(params)
+            base.BaseCalculator.gzip_inputs = lambda self: None
+            with log, performance.Monitor('total runtime', measuremem=True) as monitor:
+                calc = base.calculators(log.get_oqparam(), log.calc_id)
+                if reuse_input:  # enable caching
+                    calc.oqparam.cachedir = datastore.get_datadir()
+                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb, exports=exports)
 
-            run.main([job_ini], exports=exports)
+            logging.info('Total time spent: %s s', monitor.duration)
+            logging.info('Memory allocated: %s', general.humansize(monitor.mem))
+            print('See the output with silx view %s' % calc.datastore.filename)
+
             calc_id = logs.get_last_calc_id()
             path = os.path.join(logs.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
+            return 1 
 
-        # h5 clear for stampede2 (this is somewhat inelegant...)
-        import socket
-        if 'stampede2' in socket.gethostname():
-            # h5clear
-            if oq_h5clear(path) == 0:
-                print('FetchOpenQuake.oq_run_classical_psha: h5clear completed')
-            else:
-                print('FetchOpenQuake.oq_run_classical_psha: h5clear failed')
+    # h5 clear for stampede2 (this is somewhat inelegant...)
+    if 'stampede2' in socket.gethostname():
+        # h5clear
+        if oq_h5clear(path) == 0:
+            print('FetchOpenQuake.oq_run_classical_psha: h5clear completed')
+        else:
+            print('FetchOpenQuake.oq_run_classical_psha: h5clear failed')
     
     # copy the calc file to output directory
     if dir_info:
