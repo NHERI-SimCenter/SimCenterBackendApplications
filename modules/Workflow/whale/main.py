@@ -708,6 +708,23 @@ class Workflow(object):
                 if flag:
                     log_msg(f'  {out_type}', prepend_timestamp=False)
 
+        # replace the default values, if needed
+        default_values = input_data.get('DefaultValues', None)
+
+        if default_values is not None:
+            log_msg("The following workflow defaults were overwritten:",
+                prepend_timestamp=False)
+
+            for key, value in default_values.items():
+
+                if key in self.default_values.keys():
+                    self.default_values[key] = value
+
+                else:
+                    self.default_values.update({key: value})
+
+                log_msg(f"  {key}: {value}", prepend_timestamp=False)
+
         # parse the shared data in the input file
         self.shared_data = {}
         for shared_key in ['RegionalEvent',]:
