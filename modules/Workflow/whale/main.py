@@ -451,7 +451,7 @@ class WorkflowApplication(object):
                     self.pref[preference] = resolve_path(
                         self.pref[preference], ref_path)
 
-    def get_command_list(self, app_path):
+    def get_command_list(self, app_path, force_posix=False):
         """
         Short description
 
@@ -469,14 +469,18 @@ class WorkflowApplication(object):
         if str(abs_path).endswith('.py'):
             arg_list.append('python')
 
-        arg_list.append(u'{}'.format(abs_path))
+        if force_posix:
+            arg_list.append(u'{}'.format(abs_path.as_posix()))
+        else:
+            arg_list.append(u'{}'.format(abs_path))
 
         for in_arg in self.inputs:
             arg_list.append(u'--{}'.format(in_arg['id']))
+
             # Default values are protected, they cannot be overwritten simply
             # by providing application specific inputs in the config file
             if in_arg['type'] == 'workflowDefault':
-                arg_list.append(u'{}'.format(self.defaults[in_arg['id']]))
+                arg_value = self.defaults[in_arg['id']]
 
                 # If the user also provided an input, let them know that their
                 # input is invalid
@@ -488,9 +492,15 @@ class WorkflowApplication(object):
                             prepend_blank_space=False)
 
             elif in_arg['id'] in self.pref.keys():
-                arg_list.append(u'{}'.format(self.pref[in_arg['id']]))
+                arg_value = self.pref[in_arg['id']]
+
             else:
-                arg_list.append(u'{}'.format(in_arg['default']))
+                arg_value = in_arg['default']
+
+            if isinstance(arg_value, Path) and force_posix:
+                arg_list.append(u'{}'.format(arg_value.as_posix()))
+            else:
+                arg_list.append(u'{}'.format(arg_value))
 
         for out_arg in self.outputs:
             out_id = u'--{}'.format(out_arg['id'])
@@ -500,7 +510,7 @@ class WorkflowApplication(object):
                 # Default values are protected, they cannot be overwritten simply
                 # by providing application specific inputs in the config file
                 if out_arg['type'] == 'workflowDefault':
-                    arg_list.append(u'{}'.format(self.defaults[out_arg['id']]))
+                    arg_value = self.defaults[out_arg['id']]
 
                     # If the user also provided an input, let them know that
                     # their input is invalid
@@ -513,9 +523,15 @@ class WorkflowApplication(object):
                                 prepend_blank_space=False)
 
                 elif out_arg['id'] in self.pref.keys():
-                    arg_list.append(u'{}'.format(self.pref[out_arg['id']]))
+                    arg_value = self.pref[out_arg['id']]
+
                 else:
-                    arg_list.append(u'{}'.format(out_arg['default']))
+                    arg_value = out_arg['default']
+
+                if isinstance(arg_value, Path) and force_posix:
+                    arg_list.append(u'{}'.format(arg_value.as_posix()))
+                else:
+                    arg_list.append(u'{}'.format(arg_value))
 
         ASI_list =  [inp['id'] for inp in self.app_spec_inputs]
         for pref_name, pref_value in self.pref.items():
@@ -524,7 +540,11 @@ class WorkflowApplication(object):
                 pref_id = u'--{}'.format(pref_name)
                 if pref_id not in arg_list:
                     arg_list.append(pref_id)
-                    arg_list.append(u'{}'.format(pref_value))
+
+                    if isinstance(pref_value, Path) and force_posix:
+                        arg_list.append(u'{}'.format(pref_value.as_posix()))
+                    else:
+                        arg_list.append(u'{}'.format(pref_value))
 
         #pp.pprint(arg_list)
 
@@ -1254,7 +1274,7 @@ class Workflow(object):
 
                 if self.run_type in ['set_up', 'runningRemote']:
                     command_list = self.workflow_apps[app_type].get_command_list(
-                        app_path = self.app_dir_remote)
+                        app_path = self.app_dir_remote, force_posix = True)
 
                     driver_script += create_command(command_list, enforced_python='python3') + u'\n'
                 else:
