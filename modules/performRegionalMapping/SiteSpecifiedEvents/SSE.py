@@ -80,34 +80,41 @@ def create_event(building_file, event_grid_file):
     # store building locations in Y
     Y = np.array([[lo, la] for lo, la in zip(bim_df['Longitude'], bim_df['Latitude'])])
     
-    # Get the subgrid for the particular subset of buildings
-    for idx, row in grid_df.iterrows():
+    # iterate through the buildings and find the overlapping grid points
+    for it in Y:
+    
+        bldLon = it[0]
+        bldLat = it[1]
         
-        lon = row['Longitude']
-        lat = row['Latitude']
-        
-        for it in Y:
+        # Get the grid point for the building
+        for idx, row in grid_df.iterrows():
+            lon = row['Longitude']
+            lat = row['Latitude']
+            
             #print(it[0],it[1])
-            if np.isclose(it[0],lon) == True and np.isclose(it[1],lat) == True:
+            if np.isclose(bldLon,lon,1.0e-6,1.0e-6) == True and np.isclose(bldLat,lat,1.0e-6,1.0e-6) == True:
                 sub_grid = sub_grid.append(row)
                 break
     
-    # print(sub_grid)
+    #print(Y)
+    #print(sub_grid)
+    
+    if sub_grid.empty :
+        print('Could not find any grid points that overlap with the buildings!')
+        return
     
     # store the locations of the grid points in X
     lat_E = sub_grid['Latitude']
     lon_E = sub_grid['Longitude']
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
-    
+    # check to ensure we found all of the buildings
     if Y.size != X.size :
         print("Error, the number of buildings needs to be equal to the number of grid points")
+        print("The number of buildings is "+str(Y.size/2)+" and the number of grid points is " + str(X.size/2))
         return
         
-    for it in zip(np.nditer(X),np.nditer(Y)):
-        if np.isclose(it[0],it[1]) == False :
-            print("Error, the lat/lon coordinates between the buildings and the event grid points need to match")
-
+        
     # iterate through the buildings and store the selected events in the BIM
     for idx, bim_id in enumerate(bim_df.index):
 
