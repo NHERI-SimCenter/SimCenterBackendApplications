@@ -11,8 +11,8 @@ add_subdirectory(pointWindSpeed)
 add_subdirectory(LLNL_SW4)
 add_subdirectory(SimCenterEvent)
 add_subdirectory(ASCE7_WindSpeed)
-#add_subdirectory(stochasticGroundMotion)
-#add_subdirectory(stochasticWind)
+add_subdirectory(stochasticGroundMotion)
+add_subdirectory(stochasticWind)
 
 
 
