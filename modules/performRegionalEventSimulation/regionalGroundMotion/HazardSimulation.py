@@ -49,105 +49,53 @@ import importlib
 
 R2D = True
 
-if __name__ == '__main__':
+def site_job(hazard_info):
 
-    # parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--hazard_config')
-    parser.add_argument('--filter', default=None)
-    parser.add_argument('-d', '--referenceDir', default=None)
-    parser.add_argument('-w', '--workDir', default=None)
-    parser.add_argument('--hcid', default=None)
-    args = parser.parse_args()
-
-    # read the hazard configuration file
-    with open(args.hazard_config) as f:
-        hazard_info = json.load(f)
-
-    # directory (back compatibility here)
-    dir_info = hazard_info['Directory']
-    work_dir = dir_info['Work']
-    input_dir = dir_info['Input']
-    output_dir = dir_info['Output']
-    if args.referenceDir:
-        input_dir = args.referenceDir
-        dir_info['Input'] = input_dir
-    if args.workDir:
-        output_dir = args.workDir
-        dir_info['Output'] = output_dir
-        dir_info['Work'] = output_dir
-    try:
-        os.mkdir(f"{output_dir}")
-    except:
-        print('HazardSimulation: output folder already exists.')
-
-    # site filter (if explicitly defined)
-    minID = None
-    maxID = None
-    if args.filter:
-        tmp = [int(x) for x in args.filter.split('-')]
-        if len(tmp) == 1:
-            minID = tmp[0]
-            maxID = minID
+    # Sites and stations
+    print('HazardSimulation: creating stations.')
+    site_info = hazard_info['Site']
+    if site_info['Type'] == 'From_CSV':
+        input_file = os.path.join(input_dir,site_info['input_file'])
+        output_file = site_info.get('output_file',False)
+        if output_file:
+            output_file = os.path.join(output_dir, output_file)
+        min_ID = site_info['min_ID']
+        max_ID = site_info['max_ID']
+        # forward compatibility
+        if minID:
+            min_ID = minID
+            site_info['min_ID'] = minID
+        if maxID:
+            max_ID = maxID
+            site_info['max_ID'] = maxID
+        # Creating stations from the csv input file
+        z1_tag = 0
+        z25_tag = 0
+        # Vs30
+        if 'Global Vs30' in site_info['Vs30']['Type']:
+            vs30_tag = 1
+        elif 'Thompson' in site_info['Vs30']['Type']:
+            vs30_tag = 2
+        elif 'National Crustal Model' in site_info['Vs30']['Type']:
+            vs30_tag = 3
         else:
-            [minID, maxID] = tmp
-
-    # parse job type for set up environment and constants
-    opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['PointSource', 'ERF']
-    opensha_vs30_flag = hazard_info['Site']['Vs30']['Type'] == "CGS/Wills Vs30 (Wills et al., 2015)"
-    oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
-
-    # dependencies
-    if R2D:
-        packages = ['tqdm', 'psutil']
+            vs30_tag = 0
+        # Bedrock depth
+        zTR_tag = 0
+        if 'SoilGrid250' in site_info['BedrockDepth']['Type']:
+            zTR_tag = 0
+        elif 'National Crustal Model' in site_info['BedrockDepth']['Type']:
+            zTR_tag = 1
+        # Creating stations from the csv input file
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, soil_flag=True)
+    if stations:
+        print('HazardSimulation: site data are fetched and saved in {}.'.format(output_file))
     else:
-        packages = ['selenium', 'tqdm', 'psutil']
-    for p in packages:
-        if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+        print('HazardSimulation: please check the "Input" directory in the configuration json file.')
+        exit()
 
-    # set up environment
-    import socket
-    if 'stampede2' not in socket.gethostname():
-        if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "JPype1"])
-        import jpype
-        from jpype import imports
-        from jpype.types import *
-        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM("-Xmx8G", convertStrings=False)
-    if oq_flag:
-        # clear up old db.sqlite3 if any
-        if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
-            new_db_sqlite3 = True
-            try:
-                os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
-            except:
-                new_db_sqlite3 = False
-        # data dir
-        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
-        print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
-        if os.path.exists(os.environ.get('OQ_DATADIR')):
-            print('HazardSimulation: local OQ folder already exists, overwiting it now...')
-            shutil.rmtree(os.environ.get('OQ_DATADIR'))
-        os.makedirs(f"{os.environ.get('OQ_DATADIR')}")    
-    
-    # import modules
-    from CreateStation import *
-    from CreateScenario import *
-    from ComputeIntensityMeasure import *
-    from SelectGroundMotion import *
 
-    # untar site databases
-    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-    print('HazardSimulation: Extracting site databases.')
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    for cur_database in site_database:
-        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
-
-    # Initial process list
-    import psutil
-    proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+def hazard_job(hazard_info):
 
     # Sites and stations
     print('HazardSimulation: creating stations.')
@@ -213,9 +161,7 @@ if __name__ == '__main__':
         if opensha_flag:
             im_raw = compute_im(scenarios, stations['Stations'],
                                 event_info['GMPE'], event_info['IntensityMeasure'])
-        elif oq_flag:           
-            # import FetchOpenQuake
-            from FetchOpenQuake import *
+        elif oq_flag:
             # Preparing config ini for OpenQuake
             filePath_ini, oq_ver_loaded, event_info = openquake_config(site_info, scenario_info, event_info, dir_info)
             if not filePath_ini:
@@ -316,6 +262,124 @@ if __name__ == '__main__':
                     print('HazardSimulation: No records to be parsed.')
         else:
             print('HazardSimulation: ground motion selection is not requested.')
+
+
+if __name__ == '__main__':
+
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--hazard_config')
+    parser.add_argument('--filter', default=None)
+    parser.add_argument('-d', '--referenceDir', default=None)
+    parser.add_argument('-w', '--workDir', default=None)
+    parser.add_argument('--hcid', default=None)
+    parser.add_argument('-j', '--job_type', default='Hazard')
+    args = parser.parse_args()
+
+    # read the hazard configuration file
+    with open(args.hazard_config) as f:
+        hazard_info = json.load(f)
+
+    # directory (back compatibility here)
+    dir_info = hazard_info['Directory']
+    work_dir = dir_info['Work']
+    input_dir = dir_info['Input']
+    output_dir = dir_info['Output']
+    if args.referenceDir:
+        input_dir = args.referenceDir
+        dir_info['Input'] = input_dir
+    if args.workDir:
+        output_dir = args.workDir
+        dir_info['Output'] = output_dir
+        dir_info['Work'] = output_dir
+    try:
+        os.mkdir(f"{output_dir}")
+    except:
+        print('HazardSimulation: output folder already exists.')
+
+    # site filter (if explicitly defined)
+    minID = None
+    maxID = None
+    if args.filter:
+        tmp = [int(x) for x in args.filter.split('-')]
+        if len(tmp) == 1:
+            minID = tmp[0]
+            maxID = minID
+        else:
+            [minID, maxID] = tmp
+
+    # parse job type for set up environment and constants
+    try:
+        opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['PointSource', 'ERF']
+    except:
+        opensha_flag = False
+    try:
+        oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
+    except:
+        oq_flag = False
+
+    # dependencies
+    if R2D:
+        packages = ['tqdm', 'psutil']
+    else:
+        packages = ['selenium', 'tqdm', 'psutil']
+    for p in packages:
+        if importlib.util.find_spec(p) is None:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+
+    # set up environment
+    import socket
+    if 'stampede2' not in socket.gethostname():
+        if importlib.util.find_spec('jpype') is None:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "JPype1"])
+        import jpype
+        from jpype import imports
+        from jpype.types import *
+        jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+        jpype.startJVM("-Xmx8G", convertStrings=False)
+    if oq_flag:
+        # clear up old db.sqlite3 if any
+        if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
+            new_db_sqlite3 = True
+            try:
+                os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
+            except:
+                new_db_sqlite3 = False
+        # data dir
+        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
+        print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
+        if os.path.exists(os.environ.get('OQ_DATADIR')):
+            print('HazardSimulation: local OQ folder already exists, overwiting it now...')
+            shutil.rmtree(os.environ.get('OQ_DATADIR'))
+        os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
+
+    # import modules
+    from CreateStation import *
+    from CreateScenario import *
+    from ComputeIntensityMeasure import *
+    from SelectGroundMotion import *
+    if oq_flag:
+        # import FetchOpenQuake
+        from FetchOpenQuake import *
+
+    # untar site databases
+    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+    print('HazardSimulation: Extracting site databases.')
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    for cur_database in site_database:
+        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+
+    # Initial process list
+    import psutil
+    proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+
+    # run the job
+    if args.job_type == 'Hazard':
+        hazard_job(hazard_info)
+    elif args.job_type == 'Site':
+        site_job(hazard_info)
+    else:
+        print('HazardSimulation: --job_type = Hazard or Site (please check).')
 
     # Closing the current process
     sys.exit(0)

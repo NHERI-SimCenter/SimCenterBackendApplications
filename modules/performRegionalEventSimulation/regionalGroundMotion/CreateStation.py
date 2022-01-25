@@ -67,20 +67,20 @@ class Station:
         self.vs30 = vs30
         self.z2p5 = z2p5
 
-    def get_location():
+    def get_location(self):
         # Returning the geo location
         return self.lon, self.lat
 
-    def get_vs30():
+    def get_vs30(self):
         # Returning the Vs30 at the station
         return self.vs30
 
-    def get_z2p5():
+    def get_z2p5(self):
         # Returning the z2.5 of the station
         return self.z2p5
 
 
-def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z25_tag):
+def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False):
     """
     Reading input csv file for stations and saving data to output json file
     Input:
@@ -111,6 +111,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     min_id = np.max([stn_ids_min, min_id])
     max_id = np.min([stn_ids_max, max_id])
     selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])
+    selected_stn.index = list(range(len(selected_stn.index)))
     # Extracting data
     labels = selected_stn.columns.values
     lon_label, labels = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
@@ -131,6 +132,11 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         zTR_label, labels = get_label(['zTR', 'ztr', 'ZTR', 'DepthToRock'], labels, 'zTR')
     else:
         zTR_label = 'zTR'
+    if soil_flag:
+        if any([i in ['Model', 'model', 'SoilModel', 'soilModel'] for i in labels]):
+            soil_model_label, labels = get_label(['Model', 'model', 'SoilModel', 'soilModel'], labels, 'Model')
+        else:
+            soil_model_label = 'Model'
     STN = []
     stn_file = {
         'Stations': []
@@ -164,14 +170,59 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     # Get zTR
     if zTR_label in selected_stn.keys():
         tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(zTR_label)].values.tolist()
-        nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
-        if nan_loc:
+        if len(tmp):
+            nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+        else:
+            nan_loc = []
+    else:
+        nan_loc = list(range(len(selected_stn.index)))
+    if len(nan_loc) and zTR_tag == 0:
             print('CreateStation: Interpolating global depth to rock map for defined stations.')
             selected_stn.loc[nan_loc, zTR_label] = [max(0,x) for x in get_zTR_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
                                                                                      selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())]
-    else:
-        print('CreateStation: Interpolating global depth to rock map for defined stations.')
-        selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]  
+    elif len(nan_loc) and zTR_tag == 1:
+            print('CreateStation: Interpolating depth to rock map from National Crustal Model.')
+            selected_stn.loc[nan_loc, zTR_label] = [max(0,x) for x in get_zTR_ncm(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
+                                                                                  selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lon_label)].values.tolist())]
+    elif len(nan_loc):
+        print('CreateStation: Default zore depth to rock for sites missing the data.')
+        selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]
+
+    # get soil model 
+    if soil_flag:
+        # get soil_model
+        soil_model = selected_stn.iloc[:, list(selected_stn.keys()).index(soil_model_label)].values.tolist()
+        # elastic istropic model
+        row_EI = [i for i, x in enumerate(soil_model) if x == 'EI']
+        # Borja & Amier model
+        row_BA = [i for i, x in enumerate(soil_model) if x == 'BA']
+        if len(row_EI):
+            cur_param_list = ['Den']
+            for cur_param in cur_param_list:
+                if cur_param in selected_stn.keys():
+                    tmp = selected_stn.iloc[row_EI,list(selected_stn.keys()).index(cur_param)].values.tolist()
+                    if len(tmp):
+                        nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+                    else:
+                        nan_loc = []
+                else:
+                    nan_loc = list(range(len(row_EI)))
+                if len(nan_loc):
+                    selected_stn.loc[row_EI,cur_param] = [get_soil_model_ei(param=cur_param) for x in range(len(row_EI))]
+        
+        if len(row_BA):
+            cur_param_list = ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']
+            for cur_param in cur_param_list:
+                if cur_param in selected_stn.keys():
+                    tmp = selected_stn.iloc[row_BA,list(selected_stn.keys()).index(cur_param)].values.tolist()
+                    if len(tmp):
+                        nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
+                    else:
+                        nan_loc = []
+                else:
+                    nan_loc = list(range(len(row_BA)))
+                if len(nan_loc):
+                    selected_stn.loc[row_BA,cur_param] = [get_soil_model_ba(param=cur_param) for x in range(len(row_BA))]
 
     for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
@@ -218,6 +269,11 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         else:
             #tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})
             tmp.update({'zTR': 0.0})
+
+        if soil_flag:
+            tmp.update({'Model': stn.get(soil_model_label, 'EI')})
+            for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
+                tmp.update({cur_param: stn.get(cur_param, None)})
         
         stn_file['Stations'].append(tmp)
         #stn_file['Stations'].append({
@@ -246,6 +302,18 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 df_csv.update({
                     'backarc': [x.get('backarc') for x in stn_file['Stations']]
                 })
+            pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
+        if 'SiteData' in output_file:
+            df_csv = {
+                'id': list(range(len(stn_file['Stations']))),
+                'Longitude': [x['Longitude'] for x in stn_file['Stations']],
+                'Latitude': [x['Latitude'] for x in stn_file['Stations']],
+                'Vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
+                'DepthToRock': [x.get('zTR',0) for x in stn_file['Stations']],
+                'Model': [x.get('Model','EI') for x in stn_file['Stations']]
+            }
+            for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
+                df_csv.update({cur_param: [x.get(cur_param) for x in stn_file['Stations']]})
             pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
@@ -442,7 +510,7 @@ def get_zTR_ncm(lat, lon):
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
-        url_geology = 'https://earthquake.usgs.gov/nshmp/ncm/geologic-framework?location={}%2C{}'.format(cur_lat,cur_lon)
+        url_geology = 'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geologic-framework?location={}%2C{}'.format(cur_lat,cur_lon)
         # geological data (depth to bedrock)
         r1 = requests.get(url_geology)
         cur_res = r1.json()
@@ -477,7 +545,7 @@ def get_vsp_ncm(lat, lon, depth):
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
-        url_geophys = 'https://earthquake.usgs.gov/nshmp/ncm/geophysical?location={}%2C{}&depths={}%2C{}%2C{}'.format(cur_lat,cur_lon,depthMin,depthInc,depthMax)
+        url_geophys = 'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geophysical?location={}%2C{}&depths={}%2C{}%2C{}'.format(cur_lat,cur_lon,depthMin,depthInc,depthMax)
         r1 = requests.get(url_geophys)
         cur_res = r1.json()
         if cur_res['status'] == 'error':
@@ -538,3 +606,50 @@ def get_vs30_ncm(lat, lon):
             vs30.append(760.0)
     # return
     return vs30
+
+
+def get_soil_model_ba(param=None):
+    """
+    Get modeling parameters for Borja and Amies 1994 J2 model
+    Currently just assign default values
+    Can be extended to have input soil properties to predict this pararmeters
+    """
+    su_rat = 0.26
+    density = 2.0
+    h_to_G = 1.0
+    m = 1.0
+    h0 = 0.2
+    chi = 0.0
+
+    if param == 'Su_rat':
+        res = su_rat
+    elif param == 'Den':
+        res = density
+    elif param == 'h/G':
+        res = h_to_G
+    elif param == 'm':
+        res = m
+    elif param == 'h0':
+        res = h0
+    elif param == 'chi':
+        res = chi
+    else:
+        res = None
+
+    return res
+
+
+def get_soil_model_ei(param=None):
+    """
+    Get modeling parameters for elastic isotropic
+    Currently just assign default values
+    Can be extended to have input soil properties to predict this pararmeters
+    """
+    density = 2.0
+
+    if param == 'Den':
+        res = density
+    else:
+        res = None
+
+    return res
