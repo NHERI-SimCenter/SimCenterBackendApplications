@@ -86,8 +86,13 @@ def site_job(hazard_info):
             zTR_tag = 0
         elif 'National Crustal Model' in site_info['BedrockDepth']['Type']:
             zTR_tag = 1
+        # soil model if any
+        if site_info.get('SoilModel', None) is not None:
+            soil_model_type = site_info['SoilModel'].get('Type', 'EI')
+        else:
+            soil_model_type = None
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, soil_flag=True)
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, soil_flag=True, soil_model_type=soil_model_type)
     if stations:
         print('HazardSimulation: site data are fetched and saved in {}.'.format(output_file))
     else:

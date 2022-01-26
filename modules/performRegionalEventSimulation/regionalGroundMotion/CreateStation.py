@@ -80,7 +80,7 @@ class Station:
         return self.z2p5
 
 
-def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False):
+def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False, soil_model_type=None):
     """
     Reading input csv file for stations and saving data to output json file
     Input:
@@ -137,6 +137,12 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
             soil_model_label, labels = get_label(['Model', 'model', 'SoilModel', 'soilModel'], labels, 'Model')
         else:
             soil_model_label = 'Model'
+            if soil_model_type is not None:
+                model_map = {'Elastic Isotropic': 'EI',
+                             'Multiaxial Cyclic Plasticity': 'BA'}
+                soil_model_tag = model_map.get(soil_model_type, 'EI')
+                # add a 'Model' column to selected_stn
+                selected_stn[soil_model_label] = [soil_model_tag for x in range(len(selected_stn.index))]
     STN = []
     stn_file = {
         'Stations': []
