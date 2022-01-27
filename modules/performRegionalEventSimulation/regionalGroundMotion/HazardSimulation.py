@@ -91,8 +91,15 @@ def site_job(hazard_info):
             soil_model_type = site_info['SoilModel'].get('Type', 'EI')
         else:
             soil_model_type = None
+        # user soil model function file path
+        soil_user_fun = None
+        if soil_model_type == 'User':
+            soil_user_fun = site_info['SoilModel'].get('Parameters', None)
+            if soil_user_fun is not None:
+                soil_user_fun = os.path.join(input_dir, soil_user_fun)
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, soil_flag=True, soil_model_type=soil_model_type)
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, 
+                                   soil_flag=True, soil_model_type=soil_model_type, soil_user_fun=soil_user_fun)
     if stations:
         print('HazardSimulation: site data are fetched and saved in {}.'.format(output_file))
     else:
