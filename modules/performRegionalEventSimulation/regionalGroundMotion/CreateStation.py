@@ -247,7 +247,8 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                                          'z2p5', 'Model', 'Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
                         user_param_list.append(cur_param)
             else:
-                selected_stn, user_param_list = get_soil_model_user(selected_stn, soil_user_fun)
+                selected_stn = get_soil_model_user(selected_stn, soil_user_fun)
+                user_param_list = list(selected_stn.keys())
                 for cur_param in user_param_list:
                     if cur_param in ['Longitude', 'Latitude', 'Vs30', 'DepthToRock', 'z1p0', 
                                      'z2p5', 'Model', 'Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
@@ -701,23 +702,20 @@ def get_soil_model_user(df_stn, model_fun):
         user_model= importlib.__import__(path_model_fun.name[:-3], globals(), locals(), [], 0)
     except:
         print('CreateStation.get_soil_model_user: {} cannot be loaded.'.format(model_fun))
-        return df_stn, []
+        return df_stn
 
     # try to load the standard function: soil_model_fun(site_info=None)
     try:
         soil_model = user_model.soil_model
     except:
         print('CreateStation.get_soil_model_user: soil_model is nto found in {}.'.format(model_fun))
-        return df_stn, []
-
-    print(soil_model)
+        return df_stn
     
     # get the parameters from soil_model_fun
-    df_stn_new, user_param_list = soil_model(site_info=df_stn)
     try:
-        df_stn_new, user_param_list = soil_model(site_info=df_stn)
+        df_stn_new = soil_model(site_info=df_stn)
     except:
         print('CreateStation.get_soil_model_user: error in soil_model_fun(site_info=None).')
-        return df_stn, []
+        return df_stn
 
-    return df_stn_new, user_param_list
+    return df_stn_new
