@@ -61,9 +61,16 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth = False):
     """
 
     # Parse periods from im1 and im2
-    if im1.startswith('SA') and im2.startswith('SA'):
+    if im1.startswith('SA'):
         T1 = float(im1[3:-1])
+    elif im1.startswith('PGA'):
+        T1 = 0.0
+    else:
+        return 0.0
+    if im2.startswith('SA'):
         T2 = float(im2[3:-1])
+    elif im2.startswith('PGA'):
+        T2 = 0.0
     else:
         return 0.0
 
@@ -200,7 +207,10 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering = False):
     # parse period form im
     try:
         # for Sa
-        T = float(im[3:-1])
+        if im.startswith('SA'):
+            T = float(im[3:-1])
+        elif im.startswith('PGA'):
+            T = 0.0
     except ValueError:
         print('CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {}'.format(im))
 
@@ -287,7 +297,10 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
     periods = []
     for cur_im in im_name_list:
         try:
-            periods.append(float(cur_im[3:-1]))
+            if cur_im.startswith('SA'):
+                periods.append(float(cur_im[3:-1]))
+            elif cur_im.startswith('PGA'):
+                periods.append(0.0)
         except ValueError:
             print('CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(cur_im))
     # Loading modeling coefficients
@@ -370,7 +383,10 @@ def markhvida_ceferino_baker_correlation_2017(stations, im_name_list, num_simu, 
     periods = []
     for cur_im in im_name_list:
         try:
-            periods.append(float(cur_im[3:-1]))
+            if cur_im.startswith('SA'):
+                periods.append(float(cur_im[3:-1]))
+            elif cur_im.startswith('PGA'):
+                periods.append(0.0)
         except ValueError:
             print('CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(cur_im))
     # Loading factors
