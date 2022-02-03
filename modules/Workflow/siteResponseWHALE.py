@@ -145,7 +145,8 @@ def main(run_type, input_file, app_registry,
         }
     }        
 
-    siteResponseInputFile = 'tmpSiteResponseInput.json'
+    #siteResponseInputFile = 'tmpSiteResponseInput.json'
+    siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
 
     with open(siteResponseInputFile, 'w') as json_file:
         json_file.write(json.dumps(siteResponseInput, indent=2))    
