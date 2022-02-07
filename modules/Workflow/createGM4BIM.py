@@ -64,7 +64,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     id = []
     sites = []
     # site im dictionary
-    periods = np.array([x+1 for x in range(10)])
+    periods = np.array([0.01,0.02,0.05,0.1,0.2,0.5,1,2,3,4,5,7.5,10])
     dict_im = {('type','loc','dir','stat'):[],
                ('PGA',0,1,'median'):[],
                ('PGA',0,1,'beta'):[],
@@ -79,10 +79,10 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                ('PGD',0,2,'median'):[],
                ('PGD',0,2,'beta'):[]}
     for Ti in periods:
-        dict_im.update({('SA({})'.format(Ti),0,1,'median'):[],
-                        ('SA({})'.format(Ti),0,1,'beta'):[],
-                        ('SA({})'.format(Ti),0,2,'median'):[],
-                        ('SA({})'.format(Ti),0,2,'beta'):[]})
+        dict_im.update({('SA({}s)'.format(Ti),0,1,'median'):[],
+                        ('SA({}s)'.format(Ti),0,1,'beta'):[],
+                        ('SA({}s)'.format(Ti),0,2,'median'):[],
+                        ('SA({}s)'.format(Ti),0,2,'beta'):[]})
 
     for site in siteFiles:
 
@@ -190,26 +190,26 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 m_pgv_x =  np.exp(np.mean(np.log(pgv_x)))
                 s_pgv_x =  np.std(np.log(pgv_x))
             else:
-                m_psv_x = 0.0
+                m_pgv_x = 0.0
                 s_pgv_x = 0.0
             if len(pgv_y) > 0:
                 m_pgv_y =  np.exp(np.mean(np.log(pgv_y)))
                 s_pgv_y =  np.std(np.log(pgv_y))
             else:
-                m_psv_y = 0.0
+                m_pgv_y = 0.0
                 s_pgv_y = 0.0
             # pgd
             if len(pgd_x) > 0:
                 m_pgd_x =  np.exp(np.mean(np.log(pgd_x)))
                 s_pgd_x =  np.std(np.log(pgd_x))
             else:
-                m_psd_x = 0.0
+                m_pgd_x = 0.0
                 s_pgd_x = 0.0
             if len(pgd_y) > 0:
                 m_pgd_y =  np.exp(np.mean(np.log(pgd_y)))
                 s_pgd_y =  np.std(np.log(pgd_y))
             else:
-                m_psd_y = 0.0
+                m_pgd_y = 0.0
                 s_pgd_y = 0.0
             # add to dictionary
             dict_im[('type','loc','dir','stat')].append(int(siteID))
@@ -229,7 +229,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             dict_im[('PGD',0,2,'median')].append(m_pgd_y)
             dict_im[('PGD',0,2,'beta')].append(s_pgd_y)
             for jj, Ti in enumerate(periods):
-                cur_sa = 'SA({})'.format(Ti)
+                cur_sa = 'SA({}s)'.format(Ti)
                 dict_im[(cur_sa,0,1,'median')].append(m_psa_x[jj])
                 dict_im[(cur_sa,0,1,'beta')].append(s_psa_x[jj])
                 dict_im[(cur_sa,0,2,'median')].append(m_psa_y[jj])

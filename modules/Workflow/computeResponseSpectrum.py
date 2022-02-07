@@ -76,7 +76,7 @@ class NewmarkBeta:
         """
         Setup the response spectrum calculator
         :param numpy.ndarray time_hist:
-            Acceleration time history [Time, Acceleration]
+            Acceleration time history
         :param numpy.ndarray periods:
             Spectral periods (s) for calculation
         :param float damping:
@@ -86,14 +86,11 @@ class NewmarkBeta:
         """
         self.periods = periods
         self.num_per = len(periods)
-        print(acceleration[0])
         self.acceleration = convert_accel_units(acceleration, units)
-        print(self.acceleration[0])
         self.damping = damping
         self.d_t = time_step
         self.velocity, self.displacement = get_velocity_displacement(
             self.d_t, self.acceleration)
-        print(self.velocity[0])
         self.num_steps = len(self.acceleration)
         self.omega = (2. * np.pi) / self.periods
         self.response_spectrum = None
