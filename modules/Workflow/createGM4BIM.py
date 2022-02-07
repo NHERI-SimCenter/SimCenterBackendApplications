@@ -64,7 +64,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     id = []
     sites = []
     # site im dictionary
-    periods = np.array([0.01,0.02,0.05,0.1,0.2,0.5,1,2,3,4,5,7.5,10])
+    periods = np.array([0.1,0.2,0.3,0.4,0.5,0.75,1,2,3,4,5,7.5,10])
     dict_im = {('type','loc','dir','stat'):[],
                ('PGA',0,1,'median'):[],
                ('PGA',0,1,'beta'):[],
