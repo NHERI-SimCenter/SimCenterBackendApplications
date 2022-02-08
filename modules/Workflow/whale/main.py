@@ -1274,7 +1274,10 @@ class Workflow(object):
                 
                 command = create_command(command_list)
 
-                print(command)
+                log_msg('\nRunning FEM app',
+                        prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                        prepend_blank_space=False)
                 
                 result, returncode = run_command(command)
 
