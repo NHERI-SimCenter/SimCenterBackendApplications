@@ -39,12 +39,92 @@
 
 import numpy as np
 import json
-import os
+import os, sys
 import shutil
 from glob import glob
 import argparse
 import pandas as pd
 from computeResponseSpectrum import *
+
+# import the common constants and methods
+from pathlib import Path
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[0]
+sys.path.insert(0, str(main_dir / 'common'))
+from simcenter_common import *
+
+def get_scale_factors(input_units, output_units):
+    """
+    Determine the scale factor to convert input event to internal event data
+
+    """
+
+    # special case: if the input unit is not specified then do not do any scaling
+    if input_units is None:
+
+        scale_factors = {'ALL': 1.0}
+
+    else:
+
+        # parse output units:
+
+        # if no length unit is specified, 'inch' is assumed
+        unit_length = output_units.get('length', 'inch')
+        f_length = globals().get(unit_length, None)
+        if f_length is None:
+            raise ValueError(
+                f"Specified length unit not recognized: {unit_length}")
+
+        # if no time unit is specified, 'sec' is assumed
+        unit_time = output_units.get('time', 'sec')
+        f_time = globals().get(unit_time, None)
+        if f_time is None:
+            raise ValueError(
+                f"Specified time unit not recognized: {unit_time}")
+
+        scale_factors = {}
+
+        for input_name, input_unit in input_units.items():
+
+            # exceptions
+            if input_name in ['factor', ]:
+                f_scale = 1.0
+
+            else:
+
+                # get the scale factor to standard units
+                f_in = globals().get(input_unit, None)
+                if f_in is None:
+                    raise ValueError(
+                        f"Input unit for event files not recognized: {input_unit}")
+
+                unit_type = None
+                for base_unit_type, unit_set in globals()['unit_types'].items():
+                    if input_unit in unit_set:
+                        unit_type = base_unit_type
+
+                if unit_type is None:
+                    raise ValueError(f"Failed to identify unit type: {input_unit}")
+
+                # the output unit depends on the unit type
+                if unit_type == 'acceleration':
+                    f_out = f_time ** 2.0 / f_length
+
+                elif unit_type == 'speed':
+                    f_out = f_time / f_length
+
+                elif unit_type == 'length':
+                    f_out = 1.0 / f_length
+
+                else:
+                    raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
+
+                # the scale factor is the product of input and output scaling
+                f_scale = f_in * f_out
+
+            scale_factors.update({input_name: f_scale})
+
+    return scale_factors
 
 def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
@@ -93,6 +173,24 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
             siteID = generalInfo['BIM_id']
+            # get unit info (needed for determining the simulated acc unit)
+            unitInfo = All_json['units']
+            # get scaling factor for surface acceleration
+            acc_unit = {"AccelerationEvent": "g"}
+            f_scale_units = get_scale_factors(acc_unit, unitInfo)
+
+            # if f_scale_units is None
+            if None in [acc_unit, f_scale_units]:
+                f_scale = 1.0
+            else:
+                for cur_var in list(f_scale_units.keys()):
+                    cur_unit = acc_unit.get(cur_var)
+                    unit_type = None
+                    for base_unit_type, unit_set in globals()['unit_types'].items():
+                        if cur_unit in unit_set:
+                            unit_type = base_unit_type
+                    if unit_type == 'acceleration':
+                        f_scale = f_scale_units.get(cur_var)
 
             id.append(int(siteID))
             
@@ -135,7 +233,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 # im_X and im_Y
                 for cur_time_series in cur_seismograms:
                     dt = cur_time_series.get('dT')
-                    acc = cur_time_series.get('data')
+                    acc = [x / f_scale for x in cur_time_series.get('data')]
                     acc_hist = np.array([[dt*x for x in range(len(acc))],acc])
                     # get intensity measure
                     my_response_spectrum_calc = NewmarkBeta(acc, dt, periods, damping=0.05, units='g')
@@ -144,8 +242,6 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                     pga = time_series.get('PGA',0.0)
                     pgv = time_series.get('PGV',0.0)
                     pgd = time_series.get('PGD',0.0)
-                    print(psa)
-                    print(pga)
                     # append
                     if cur_time_series.get('name') == 'accel_X':
                         psa_x.append(psa)
