@@ -197,8 +197,9 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
 
     # rename column headers to standard keywords
     selected_stn.rename(columns={lat_label: 'Latitude', lon_label: 'Longitude', vs30_label: 'Vs30',
-                                 z1p0_label: 'z1p0', z2p5_label: 'z2p5', zTR_label: 'DepthToRock',
-                                 soil_model_label: 'Model'})
+                                 z1p0_label: 'z1p0', z2p5_label: 'z2p5', zTR_label: 'DepthToRock'})
+    if soil_flag:
+        selected_stn.rename(columns={soil_model_label: 'Model'})
 
     # get soil model 
     if soil_flag:
@@ -472,7 +473,7 @@ def get_zTR_global(lat, lon):
         lat: list of latitude
         lon: list of longitude
     Output:
-        vs30: list of zTR
+        zTR: list of zTR
     """
     import pickle
     import os
