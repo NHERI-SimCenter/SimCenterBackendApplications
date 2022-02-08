@@ -108,6 +108,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         WF.create_driver_file(
             app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
 
+        # gather all Randomvariables and EDP's and place in new input file for UQ
         WF.gather_workflow_inputs();
 
         # run uq engine to simulate response
