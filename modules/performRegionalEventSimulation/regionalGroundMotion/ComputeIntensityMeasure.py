@@ -748,13 +748,13 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 			lat = [stations[j]['Latitude'] for j in range(len(stations))]
 			lon = [stations[j]['Longitude'] for j in range(len(stations))]
 			vs30 = [stations[j]['Vs30'] for j in range(len(stations))]
-			zTR = [stations[j]['zTR'] for j in range(len(stations))]
+			zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
 			df = pd.DataFrame({
 				'GP_file': station_name,
 				'Longitude': lon,
 				'Latitude': lat,
 				'Vs30': vs30,
-				'zTR': zTR
+				'DepthToRock': zTR
 			})
 			if cur_eq[2]:
 				df['SiteSourceDistance'] = cur_eq[2]
