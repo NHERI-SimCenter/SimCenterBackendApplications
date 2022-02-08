@@ -1,12 +1,9 @@
-simcenter_add_executable(NAME extractEDP
-                         FILES extractEDP.cpp
-                         DEPENDS CONAN_PKG::jansson)
+add_subdirectory(common)
+add_subdirectory(templateSub)
+add_subdirectory(dakota)
+add_subdirectory(UCSD_UQ)
+add_subdirectory(SimCenterUQ)
+add_subdirectory(other)
 
-simcenter_add_executable(NAME createStandardUQ_Input
-                         FILES createStandardUQ_Input.cpp
-                         DEPENDS CONAN_PKG::jansson)
 
-add_library(commonUQ OBJECT
-               parseWorkflowInput.cpp)
 
-target_include_directories(commonUQ PUBLIC ${CONAN_INCLUDE_DIRS_JANSSON})
