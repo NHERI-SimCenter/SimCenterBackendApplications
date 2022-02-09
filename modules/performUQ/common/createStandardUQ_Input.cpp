@@ -143,6 +143,10 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		edpAcronym = "PFD";
 		floor = json_string_value(json_object_get(eventEDP,"floor"));
 		known = true;
+	      } else if (strcmp(edpEngType,"max_roof_drift") == 0) {
+		edpAcronym = "PRD";
+		floor = "1";
+		known = true;		
 	      } else if (strcmp(edpEngType,"peak_wind_gust_speed") == 0) {
 		edpAcronym = "PWS";
 		floor = json_string_value(json_object_get(eventEDP,"floor"));
@@ -159,7 +163,6 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		// loop over all edp for the event
 		for (int k=0; k<numDOF; k++) {
 		  int dof = json_integer_value(json_array_get(dofs,k));
-		  //	  dakotaFile << "'" << i+1 << "-" << edpAcronym << "-" << floor << "-" << dof << "' ";
 		  edpName = std::string(std::to_string(i+1)) + std::string("-")
 		    + edpAcronym
 		    + std::string("-")
@@ -167,16 +170,15 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		    std::string("-") + std::string(std::to_string(dof));
 		  
 		  // edpList.push_back(newEDP);
-		}
+		  // add new EDP
+		  json_t *newEDP = json_object();
+		  json_object_set(newEDP, "length", json_integer(1));
+		  json_object_set(newEDP, "type", json_string("scalar"));
+		  json_object_set(newEDP, "name", json_string(edpName.c_str()));
+		  
+		  json_array_append(rootEDPs, newEDP);	      
+		}		  
 	      }
-
-	      // add new EDP
-	      json_t *newEDP = json_object();
-	      json_object_set(newEDP, "length", json_integer(1));
-	      json_object_set(newEDP, "type", json_string("scalar"));
-	      json_object_set(newEDP, "name", json_string(edpName.c_str()));
-	      
-	      json_array_append(rootEDPs, newEDP);	      
 	    }
 	  }
 	} else {
