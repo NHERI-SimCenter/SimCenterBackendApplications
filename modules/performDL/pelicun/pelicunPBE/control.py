@@ -267,6 +267,7 @@ class Assessment(object):
                            DWD=1.,
                            RDR=1.,
                            PFA=self._AIM_in['units']['acceleration'],
+                           PFD=self._AIM_in['units']['length'],                           
                            PMD=1.,
                            PGA=self._AIM_in['units']['acceleration'],
                            PGV=self._AIM_in['units']['speed'],
