@@ -57,7 +57,7 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
         # Large number to consider all sources in the ERF
         source_num = 10000000
     # sampling method
-    samp_method = scenario_info.get('Sampling','Random')
+    samp_method = scenario_info['EqRupture'].get('Sampling','Random')
     # Directly defining earthquake ruptures
     if scenario_info['Generator'] == 'Simulation':
         # TODO:
