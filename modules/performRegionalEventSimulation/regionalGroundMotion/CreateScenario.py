@@ -79,17 +79,32 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
             if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
                 source_model = scenario_info['EqRupture']['Model']
                 eq_source = getERF(source_model, True)
-                distToSource = get_source_distance(eq_source, scenario_info['EqRupture']['SourceIndex'], lat, lon)
+                # check source index list and rupture index list
+                if type(scenario_info['EqRupture']['SourceIndex']) == int:
+                    source_index_list = [scenario_info['EqRupture']['SourceIndex']]
+                else:
+                    source_index_list = scenario_info['EqRupture']['SourceIndex']
+                if type(scenario_info['EqRupture']['RuptureIndex']) == int:
+                    rup_index_list = [scenario_info['EqRupture']['RuptureIndex']]
+                else:
+                    rup_index_list = scenario_info['EqRupture']['RuptureIndex']
+                if not(len(source_index_list) == len(rup_index_list)):
+                    print('CreateScenario: source number {} should be matched by rupture number {}'.format(len(source_index_list),len(rup_index_list)))
+                    return dict()
+                # loop over all scenarios
                 scenario_data = dict()
-                scenario_data.update({0: {
-                    'Type': source_type,
-                    'RuptureForecast': source_model,
-                    'SourceIndex': scenario_info['EqRupture']['SourceIndex'],
-                    'RuptureIndex': scenario_info['EqRupture']['RuptureIndex'],
-                    'SiteSourceDistance': distToSource,
-                    'SiteRuptureDistance': get_rupture_distance(eq_source, scenario_info['EqRupture']['SourceIndex'], scenario_info['EqRupture']['RuptureIndex'], lat, lon)
-                }})
-                
+                for i in range(len(source_index_list)):
+                    cur_source_index = source_index_list[i]
+                    cur_rup_index = rup_index_list[i]
+                    distToSource = get_source_distance(eq_source, cur_source_index, lat, lon)
+                    scenario_data.update({i: {
+                        'Type': source_type,
+                        'RuptureForecast': source_model,
+                        'SourceIndex': cur_source_index,
+                        'RuptureIndex': cur_rup_index,
+                        'SiteSourceDistance': distToSource,
+                        'SiteRuptureDistance': get_rupture_distance(eq_source, cur_source_index, cur_rup_index, lat, lon)
+                    }})
                 return scenario_data
             else:
                 source_model = scenario_info['EqRupture']['Model']
