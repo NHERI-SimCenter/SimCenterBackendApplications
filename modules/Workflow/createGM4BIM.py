@@ -200,8 +200,6 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             workdirs = glob(f"{inputDir}/{siteID}/workdir.*")
             siteEventFiles = []
             siteEventFactors = []
-            siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
-            siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
 
             # initialization
             psa_x = []
@@ -330,6 +328,10 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 dict_im[(cur_sa,0,1,'beta')].append(s_psa_x[jj])
                 dict_im[(cur_sa,0,2,'median')].append(m_psa_y[jj])
                 dict_im[(cur_sa,0,2,'beta')].append(s_psa_y[jj])
+
+            # create site csv
+            siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
+            siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
 
     # create pandas
     im_csv_path = os.path.dirname(os.path.dirname(outputDir))
