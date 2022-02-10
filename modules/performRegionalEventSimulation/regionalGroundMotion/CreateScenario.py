@@ -56,6 +56,8 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
     if source_num == 'All':
         # Large number to consider all sources in the ERF
         source_num = 10000000
+    # sampling method
+    samp_method = scenario_info.get('Sampling','Random')
     # Directly defining earthquake ruptures
     if scenario_info['Generator'] == 'Simulation':
         # TODO:
@@ -119,6 +121,7 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                                         maxSources = np.max([500, source_num]))
                 # Parsing data
                 feat = erf_data['features']
+                """
                 tag = []
                 for i, cur_f in enumerate(feat):
                     if source_name and (source_name not in cur_f['properties']['Name']):
@@ -128,6 +131,8 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                     tag.append(i)
                 # Abstracting desired ruptures
                 s_tag = random.sample(tag, min(source_num, len(tag)))
+                """
+                s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
                 erf_data['features'] = list(feat[i] for i in s_tag)
                 scenario_data = dict()
                 for i, rup in enumerate(erf_data['features']):
@@ -160,6 +165,40 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
     # return
     return scenario_data
 
+
+def sample_scenarios(rup_info=[], sample_num=1, sample_type='Random', source_name=None, min_M=0.0):
+
+    if len(rup_info) == 0:
+        print('CreateScenario.sample_scenarios: no available scenario provided - please relax earthquake filters.')
+        return []
+
+    feat = rup_info
+    tag = []
+    for i, cur_f in enumerate(feat):
+        if source_name and (source_name not in cur_f['properties']['Name']):
+            continue
+        if min_M > cur_f['properties']['Magnitude']:
+            continue
+        tag.append(i)
+    
+    if sample_type == 'Random':
+        s_tag = random.sample(tag, min(sample_num, len(tag)))
+    
+    elif sample_type == 'MAF':
+        # maf list
+        maf_list = [feat[x]['properties']['MeanAnnualRate'] for x in tag]
+        # normalize maf list
+        sum_maf = np.sum(maf_list)
+        maf_list_n = [x/sum_maf for x in maf_list]
+        # get sample
+        s_tag = np.random.choice(tag, sample_num, p=maf_list_n).tolist()
+
+    else:
+        print('CreateScenario.sample_scenarios: please specify a sampling method.')
+        s_tag = []
+
+    # return
+    return s_tag
 
 def create_wind_scenarios(scenario_info, stations, data_dir):
 
