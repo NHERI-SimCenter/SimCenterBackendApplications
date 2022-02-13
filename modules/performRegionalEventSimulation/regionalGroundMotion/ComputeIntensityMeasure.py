@@ -280,14 +280,14 @@ class IM_Calculator:
 				if cur_gmpe == 'Bommer, Stafford & Alarcon (2009)':
 					mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.bommer_stafford_alarcon_ds_2009(magnitude=eq_magnitude, 
 						distance=cur_dist, vs30=cur_vs30,duration_type=im_type)
-					tmpResult['Mean'].append(float(np.log(mean)))
+					tmpResult['Mean'].append(float(mean))
 					tmpResult['TotalStdDev'].append(float(stdDev))
 					tmpResult['InterEvStdDev'].append(float(interEvStdDev))
 					tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
 				elif cur_gmpe == 'Afshari & Stewart (2016)':
 					mean, stdDev, interEvStdDev, intraEvStdDev = SignificantDurationModel.afshari_stewart_ds_2016(magnitude=eq_magnitude, 
 						distance=cur_dist, vs30=cur_vs30, duration_type=im_type)
-					tmpResult['Mean'].append(float(np.log(mean)))
+					tmpResult['Mean'].append(float(mean))
 					tmpResult['TotalStdDev'].append(float(stdDev))
 					tmpResult['InterEvStdDev'].append(float(interEvStdDev))
 					tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
