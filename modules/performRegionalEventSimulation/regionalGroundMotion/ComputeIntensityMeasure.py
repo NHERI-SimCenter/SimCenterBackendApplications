@@ -730,7 +730,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 					srd = cur_eq[3]
 				else:
 					srd = 'N/A'
-				tmp = {'Magnitdue': float(cur_eq[0]),
+				tmp = {'Magnitude': float(cur_eq[0]),
 					   'MeanAnnualRate': mar,
 					   'SiteSourceDistance': ssd,
 					   'SiteRuputureDistance': srd}
