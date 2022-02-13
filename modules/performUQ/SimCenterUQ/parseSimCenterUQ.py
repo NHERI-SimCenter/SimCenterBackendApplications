@@ -39,6 +39,7 @@ if run_type in ['runningLocal',]:
         natafExe = 'nataf_gsa'          
         Feap = 'feappv'
         Dakota = 'dakota'
+        plomScript = 'runPLoM.py'
         workflow_driver = 'workflow_driver'
         osType = 'Darwin'
 
@@ -49,6 +50,7 @@ if run_type in ['runningLocal',]:
         surrogate = 'surrogateBuild.py'  
         natafExe = 'nataf_gsa.exe'      
         Dakota = 'dakota'
+        plomScript = 'runPLoM.py'
         workflow_driver = 'workflow_driver.bat'
         osType = 'Windows'
 
@@ -130,6 +132,8 @@ if run_type in ['runningLocal']:
         simCenterUQCommand = '"{}/{}" "{}" {} {}'.format(myScriptDir,natafExe,workdir_main,osType,run_type)
     elif uq_data['uqType'] == 'Forward Propagation':
         simCenterUQCommand = '"{}/{}" "{}" {} {}'.format(myScriptDir,natafExe,workdir_main,osType,run_type)
+    elif uq_data['uqType'] == 'Train PLoM Model':
+        simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(data['python'],myScriptDir,plomScript,workdir_main,osType,run_type)
 
 
 
