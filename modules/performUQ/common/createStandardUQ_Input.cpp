@@ -237,10 +237,18 @@ int main(int argc, char **argv) {
   std::string callOldWorkflow;
   std::string localDir(json_string_value(json_object_get(rootINPUT, "localAppDir")));
   std::string remoteDir(json_string_value(json_object_get(rootINPUT, "remoteAppDir")));
-  
-  std::ofstream workflowDriverFile(workflowNew, std::ios::binary);
+
+  // KZ: for different os sytem
+  std::string workflowNew_os = std::string(workflowNew);
+  if ((strcmp(runType, "runningLocal")==0) && strcmp(osType,"Windows") == 0)
+  {
+    workflowNew_os = std::string(workflowNew)+std::string(".bat");
+  }
+  std::ofstream workflowDriverFile(workflowNew_os, std::ios::binary);
+  //std::ofstream workflowDriverFile(workflowNew, std::ios::binary);
   if (!workflowDriverFile.is_open()) {
-    std::cerr << "parseFileForRV:: could not create workflow driver file: " << workflowNew << "\n";
+    //std::cerr << "parseFileForRV:: could not create workflow driver file: " << workflowNew << "\n";
+    std::cerr << "parseFileForRV:: could not create workflow driver file: " << workflowNew_os << "\n";
     exit(802); // no random variables is allowed
   }  
 
