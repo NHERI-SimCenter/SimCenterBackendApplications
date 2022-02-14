@@ -294,7 +294,7 @@ class IntensityMeasureComputer:
             vel = np.zeros([num_steps_disc, num_periods])
             disp = np.zeros([num_steps_disc, num_periods])
             a_t = np.zeros([num_steps_disc, num_periods])
-            #accel[0, :] =(-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
+            accel[0, :] =(-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
             for j in range(1, num_steps_disc):
                 delta_acc = ground_acc[j]-ground_acc[j-1]
                 delta_d2u = (-delta_acc-dt_disc*cval*accel[j-1,:]-dt_disc*kval*(vel[j-1,:]+0.5*dt_disc*accel[j-1,:]))/ \
