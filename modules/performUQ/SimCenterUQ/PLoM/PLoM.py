@@ -6,7 +6,7 @@ import pandas as pd
 import random
 from math import pi, sqrt
 import PLoM_library as plom
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import warnings
 #export DISPLAY=localhost:0.0
 from ctypes import *
@@ -29,6 +29,7 @@ class PLoM:
         if self.initialize_data(data, separator, col_header):
             self.logfile.write_msg(msg='PLoM: data loading failed.',msg_type='ERROR',msg_level=0)
         else:
+            """
             # plot data matrix
             if self.plot_tag:
                 smp = pd.plotting.scatter_matrix(self.X0, alpha=0.5, diagonal ='kde', figsize=(10,10))
@@ -37,6 +38,7 @@ class PLoM:
                     ax.set_ylabel(ax.get_ylabel(), fontsize = 6, rotation = 45)
                 plt.savefig(os.path.join(self.vl_path,'ScatterMatrix_X0.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('ScatterMatrix_X0.png',self.vl_path),msg_type='RUNNING',msg_level=0)
+            """
         if not self.constraints: 
             if self.add_constraints(constraints_file=constraints):
                 self.logfile.write_msg(msg='PLoM: constraints input failed.',msg_type='ERROR',msg_level=0)
@@ -558,6 +560,7 @@ class PLoM:
         (H, mu, phi, errors) = plom.PCA(X_origin, epsilon_pca)
         nu = len(H)
         self.logfile.write_msg(msg='PLoM.RunPCA: considered number of PCA components = {}'.format(nu),msg_type='RUNNING',msg_level=0)
+        """
         if self.plot_tag:
             fig, ax = plt.subplots(figsize=(8,6))
             ctp = ax.contourf(plom.covariance(H), cmap=plt.cm.bone, levels=100)
@@ -569,6 +572,7 @@ class PLoM:
             cbar = fig.colorbar(ctp)
             plt.savefig(os.path.join(self.vl_path,'PCA_CovarianceMatrix.png'),dpi=480)
             self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('PCA_CovarianceMatrix.png',self.vl_path),msg_type='RUNNING',msg_level=0)
+        """
         return H, mu, phi, nu, errors
 
 
@@ -593,6 +597,7 @@ class PLoM:
             m = plom.m(eigenvalues, tol=tol)
             a = g[:,0:m].dot(np.linalg.inv(np.transpose(g[:,0:m]).dot(g[:,0:m])))
             Z = H.dot(a)
+            """
             if self.plot_tag:
                 fig, ax = plt.subplots(figsize=(6,4))
                 ax.semilogy(np.arange(len(eigenvalues)), eigenvalues)
@@ -601,6 +606,7 @@ class PLoM:
                 ax.set_title('Eigen value (KDE)')
                 plt.savefig(os.path.join(self.vl_path,'KDE_EigenValue.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('KDE_EigenValue.png',self.vl_path),msg_type='RUNNING',msg_level=0)
+            """
         except:
             g = None
             m = 0
@@ -727,7 +733,7 @@ class PLoM:
                     else:
                         self.logfile.write_msg(msg='PLoM.export_results: {} is exported in {}.'.format(data_i,ex_flag),msg_type='RUNNING',msg_level=0)
 
-
+    """
     def PostProcess():
     	#...output plots...
 
@@ -789,6 +795,7 @@ class PLoM:
         blue_patch = mpatches.Patch(color='blue', label='X')
         plt.legend(handles=[red_patch, blue_patch])
         plt.show()
+    """
 
 
         
