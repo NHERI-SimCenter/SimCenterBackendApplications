@@ -42,6 +42,8 @@ import argparse, json, sys, os
 import numpy as np
 from pathlib import Path
 from scipy.integrate import cumtrapz
+from scipy.interpolate import interp1d
+from scipy.stats.mstats import gmean
 
 class IntensityMeasureComputer:
 
@@ -92,6 +94,8 @@ class IntensityMeasureComputer:
         # significant duration
         self.ds575 = dict()
         self.ds595 = dict()
+        # saratio
+        self.saratio = dict()
 
         # all
         self.intensity_measures = {
@@ -106,7 +110,8 @@ class IntensityMeasureComputer:
             'PGD': self.pgd,
             'AriasIntensity': self.i_a,
             'DS575': self.ds575,
-            'DS595': self.ds595
+            'DS595': self.ds595,
+            'SaRatio': self.saratio
         }
 
     def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
@@ -274,31 +279,38 @@ class IntensityMeasureComputer:
             dt = cur_hist[1]
             ground_acc = cur_hist[2]
             num_steps = len(ground_acc)
+            # discritize
+            dt_disc = 0.005
+            num_steps_disc = int(np.floor(num_steps*dt/dt_disc))
+            f = interp1d([dt*x for x in range(num_steps)], ground_acc, bounds_error=False, fill_value=(ground_acc[0], ground_acc[-1]))
+            tmp_time = [dt_disc*x for x in range(num_steps_disc)]
+            ground_acc = f(tmp_time)
             # circular frequency, damping, and stiffness terms
             omega = (2*np.pi)/periods
             cval = damping*2*omega
             kval = ((2*np.pi)/periods)**2
             # Newmark-Beta
-            accel = np.zeros([num_steps, num_periods])
-            vel = np.zeros([num_steps, num_periods])
-            disp = np.zeros([num_steps, num_periods])
-            a_t = np.zeros([num_steps, num_periods])
-            accel[0, :] =(-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
-            for j in range(1, num_steps):
-                disp[j, :] = disp[j-1, :] + (dt * vel[j-1, :]) + \
-                    (((dt ** 2.) / 2.) * accel[j-1, :])  
-                accel[j, :] = (1./ (1. + dt * 0.5 * cval)) * \
-                    (-ground_acc[j] - kval * disp[j, :] - cval *
-                    (vel[j-1, :] + (dt * 0.5) * accel[j-1, :]))
-                vel[j, :] = vel[j - 1, :] + dt * (0.5 * accel[j - 1, :] +
-                    0.5 * accel[j, :])
+            accel = np.zeros([num_steps_disc, num_periods])
+            vel = np.zeros([num_steps_disc, num_periods])
+            disp = np.zeros([num_steps_disc, num_periods])
+            a_t = np.zeros([num_steps_disc, num_periods])
+            #accel[0, :] =(-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
+            for j in range(1, num_steps_disc):
+                delta_acc = ground_acc[j]-ground_acc[j-1]
+                delta_d2u = (-delta_acc-dt_disc*cval*accel[j-1,:]-dt_disc*kval*(vel[j-1,:]+0.5*dt_disc*accel[j-1,:]))/ \
+                    (1.0+0.5*dt_disc*cval+0.25*dt_disc**2*kval)
+                delta_du = dt_disc*accel[j-1,:]+0.5*dt_disc*delta_d2u
+                delta_u = dt_disc*vel[j-1,:]+0.5*dt_disc**2*accel[j-1,:]+0.25*dt_disc**2*delta_d2u
+                accel[j,:] = delta_d2u+accel[j-1,:]
+                vel[j,:] = delta_du+vel[j-1,:]
+                disp[j,:] = delta_u+disp[j-1,:]
                 a_t[j, :] = ground_acc[j] + accel[j, :]
             # collect data
             self.disp_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(disp), axis=0))})
             self.vel_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(vel), axis=0))})
             self.acc_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(a_t), axis=0)/100.0/self.g)})
             self.psv.update({cur_hist_name: np.ndarray.tolist(omega*np.max(np.fabs(disp), axis=0))})
-            self.psa.update({cur_hist_name: np.ndarray.tolist(2*omega*np.max(np.fabs(disp), axis=0)/100.0/self.g)})
+            self.psa.update({cur_hist_name: np.ndarray.tolist(omega**2*np.max(np.fabs(disp), axis=0)/100.0/self.g)})
             self.periods.update({cur_hist_name: periods.tolist()})
 
     def compute_peak_ground_responses(self):
@@ -350,6 +362,25 @@ class IntensityMeasureComputer:
         ds595 = dt*(id95-id5)
         # return
         return ds575, ds595
+
+    def compute_saratio(self, T1 = 1.0, Ta = 0.02, Tb = 3.0):
+
+        if len(self.psa) == 0:
+            return
+
+        # period list for SaRatio calculations
+        period_list = [0.01*x for x in range(1500)]
+        period_list = [x for x in period_list if x <= Tb and x >= Ta]
+
+        for cur_hist_name, cur_hist in self.time_hist_dict.items():
+            cur_psa = self.psa.get(cur_hist_name, None)
+            cur_periods = self.periods.get(cur_hist_name, None)
+            if (cur_psa is None) or (cur_periods is None):
+                # put zero if the psa is empty
+                self.saratio.update({cur_hist_name: 0.0})
+            else:
+                f = interp1d(cur_periods, cur_psa)
+                self.saratio.update({cur_hist_name: f(T1)/gmean(f(period_list))})               
 
 
 def load_records(event_file, ampScaled):
@@ -417,7 +448,8 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     bim_event = bim_file['Events']
     if type(bim_event)==list:
         bim_event = bim_event[0]
-    periods = bim_event.get('SpectrumPeriod',[0.1,0.2,0.3,0.4,0.5,0.75,1.0,
+    periods = bim_event.get('SpectrumPeriod',[0.01,0.02,0.03,0.04,0.05,0.75,
+                                              0.1,0.2,0.3,0.4,0.5,0.75,1.0,
                                               2.0,3.0,4.0,5.0,7.5,10.0])
 
     # get units
@@ -440,6 +472,7 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     im_computer.compute_peak_ground_responses()
     im_computer.compute_response_spectrum(periods=periods)
     im_computer.compute_arias_intensity()
+    im_computer.compute_saratio(T1=1, Ta=0.02, Tb=3.0) # T1, Ta, Tb will be user-defined
 
     # save a IM.json
     out_data = {'IntensityMeasure': im_computer.intensity_measures}
