@@ -139,6 +139,9 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     if vs30_label not in selected_stn.keys() and vs30_tag == 2:
         print('CreateStation: Interpolating Thompson Vs30 map for defined stations.')
         selected_stn.loc[:,vs30_label] = get_vs30_thompson(selected_stn[lat_label], selected_stn[lon_label])
+    if vs30_label not in selected_stn.keys() and vs30_tag == 3:
+        print('CreateStation: Fetch National Crustal Model Vs for defined stations.')
+        selected_stn.loc[:,vs30_label] = get_vs30_ncm(selected_stn[lat_label], selected_stn[lon_label])
     # Interpolate zTR
     if zTR_label not in selected_stn.keys():
         print('CreateStation: Interpolating global depth to rock map for defined stations.')
@@ -164,22 +167,24 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
             elif vs30_tag == 2:
                 tmp.update({'Vs30': get_vs30_thompson([stn[lat_label]], [stn[lon_label]])[0]})
+            elif vs30_tag == 3:
+                tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
 
         if stn.get(z1p0_label):
-            tmp.update({'z1pt0': stn.get(z2p5_label)})
+            tmp.update({'z1pt0': stn.get(z1p0_label)})
         else:
             if z1_tag:
                 if not tmp.get('Vs30'):
-                    tmp.update({'Vs30': get_vs30_global(stn[lat_label], stn[lon_label])[0]})
+                    tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
 
         if stn.get(z2p5_label):
-            tmp.update({'z2.5': stn.get(z2p5_label)})
+            tmp.update({'z2pt5': stn.get(z2p5_label)})
         else:
             if z25_tag:
                 if not tmp.get('z1pt0'):
                     if not tmp.get('Vs30'):
-                        tmp.update({'Vs30': get_vs30_global(stn[lat_label], stn[lon_label])[0]})
+                        tmp.update({'Vs30': get_vs30_global([stn[lat_label]], [stn[lon_label]])[0]})
                     tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
 
@@ -198,8 +203,24 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         #})
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:
-            json.dump(stn_file, f, indent=2)
+        if '.json' in output_file:
+            with open(output_file, 'w') as f:
+                json.dump(stn_file, f, indent=2)
+        if 'OpenQuake' in output_file:
+            df_csv = {
+                'lon': [x['Longitude'] for x in stn_file['Stations']],
+                'lat': [x['Latitude'] for x in stn_file['Stations']],
+                'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
+                'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
+                'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
+                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']]
+            }
+            # no backarc by default
+            if stn_file['Stations'][0].get('backarc',None):
+                df_csv.update({
+                    'backarc': [x.get('backarc') for x in stn_file['Stations']]
+                })
+            pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
 
@@ -269,8 +290,6 @@ def get_vs30_global(lat, lon):
         vs30_global = pickle.load(f)
     # Interpolation function (linear)
     interpFunc = interpolate.interp2d(vs30_global['Longitude'], vs30_global['Latitude'], vs30_global['Vs30'])
-    print(lon)
-    print(lat)
     vs30 = [float(interpFunc(x, y)) for x,y in zip(lon, lat)]
     # return
     return vs30
@@ -329,7 +348,7 @@ def get_zTR_global(lat, lon):
         lat: list of latitude
         lon: list of longitude
     Output:
-        vs30: list of vs30
+        vs30: list of zTR
     """
     import pickle
     import os
@@ -379,3 +398,117 @@ def export_site_prop(stn_file, output_dir, filename):
         print('HazardSimulation: output folder already exists.')
     # save the csv
     df.to_csv(os.path.join(output_dir, filename), index = False)
+
+
+def get_zTR_ncm(lat, lon):
+    """
+    Call USGS National Crustal Model services for zTR
+    https://earthquake.usgs.gov/nshmp/ncm
+    Input:
+        lat: list of latitude
+        lon: list of longitude
+    Output:
+        zTR: list of depth to bedrock
+    """
+    import requests
+
+    zTR = []
+
+    # Looping over sites
+    for cur_lat, cur_lon in zip(lat, lon):
+        url_geology = 'https://earthquake.usgs.gov/nshmp/ncm/geologic-framework?location={}%2C{}'.format(cur_lat,cur_lon)
+        # geological data (depth to bedrock)
+        r1 = requests.get(url_geology)
+        cur_res = r1.json()
+        if not cur_res['response']['results'][0]['profiles']:
+            # the current site is out of the available range of NCM (Western US only, 06/2021)
+            # just append 0.0 to zTR
+            print('CreateStation: Warning in NCM API call - could not get the site geological data and approximate 0.0 for zTR for site {}, {}'.format(cur_lat,cur_lon))
+            zTR.append(0.0)
+            continue
+        else:
+            # get the top bedrock data
+            zTR.append(abs(cur_res['response']['results'][0]['profiles'][0]['top']))
+    # return
+    return zTR
+
+
+def get_vsp_ncm(lat, lon, depth):
+    """
+    Call USGS National Crustal Model services for Vs30 profile
+    https://earthquake.usgs.gov/nshmp/ncm
+    Input:
+        lat: list of latitude
+        lon: list of longitude
+        depth: [depthMin, depthInc, depthMax]
+    Output:
+        vsp: list of shear-wave velocity profile
+    """
+    import requests
+
+    vsp = []
+    depthMin, depthInc, depthMax = [abs(x) for x in depth]
+
+    # Looping over sites
+    for cur_lat, cur_lon in zip(lat, lon):
+        url_geophys = 'https://earthquake.usgs.gov/nshmp/ncm/geophysical?location={}%2C{}&depths={}%2C{}%2C{}'.format(cur_lat,cur_lon,depthMin,depthInc,depthMax)
+        r1 = requests.get(url_geophys)
+        cur_res = r1.json()
+        if cur_res['status'] == 'error':
+            # the current site is out of the available range of NCM (Western US only, 06/2021)
+            # just append -1 to zTR
+            print('CreateStation: Warning in NCM API call - could not get the site geopyhsical data.')
+            vsp.append([])
+            continue
+        else:
+            # get vs30 profile
+            vsp.append([abs(x) for x in cur_res['response']['results'][0]['profile']['vs']])
+    if len(vsp) == 1:
+        vsp = vsp[0]
+    # return
+    return vsp
+
+
+def compute_vs30_from_vsp(depthp, vsp):
+    """
+    Compute the Vs30 given the depth and Vs profile
+    Input:
+        depthp: list of depth for Vs profile
+        vsp: Vs profile
+    Output:
+        vs30p: average VS for the upper 30-m depth
+    """
+    # Computing the depth interval
+    delta_depth = np.diff([0] + depthp)
+    # Computing the wave-travel time
+    delta_t = [x / y for x,y in zip(delta_depth, vsp)]
+    # Computing the Vs30
+    vs30p = 30.0 / np.sum(delta_t)
+    # return
+    return vs30p
+
+
+def get_vs30_ncm(lat, lon):
+    """
+    Fetch Vs30 at given latitude and longitude from NCM
+    Input:
+        lat: list of latitude
+        lon: list of longitude
+    Output:
+        vs30: list of vs30
+    """
+    # Depth list (in meter)
+    depth = [1.0, 1.0, 30.0]
+    depthp = np.arange(depth[0], depth[2] + 1.0, depth[1])
+    # Getting Vs profile
+    vsp = [get_vsp_ncm([x], [y], depth) for x,y in zip(lat, lon)]
+    # Computing Vs30
+    vs30 = []
+    for cur_vsp in vsp:
+        if cur_vsp:
+            vs30.append(compute_vs30_from_vsp(depthp, cur_vsp))
+        else:
+            print('CreateStation: Warning - approximate 760 m/s for sites not supported by NCM (Western US).')
+            vs30.append(760.0)
+    # return
+    return vs30

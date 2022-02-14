@@ -42,12 +42,11 @@
 import argparse, json
 import numpy as np
 import pandas as pd
-from numpy.random import multinomial
 from pathlib import Path
 
 from sklearn.neighbors import NearestNeighbors
 
-def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label):
+def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label, seed):
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -91,6 +90,12 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     distances, indices = nbrs.kneighbors(Y)
     distances = distances + 1e-20
 
+    # initialize the random generator
+    if seed is not None:
+        rng = np.random.default_rng(seed)
+    else:
+        rng = np.random.default_rng()
+
     # iterate through the buildings and store the selected events in the BIM
     for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index,
                                                           distances,
@@ -126,7 +131,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         weights = np.array(dist_list)/np.sum(dist_list)
 
         # get the pre-defined number of samples for each neighbor
-        nbr_samples = np.where(multinomial(1, weights, samples) == 1)[1]
+        nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
 
         # this is the preferred behavior, the else caluse is left for legacy inputs
         if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
@@ -173,7 +178,7 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
 
                     # append the scale factor (or 1.0) to the scale list
                     if len(event_df.columns) > 1:
-                        scale_list.append(event_df.iloc[event_j,1])
+                        scale_list.append(float(event_df.iloc[event_j,1]))
                     else:
                         scale_list.append(1.0)
 
@@ -197,19 +202,21 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
         # prepare a dictionary of events
         event_list_json = []
         for e_i, event in enumerate(event_list):
-            event_list_json.append({
-                "EventClassification": "Earthquake",
-                "fileName": f'{event}x{e_i:05d}',
-                "factor": scale_list[e_i],
-                "type": event_type
-                })
+            #event_list_json.append({
+            #    #"EventClassification": "Earthquake",
+            #    "fileName": f'{event}x{e_i:05d}',
+            #    "factor": scale_list[e_i],
+            #    #"type": event_type
+            #    })
+            event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the BIM
         bldg_data['Events'] = {
-            "EventClassification": "Earthquake",
+            #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
-            "type": "SimCenterEvents"
+            "type": event_type
+            #"type": "SimCenterEvents"
         }
 
         with open(bldg_file, 'w') as f:
@@ -223,7 +230,9 @@ if __name__ == '__main__':
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
     parser.add_argument('--filter_label', default="")
+    parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
 
     find_neighbors(args.buildingFile, args.filenameEVENTgrid,
-                   args.samples,args.neighbors, args.filter_label)
+                   args.samples,args.neighbors, args.filter_label,
+                   args.seed)

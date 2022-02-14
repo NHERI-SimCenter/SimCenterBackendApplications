@@ -1,3 +1,55 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2018 Leland Stanford Junior University
+# Copyright (c) 2018 The Regents of the University of California
+#
+# This file is part of the SimCenter Backend Applications
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# You should have received a copy of the BSD 3-Clause License along with
+# this file. If not, see <http://www.opensource.org/licenses/>.
+#
+# Contributors:
+# Kuanshi Zhong
+# Ajay B Harish
+# Frank Mckenna
+# Sanjay Govindjee
+#
+# Special thanks to the original authors Snaiki and Wu for 
+# sharing the Matlab scripts
+# Reference:
+# 1. Snaiki, R. and Wu, T. (2017). Modeling tropical cyclone boundary layer: Height-
+# resolving pressure and wind fields. Journal of Wind Engineering and Industrial 
+# Aerodynamics, 170, pp. 18-27.
+# 2. Snaiki, R. and Wu, T. (2017). A linear height-resolving wind field model for 
+# tropical cyclone boundary layer. Journal of Wind Engineering and Industrial 
+# Aerodynamics, 171, pp. 248-260.
+
 import numpy as np
 from shapely.geometry import Point, Polygon
 
@@ -103,7 +155,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             # no reference terrain provided, using default reference z0 = 0.03
             z0 = 0.03
         else:
-            pt = Point(lat, lon)
+            #pt = Point(lat, lon)
+            pt = Point(lon, lat)
             for p, z in zip(self.terrain_poly, self.terrain_z0):
                 if pt.within(p):
                     z0 = z
@@ -121,7 +174,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         for p in terrain_info['features']:
             if (p['geometry']['type'] == 'Polygon'):
                 # creating a new polygon
-                new_poly = Polygon(p['geometry']['coordinates'])
+                new_poly = Polygon(p['geometry']['coordinates'][0])
                 self.terrain_poly.append(new_poly)
                 self.terrain_z0.append(p['properties']['z0'])
                 self.terrain_num += 1

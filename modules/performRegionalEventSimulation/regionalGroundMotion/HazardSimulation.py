@@ -41,37 +41,44 @@
 import os
 import sys
 import subprocess
-R2D = True
-if R2D:
-    packages = ['JPype1', 'tqdm']
-else:
-    packages = ['JPype1', 'selenium', 'tqdm']
-for p in packages:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", p])
 import argparse, posixpath, json
 import numpy as np
 import pandas as pd
 import time
-import jpype
-from jpype import imports
-from jpype.types import *
-jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-jpype.startJVM("-Xmx8G", convertStrings=False)
 
-from CreateStation import *
-from CreateScenario import *
-from ComputeIntensityMeasure import *
-from SelectGroundMotion import *
-
-# untar site databases
-site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-import subprocess
-print('HazardSimulation: Extracting site databases.')
-cwd = os.path.dirname(os.path.realpath(__file__))
-for cur_database in site_database:
-    subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+R2D = True
 
 if __name__ == '__main__':
+
+    # local dependencies
+    if R2D:
+        packages = ['JPype1', 'tqdm', 'psutil']
+    else:
+        packages = ['JPype1', 'selenium', 'tqdm', 'psutil']
+    for p in packages:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+    
+    import jpype
+    from jpype import imports
+    from jpype.types import *
+    jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
+    jpype.startJVM("-Xmx8G", convertStrings=False)
+    import psutil
+    from CreateStation import *
+    from CreateScenario import *
+    from ComputeIntensityMeasure import *
+    from SelectGroundMotion import *
+
+    # untar site databases
+    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+    import subprocess
+    print('HazardSimulation: Extracting site databases.')
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    for cur_database in site_database:
+        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+
+    # Initial process list
+    proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
@@ -96,7 +103,7 @@ if __name__ == '__main__':
         input_file = os.path.join(input_dir,site_info['input_file'])
         output_file = site_info.get('output_file',False)
         if output_file:
-            output_file = os.path.join(output_dir, output_file)
+            output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
         # Creating stations from the csv input file
@@ -109,6 +116,8 @@ if __name__ == '__main__':
             vs30_tag = 1
         elif 'Thompson' in site_info['Vs30']['Type']:
             vs30_tag = 2
+        elif 'NCM' in site_info['Vs30']['Type']:
+            vs30_tag = 3
         else:
             vs30_tag = 0
         # Creating stations from the csv input file
@@ -125,7 +134,8 @@ if __name__ == '__main__':
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # Creating earthquake scenarios
-        scenarios = create_earthquake_scenarios(scenario_info, stations)
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            scenarios = create_earthquake_scenarios(scenario_info, stations)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -140,24 +150,62 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
-        psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
-                                           event_info['GMPE'],
-                                           event_info['IntensityMeasure'])
+        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            psa_raw, stn_new = compute_spectra(scenarios, stations['Stations'],
+                                               event_info['GMPE'],
+                                               event_info['IntensityMeasure'])
+        elif 'OpenQuake' in scenario_info['EqRupture']['Type']:           
+            # import FetchOpenQuake
+            from FetchOpenQuake import *
+            # Preparing config ini for OpenQuake
+            filePath_ini, oq_ver_loaded = openquake_config(site_info, scenario_info, event_info, dir_info)
+            if not filePath_ini:
+                # Error in ini file
+                print('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
+                exit()
+            if scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
+                # Calling openquake to run classical PSHA
+                #oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)
+                oq_flag = oq_run_classical_psha(filePath_ini, exports='csv', oq_version=oq_ver_loaded, dir_info=dir_info)
+                if not oq_flag:
+                    print('HazardSimulation: OpenQuake Classical PSHA completed.')
+                if scenario_info['EqRupture'].get('UHS', False):
+                    ln_psa_mr, mag_maf = oq_read_uhs_classical_psha(scenario_info, event_info, dir_info)
+                else:
+                    ln_psa_mr = []
+                    mag_maf = []
+                stn_new = stations['Stations']
+
+            elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+                # Creating and conducting OpenQuake calculations
+                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=dir_info)
+                oq_calc.run_calc()
+                psa_raw = [oq_calc.eval_calc()]
+                stn_new = stations['Stations']
+                print('HazardSimulation: OpenQuake Scenario calculation completed.')
+
+            else:                
+                print('HazardSimulation: OpenQuakeClassicalPSHA and OpenQuakeScenario are supported.')
+                exit()
+            
         # Updating station information
         stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')
         #print(psa_raw)
-        # Computing log mean Sa
-        ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
-                                                    event_info['NumberPerSite'],
-                                                    event_info['CorrelationModel'],
-                                                    event_info['IntensityMeasure'])
-        print('HazardSimulation: correlated response spectra computed.')
-        if event_info['SaveIM']:
+        if not scenario_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
+            # Computing correlated IMs
+            ln_psa_mr, mag_maf = simulate_ground_motion(stations['Stations'], psa_raw,
+                                                        event_info['NumberPerSite'],
+                                                        event_info['CorrelationModel'],
+                                                        event_info['IntensityMeasure'])
+            print('HazardSimulation: correlated response spectra computed.')
+        if event_info['SaveIM'] and ln_psa_mr:
             print('HazardSimulation: saving simulated intensity measures.')
             _ = export_im(stations['Stations'], event_info['IntensityMeasure'],
                           ln_psa_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
+        else:
+            print('HazardSimulation: IM is not required to saved or no IM is found.')
         #print(np.exp(ln_psa_mr[0][0, :, 1]))
         #print(np.exp(ln_psa_mr[0][1, :, 1]))
     elif scenario_info['Type'] == 'Wind':
@@ -215,3 +263,12 @@ if __name__ == '__main__':
                     print('HazardSimulation: No records to be parsed.')
         else:
             print('HazardSimulation: ground motion selection is not requested.')
+
+    # Final process list
+    proc_list_final = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+    # Closing processes created by this run
+    for i in proc_list_final:
+        if i not in proc_list_init:
+            os.kill(i['pid'],9)
+    # Closing the current process
+    sys.exit(0)

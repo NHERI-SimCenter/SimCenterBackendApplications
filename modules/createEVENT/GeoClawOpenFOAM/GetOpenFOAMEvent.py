@@ -205,5 +205,4 @@ if __name__ == "__main__":
     arguments, unknowns = parser.parse_known_args()
     [floors, startTime] = ReadBIM(arguments.bim)
 
-
     GetOpenFOAMEvent(floors, startTime)

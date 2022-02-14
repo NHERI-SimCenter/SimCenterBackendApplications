@@ -113,14 +113,14 @@ int main(int argc, char **argv)
 
   json_array_foreach(eventsArray, index, value) {
 
-    // check earthquake
-    json_t *type = json_object_get(value,"type");
-    const char *eventType = json_string_value(type);
-    if (strcmp(eventType,"Seismic") != 0) {
-	json_object_clear(rootEVENT);
-	printf("ERROR event type %s not Seismic", eventType);
-	return -1;
-    }
+    // check earthquake  - skip this check for now
+    //json_t *type = json_object_get(value,"type");
+    //const char *eventType = json_string_value(type);
+    //if (strcmp(eventType,"Seismic") != 0) {
+    //  json_object_clear(rootEVENT);
+    //  printf("ERROR event type %s not Seismic", eventType);
+    //  return -1;
+    //}
 
     // add the EDP for the event
     json_t *eventObj = json_object();

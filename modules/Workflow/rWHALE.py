@@ -3,7 +3,7 @@
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
-# This file is part of the RDT Application.
+# This file is part of the SimCenter Backend Applications.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 # You should have received a copy of the BSD 3-Clause License along with the
-# RDT Application. If not, see <http://www.opensource.org/licenses/>.
+# SimCenter Backend Applications. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
 # Frank McKenna
@@ -54,31 +54,48 @@ def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file):
 
-    # initialize the log file
+    # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
 
-    if working_dir is not None:
-        runDir = working_dir
-    else:
-        runDir = inputs['runDir']
+    # TODO: if the ref dir is needed, do NOT save it to the input file, store it
+    # somewhere else in a file that i not shared among processes
+    #inputs['refDir'] = reference_dir
+    #with open(input_file, 'w') as f:
+    #    json.dump(inputs, f, indent=2)
 
-    if not os.path.exists(runDir):
-        os.mkdir(runDir)
+    # TODO: remove the commented section below, I only kept it for now to make
+    # sure it is not needed
 
+    #if working_dir is not None:
+    #    runDir = working_dir
+    #else:
+    #    runDir = inputs['runDir']
+
+    if not os.path.exists(working_dir):
+        os.mkdir(working_dir)
+
+    # initialize log file
     if log_file == 'log.txt':
-        whale.log_file = runDir + '/log.txt'
+        log_file_path = working_dir + '/log.txt'
     else:
-        whale.log_file = log_file
-    with open(whale.log_file, 'w') as f:
-        f.write('rWHALE workflow\n')
+        log_file_path = log_file
+
+    whale.set_options({
+        "LogFile": log_file_path,
+        "LogShowMS": False,
+        "PrintLog": True
+        })
+    log_msg('\nrWHALE workflow\n',
+            prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
 
     # echo the inputs
-    log_msg(log_div)
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
     log_msg('Started running the workflow script')
-    log_msg(log_div)
+    log_div()
 
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
@@ -88,9 +105,7 @@ def main(run_type, input_file, app_registry,
                          'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
-        app_dir = app_dir,
-        units = inputs.get('units', None),
-        outputs=inputs.get('outputs', None))
+        app_dir = app_dir)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
@@ -104,16 +119,24 @@ def main(run_type, input_file, app_registry,
     # initialize the working directory
     WF.init_workdir()
 
+    # perform the event simulation (if needed)
+    if 'RegionalEvent' in WF.workflow_apps.keys():
+        WF.perform_regional_event()
+
     # prepare the basic inputs for individual buildings
     building_file = WF.create_building_files()
     WF.perform_regional_mapping(building_file)
 
     # TODO: not elegant code, fix later
-    with open(WF.building_file_path, 'r') as f:
+    with open(building_file, 'r') as f:
         bldg_data = json.load(f)
 
     for bldg in bldg_data: #[:1]:
-        log_msg(bldg)
+        log_msg('', prepend_timestamp=False)
+        log_div(prepend_blank_space=False)
+        log_div(prepend_blank_space=False)
+        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
+        log_div()
 
         # initialize the simulation directory
         WF.init_simdir(bldg['id'], bldg['file'])
@@ -132,7 +155,9 @@ def main(run_type, input_file, app_registry,
         WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
 
         # run dl engine to estimate losses
-        WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
+        WF.estimate_losses(
+            BIM_file = bldg['file'], bldg_id = bldg['id'],
+            copy_resources=True)
 
         if force_cleanup:
             #clean up intermediate files from the simulation
@@ -144,6 +169,10 @@ def main(run_type, input_file, app_registry,
     if force_cleanup:
         # clean up intermediate files from the working directory
         WF.cleanup_workdir()
+
+    log_msg('Workflow completed.')
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
 
 if __name__ == '__main__':
 
