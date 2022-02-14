@@ -40,9 +40,10 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
 	    json_array_append(rootRVs, fileRandomVariable);
 	  }
-	  if (numRVs != 0) {
+    // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
+	  //if (numRVs != 0) {
 	    rvFiles.insert(std::string(fName));
-	  }
+	  //}
 	}
       }
     }
