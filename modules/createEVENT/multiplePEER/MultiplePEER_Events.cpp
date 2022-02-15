@@ -130,6 +130,8 @@ int main(int argc, char **argv)
     // then copy file to replace EVENT
     // 
 
+    std::cout << "hello" << std::endl;
+
     json_t *rootINPUT = json_load_file(filenameBIM, 0, &error);
     json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
     
@@ -166,7 +168,7 @@ int main(int argc, char **argv)
 	      const char * name = json_string_value(json_object_get(theEvent,"name"));
 
 	      if (strcmp(eventName, name) == 0) {
-		addEvent(name, value);
+		//addEvent(name, value);
 		
 		i = json_array_size(events);
 	      }
