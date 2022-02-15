@@ -42,22 +42,12 @@
 # Sang-ri Yi
 # Frank Mckenna
 #
-from re import T
-import time
 import shutil
 import os
 import sys
-import subprocess
-import math
-import pickle
-import glob
 import json
 from scipy.stats import lognorm, norm
 import numpy as np
-import GPy as GPy
-from pyDOE import lhs
-import warnings
-import random
 from multiprocessing import Pool
 from PLoM.PLoM import *
 import pandas as pd
@@ -95,9 +85,16 @@ class runPLoM:
         self.run_type = run_type
         self.os_type = os_type
         self.errlog = errlog
+        self.job_config = job_config
+
+        # initialization
+        self.rv_name = list()
+        self.g_name = list()
+        self.x_dim = 0
+        self.y_dim = 0
 
         # read variable names
-        self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)
+        # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)
 
         # read PLoM parameters
         surrogateInfo = job_config["UQ_Method"]["surrogateMethodInfo"]
@@ -124,22 +121,215 @@ class runPLoM:
             self.inpData = os.path.join(work_dir, "templatedir/inpFile.in")
             if not do_simulation:
                 self.outData = os.path.join(work_dir, "templatedir/outFile.in")
+        elif surrogateInfo["method"] == "Sampling and Simulation":
+            # run simulation first to generate training data
+            do_sampling = False
+            do_simulation = False
+            self._run_simulation()
         else:
             msg = 'Error reading json: only supporting "Import Data File"'
             errlog.exit(msg)
 
+        # read variable names
+        self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])
+
         # load variables
-        if self._load_variables(do_sampling, do_simulation, job_config):
+        if self._load_variables(do_sampling, do_simulation):
             msg = 'runPLoM.__init__: Error in loading variables.'
             self.errlog.exit(msg)
 
 
-    def _create_variables(self, job_config):
+    def _run_simulation(self):
+
+        """
+        _run_simulation: running simulation to get training data
+        input:
+            job_config: job configuration dictionary
+        output:
+            None
+        """
+        import platform
+
+        job_config = self.job_config
+
+        # get python instance
+        runType = job_config.get('runType','runningLocal')
+        pythonEXE = 'python'
+        if runType == 'runningLocal' and platform.system() == 'Windows':
+            localAppDir = job_config.get('localAppDir',None)
+            if localAppDir is None:
+                # no local app directory is found, let's try to use system python
+                pass
+            else:
+                pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
+        else:
+            # for remote run and macOS, let's use system python
+            pass
+
+        # move into the templatedir
+        run_dir = job_config.get('runDir',os.getcwd())
+        os.chdir(run_dir)
+        # training is done for single building (for now)
+        bldg_id = None
+        if bldg_id is not None:
+            os.chdir(bldg_id)
+        os.chdir('templatedir')
+
+        # dakota script path
+        dakotaScript = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'dakota','DakotaUQ.py')
+
+        # write a new dakota.json for forward propogation
+        with open('sc_dakota.json','r') as f:
+            tmp = json.load(f)
+        tmp['UQ_Method']['uqType'] = 'Forward Propagation'
+        tmp['UQ_Method']['parallelExecution'] = tmp['UQ_Method']['surrogateMethodInfo']['parallelExecution']
+        samplingObj = tmp['UQ_Method']['surrogateMethodInfo']['samplingMethod']
+        tmp['UQ_Method']['samplingMethodData']=dict()
+        for key, item in samplingObj.items():
+            tmp['UQ_Method']['samplingMethodData'][key] = item
+        with open('sc_dakota_plom.json','w') as f:
+            json.dump(tmp, f, indent=2)
+
+        # command line
+        command_line = f"{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile sc_driver --workflowOutput EDP.json --runType {runType}"
+        print(command_line)
+
+        # run command
+        os.system(command_line)
+
+        # remove the new dakota.json
+        #os.remove('sc_dakota_plom.json')
+
+        if runType in ['run', 'runningLocal']:
+            # create the response.csv file from the dakotaTab.out file
+            os.chdir(run_dir)
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+            dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
+            # save to csv
+            dakota_out.to_csv('response.csv')
+            # create a IM.csv file
+            self._compute_IM(run_dir, pythonEXE)
+            # collect IMs and RVs to the PLoM_variables.csv and EDPs to PLoM_responses.csv
+            self.inpData, self.outData = self._prepare_training_data(run_dir)
+            # update job_config['randomVariables']
+            cur_rv_list = [x.get('name') for x in job_config['randomVariables']]
+            for curRV in self.rv_name:
+                if curRV not in cur_rv_list:
+                    job_config['randomVariables'].append({'distribution': 'Normal', 'name': curRV})
+            self.job_config = job_config
+
+        elif self.run_type in ['set_up', 'runningRemote']:
+            pass
+
+    
+    def _prepare_training_data(self, run_dir):
+
+        # load IM.csv if exists
+        df_IM = None
+        if os.path.exists(os.path.join(run_dir,'IM.csv')):
+            df_IM = pd.read_csv(os.path.join(run_dir,'IM.csv'),index_col=None)
+        else:
+            msg = 'runPLoM._prepare_training_data: no IM.csv in {}.'.format(run_dir)
+            print(msg)
+
+        # load response.csv if exists
+        df_SIMU = None
+        if os.path.exists(os.path.join(run_dir,'response.csv')):
+            df_SIMU = pd.read_csv(os.path.join(run_dir,'response.csv'),index_col=None)
+        else:
+            msg = 'runPLoM._prepare_training_data: response.csv not found in {}.'.format(run_dir)
+            self.errlog.exit(msg)
+
+        # read BIM to get RV names
+        with open(os.path.join(run_dir, 'templatedir', 'dakota.json')) as f:
+            tmp = json.load(f)
+        rVs = tmp.get('randomVariables', None)
+        if rVs is None:
+            rv_names = []
+        else:
+            rv_names = [x.get('name') for x in rVs]
+        
+        # collect rv columns from df_SIMU
+        df_RV = None
+        if len(rv_names) > 0:
+            df_RV = df_SIMU[rv_names]
+            for cur_rv in rv_names:
+                df_SIMU.pop(cur_rv)
+        if '%eval_id' in list(df_SIMU.columns):
+            df_SIMU.pop('%eval_id')
+        if 'interface' in list(df_SIMU.columns):
+            df_SIMU.pop('interface')
+        if 'MultipleEvent' in list(df_SIMU.columns):
+            df_SIMU.pop('MultipleEvent')
+        
+        # concat df_RV and df_IM
+        df_X = pd.concat([df_IM, df_RV], axis=1)
+        if '%eval_id' in list(df_X.columns):
+            df_X.pop('%eval_id')
+
+        # make the first column name start with %
+        df_X = df_X.rename({list(df_X.columns)[0]:'%'+list(df_X.columns)[0]}, axis='columns')
+        df_SIMU = df_SIMU.rename({list(df_SIMU.columns)[0]:'%'+list(df_SIMU.columns)[0]}, axis='columns')
+
+        # save to csvs
+        inpData = os.path.join(run_dir,'PLoM_variables.csv')
+        outData = os.path.join(run_dir,'PLoM_responses.csv')
+        df_X.to_csv(inpData,index=False)
+        df_SIMU.to_csv(outData,index=False)
+
+        # set rv_names, g_name, x_dim, y_dim
+        self.rv_name = list(df_X.columns)
+        self.g_name = list(df_SIMU.columns)
+        self.x_dim = len(self.rv_name)
+        self.y_dim = len(self.g_name)
+
+        return inpData, outData
+
+
+    def _compute_IM(self, run_dir, pythonEXE):
+
+        # find workdirs
+        workdir_list = [x for x in os.listdir(run_dir) if x.startswith('workdir')]
+
+        # intensity measure app
+        computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                'createEVENT','groundMotionIM','IntensityMeasureComputer.py')
+        
+        # compute IMs
+        for cur_workdir in workdir_list:
+            os.chdir(cur_workdir)
+            os.system(f"{pythonEXE} {computeIM} --filenameBIM BIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
+            os.chdir(run_dir)
+
+        # collect IMs from different workdirs
+        for i, cur_workdir in enumerate(workdir_list):
+            cur_id = int(cur_workdir.split('.')[-1])
+            if os.path.exists(os.path.join(cur_workdir,'IM.csv')):
+                try:
+                    tmp1 = pd.read_csv(os.path.join(cur_workdir,'IM.csv'),index_col=None)
+                except:
+                    return
+                if tmp1.empty:
+                    return
+                tmp2 = pd.DataFrame({'%eval_id': [cur_id for x in range(len(tmp1.index))]})
+                if i == 0:
+                    im_collector = pd.concat([tmp2, tmp1], axis=1)
+                else:
+                    tmp3 = pd.concat([tmp2, tmp1], axis=1)
+                    im_collector = pd.concat([im_collector, tmp3])
+            else:
+                return
+        im_collector = im_collector.sort_values(by=['%eval_id'])
+        im_collector.to_csv('IM.csv',index=False)
+
+
+    def _create_variables(self, training_data):
 
         """
         create_variables: creating X and Y variables
         input:
-            job_config: job configuration dictionary
+            training_data: training data source
         output:
             x_dim: dimension of X data
             y_dim: dimension of Y data
@@ -147,11 +337,19 @@ class runPLoM:
             g_name: variable name (Y data)
         """
 
+        job_config = self.job_config
+
+        # initialization
+        rv_name = self.rv_name
+        g_name = self.g_name
+        x_dim = self.x_dim
+        y_dim = self.y_dim
+
+        # check if training data source from simulation
+        if training_data == 'Sampling and Simulation':
+            return x_dim, y_dim, rv_name, g_name
+
         # read X and Y variable names
-        rv_name = list()
-        g_name = list()
-        x_dim = 0
-        y_dim = 0
         for rv in job_config['randomVariables']:
             rv_name = rv_name + [rv['name']]
             x_dim += 1
@@ -240,7 +438,7 @@ class runPLoM:
         return run_flag
 
 
-    def _load_variables(self, do_sampling, do_simulation, job_config):
+    def _load_variables(self, do_sampling, do_simulation):
         
         """
         _load_variables: load variables
@@ -251,60 +449,61 @@ class runPLoM:
         output:
             run_flag: 0 - sucess, 1 - failure
         """
+        job_config = self.job_config
 
         run_flag = 0
-        try:
-            if do_sampling:
-                pass
-            else:
-                X = read_txt(self.inpData, self.errlog)
-                if len(X.columns) != self.x_dim:
-                    msg = 'Error importing input data: Number of dimension inconsistent: have {} RV(s) but {} column(s).' \
-                        .format(self.x_dim, len(X.columns))
-                    errlog.exit(msg)
-                if self.logTransform:
-                    X = np.log(X)
+        #try:
+        if do_sampling:
+            pass
+        else:
+            X = read_txt(self.inpData, self.errlog)
+            if len(X.columns) != self.x_dim:
+                msg = 'Error importing input data: Number of dimension inconsistent: have {} RV(s) but {} column(s).' \
+                    .format(self.x_dim, len(X.columns))
+                errlog.exit(msg)
+            if self.logTransform:
+                X = np.log(X)
 
-            if do_simulation:
-                pass
-            else:
-                Y = read_txt(self.outData, self.errlog)
-                if Y.shape[1] != self.y_dim:
-                    msg = 'Error importing input data: Number of dimension inconsistent: have {} QoI(s) but {} column(s).' \
-                        .format(self.y_dim, len(Y.columns))
-                    errlog.exit(msg)
-                if self.logTransform:
-                    Y = np.log(Y)
+        if do_simulation:
+            pass
+        else:
+            Y = read_txt(self.outData, self.errlog)
+            if Y.shape[1] != self.y_dim:
+                msg = 'Error importing input data: Number of dimension inconsistent: have {} QoI(s) but {} column(s).' \
+                    .format(self.y_dim, len(Y.columns))
+                errlog.exit(msg)
+            if self.logTransform:
+                Y = np.log(Y)
 
-                if X.shape[0] != Y.shape[0]:
-                    msg = 'Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(len(X.columns), len(Y.columns))
-                    errlog.exit(msg)
+            if X.shape[0] != Y.shape[0]:
+                msg = 'Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(len(X.columns), len(Y.columns))
+                errlog.exit(msg)
 
-                n_samp = Y.shape[0]
-                # writing a data file for PLoM input
-                self.X = X.to_numpy()
-                self.Y = Y.to_numpy()
-                inputXY = os.path.join(work_dir, "templatedir/inputXY.csv")
-                X_Y = pd.concat([X,Y], axis=1)
-                X_Y.to_csv(inputXY, sep=',', header=True, index=False)
-                self.inputXY = inputXY
-                self.n_samp = n_samp
+            n_samp = Y.shape[0]
+            # writing a data file for PLoM input
+            self.X = X.to_numpy()
+            self.Y = Y.to_numpy()
+            inputXY = os.path.join(work_dir, "templatedir/inputXY.csv")
+            X_Y = pd.concat([X,Y], axis=1)
+            X_Y.to_csv(inputXY, sep=',', header=True, index=False)
+            self.inputXY = inputXY
+            self.n_samp = n_samp
 
-                self.do_sampling = do_sampling
-                self.do_simulation = do_simulation
-                self.rvName = []
-                self.rvDist = []
-                self.rvVal = []
-                for nx in range(self.x_dim):
-                    rvInfo = job_config["randomVariables"][nx]
-                    self.rvName = self.rvName + [rvInfo["name"]]
-                    self.rvDist = self.rvDist + [rvInfo["distribution"]]
-                    if do_sampling:
-                        self.rvVal = self.rvVal + [(rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2]
-                    else:
-                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]
-        except:
-            run_flag = 1
+            self.do_sampling = do_sampling
+            self.do_simulation = do_simulation
+            self.rvName = []
+            self.rvDist = []
+            self.rvVal = []
+            for nx in range(self.x_dim):
+                rvInfo = job_config["randomVariables"][nx]
+                self.rvName = self.rvName + [rvInfo["name"]]
+                self.rvDist = self.rvDist + [rvInfo["distribution"]]
+                if do_sampling:
+                    self.rvVal = self.rvVal + [(rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2]
+                else:
+                    self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]
+        #except:
+        #    run_flag = 1
 
         # return
         return run_flag
@@ -435,7 +634,7 @@ def read_txt(text_dir, errlog):
         for line in f:
             if line.startswith('%'):
                 header_count = header_count + 1
-                print(line)
+                header_line = line
         try:
             with open(text_dir) as f:
                 X = np.loadtxt(f, skiprows=header_count)
@@ -453,7 +652,8 @@ def read_txt(text_dir, errlog):
     if X.ndim == 1:
         X = np.array([X]).transpose()
 
-    df_X = pd.DataFrame(data=X, columns=["V"+str(x) for x in range(X.shape[1])])
+    #df_X = pd.DataFrame(data=X, columns=["V"+str(x) for x in range(X.shape[1])])
+    df_X = pd.DataFrame(data=X, columns=header_line.replace('\n','').split(','))
 
     return df_X
     
