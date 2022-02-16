@@ -166,7 +166,7 @@ int main(int argc, char **argv)
 	      const char * name = json_string_value(json_object_get(theEvent,"name"));
 
 	      if (strcmp(eventName, name) == 0) {
-		//addEvent(name, value);
+		addEvent(name, value);
 		
 		i = json_array_size(events);
 	      }
@@ -197,8 +197,59 @@ int addEvent(const char *fileName, json_t *obj) {
   json_t *eventsArray = json_object_get(rootEVENT,"Events");  
   json_t *eventToCopy = json_array_get(eventsArray,0);
 
+  // KZ: dealing with random scaling factor
+  json_t *eventTimeSeriesObj = json_object_get(eventToCopy,"timeSeries");
+  if (eventTimeSeriesObj == NULL) {
+    std::cout << "eventTimeSeriesObj wrong" << std::endl;
+  } else {
+    std::cout << "eventTimeSeriesObj got" << std::endl;
+  }
+  json_t *eventTimeSeries = json_array_get(eventTimeSeriesObj,0);
+  if (eventTimeSeries == NULL) {
+    std::cout << "eventTimeSeries wrong" << std::endl;
+  } else {
+    std::cout << "eventTimeSeries got" << std::endl;
+  }
+  json_t *eventFactor = json_object_get(eventTimeSeries,"factor");
+  if (eventFactor == NULL) {
+    std::cout << "eventFactor wrong" << std::endl;
+  } else {
+    std::cout << "eventFactor got" << std::endl;
+  }
+  double pFactor = -1.0;
+  if (json_is_number(eventFactor)==false) {
+    // scaling factor is random variable, so we want keep the factor in obj as it's populated
+    json_t *populatedTimeSeriesObj = json_object_get(obj, "timeSeries");
+    if (populatedTimeSeriesObj == NULL) {
+      std::cout << "populatedTimeSeriesObj wrong" << std::endl;
+    } else {
+      std::cout << "populatedTimeSeriesObj got" << std::endl;
+    }
+    json_t *populatedTimeSeries = json_array_get(populatedTimeSeriesObj,0);
+    if (populatedTimeSeries == NULL) {
+      std::cout << "populatedTimeSeries wrong" << std::endl;
+    } else {
+      std::cout << "populatedTimeSeries got" << std::endl;
+    }
+    json_t *populatedFactor = json_object_get(populatedTimeSeries,"factor");
+    if (populatedFactor == NULL) {
+      std::cout << "populatedFactor wrong" << std::endl;
+    } else {
+      std::cout << "populatedFactor got" << std::endl;
+    }
+    pFactor = json_number_value(populatedFactor);
+    std::cout << "pFactor = " << pFactor << std::endl;
+  } 
+
   // update the object
   json_object_update(obj, eventToCopy); 
+
+  // instill the pFactor back
+  if (pFactor > 0) {
+    json_t *populatedTimeSeriesObj = json_object_get(obj, "timeSeries");
+    json_t *populatedTimeSeries = json_array_get(populatedTimeSeriesObj,0);
+    json_object_set(populatedTimeSeries, "factor", json_real(pFactor));
+  }
   return 0;
 }
 
