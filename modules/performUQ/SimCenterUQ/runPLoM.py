@@ -261,7 +261,9 @@ class runPLoM:
         if 'interface' in list(df_SIMU.columns):
             df_SIMU.pop('interface')
         if 'MultipleEvent' in list(df_SIMU.columns):
-            df_SIMU.pop('MultipleEvent')
+            self.multipleEvent = df_SIMU.pop('MultipleEvent')
+        else:
+            self.multipleEvent = None
         
         # concat df_RV and df_IM
         df_X = pd.concat([df_IM, df_RV], axis=1)
@@ -546,9 +548,9 @@ class runPLoM:
         if self.n_mc > 0:
             shutil.copy2(os.path.join(self.work_dir,'templatedir','SurrogatePLoM','DataOut','X_new.csv'),self.work_dir)
 
-        header_string_x = ' ' + ' '.join([str(elem) for elem in self.rv_name]) + ' '
-        header_string_y = ' ' + ' '.join([str(elem) for elem in self.g_name])
-        header_string = header_string_x + header_string_y
+        header_string_x = ' ' + ' '.join([str(elem).replace('%','') for elem in self.rv_name]) + ' '
+        header_string_y = ' ' + ' '.join([str(elem).replace('%','') for elem in self.g_name])
+        header_string = header_string_x[:-1] + header_string_y
 
         #xy_data = np.concatenate((np.asmatrix(np.arange(1, self.n_samp + 1)).T, self.X, self.Y), axis=1)
         #np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
@@ -606,6 +608,11 @@ class runPLoM:
 
         xy_data = np.concatenate((np.asmatrix(np.arange(1, self.X.shape[0] + 1)).T, self.X, self.Y), axis=1)
         np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
+        # KZ: adding MultipleEvent if any
+        if self.multipleEvent is not None:
+            tmp = pd.read_csv(os.path.join(self.work_dir,'dakotaTab.out'),index_col=None,sep=' ')
+            tmp = pd.concat([tmp,self.multipleEvent],axis=1)
+            tmp.to_csv(os.path.join(self.work_dir,'dakotaTab.out'),index=False,sep=' ')
 
             #if not self.do_logtransform:
             #results["yPredict_CI_lb"][self.g_name[ny]] = norm.ppf(0.25, loc = results["yPredict"][self.g_name[ny]] , scale = np.sqrt(self.Y_loo_var[:, ny])).tolist()
@@ -634,7 +641,7 @@ def read_txt(text_dir, errlog):
         for line in f:
             if line.startswith('%'):
                 header_count = header_count + 1
-                header_line = line
+                header_line = line[1:] # remove '%'
         try:
             with open(text_dir) as f:
                 X = np.loadtxt(f, skiprows=header_count)
