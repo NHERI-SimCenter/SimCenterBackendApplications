@@ -1098,6 +1098,11 @@ class Workflow(object):
 
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
 
+            # Remove files with .j extensions that might be there from previous runs
+            for file in os.listdir(os.getcwd()):
+                if file.endswith('.j'):
+                    os.remove(file)
+
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
             dst = Path(os.getcwd()) / BIM_file
