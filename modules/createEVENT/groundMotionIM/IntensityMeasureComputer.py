@@ -45,6 +45,10 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from scipy.stats.mstats import gmean
 import pandas as pd
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
+sys.path.insert(0, str(main_dir / 'common'))
+from simcenter_common import *
 
 IM_TYPES = ['PeakGroundResponse','PseudoSpectrum','AriasIntensity','Duration','SpectralShape']
 IM_MAP = {'PeakGroundResponse': ['PGA', 'PGV', 'PGD'],
@@ -120,6 +124,23 @@ class IntensityMeasureComputer:
             'DS575': self.ds575,
             'DS595': self.ds595,
             'SaRatio': self.saratio
+        }
+
+        # internal units
+        self.im_units = {
+            'Periods': 'sec',
+            'PSD': 'cm',
+            'VelocitySpectrum': 'cmps',
+            'AccelerationSpectrum': 'g',
+            'PSV': 'cmps',
+            'PSA': 'g',
+            'PGA': 'g',
+            'PGV': 'cmps',
+            'PGD': 'cm',
+            'Ia': 'cmps',
+            'DS575': 'sec',
+            'DS595': 'sec',
+            'SaRatio': 'scalar'
         }
 
     def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
@@ -273,8 +294,21 @@ class IntensityMeasureComputer:
 
         raise ValueError(f"Unrecognized unit {from_}")
 
-    def compute_response_spectrum(self, periods=[], damping=0.05):
+    def compute_response_spectrum(self, periods=[], damping=0.05, im_units=dict()):
 
+        if len(im_units) == 0:
+            unit_factor_vspec = 1.0
+            unit_factor_aspec = 1.0
+            unit_factor_psa = 1.0
+            unit_factor_psv = 1.0
+            unit_factor_psd = 1.0
+        else:
+            unit_factor_vspec = get_unit_factor(self.im_units.get('VelocitySpectrum','cmps'), im_units.get('VelocitySpectrum','cmps'))
+            unit_factor_aspec = get_unit_factor(self.im_units.get('AccelerationSpectrum','g'), im_units.get('AccelerationSpectrum','g'))
+            unit_factor_psa = get_unit_factor(self.im_units.get('PSA','g'), im_units.get('PSA','g'))
+            unit_factor_psv = get_unit_factor(self.im_units.get('PSV','cmps'), im_units.get('PSV','cmps'))
+            unit_factor_psd = get_unit_factor(self.im_units.get('PSD','cm'), im_units.get('PSD','cm'))
+        
         # note this function assumes acceleration in cm/sec/sec
         # psa is in g, psv in cm/sec
         if len(periods)==0:
@@ -314,14 +348,23 @@ class IntensityMeasureComputer:
                 disp[j,:] = delta_u+disp[j-1,:]
                 a_t[j, :] = ground_acc[j] + accel[j, :]
             # collect data
-            self.disp_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(disp), axis=0))})
-            self.vel_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(vel), axis=0))})
-            self.acc_spectrum.update({cur_hist_name: np.ndarray.tolist(np.max(np.fabs(a_t), axis=0)/100.0/self.g)})
-            self.psv.update({cur_hist_name: np.ndarray.tolist(omega*np.max(np.fabs(disp), axis=0))})
-            self.psa.update({cur_hist_name: np.ndarray.tolist(omega**2*np.max(np.fabs(disp), axis=0)/100.0/self.g)})
+            self.disp_spectrum.update({cur_hist_name: np.ndarray.tolist(unit_factor_psd*np.max(np.fabs(disp), axis=0))})
+            self.vel_spectrum.update({cur_hist_name: np.ndarray.tolist(unit_factor_vspec*np.max(np.fabs(vel), axis=0))})
+            self.acc_spectrum.update({cur_hist_name: np.ndarray.tolist(unit_factor_aspec*np.max(np.fabs(a_t), axis=0)/100.0/self.g)})
+            self.psv.update({cur_hist_name: np.ndarray.tolist(unit_factor_psv*omega*np.max(np.fabs(disp), axis=0))})
+            self.psa.update({cur_hist_name: np.ndarray.tolist(unit_factor_psa*omega**2*np.max(np.fabs(disp), axis=0)/100.0/self.g)})
             self.periods.update({cur_hist_name: periods.tolist()})
 
-    def compute_peak_ground_responses(self):
+    def compute_peak_ground_responses(self, im_units=dict()):
+
+        if len(im_units) == 0:
+            unit_factor_pga = 1.0
+            unit_factor_pgv = 1.0
+            unit_factor_pgd = 1.0
+        else:
+            unit_factor_pga = get_unit_factor(self.im_units.get('PGA','g'), im_units.get('PGA','g'))
+            unit_factor_pgv = get_unit_factor(self.im_units.get('PGV','cmps'), im_units.get('PGV','cmps'))
+            unit_factor_pgd = get_unit_factor(self.im_units.get('PGD','cm'), im_units.get('PGD','cm'))
 
         # note this function assumes acceleration in cm/sec/sec
         # pga is in g, pgv in cm/sec, pgd in cm
@@ -333,11 +376,20 @@ class IntensityMeasureComputer:
             velocity = dt * cumtrapz(ground_acc, initial=0.)
             displacement = dt * cumtrapz(velocity, initial=0.)
             # collect data
-            self.pga.update({cur_hist_name: np.max(np.fabs(ground_acc))/self.g/100.0})
-            self.pgv.update({cur_hist_name: np.max(np.fabs(velocity))})
-            self.pgd.update({cur_hist_name: np.max(np.fabs(displacement))})
+            self.pga.update({cur_hist_name: np.max(np.fabs(ground_acc))/self.g/100.0*unit_factor_pga})
+            self.pgv.update({cur_hist_name: np.max(np.fabs(velocity))*unit_factor_pgv})
+            self.pgd.update({cur_hist_name: np.max(np.fabs(displacement))*unit_factor_pgd})
 
-    def compute_arias_intensity(self):
+    def compute_arias_intensity(self, im_units=dict()):
+
+        if len(im_units) == 0:
+            unit_factor_ai = 1.0
+            unit_factor_ds575 = 1.0
+            unit_factor_ds595 = 1.0
+        else:
+            unit_factor_ai = get_unit_factor(self.im_units.get('Ia'), im_units.get('Ia','cmps'))
+            unit_factor_ds575 = get_unit_factor(self.im_units.get('DS575','sec'), im_units.get('DS575','sec'))
+            unit_factor_ds595 = get_unit_factor(self.im_units.get('DS595','sec'), im_units.get('DS595','sec'))
         
         # note this function assumes acceleration in cm/sec/sec and return Arias Intensity in m/sec
         for cur_hist_name, cur_hist in self.time_hist_dict.items():
@@ -348,11 +400,11 @@ class IntensityMeasureComputer:
             # integral
             I_A = np.pi / 2 / self.g * dt * cumtrapz(tmp, initial=0.)
             # collect data
-            self.i_a.update({cur_hist_name: np.max(np.fabs(I_A))})
+            self.i_a.update({cur_hist_name: np.max(np.fabs(I_A))*unit_factor_ai})
             # compute significant duration
             ds575, ds595 = self._compute_significant_duration(I_A, dt)
-            self.ds575.update({cur_hist_name: ds575})
-            self.ds595.update({cur_hist_name: ds595})
+            self.ds575.update({cur_hist_name: ds575*unit_factor_ds575})
+            self.ds595.update({cur_hist_name: ds595*unit_factor_ds595})
 
     def _compute_significant_duration(self, I_A, dt):
 
@@ -371,10 +423,15 @@ class IntensityMeasureComputer:
         # return
         return ds575, ds595
 
-    def compute_saratio(self, T1 = 1.0, Ta = 0.02, Tb = 3.0):
+    def compute_saratio(self, T1 = 1.0, Ta = 0.02, Tb = 3.0, im_units=dict()):
 
         if len(self.psa) == 0:
             return
+
+        if len(im_units) == 0:
+            unit_factor = 1.0
+        else:
+            unit_factor = get_unit_factor(self.im_units.get('SaRatio'), im_units.get('SaRatio','scalar'))
 
         # period list for SaRatio calculations
         period_list = [0.01*x for x in range(1500)]
@@ -388,7 +445,7 @@ class IntensityMeasureComputer:
                 self.saratio.update({cur_hist_name: 0.0})
             else:
                 f = interp1d(cur_periods, cur_psa)
-                self.saratio.update({cur_hist_name: f(T1)/gmean(f(period_list))})               
+                self.saratio.update({cur_hist_name: f(T1)/gmean(f(period_list))*unit_factor})               
 
 
 def load_records(event_file, ampScaled):
@@ -436,6 +493,23 @@ def load_records(event_file, ampScaled):
     return dict_ts
 
 
+def get_unit_factor(unit_in, unit_out):
+
+    # this function is geared to the unit names in SimCenterUnitsCombo in R2D.
+    unit_factor = 1.0
+    # unit types
+    unit_types = globals().get('unit_types')
+    f_out = 1
+    f_in = 1
+    for cur_unit, name_list in unit_types.items():
+        if unit_out in name_list:
+            f_out = globals().get(unit_out)
+        if unit_in in name_list:
+            f_in = globals().get(unit_in)
+    unit_factor = f_in/f_out
+    return unit_factor
+
+
 def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
 
     # load BIM file
@@ -474,6 +548,7 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
 
     # get IM list (will be user-defined)
     im_types = [] # IM type
+    im_units = dict()
     im_names = ['Periods'] # IM name
     bim_im = bim_file.get('IntensityMeasure', None)
     output_periods = []
@@ -488,6 +563,7 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
             for ref_type in IM_TYPES:
                 if cur_im in IM_MAP.get(ref_type):
                     im_names.append(cur_im)
+                    im_units.update({cur_im: bim_im.get(cur_im).get('Unit')})
                     if ref_type not in im_types:
                         im_types.append(ref_type)
                     if cur_im.startswith('PS'):
@@ -519,13 +595,13 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
 
     # compute intensity measures
     if 'PeakGroundResponse' in im_types:
-        im_computer.compute_peak_ground_responses()
+        im_computer.compute_peak_ground_responses(im_units=im_units)
     if 'PseudoSpectrum' in im_types or 'SpectralShape' in im_types:
-        im_computer.compute_response_spectrum(periods=periods)
+        im_computer.compute_response_spectrum(periods=periods,im_units=im_units)
     if 'AriasIntensity' in im_types or 'Duration' in im_types:
-        im_computer.compute_arias_intensity()
+        im_computer.compute_arias_intensity(im_units=im_units)
     if 'SpectralShape' in im_types:
-        im_computer.compute_saratio(T1=T1, Ta=Ta, Tb=Tb)
+        im_computer.compute_saratio(T1=T1, Ta=Ta, Tb=Tb, im_units=im_units)
 
     # pop not requested IMs
     for cur_im in list(im_computer.intensity_measures.keys()):
