@@ -620,6 +620,7 @@ class runPLoM:
         else:
             xy_data = np.concatenate((np.asmatrix(np.arange(1, self.Y.shape[0] + 1)).T, self.Y), axis=1)
         np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
+        
         # KZ: adding MultipleEvent if any
         if self.multipleEvent is not None:
             tmp = pd.read_csv(os.path.join(self.work_dir,'dakotaTab.out'),index_col=None,sep=' ')
@@ -634,6 +635,11 @@ class runPLoM:
             #    sig = np.sqrt(np.log(self.Y_loo_var[:, ny]/pow(self.Y_loo[:, ny] ,2)+1))
             #    results["yPredict_CI_lb"][self.g_name[ny]] =  lognorm.ppf(0.25, s = sig, scale = np.exp(mu)).tolist()
             #    results["yPredict_CI_ub"][self.g_name[ny]] =  lognorm.ppf(0.75, s = sig, scale = np.exp(mu)).tolist()
+        
+        # over-write the data with Xnew if any
+        if self.n_mc > 0:
+            Xnew.insert(0,'%',[x+1 for x in list(Xnew.index)])
+            Xnew.to_csv(self.work_dir + '/dakotaTab.out', index=False, sep=' ')
 
         with open('dakota.out', 'w') as fp:
             json.dump(results, fp, indent=2)
