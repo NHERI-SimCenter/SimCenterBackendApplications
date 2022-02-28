@@ -131,7 +131,8 @@ class runPLoM:
             errlog.exit(msg)
 
         # read variable names
-        self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])
+        #self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])
+        self._create_variables_from_input()
 
         # load variables
         if self._load_variables(do_sampling, do_simulation):
@@ -378,6 +379,27 @@ class runPLoM:
         return x_dim, y_dim, rv_name, g_name
 
 
+    def _create_variables_from_input(self):
+
+        df_variables = pd.read_csv(self.inpData, header=0)
+        df_responses = pd.read_csv(self.outData, header=0)
+
+        self.rv_name = list(df_variables.columns)
+        self.g_name = list(df_responses.columns)
+        self.x_dim = len(self.rv_name)
+        self.y_dim = len(self.g_name)
+
+        if 'MultipleEvent' in list(df_variables.columns):
+            self.multipleEvent = df_variables.pop('MultipleEvent')
+        else:
+            self.multipleEvent = None
+
+        if 'MultipleEvent' in list(df_responses.columns):
+            self.multipleEvent = df_responses.pop('MultipleEvent')
+        else:
+            self.multipleEvent = None
+
+
     def _parse_plom_parameters(self, surrogateInfo):
 
         """
@@ -502,14 +524,18 @@ class runPLoM:
             self.rvName = []
             self.rvDist = []
             self.rvVal = []
-            for nx in range(self.x_dim):
-                rvInfo = job_config["randomVariables"][nx]
-                self.rvName = self.rvName + [rvInfo["name"]]
-                self.rvDist = self.rvDist + [rvInfo["distribution"]]
-                if do_sampling:
-                    self.rvVal = self.rvVal + [(rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2]
-                else:
-                    self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]
+            try:
+                for nx in range(self.x_dim):
+                    rvInfo = job_config["randomVariables"][nx]
+                    self.rvName = self.rvName + [rvInfo["name"]]
+                    self.rvDist = self.rvDist + [rvInfo["distribution"]]
+                    if do_sampling:
+                        self.rvVal = self.rvVal + [(rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2]
+                    else:
+                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]
+            except:
+                msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
+                print(msg)
         #except:
         #    run_flag = 1
 
@@ -563,8 +589,12 @@ class runPLoM:
 
         #xy_data = np.concatenate((np.asmatrix(np.arange(1, self.n_samp + 1)).T, self.X, self.Y), axis=1)
         #np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
-        np.savetxt(self.work_dir + '/inputTab.out', self.X, header=header_string_x, fmt='%1.4e', comments='%')
-        np.savetxt(self.work_dir + '/outputTab.out', self.Y, header=header_string_y, fmt='%1.4e', comments='%')
+        #np.savetxt(self.work_dir + '/inputTab.out', self.X, header=header_string_x[1:-1], fmt='%1.4e', comments='%')
+        #np.savetxt(self.work_dir + '/outputTab.out', self.Y, header=header_string_y[1:], fmt='%1.4e', comments='%')
+        df_inputTab = pd.DataFrame(data=self.X, columns=self.rv_name)
+        df_outputTab = pd.DataFrame(data=self.Y, columns=self.g_name)
+        df_inputTab.to_csv(os.path.join(self.work_dir,'inputTab.out'),index=False)
+        df_outputTab.to_csv(os.path.join(self.work_dir,'outputTab.out'),index=False)
 
         results = {}
 
@@ -589,13 +619,17 @@ class runPLoM:
         results["logTransform"] = self.logTransform
 
         rv_list = []
-        for nx in range(self.x_dim):
-            rvs = {}
-            rvs["name"] = self.rvName[nx]
-            rvs["distribution"] = self.rvDist[nx]
-            rvs["value"] = self.rvVal[nx]
-            rv_list = rv_list + [rvs]
-        results["randomVariables"] = rv_list
+        try:
+            for nx in range(self.x_dim):
+                rvs = {}
+                rvs["name"] = self.rvName[nx]
+                rvs["distribution"] = self.rvDist[nx]
+                rvs["value"] = self.rvVal[nx]
+                rv_list = rv_list + [rvs]
+            results["randomVariables"] = rv_list
+        except:
+            msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
+            print(msg)
         results["dirPLoM"] = os.path.join(os.path.dirname(os.path.abspath(__file__)),'PLoM')
 
         results["pcaEigen"] = self.pcaEigen.tolist()
