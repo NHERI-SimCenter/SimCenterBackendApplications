@@ -226,7 +226,7 @@ class runPLoM:
     def _prepare_training_data(self, run_dir):
 
         # load IM.csv if exists
-        df_IM = None
+        df_IM = pd.DataFrame()
         if os.path.exists(os.path.join(run_dir,'IM.csv')):
             df_IM = pd.read_csv(os.path.join(run_dir,'IM.csv'),index_col=None)
         else:
@@ -234,7 +234,7 @@ class runPLoM:
             print(msg)
 
         # load response.csv if exists
-        df_SIMU = None
+        df_SIMU = pd.DataFrame()
         if os.path.exists(os.path.join(run_dir,'response.csv')):
             df_SIMU = pd.read_csv(os.path.join(run_dir,'response.csv'),index_col=None)
         else:
@@ -251,7 +251,7 @@ class runPLoM:
             rv_names = [x.get('name') for x in rVs]
         
         # collect rv columns from df_SIMU
-        df_RV = None
+        df_RV = pd.DataFrame()
         if len(rv_names) > 0:
             df_RV = df_SIMU[rv_names]
             for cur_rv in rv_names:
@@ -266,12 +266,16 @@ class runPLoM:
             self.multipleEvent = None
         
         # concat df_RV and df_IM
-        df_X = pd.concat([df_IM, df_RV], axis=1)
-        if '%eval_id' in list(df_X.columns):
+        if not df_IM.empty:
+            df_X = pd.concat([df_IM, df_RV], axis=1)
+        else:
+            df_X = df_RV
+        if not df_X.empty and '%eval_id' in list(df_X.columns):
             df_X.pop('%eval_id')
 
         # make the first column name start with %
-        df_X = df_X.rename({list(df_X.columns)[0]:'%'+list(df_X.columns)[0]}, axis='columns')
+        if not df_X.empty:
+            df_X = df_X.rename({list(df_X.columns)[0]:'%'+list(df_X.columns)[0]}, axis='columns')
         df_SIMU = df_SIMU.rename({list(df_SIMU.columns)[0]:'%'+list(df_SIMU.columns)[0]}, axis='columns')
 
         # save to csvs
@@ -459,6 +463,8 @@ class runPLoM:
             pass
         else:
             X = read_txt(self.inpData, self.errlog)
+            print('X = ', X)
+            print(X.columns)
             if len(X.columns) != self.x_dim:
                 msg = 'Error importing input data: Number of dimension inconsistent: have {} RV(s) but {} column(s).' \
                     .format(self.x_dim, len(X.columns))
@@ -478,8 +484,8 @@ class runPLoM:
                 Y = np.log(Y)
 
             if X.shape[0] != Y.shape[0]:
-                msg = 'Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(len(X.columns), len(Y.columns))
-                errlog.exit(msg)
+                msg = 'Warning importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(len(X.columns), len(Y.columns))
+                print(msg)
 
             n_samp = Y.shape[0]
             # writing a data file for PLoM input
@@ -548,7 +554,10 @@ class runPLoM:
         if self.n_mc > 0:
             shutil.copy2(os.path.join(self.work_dir,'templatedir','SurrogatePLoM','DataOut','X_new.csv'),self.work_dir)
 
-        header_string_x = ' ' + ' '.join([str(elem).replace('%','') for elem in self.rv_name]) + ' '
+        if self.X.shape[0] > 0:
+            header_string_x = ' ' + ' '.join([str(elem).replace('%','') for elem in self.rv_name]) + ' '
+        else:
+            header_string_x = ' '
         header_string_y = ' ' + ' '.join([str(elem).replace('%','') for elem in self.g_name])
         header_string = header_string_x[:-1] + header_string_y
 
@@ -606,7 +615,10 @@ class runPLoM:
             for ny in range(self.y_dim):
                 results["yPredict"][self.g_name[ny]] = Xnew.iloc[:, self.x_dim+ny].tolist()
 
-        xy_data = np.concatenate((np.asmatrix(np.arange(1, self.X.shape[0] + 1)).T, self.X, self.Y), axis=1)
+        if self.X.shape[0]>0:
+            xy_data = np.concatenate((np.asmatrix(np.arange(1, self.Y.shape[0] + 1)).T, self.X, self.Y), axis=1)
+        else:
+            xy_data = np.concatenate((np.asmatrix(np.arange(1, self.Y.shape[0] + 1)).T, self.Y), axis=1)
         np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
         # KZ: adding MultipleEvent if any
         if self.multipleEvent is not None:
@@ -635,6 +647,7 @@ def read_txt(text_dir, errlog):
         msg = "Error: file does not exist: " + text_dir
         errlog.exit(msg)
 
+    header_line = []
     with open(text_dir) as f:
         # Iterate through the file until the table starts
         header_count = 0
@@ -646,21 +659,28 @@ def read_txt(text_dir, errlog):
             with open(text_dir) as f:
                 X = np.loadtxt(f, skiprows=header_count)
         except ValueError:
-            with open(text_dir) as f:
-                try:
+            try:
+                with open(text_dir) as f:
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=',')
-                    # if there are extra delimiter, remove nan
-                    if np.isnan(X[-1, -1]):
-                        X = np.delete(X, -1, 1)
-                except ValueError:
-                    msg = "Error: file format is not supported " + text_dir
-                    errlog.exit(msg)
+                # if there are extra delimiter, remove nan
+                if np.isnan(X[-1, -1]):
+                    X = np.delete(X, -1, 1)
+            except ValueError:
+                msg = "Error: file format is not supported " + text_dir
+                errlog.exit(msg)
 
     if X.ndim == 1:
         X = np.array([X]).transpose()
 
+    print('X = ', X)
+
     #df_X = pd.DataFrame(data=X, columns=["V"+str(x) for x in range(X.shape[1])])
-    df_X = pd.DataFrame(data=X, columns=header_line.replace('\n','').split(','))
+    if len(header_line) > 0:
+        df_X = pd.DataFrame(data=X, columns=header_line.replace('\n','').split(','))
+    else:
+        df_X = pd.DataFrame()
+
+    print('df_X = ',df_X)
 
     return df_X
     

@@ -38,7 +38,7 @@
 # Kuanshi Zhong
 #
 
-import argparse, json, sys, os
+import argparse, json, sys, os, bisect
 import numpy as np
 from pathlib import Path
 from scipy.integrate import cumtrapz
@@ -476,12 +476,13 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     im_types = [] # IM type
     im_names = ['Periods'] # IM name
     bim_im = bim_file.get('IntensityMeasure', None)
+    output_periods = []
     if bim_im is None:
         # search it again under UQ_Method/surrogateMethodInfo
         bim_im = bim_file['UQ_Method']['surrogateMethodInfo'].get('IntensityMeasure',None)
     if bim_im is None or len(bim_im)==0:
         # no intensity measure calculation requested
-        pass
+        return
     else:
         for cur_im in list(bim_im.keys()):
             for ref_type in IM_TYPES:
@@ -492,6 +493,7 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
                     if cur_im.startswith('PS'):
                         periods = bim_im[cur_im].get('Periods',[0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 
                                                                 0.4, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0])
+                        output_periods = periods
                     if cur_im=='SaRatio':
                         tmp = bim_im[cur_im].get('Periods',[0.02, 1.0, 3.0])
                         Ta, Tb = [np.min(tmp), np.max(tmp)]
@@ -500,6 +502,9 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
                         T1 = tmp[0]
                         periods = [Ta+0.01*(x-1) for x in range(int(np.ceil((Tb-Ta)/0.01))+3)]
                     break
+        for Ti in output_periods:
+            if Ti not in periods:
+                bisect.insort(periods,Ti)
 
     for cur_type in im_types:
         if cur_type not in IM_TYPES:
@@ -544,13 +549,16 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
         cur_periods = im_dict['Periods'].get(cur_hist_name)
         for cur_im in im_names:
             if cur_im in IM_MAP.get('PseudoSpectrum'):
-                for i,Ti in enumerate(cur_periods):
-                    cur_im_T = '{}({}s)'.format(cur_im, Ti)
-                    tmp_key = '1-{}-0-{}'.format(cur_im_T,cur_dof)
-                    if tmp_key in csv_dict.keys():
-                        csv_dict[tmp_key].append(im_dict.get(cur_im).get(cur_hist_name)[i])
-                    else:
-                        csv_dict.update({tmp_key: [im_dict.get(cur_im).get(cur_hist_name)[i]]})
+                if len(output_periods) > 0:
+                    for Ti in output_periods:
+                        cur_im_T = '{}({}s)'.format(cur_im, Ti)
+                        tmp_key = '1-{}-0-{}'.format(cur_im_T,cur_dof)
+                        # interp
+                        f = interp1d(cur_periods, im_dict.get(cur_im).get(cur_hist_name))
+                        if tmp_key in csv_dict.keys():
+                            csv_dict[tmp_key].append(f(Ti))
+                        else:
+                            csv_dict.update({tmp_key: [f(Ti)]})
             elif cur_im == 'Periods':
                 pass
             else:
