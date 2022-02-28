@@ -553,12 +553,18 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
                     for Ti in output_periods:
                         cur_im_T = '{}({}s)'.format(cur_im, Ti)
                         tmp_key = '1-{}-0-{}'.format(cur_im_T,cur_dof)
-                        # interp
-                        f = interp1d(cur_periods, im_dict.get(cur_im).get(cur_hist_name))
-                        if tmp_key in csv_dict.keys():
-                            csv_dict[tmp_key].append(f(Ti))
+                        if len(cur_periods) > 1: 
+                            # interp
+                            f = interp1d(cur_periods, im_dict.get(cur_im).get(cur_hist_name))
+                            if tmp_key in csv_dict.keys():
+                                csv_dict[tmp_key].append(f(Ti))
+                            else:
+                                csv_dict.update({tmp_key: [f(Ti)]})
                         else:
-                            csv_dict.update({tmp_key: [f(Ti)]})
+                            if tmp_key in csv_dict.keys():
+                                csv_dict[tmp_key].append(im_dict.get(cur_im).get(cur_hist_name)[cur_periods.index(Ti)])
+                            else:
+                                csv_dict.update({tmp_key: [im_dict.get(cur_im).get(cur_hist_name)[cur_periods.index(Ti)]]})
             elif cur_im == 'Periods':
                 pass
             else:
