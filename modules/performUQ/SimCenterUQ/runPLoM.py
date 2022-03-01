@@ -121,6 +121,7 @@ class runPLoM:
             self.inpData = os.path.join(work_dir, "templatedir/inpFile.in")
             if not do_simulation:
                 self.outData = os.path.join(work_dir, "templatedir/outFile.in")
+            self._create_variables_from_input()
         elif surrogateInfo["method"] == "Sampling and Simulation":
             # run simulation first to generate training data
             do_sampling = False
@@ -132,7 +133,6 @@ class runPLoM:
 
         # read variable names
         #self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])
-        self._create_variables_from_input()
 
         # load variables
         if self._load_variables(do_sampling, do_simulation):
