@@ -161,7 +161,8 @@ def postProcess(evtName, input_units, f_scale_units):
     # KZ, 01/17/2022: I corrected the acc_surf from [:,-2] to [:,-3] (horizontal x direction)
     time = acc[:,0]
     #acc_surf = acc[:,-2] / 9.81
-    acc_surf = acc[:,-3] / 9.81
+    # KZ, 03/07/2022: removed the unit conversion here (did in createGM4BIM)
+    acc_surf = acc[:,-3]
     dT = time[1] - time[0]
 
     timeSeries = dict(
@@ -178,7 +179,8 @@ def postProcess(evtName, input_units, f_scale_units):
     )
 
     # KZ, 01/17/2022: I added global y direction
-    acc_surf_y = acc[:,-1] / 9.81
+    # KZ, 03/07/2022: removed the unit conversion here (did in createGM4BIM)
+    acc_surf_y = acc[:,-1]
     timeSeries_y = dict(
         name = "accel_Y",
         type = "Value",
