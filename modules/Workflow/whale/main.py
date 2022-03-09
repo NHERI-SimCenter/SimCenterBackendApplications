@@ -587,7 +587,7 @@ class Workflow(object):
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
-        self.modifiedRun = False; # ADAM to fix
+        self.modifiedRun = False # ADAM to fix
         
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
@@ -740,7 +740,7 @@ class Workflow(object):
         print(default_values)
 
         # workflow input is input file
-        default_values['workflowInput']=os.path.basename(self.input_file);
+        default_values['workflowInput']=os.path.basename(self.input_file)
         
         if default_values is not None:
 
@@ -1316,12 +1316,12 @@ class Workflow(object):
                 arg_list.append('Windows')
             else:
                 arg_list.append('MacOS')                                
-            self.default_values['workflowInput']='sc_'+inputFilename;
+            self.default_values['workflowInput']='sc_'+inputFilename
             self.default_values['driverFile']='sc_'+self.default_values['driverFile']
 
-            self.modifiedRun = True; # ADAM to fix 
+            self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
-            print(command);
+            print(command)
 
             result, returncode = run_command(command)
             
@@ -1367,12 +1367,12 @@ class Workflow(object):
 
                 if self.run_type in ['set_up', 'runningRemote']:
                     command_list = self.workflow_apps[app_type].get_command_list(
-                        app_path = self.app_dir_remote, force_posix = True);
+                        app_path = self.app_dir_remote, force_posix = True)
 
                     driver_script += create_command(command_list, enforced_python='python3') + u'\n'
                 else:
                     command_list = self.workflow_apps[app_type].get_command_list(
-                        app_path = self.app_dir_local);
+                        app_path = self.app_dir_local)
 
                     driver_script += create_command(command_list) + u'\n'
 
@@ -1382,6 +1382,10 @@ class Workflow(object):
                     prepend_blank_space=False)
 
             driverFile = self.default_values['driverFile']
+            # KZ: for windows, to write bat
+            if platform.system() == 'Windows':
+                driverFile = driverFile+'.bat'
+            log_msg(driverFile)
             with open(driverFile,'w') as f:
                 f.write(driver_script)
 

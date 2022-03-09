@@ -43,6 +43,7 @@ def main(args):
         if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
             # MAC
             surrogate = 'surrogateBuild.py' 
+            plom = 'runPLoM.py' # KZ: main script of PLoM
             natafExe = 'nataf_gsa'          
             osType = 'Linux'
             workflowDriver1 = 'workflowDriver1'
@@ -51,6 +52,7 @@ def main(args):
         else:
             
             surrogate = 'surrogateBuild.py'  
+            plom = 'runPLoM.py' # KZ: main script of PLoM
             natafExe = 'nataf_gsa.exe'
             workflowDriver = workflowDriver + ".bat"            
             workflowDriver1 = 'workflowDriver1.bat'
@@ -96,6 +98,9 @@ def main(args):
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Forward Propagation':
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
+        # KZ: training calling runPLoM.py to launch the model training
+        elif uq_data['uqType'] == 'PLoM Model':
+            simCenterUQCommand = 'python {} {} {} {}'.format(os.path.join(myScriptDir,plom).replace('\\','/'),workdir_main.replace('\\','/'),osType,runType)
             
         print('running SimCenterUQ: ', simCenterUQCommand)
 
