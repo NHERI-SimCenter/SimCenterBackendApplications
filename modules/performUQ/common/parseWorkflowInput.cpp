@@ -289,11 +289,12 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
 
     	theRandomVariables.discreteDesignSetRVs.push_back(theRV);
     	theRandomVariables.numRandomVariables += 1;
+      //theRandomVariables.ordering.push_back(-1);
     	numberRVs++;
       }
     }
 
-    /*
+    //correlation
     json_t* corrMatJson =  json_object_get(root,"correlationMatrix");
     if (corrMatJson != NULL) {
       int numCorrs = json_array_size(corrMatJson);
@@ -304,7 +305,6 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
     } else {
       theRandomVariables.corrMat.push_back(0.0);
     }
-    */
     
     } // end if rvName not in theRandomVariables.theNames
     
