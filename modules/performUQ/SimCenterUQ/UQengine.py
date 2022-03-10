@@ -139,7 +139,7 @@ class UQengine:
         if self.run_type.lower() == 'runninglocal':
             from multiprocessing import Pool
             n_processor = os.cpu_count()
-            pool = Pool(2)
+            pool = Pool(n_processor)
         else:
             from mpi4py import MPI
             from mpi4py.futures import MPIPoolExecutor
