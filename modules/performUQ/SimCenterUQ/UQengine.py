@@ -13,7 +13,6 @@ class UQengine:
 
     def __init__(self, inputArgs):
 
-
         self.work_dir = inputArgs[1].replace(os.sep, '/')
         self.inputFile = inputArgs[2]
         self.workflowDriver = inputArgs[3]
@@ -140,7 +139,7 @@ class UQengine:
         if self.run_type.lower() == 'runninglocal':
             from multiprocessing import Pool
             n_processor = os.cpu_count()
-            pool = Pool(n_processor)
+            pool = Pool(2)
         else:
             from mpi4py import MPI
             from mpi4py.futures import MPIPoolExecutor
