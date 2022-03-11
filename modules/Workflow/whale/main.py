@@ -389,11 +389,12 @@ def run_command(command):
         if returncode != 0:
             log_error("return code: {}".format(returncode))
 
-        if platform.system() == "Windows":
-            return result.decode(sys.stdout.encoding), returncode
-        else:
-            # print(result, returncode)
-            return str(result), returncode
+        # if platform.system() == "Windows":
+        #     return result.decode(sys.stdout.encoding), returncode
+        # else:
+        #     # print(result, returncode)
+        #     return str(result), returncode
+        return result.decode(sys.stdout.encoding), returncode
 
 
 def show_warning(warning_msg):
