@@ -55,7 +55,7 @@ OPENSHA_IM_GMPE = {"SA": ["Abrahamson, Silva & Kamai (2014)", "Boore, Stewart, S
 				           "Campbell & Bozorgnia (2014)", "Chiou & Youngs (2014)"]}
 
 IM_GMPE = {"LOCAL": LOCAL_IM_GMPE,
-           "OPENSHA": LOCAL_IM_GMPE}
+           "OPENSHA": OPENSHA_IM_GMPE}
 
 IM_CORR_INTER = {"Baker & Jayaram (2008)": ["SA"], 
                  "Baker & Bradley (2017)": ["SA", "PGA", "PGV", "DS575H", "DS595H"]}

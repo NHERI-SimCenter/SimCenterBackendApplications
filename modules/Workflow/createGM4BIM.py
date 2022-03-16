@@ -158,11 +158,14 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                ('PGD',0,1,'beta'):[],
                ('PGD',0,2,'median'):[],
                ('PGD',0,2,'beta'):[]}
+    dict_im_site = {'1-PGA-0-1':[], '1-PGA-0-2':[],'1-PGV-0-1':[],'1-PGV-0-2':[],'1-PGD-0-1':[],'1-PGD-0-2':[]}
     for Ti in periods:
         dict_im.update({('SA({}s)'.format(Ti),0,1,'median'):[],
                         ('SA({}s)'.format(Ti),0,1,'beta'):[],
                         ('SA({}s)'.format(Ti),0,2,'median'):[],
                         ('SA({}s)'.format(Ti),0,2,'beta'):[]})
+        dict_im_site.update({'1-SA({}s)-0-1'.format(Ti):[],
+                             '1-SA({}s)-0-2'.format(Ti):[]})
 
     for site in siteFiles:
 
@@ -251,6 +254,24 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                         pga_y.append(pga)
                         pgv_y.append(pgv)
                         pgd_y.append(pgd)
+
+            # individual
+            dict_im_site['1-PGA-0-1'] = pga_x
+            dict_im_site['1-PGA-0-2'] = pga_y
+            dict_im_site['1-PGV-0-1'] = pgv_x
+            dict_im_site['1-PGV-0-2'] = pgv_y
+            dict_im_site['1-PGD-0-1'] = pgd_x
+            dict_im_site['1-PGD-0-2'] = pgd_y
+            for jj, Ti in enumerate(periods):
+                cur_sa = '1-SA({}s)-0-1'.format(Ti)
+                dict_im_site[cur_sa]=[tmp[jj] for tmp in psa_x]
+                cur_sa = '1-SA({}s)-0-2'.format(Ti)
+                dict_im_site[cur_sa]=[tmp[jj] for tmp in psa_y]
+
+            # dump dict_im_site
+            df_im_site = pd.DataFrame.from_dict(dict_im_site)
+            site_im_file = f"{inputDir}/{siteID}/IM.csv"
+            df_im_site.to_csv(site_im_file, index=False)
 
             # median and dispersion
             # psa
