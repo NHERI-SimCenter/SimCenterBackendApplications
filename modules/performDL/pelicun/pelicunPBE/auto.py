@@ -191,7 +191,8 @@ def auto_populate(DL_input_path, EDP_input_path,
             'ResponseModel': {
                 'ResponseDescription': {
                     'EDP_Distribution': 'empirical',
-                    'Realizations'    : realization_count
+                    'Realizations'    : realization_count,
+                    'CoupledAssessment': coupled_EDP
                 }
             }
         })
@@ -503,7 +504,11 @@ def auto_populate(DL_input_path, EDP_input_path,
         if (('Inhabitants' in loss_dict['LossModel'].keys()) and
             (event_time is not None)):
                 loss_dict['LossModel']['Inhabitants'].update({'EventTime': event_time})
-
+        
+        print("********coupled_EDP",coupled_EDP)
+        if coupled_EDP :
+            loss_dict['ResponseModel']['ResponseDescription'].update({"CoupledAssessment": coupled_EDP})
+  
         DL_input.update({'DamageAndLoss':loss_dict})
 
         DL_ap_path = DL_input_path[:-5]+'_ap.json'
