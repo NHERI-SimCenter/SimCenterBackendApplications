@@ -241,13 +241,14 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     // if correlations, (sy)
      //if (theRandomVariables.corrMat[0] != 0) {
 
+    int corrSize = theRandomVariables.ordering.size();
     if (!theRandomVariables.corrMat.empty()) {
       
       if (theRandomVariables.corrMat[0]!=0) {
 
         std::vector<int> newOrder;
         for (int i=0; i<18; i++) {
-           for (int j=0; j<theRandomVariables.ordering.size(); j++) {
+           for (int j=0; j<corrSize; j++) {
              if (i==theRandomVariables.ordering[j]) {
                 newOrder.push_back(j);
              }
@@ -259,7 +260,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
         for (int i : newOrder) {
           dakotaFile << "    ";
           for (int j : newOrder) {
-            double corrval = theRandomVariables.corrMat[i*theRandomVariables.numRandomVariables+j];
+            double corrval = theRandomVariables.corrMat[i*corrSize+j];
             dakotaFile << corrval << " ";
           }
           dakotaFile << "\n";

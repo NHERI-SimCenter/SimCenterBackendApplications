@@ -52,10 +52,10 @@ if __name__ == '__main__':
     if runType in ["runningLocal"]:
         
         # Get path to python from dakota.json file
-        dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)
-        with open(dakotaJsonFile, 'r') as f:
-            jsonInputs = json.load(f)
-        pythonCommand = jsonInputs["python"]
+        # dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)
+        # with open(dakotaJsonFile, 'r') as f:
+        #     jsonInputs = json.load(f)
+        # pythonCommand = jsonInputs["python"]
 
         # Get the path to the mainscript.py of TMCMC
         #        mainScriptDir = os.path.split(mainScriptPath)[0]

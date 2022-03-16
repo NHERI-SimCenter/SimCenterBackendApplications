@@ -86,7 +86,7 @@ unit_types = {
     'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
     'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
     'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps'],
-    'acceleration' : ['mps2', 'inchps2', 'ftps2', 'g'],
+    'acceleration' : ['mps2', 'cmps2', 'inchps2', 'ftps2', 'g'],
     'mass'         : ['kg', 'ton', 'lb'],
     'force'        : ['N', 'kN', 'lbf', 'kip', 'kips'],
     'pressure'     : ['Pa', 'kPa', 'MPa', 'GPa', 'psi', 'ksi', 'Mpsi']
@@ -144,7 +144,7 @@ ftps = ft / sec
 
 # acceleration
 mps2 = m / sec2
-
+cmps2 = cm / sec2
 inchps2 = inch / sec2
 ftps2 = ft / sec2
 
