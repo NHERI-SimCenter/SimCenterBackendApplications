@@ -743,7 +743,7 @@
     },
     "Applications": [
       {
-        "Name": "OpenSeesFEM",
+        "Name": "OpenSees",
         "ExecutablePath": "applications/performFEM/OpenSees/createOpenSeesDriver",
          "ApplicationSpecificInputs": [
         ]
