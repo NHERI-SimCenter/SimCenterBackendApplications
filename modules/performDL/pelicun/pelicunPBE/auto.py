@@ -505,7 +505,6 @@ def auto_populate(DL_input_path, EDP_input_path,
             (event_time is not None)):
                 loss_dict['LossModel']['Inhabitants'].update({'EventTime': event_time})
         
-        print("********coupled_EDP",coupled_EDP)
         if coupled_EDP :
             loss_dict['ResponseModel']['ResponseDescription'].update({"CoupledAssessment": coupled_EDP})
   
