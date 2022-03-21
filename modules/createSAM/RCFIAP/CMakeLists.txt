@@ -1,0 +1,1 @@
+simcenter_add_python_script(SCRIPT RC_FIAP_main.py)
