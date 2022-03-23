@@ -541,6 +541,11 @@
         "Name": "SteelBuildingModel",
         "ExecutablePath": "applications/createSAM/AutoSDA/main_program.py",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "ConcreteBuildingModel",
+        "ExecutablePath": "applications/createSAM/RCFIAP/RC_FIAP_main.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -709,7 +714,7 @@
       },
       {
         "Name": "SimCenter-UQ",
-        "ExecutablePath": "applications/performUQ/simcenterUQ/SimCenterUQ.py"
+        "ExecutablePath": "applications/performUQ/SimCenterUQ/SimCenterUQ.py"
       },
       {
         "Name": "UCSD-UQ",
