@@ -57,7 +57,12 @@ main(int argc, char **argv) {
   
 
   // ensure this is correct type
-  json_t *SIM = json_object_get(rootBIM,"StructuralInformation");  
+  json_t *SIM = json_object_get(rootBIM,"Modeling");
+  if (SIM == 0) {
+      fprintf(stderr, "Modeling Section not found in input\n");
+      exit(-1);
+  }
+
 
   json_t *typeSIM = json_object_get(SIM,"type");  
   if ((typeSIM == 0) || (strcmp("MDOF_BuildingModel",json_string_value(typeSIM)) != 0)) {
@@ -66,7 +71,8 @@ main(int argc, char **argv) {
     else
       fprintf(stderr, "type: NONE PROVIDED\n");
 
-    fprintf(stderr, "ERROR - MDOF_BuildingModel - incorrect type\n");    
+    fprintf(stderr, "ERROR - MDOF_BuildingModel - incorrect type\n");
+    exit(-1);    
   }
   
   //
