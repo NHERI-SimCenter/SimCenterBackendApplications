@@ -522,7 +522,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       int numSamples = json_integer_value(json_object_get(samplingMethodData,"samples"));
       int seed = json_integer_value(json_object_get(samplingMethodData,"seed"));
 
-      std::cerr << numSamples << " " << seed;
+      //std::cerr << numSamples << " " << seed;
 
       dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
       dakotaFile << "method,\n sampling\n sample_type = lhs \n samples = " << numSamples << " \n seed = " << seed << "\n\n";
