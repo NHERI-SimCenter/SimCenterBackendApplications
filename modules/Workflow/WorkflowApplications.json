@@ -714,7 +714,7 @@
       },
       {
         "Name": "SimCenter-UQ",
-        "ExecutablePath": "applications/performUQ/simcenterUQ/SimCenterUQ.py"
+        "ExecutablePath": "applications/performUQ/SimCenterUQ/SimCenterUQ.py"
       },
       {
         "Name": "UCSD-UQ",
