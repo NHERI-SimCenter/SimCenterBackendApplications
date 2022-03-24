@@ -295,7 +295,7 @@ class surrogate(UQengine):
             kr = GPy.kern.Matern52(input_dim=x_dim, ARD=True)
         else:
             msg = 'Error running SimCenterUQ - Kernel name <{}> not supported'.format(kernel)
-            self.self.exit(msg)
+            self.exit(msg)
         if self.do_linear:
             kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
@@ -353,7 +353,7 @@ class surrogate(UQengine):
         if self.do_logtransform:
             if np.min(Y_hf) < 0:
                 msg = 'Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab'
-                self.self.exit(msg)
+                self.exit(msg)
             Y_hfs = np.log(Y_hf)
         else:
             Y_hfs = Y_hf
@@ -361,7 +361,7 @@ class surrogate(UQengine):
         if self.do_logtransform and self.do_mf:
             if np.min(Y_lf) < 0:
                 msg = 'Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab'
-                self.self.exit(msg)
+                self.exit(msg)
             Y_lfs = np.log(Y_lf)
         else:
             Y_lfs = Y_lf
@@ -401,7 +401,7 @@ class surrogate(UQengine):
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(self.nuggetVal[ny])
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(self.nuggetVal[ny])
                 msg = 'Currently Nugget Fixed Values option is not supported'
-                self.self.exit(msg)
+                self.exit(msg)
 
             elif nugget_opt_tmp == "Fixed Bounds":
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_bounded(self.nuggetVal[ny][0],
@@ -409,7 +409,7 @@ class surrogate(UQengine):
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_bounded(self.nuggetVal[ny][0],
                 #                                                                         self.nuggetVal[ny][1])
                 msg = 'Currently Nugget Fixed Bounds option is not supported'
-                self.self.exit(msg)
+                self.exit(msg)
             elif nugget_opt_tmp == "Zero":
                 m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(0)
                 m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0)
@@ -495,7 +495,7 @@ class surrogate(UQengine):
                 if math.isinf(-max_log_likli) or math.isnan(-max_log_likli):
                     if np.var(m_tmp.Y) != 0:
                         msg = "Error GP optimization failed for QoI #{}".format(ny + 1)
-                        self.self.exit(msg)
+                        self.exit(msg)
 
                 print(m_opt)
                 self.m_list[ny] = m_opt  # overwirte
