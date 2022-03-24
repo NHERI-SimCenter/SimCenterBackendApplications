@@ -154,7 +154,7 @@ class UQengine:
 
 
     def create_errLog(self):
-        self.errfile = open('{}/dakota.err'.format(self.work_dir), "w")
+        self.errfile = open(os.path.join(self.work_dir, 'dakota.err'), "w")
 
     def exit(self, msg):
         print(msg)
