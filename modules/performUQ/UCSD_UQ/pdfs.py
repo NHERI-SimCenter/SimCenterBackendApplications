@@ -255,18 +255,25 @@ class DiscreteDist:
         self.values = values
         self.weights = weights
         self.probabilities = self.weights / np.sum(self.weights)
+        self.log_probabilities = np.log(self.weights) - np.log(np.sum(self.weights))
         self.rng = np.random.default_rng()
 
     def generate_rns(self, N):
         return self.rng.choice(self.values, N, p=self.probabilities)
 
     def U2X(self, u):
-        cdf_val = stats.norm.cdf(u)
         cumsum_prob = np.cumsum(self.probabilities)
         cumsum_prob = np.insert(cumsum_prob, 0, 0)
         cumsum_prob = cumsum_prob[:-1]
-        return self.values[np.where(cumsum_prob <= cdf_val)[0][-1]]
+        x = np.zeros_like(u)
+        for i, u_comp in enumerate(u):
+            cdf_val = stats.norm.cdf(u_comp)
+            x[i] = self.values[np.where(cumsum_prob <= cdf_val)[0][-1]]
+        return x
 
     def log_pdf_eval(self, u):
         x = self.U2X(u)
-        return self.probabilities[np.where(self.values == x)]
+        lp = np.zeros_like(x)
+        for i, x_comp in enumerate(x):
+            lp[i] = self.log_probabilities[np.where(self.values == x_comp)]
+        return lp

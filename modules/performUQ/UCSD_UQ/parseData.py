@@ -245,6 +245,40 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 paramString = "params: {}, {}".format(
                     rv["shapeparam"], rv["scaleparam"]
                 )
+            elif rv["distribution"] == "Exponential":
+                variablesList[ind]["Par1"].append(rv["lambda"])
+                variablesList[ind]["Par2"].append(None)
+                variablesList[ind]["Par3"].append(None)
+                variablesList[ind]["Par4"].append(None)
+                paramString = "params: {}".format(rv["lambda"])
+            elif rv["distribution"] == "Gamma":
+                variablesList[ind]["Par1"].append(rv["k"])
+                variablesList[ind]["Par2"].append(rv["lambda"])
+                variablesList[ind]["Par3"].append(None)
+                variablesList[ind]["Par4"].append(None)
+                paramString = "params: {}, {}".format(rv["k"], rv["lambda"])
+            elif rv["distribution"] == "Chisquare":
+                variablesList[ind]["Par1"].append(rv["k"])
+                variablesList[ind]["Par2"].append(None)
+                variablesList[ind]["Par3"].append(None)
+                variablesList[ind]["Par4"].append(None)
+                paramString = "params: {}".format(rv["k"])
+            elif rv["distribution"] == "Truncated exponential":
+                variablesList[ind]["Par1"].append(rv["lambda"])
+                variablesList[ind]["Par2"].append(rv["a"])
+                variablesList[ind]["Par3"].append(rv["b"])
+                variablesList[ind]["Par4"].append(None)
+                paramString = "params: {}, {}, {}".format(
+                    rv["lambda"], rv["a"], rv["b"]
+                )
+            elif rv["distribution"] == "Discrete":
+                variablesList[ind]["Par1"].append(rv["Values"])
+                variablesList[ind]["Par2"].append(rv["Weights"])
+                variablesList[ind]["Par3"].append(None)
+                variablesList[ind]["Par4"].append(None)
+                paramString = "Values: {}, Weights: {}".format(
+                    rv["Values"], rv["Weights"]
+                )
 
             logFile.write(
                 "\n\t\t\t\t\t\t\tRV number: {}, name: {}, dist: {}, {}".format(
