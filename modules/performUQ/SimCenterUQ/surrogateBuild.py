@@ -11,8 +11,7 @@ import sys
 import time
 import warnings
 from copy import deepcopy
-
-import matplotlib
+import random
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
@@ -120,6 +119,8 @@ class surrogate(UQengine):
             self.exit(msg)
 
         surrogateJson = dakotaJson["UQ_Method"]["surrogateMethodInfo"]
+        random.seed(surrogateJson["seed"])
+        np.random.seed(surrogateJson["seed"])
 
         #
         #  common for all surrogate options
@@ -301,7 +302,7 @@ class surrogate(UQengine):
         self.modelInfoHF.runIdx = 0
         self.modelInfoLF.runIdx = 0
         if self.modelInfoHF.is_model and self.modelInfoLF.is_model:
-            self.doeIdx = "HFLF"
+            self.doeIdx = "HFLF" ## HFHF is for multi-fidelity GPy
             self.modelInfoHF.runIdx = 1
             self.modelInfoLF.runIdx = 2
             self.cal_interval = 1
@@ -349,10 +350,9 @@ class surrogate(UQengine):
         elif kernel == "Matern 5/2":
             kr = GPy.kern.Matern52(input_dim=x_dim, ARD=True)
         else:
-            msg = "Error running SimCenterUQ - Kernel name <{}> not supported".format(
-                kernel
-            )
-            self.self.exit(msg)
+            msg = 'Error running SimCenterUQ - Kernel name <{}> not supported'.format(kernel)
+            self.exit(msg)
+
         if self.do_linear:
             kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
@@ -422,16 +422,18 @@ class surrogate(UQengine):
 
         if self.do_logtransform:
             if np.min(Y_hf) < 0:
-                msg = "Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab"
-                self.self.exit(msg)
+                msg = 'Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab'
+                self.exit(msg)
+
             Y_hfs = np.log(Y_hf)
         else:
             Y_hfs = Y_hf
 
         if self.do_logtransform and self.do_mf:
             if np.min(Y_lf) < 0:
-                msg = "Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab"
-                self.self.exit(msg)
+                msg = 'Error running SimCenterUQ - Response contains negative values. Please uncheck the log-transform option in the UQ tab'
+                self.exit(msg)
+
             Y_lfs = np.log(Y_lf)
         else:
             Y_lfs = Y_lf
@@ -477,16 +479,18 @@ class surrogate(UQengine):
             elif nugget_opt_tmp == "Fixed Values":
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(self.nuggetVal[ny])
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(self.nuggetVal[ny])
-                msg = "Currently Nugget Fixed Values option is not supported"
-                self.self.exit(msg)
+                msg = 'Currently Nugget Fixed Values option is not supported'
+                self.exit(msg)
+
 
             elif nugget_opt_tmp == "Fixed Bounds":
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_bounded(self.nuggetVal[ny][0],
                 #                                                                       self.nuggetVal[ny][1])
                 # m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_bounded(self.nuggetVal[ny][0],
                 #                                                                         self.nuggetVal[ny][1])
-                msg = "Currently Nugget Fixed Bounds option is not supported"
-                self.self.exit(msg)
+                msg = 'Currently Nugget Fixed Bounds option is not supported'
+                self.exit(msg)
+
             elif nugget_opt_tmp == "Zero":
                 m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(0)
                 m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0)
@@ -597,7 +601,7 @@ class surrogate(UQengine):
                 if math.isinf(-max_log_likli) or math.isnan(-max_log_likli):
                     if np.var(m_tmp.Y) != 0:
                         msg = "Error GP optimization failed for QoI #{}".format(ny + 1)
-                        self.self.exit(msg)
+                        self.exit(msg)
 
                 print(m_opt)
                 self.m_list[ny] = m_opt  # overwirte
@@ -663,7 +667,7 @@ class surrogate(UQengine):
             self.time_lf_avg = (
                 np.float64(self.time_lf_tot) / res[2]
             )  # so that it gives inf when divided by zero
-            self.time_ratio = self.time_hf_avg / self.time_lf_avg
+            self.time_ratio = self.time_lf_avg / self.time_lf_avg
             return res
 
         tmp = time.time()
@@ -754,8 +758,13 @@ class surrogate(UQengine):
                 self.Y_cv_var = self.Y_cv_vars
 
             if self.id_sim_hf < model_hf.thr_count:
+                if self.doeIdx=="HF":
+                    tmp_doeIdx = self.doeIdx # single fideility
+                else:
+                   tmp_doeIdx = "HFHF" # HF in multifideility
+
                 [x_new_hf, y_idx_hf, score_hf] = self.run_design_of_experiments(
-                    nc1, nq, e2, "HFHF"
+                    nc1, nq, e2, tmp_doeIdx
                 )
             else:
                 score_hf = 0
@@ -1960,7 +1969,7 @@ class model_info:
                 self.xrange = np.zeros((self.x_dim, 2))
         # TODO should I use "effective" number of dims?
         self.ll = self.xrange[:, 1] - self.xrange[:, 0]
-        if self.user_init < 0:  # automated choice 8*D
+        if self.user_init <= 0:  # automated choice 8*D
             n_init_tmp = int(np.ceil(8 * self.x_dim / n_processor) * n_processor)
         else:
             n_init_tmp = int(
