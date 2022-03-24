@@ -363,11 +363,12 @@ def run_command(command):
         if returncode != 0:
             log_error('return code: {}'.format(returncode))
 
-        if platform.system() == 'Windows':
-            return result.decode(sys.stdout.encoding), returncode
-        else:
-            #print(result, returncode)
-            return str(result), returncode
+        # if platform.system() == 'Windows':
+        #     return result.decode(sys.stdout.encoding), returncode
+        # else:
+        #     #print(result, returncode)
+        #     return str(result), returncode
+        return result.decode(sys.stdout.encoding), returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
@@ -1471,24 +1472,28 @@ class Workflow(object):
                 os.chdir(self.run_dir)
                 if bldg_id is not None:
                     os.chdir(bldg_id)
-                dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
+                try:
+                # sy, abs - added try-statement because dakota-reliability does not write DakotaTab.out
+                    dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
 
-                # if the DL is coupled with response estimation, we need to sort the results
-                DL_app = self.workflow_apps.get('DL', None)
-                if DL_app is not None:
-                    is_coupled = DL_app.pref.get('coupled_EDP', None)
-                    if is_coupled:
-                        if 'eventID' in dakota_out.columns:
-                            events = dakota_out['eventID'].values
-                            events = [int(e.split('x')[-1]) for e in events]
-                            sorter = np.argsort(events)
-                            dakota_out = dakota_out.iloc[sorter, :]
-                            dakota_out.index = np.arange(dakota_out.shape[0])
+                    # if the DL is coupled with response estimation, we need to sort the results
+                    DL_app = self.workflow_apps.get('DL', None)
+                    if DL_app is not None:
+                        is_coupled = DL_app.pref.get('coupled_EDP', None)
+                        if is_coupled:
+                            if 'eventID' in dakota_out.columns:
+                                events = dakota_out['eventID'].values
+                                events = [int(e.split('x')[-1]) for e in events]
+                                sorter = np.argsort(events)
+                                dakota_out = dakota_out.iloc[sorter, :]
+                                dakota_out.index = np.arange(dakota_out.shape[0])
 
-                dakota_out.to_csv('response.csv')
-
-                log_msg('Response simulation finished successfully.',
+                    dakota_out.to_csv('response.csv')                
+                    log_msg('Response simulation finished successfully.',
                         prepend_timestamp=False)
+                except:
+                    log_msg('DakotaTab.out not found. Response.csv not created.',
+                            prepend_timestamp=False)
 
             elif self.run_type in ['set_up', 'runningRemote']:
 
