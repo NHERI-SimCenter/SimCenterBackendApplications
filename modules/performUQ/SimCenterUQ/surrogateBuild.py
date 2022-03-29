@@ -119,8 +119,13 @@ class surrogate(UQengine):
             self.exit(msg)
 
         surrogateJson = dakotaJson["UQ_Method"]["surrogateMethodInfo"]
-        random.seed(surrogateJson["seed"])
-        np.random.seed(surrogateJson["seed"])
+
+        if surrogateJson["method"]=="Sampling and Simulation":
+            random.seed(surrogateJson["seed"])
+            np.random.seed(surrogateJson["seed"])
+        else:
+            random.seed(1)
+            np.random.seed(1)
 
         #
         #  common for all surrogate options
@@ -137,6 +142,11 @@ class surrogate(UQengine):
         y_dim = 0
         for g in dakotaJson["EDP"]:
             # scalar
+
+            if (not g["name"]):
+                msg = "QoI name cannot be an empty string"
+                self.exit(msg)
+                
             if g["length"] == 1:
                 self.g_name += [g["name"]]
                 y_dim += 1
@@ -501,122 +511,127 @@ class surrogate(UQengine):
         t_opt = time.time()
         nugget_opt_tmp = self.nugget_opt
         for ny in range(self.y_dim):
-            print("y dimension {}:".format(ny))
-            if not self.do_mf:
-                nopt = 10
-                m_tmp = copy.deepcopy(self.m_list[ny])
+            # print("y dimension {}:".format(ny))
+            # if not self.do_mf:
+            #     nopt = 10
+            #     m_tmp = copy.deepcopy(self.m_list[ny])
+            #
+            #     # Save the previous optimal
+            #
+            #     init_length_params = {}
+            #     for parname in m_tmp.parameter_names():
+            #         if parname.endswith("lengthscale"):
+            #             exec(
+            #                 'init_length_params["'
+            #                 + parname.replace(".", "_")
+            #                 + '"] = m_tmp.'
+            #                 + parname
+            #             )
+            #
+            #     # if response is constant....
+            #
+            #     if np.var(m_tmp.Y) == 0:
+            #         nugget_opt_tmp = "Zero"
+            #         for parname in m_tmp.parameter_names():
+            #             if parname.endswith("variance"):
+            #                 m_tmp[parname].constrain_fixed(0)
+            #
+            #     # optimization #1 with previous optimal
+            #
+            #     m_tmp = self.setNugget(m_tmp, nugget_opt_tmp, ny)  # set nugget
+            #     m_tmp.optimize(clear_after_finish=True)  # optimize parameters
+            #     max_log_likli = m_tmp.log_likelihood()
+            #
+            #     id_opt = 1
+            #     print(
+            #         "{} among {} Log-Likelihood: {}".format(
+            #             1, nopt, m_tmp.log_likelihood()
+            #         )
+            #     )
+            #     m_opt = m_tmp.copy()  # candidate
+            #
+            #     # optimization #2 with bounds
+            #
+            #     for parname in m_tmp.parameter_names():
+            #         if parname.endswith("lengthscale"):
+            #             exec("m_tmp." + parname + "=self.ll")
+            #     m_tmp.optimize(clear_after_finish=True)
+            #
+            #     # check if it is better
+            #     if m_tmp.log_likelihood() > max_log_likli:
+            #         max_log_likli = m_tmp.log_likelihood()
+            #         m_opt = m_tmp.copy()
+            #         id_opt = 2
+            #
+            #     print(
+            #         "{} among {} Log-Likelihood: {}".format(
+            #             2, nopt, m_tmp.log_likelihood()
+            #         )
+            #     )
+            #
+            #     #
+            #     # optimization #3-nopt with random inits
+            #     #
+            #
+            #     for no in range(nopt - 2):
+            #         for parname in m_tmp.parameter_names():
+            #             if parname.endswith("lengthscale"):
+            #                 if math.isnan(m_opt.log_likelihood()):
+            #                     exec(
+            #                         "m_tmp."
+            #                         + parname
+            #                         + '=np.random.exponential(1, (1, self.x_dim)) * init_length_params["'
+            #                         + parname.replace("_", ".")
+            #                         + '"]'
+            #                     )
+            #                 else:
+            #                     exec(
+            #                         "m_tmp."
+            #                         + parname
+            #                         + "=np.random.exponential(1, (1, self.x_dim)) * m_opt."
+            #                         + parname
+            #                     )
+            #
+            #         try:
+            #             # m_tmp = self.setNugget(m_tmp, nugget_opt_tmp, ny)
+            #             m_tmp.optimize()
+            #         except Exception as ex:
+            #             print("OS error: {0}".format(ex))
+            #         print(
+            #             "{} among {} Log-Likelihood: {}".format(
+            #                 no + 3, nopt, m_tmp.log_likelihood()
+            #             )
+            #         )
+            #
+            #         if m_tmp.log_likelihood() > max_log_likli:
+            #             max_log_likli = m_tmp.log_likelihood()
+            #             m_opt = m_tmp.copy()
+            #             id_opt = no
+            #
+            #     if math.isinf(-max_log_likli) or math.isnan(-max_log_likli):
+            #         if np.var(m_tmp.Y) != 0:
+            #             msg = "Error GP optimization failed for QoI #{}".format(ny + 1)
+            #             self.exit(msg)
+            #
+            #     print(m_opt)
+            #     self.m_list[ny] = m_opt  # overwirte
+            #     self.calib_time = (time.time() - t_opt) * round(10 / nopt)
+            #     print(
+            #         "     Calibration time: {:.2f} s, id_opt={}".format(
+            #             self.calib_time, id_opt
+            #         )
+            #     )
+            #
+            # else:
+            #     self.m_list[ny] = self.setNugget(self.m_list[ny], nugget_opt_tmp, ny)
+            #     self.m_list[ny].optimize()
+            #     self.calib_time = time.time() - t_opt
+            #     print("     Calibration time: {:.2f} s".format(self.calib_time))
 
-                # Save the previous optimal
-
-                init_length_params = {}
-                for parname in m_tmp.parameter_names():
-                    if parname.endswith("lengthscale"):
-                        exec(
-                            'init_length_params["'
-                            + parname.replace(".", "_")
-                            + '"] = m_tmp.'
-                            + parname
-                        )
-
-                # if response is constant....
-
-                if np.var(m_tmp.Y) == 0:
-                    nugget_opt_tmp = "Zero"
-                    for parname in m_tmp.parameter_names():
-                        if parname.endswith("variance"):
-                            m_tmp[parname].constrain_fixed(0)
-
-                # optimization #1 with previous optimal
-
-                m_tmp = self.setNugget(m_tmp, nugget_opt_tmp, ny)  # set nugget
-                m_tmp.optimize(clear_after_finish=True)  # optimize parameters
-                max_log_likli = m_tmp.log_likelihood()
-
-                id_opt = 1
-                print(
-                    "{} among {} Log-Likelihood: {}".format(
-                        1, nopt, m_tmp.log_likelihood()
-                    )
-                )
-                m_opt = m_tmp.copy()  # candidate
-
-                # optimization #2 with bounds
-
-                for parname in m_tmp.parameter_names():
-                    if parname.endswith("lengthscale"):
-                        exec("m_tmp." + parname + "=self.ll")
-                m_tmp.optimize(clear_after_finish=True)
-
-                # check if it is better
-                if m_tmp.log_likelihood() > max_log_likli:
-                    max_log_likli = m_tmp.log_likelihood()
-                    m_opt = m_tmp.copy()
-                    id_opt = 2
-
-                print(
-                    "{} among {} Log-Likelihood: {}".format(
-                        2, nopt, m_tmp.log_likelihood()
-                    )
-                )
-
-                #
-                # optimization #3-nopt with random inits
-                #
-
-                for no in range(nopt - 2):
-                    for parname in m_tmp.parameter_names():
-                        if parname.endswith("lengthscale"):
-                            if math.isnan(m_opt.log_likelihood()):
-                                exec(
-                                    "m_tmp."
-                                    + parname
-                                    + '=np.random.exponential(1, (1, self.x_dim)) * init_length_params["'
-                                    + parname.replace("_", ".")
-                                    + '"]'
-                                )
-                            else:
-                                exec(
-                                    "m_tmp."
-                                    + parname
-                                    + "=np.random.exponential(1, (1, self.x_dim)) * m_opt."
-                                    + parname
-                                )
-
-                    try:
-                        # m_tmp = self.setNugget(m_tmp, nugget_opt_tmp, ny)
-                        m_tmp.optimize()
-                    except Exception as ex:
-                        print("OS error: {0}".format(ex))
-                    print(
-                        "{} among {} Log-Likelihood: {}".format(
-                            no + 3, nopt, m_tmp.log_likelihood()
-                        )
-                    )
-
-                    if m_tmp.log_likelihood() > max_log_likli:
-                        max_log_likli = m_tmp.log_likelihood()
-                        m_opt = m_tmp.copy()
-                        id_opt = no
-
-                if math.isinf(-max_log_likli) or math.isnan(-max_log_likli):
-                    if np.var(m_tmp.Y) != 0:
-                        msg = "Error GP optimization failed for QoI #{}".format(ny + 1)
-                        self.exit(msg)
-
-                print(m_opt)
-                self.m_list[ny] = m_opt  # overwirte
-                self.calib_time = (time.time() - t_opt) * round(10 / nopt)
-                print(
-                    "     Calibration time: {:.2f} s, id_opt={}".format(
-                        self.calib_time, id_opt
-                    )
-                )
-
-            else:
-                self.m_list[ny] = self.setNugget(self.m_list[ny], nugget_opt_tmp, ny)
-                self.m_list[ny].optimize()
-                self.calib_time = time.time() - t_opt
-                print("     Calibration time: {:.2f} s".format(self.calib_time))
+            self.m_list[ny] = self.setNugget(self.m_list[ny], nugget_opt_tmp, ny)
+            self.m_list[ny].optimize()
+            self.calib_time = time.time() - t_opt
+            print("     Calibration time: {:.2f} s".format(self.calib_time))
 
         Y_preds, Y_pred_vars, e2 = self.get_cross_validation_err()
 
@@ -646,7 +661,7 @@ class surrogate(UQengine):
 
         def FEM_batch_hf(X, id_sim):
             tmp = time.time()
-            if model_hf.is_model:
+            if model_hf.is_model  or model_hf.model_without_sampling:
                 res = self.run_FEM_batch(X, id_sim, runIdx=model_hf.runIdx)
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
@@ -672,9 +687,16 @@ class surrogate(UQengine):
 
         tmp = time.time()
 
+        #
+        # get initial samples for high fidelity modeling
+        #
+
         X_hf_tmp = model_hf.sampling(max([model_hf.n_init - model_hf.n_existing, 0]))
 
+        #
         # if X is from a data file & Y is from simulation
+        #
+
         if model_hf.model_without_sampling:
             X_hf_tmp, model_hf.X_existing = model_hf.X_existing, X_hf_tmp
         X_hf_tmp, Y_hf_tmp, self.id_sim_hf = FEM_batch_hf(X_hf_tmp, self.id_sim_hf)
@@ -1301,7 +1323,7 @@ class surrogate(UQengine):
 
         y_var = np.var(Y_hf, axis=0)  # normalization
         y_idx = np.argmax(np.sum(e2 / y_var, axis=0))
-        if np.max(np.sum(e2 / y_var, axis=0)) == 0:
+        if np.max(y_var) == 0:
             # if this Y is constant
             self.doe_method = "none"
             self.doe_stop = True
@@ -1863,8 +1885,8 @@ class model_info:
             elif surrogateJson["method"] == "Import Data File":
                 self.is_model = False
                 self.is_data = True
-                if surrogateJson["outputData"]:
-                    self.model_without_sampling = True
+                if not surrogateJson["outputData"]:
+                    self.model_without_sampling = True # checkbox not checked...
             else:
                 msg = 'Error reading json: either select "Import Data File" or "Sampling and Simulation"'
                 exit_tmp(msg)
@@ -1897,12 +1919,8 @@ class model_info:
             self.inpData = os.path.join(work_dir, input_file)
             self.outData = os.path.join(work_dir, output_file)
 
-            def exit_func(msg):
-                self.exit(msg)
 
-            self.X_existing = read_txt(self.inpData, exit_func)
-            if not self.model_without_sampling:
-                self.Y_existing = read_txt(self.outData, exit_func)
+            self.X_existing = read_txt(self.inpData, exit_tmp)
             self.n_existing = self.X_existing.shape[0]
 
             if not (self.X_existing.shape[1] == self.x_dim):
@@ -1911,19 +1929,22 @@ class model_info:
                 )
                 exit_tmp(msg)
 
-            if not (self.Y_existing.shape[1] == self.y_dim):
-                msg = "Error importing input data - dimension inconsistent: have {} QoI(s) but have {} column(s).".format(
-                    self.y_dim, self.Y_existing.shape[1]
-                )
-                exit_tmp(msg)
+            if not self.model_without_sampling: # i.e. check box clicked
+                self.Y_existing = read_txt(self.outData, exit_tmp)
 
-            if (not (self.Y_existing.shape[0] == self.X_existing.shape[0])) and (
-                not self.model_without_sampling
-            ):
-                msg = "Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent".format(
-                    self.X_existing.shape[0], self.Y_existing.shape[0]
-                )
-                exit_tmp(msg)
+                if not (self.Y_existing.shape[1] == self.y_dim):
+                    msg = "Error importing input data - dimension inconsistent: have {} QoI(s) but have {} column(s).".format(
+                        self.y_dim, self.Y_existing.shape[1]
+                    )
+                    exit_tmp(msg)
+
+                if not (self.Y_existing.shape[0] == self.X_existing.shape[0]):
+                    msg = "Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent".format(
+                        self.X_existing.shape[0], self.Y_existing.shape[0]
+                    )
+                    exit_tmp(msg)
+            else:
+                self.Y_existing = np.zeros((0, y_dim))
 
         else:
             self.inpData = ""
