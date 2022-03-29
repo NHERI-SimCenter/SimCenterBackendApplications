@@ -212,7 +212,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
                               workdirMain, default_rng(child_seeds[j1]),
                               calibrationData, numExperiments, covarianceMatrixList,
                               edpNamesList, edpLengthsList, scaleFactors,
-                              shiftFactors)
+                              shiftFactors, workflowDriver)
                              for j1 in range(N)]
                 results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
         else:
@@ -222,7 +222,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
                 tmcmcFunctions.MCMC_MH(j1, Em, Nm_steps, Smcap[j1], Lmcap[j1], Postmcap[j1], beta, numAccepts, AllPars,
                                        log_likelihood, variables, workdirMain, default_rng(child_seeds[j1]),
                                        calibrationData, numExperiments, covarianceMatrixList,
-                                       edpNamesList, edpLengthsList, scaleFactors, shiftFactors)
+                                       edpNamesList, edpLengthsList, scaleFactors, shiftFactors, workflowDriver)
                 for j1 in range(N)]
 
         Sm1, Lm1, Postm1, numAcceptsS, all_proposals, all_PLP = zip(*results)
