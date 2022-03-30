@@ -512,6 +512,26 @@ def build_model(model_params, numEvt):
             f.write('set chi({:d}) {:.2f}\n'.format(ii+1, model_params['chi']))
             f.write('set mat({:d}) "J2CyclicBoundingSurface {:d} $shearG({:d}) $bulkK({:d}) $su({:d}) $rho({:d}) $h({:d}) $m({:d}) $h0({:d}) $chi({:d}) 0.5"\n\n\n'.format(
                 ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1, ii+1))
+    elif model_params['Model'] in 'PIMY':
+        # PIMY model
+        rhoSoil = model_params['Den']
+        poisson = 0.3
+        sig_v = rhoSoil * gravityG * eleVsize * 0.5
+        for ii in range(numElems):
+            f.write('set rho({:d}) {:.1f}\n'.format(numElems-ii, rhoSoil))
+            shearG = rhoSoil * Vs[ii] * Vs[ii]
+            bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
+            f.write('set Vs({:d}) {:.2f}\n'.format(numElems-ii, Vs[ii]))
+            f.write('set shearG({:d}) {:.2f}\n'.format(numElems-ii, shearG))
+            f.write('set bulkK({:d}) {:.2f}\n'.format(numElems-ii, bulkK))
+            f.write('set su({:d}) {:.2f}\n'.format(numElems-ii, model_params['Su_rat'] * sig_v))
+            sig_v = sig_v + rhoSoil * gravityG * eleVsize
+            f.write('set h({:d}) {:.2f}\n'.format(numElems-ii, shearG * model_params['h/G']))
+            f.write('set m({:d}) {:.2f}\n'.format(numElems-ii, model_params['m']))
+            f.write('set h0({:d}) {:.2f}\n'.format(numElems-ii, model_params['h0']))
+            f.write('set chi({:d}) {:.2f}\n'.format(numElems-ii, model_params['chi']))
+            f.write('set mat({:d}) "PressureIndependMultiYield {:d} 3 $rho({:d}) $shearG({:d}) $bulkK({:d}) $su({:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'.format(
+                numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii, numElems-ii))
     else:
         rhoSoil = model_params['Den']
         poisson = 0.3
