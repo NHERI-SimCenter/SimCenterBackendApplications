@@ -66,7 +66,7 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
 
     script = workflowDriver
 
-    print("RUN FEM: " + script)
+    # print("RUN FEM: " + script)
 
     p = subprocess.Popen(script, stderr=subprocess.PIPE, shell=True)
     (output, err) = p.communicate()

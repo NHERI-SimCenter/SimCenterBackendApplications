@@ -27,23 +27,23 @@ void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
 
 int main(int argc, const char **argv) {
 
-  if (argc < 4) {
-    std::cerr << "createOpenSeesDriver:: expecting 3 inputs\n";
-    exit(-1);
-  }
+  std::cerr << "createGpDriver:: starting\n";  
+  for (int i=0; i<argc; i++)
+    std::cerr << "\n\t" << i << " " << argv[i];
+  std::cerr << "\n";
+  std::cerr << "Testing" << std::endl;
 
   std::string thisProgram(argv[0]);
   std::string inputFile(argv[1]);
   std::string runType(argv[2]);
   std::string osType(argv[3]);
+  std::string workflowDriver(argv[4]);
   
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");
   eraseAllSubstring(osType,"\"");
+  eraseAllSubstring(workflowDriver,"\"");
 
-  std::cerr << "runType: " << runType << '\n';
-  std::cerr << "osType: " << osType << '\n';
-  
   if (!std::filesystem::exists(inputFile)) {
     std::cerr << "createOpenSeesDriver:: input file: " << inputFile << " does not exist\n";
     exit(801);
@@ -52,13 +52,18 @@ int main(int argc, const char **argv) {
   //current_path(currentPath);
   auto path = std::filesystem::current_path(); //getting path
 
+
   //  std::string fileName = std::filesystem::path(inputFile).filename()
   std::filesystem::path fileNameP = std::filesystem::path(inputFile).filename();
   std::string fileName = fileNameP.generic_string(); 
-  std::cerr << "fileName: " << fileName << '\n';  
+  //std::cerr << "fileName: " << fileName << '\n';  
 
   
   std::string fullPath = std::filesystem::path(inputFile).remove_filename().generic_string();
+
+  //
+  // open input file to get RV's and EDP names
+  //
 
   std::filesystem::current_path(fullPath); //getting path
   std::filesystem::current_path(fullPath); //getting path
@@ -98,10 +103,12 @@ int main(int argc, const char **argv) {
   // open workflow_driver 
   //
   
-  std::string workflowDriver = "workflow_driver"; 
+  //std::string workflowDriver = "workflow_driver"; 
   if ((osType.compare("Windows") == 0) && (runType.compare("runningLocal") == 0))
-    workflowDriver = "workflow_driver.bat";
+    workflowDriver.append(std::string(".bat"));
   
+std::cerr<<workflowDriver<<std::endl;
+
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
   
   if (!workflowDriverFile.is_open()) {
@@ -122,57 +129,86 @@ int main(int argc, const char **argv) {
 
   if (runType.compare("runningLocal") == 0) {
 
-    openSeesCommand = std::string("OpenSees");
-    pythonCommand = std::string("\"") + json_string_value(json_object_get(rootInput,"python")) + std::string("\"");
-
     if (osType.compare("Windows") == 0) {
       dpreproCommand = std::string("\"") + localDir + std::string("/applications/performUQ/templateSub/simCenterSub.exe\"");
-      // sy - check cross platform (.py needed?)
-      gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performSIM/surrogateGP/gpPredict.py\"");
+      pythonCommand = std::string("python");            
     } else {
       dpreproCommand = std::string("\"") + localDir + std::string("/applications/performUQ/templateSub/simCenterSub\"");
-      gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performSIM/surrogateGP/gpPredict.py\"");
+      pythonCommand = std::string("python3");      
     }
     
+    openSeesCommand = std::string("OpenSees");
 
+    if (json_object_get(rootInput, "python") != NULL)
+      pythonCommand = std::string("\"") + json_string_value(json_object_get(rootInput,"python")) + std::string("\"");
+    
   } else {
 
     dpreproCommand = remoteDir + std::string("/applications/performUQ/templateSub/simCenterSub");
     openSeesCommand = std::string("/home1/00477/tg457427/bin/OpenSees");
     pythonCommand = std::string("python3");
+
   }
 
+  gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
+  std::cerr << "Running Local"<<std::endl;
+  std::cerr<<pythonCommand<<std::endl;
+  std::cerr<<localDir<<std::endl;
+  std::cerr<<gpCommand<<std::endl;
 
-  json_t *fem =  json_object_get(rootInput, "fem");
-  if (fem == NULL) {
+
+  json_t *rootAPPs =  json_object_get(rootInput, "Applications");
+  if (rootAPPs == NULL) {
+    std::cerr << "createGPDriver:: no Applications found\n";
     return 0; // no random variables is allowed
+  }  
+  
+
+  json_t *femApp =  json_object_get(rootAPPs, "FEM");
+  if (femApp == NULL) {
+    std::cerr << "createGPDriver:: no FEM application in rootAPPs\n";    
+    return -2; 
+  }
+
+    json_t *fem =  json_object_get(femApp, "ApplicationData");  
+  if (fem == NULL) {
+    std::cerr << "createGPDriver:: no ApplicationData in femApp\n";        
+    return -3; 
   }
   
-  const char *mainInput =  json_string_value(json_object_get(fem, "mainInput"));
-  const char *postprocessScript =  json_string_value(json_object_get(fem, "mainPostprocessScript"));
+  
+  const char *mainInput =  json_string_value(json_object_get(fem, "mainScript"));
+  const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
     
+  std::cerr<<"flag"<<std::endl;
+
   int scriptType = 0;
   if (strstr(postprocessScript,".py") != NULL) 
     scriptType = 1;
   else if (strstr(postprocessScript,".tcl") != NULL) 
     scriptType = 2;
+  std::cerr<<"flag2"<<std::endl;
   
   std::ofstream templateFile("SimCenterInput.RV");
   for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
     templateFile << "pset " << *itRV << " \"RV." << *itRV << "\"\n";
   }
-  
+    std::cerr<<"flag3"<<std::endl;
+
   templateFile << "\n set listQoI \"";
   for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
     templateFile << *itEDP << " ";
   }
   
   templateFile << "\"\n\n\n source " << mainInput << "\n";
-  
+    std::cerr<<"flag4"<<std::endl;
+
   //workflowDriverFile << dpreproCommand << " params.in SimCenterInput.RV SimCenterInput.tcl\n";
   //workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1> ops.out 2>&1\n";
   workflowDriverFile << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n ";
+    std::cout << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n" << std::endl;
 
+  std::cerr<<"flag5"<<std::endl;
 
   // depending on script type do something
   if (scriptType == 1) { // python script

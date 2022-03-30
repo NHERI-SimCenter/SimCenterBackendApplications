@@ -6,8 +6,17 @@ import sys
 import json as json
 import shutil
 from scipy.stats import lognorm, norm
-import GPy as GPy
 import subprocess
+
+try:
+    moduleName = "emukit"
+    from emukit.multi_fidelity.convert_lists_to_array import  convert_x_list_to_array, convert_xy_lists_to_arrays
+    moduleName = "GPy"
+    import GPy as GPy
+    error_tag = False  # global variable
+except:
+    error_tag = True
+    print("Failed to import module:" + moduleName)
 
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
@@ -35,6 +44,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     with open(dakota_path) as f: # current input file
         try:
             inp_tmp = json.load(f)
+            inp_fem = inp_tmp["Applications"]["FEM"]
         except ValueError:
             msg = 'invalid json format - dakota.json'
             error_file.write(msg)
@@ -43,11 +53,11 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             file_object.close()
             exit(-1)
 
-    norm_var_thr = inp_tmp["fem"]["varThres"]
-    when_inaccurate = inp_tmp["fem"]["femOption"]
+    norm_var_thr = inp_fem["varThres"]
+    when_inaccurate = inp_fem["femOption"]
     do_mf = inp_tmp
 
-    np.random.seed(int(inp_tmp["fem"]["gpSeed"])+int(sampNum))
+    np.random.seed(int(inp_fem["gpSeed"])+int(sampNum))
 
     # sampNum=0
 
@@ -81,7 +91,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     # from json
     g_name_sur = list()
     ng_sur = 0
-    Y=np.zeros((sur['valSamp'],sur['ydim']))
+    Y=np.zeros((sur['highFidelityInfo']['valSamp'],sur['ydim']))
     for g in sur['ylabels']:
         g_name_sur += [g]
         Y[:,ng_sur]=np.array(sur['yExact'][g])
@@ -89,7 +99,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
     rv_name_sur = list()
     nrv_sur = 0
-    X=np.zeros((sur['valSamp'],sur['xdim']))
+    X=np.zeros((sur['highFidelityInfo']['valSamp'],sur['xdim']))
     for rv in sur['xlabels']:
         rv_name_sur += [rv]
         X[:,nrv_sur]=np.array(sur['xExact'][rv])
@@ -123,6 +133,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             for key, val in sur["modelInfo"][g_name_sur[ny]].items():
                 exec('m_list[ny].' + key + '= np.array(val)')
 
+    else:
+        with open(surrogate_dir, "rb") as file:
+            m_list=pickle.load(file)
 
     # to read:::
     # kern_name='Mat52'
@@ -170,7 +183,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             try:
                 id_map = g_name_sur.index(edp["name"])
             except ValueError:
-                msg = 'Error importing input data: qui "{}" not identified.'.format(name)
+                msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
                 print(msg)
                 error_file.write(msg)
                 error_file.close()
@@ -276,9 +289,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
             # run workflowDriver
             if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
-                workflowDriver = "workflow_driver.bat"
+                workflowDriver = "driver.bat"
             else:
-                workflowDriver = "workflow_driver"
+                workflowDriver = "driver"
 
             workflow_run_command = '{}/{}'.format(sim_dir, workflowDriver)
             subprocess.Popen(workflow_run_command, shell=True).wait()
@@ -307,7 +320,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             file_object.close()
             #exit(-1)
         elif when_inaccurate == 'giveError':
-            msg2 = msg0+msg1+'- STOP\n'
+            msg2 = msg0+msg1+'- EXIT\n'
             print(msg2)
             error_file.write(msg2)
             file_object.write(msg2)
@@ -320,39 +333,45 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             file_object.write(msg2)
             error_file.close()
 
-            if inp_tmp["fem"]["predictionOption"].lower().startswith("median"):
-                y_pred = y_pred_median[g_idx]
-            elif inp_tmp["fem"]["predictionOption"].lower().startswith("rand"):
-                y_pred = y_samp[g_idx]
+            if inp_fem["predictionOption"].lower().startswith("median"):
+                y_pred_subset = y_pred_median[g_idx]
+            elif inp_fem["predictionOption"].lower().startswith("rand"):
+                y_pred_subset = y_samp[g_idx]
 
     else:
         msg3 = 'Prediction error of output {} is {:.2f}%\n'.format(idx, np.max(error_ratio2)*100)
         file_object.write(msg0+msg3)
         file_object.close()
 
-        if inp_tmp["fem"]["predictionOption"].lower().startswith("median"):
-            y_pred = y_pred_median[g_idx]
-        elif inp_tmp["fem"]["predictionOption"].lower().startswith("rand"):
-            y_pred = y_samp[g_idx]
+        if inp_fem["predictionOption"].lower().startswith("median"):
+            y_pred_subset = y_pred_median[g_idx]
+        elif inp_fem["predictionOption"].lower().startswith("rand"):
+            y_pred_subset = y_samp[g_idx]
 
-    np.savetxt(result_file, np.array([y_pred]), fmt='%.5e')
+    np.savetxt(result_file, np.array([y_pred_subset]), fmt='%.5e')
 
+    y_pred_median_subset=y_pred_median[g_idx]
+    y_q1_subset=y_q1[g_idx]
+    y_q3_subset=y_q3[g_idx]
+    y_pred_var_subset=y_pred_var[g_idx]
     #
     # tab file
     #
+    
+    g_name_subset = [g_name_sur[i] for i in g_idx]
 
     with open('../surrogateTab.out', 'a') as tab_file:
         # write header
         if os.path.getsize('../surrogateTab.out') == 0:
-            tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_sur) + " " + ".median ".join(g_name_sur) + ".median "+ ".q5 ".join(g_name_sur) + ".q5 "+ ".q95 ".join(g_name_sur) + ".q95 " +".var ".join(g_name_sur) + ".var \n")
+            tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var \n")
         # write values
 
         rv_list = " ".join("{:e}".format(rv)  for rv in rv_val[0])
-        ypred_list = " ".join("{:e}".format(yp) for yp in y_pred)
-        ymedian_list = " ".join("{:e}".format(ym) for ym in y_pred_median)
-        yQ1_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1)
-        yQ3_list = " ".join("{:e}".format(yq3) for yq3 in y_q3)
-        ypredvar_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var)
+        ypred_list = " ".join("{:e}".format(yp) for yp in y_pred_subset)
+        ymedian_list = " ".join("{:e}".format(ym) for ym in y_pred_median_subset)
+        yQ1_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1_subset)
+        yQ3_list = " ".join("{:e}".format(yq3) for yq3 in y_q3_subset)
+        ypredvar_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_subset)
 
         tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " \n")
 
@@ -421,5 +440,5 @@ if __name__ == "__main__":
     surrogate_meta_dir = inputArgs[2]
     result_file="results.out"
 
-    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file,'dakota.json'))
+    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file,'scInput.json'))
 

@@ -726,6 +726,10 @@
       },{
         "Name": "Dakota-UQ1",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
+      },
+      {
+        "Name": "CustomUQ",
+        "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]
   },
