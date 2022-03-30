@@ -144,8 +144,8 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     id = []
     sites = []
     # site im dictionary
-    periods = np.array([0.1,0.2,0.3,0.4,0.5,0.75,1,2,3,4,5,7.5,10])
-    dict_im = {('type','loc','dir','stat'):[],
+    periods = np.array([0.01,0.02,0.03,0.04,0.05,0.075,0.1,0.2,0.3,0.4,0.5,0.75,1,2,3,4,5,7.5,10])
+    dict_im_all = {('type','loc','dir','stat'):[],
                ('PGA',0,1,'median'):[],
                ('PGA',0,1,'beta'):[],
                ('PGA',0,2,'median'):[],
@@ -160,7 +160,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                ('PGD',0,2,'beta'):[]}
     dict_im_site = {'1-PGA-0-1':[], '1-PGA-0-2':[],'1-PGV-0-1':[],'1-PGV-0-2':[],'1-PGD-0-1':[],'1-PGD-0-2':[]}
     for Ti in periods:
-        dict_im.update({('SA({}s)'.format(Ti),0,1,'median'):[],
+        dict_im_all.update({('SA({}s)'.format(Ti),0,1,'median'):[],
                         ('SA({}s)'.format(Ti),0,1,'beta'):[],
                         ('SA({}s)'.format(Ti),0,2,'median'):[],
                         ('SA({}s)'.format(Ti),0,2,'beta'):[]})
@@ -168,6 +168,28 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                              '1-SA({}s)-0-2'.format(Ti):[]})
 
     for site in siteFiles:
+
+        dict_im = {('type','loc','dir','stat'):[],
+                   ('PGA',0,1,'median'):[],
+                   ('PGA',0,1,'beta'):[],
+                   ('PGA',0,2,'median'):[],
+                   ('PGA',0,2,'beta'):[],
+                   ('PGV',0,1,'median'):[],
+                   ('PGV',0,1,'beta'):[],
+                   ('PGV',0,2,'median'):[],
+                   ('PGV',0,2,'beta'):[],
+                   ('PGD',0,1,'median'):[],
+                   ('PGD',0,1,'beta'):[],
+                   ('PGD',0,2,'median'):[],
+                   ('PGD',0,2,'beta'):[]}
+        dict_im_site = {'1-PGA-0-1':[], '1-PGA-0-2':[],'1-PGV-0-1':[],'1-PGV-0-2':[],'1-PGD-0-1':[],'1-PGD-0-2':[]}
+        for Ti in periods:
+            dict_im.update({('SA({}s)'.format(Ti),0,1,'median'):[],
+                            ('SA({}s)'.format(Ti),0,1,'beta'):[],
+                            ('SA({}s)'.format(Ti),0,2,'median'):[],
+                            ('SA({}s)'.format(Ti),0,2,'beta'):[]})
+            dict_im_site.update({'1-SA({}s)-0-1'.format(Ti):[],
+                                 '1-SA({}s)-0-2'.format(Ti):[]})
 
         with open(site, 'r') as f:
 
@@ -270,7 +292,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
             # dump dict_im_site
             df_im_site = pd.DataFrame.from_dict(dict_im_site)
-            site_im_file = f"{inputDir}/{siteID}/IM.csv"
+            site_im_file = f"{inputDir}/{siteID}/IM_realization.csv"
             df_im_site.to_csv(site_im_file, index=False)
 
             # median and dispersion
@@ -350,21 +372,40 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 dict_im[(cur_sa,0,2,'median')].append(m_psa_y[jj])
                 dict_im[(cur_sa,0,2,'beta')].append(s_psa_y[jj])
 
+            # aggregate
+            for cur_key, cur_value in dict_im.items():
+                dict_im_all[cur_key].append(cur_value)
+
+            # save median and standard deviation to IM.csv
+            df_im = pd.DataFrame.from_dict(dict_im)
+            df_im.to_csv(f"{inputDir}/{siteID}/IM.csv", index=False)
+
             # create site csv
             siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
             siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
 
-    # create pandas
-    im_csv_path = os.path.dirname(os.path.dirname(outputDir))
-    df_im = pd.DataFrame.from_dict(dict_im)
-    df_im.to_csv(os.path.join(im_csv_path,'Results','IM_{}-{}.csv'.format(min(id),max(id))),index=False)
-
-
     # create the EventFile
     gridDF = pd.DataFrame(list(zip(sites, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
 
-    gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
-    
+    # change the writing mode to append for paralleling workflow
+    if os.path.exists(f"{outputDir}/EventGrid.csv"):
+        # EventGrid.csv has been created
+        gridDF.to_csv(f"{outputDir}/EventGrid.csv", mode='a', index=False, header=False)
+    else:
+        # EventGrid.csv to be created
+        gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
+    #gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
+    print(f"EventGrid.csv saved to {outputDir}")
+
+    # create pandas
+    im_csv_path = os.path.dirname(os.path.dirname(outputDir))
+    df_im_all = pd.DataFrame.from_dict(dict_im_all)
+    try:
+        os.mkdir(os.path.join(im_csv_path,'Results'))
+    except:
+        print(f"Results folder already exists")
+    df_im_all.to_csv(os.path.join(im_csv_path,'Results','IM_{}-{}.csv'.format(min(id),max(id))),index=False)
+    df_im_all.to_csv(os.path.join(im_csv_path,'IM_{}-{}.csv'.format(min(id),max(id))),index=False)    
 
     # remove original files
     if removeInputDir:         
