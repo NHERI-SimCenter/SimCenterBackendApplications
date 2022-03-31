@@ -300,7 +300,8 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             #shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
 
             with open('results.out', 'r') as f:
-                y_pred = np.loadtxt(f)
+                y_pred = np.array([np.loadtxt(f)]).flatten()
+                y_pred_subset = y_pred[g_idx]
 
             os.chdir("../")
 
