@@ -66,6 +66,7 @@ class UQpyRunner(UqRunner):
         coresPerTask = 1
         clusterRun = False
         resumeRun = False
+        seed = 1
 
         # If computations are being executed on HPC, enable UQpy to start computations using srun
         if runType == "runningRemote":
@@ -85,7 +86,7 @@ class UQpyRunner(UqRunner):
                 samplingMethod = val["value"]
             
             if val["name"] == "Number of Samples":
-                numberOfSamples = val["value"]
+                numberOfSamples = int(val["value"])
 
             if val["name"] == "Number of Concurrent Tasks":
                 numberOfTasks = val["value"]
@@ -95,6 +96,9 @@ class UQpyRunner(UqRunner):
 
             if val["name"] == "Cores per Task":
                 coresPerTask = val["value"]
+            
+            if val["name"] == "Seed":
+                seed = int(val["value"])
 
 
         # Create distribution objects
@@ -106,7 +110,7 @@ class UQpyRunner(UqRunner):
         # Generate samples
         if samplingMethod == "LHS":
             samples = LHS(dist_object=distributionObjects, lhs_criterion='random',\
-                          lhs_iter=None, nsamples=numberOfSamples, var_names=variableNames)        
+                          lhs_iter=None, nsamples=numberOfSamples, var_names=variableNames, random_state=seed)        
             # samples = LHS(dist_name=distributionNames, dist_params=distributionParams, lhs_criterion='random',\
                 #               lhs_iter=None, nsamples=numberOfSamples, var_names=variableNames)
         else:
