@@ -1530,9 +1530,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            IM = [0, 1, 2, 3],
             BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],

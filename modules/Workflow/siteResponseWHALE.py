@@ -53,7 +53,7 @@ from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
-         working_dir, app_dir, log_file):
+         working_dir, app_dir, log_file, output_dir):
 
     # save the reference dir in the input file
     with open(input_file, 'r') as f:
@@ -108,7 +108,8 @@ def main(run_type, input_file, app_registry,
     siteResponseInput = {
         "units": inputs["units"],
         "outputs": {
-            "EDP": True,
+            "IM": True,
+            "EDP": False,
             "DM": False,
             "BIM": False,            
             "DV": False,
@@ -145,7 +146,8 @@ def main(run_type, input_file, app_registry,
         }
     }        
 
-    siteResponseInputFile = 'tmpSiteResponseInput.json'
+    #siteResponseInputFile = 'tmpSiteResponseInput.json'
+    siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
 
     with open(siteResponseInputFile, 'w') as json_file:
         json_file.write(json.dumps(siteResponseInput, indent=2))    
@@ -211,6 +213,10 @@ def main(run_type, input_file, app_registry,
         if force_cleanup:
             #clean up intermediate files from the simulation
             WF.cleanup_simdir(bldg['id'])
+    
+    createFilesForEventGrid(working_dir,
+                            output_dir,
+                            force_cleanup)
 
     # aggregate results
     WF.aggregate_results(bldg_data = bldg_data)
@@ -311,15 +317,16 @@ if __name__ == '__main__':
          reference_dir = wfArgs.referenceDir,
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,
-         log_file = wfArgs.logFile)
+         log_file = wfArgs.logFile,
+         output_dir = wfArgs.outputDir)
 
     #
     # now create new event file, sites and record files
     #
     
-    createFilesForEventGrid(wfArgs.workDir,
-                            wfArgs.outputDir,
-                            wfArgs.forceCleanup)
+    #createFilesForEventGrid(wfArgs.workDir,
+    #                        wfArgs.outputDir,
+    #                        wfArgs.forceCleanup)
                             
 
     # chdir again back to where ADAM starts!
