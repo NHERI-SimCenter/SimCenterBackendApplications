@@ -124,12 +124,10 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
 
     # Processing EDP inputs
     logFile.write("\n\n\t\tProcessing EDP inputs")
-    lineLength = 0
     edpNamesList = []
     edpLengthsList = []
     # Get list of EDPs and their lengths
     for edp in edpInputs:
-        lineLength += edp["length"]
         edpNamesList.append(edp["name"])
         edpLengthsList.append(edp["length"])
 
@@ -140,7 +138,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
             edpNamesList[i], edpLengthsList[i]
         )
     logFile.write(printString)
-    logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
+    # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
 
     # Processing FEM inputs .. FMK
     logFile.write("\n\n\t\tNO LONGER Processing FEM inputs")
@@ -325,7 +323,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         logLikeModule,
         writeFEMOutputs,
         variablesList,
-        lineLength,
         edpNamesList,
         edpLengthsList,
     )

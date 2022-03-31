@@ -4,8 +4,9 @@ import json
 import os
 import sys
 import platform
-# import argparse
+import argparse
 from configureAndRunUQ import configureAndRunUQ
+from pathlib import Path
 
 def main():
     # KEEP THIS FOR NOW--MAYBE BACKEND WILL BE UPDATED ACCEPT DIFFERENT ARGUMENTS...
@@ -24,27 +25,46 @@ def main():
     # runType = args.runType
     # inputFile = args.inputFile
 
-    inputArgs = sys.argv    
-    workDirMain = inputArgs[1]
-    workDirTemp = inputArgs[2]
-    runType = inputArgs[3]
-    inputFile = "dakota.json" # Why is this hardcoded, you might ask? Check with Frank...
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--workflowInput")
+    parser.add_argument("--workflowOutput")
+    parser.add_argument("--driverFile")
+    parser.add_argument("--runType")
+
+    args, unknowns = parser.parse_known_args()
+
+    inputFile = args.workflowInput
+    runType = args.runType
+    workflowDriver = args.driverFile
+    outputFile = args.workflowOutput
+
+    cwd = os.getcwd()
+    workDirTemp = cwd
+
+    # inputArgs = sys.argv    
+    # workDirMain = inputArgs[1]
+    # workDirTemp = inputArgs[2]
+    # runType = inputArgs[3]
+    # inputFile = "dakota.json" # Why is this hardcoded, you might ask? Check with Frank...
     
     if runType not in runTypeOptions:
         raise ValueError("ERROR: Input run type has to be either local or remote")
     
     # change workdir to the templatedir
-    os.chdir(workDirTemp)
-    cwd = os.getcwd()
+    # os.chdir(workDirTemp)
+    # cwd = os.getcwd()
     
     # Open input file
     inputdata = {}
     with open(inputFile) as data_file:
         inputData = json.load(data_file)
+    
+    applicationsData = inputData["Applications"]
 
     # Get data to pass to UQ driver
     uqData = inputData["UQ_Method"]
-    simulationData = inputData["fem"]
+    simulationData = applicationsData["FEM"]
     randomVarsData = inputData["randomVariables"]
     demandParams = inputData["EDP"]
     localAppDir = inputData["localAppDir"]

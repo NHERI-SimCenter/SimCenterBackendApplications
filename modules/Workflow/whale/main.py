@@ -354,7 +354,7 @@ def run_command(command):
     else:
 
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
@@ -368,7 +368,8 @@ def run_command(command):
         # else:
         #     #print(result, returncode)
         #     return str(result), returncode
-        return result.decode(sys.stdout.encoding), returncode
+
+        return result, returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
