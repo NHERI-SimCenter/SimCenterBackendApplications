@@ -41,12 +41,6 @@ def main():
 
     cwd = os.getcwd()
     workDirTemp = cwd
-
-    # inputArgs = sys.argv    
-    # workDirMain = inputArgs[1]
-    # workDirTemp = inputArgs[2]
-    # runType = inputArgs[3]
-    # inputFile = "dakota.json" # Why is this hardcoded, you might ask? Check with Frank...
     
     if runType not in runTypeOptions:
         raise ValueError("ERROR: Input run type has to be either local or remote")
