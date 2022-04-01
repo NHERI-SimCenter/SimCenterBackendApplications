@@ -68,7 +68,7 @@ class runPLoM:
         save_model: model saving
     """
 
-    def __init__(self, work_dir, run_type, os_type, job_config, errlog):
+    def __init__(self, work_dir, run_type, os_type, job_config, errlog, input_file, workflow_driver):
 
         """
         __init__
@@ -86,6 +86,8 @@ class runPLoM:
         self.os_type = os_type
         self.errlog = errlog
         self.job_config = job_config
+        self.input_file = input_file
+        self.workflow_driver = workflow_driver
 
         # initialization
         self.rv_name = list()
@@ -179,20 +181,27 @@ class runPLoM:
         # dakota script path
         dakotaScript = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'dakota','DakotaUQ.py')
 
+        print('dakotaScript = ',dakotaScript)
+
         # write a new dakota.json for forward propogation
-        with open('sc_dakota.json','r') as f:
+        ## KZ modified 0331
+        with open(self.input_file,'r') as f:
             tmp = json.load(f)
         tmp['UQ_Method']['uqType'] = 'Forward Propagation'
-        tmp['UQ_Method']['parallelExecution'] = tmp['UQ_Method']['surrogateMethodInfo']['parallelExecution']
+        tmp['UQ_Method']['parallelExecution'] = True
         samplingObj = tmp['UQ_Method']['surrogateMethodInfo']['samplingMethod']
         tmp['UQ_Method']['samplingMethodData']=dict()
+        ## KZ modified 0331
+        tmp['UQ_Method']['uqEngine'] = 'Dakota'
+        tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
             tmp['UQ_Method']['samplingMethodData'][key] = item
         with open('sc_dakota_plom.json','w') as f:
             json.dump(tmp, f, indent=2)
 
         # command line
-        command_line = f"{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile sc_driver --workflowOutput EDP.json --runType {runType}"
+        ## KZ modified 0331
+        command_line = f"{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}"
         print(command_line)
 
         # run command
@@ -243,7 +252,8 @@ class runPLoM:
             self.errlog.exit(msg)
 
         # read BIM to get RV names
-        with open(os.path.join(run_dir, 'templatedir', 'dakota.json')) as f:
+        # KZ modified 0331
+        with open(os.path.join(run_dir, 'templatedir', self.input_file)) as f:
             tmp = json.load(f)
         rVs = tmp.get('randomVariables', None)
         if rVs is None:
@@ -273,6 +283,10 @@ class runPLoM:
             df_X = df_RV
         if not df_X.empty and '%eval_id' in list(df_X.columns):
             df_X.pop('%eval_id')
+        if not df_X.empty and '%MultipleEvent' in list(df_X.columns):
+            self.multipleEvent = df_X.pop('%MultipleEvent')
+        elif not df_X.empty and 'MultipleEvent' in list(df_X.columns):
+            self.multipleEvent = df_X.pop('MultipleEvent')
 
         # make the first column name start with %
         if not df_X.empty:
@@ -301,12 +315,13 @@ class runPLoM:
 
         # intensity measure app
         computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                'createEVENT','groundMotionIM','IntensityMeasureComputer.py')
-        
+                                    'createEVENT','groundMotionIM','IntensityMeasureComputer.py')
+            
         # compute IMs
         for cur_workdir in workdir_list:
             os.chdir(cur_workdir)
-            os.system(f"{pythonEXE} {computeIM} --filenameBIM BIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
+            if os.path.exists('EVENT.json') and os.path.exists('BIM.json'):
+                os.system(f"{pythonEXE} {computeIM} --filenameBIM BIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
             os.chdir(run_dir)
 
         # collect IMs from different workdirs
@@ -675,6 +690,9 @@ class runPLoM:
             Xnew.insert(0,'%',[x+1 for x in list(Xnew.index)])
             Xnew.to_csv(self.work_dir + '/dakotaTab.out', index=False, sep=' ')
 
+        if os.path.exists('dakota.out'):
+            os.remove('dakota.out')
+
         with open('dakota.out', 'w') as fp:
             json.dump(results, fp, indent=2)
 
@@ -737,7 +755,7 @@ class errorLog(object):
         exit(-1)
 
 
-def build_surrogate(work_dir, os_type, run_type):
+def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
     
     """
     build_surrogate: built surrogate model
@@ -751,11 +769,11 @@ def build_surrogate(work_dir, os_type, run_type):
     # default filename
     filename = 'PLoM_Model'
     # read the configuration file
-    f = open(work_dir + '/templatedir/dakota.json')
+    f = open(work_dir + '/templatedir/' + input_file)
     try:
         job_config = json.load(f)
     except ValueError:
-        msg = 'invalid json format - dakota.json'
+        msg = 'invalid json format - ' + input_file
         errlog.exit(msg)
     f.close()
 
@@ -766,7 +784,7 @@ def build_surrogate(work_dir, os_type, run_type):
         errlog.exit(msg)
 
     # initializing runPLoM
-    model = runPLoM(work_dir, run_type, os_type, job_config, errlog)
+    model = runPLoM(work_dir, run_type, os_type, job_config, errlog, input_file, workflow_driver)
     # training the model
     model.train_model()
     # save the model
@@ -789,10 +807,14 @@ if __name__ == "__main__":
     # print the work_dir
     errlog = errorLog(work_dir)
     # job type
-    run_type = inputArgs[3]
+    run_type = inputArgs[5]
     # operating system type
-    os_type = inputArgs[2]
+    os_type = inputArgs[4]
     # default output file: results.out
     result_file = "results.out"
+    # input file name
+    input_file = inputArgs[2]
+    # workflowDriver
+    workflow_driver = inputArgs[3]
     # start build the surrogate
-    build_surrogate(work_dir, os_type, run_type)    
+    build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver)    
