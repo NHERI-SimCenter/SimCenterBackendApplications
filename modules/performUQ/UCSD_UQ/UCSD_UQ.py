@@ -60,7 +60,7 @@ if __name__ == "__main__":
         # Get the path to the mainscript.py of TMCMC
         #        mainScriptDir = os.path.split(mainScriptPath)[0]
         mainScript = os.path.join(mainScriptPath, "mainscript.py")
-        command = "{} {} {} {} {} {} {}".format(
+        command = '"{}" "{}" "{}" "{}" {} {} {}'.format(
             pythonCommand,
             mainScript,
             tmpSimCenterDir,
