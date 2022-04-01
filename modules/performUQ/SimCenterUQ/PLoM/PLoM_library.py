@@ -9,12 +9,16 @@ from ctypes import *
 import os
 from general import Logfile, DBServer
 
-from sys import platform
-if platform == "linux" or platform == "linux2":
+from sys import platform as pltm
+import platform
+if pltm == "linux" or pltm == "linux2":
     c_lib = CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)),"lib/linux/PLoM_C_library.so"))
-elif platform == "darwin":
-    c_lib = CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)),"lib/macOS/PLoM_C_library.so"))
-elif platform == "win32":
+elif pltm == "darwin":
+    if platform.processor() == 'arm':
+        c_lib = CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)),"lib/macOS_m1/PLoM_C_library.so"))
+    else:
+        c_lib = CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)),"lib/macOS/PLoM_C_library.so"))
+elif pltm == "win32":
     c_lib = CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)),"lib/win/PLoM_C_library.so"))
 
 c_lib.rho.restype = c_double
