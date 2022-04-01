@@ -100,7 +100,7 @@ def main(args):
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         # KZ: training calling runPLoM.py to launch the model training
         elif uq_data['uqType'] == 'PLoM Model':
-            simCenterUQCommand = 'python {} {} {} {}'.format(os.path.join(myScriptDir,plom).replace('\\','/'),workdir_main.replace('\\','/'),osType,runType)
+            simCenterUQCommand = '"{}" "{}" "{}" {} {} {} {}'.format(python, os.path.join(myScriptDir,plom).replace('\\','/'),workdir_main.replace('\\','/'),inputFile,workflowDriver,osType,runType)
             
         print('running SimCenterUQ: ', simCenterUQCommand)
 

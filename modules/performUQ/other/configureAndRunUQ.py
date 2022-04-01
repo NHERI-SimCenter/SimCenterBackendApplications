@@ -1,8 +1,6 @@
-# written: Michael Gardner @ UNR
+# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB
 
-from UQpyRunner import UQpyRunner
-# Currently, the only UQ driver that is implemented is UQpy. Use this as a
-# starting point if you want to add other UQ capabilities
+# Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
 def configureAndRunUQ(uqData, simulationData, randomVarsData, demandParams, workingDir,
                       runType, localAppDir, remoteAppDir):
@@ -24,7 +22,7 @@ def configureAndRunUQ(uqData, simulationData, randomVarsData, demandParams, work
     remoteAppDir:   Directory containing apps for remote run
     """
 
-    uqDriverOptions = ["UQpy"]
+    uqDriverOptions = ["UQpy", "HeirBayes"]
     
     for val in uqData["Parameters"]:
         if val["name"] == "UQ Driver":
@@ -35,6 +33,11 @@ def configureAndRunUQ(uqData, simulationData, randomVarsData, demandParams, work
                          " Either input incorrectly or class to run UQ driver not"+\
                          " implemented: ", uqDriver)
     else:
-        uqDriverClass = globals()[uqDriver+"Runner"]
+        if uqDriver in ["UQpy"]:
+            from UQpyRunner import UQpyRunner
+        elif uqDriver in ["HeirBayes"]:
+            from HeirBayesRunner import HeirBayesRunner
+
+        uqDriverClass = locals()[uqDriver+"Runner"]
         uqDriverClass().runUQ(uqData, simulationData, randomVarsData, demandParams,
                               workingDir, runType, localAppDir, remoteAppDir)      

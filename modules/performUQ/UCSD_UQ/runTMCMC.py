@@ -33,6 +33,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
     scalem = 1  # cov scale factor
     evidence = 1  # model evidence
     stageNum = 0  # stage number of TMCMC
+    log_evidence = 0
 
     logFile.write('\n\n\t\t==========================')
     logFile.write("\n\t\tStage number: {}".format(stageNum))
@@ -131,6 +132,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
         # plausible weights of Sm corresponding to new beta
         beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)
+        # beta, log_evidence, Wm, ESS = tmcmcFunctions.compute_beta_evidence(beta, Lm, log_evidence, ESS, threshold=0.95)
 
         stageNum += 1
 
@@ -285,4 +287,4 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
             executor.shutdown()
             logFile.write("\n\tShutdown mpi4py executor pool for runType: {}".format(run_type))
 
-    return mytrace
+    return mytrace, log_evidence

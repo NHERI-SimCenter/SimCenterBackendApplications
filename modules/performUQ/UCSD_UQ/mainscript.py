@@ -685,7 +685,7 @@ if __name__ == "__main__":
 
         syncLogFile(logFile)
 
-        mytrace = RunTMCMC(
+        mytrace, log_evidence = RunTMCMC(
             Np,
             AllPars,
             Nm_steps_max,
@@ -723,6 +723,8 @@ if __name__ == "__main__":
             Wm = mytrace[i][2]
             evidence = evidence * (sum(Wm) / len(Wm))
         logFile.write("\n\t\t\tModel evidence: {:e}".format(evidence))
+        # evidence = np.exp(log_evidence)
+        # logFile.write("\n\t\t\tModel evidence from log_evidence: {:e}".format(evidence))
 
         syncLogFile(logFile)
 

@@ -6,7 +6,7 @@ affiliation: University of California, San Diego
 
 import numpy as np
 from runFEM import runFEM
-
+from scipy.special import logsumexp
 
 def initial_population(N, p):
     IniPop = np.zeros((N, len(p)))
@@ -54,6 +54,54 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
 
     return new_beta, Wm, ESS
 
+def compute_beta_evidence(beta, log_likelihoods, log_evidence, prev_ESS, threshold):
+    old_beta = beta
+    min_beta = beta
+    max_beta = 2.0
+
+    N = len(log_likelihoods)
+    min_ESS = np.ceil(0.1*N)
+    rN = max(threshold*prev_ESS, min_ESS)
+
+    new_beta = 0.5*(max_beta+min_beta)
+    inc_beta = new_beta-old_beta
+    log_Wm = inc_beta * log_likelihoods
+    log_Wm_n = log_Wm - logsumexp(log_Wm)
+    ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
+
+    while max_beta - min_beta > 1e-6: #min step size
+        new_beta = 0.5*(max_beta+min_beta)
+        #plausible weights of Sm corresponding to new beta
+        inc_beta = new_beta-old_beta
+        
+        log_Wm = inc_beta * log_likelihoods
+        log_Wm_n = log_Wm - logsumexp(log_Wm)
+        ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
+        
+        if ESS == rN:
+            break
+        elif ESS < rN:
+            max_beta = new_beta
+        else:
+            min_beta = new_beta
+            
+    if new_beta >= 1:
+        new_beta = 1
+        #plausible weights of Sm corresponding to new beta
+        inc_beta = new_beta-old_beta
+        
+        log_Wm = inc_beta * log_likelihoods
+        log_Wm_n = log_Wm - logsumexp(log_Wm)
+    
+    Wm = np.exp(log_Wm)
+    Wm_n = np.exp(log_Wm_n)
+    
+    # update model evidence 
+    # evidence = evidence * (sum(Wm)/N)
+    log_evidence = log_evidence + logsumexp(log_Wm) - np.log(N)
+    # log_evidence = log_evidence + np.log((sum(Wm)/N))
+    
+    return new_beta, log_evidence, Wm_n, ESS
 
 # MCMC
 def MCMC_MH(ParticleNum, Em, Nm_steps, current, likelihood_current, posterior_current, beta, numAccepts, AllPars,
