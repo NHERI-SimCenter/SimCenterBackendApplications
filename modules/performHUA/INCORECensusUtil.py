@@ -39,14 +39,35 @@
 
 import os
 import sys
+import importlib
+import subprocess
 import argparse, posixpath, json
   
-from pyincore_data.censusutil import CensusUtil
-
 if __name__ == '__main__':
      
     print('Pulling census data')
+    
+    
+    # Get any missing dependencies
+    packageInstalled = False
 
+    import requests
+    if not hasattr(requests, 'get'):
+        print('Installing the requests package')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", 'requests'])
+        packageInstalled = True
+
+    
+    packages = ['geopandas']
+    for p in packages:
+        if importlib.util.find_spec(p) is None:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+            packageInstalled = True
+            print('Installing the ' +p+ ' package')
+
+    if packageInstalled == True :
+        print('New packages were installed. Please restart the process.')
+        sys.exit(0)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--census_config')
@@ -69,6 +90,8 @@ if __name__ == '__main__':
 
     # Vintage, e.g., "2010"
     vintage = config_info['Vintage']
+
+    from pyincore_data.censusutil import CensusUtil
 
 
     disloc_df = CensusUtil.get_blockgroupdata_for_dislocation(state_counties, vintage,out_csv=False, out_shapefile=True, out_geopackage=False,out_geojson=False,geo_name="CensusData"+vintage , program_name=output_dir)
