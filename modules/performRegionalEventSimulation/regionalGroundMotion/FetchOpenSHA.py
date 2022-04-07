@@ -335,8 +335,9 @@ def get_site_prop(gmpe_name, siteSpec):
     try:
         availableSiteData = siteDataProviders.getAllAvailableData(sites)
     except:
-        print('Error in getAllAvailableData')
-        return 1
+        availableSiteData = []
+        print('remote getAllAvailableData is not available temporarily, please provide site Vs30 in the site csv file.')
+        #return 1
     siteTrans = SiteTranslator()
     # Looping over all sites
     site_prop = []
@@ -358,7 +359,10 @@ def get_site_prop(gmpe_name, siteSpec):
         for j in range(imrSiteParams.size()):
             siteParam = imrSiteParams.getByIndex(j)
             newParam = Parameter.clone(siteParam)
-            siteDataFound = siteTrans.setParameterValue(newParam, siteDataValues)
+            if siteDataValues.size() > 0:
+                siteDataFound = siteTrans.setParameterValue(newParam, siteDataValues)
+            else:
+                siteDataFound = False
             if (str(newParam.getName())=='Vs30' and bool(cur_site.get('Vs30', None))):
                 newParam.setValue(Double(cur_site['Vs30']))
                 siteDataResults.append({'Type': 'Vs30',
