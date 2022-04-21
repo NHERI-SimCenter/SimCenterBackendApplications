@@ -93,7 +93,7 @@ class GM_Selector:
             self.sf_max = 100000.0
         else:
             self.sf_max = sf_max
-        self.sf_range = [self.sf_min, self.sf_max]
+        self.sf_range = np.linspace(self.sf_min, self.sf_max, 100)
 
     def set_target_im(self, target_im):
         self.target_im = [target_im for k in range(self.num_gm)]
