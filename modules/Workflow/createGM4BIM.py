@@ -374,7 +374,10 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
             # aggregate
             for cur_key, cur_value in dict_im.items():
-                dict_im_all[cur_key].append(cur_value)
+                if isinstance(cur_value,list):
+                    dict_im_all[cur_key].append(cur_value[0])
+                else:
+                    dict_im_all[cur_key].append(cur_value)
 
             # save median and standard deviation to IM.csv
             df_im = pd.DataFrame.from_dict(dict_im)
