@@ -42,6 +42,7 @@ import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from gmpe import SignificantDurationModel
 
 from java.io import *
 from java.lang import *
@@ -126,13 +127,23 @@ def get_source_distance(erf, source_index, lat, lon):
 
     rupSource = erf.getSource(source_index)
     sourceSurface = rupSource.getSourceSurface()
-    print(lon)
-    print(lat)
+    #print(lon)
+    #print(lat)
     distToSource = []
     for i in range(len(lat)):
         distToSource.append(float(sourceSurface.getDistanceRup(Location(lat[i], lon[i]))))
 
     return distToSource
+
+def get_rupture_distance(erf, source_index, rupture_index, lat, lon):
+
+    rupSource = erf.getSource(source_index)
+    rupSurface = rupSource.getRuptureList().get(rupture_index).getRuptureSurface()
+    distToRupture = []
+    for i in range(len(lat)):
+        distToRupture.append(float(rupSurface.getDistanceRup(Location(lat[i], lon[i]))))
+
+    return distToRupture
 
 
 def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0, maxSources = 500):
@@ -164,7 +175,7 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         distanceToSource = source_collection.iloc[i, 1]
         # Checking maximum distance
         if (distanceToSource > maxDistance):
-            break
+            continue
         # Getting rupture distances
         rupSource = erf.getSource(source_index)
         try:
@@ -194,7 +205,7 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
             cur_dict.update({'type': 'Feature'})
             rup_index = rup_collection.iloc[j, 0]
             cur_dist = rup_collection.iloc[j, 1]
-            if cur_dist < 0:
+            if cur_dist <= 0.:
                 # skipping ruptures with distance exceeding the maxDistance
                 continue
             rupture = rupList.get(rup_index)
@@ -324,8 +335,9 @@ def get_site_prop(gmpe_name, siteSpec):
     try:
         availableSiteData = siteDataProviders.getAllAvailableData(sites)
     except:
-        print('Error in getAllAvailableData')
-        return 1
+        availableSiteData = []
+        print('remote getAllAvailableData is not available temporarily, please provide site Vs30 in the site csv file.')
+        #return 1
     siteTrans = SiteTranslator()
     # Looping over all sites
     site_prop = []
@@ -347,7 +359,10 @@ def get_site_prop(gmpe_name, siteSpec):
         for j in range(imrSiteParams.size()):
             siteParam = imrSiteParams.getByIndex(j)
             newParam = Parameter.clone(siteParam)
-            siteDataFound = siteTrans.setParameterValue(newParam, siteDataValues)
+            if siteDataValues.size() > 0:
+                siteDataFound = siteTrans.setParameterValue(newParam, siteDataValues)
+            else:
+                siteDataFound = False
             if (str(newParam.getName())=='Vs30' and bool(cur_site.get('Vs30', None))):
                 newParam.setValue(Double(cur_site['Vs30']))
                 siteDataResults.append({'Type': 'Vs30',
@@ -464,10 +479,6 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
         tag_PGA = True
     if 'PGV' in im_info['Type']:
         tag_PGV = True
-    if 'Ds575' in im_info['Type']:
-        tag_Ds575 = True
-    if 'Ds595' in im_info['Type']:
-        tag_Ds595 = True
     # Looping over sites
     gm_collector = []
     for i in range(len(siteSpec)):
@@ -552,6 +563,7 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
                 pgvResult['InterEvStdDev'].append(float(interEvStdDev))
                 pgvResult['IntraEvStdDev'].append(float(intraEvStdDev))
             gmResults.update({'lnPGV': pgvResult})
+
         gm_collector.append(gmResults)
     # Updating station information
     if station_info['Type'] == 'SiteList':
@@ -560,7 +572,40 @@ def get_IM(gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info
     res = {'Magnitude': magnitude,
            'MeanAnnualRate': meanAnnualRate,
            'SiteSourceDistance': source_info.get('SiteSourceDistance',None),
+           'SiteRuptureDistance': source_info.get('SiteRuptureDistance',None),
            'Periods': cur_T,
            'GroundMotions': gm_collector}
     # return
     return res, station_info
+
+def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
+
+    # set up site java object
+    sites = ArrayList()
+    num_sites = len(lat)
+    for i in range(num_sites):
+        sites.add(Site(Location(lat[i], lon[i])))
+    
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+
+    # search name
+    vs30 = []
+    for i in range(int(siteData.size())):
+        cur_siteData = siteData.get(i)
+        if str(cur_siteData.getSourceName()) == vs30model:
+            vs30 = [float(cur_siteData.getValue(x).getValue()) for x in range(num_sites)]
+            break
+        else:
+            continue
+
+    # check if any nan (Wills Map return nan for offshore sites)
+    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
+    if any([np.isnan(x) for x in vs30]):
+        non_list = np.where(np.isnan(vs30))[0].tolist()
+        for i in non_list:
+            vs30[i] = float(siteData.get(3).getValue(i).getValue())
+
+    # return
+    return vs30

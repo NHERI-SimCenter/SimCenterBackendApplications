@@ -54,6 +54,7 @@ def log_msg(msg):
 
 def main(threads = 1):
     headers = dict(
+        IM = [0, 1, 2, 3],
         BIM = [0, ],
         EDP = [0, 1, 2, 3],
         DM = [0, 1, 2],
@@ -98,7 +99,7 @@ def main(threads = 1):
         log_msg('Cluster initialized.')
         log_msg(client)
 
-    for res_type in ['BIM', 'EDP', 'DM', 'DV']:
+    for res_type in ['IM', 'BIM', 'EDP', 'DM', 'DV']:
 
         log_msg('Loading {} files...'.format(res_type))
 

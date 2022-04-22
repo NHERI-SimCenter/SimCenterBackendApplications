@@ -226,6 +226,12 @@ mps2 = m / sec2
 inchps2 = inch / sec2
 ftps2 = ft / sec2
 
+#SG add tsunami workflow
+# momentum flux
+m3ps2 = m3 / sec2
+ft3ps2 = ft3 / sec2
+inch3ps2 = inch3 / sec2
+
 g = 9.80665 * mps2
 
 # mass
@@ -322,6 +328,9 @@ EDP_to_demand_type = {
     'Peak Gust Wind Speed' :          'PWS',
     'Peak Inundation Height' :        'PIH',
     'Flood Water Depth' :             'PIH', # temporary workaround
+    'Maximum Tsunami Depth' :         'PIH', # SG add tsunami workflow
+    'Maximum Tsunami Momentum Flux' : 'PWM', # SG add tsunami workflow
+    'Maximum Tsunami Velocity' :      'PWV', # SG add tsunami workflow
     'Peak Ground Acceleration' :      'PGA',
     'Peak Ground Velocity' :          'PGV',
     'Spectral Acceleration' :         'SA',

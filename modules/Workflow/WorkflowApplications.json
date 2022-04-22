@@ -927,6 +927,16 @@
             "id": "auto_script",
             "type": "path",
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
+          },
+          {
+            "id": "resource_dir",
+            "type": "path",
+            "description": ""
+          },
+          {
+            "id": "custom_fragility_dir",
+            "type": "path",
+            "description": "Identifies the location of user-provided fragility functions."
           }
         ]
       }

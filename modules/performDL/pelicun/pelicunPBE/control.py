@@ -283,6 +283,16 @@ class Assessment(object):
                 units=dict(PWS=self._AIM_in['units']['speed'],
                            PIH=self._AIM_in['units']['length']),
                 verbose=verbose)
+        #SG add tsunami workflow
+        elif self._hazard == 'TN':
+            self._EDP_in = read_SimCenter_EDP_input(
+                path_EDP_input,
+                #EDP_kinds=('PIH','PWM','PWV') # Maximum water height, Momentum Flux, Maximum velocity
+                units=dict(PIH=self._AIM_in['units']['length'],
+                           PWV=self._AIM_in['units']['speed'],
+                           PWM=self._AIM_in['units']['momentumFlux']
+                ),
+                verbose=verbose)
 
         data = self._EDP_in
 

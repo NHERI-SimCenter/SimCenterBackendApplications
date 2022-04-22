@@ -810,7 +810,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro'] :
+                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro', 'Tsunami'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
@@ -1535,9 +1535,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            IM = [0, 1, 2, 3],
             BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],
