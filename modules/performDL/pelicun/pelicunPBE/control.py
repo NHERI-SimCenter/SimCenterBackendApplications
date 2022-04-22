@@ -267,6 +267,7 @@ class Assessment(object):
                            DWD=1.,
                            RDR=1.,
                            PFA=self._AIM_in['units']['acceleration'],
+                           PFD=self._AIM_in['units']['length'],
                            PMD=1.,
                            PGA=self._AIM_in['units']['acceleration'],
                            PGV=self._AIM_in['units']['speed'],
@@ -372,7 +373,7 @@ class Assessment(object):
             elif (('PFV' in col) or ('PGV' in col) or ('SV' in col) or
                   ('PWS' in col)):
                 scale_factor = self._AIM_in['units']['speed']
-            elif ('PGD', 'PIH' in col):
+            elif ('PGD', 'PIH', 'PFD' in col):
                 scale_factor = self._AIM_in['units']['length']
             else:
                 scale_factor = 1.0
@@ -2452,7 +2453,7 @@ class FEMA_P58_Assessment(Assessment):
                             )
 
                 FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count] = \
-                    FG_damages.mul(PG_qnt, axis=0)
+                    FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count].mul(PG_qnt, axis=0)
 
             DMG = pd.concat((DMG, FG_damages), axis=1)
 

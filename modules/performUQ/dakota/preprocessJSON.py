@@ -654,7 +654,7 @@ interface_pointer = 'SimulationInterface'
                 f.write("'{}' ".format(edp["type"]))
             else:
                 edpAcronym = edp["type"]
-                floor = edp["id"]
+                #floor = edp["id"]
                 known = False
                 f.write("'{}' ".format(edp["type"]))
 

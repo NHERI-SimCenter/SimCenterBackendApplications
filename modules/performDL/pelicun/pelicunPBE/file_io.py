@@ -619,7 +619,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             "Number of realizations is not specified in the input file.")
 
     if AT in ['P58', 'HAZUS_EQ']:
-        EDP_keys = ['PID', 'PRD', 'PFA',
+        EDP_keys = ['PID', 'PRD', 'PFA', 'PFD',
                     'PGV', 'RID', 'PMD',
                     'PGA', 'SA', 'SV', 'SD',
                     'RDR','DWD']
