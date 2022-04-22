@@ -2443,7 +2443,7 @@ class FEMA_P58_Assessment(Assessment):
                             )
 
                 FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count] = \
-                    FG_damages.mul(PG_qnt, axis=0)
+                    FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count].mul(PG_qnt, axis=0)
 
             DMG = pd.concat((DMG, FG_damages), axis=1)
 
