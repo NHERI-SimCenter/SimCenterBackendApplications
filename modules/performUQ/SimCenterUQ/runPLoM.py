@@ -157,7 +157,10 @@ class runPLoM:
 
         # get python instance
         runType = job_config.get('runType','runningLocal')
-        pythonEXE = 'python'
+        if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
+            pythonEXE = 'python3'
+        else:
+            pythonEXE = 'python'
         if runType == 'runningLocal' and platform.system() == 'Windows':
             localAppDir = job_config.get('localAppDir',None)
             if localAppDir is None:
@@ -205,7 +208,11 @@ class runPLoM:
         print(command_line)
 
         # run command
-        os.system(command_line)
+        try:
+            os.system(command_line)
+        except:
+            print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
+            print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
 
         # remove the new dakota.json
         #os.remove('sc_dakota_plom.json')
