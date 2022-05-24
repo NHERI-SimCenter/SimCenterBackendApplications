@@ -128,6 +128,10 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		edpAcronym = "PFA";
 		floor = json_string_value(json_object_get(eventEDP,"floor"));
 		known = true;
+	      } else if (strcmp(edpEngType,"rms_acceleration") == 0) {
+		edpAcronym = "RMSA";
+		floor = json_string_value(json_object_get(eventEDP,"floor"));
+		known = true;		
 	      } else if	(strcmp(edpEngType,"max_drift") == 0) {
 		edpAcronym = "PID";
 		floor = json_string_value(json_object_get(eventEDP,"floor2"));
