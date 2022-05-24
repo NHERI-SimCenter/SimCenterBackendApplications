@@ -180,6 +180,17 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		  json_array_append(rootEDPs, newEDP);	      
 		}		  
 	      }
+
+        // KZ: for not standard edp (known==false)
+        else {
+          // add new EDP as defined by users
+          json_t *newEDP = json_object();
+          json_object_set(newEDP, "length", json_integer(1));
+          json_object_set(newEDP, "type", json_string("scalar"));
+          json_object_set(newEDP, "name", json_string(edpName.c_str()));
+          json_array_append(rootEDPs, newEDP);	   
+
+        }
 	    }
 	  }
 	} else {
