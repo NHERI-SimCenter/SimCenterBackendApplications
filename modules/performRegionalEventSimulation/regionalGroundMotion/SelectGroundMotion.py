@@ -55,15 +55,77 @@ import numpy as np
 import pandas as pd
 import zipfile
 import csv
+import copy
 
 
-def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
+class GM_Selector:
+
+    def __init__(self, gmdb_im_df=dict(), num_records=1, sf_min=None, sf_max=None, target_im=None):
+
+        self.set_gmdb_im_df(gmdb_im_df)
+        self.set_num_records(num_records)
+        self.set_sf_range(sf_min, sf_max)
+        self.set_target_im(target_im)
+
+    def set_gmdb_im_df(self, gmdb_im_df):
+        self.gmdb_im_df = gmdb_im_df
+        self.num_gm = len(gmdb_im_df['RSN'])
+        tmp_list = list(gmdb_im_df.keys())
+        tmp_list.remove('RSN')
+        self.im_list = tmp_list
+        tmp_scalable = []
+        for cur_im in self.im_list:
+            if cur_im.startswith('DS'):
+                tmp_scalable.append(0)
+            else:
+                tmp_scalable.append(1)
+        self.scalable = tmp_scalable
+
+    def set_num_records(self, num_records):
+        self.num_records = num_records
+
+    def set_sf_range(self, sf_min, sf_max):
+        if sf_min is None:
+            self.sf_min = 0.0001
+        else:
+            self.sf_min = sf_min
+        if sf_max is None:
+            self.sf_max = 100000.0
+        else:
+            self.sf_max = sf_max
+        self.sf_range = np.linspace(self.sf_min, self.sf_max, 100)
+
+    def set_target_im(self, target_im):
+        self.target_im = [target_im for k in range(self.num_gm)]
+
+    def select_records(self):
+
+        im_table = self.gmdb_im_df.iloc[:,1:]
+        min_err = 1000000.0
+        for s in self.sf_range:
+            cur_im_table = copy.copy(im_table)
+            for i in range(cur_im_table.shape[1]):
+                if self.scalable[i]:
+                    cur_im_table.iloc[:,i] = cur_im_table.iloc[:,i]*s
+            err = np.linalg.norm(np.exp(self.target_im) - cur_im_table.to_numpy(), axis = 1)
+            if np.min(err) < min_err:
+                min_err = np.min(err)
+                tmp_tag = err.argmin()
+                sf = s
+
+        self.loc_tag = tmp_tag
+        self.min_err = min_err
+        self.rsn_tag = self.gmdb_im_df['RSN'].values.tolist()[tmp_tag]
+        self.sf = sf
+
+
+def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
                          output_dir, output_file, stations):
 
     # Loading gmdb
     if gmdb_file == 'NGAWest2':
         cwd = os.path.dirname(os.path.realpath(__file__))
-        gmdb = pd.read_csv(cwd+'/database/gmdb/NGAWest2.csv', header = 0, index_col = None)
+        gmdb = pd.read_csv(cwd+'/database/gmdb/NGAWest2.csv', header = 0, index_col = None, low_memory=False)
         # Parsing spectral data
         num_gm = len(gmdb['RecId'])
         tmp = gmdb.keys()[37:147]
@@ -78,14 +140,29 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
         gm_id = []
         sf_data = []
         filename = []
-        # Processing gmdb spectra (or PGA)
-        if (len(target_period) == 1) and (target_period[0] == 0.0):
-            psa_db_m = pga.values.tolist()
-        else:
-            psa_db_m = [np.interp(target_period, T_db, psa_db.iloc[k, :]) for k in range(num_gm)]
+        # get available key names
+        # Parese im_list
+        target_period = []
+        im_map = {"PGA": 34,
+                  "PGV": 35,
+                  "PGD": 36,
+                  "DS575H": 151,
+                  "DS595H": 152}
+        im_loc_tag = []
+        gmdb_im_dict = dict()
+        gmdb_im_dict.update({'RSN':gmdb['RecId'].values.tolist()})
+        for cur_im in im_list:
+            if cur_im.startswith('SA'):
+                cur_period = float(cur_im[3:-1])
+                gmdb_im_dict.update({cur_im:[np.interp(cur_period, T_db, psa_db.iloc[k, :]) for k in range(num_gm)]})
+            else:
+                im_loc_tag.append(im_map.get(cur_im, None))
+                gmdb_im_dict.update({cur_im:[x[0] for x in gmdb.iloc[:, im_loc_tag].values.tolist()]})
+        # ground motion database intensity measure data frame
+        gmdb_im_df = pd.DataFrame.from_dict(gmdb_im_dict)
         tmp_scen = 0
         # Looping over all scenarios
-        for cur_target in target_ln_sa:
+        for cur_target in target_ln_im:
             tmp_scen = tmp_scen + 1
             print('-Scenario #'+str(tmp_scen))
             num_stations, num_periods, num_simu = cur_target.shape
@@ -96,23 +173,17 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
             for i in range(num_simu):
                 print('--Realization #'+str(i+1))
                 for j in range(num_stations):
+                    # create a ground motion selector
+                    gm_selector = GM_Selector(gmdb_im_df=gmdb_im_df, num_records=1, sf_min=sf_min, sf_max=sf_max, target_im=cur_target[j,:,i])
+                    # select records
+                    gm_selector.select_records()
+                    # collect results
+                    tmp_min_err[j, i] = gm_selector.min_err
+                    tmp_id[j, i] = int(gmdb['RecId'][gm_selector.loc_tag])
+                    tmp_sf[j, i] = gm_selector.sf
+                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal1'][gm_selector.loc_tag].replace("\\","_").replace("/","_"))
+                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal2'][gm_selector.loc_tag].replace("\\","_").replace("/","_"))
                     #print('---Station #'+str(j+1))
-                    tmp_target = [cur_target[j, :, i] for k in range(num_gm)]
-                    min_err = 1000000.0
-                    for s in sf_range:
-                        if (num_periods == 1) and (target_period[0] == 0.0):
-                            err = np.abs(np.exp([x[0] for x in tmp_target]) - np.exp(np.log(s) + np.log(psa_db_m)))
-                        else:
-                            err = np.linalg.norm(np.exp(tmp_target) - np.exp(np.log(s) + np.log(psa_db_m)), axis = 1)
-                        if np.min(err) < min_err:
-                            min_err = np.min(err)
-                            tmp_tag = err.argmin()
-                            sf = s
-                    tmp_min_err[j, i] = min_err
-                    tmp_id[j, i] = int(gmdb['RecId'][tmp_tag])
-                    tmp_sf[j, i] = sf
-                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal1'][tmp_tag].replace("\\","_").replace("/","_"))
-                    tmp_filename.append('RSN'+str(int(tmp_id[j,i]))+'_'+gmdb['FileNameHorizontal2'][tmp_tag].replace("\\","_").replace("/","_"))
             # Collecting results in one scenario
             gm_id.append(tmp_id)
             sf_data.append(tmp_sf)
@@ -127,13 +198,13 @@ def select_ground_motion(target_period, target_ln_sa, gmdb_file, sf_max, sf_min,
     lat = [stations[j]['Latitude'] for j in range(len(stations))]
     lon = [stations[j]['Longitude'] for j in range(len(stations))]
     vs30 = [stations[j]['Vs30'] for j in range(len(stations))]
-    zTR = [stations[j]['zTR'] for j in range(len(stations))]
+    zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
     df = pd.DataFrame({
         'GP_file': station_name,
         'Longitude': lon,
         'Latitude': lat,
 		'Vs30': vs30,
-		'zTR': zTR
+		'DepthToRock': zTR
     })
     output_dir = os.path.join(os.path.dirname(Path(output_dir)),
                               os.path.basename(Path(output_dir)))
@@ -179,8 +250,9 @@ def output_all_ground_motion_info(gm_id, gm_file, output_dir, filename):
 
 """ Uncommenting below if use this tool alone to download records from PEER
 
-def download_ground_motion(gm_id, user_name, user_password, output_dir):
+def download_ground_motion(gm_id, user_name, user_password, output_dir, spectra_only=False):
 
+    from selenium import webdriver
     # Setting chrome options
     if sys.platform.startswith('win'):
         chromedriver = os.path.dirname(__file__) + '/bin/chromedriver/chromedriver.exe'
@@ -196,6 +268,7 @@ def download_ground_motion(gm_id, user_name, user_password, output_dir):
                               os.path.basename(Path(output_dir)))
     prefs = {"download.default_directory" : output_dir, "directory_upgrade": True}
     chromeOptions.add_experimental_option("prefs", prefs)
+    chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
     # Ground motion record numbers
     num_gm = len(gm_id)
     # Accessing NGA West-2 website
@@ -214,33 +287,38 @@ def download_ground_motion(gm_id, user_name, user_password, output_dir):
         return 0
 
     # Grouping every 100 records (NGA West website allows 100 records/time)
-    for r in range(num_gm//100 + 1):
+    for r in range(int(np.ceil(num_gm/100))):
         cur_id = [f"{c}" for c in gm_id[r*100:min(r*100+100, num_gm)]]
         s = ","
         s = s.join(cur_id)
         gm_driver.find_element_by_id("search_search_nga_number").clear()
         gm_driver.find_element_by_id("search_search_nga_number").send_keys(s)
         gm_driver.find_element_by_xpath('//button[@onclick="uncheck_plot_selected();reset_selectedResult();OnSubmit();"]').click()
-        time.sleep(20)
-        gm_driver.find_element_by_xpath('//button[@onclick="getSelectedResult(true)"]').click()
-        gm_driver.switch_to_alert().accept()
-        gm_driver.switch_to_alert().accept()
-        time.sleep(40)
+        time.sleep(10)
+        if spectra_only:
+            gm_driver.find_element_by_xpath('//button[@onclick="getSaveSearchResult()"]')
+            time.sleep(5)
+        else:
+            gm_driver.find_element_by_xpath('//button[@onclick="getSelectedResult(true)"]').click()
+            gm_driver.switch_to_alert().accept()
+            gm_driver.switch_to_alert().accept()
+            time.sleep(40)
     # Closing
     gm_driver.close()
 
     record_path = output_dir
     record_files = os.listdir(record_path)
     raw_record_folder = 'raw'
-    try:
-        os.mkdir(os.path.join(record_path, raw_record_folder))
-    except:
-        print('SelectGroundMotion: the /record/raw folder already exists.')
-    for cur_file in record_files:
-        if 'zip' in cur_file:
-            with zipfile.ZipFile(os.path.join(record_path, cur_file), 'r') as zip_ref:
-                zip_ref.extractall(os.path.join(record_path, raw_record_folder))
-            os.remove(os.path.join(record_path, cur_file))
+    if not spectra_only:
+        try:
+            os.mkdir(os.path.join(record_path, raw_record_folder))
+        except:
+            print('SelectGroundMotion: the /record/raw folder already exists.')
+        for cur_file in record_files:
+            if 'zip' in cur_file:
+                with zipfile.ZipFile(os.path.join(record_path, cur_file), 'r') as zip_ref:
+                    zip_ref.extractall(os.path.join(record_path, raw_record_folder))
+                os.remove(os.path.join(record_path, cur_file))
     # return
     return os.path.join(record_path, raw_record_folder)
 

@@ -368,12 +368,14 @@ class Assessment(object):
 
         # TODO: use some global vars to identify EDP units because this is a mess
         for col_i, col in enumerate(cols):
-            if ('PFA' in col) or ('PGA' in col) or ('SA' in col):
+            if (('PFA' in col) or ('PGA' in col) or ('SA' in col)):
                 scale_factor = self._AIM_in['units']['acceleration']
             elif (('PFV' in col) or ('PGV' in col) or ('SV' in col) or
                   ('PWS' in col)):
                 scale_factor = self._AIM_in['units']['speed']
             elif ('PGD', 'PIH', 'PFD' in col):
+            # FMK head << elif ('PGD', 'PIH', 'PFD' in col):                
+            # FMK master >>> elif (('PGD' in col) or ('PIH' in col) or ('PFD' in col)):
                 scale_factor = self._AIM_in['units']['length']
             else:
                 scale_factor = 1.0

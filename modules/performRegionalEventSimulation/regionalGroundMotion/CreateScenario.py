@@ -44,16 +44,20 @@ import json
 import random
 import numpy as np
 import pandas as pd
-from FetchOpenSHA import *
+import socket
+if 'stampede2' not in socket.gethostname():
+	from FetchOpenSHA import *
 
 
-def create_earthquake_scenarios(scenario_info, stations):
+def create_earthquake_scenarios(scenario_info, stations, dir_info):
 
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
     if source_num == 'All':
         # Large number to consider all sources in the ERF
         source_num = 10000000
+    # sampling method
+    samp_method = scenario_info['EqRupture'].get('Sampling','Random')
     # Directly defining earthquake ruptures
     if scenario_info['Generator'] == 'Simulation':
         # TODO:
@@ -77,16 +81,32 @@ def create_earthquake_scenarios(scenario_info, stations):
             if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
                 source_model = scenario_info['EqRupture']['Model']
                 eq_source = getERF(source_model, True)
-                distToSource = get_source_distance(eq_source, scenario_info['EqRupture']['SourceIndex'], lat, lon)
+                # check source index list and rupture index list
+                if type(scenario_info['EqRupture']['SourceIndex']) == int:
+                    source_index_list = [scenario_info['EqRupture']['SourceIndex']]
+                else:
+                    source_index_list = scenario_info['EqRupture']['SourceIndex']
+                if type(scenario_info['EqRupture']['RuptureIndex']) == int:
+                    rup_index_list = [scenario_info['EqRupture']['RuptureIndex']]
+                else:
+                    rup_index_list = scenario_info['EqRupture']['RuptureIndex']
+                if not(len(source_index_list) == len(rup_index_list)):
+                    print('CreateScenario: source number {} should be matched by rupture number {}'.format(len(source_index_list),len(rup_index_list)))
+                    return dict()
+                # loop over all scenarios
                 scenario_data = dict()
-                scenario_data.update({0: {
-                    'Type': source_type,
-                    'RuptureForecast': source_model,
-                    'SourceIndex': scenario_info['EqRupture']['SourceIndex'],
-                    'RuptureIndex': scenario_info['EqRupture']['RuptureIndex'],
-                    'SiteSourceDistance': distToSource
-                }})
-                
+                for i in range(len(source_index_list)):
+                    cur_source_index = source_index_list[i]
+                    cur_rup_index = rup_index_list[i]
+                    distToSource = get_source_distance(eq_source, cur_source_index, lat, lon)
+                    scenario_data.update({i: {
+                        'Type': source_type,
+                        'RuptureForecast': source_model,
+                        'SourceIndex': cur_source_index,
+                        'RuptureIndex': cur_rup_index,
+                        'SiteSourceDistance': distToSource,
+                        'SiteRuptureDistance': get_rupture_distance(eq_source, cur_source_index, cur_rup_index, lat, lon)
+                    }})
                 return scenario_data
             else:
                 source_model = scenario_info['EqRupture']['Model']
@@ -95,12 +115,13 @@ def create_earthquake_scenarios(scenario_info, stations):
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
                 eq_source = getERF(source_model, True)
-                erf_data = export_to_json(eq_source, ref_station, outfile = None, \
+                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(dir_info['Output'],'RupFile.json'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
                                         maxSources = np.max([500, source_num]))
                 # Parsing data
                 feat = erf_data['features']
+                """
                 tag = []
                 for i, cur_f in enumerate(feat):
                     if source_name and (source_name not in cur_f['properties']['Name']):
@@ -110,6 +131,8 @@ def create_earthquake_scenarios(scenario_info, stations):
                     tag.append(i)
                 # Abstracting desired ruptures
                 s_tag = random.sample(tag, min(source_num, len(tag)))
+                """
+                s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
                 erf_data['features'] = list(feat[i] for i in s_tag)
                 scenario_data = dict()
                 for i, rup in enumerate(erf_data['features']):
@@ -117,7 +140,9 @@ def create_earthquake_scenarios(scenario_info, stations):
                         'Type': source_type,
                         'RuptureForecast': source_model,
                         'SourceIndex': rup['properties']['Source'],
-                        'RuptureIndex': rup['properties']['Rupture']
+                        'RuptureIndex': rup['properties']['Rupture'],
+                        'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
+                        'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
                     }})
                 # Cleaning tmp outputs
                 del erf_data
@@ -140,6 +165,40 @@ def create_earthquake_scenarios(scenario_info, stations):
     # return
     return scenario_data
 
+
+def sample_scenarios(rup_info=[], sample_num=1, sample_type='Random', source_name=None, min_M=0.0):
+
+    if len(rup_info) == 0:
+        print('CreateScenario.sample_scenarios: no available scenario provided - please relax earthquake filters.')
+        return []
+
+    feat = rup_info
+    tag = []
+    for i, cur_f in enumerate(feat):
+        if source_name and (source_name not in cur_f['properties']['Name']):
+            continue
+        if min_M > cur_f['properties']['Magnitude']:
+            continue
+        tag.append(i)
+    
+    if sample_type == 'Random':
+        s_tag = random.sample(tag, min(sample_num, len(tag)))
+    
+    elif sample_type == 'MAF':
+        # maf list
+        maf_list = [feat[x]['properties']['MeanAnnualRate'] for x in tag]
+        # normalize maf list
+        sum_maf = np.sum(maf_list)
+        maf_list_n = [x/sum_maf for x in maf_list]
+        # get sample
+        s_tag = np.random.choice(tag, sample_num, p=maf_list_n).tolist()
+
+    else:
+        print('CreateScenario.sample_scenarios: please specify a sampling method.')
+        s_tag = []
+
+    # return
+    return s_tag
 
 def create_wind_scenarios(scenario_info, stations, data_dir):
 

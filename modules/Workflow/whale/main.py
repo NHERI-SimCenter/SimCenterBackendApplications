@@ -824,7 +824,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro'] :
+                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro', 'Tsunami'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
@@ -1109,6 +1109,11 @@ class Workflow(object):
                         os.remove(dir_or_file)
 
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
+
+            # Remove files with .j extensions that might be there from previous runs
+            for file in os.listdir(os.getcwd()):
+                if file.endswith('.j'):
+                    os.remove(file)
 
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
@@ -1656,9 +1661,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            IM = [0, 1, 2, 3],
             BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],
