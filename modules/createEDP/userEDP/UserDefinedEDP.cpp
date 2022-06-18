@@ -98,9 +98,9 @@ int main(int argc, char **argv)
     json_t *postprocess = NULL;
     json_t *edpArray = NULL;
     if (edpData != NULL) {
-      json_t *additionalIn = json_object_get(edpData,"fileNameAI");
-      json_t *postprocess = json_object_get(edpData,"fileNamePS");
-      json_t *edpArray = json_object_get(edpData,"EDP");
+      additionalIn = json_object_get(edpData,"fileNameAI");
+      postprocess = json_object_get(edpData,"fileNamePS");
+      edpArray = json_object_get(edpData,"EDP");
     }
 
     // first, try to see if there is an EDP file name in the GI part
