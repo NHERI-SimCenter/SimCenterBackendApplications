@@ -2071,7 +2071,7 @@ def read_txt(text_dir, exit_fun):
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
-            if line.startswith("%"):
+            if line.replace(" ", "").startswith("%"):
                 header_count = header_count + 1
                 # print(line)
         try:
