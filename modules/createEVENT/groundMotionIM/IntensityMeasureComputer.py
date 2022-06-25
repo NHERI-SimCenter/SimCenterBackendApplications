@@ -142,8 +142,7 @@ class IntensityMeasureComputer:
             'DS595': 'sec',
             'SaRatio': 'scalar'
         }
-
-    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
+def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
         """
         Converts acceleration from/to different units
         """      
@@ -376,6 +375,7 @@ class IntensityMeasureComputer:
             velocity = dt * cumtrapz(ground_acc, initial=0.)
             displacement = dt * cumtrapz(velocity, initial=0.)
             # collect data
+
             self.pga.update({cur_hist_name: np.max(np.fabs(ground_acc))/self.g/100.0*unit_factor_pga})
             self.pgv.update({cur_hist_name: np.max(np.fabs(velocity))*unit_factor_pgv})
             self.pgd.update({cur_hist_name: np.max(np.fabs(displacement))*unit_factor_pgd})
@@ -447,7 +447,6 @@ class IntensityMeasureComputer:
                 f = interp1d(cur_periods, cur_psa)
                 self.saratio.update({cur_hist_name: f(T1)/gmean(f(period_list))*unit_factor})               
 
-
 def load_records(event_file, ampScaled):
 
     event_data = event_file.get('Events', None)
@@ -509,7 +508,6 @@ def get_unit_factor(unit_in, unit_out):
     unit_factor = f_in/f_out
     return unit_factor
 
-
 def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
 
     # load BIM file
@@ -530,12 +528,9 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     bim_event = bim_file['Events']
     if type(bim_event)==list:
         bim_event = bim_event[0]
-    """
-    periods = bim_event.get('SpectrumPeriod',[0.01,0.02,0.03,0.04,0.05,0.075,
+    periods = bim_event.get('SpectrumPeriod',[0.01,0.02,0.03,0.04,0.05,0.75,
                                               0.1,0.2,0.3,0.4,0.5,0.75,1.0,
                                               2.0,3.0,4.0,5.0,7.5,10.0])
-    """
-
     # get units
     if unitScaled:
         # corresponding to records after SimCenterEvent.py
@@ -657,7 +652,6 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     else:
         filenameCSV = IM_file+'.csv'
     csv_df.to_csv(filenameCSV,index=False)
-
 
 if __name__ == '__main__':
 
