@@ -105,9 +105,14 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         X[:,nrv_sur]=np.array(sur['xExact'][rv])
         nrv_sur += 1
 
+    try:
+        constIdx = sur['highFidelityInfo']["constIdx"]
+        constVal = sur['highFidelityInfo']["constVal"]
+    except:
+        constIdx = []
+        constVal = []
 
-
-    # Read pickles
+        # Read pickles
     # todo: fix for different nys
 
     if kernel == 'Radial Basis':
@@ -180,8 +185,16 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
         g_idx = []
         for edp in (inp_tmp["EDP"]):
+            edp_names = []
+            if edp["length"]==1:
+                edp_names += [edp["name"]]
+            else:
+                for i in range(0,edp["length"]):
+                    edp_names += [edp["name"] + "_" + str(i+1)]
             try:
-                id_map = g_name_sur.index(edp["name"])
+                for i in range(0,edp["length"]):
+                    id_map = g_name_sur.index(edp_names[i])
+                    g_idx += [id_map]
             except ValueError:
                 msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
                 print(msg)
@@ -190,7 +203,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                 file_object.write(msg0 + msg)
                 file_object.close()
                 exit(-1)
-            g_idx += [id_map]
+
+
+
 
     # f = open(work_dir + '/templatedir/dakota.json')
     # inp = json.load(f)
@@ -227,7 +242,10 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     for ny in range(y_dim):
         y_data_var[ny] = np.var(m_list[ny].Y)
         #y_pred_tmp, y_pred_var_tmp  = m_list[ny].predict(rv_val)
-        y_pred_median_tmp, y_pred_var_tmp[ny] = predict(m_list[ny],rv_val,did_mf)
+        if ny in constIdx:
+            y_pred_median_tmp, y_pred_var_tmp[ny] = constVal[constIdx.index(ny)], 0
+        else:
+            y_pred_median_tmp, y_pred_var_tmp[ny] = predict(m_list[ny],rv_val,did_mf)
 
         y_samp_tmp = np.random.normal(y_pred_median_tmp,np.sqrt(y_pred_var_tmp[ny]))
         if did_logtransform:
@@ -249,6 +267,11 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             y_samp[ny] = y_samp_tmp
             y_q1[ny] = norm.ppf(0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[ny]))
             y_q3[ny] = norm.ppf(0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[ny]))
+
+        if np.isnan(y_samp[ny]):
+            y_samp[ny] = 0.0
+        if np.isnan(y_pred_var[ny]):
+            y_pred_var[ny]  = 0.0
 
         #for parname in m_list[ny].parameter_names():
         #    if (kern_name in parname) and parname.endswith('variance'):
