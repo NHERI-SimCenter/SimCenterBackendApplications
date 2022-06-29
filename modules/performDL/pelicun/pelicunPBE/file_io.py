@@ -389,6 +389,11 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
                 data['unit_names'].update({
                     #'acceleration': 1.0 })
                     'acceleration': data['unit_names']['length']+'ps2'})
+            
+            #SG add tsunami workflow
+            if 'momentumFlux' not in data['unit_names'].keys():
+                data['unit_names'].update({
+                    'momentumFlux': data['unit_names']['length']+'3'+'ps2'})
     else:
         show_warning("No units were specified in the input file.")
         data['unit_names'].update(default_units)
@@ -614,7 +619,7 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
             "Number of realizations is not specified in the input file.")
 
     if AT in ['P58', 'HAZUS_EQ']:
-        EDP_keys = ['PID', 'PRD', 'PFA',
+        EDP_keys = ['PID', 'PRD', 'PFA', 'PFD',
                     'PGV', 'RID', 'PMD',
                     'PGA', 'SA', 'SV', 'SD',
                     'RDR','DWD']
@@ -622,6 +627,9 @@ def read_SimCenter_DL_input(input_path, assessment_type='P58', verbose=False):
         EDP_keys = ['PWS', 'PIH']
     elif AT in ['HAZUS_FL']:
         EDP_keys = ['PIH']
+    # SG add tsunami workflow
+    elif AT in ['HAZUS_TN']:
+        EDP_keys = ['PIH','PWM','PWV']
 
     # response model info ------------------------------------------------------
     if response is None:

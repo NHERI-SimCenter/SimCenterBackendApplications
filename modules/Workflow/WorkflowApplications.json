@@ -502,6 +502,37 @@
         ]
       },
       {
+        "Name": "CustomPyInput",
+        "ExecutablePath": "applications/createSAM/customPyInput/customPyInput.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "mainScript",
+            "type": "string",
+            "description": "Defines the name of the main model file."
+          },
+          {
+            "id": "modelPath",
+            "type": "path",
+            "description": "Defines the location of the OpenSeesPy model files."
+          },
+          {
+            "id": "ndm",
+            "type": "int",
+            "description": "Defines the number of degrees of freedom in the numerical model."
+          },
+          {
+            "id": "dofMap",
+            "type": "string",
+            "description": "The workflow assumes X=1, Y=2, Z=3 mapping between directions and degrees of freedom; XY being the horizontal directions. This input allows you to define an alternative mapping by providing three numbers separated by commas in a string, such as '1, 3, 2' if you want to have Y as the vertical direction."
+          },
+          {
+            "id": "columnLine",
+            "type": "string",
+            "description": "Defines the ids of the nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building."
+          }
+        ]
+      },
+      {
         "Name": "OpenSeesPyInput",
         "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
         "ApplicationSpecificInputs": [
@@ -610,7 +641,13 @@
       {
         "Name": "UserDefinedEDP",
         "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+        ]
       },
       {
         "Name": "UserDefinedEDP_R",
@@ -670,6 +707,10 @@
       {
         "Name": "OpenSeesPy-Simulation",
         "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"
+      },
+      {
+        "Name": "CustomPy-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/customPy/customPySimulation.py"
       },
       {
         "Name": "ExtractPGA",
@@ -865,6 +906,12 @@
             "type": "path",
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
           }
+        ]
+      },
+      {
+        "Name": "Pelicun3",
+        "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
+        "ApplicationSpecificInputs": [
         ]
       }
     ]

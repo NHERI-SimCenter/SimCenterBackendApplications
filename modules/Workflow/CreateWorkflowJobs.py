@@ -56,6 +56,11 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
     output_types = [out_type for out_type, val in settings['outputs'].items()
                     if val == True]
 
+    # KZ@220324: check if regional site response is requested
+    run_regional_event = settings['Applications'].get('RegionalEvent',None)
+    if run_regional_event and run_regional_event.get('Application',None) == 'RegionalSiteResponse':
+            generate_workflow_tasks_regionalsiteresponse("", config_file, out_dir, task_size, rWHALE_dir)
+
     # get the list of buildings requested to run
     if bldg_filter == "":
         # we pull the bldg_filter from the config file
@@ -133,7 +138,8 @@ def generate_workflow_tasks(bldg_filter, config_file, out_dir, task_size,
                           f'/tmp/{rWHALE_dir}/{config_file} '
                           f'-d /tmp/{rWHALE_dir}/input_data '
                           f'-w {run_dir} -l {log_path} '
-                          f'--filter {filter} && ')
+                          f'--filter {filter} '
+                          f'-s parallel && ')
 
             # copy the results from the task for aggregation
             for out_type in output_types:
@@ -265,6 +271,126 @@ def generate_workflow_tasks_siteresponse(bldg_filter, config_file, out_dir, task
             # write the tasks to the output file
             with open('WorkflowJobs_siteResponse.txt', 'a+') as tasksFile:
                 tasksFile.write(task_list)
+
+def generate_workflow_tasks_regionalsiteresponse(site_filter, config_file, out_dir, task_size, rWHALE_dir):
+
+    jobId = os.getenv('SLURM_JOB_ID') # We might need this later
+
+    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step
+    output_valid = ['IM']
+
+    # get the type of outputs requested
+    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
+        settings = json.load(f)
+    output_types = [out_type for out_type, val in settings['outputs'].items()
+                    if (val == True and out_type in output_valid)]
+
+    # get the list of sites requested to run
+    if site_filter == "":
+        # we pull the site_filter from the config file
+        site_filter = settings['Applications']['RegionalEvent']['ApplicationData'].get('filter', "")
+
+        if site_filter == "":
+            raise ValueError(
+                "Running a regional simulation on DesignSafe requires either "
+                "the 'buildingFilter' parameter to be set for the workflow "
+                "application or the 'filter' parameter set for the Building "
+                "application in the workflow configuration file. Neither was "
+                "provided in the current job. If you want to run every building "
+                "in the input file, provide the filter like '#min-#max' where "
+                "#min is the id of the first building and #max is the id of the "
+                "last building in the inventory."
+            )
+
+    # note: we assume that there are no gaps in the indexes
+    sites_requested = []
+    for sites in site_filter.split(','):
+        if "-" in sites:
+            site_low, site_high = sites.split("-")
+            sites_requested += list(
+                range(int(site_low), int(site_high) + 1))
+        else:
+            sites_requested.append(int(sites))
+
+    count = len(sites_requested)
+
+    tasksCount = int(math.ceil(count/task_size))
+
+    workflowScript = f"/tmp/{rWHALE_dir}/applications/Workflow/siteResponseWHALE.py"
+
+    subfolder = 0
+    for i in range(0, tasksCount):
+
+        site_list = np.array(sites_requested[i*task_size : (i+1)*task_size])
+
+        # do not try to run sims if there are no bldgs to run
+        if len(site_list) > 0:
+
+            min_ID = site_list[0]
+            max_ID = site_list[-1]
+
+            max_ids = np.where(np.diff(site_list) != 1)[0]
+            max_ids = np.append(max_ids, [len(site_list) - 1, ]).astype(int)
+
+            min_ids = np.zeros(max_ids.shape, dtype=int)
+            min_ids[1:] = max_ids[:-1] + 1
+
+            filter = ""
+            for i_min, i_max in zip(min_ids, max_ids):
+                if i_min == i_max:
+                    filter += f",{site_list[i_min]}"
+                else:
+                    filter += f",{site_list[i_min]}-{site_list[i_max]}"
+            filter = filter[1:]  # to remove the initial comma
+
+            if (i%500) == 0:
+                subfolder = subfolder + 1
+
+            run_dir = (f"/tmp/{rWHALE_dir}"
+                       f"/applications/Workflow/RunDirSite{min_ID}-{max_ID}")
+
+            log_path = (f"{out_dir}/logs/{subfolder}"
+                       f"/logSite{min_ID:07d}-{max_ID:07d}.txt")
+
+            task_list = ""
+
+            # create the subfolder to store log files
+            task_list += f'mkdir -p {out_dir}/logs/{subfolder}/ && '
+
+            # run the simulation
+            task_list += (f'python3 {workflowScript} '
+                          f'-i /tmp/{rWHALE_dir}/{config_file} '
+                          f'-d /tmp/{rWHALE_dir}/input_data '
+                          f'-w {run_dir} -l {log_path} '
+                          f'-o /tmp/{rWHALE_dir}/input_data/siteResponseOutputMotions '
+                          f'--filter {filter} && ')
+
+            # copy the results from the task for aggregation
+            for out_type in output_types:
+
+                res_type = None
+
+                if out_type in ['IM', 'BIM', 'EDP', 'DM', 'DV']:
+                    res_type = out_type
+                    file_name = f'{res_type}*.csv'
+                elif out_type == 'every_realization':
+                    res_type = 'realizations'
+                    file_name = f'{res_type}*.hdf'
+
+                if res_type is not None:
+                    task_list += (f'mkdir -p {out_dir}/results/{res_type}'
+                                  f'/{subfolder}/ && ')
+
+                    task_list += (f'cp -f {run_dir}/{file_name} {out_dir}/results'
+                                  f'/{res_type}/{subfolder}/ && ')
+
+            # remove the results after the simulation is completed
+            task_list += f"rm -rf {run_dir} \n"
+
+            # write the tasks to the output file
+            with open('WorkflowJobs_SiteResponse.txt', 'a+') as tasksFile:
+                tasksFile.write(task_list)
+
 
 if __name__ == "__main__":
 
