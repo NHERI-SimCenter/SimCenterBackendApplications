@@ -98,7 +98,7 @@ main(int argc, char **argv) {
     json_object_set(rootSAM,"mainScript",json_stringn(fileName, length));
     json_object_set(rootSAM,"type",json_string("OpenSeesInput"));
 
-    json_t *theSIM = json_object_get(rootBIM,"StructuralInformation");
+    json_t *theSIM = json_object_get(rootBIM,"Modeling");
     json_t *theResponseNodes = json_object_get(theSIM,"responseNodes");
 
     // check nodes exists

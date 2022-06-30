@@ -62,13 +62,17 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     else:
         runDir = inputs['runDir']
 
+
+    whale.log_file = runDir + '/log.txt'
+    
     # initialize log file
     whale.set_options({
         "LogFile": runDir + '/log.txt',
         "LogShowMS": False,
         "PrintLog": True
         })
-    log_msg('\nrWHALE workflow\n',
+    
+    log_msg('\nsWHALE workflow\n',
             prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
@@ -103,6 +107,9 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         # create the workflow driver file
         WF.create_driver_file(
             app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
+
+        # gather all Randomvariables and EDP's and place in new input file for UQ
+        WF.gather_workflow_inputs();
 
         # run uq engine to simulate response
         WF.simulate_response()

@@ -20,7 +20,7 @@ int main(int argc, const char **argv)
 {
   const char *filenameEDP = argv[1];
   const char *filenameOUT = argv[2];
-
+  
   std::ofstream fOut(filenameOUT);
 
   json_error_t error;
@@ -91,13 +91,10 @@ int main(int argc, const char **argv)
       json_t *rootDakota = json_load_file(dakotaIN, 0, &error);
       json_t *uqMethod = json_object_get(rootDakota,"UQ_Method");  
       if (uqMethod != NULL) {
-      	std::cerr << "HELLO1";
       	json_t *samplingData = json_object_get(uqMethod,"samplingMethodData");
       	if (samplingData != NULL) {
-      	std::cerr << "HELLO2";
       	  json_t *evalID_Data = json_object_get(samplingData,"evalID");
       	  if (evalID_Data != NULL) {
-      	    std::cerr << "HELLO3";
       	    evalID = json_integer_value(evalID_Data);
       	  }
       	}

@@ -268,9 +268,9 @@ class DemandModel(PelicunModel):
 
         return sample
 
-    def save_sample(self, filepath=None):
+    def save_sample(self, filepath=None, save_units=False):
         """
-        Save demand sample to a csv file
+        Save demand sample to a csv file or return it in a DataFrame
 
         """
 
@@ -285,8 +285,14 @@ class DemandModel(PelicunModel):
             log_msg(f'Demand sample successfully saved.',
                     prepend_timestamp=False)
         else:
+            units = res.loc["Units"]
             res.drop("Units", inplace=True)
-            return res.astype(float)
+
+            if save_units:
+                return res.astype(float), units
+
+            else:
+                return res.astype(float)
 
     def load_sample(self, filepath):
         """
@@ -450,6 +456,21 @@ class DemandModel(PelicunModel):
 
         def parse_settings(settings, demand_type):
 
+            def parse_str_to_float(in_str, context_string):
+
+                try:
+                    out_float = float(in_str)
+
+                except:
+
+                    log_msg(f"WARNING: Could not parse {in_str} provided as "
+                            f"{context_string}. Using NaN instead.",
+                            prepend_timestamp=False)
+
+                    out_float = np.nan
+
+                return out_float
+
             active_d_types = (
                 demand_sample.columns.get_level_values('type').unique())
 
@@ -468,17 +489,14 @@ class DemandModel(PelicunModel):
             # load the distribution family
             cal_df.loc[idx[cols,:,:], 'Family'] = settings['DistributionFamily']
 
-            # load the censor limits
-            if 'CensorAt' in settings.keys():
-                CensorLower, CensorUpper = settings['CensorAt']
-                cal_df.loc[idx[cols,:,:], 'CensorLower'] = CensorLower
-                cal_df.loc[idx[cols,:,:], 'CensorUpper'] = CensorUpper
+            # load limits
+            for lim in ['CensorLower', 'CensorUpper',
+                        'TruncateLower', 'TruncateUpper']:
 
-            # load the truncation limits
-            if 'TruncateAt' in settings.keys():
-                TruncateLower, TruncateUpper = settings['TruncateAt']
-                cal_df.loc[idx[cols,:,:], 'TruncateLower'] = TruncateLower
-                cal_df.loc[idx[cols,:,:], 'TruncateUpper'] = TruncateUpper
+                if lim in settings.keys():
+                    val = parse_str_to_float(settings[lim], lim)
+                    if not pd.isna(val):
+                        cal_df.loc[idx[cols, :, :], lim] = val
 
             # scale the censor and truncation limits, if needed
             scale_factor = options.scale_factor(settings.get('Unit', None))
@@ -490,7 +508,8 @@ class DemandModel(PelicunModel):
             # load the prescribed additional uncertainty
             if 'AddUncertainty' in settings.keys():
 
-                sig_increase = float(settings['AddUncertainty'])
+                sig_increase = parse_str_to_float(settings['AddUncertainty'],
+                                                  'AddUncertainty')
 
                 # scale the sig value if the target distribution family is normal
                 if settings['DistributionFamily'] == 'normal':
@@ -500,13 +519,13 @@ class DemandModel(PelicunModel):
 
         def get_filter_mask(lower_lims, upper_lims):
 
-            demands_of_interest = demand_sample.iloc[:, ~np.isnan(upper_lims)]
-            limits_of_interest = upper_lims[~np.isnan(upper_lims)]
+            demands_of_interest = demand_sample.iloc[:, ~pd.isna(upper_lims)]
+            limits_of_interest = upper_lims[~pd.isna(upper_lims)]
             upper_mask = np.all(demands_of_interest < limits_of_interest,
                                 axis=1)
 
-            demands_of_interest = demand_sample.iloc[:, ~np.isnan(lower_lims)]
-            limits_of_interest = lower_lims[~np.isnan(lower_lims)]
+            demands_of_interest = demand_sample.iloc[:, ~pd.isna(lower_lims)]
+            limits_of_interest = lower_lims[~pd.isna(lower_lims)]
             lower_mask = np.all(demands_of_interest > limits_of_interest,
                                 axis=1)
 
@@ -555,7 +574,7 @@ class DemandModel(PelicunModel):
         upper_lims = cal_df.loc[:, 'CensorUpper'].values
         lower_lims = cal_df.loc[:, 'CensorLower'].values
 
-        if ~np.all(np.isnan(np.array([upper_lims, lower_lims]))):
+        if ~np.all(pd.isna(np.array([upper_lims, lower_lims]))):
 
             censor_mask = get_filter_mask(lower_lims, upper_lims)
             censored_count = np.sum(~censor_mask)
@@ -575,7 +594,7 @@ class DemandModel(PelicunModel):
         upper_lims = cal_df.loc[:, 'TruncateUpper'].values
         lower_lims = cal_df.loc[:, 'TruncateLower'].values
 
-        if ~np.all(np.isnan(np.array([upper_lims, lower_lims]))):
+        if ~np.all(pd.isna(np.array([upper_lims, lower_lims]))):
 
             truncate_mask = get_filter_mask(lower_lims, upper_lims)
             truncated_count = np.sum(~truncate_mask)
@@ -1298,7 +1317,20 @@ class DamageModel(PelicunModel):
 
         # only keep the damage model parameters for the components in the model
         cmp_unique = cmp_labels.unique(level=0)
-        damage_params = damage_params.loc[cmp_unique, :]
+        cmp_mask = damage_params.index.isin(cmp_unique, level=0)
+
+        damage_params = damage_params.loc[cmp_mask, :]
+
+        if np.sum(cmp_mask) != len(cmp_unique):
+
+            cmp_list = cmp_unique[
+                np.isin(cmp_unique, damage_params.index.values,
+                        invert=True)].to_list()
+
+            log_msg(f"\nWARNING: The damage model does not provide "
+                    f"vulnerability information for the following component(s) "
+                    f"in the asset model: {cmp_list}.\n",
+                    prepend_timestamp=False)
 
         # TODO: load defaults for Demand-Offset and Demand-Directional
 
@@ -1861,7 +1893,7 @@ class DamageModel(PelicunModel):
         # get the realized Damage States
         # Note that these might be fewer than all possible Damage States
         ds_list = np.unique(dmg_ds.values)
-        ds_list = np.array(ds_list[~np.isnan(ds_list)], dtype=int)
+        ds_list = np.array(ds_list[~pd.isna(ds_list)], dtype=int)
 
         # If requested, drop the zero damage case
         if dropzero:
@@ -2281,6 +2313,9 @@ class DamageModel(PelicunModel):
         if dmg_process is not None:
             log_msg(f"Applying damage processes...")
 
+            # sort the processes
+            dmg_process = {key: dmg_process[key] for key in sorted(dmg_process)}
+
             for task in dmg_process.items():
 
                 qnt_sample = self._perform_dmg_task(task, qnt_sample)
@@ -2338,15 +2373,23 @@ class LossModel(PelicunModel):
         if filepath is not None:
             log_msg(f'Saving loss sample...')
 
-        #TODO: handle units
-        res = save_to_csv(self.sample, filepath, #units=self.units,
+        cmp_units = self.loss_params[('DV', 'Unit')]
+        dv_units = pd.Series(index=self.sample.columns, name='Units',
+                             dtype='object')
+
+        for cmp_id, dv_type in cmp_units.index:
+
+            if (dv_type.upper(), cmp_id) in dv_units.index:
+                dv_units.loc[(dv_type.upper(), cmp_id)] = cmp_units.loc[(cmp_id, dv_type)]
+
+        res = save_to_csv(self.sample, filepath, units=dv_units,
                           use_simpleindex=filepath is not None)
 
         if filepath is not None:
             log_msg(f'Loss sample successfully saved.',
                     prepend_timestamp=False)
         else:
-            #res.drop("Units", inplace=True)
+            res.drop("Units", inplace=True)
             return res.astype(float)
 
     def load_sample(self, filepath):
@@ -2739,10 +2782,17 @@ class BldgRepairModel(LossModel):
                     try:
                         theta_0 = float(theta_0)
 
-                        # use a constant 1.0 as the median function
-                        # The random variable will be generated as a variation
-                        # from this 1.0 and added in a later step.
-                        f_median = prep_constant_median_DV(1.0)
+                        if pd.isna(loss_params_DS.get('Family', np.nan)):
+
+                            # if theta_0 is constant, then use it directly
+                            f_median = prep_constant_median_DV(theta_0)
+
+                        else:
+
+                            # otherwise use a constant 1.0 as the median
+                            # The random variable will be generated as a
+                            # variation from this 1.0 and added in a later step.
+                            f_median = prep_constant_median_DV(1.0)
 
                     except:
 
@@ -2846,11 +2896,29 @@ class BldgRepairModel(LossModel):
                                   'repair_time-sequential'],
                                  axis=1)
 
+        # convert units
+
+        cmp_units = self.loss_params[('DV', 'Unit')].groupby(level=[1,]).agg(
+            lambda x:x.value_counts().index[0])
+
+        dv_units = pd.Series(index=df_agg.columns, name='Units', dtype='object')
+
+        dv_units['repair_cost'] = cmp_units['Cost']
+        dv_units['repair_time-parallel'] = cmp_units['Time']
+        dv_units['repair_time-sequential'] = cmp_units['Time']
+
+        df_agg = save_to_csv(df_agg, None, units=dv_units,
+                             use_simpleindex=False)
+
+        df_agg.drop("Units", inplace=True)
+
+        # convert header
+
         df_agg = convert_to_MultiIndex(df_agg, axis=1)
 
         log_msg(f"Repair consequences successfully aggregated.")
 
-        return df_agg
+        return df_agg.astype(float)
 
 
     def _generate_DV_sample(self, dmg_quantities, sample_size):
