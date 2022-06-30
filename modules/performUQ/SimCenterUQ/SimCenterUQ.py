@@ -95,7 +95,7 @@ def main(args):
         if uq_data['uqType'] == 'Train GP Surrogate Model':
             simCenterUQCommand = '"{}" "{}/{}" "{}" {} {} {} {}'.format(python,myScriptDir,surrogate,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Sensitivity Analysis':
-            simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
+            simCenterUQCommand = '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Forward Propagation':
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         # KZ: training calling runPLoM.py to launch the model training
