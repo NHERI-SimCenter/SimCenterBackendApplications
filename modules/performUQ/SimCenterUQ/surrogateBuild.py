@@ -1060,6 +1060,16 @@ class surrogate(UQengine):
         hfJson["valSamp"] = self.modelInfoHF.n_existing + self.id_sim_hf
         hfJson["valSim"] = self.id_sim_hf
 
+        constIdx = []
+        constVal = []
+        for ny in range(self.y_dim):
+            if np.var(self.Y_hf[:, ny])==0:
+                constIdx += [ny]
+                constVal += [np.mean((self.Y_hf[:, ny]))]
+
+        hfJson["constIdx"] = constIdx
+        hfJson["constVal"] = constVal
+
         results["inpData"] = self.modelInfoHF.inpData
         results["outData"] = self.modelInfoHF.outData
         results["valSamp"] = self.X_hf.shape[0]
@@ -1980,7 +1990,7 @@ class model_info:
             self.doe_method = "None"
             self.user_init = 0
             self.thr_count = 0
-            self.thr_NRMSE = 0
+            self.thr_NRMSE = 0.02
             self.thr_t = float("inf")
             if self.is_data:
                 self.xrange = np.vstack(
@@ -2071,7 +2081,7 @@ def read_txt(text_dir, exit_fun):
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
-            if line.startswith("%"):
+            if line.replace(" ", "").startswith("%"):
                 header_count = header_count + 1
                 # print(line)
         try:
