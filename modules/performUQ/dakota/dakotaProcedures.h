@@ -1,90 +1,10 @@
-
-#define OVERSUBSCRIBE_CORE_MULTIPLIER 1
-
-struct normalRV {
-  std::string name;
-  double mean;
-  double stdDev;
-};
-
-struct lognormalRV {
-  std::string name;
-  double mean;
-  double stdDev;
-};
-
-struct constantRV {
-  std::string name;
-  double value;
-};
-
-struct uniformRV {
-  std::string name;
-  double lowerBound;
-  double upperBound;
-};
-
-struct continuousDesignRV {
-  std::string name;
-  double lowerBound;
-  double upperBound;
-  double initialPoint;
-};
-
-struct weibullRV {
-  std::string name;
-  double scaleParam;
-  double shapeParam;
-};
-
-struct gammaRV {
-  std::string name;
-  double alphas;
-  double betas;
-};
-
-struct gumbellRV {
-  std::string name;
-  double alphas;
-  double betas;
-};
-
-struct betaRV {
-  std::string name;
-  double alphas;
-  double betas;
-  double lowerBound;
-  double upperBound;
-};
-
-struct discreteDesignSetRV {
-  std::string name;
-  std::list<std::string> elements;
-};
-
-struct randomVariables {
-  int numRandomVariables;
-  std::list<struct normalRV> normalRVs;
-  std::list<struct lognormalRV> lognormalRVs;
-  std::list<struct constantRV> constantRVs;
-  std::list<struct uniformRV> uniformRVs;
-  std::list<struct continuousDesignRV> continuousDesignRVs;
-  std::list<struct weibullRV> weibullRVs;
-  std::list<struct gammaRV> gammaRVs;
-  std::list<struct gumbellRV> gumbellRVs;
-  std::list<struct betaRV> betaRVs;
-  std::list<struct discreteDesignSetRV> discreteDesignSetRVs;
-  std::vector<int> ordering;
-  std::vector<double> corrMat;    
-};
-
-int parseForRV(json_t *root, 
-	       struct randomVariables &theRandomVariables);
+#include "../common/parseWorkflowInput.h"
 
 int writeRV(std::ostream &dakotaFile, 
 	    struct randomVariables &theRandomVariables, 
 	    std::string idVariables,
-	    std::vector<std::string> &rvList);
+	    std::vector<std::string> &rvList,
+	    bool includeActiveUncertainText = true);
 
 int writeInterface(std::ostream &dakotaFile, 
 		   json_t *uqData, 
@@ -97,7 +17,8 @@ int writeResponse(std::ostream &dakotaFile,
 		  std::string idResponse, 
 		  bool numericalGradients, 
 		  bool numericalHessians,
-		  std::vector<std::string> &edpList);
+		  std::vector<std::string> &edpList,
+		  std::istream &calDataFile);
 
 int writeDakotaInputFile(std::ostream &dakotaFile, 
 			 json_t *uqData, 
@@ -107,3 +28,10 @@ int writeDakotaInputFile(std::ostream &dakotaFile,
 			 std::vector<std::string> &rvList,
 			 std::vector<std::string> &edpList,
 			 int evalConcurrency);
+
+int processDataFiles(const char *calFileName,
+                     std::vector<std::string> &edpList,
+                     std::vector<int> &lengthList,
+                     int numResponses, int numFieldResponses,
+                     std::vector<std::string> &errFileList,
+                     std::stringstream &errType, std::string idResponse);

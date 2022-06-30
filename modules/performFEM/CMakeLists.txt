@@ -1,0 +1,6 @@
+add_subdirectory(OpenSees)
+add_subdirectory(OpenSeesPy)
+add_subdirectory(feappv)
+add_subdirectory(surrogateGP)
+add_subdirectory(MultipleModels)
+add_subdirectory(Custom)

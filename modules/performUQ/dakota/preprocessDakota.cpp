@@ -5,165 +5,57 @@
 #include <string>
 #include <sstream>
 #include <list>
-#include <thread>
+#include <set>
 #include <vector>
+#include <thread>
+#include <stdio.h>
 
 #include "dakotaProcedures.h"
 
-
 int main(int argc, const char **argv) {
 
-  const char *bimName = argv[1];
-  const char *samName = argv[2];
-  const char *evtName = argv[3];
-  const char *edpName = argv[4];
-  const char *simName = argv[5];
-  const char *driver  = argv[6];
-  const char *runType = argv[7];
-  const char *osType = argv[8];
+  const char *inputFile = argv[1];
+  const char *workflow = argv[2];
+  std::string workflow1(argv[3]);
+  const char *runType = argv[4];
+  const char *osType = argv[5];
+  const char *edpFile = NULL;
 
   struct randomVariables theRandomVariables;
+  
   theRandomVariables.numRandomVariables = 0;
-
-  for (int i=0; i<=8; i++)
-    std::cerr << i << " " << argv[i] << "\n";
-
-
-  //
-  // open workflow driver 
-  //
-
-  std::string workflowDriver = "workflow_driver";
-  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"runningLocal") == 0))
-    workflowDriver = "workflow_driver.bat";
-
-
-  std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
-
-  if (!workflowDriverFile.is_open()) {
-    std::cerr << "parseFileForRV:: could not create dakota input file: dakota.in\n";
-    exit(802); // no random variables is allowed
-  }
+  
+  std::vector<std::string> edpList;
+  std::vector<std::string> rvList;
 
   //
   // open files & parse for RV, if RV found rename file, and put text in workflow driver for dprepro
   // 
 
-  // open bim
-
   json_error_t error;
-  json_t *rootINPUT = json_load_file(bimName, 0, &error);
+  json_t *rootINPUT = json_load_file(inputFile, 0, &error);
   if (rootINPUT == NULL) {
-    std::cerr << "parseFileForRV:: could not open BIM file with name: " << bimName << "\n";
+    std::cerr << "parseFileForRV:: could not open BIM file with name: " << inputFile << "\n";
     exit(801); // no random variables is allowed
   } 
 
-  std::string dpreproCommand;
-  const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
-  const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));
-
-  std::string quoteIt("\"");
-
-  if ((strcmp(runType, "local") == 0) || (strcmp(runType,"runningLocal") == 0)) {
-    dpreproCommand = quoteIt + localDir + std::string("/applications/performUQ/dakota/simCenterDprepro") + quoteIt;
-  } else {
-    dpreproCommand = quoteIt + remoteDir + std::string("/applications/performUQ/dakota/simCenterDprepro") + quoteIt;
-  }
-
+  json_t *defaultValues = json_object_get(rootINPUT, "DefaultValues");
+  
   int numRV = parseForRV(rootINPUT, theRandomVariables);
-  //  if (numRV > 0) {
-  if (rename(bimName, "bim.j") != 0) {
-    std::cerr << "preprocessDakota - cound not rename bim file\n";
-    exit(802);
+
+  if (json_object_get(rootINPUT,"localAppDir") == NULL ||
+      json_object_get(rootINPUT,"remoteAppDir") == NULL) {
+    std::cerr << "No localAppDir or remoteAppDir in input\n";
+    exit(-1);
   }
-  workflowDriverFile << dpreproCommand << " params.in bim.j " << bimName << "\n";
-  //  } 
+  const char *localDir = json_string_value(json_object_get(rootINPUT,"localAppDir"));
+  const char *remoteDir = json_string_value(json_object_get(rootINPUT,"remoteAppDir"));  
+  
 
-  // load event read random variables, if any rename file and add a dprepro line to workflow
-
-  json_t *rootEVT = json_load_file(evtName, 0, &error);
-  if (rootEVT == NULL) {
-    std::cerr << "parseFileForRV:: could not open EVT file with name: " << evtName << "\n";
-    exit(801); // no random variables is allowed
-  } 
-  numRV = parseForRV(rootEVT, theRandomVariables);
-  //if (numRV > 0) {
-  if (rename(evtName, "evt.j") != 0) {
-    std::cerr << "preprocessDakota - cound not rename event file\n";
-    exit(802);
-  }
-  workflowDriverFile << dpreproCommand << " params.in evt.j " << evtName << "\n";
-  //  }
-
-  // load sam, read random variables, if any rename file and add a dprepro line to workflow
-
-  json_t *rootSAM = json_load_file(samName, 0, &error);
-  if (rootSAM == NULL) {
-    std::cerr << "parseFileForRV:: could not open SAM file with name: " << samName << "\n";
-    //    exit(801); // no random variables is allowed
-  } else {
-    numRV = parseForRV(rootSAM, theRandomVariables);
-    //if (numRV > 0) {
-    if (rename(samName, "sam.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename bim file\n";
-      exit(802);
-    }
-    
-    workflowDriverFile << dpreproCommand << " params.in sam.j " << samName << "\n";
-  }
-
-  // load sim, read random variables, if any rename file and add a dprepro to workflow
-
-  json_t *rootSIM = json_load_file(simName, 0, &error);
-  if (rootSIM == NULL) {
-    std::cerr << "parseFileForRV:: could not open SIM file with name: " << simName << "\n";
-  }  else { 
-    numRV = parseForRV(rootSIM, theRandomVariables);
-    //if (numRV > 0) {
-    if (rename(simName, "sim.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename sim file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in sim.j " << simName << "\n";
-  }
-
-  json_t *rootEDP = json_load_file(edpName, 0, &error);
-  if (rootEDP == NULL) {
-    std::cerr << "parseFileForRV:: could not open EDP file with name: " << edpName << "\n";
-    exit(801); // no random variables is allowed
-  } 
-  numRV = parseForRV(rootEDP, theRandomVariables);
-  if (numRV > 0) {
-    if (rename(edpName, "edp.j") != 0) {
-      std::cerr << "preprocessDakota - cound not rename edp file\n";
-      exit(802);
-    }
-    workflowDriverFile << dpreproCommand << " params.in edp.j " << edpName << "\n";
-  }
-
+  numRV = theRandomVariables.theNames.size();
+  
   //
-  // open driver file, copy to workflorDriverFile and close files
-  //
-
-  std::ifstream originalDriverFile(driver);
-  std::string line;
-  while (std::getline(originalDriverFile, line)) {
-    workflowDriverFile << line << "\n";
-  }
-
-  std::string extractEDP;
-    if ((strcmp(runType, "local") == 0) || (strcmp(runType,"run") == 0)) {
-      extractEDP = quoteIt + localDir + std::string("/applications/performUQ/dakota/extractEDP") + quoteIt;
-  } else {
-      extractEDP = quoteIt + remoteDir + std::string("/applications/performUQ/dakota/extractEDP") + quoteIt;
-  }
-  workflowDriverFile << extractEDP << " "  << edpName << "  results.out "  <<  bimName  <<  "\n"; //  + numR + ' ' + files + '\n')
-
-  originalDriverFile.close();
-  workflowDriverFile.close();
-
-  //
-  // open empty dakota input file
+  // open empty dakota input file & write file
   //
 
   std::ofstream dakotaFile("dakota.in", std::ios::binary);
@@ -173,41 +65,140 @@ int main(int argc, const char **argv) {
     exit(802); // no random variables is allowed
   }
 
-  //
-  // write dakota file
-  // 
-  
   json_t *uqData =  json_object_get(rootINPUT, "UQ_Method");
   if (uqData == NULL) {
     std::cerr << "preprocessJSON - no UQ Data in inputfile\n";
     exit(-1); // no random variables is allowed
   }
 
-  std::vector<std::string> edpList;
-  std::vector<std::string> rvList;
-
+  json_t *rootEDP =  json_object_get(rootINPUT, "EDP");
+  
+  if (rootEDP == NULL) {
+    std::cerr << "FAILURE: preproessDakota no EDP section in input file\n";
+    return 0; // no random variables is allowed
+  }
+  
   int evalConcurrency = 0;
-  //  if ((strcmp(osType,"Windows") == 0) && (strcmp(runType,"runningLocal") == 0)) {
   if (strcmp(runType,"runningLocal") == 0) {
     evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency();
-    std::cerr << "EVAL: " << evalConcurrency << "\n";
+    std::cerr << "EVAL CONCURRENCY: " << evalConcurrency << "\n";
   }
 
-
-  int errorWrite = writeDakotaInputFile(dakotaFile, 
-					uqData, 
-					rootEDP, 
-					theRandomVariables, 
-					workflowDriver,
-					rvList,
-					edpList,
-					evalConcurrency);
+  int errorWrite = writeDakotaInputFile(dakotaFile, uqData, rootEDP, theRandomVariables, workflow1, rvList, edpList, evalConcurrency);
 
   dakotaFile.close();
-  std::cerr << "NUM RV: " << theRandomVariables.numRandomVariables << "\n";
-  std::cerr << "DONE PREPROCESSOR .. DONE\n";
+
+  //
+  // open workflow_driver 
+  //
+    
+  std::ofstream workflowDriverFile(workflow1, std::ios::binary);
+
+  if (!workflowDriverFile.is_open()) {
+    std::cerr << "parseFileForRV:: could not create workflow driver file: " << workflow1 << "\n";
+    exit(802); // no random variables is allowed
+  }
+
+  if ((strcmp(runType,"runningLocal") == 0)
+      && strcmp(osType,"Windows") == 0) {
+    
+    std::string dpreproCommand = std::string("\"") + localDir + std::string("/applications/performUQ/templateSub/simCenterSub.exe\"");
+    
+    workflowDriverFile << "python writeParam.py paramsDakota.in params.in\n";
+    workflowDriverFile << "call ./" << workflow << "\n";
+    
+  } else {
+
+    std::string dpreproCommand;
+    std::string edpCommand;
+    
+    if (strcmp(runType,"runningLocal") == 0) {
+	dpreproCommand = std::string("\"") + localDir + std::string("/applications/performUQ/templateSub/simCenterSub\"");
+	edpCommand = std::string("\"") + localDir + std::string("/applications/performUQ/extractEDP/extractEDP\"");
+    } 
+    else {
+	dpreproCommand = std::string("\"") + remoteDir + std::string("/applications/performUQ/templateSub/simCenterSub\"");
+	edpCommand = std::string("\"") + remoteDir + std::string("/applications/performUQ/extractEDP/extractEDP\"");	
+    }
+    
+    workflowDriverFile << "#!/bin/bash\n"; 
+    workflowDriverFile << "python3 writeParam.py paramsDakota.in params.in\n";
+
+    /*****
+    // rename files with rv and add a dprepro command
+    if (defaultValues != NULL) {
+
+      json_t *defaultRVs =  json_object_get(defaultValues, "rvFiles");
+      if ((defaultRVs != NULL) && json_is_array(defaultRVs)) {
+
+	size_t index;
+	json_t *value;
+	
+	json_array_foreach(defaultRVs, index, value) {
+	  const char *fNameOrig = json_string_value(value);
+
+	  std::string fNameCopy  = fNameOrig + std::string(".sc");
+	  rename (fNameOrig, fNameCopy.c_str());
+	  workflowDriverFile << dpreproCommand << " params.in " << fNameCopy << " " << fNameOrig << "\n";
+	  std::cerr << dpreproCommand << " params.in " << fNameCopy << " " << fNameOrig << "\n";
+	}
+      }
+    }
+    **/
+    
+    workflowDriverFile << "source ./" << workflow << "\n";
+
+    /*
+    // if edpFile we need to extract the EDP and place in results.out
+    if (edpFile != NULL) {
+      workflowDriverFile << edpCommand << " "  << edpFile << "  results.out "  <<  "\n"; 
+    } 
+    */
+  }
+
+  workflowDriverFile.close();
+  
+  std::string moveCommand;
+  
+  std::ofstream writeParamsFile("writeParam.py", std::ios::binary);
+
+  if (!writeParamsFile.is_open()) {
+    std::cerr << "parseFileForRV:: could not create writeParam file\n";
+    exit(802); // no random variables is allowed
+  }  
+
+  writeParamsFile << "import sys\n";
+  writeParamsFile << "import os\n";
+  writeParamsFile << "from subprocess import Popen, PIPE\n";
+  writeParamsFile << "import subprocess\n\n";
+  writeParamsFile << "def main():\n";
+  writeParamsFile << "    paramsIn = sys.argv[1]\n";
+  writeParamsFile << "    paramsOut = sys.argv[2]\n\n";
+  writeParamsFile << "    if not os.path.isfile(paramsIn):\n";
+  writeParamsFile << "        print('Input param file {} does not exist. Exiting...'.format(paramsIn))\n        sys.exit()\n\n";
+  writeParamsFile << "    outFILE = open(paramsOut, 'w')\n\n";
+  writeParamsFile << "    with open(paramsIn) as inFILE:\n\n";
+  writeParamsFile << "        line = inFILE.readline()\n";
+  writeParamsFile << "        splitLine = line.split()\n";
+  writeParamsFile << "        numRV = int(splitLine[3])\n";
+  writeParamsFile << "        print(numRV, file=outFILE)\n\n";
+  writeParamsFile << "        for i in range(numRV):\n";
+  writeParamsFile << "            line = inFILE.readline()\n";
+  writeParamsFile << "            splitLine = line.split()\n";
+  writeParamsFile << "            nameRV = splitLine[1]\n";
+  writeParamsFile << "            valueRV = splitLine[3]\n";
+  writeParamsFile << "            print('{} {}'.format(nameRV, valueRV), file=outFILE)\n\n";
+  writeParamsFile << "    outFILE.close \n";
+  writeParamsFile << "    inFILE.close\n\n";
+  writeParamsFile << "if __name__ == '__main__':\n";
+  writeParamsFile << "   main()\n";
+				     
+  writeParamsFile.close();
+
+  //
+  // done
+  //
 
   exit(errorWrite);
 }
-
 

@@ -646,6 +646,9 @@ rad = 1.
 C = 1.
 
 USD_2011 = 1.
+USD = 1.
+loss_ratio = 1.
+
 worker_day = 1.
 
 # FEMA P58 specific
@@ -743,6 +746,9 @@ EDP_to_demand_type = {
     'Peak Spectral Velocity' :        'SV',
     'Peak Spectral Displacement' :    'SD',
     'Permanent Ground Deformation' :  'PGD',
+
+    # Placeholder for advanced calculations
+    'One':                            'ONE'
 }
 
 # PFA in FEMA P58 corresponds to the top of the given story. The ground floor

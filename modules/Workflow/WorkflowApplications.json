@@ -1,12 +1,14 @@
 {
   "DefaultValues": {
-    "filenameBIM": "BIM.json",
-    "filenameEVENT": "EVENT.json",
-    "filenameSAM": "SAM.json",
-    "filenameEDP": "EDP.json",
-    "filenameSIM": "SIM.json",
-    "driverFile": "driver",
-    "filenameDL": "BIM.json"
+      "workflowInput": "scInput.json",
+      "filenameBIM": "BIM.json",
+      "filenameEVENT": "EVENT.json",
+      "filenameSAM": "SAM.json",
+      "filenameEDP": "EDP.json",
+      "filenameSIM": "SIM.json",
+      "driverFile": "driver",
+      "filenameDL": "BIM.json",
+      "workflowOutput": "EDP.json"
   },
   "BuildingApplications": {
     "API": {
@@ -725,128 +727,104 @@
     ]
   },
   "UQApplications": {
-    "API": {
-      "Inputs": [
-      {
-          "id": "filenameBIM",
-          "type": "workflowDefault",
-          "description": "name of file containing the BIM"
-      },
-      {
-          "id": "filenameSAM",
-          "type": "workflowDefault",
-          "description": "name of file containing the SAM"
-      },
-      {
-          "id": "filenameEVENT",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "filenameEDP",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "filenameSIM",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "driverFile",
-          "type": "workflowDefault",
-          "description": "name of file containing the simulation driver"
-      }
-      ],
-      "Outputs": [
-      {
-          "id": "filenameEDP",
-          "type": "workflowDefault",
-          "description": "name of EDP file to be added to"
-      }
-      ]
+      "API": {
+	  "Inputs": [
+	      {
+		  "id": "workflowInput",
+		  "type": "workflowDefault",
+		  "description": "name of input file"
+	      },
+	      {
+		  "id": "driverFile",
+		  "type": "workflowDefault",
+		  "description": "name of file containing the simulation driver"
+	      }
+	  ],
+	  "Outputs": [
+	      {
+		  "id": "workflowOutput",
+		  "type": "workflowDefault",
+		  "description": "name of EDP file to be added to"
+	      }
+	  ]
     },
     "Applications": [
       {
         "Name": "Dakota-UQ",
-        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py",
-        "ApplicationSpecificInputs": [
-          {
-            "id": "method",
-            "type": "string",
-            "description": "Defines the UQ method to use."
-          },
-          {
-            "id": "samples",
-            "type": "int",
-            "description": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model."
-          },
-          {
-            "id": "samples2",
-            "type": "int",
-            "description": "Only for surrogate models. Specifies the number of realizations to generate from the trained model."
-          },
-          {
-            "id": "seed",
-            "type": "int",
-            "description": "Specifies the random seed."
-          },
-          {
-            "id": "seed2",
-            "type": "int",
-            "description": "Only for surrogate models. Specifies the random seed to generate samples from the models."
-          },
-          {
-            "id": "ismethod",
-            "type": "string",
-            "description": "Specifies the importance sampling method."
-          },
-          {
-            "id": "dataMethod",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "dataMethod2",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "type",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "concurrency",
-            "type": "int",
-            "description": "Specifies the number of processes to use for simulation."
-          },
-          {
-            "id": "keepSamples",
-            "type": "bool",
-            "description": "True if the intermediate results shall be kept for each sample."
-          },
-          {
-            "id": "runType",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "detailedLog",
-            "type": "bool",
-            "description": "If true, the output from the response simulation is printed in the log file."
-          }
-        ]
+        "ExecutablePath": "applications/performUQ/dakota/DakotaUQ.py"
       },
+      {
+        "Name": "SimCenter-UQ",
+        "ExecutablePath": "applications/performUQ/SimCenterUQ/SimCenterUQ.py"
+      },
+      {
+        "Name": "UCSD-UQ",
+        "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
+      },		
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
       },{
         "Name": "Dakota-UQ1",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
+      },
+      {
+        "Name": "CustomUQ",
+        "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]
   },
+  "FEMApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "workflowInput",
+          "type": "workflowDefault",
+          "description": "name of file containing the input"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "driverFile",
+          "type": "workflowDefault",
+          "description": "name of output file"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "OpenSees",
+        "ExecutablePath": "applications/performFEM/OpenSees/createOpenSeesDriver",
+         "ApplicationSpecificInputs": [
+        ]
+      },
+      {
+        "Name": "OpenSeesPy",
+        "ExecutablePath": "applications/performFEM/OpenSeesPy/createOpenSeesPyDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SurrogateGP",
+        "ExecutablePath": "applications/performFEM/surrogateGP/createGpDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "FEAPpv",
+        "ExecutablePath": "applications/performFEM/feappv/createFeapDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "Custom",
+        "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
+        "ApplicationSpecificInputs": []
+      }	,
+      {
+        "Name": "MultipleModels",
+        "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
+        "ApplicationSpecificInputs": []
+      } 
+    ]
+  },    
   "DLApplications": {
     "API": {
       "Inputs": [

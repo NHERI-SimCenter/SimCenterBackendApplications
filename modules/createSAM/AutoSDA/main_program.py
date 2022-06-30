@@ -40,7 +40,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     with open(BIM_file, 'r') as f:
         rootBIM = json.load(f)
     try:
-        rootSIM = rootBIM['StructuralInformation']
+        rootSIM = rootBIM['Modeling']
     except:
         raise ValueError("AutoSDA - structural information missing")
 
