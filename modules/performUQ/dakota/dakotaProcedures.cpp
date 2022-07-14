@@ -41,6 +41,26 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 	}
 	dakotaFile << "\n\n";
       }
+
+
+    int numConstant = theRandomVariables.constantRVs.size();
+    if (numConstant > 0) {
+      dakotaFile << "  discrete_state_set  \n    real = " << numConstant;
+      dakotaFile << "\n    elements_per_variable = ";
+      for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++)
+        dakotaFile << "1 ";     //std::list<struct betaRV>::iterator it;
+      dakotaFile << "\n    elements = ";
+      for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++)
+        dakotaFile << it->value << " ";
+      dakotaFile << "\n    descriptors = ";
+      for (auto it = theRandomVariables.constantRVs.begin(); it != theRandomVariables.constantRVs.end(); it++) {
+        dakotaFile << "\'" << it->name << "\' ";
+        rvList.push_back(it->name);
+      }
+      dakotaFile << "\n";
+    }
+
+      
       return 0;
     }
 
