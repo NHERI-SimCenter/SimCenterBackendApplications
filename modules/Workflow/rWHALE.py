@@ -52,7 +52,7 @@ from whale.main import log_msg, log_div
 
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
-         working_dir, app_dir, log_file):
+         working_dir, app_dir, log_file, site_response):
 
     # save the reference dir in the input file
     with open(input_file, 'r') as f:
@@ -120,7 +120,9 @@ def main(run_type, input_file, app_registry,
     WF.init_workdir()
 
     # perform the event simulation (if needed)
-    if 'RegionalEvent' in WF.workflow_apps.keys():
+    # commented by KZ
+    if site_response == 'sequential' and 'RegionalEvent' in WF.workflow_apps.keys():
+        # run anlaysis
         WF.perform_regional_event()
 
     # prepare the basic inputs for individual buildings
@@ -209,6 +211,9 @@ if __name__ == '__main__':
     workflowArgParser.add_argument("-l", "--logFile",
         default='log.txt',
         help="Path where the log file will be saved.")
+    workflowArgParser.add_argument("-s", "--siteResponse",
+        default='sequential',
+        help="How site response analysis runs.")
 
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
@@ -232,4 +237,5 @@ if __name__ == '__main__':
          reference_dir = wfArgs.referenceDir,
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,
-         log_file = wfArgs.logFile)
+         log_file = wfArgs.logFile,
+         site_response = wfArgs.siteResponse)

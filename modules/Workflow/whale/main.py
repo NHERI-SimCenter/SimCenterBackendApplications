@@ -354,7 +354,7 @@ def run_command(command):
     else:
 
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
@@ -363,11 +363,13 @@ def run_command(command):
         if returncode != 0:
             log_error('return code: {}'.format(returncode))
 
-        if platform.system() == 'Windows':
-            return result.decode(sys.stdout.encoding), returncode
-        else:
-            #print(result, returncode)
-            return str(result), returncode
+        # if platform.system() == 'Windows':
+        #     return result.decode(sys.stdout.encoding), returncode
+        # else:
+        #     #print(result, returncode)
+        #     return str(result), returncode
+
+        return result, returncode
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
@@ -462,6 +464,7 @@ class WorkflowApplication(object):
         """
 
         abs_path = Path(app_path) / self.rel_path
+        
         #abs_path = posixpath.join(app_path, self.rel_path)
 
         arg_list = []
@@ -504,7 +507,9 @@ class WorkflowApplication(object):
 
         for out_arg in self.outputs:
             out_id = u'--{}'.format(out_arg['id'])
+
             if out_id not in arg_list:
+
                 arg_list.append(out_id)
 
                 # Default values are protected, they cannot be overwritten simply
@@ -579,12 +584,13 @@ class Workflow(object):
             prepend_timestamp=False)
         log_div()
 
-        self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL']
+        self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
 
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
-
+        self.modifiedRun = False # ADAM to fix
+        
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
         else:
@@ -731,7 +737,15 @@ class Workflow(object):
         # replace the default values, if needed
         default_values = input_data.get('DefaultValues', None)
 
+        if default_values is None:
+            default_values = {}
+        print(default_values)
+
+        # workflow input is input file
+        default_values['workflowInput']=os.path.basename(self.input_file)
+        
         if default_values is not None:
+
             log_msg("The following workflow defaults were overwritten:",
                 prepend_timestamp=False)
 
@@ -810,7 +824,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro'] :
+                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro', 'Tsunami'] :
 
                         app_object = deepcopy(
                             self.app_registry['Event'].get(event['Application']))
@@ -830,8 +844,6 @@ class Workflow(object):
                              ).format(eventClassification))
                 else:
                     raise WorkFlowInputError('Need Event Classification')
-        else:
-            raise WorkFlowInputError('Need an Events Entry in Applications')
 
         for app_type in self.app_type_list:
             if app_type != 'Event':
@@ -1098,6 +1110,11 @@ class Workflow(object):
 
             os.chdir('templatedir') #TODO: we might want to add a generic id dir to be consistent with the regional workflow here
 
+            # Remove files with .j extensions that might be there from previous runs
+            for file in os.listdir(os.getcwd()):
+                if file.endswith('.j'):
+                    os.remove(file)
+
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
             dst = Path(os.getcwd()) / BIM_file
@@ -1213,36 +1230,118 @@ class Workflow(object):
 
             workflow_app = self.workflow_apps[app_type]
 
-            if BIM_file is not None:
-                workflow_app.defaults['filenameBIM'] = BIM_file
-                #for input_var in workflow_app.inputs:
-                #    if input_var['id'] == 'filenameBIM':
-                #        input_var['default'] = BIM_file
+            if (app_type != 'FEM'):
+                if BIM_file is not None:
+                    workflow_app.defaults['filenameBIM'] = BIM_file
+                    #for input_var in workflow_app.inputs:
+                    #    if input_var['id'] == 'filenameBIM':
+                    #        input_var['default'] = BIM_file
+                    
+                command_list = workflow_app.get_command_list(
+                    app_path = self.app_dir_local)
 
-            command_list = workflow_app.get_command_list(
-                app_path = self.app_dir_local)
+                command_list.append(u'--getRV')
+                
+                command = create_command(command_list)
+                
+                log_msg('\nRunning {} app for RV...'.format(app_type),
+                        prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                        prepend_blank_space=False)
+                
+                result, returncode = run_command(command)
 
-            command_list.append(u'--getRV')
+                log_msg('Output: ', prepend_timestamp=False,
+                        prepend_blank_space=False)
+                log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                        prepend_blank_space=False)
 
-            command = create_command(command_list)
+                log_msg('Files with random variables successfully created.',
+                        prepend_timestamp=False)
+                log_div()
 
-            log_msg('\nRunning {} app for RV...'.format(app_type),
-                    prepend_timestamp=False)
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                    prepend_blank_space=False)
+            else:
+
+                old_command_list = workflow_app.get_command_list(
+                    app_path = self.app_dir_local)
+
+                command_list = []
+                command_list.append(old_command_list[0])
+                command_list.append(self.input_file)
+                if self.run_type in ['set_up', 'runningRemote']:
+                    command_list.append('runningRemote')
+                    command_list.append('MacOS')
+                else:
+                    command_list.append('runningLocal')
+                    if any(platform.win32_ver()):
+                        command_list.append('Windows')
+                    else:
+                        command_list.append('MacOS')                    
+                command_list.append(old_command_list[4])
+                
+                command = create_command(command_list)
+
+                log_msg('\nRunning FEM app',
+                        prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                        prepend_blank_space=False)
+                
+                result, returncode = run_command(command)
+
+                log_msg('Output: ', prepend_timestamp=False,
+                        prepend_blank_space=False)
+                log_msg('\n{}\n'.format(result), prepend_timestamp=False,
+                        prepend_blank_space=False)
+                
+                log_msg('Successfully Created Driver File for Workflow.',
+                        prepend_timestamp=False)
+                log_div()
+
+    def gather_workflow_inputs(self, bldg_id=None):
+
+        if 'UQ' in self.workflow_apps.keys():        
+            os.chdir(self.run_dir)
+            
+            if bldg_id is not None:
+                os.chdir(bldg_id)
+                
+            os.chdir('templatedir')
+                
+            relPathCreateCommon = 'applications/performUQ/common/createStandardUQ_Input'
+            abs_path = Path(self.app_dir_local) / relPathCreateCommon
+            
+            arg_list = []
+            arg_list.append(u'{}'.format(abs_path.as_posix()))
+            # arg_list.append(u'{}'.format(abs_path))
+            inputFilename = os.path.basename(self.input_file)
+            arg_list.append(u'{}'.format(inputFilename))
+            arg_list.append(u'{}'.format('sc_'+inputFilename))
+            arg_list.append(u'{}'.format(self.default_values['driverFile']))
+            arg_list.append(u'{}'.format('sc_'+self.default_values['driverFile']))
+            arg_list.append(u'{}'.format(self.run_type))
+            if any(platform.win32_ver()):
+                arg_list.append('Windows')
+            else:
+                arg_list.append('MacOS')                                
+            self.default_values['workflowInput']='sc_'+inputFilename
+            self.default_values['driverFile']='sc_'+self.default_values['driverFile']
+
+            self.modifiedRun = True # ADAM to fix 
+            command = create_command(arg_list)
+            print(command)
 
             result, returncode = run_command(command)
-
+            
             log_msg('Output: ', prepend_timestamp=False,
                     prepend_blank_space=False)
             log_msg('\n{}\n'.format(result), prepend_timestamp=False,
-                    prepend_blank_space=False)
-
-        log_msg('Files with random variables successfully created.',
-                prepend_timestamp=False)
-        log_div()
-
-
+                prepend_blank_space=False)
+                
+            log_msg('Successfully Gathered Inputs.',
+                    prepend_timestamp=False)
+            log_div()
+            
+                
     def create_driver_file(self, app_sequence, bldg_id=None):
         """
         Short description
@@ -1254,6 +1353,7 @@ class Workflow(object):
         """
 
         if 'UQ' in self.workflow_apps.keys():
+            
             log_msg('Creating the workflow driver file')
 
             os.chdir(self.run_dir)
@@ -1283,11 +1383,17 @@ class Workflow(object):
 
                     driver_script += create_command(command_list) + u'\n'
 
+
             log_msg('Workflow driver script:', prepend_timestamp=False)
             log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False,
                     prepend_blank_space=False)
 
-            with open('driver','w') as f:
+            driverFile = self.default_values['driverFile']
+            # KZ: for windows, to write bat
+            if platform.system() == 'Windows':
+                driverFile = driverFile+'.bat'
+            log_msg(driverFile)
+            with open(driverFile,'w') as f:
                 f.write(driver_script)
 
             log_msg('Workflow driver file successfully created.',
@@ -1296,6 +1402,8 @@ class Workflow(object):
         else:
             log_msg('No UQ requested, workflow driver is not needed.')
             log_div()
+
+
 
     def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
         """
@@ -1308,6 +1416,7 @@ class Workflow(object):
         """
 
         if 'UQ' in self.workflow_apps.keys():
+
             log_msg('Running response simulation')
 
             os.chdir(self.run_dir)
@@ -1328,11 +1437,29 @@ class Workflow(object):
             command_list = workflow_app.get_command_list(
                 app_path=self.app_dir_local)
 
+            #ADAM to fix FMK
+            if (self.modifiedRun):
+                command_list[3] = self.default_values['workflowInput']
+                command_list[5] = self.default_values['driverFile']
+            
             # add the run type to the uq command list
             command_list.append(u'--runType')
             command_list.append(u'{}'.format(self.run_type))
 
+            #if ('rvFiles' in self.default_values.keys()):
+            #    command_list.append('--filesWithRV')                
+            #    rvFiles = self.default_values['rvFiles']
+            #    for rvFile in rvFiles:
+            #        command_list.append(rvFile)
+
+            #if ('edpFiles' in self.default_values.keys()):
+            #    command_list.append('--filesWithEDP')                
+            #    edpFiles = self.default_values['edpFiles']
+            #    for edpFile in edpFiles:
+            #        command_list.append(edpFile)
+                    
             command = create_command(command_list)
+            print('FMK COMMAND: ' + command)
 
             log_msg('Simulation command:', prepend_timestamp=False)
             log_msg('\n{}\n'.format(command), prepend_timestamp=False,
@@ -1351,24 +1478,28 @@ class Workflow(object):
                 os.chdir(self.run_dir)
                 if bldg_id is not None:
                     os.chdir(bldg_id)
-                dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
+                try:
+                # sy, abs - added try-statement because dakota-reliability does not write DakotaTab.out
+                    dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
 
-                # if the DL is coupled with response estimation, we need to sort the results
-                DL_app = self.workflow_apps.get('DL', None)
-                if DL_app is not None:
-                    is_coupled = DL_app.pref.get('coupled_EDP', None)
-                    if is_coupled:
-                        if 'eventID' in dakota_out.columns:
-                            events = dakota_out['eventID'].values
-                            events = [int(e.split('x')[-1]) for e in events]
-                            sorter = np.argsort(events)
-                            dakota_out = dakota_out.iloc[sorter, :]
-                            dakota_out.index = np.arange(dakota_out.shape[0])
+                    # if the DL is coupled with response estimation, we need to sort the results
+                    DL_app = self.workflow_apps.get('DL', None)
+                    if DL_app is not None:
+                        is_coupled = DL_app.pref.get('coupled_EDP', None)
+                        if is_coupled:
+                            if 'eventID' in dakota_out.columns:
+                                events = dakota_out['eventID'].values
+                                events = [int(e.split('x')[-1]) for e in events]
+                                sorter = np.argsort(events)
+                                dakota_out = dakota_out.iloc[sorter, :]
+                                dakota_out.index = np.arange(dakota_out.shape[0])
 
-                dakota_out.to_csv('response.csv')
-
-                log_msg('Response simulation finished successfully.',
+                    dakota_out.to_csv('response.csv')                
+                    log_msg('Response simulation finished successfully.',
                         prepend_timestamp=False)
+                except:
+                    log_msg('DakotaTab.out not found. Response.csv not created.',
+                            prepend_timestamp=False)
 
             elif self.run_type in ['set_up', 'runningRemote']:
 
@@ -1530,9 +1661,10 @@ class Workflow(object):
         min_id = int(bldg_data[0]['id'])
         max_id = int(bldg_data[0]['id'])
 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization']
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
         headers = dict(
+            IM = [0, 1, 2, 3],
             BIM = [0, ],
             EDP = [0, 1, 2, 3],
             DM = [0, 1, 2],

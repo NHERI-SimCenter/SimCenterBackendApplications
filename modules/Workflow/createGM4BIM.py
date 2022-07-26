@@ -39,11 +39,92 @@
 
 import numpy as np
 import json
-import os
+import os, sys
 import shutil
 from glob import glob
 import argparse
 import pandas as pd
+from computeResponseSpectrum import *
+
+# import the common constants and methods
+from pathlib import Path
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[0]
+sys.path.insert(0, str(main_dir / 'common'))
+from simcenter_common import *
+
+def get_scale_factors(input_units, output_units):
+    """
+    Determine the scale factor to convert input event to internal event data
+
+    """
+
+    # special case: if the input unit is not specified then do not do any scaling
+    if input_units is None:
+
+        scale_factors = {'ALL': 1.0}
+
+    else:
+
+        # parse output units:
+
+        # if no length unit is specified, 'inch' is assumed
+        unit_length = output_units.get('length', 'inch')
+        f_length = globals().get(unit_length, None)
+        if f_length is None:
+            raise ValueError(
+                f"Specified length unit not recognized: {unit_length}")
+
+        # if no time unit is specified, 'sec' is assumed
+        unit_time = output_units.get('time', 'sec')
+        f_time = globals().get(unit_time, None)
+        if f_time is None:
+            raise ValueError(
+                f"Specified time unit not recognized: {unit_time}")
+
+        scale_factors = {}
+
+        for input_name, input_unit in input_units.items():
+
+            # exceptions
+            if input_name in ['factor', ]:
+                f_scale = 1.0
+
+            else:
+
+                # get the scale factor to standard units
+                f_in = globals().get(input_unit, None)
+                if f_in is None:
+                    raise ValueError(
+                        f"Input unit for event files not recognized: {input_unit}")
+
+                unit_type = None
+                for base_unit_type, unit_set in globals()['unit_types'].items():
+                    if input_unit in unit_set:
+                        unit_type = base_unit_type
+
+                if unit_type is None:
+                    raise ValueError(f"Failed to identify unit type: {input_unit}")
+
+                # the output unit depends on the unit type
+                if unit_type == 'acceleration':
+                    f_out = f_time ** 2.0 / f_length
+
+                elif unit_type == 'speed':
+                    f_out = f_time / f_length
+
+                elif unit_type == 'length':
+                    f_out = 1.0 / f_length
+
+                else:
+                    raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
+
+                # the scale factor is the product of input and output scaling
+                f_scale = f_in * f_out
+
+            scale_factors.update({input_name: f_scale})
+
+    return scale_factors
 
 def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
@@ -62,8 +143,53 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     Latitude = []
     id = []
     sites = []
+    # site im dictionary
+    periods = np.array([0.01,0.02,0.03,0.04,0.05,0.075,0.1,0.2,0.3,0.4,0.5,0.75,1,2,3,4,5,7.5,10])
+    dict_im_all = {('type','loc','dir','stat'):[],
+               ('PGA',0,1,'median'):[],
+               ('PGA',0,1,'beta'):[],
+               ('PGA',0,2,'median'):[],
+               ('PGA',0,2,'beta'):[],
+               ('PGV',0,1,'median'):[],
+               ('PGV',0,1,'beta'):[],
+               ('PGV',0,2,'median'):[],
+               ('PGV',0,2,'beta'):[],
+               ('PGD',0,1,'median'):[],
+               ('PGD',0,1,'beta'):[],
+               ('PGD',0,2,'median'):[],
+               ('PGD',0,2,'beta'):[]}
+    dict_im_site = {'1-PGA-0-1':[], '1-PGA-0-2':[],'1-PGV-0-1':[],'1-PGV-0-2':[],'1-PGD-0-1':[],'1-PGD-0-2':[]}
+    for Ti in periods:
+        dict_im_all.update({('SA({}s)'.format(Ti),0,1,'median'):[],
+                        ('SA({}s)'.format(Ti),0,1,'beta'):[],
+                        ('SA({}s)'.format(Ti),0,2,'median'):[],
+                        ('SA({}s)'.format(Ti),0,2,'beta'):[]})
+        dict_im_site.update({'1-SA({}s)-0-1'.format(Ti):[],
+                             '1-SA({}s)-0-2'.format(Ti):[]})
 
     for site in siteFiles:
+
+        dict_im = {('type','loc','dir','stat'):[],
+                   ('PGA',0,1,'median'):[],
+                   ('PGA',0,1,'beta'):[],
+                   ('PGA',0,2,'median'):[],
+                   ('PGA',0,2,'beta'):[],
+                   ('PGV',0,1,'median'):[],
+                   ('PGV',0,1,'beta'):[],
+                   ('PGV',0,2,'median'):[],
+                   ('PGV',0,2,'beta'):[],
+                   ('PGD',0,1,'median'):[],
+                   ('PGD',0,1,'beta'):[],
+                   ('PGD',0,2,'median'):[],
+                   ('PGD',0,2,'beta'):[]}
+        dict_im_site = {'1-PGA-0-1':[], '1-PGA-0-2':[],'1-PGV-0-1':[],'1-PGV-0-2':[],'1-PGD-0-1':[],'1-PGD-0-2':[]}
+        for Ti in periods:
+            dict_im.update({('SA({}s)'.format(Ti),0,1,'median'):[],
+                            ('SA({}s)'.format(Ti),0,1,'beta'):[],
+                            ('SA({}s)'.format(Ti),0,2,'median'):[],
+                            ('SA({}s)'.format(Ti),0,2,'beta'):[]})
+            dict_im_site.update({'1-SA({}s)-0-1'.format(Ti):[],
+                                 '1-SA({}s)-0-2'.format(Ti):[]})
 
         with open(site, 'r') as f:
 
@@ -72,8 +198,26 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
             siteID = generalInfo['BIM_id']
+            # get unit info (needed for determining the simulated acc unit)
+            unitInfo = All_json['units']
+            # get scaling factor for surface acceleration
+            acc_unit = {"AccelerationEvent": "g"}
+            f_scale_units = get_scale_factors(acc_unit, unitInfo)
 
-            id.append(siteID)
+            # if f_scale_units is None
+            if None in [acc_unit, f_scale_units]:
+                f_scale = 1.0
+            else:
+                for cur_var in list(f_scale_units.keys()):
+                    cur_unit = acc_unit.get(cur_var)
+                    unit_type = None
+                    for base_unit_type, unit_set in globals()['unit_types'].items():
+                        if cur_unit in unit_set:
+                            unit_type = base_unit_type
+                    if unit_type == 'acceleration':
+                        f_scale = f_scale_units.get(cur_var)
+
+            id.append(int(siteID))
             
             siteFileName = f"Site_{siteID}.csv"
             sites.append(siteFileName)
@@ -81,6 +225,16 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             workdirs = glob(f"{inputDir}/{siteID}/workdir.*")
             siteEventFiles = []
             siteEventFactors = []
+
+            # initialization
+            psa_x = []
+            psa_y = []
+            pga_x = []
+            pga_y = []
+            pgv_x = []
+            pgv_y = []
+            pgd_x = []
+            pgd_y = []
                         
             for workdir in workdirs:
 
@@ -94,15 +248,167 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 siteEventFiles.append(eventName)
                 siteEventFactors.append(1.0)
 
+                # compute ground motion intensity measures
+                with open(f"{outputDir}/{eventName}.json", 'r') as f:
+                    cur_gm = json.load(f)
+                cur_seismograms = cur_gm['Events'][0]['timeSeries']
+                num_seismograms = len(cur_seismograms)
+                # im_X and im_Y
+                for cur_time_series in cur_seismograms:
+                    dt = cur_time_series.get('dT')
+                    acc = [x / f_scale for x in cur_time_series.get('data')]
+                    acc_hist = np.array([[dt*x for x in range(len(acc))],acc])
+                    # get intensity measure
+                    my_response_spectrum_calc = NewmarkBeta(acc, dt, periods, damping=0.05, units='g')
+                    tmp, time_series, accel, vel, disp = my_response_spectrum_calc.run()
+                    psa = tmp.get('Pseudo-Acceleration')
+                    pga = time_series.get('PGA',0.0)
+                    pgv = time_series.get('PGV',0.0)
+                    pgd = time_series.get('PGD',0.0)
+                    # append
+                    if cur_time_series.get('name') == 'accel_X':
+                        psa_x.append(psa)
+                        pga_x.append(pga)
+                        pgv_x.append(pgv)
+                        pgd_x.append(pgd)
+                    else:
+                        psa_y.append(psa)
+                        pga_y.append(pga)
+                        pgv_y.append(pgv)
+                        pgd_y.append(pgd)
+
+            # individual
+            dict_im_site['1-PGA-0-1'] = pga_x
+            dict_im_site['1-PGA-0-2'] = pga_y
+            dict_im_site['1-PGV-0-1'] = pgv_x
+            dict_im_site['1-PGV-0-2'] = pgv_y
+            dict_im_site['1-PGD-0-1'] = pgd_x
+            dict_im_site['1-PGD-0-2'] = pgd_y
+            for jj, Ti in enumerate(periods):
+                cur_sa = '1-SA({}s)-0-1'.format(Ti)
+                dict_im_site[cur_sa]=[tmp[jj] for tmp in psa_x]
+                cur_sa = '1-SA({}s)-0-2'.format(Ti)
+                dict_im_site[cur_sa]=[tmp[jj] for tmp in psa_y]
+
+            # dump dict_im_site
+            df_im_site = pd.DataFrame.from_dict(dict_im_site)
+            site_im_file = f"{inputDir}/{siteID}/IM_realization.csv"
+            df_im_site.to_csv(site_im_file, index=False)
+
+            # median and dispersion
+            # psa
+            if len(psa_x) > 0:
+                m_psa_x =  np.exp(np.mean(np.log(psa_x),axis=0))
+                s_psa_x = np.std(np.log(psa_x),axis=0)
+            else:
+                m_psa_x = np.zeros((len(periods),))
+                s_psa_x = np.zeros((len(periods),))
+            if len(psa_y) > 0:
+                m_psa_y =  np.exp(np.mean(np.log(psa_y),axis=0))
+                s_psa_y = np.std(np.log(psa_y),axis=0)
+            else:
+                m_psa_y = np.zeros((len(periods),))
+                s_psa_y = np.zeros((len(periods),))
+            # pga
+            if len(pga_x) > 0:
+                m_pga_x =  np.exp(np.mean(np.log(pga_x)))
+                s_pga_x =  np.std(np.log(pga_x))
+            else:
+                m_psa_x = 0.0
+                s_pga_x = 0.0
+            if len(pga_y) > 0:
+                m_pga_y =  np.exp(np.mean(np.log(pga_y)))
+                s_pga_y =  np.std(np.log(pga_y))
+            else:
+                m_psa_y = 0.0
+                s_pga_y = 0.0
+            # pgv
+            if len(pgv_x) > 0:
+                m_pgv_x =  np.exp(np.mean(np.log(pgv_x)))
+                s_pgv_x =  np.std(np.log(pgv_x))
+            else:
+                m_pgv_x = 0.0
+                s_pgv_x = 0.0
+            if len(pgv_y) > 0:
+                m_pgv_y =  np.exp(np.mean(np.log(pgv_y)))
+                s_pgv_y =  np.std(np.log(pgv_y))
+            else:
+                m_pgv_y = 0.0
+                s_pgv_y = 0.0
+            # pgd
+            if len(pgd_x) > 0:
+                m_pgd_x =  np.exp(np.mean(np.log(pgd_x)))
+                s_pgd_x =  np.std(np.log(pgd_x))
+            else:
+                m_pgd_x = 0.0
+                s_pgd_x = 0.0
+            if len(pgd_y) > 0:
+                m_pgd_y =  np.exp(np.mean(np.log(pgd_y)))
+                s_pgd_y =  np.std(np.log(pgd_y))
+            else:
+                m_pgd_y = 0.0
+                s_pgd_y = 0.0
+            # add to dictionary
+            dict_im[('type','loc','dir','stat')].append(int(siteID))
+            # pga
+            dict_im[('PGA',0,1,'median')].append(m_pga_x)
+            dict_im[('PGA',0,1,'beta')].append(s_pga_x)
+            dict_im[('PGA',0,2,'median')].append(m_pga_y)
+            dict_im[('PGA',0,2,'beta')].append(s_pga_y)
+            # pgv
+            dict_im[('PGV',0,1,'median')].append(m_pgv_x)
+            dict_im[('PGV',0,1,'beta')].append(s_pgv_x)
+            dict_im[('PGV',0,2,'median')].append(m_pgv_y)
+            dict_im[('PGV',0,2,'beta')].append(s_pgv_y)
+            # pgd
+            dict_im[('PGD',0,1,'median')].append(m_pgd_x)
+            dict_im[('PGD',0,1,'beta')].append(s_pgd_x)
+            dict_im[('PGD',0,2,'median')].append(m_pgd_y)
+            dict_im[('PGD',0,2,'beta')].append(s_pgd_y)
+            for jj, Ti in enumerate(periods):
+                cur_sa = 'SA({}s)'.format(Ti)
+                dict_im[(cur_sa,0,1,'median')].append(m_psa_x[jj])
+                dict_im[(cur_sa,0,1,'beta')].append(s_psa_x[jj])
+                dict_im[(cur_sa,0,2,'median')].append(m_psa_y[jj])
+                dict_im[(cur_sa,0,2,'beta')].append(s_psa_y[jj])
+
+            # aggregate
+            for cur_key, cur_value in dict_im.items():
+                if isinstance(cur_value,list):
+                    dict_im_all[cur_key].append(cur_value[0])
+                else:
+                    dict_im_all[cur_key].append(cur_value)
+
+            # save median and standard deviation to IM.csv
+            df_im = pd.DataFrame.from_dict(dict_im)
+            df_im.to_csv(f"{inputDir}/{siteID}/IM.csv", index=False)
+
+            # create site csv
             siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
             siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
-
 
     # create the EventFile
     gridDF = pd.DataFrame(list(zip(sites, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
 
-    gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
-    
+    # change the writing mode to append for paralleling workflow
+    if os.path.exists(f"{outputDir}/EventGrid.csv"):
+        # EventGrid.csv has been created
+        gridDF.to_csv(f"{outputDir}/EventGrid.csv", mode='a', index=False, header=False)
+    else:
+        # EventGrid.csv to be created
+        gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
+    #gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
+    print(f"EventGrid.csv saved to {outputDir}")
+
+    # create pandas
+    im_csv_path = os.path.dirname(os.path.dirname(outputDir))
+    df_im_all = pd.DataFrame.from_dict(dict_im_all)
+    try:
+        os.mkdir(os.path.join(im_csv_path,'Results'))
+    except:
+        print(f"Results folder already exists")
+    df_im_all.to_csv(os.path.join(im_csv_path,'Results','IM_{}-{}.csv'.format(min(id),max(id))),index=False)
+    df_im_all.to_csv(os.path.join(im_csv_path,'IM_{}-{}.csv'.format(min(id),max(id))),index=False)    
 
     # remove original files
     if removeInputDir:         

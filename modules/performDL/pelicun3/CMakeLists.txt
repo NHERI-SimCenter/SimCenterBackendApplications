@@ -1,0 +1,2 @@
+simcenter_add_python_script(SCRIPT DL_calculation.py DEPENDS pelicun)
+simcenter_add_python_script(SCRIPT HDF_to_CSV.py)

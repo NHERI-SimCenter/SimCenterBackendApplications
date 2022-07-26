@@ -1,12 +1,14 @@
 {
   "DefaultValues": {
-    "filenameBIM": "BIM.json",
-    "filenameEVENT": "EVENT.json",
-    "filenameSAM": "SAM.json",
-    "filenameEDP": "EDP.json",
-    "filenameSIM": "SIM.json",
-    "driverFile": "driver",
-    "filenameDL": "BIM.json"
+      "workflowInput": "scInput.json",
+      "filenameBIM": "BIM.json",
+      "filenameEVENT": "EVENT.json",
+      "filenameSAM": "SAM.json",
+      "filenameEDP": "EDP.json",
+      "filenameSIM": "SIM.json",
+      "driverFile": "driver",
+      "filenameDL": "BIM.json",
+      "workflowOutput": "EDP.json"
   },
   "BuildingApplications": {
     "API": {
@@ -500,6 +502,37 @@
         ]
       },
       {
+        "Name": "CustomPyInput",
+        "ExecutablePath": "applications/createSAM/customPyInput/customPyInput.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "mainScript",
+            "type": "string",
+            "description": "Defines the name of the main model file."
+          },
+          {
+            "id": "modelPath",
+            "type": "path",
+            "description": "Defines the location of the OpenSeesPy model files."
+          },
+          {
+            "id": "ndm",
+            "type": "int",
+            "description": "Defines the number of degrees of freedom in the numerical model."
+          },
+          {
+            "id": "dofMap",
+            "type": "string",
+            "description": "The workflow assumes X=1, Y=2, Z=3 mapping between directions and degrees of freedom; XY being the horizontal directions. This input allows you to define an alternative mapping by providing three numbers separated by commas in a string, such as '1, 3, 2' if you want to have Y as the vertical direction."
+          },
+          {
+            "id": "columnLine",
+            "type": "string",
+            "description": "Defines the ids of the nodes that shall be used for EDP calculations. Only the firsts n+1 nodes will be used for an n-story building."
+          }
+        ]
+      },
+      {
         "Name": "OpenSeesPyInput",
         "ExecutablePath": "applications/createSAM/openSeesPyInput/OpenSeesPyInput.py",
         "ApplicationSpecificInputs": [
@@ -538,6 +571,11 @@
       {
         "Name": "SteelBuildingModel",
         "ExecutablePath": "applications/createSAM/AutoSDA/main_program.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "ConcreteBuildingModel",
+        "ExecutablePath": "applications/createSAM/RCFIAP/RC_FIAP_main.py",
         "ApplicationSpecificInputs": []
       }
     ]
@@ -603,7 +641,13 @@
       {
         "Name": "UserDefinedEDP",
         "ExecutablePath": "applications/createEDP/userEDP/UserDefinedEDP",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+        ]
       },
       {
         "Name": "UserDefinedEDP_R",
@@ -665,6 +709,10 @@
         "ExecutablePath": "applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py"
       },
       {
+        "Name": "CustomPy-Simulation",
+        "ExecutablePath": "applications/performSIMULATION/customPy/customPySimulation.py"
+      },
+      {
         "Name": "ExtractPGA",
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
@@ -679,128 +727,104 @@
     ]
   },
   "UQApplications": {
-    "API": {
-      "Inputs": [
-      {
-          "id": "filenameBIM",
-          "type": "workflowDefault",
-          "description": "name of file containing the BIM"
-      },
-      {
-          "id": "filenameSAM",
-          "type": "workflowDefault",
-          "description": "name of file containing the SAM"
-      },
-      {
-          "id": "filenameEVENT",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "filenameEDP",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "filenameSIM",
-          "type": "workflowDefault",
-          "description": "name of file containing the event data"
-      },
-      {
-          "id": "driverFile",
-          "type": "workflowDefault",
-          "description": "name of file containing the simulation driver"
-      }
-      ],
-      "Outputs": [
-      {
-          "id": "filenameEDP",
-          "type": "workflowDefault",
-          "description": "name of EDP file to be added to"
-      }
-      ]
+      "API": {
+	  "Inputs": [
+	      {
+		  "id": "workflowInput",
+		  "type": "workflowDefault",
+		  "description": "name of input file"
+	      },
+	      {
+		  "id": "driverFile",
+		  "type": "workflowDefault",
+		  "description": "name of file containing the simulation driver"
+	      }
+	  ],
+	  "Outputs": [
+	      {
+		  "id": "workflowOutput",
+		  "type": "workflowDefault",
+		  "description": "name of EDP file to be added to"
+	      }
+	  ]
     },
     "Applications": [
       {
         "Name": "Dakota-UQ",
-        "ExecutablePath": "applications/performUQ/dakota/DakotaFEM.py",
-        "ApplicationSpecificInputs": [
-          {
-            "id": "method",
-            "type": "string",
-            "description": "Defines the UQ method to use."
-          },
-          {
-            "id": "samples",
-            "type": "int",
-            "description": "Specifies the number of realizations to generate. For surrogate models, these samples are used to train the model."
-          },
-          {
-            "id": "samples2",
-            "type": "int",
-            "description": "Only for surrogate models. Specifies the number of realizations to generate from the trained model."
-          },
-          {
-            "id": "seed",
-            "type": "int",
-            "description": "Specifies the random seed."
-          },
-          {
-            "id": "seed2",
-            "type": "int",
-            "description": "Only for surrogate models. Specifies the random seed to generate samples from the models."
-          },
-          {
-            "id": "ismethod",
-            "type": "string",
-            "description": "Specifies the importance sampling method."
-          },
-          {
-            "id": "dataMethod",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "dataMethod2",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "type",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "concurrency",
-            "type": "int",
-            "description": "Specifies the number of processes to use for simulation."
-          },
-          {
-            "id": "keepSamples",
-            "type": "bool",
-            "description": "True if the intermediate results shall be kept for each sample."
-          },
-          {
-            "id": "runType",
-            "type": "string",
-            "description": "..."
-          },
-          {
-            "id": "detailedLog",
-            "type": "bool",
-            "description": "If true, the output from the response simulation is printed in the log file."
-          }
-        ]
+        "ExecutablePath": "applications/performUQ/dakota/DakotaUQ.py"
       },
+      {
+        "Name": "SimCenter-UQ",
+        "ExecutablePath": "applications/performUQ/SimCenterUQ/SimCenterUQ.py"
+      },
+      {
+        "Name": "UCSD-UQ",
+        "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
+      },		
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
       },{
         "Name": "Dakota-UQ1",
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
+      },
+      {
+        "Name": "CustomUQ",
+        "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]
   },
+  "FEMApplications": {
+    "API": {
+      "Inputs": [
+      {
+          "id": "workflowInput",
+          "type": "workflowDefault",
+          "description": "name of file containing the input"
+      }
+      ],
+      "Outputs": [
+      {
+          "id": "driverFile",
+          "type": "workflowDefault",
+          "description": "name of output file"
+      }
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "OpenSees",
+        "ExecutablePath": "applications/performFEM/OpenSees/createOpenSeesDriver",
+         "ApplicationSpecificInputs": [
+        ]
+      },
+      {
+        "Name": "OpenSeesPy",
+        "ExecutablePath": "applications/performFEM/OpenSeesPy/createOpenSeesPyDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SurrogateGP",
+        "ExecutablePath": "applications/performFEM/surrogateGP/createGpDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "FEAPpv",
+        "ExecutablePath": "applications/performFEM/feappv/createFeapDriver",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "Custom",
+        "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
+        "ApplicationSpecificInputs": []
+      }	,
+      {
+        "Name": "MultipleModels",
+        "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
+        "ApplicationSpecificInputs": []
+      } 
+    ]
+  },    
   "DLApplications": {
     "API": {
       "Inputs": [
@@ -882,6 +906,12 @@
             "type": "path",
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
           }
+        ]
+      },
+      {
+        "Name": "Pelicun3",
+        "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
+        "ApplicationSpecificInputs": [
         ]
       }
     ]

@@ -267,6 +267,7 @@ class Assessment(object):
                            DWD=1.,
                            RDR=1.,
                            PFA=self._AIM_in['units']['acceleration'],
+                           PFD=self._AIM_in['units']['length'],
                            PMD=1.,
                            PGA=self._AIM_in['units']['acceleration'],
                            PGV=self._AIM_in['units']['speed'],
@@ -281,6 +282,16 @@ class Assessment(object):
                 #EDP_kinds=('PWS','PIH',),
                 units=dict(PWS=self._AIM_in['units']['speed'],
                            PIH=self._AIM_in['units']['length']),
+                verbose=verbose)
+        #SG add tsunami workflow
+        elif self._hazard == 'TN':
+            self._EDP_in = read_SimCenter_EDP_input(
+                path_EDP_input,
+                #EDP_kinds=('PIH','PWM','PWV') # Maximum water height, Momentum Flux, Maximum velocity
+                units=dict(PIH=self._AIM_in['units']['length'],
+                           PWV=self._AIM_in['units']['speed'],
+                           PWM=self._AIM_in['units']['momentumFlux']
+                ),
                 verbose=verbose)
 
         data = self._EDP_in
@@ -357,12 +368,12 @@ class Assessment(object):
 
         # TODO: use some global vars to identify EDP units because this is a mess
         for col_i, col in enumerate(cols):
-            if ('PFA' in col) or ('PGA' in col) or ('SA' in col):
+            if (('PFA' in col) or ('PGA' in col) or ('SA' in col)):
                 scale_factor = self._AIM_in['units']['acceleration']
             elif (('PFV' in col) or ('PGV' in col) or ('SV' in col) or
                   ('PWS' in col)):
                 scale_factor = self._AIM_in['units']['speed']
-            elif ('PGD', 'PIH' in col):
+            elif (('PGD' in col) or ('PIH' in col) or ('PFD' in col)):
                 scale_factor = self._AIM_in['units']['length']
             else:
                 scale_factor = 1.0
@@ -2442,7 +2453,7 @@ class FEMA_P58_Assessment(Assessment):
                             )
 
                 FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count] = \
-                    FG_damages.mul(PG_qnt, axis=0)
+                    FG_damages.iloc[:,pg_i * d_count:(pg_i + 1) * d_count].mul(PG_qnt, axis=0)
 
             DMG = pd.concat((DMG, FG_damages), axis=1)
 
