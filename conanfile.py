@@ -23,6 +23,8 @@ class simCenterBackendApps(ConanFile):
                "mkl-static/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.2", \
+               "boost/1.79.0", \
+               "nlopt/2.6.2",\
                    
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
