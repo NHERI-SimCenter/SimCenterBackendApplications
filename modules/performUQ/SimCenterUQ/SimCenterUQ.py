@@ -44,7 +44,8 @@ def main(args):
             # MAC
             surrogate = 'surrogateBuild.py' 
             plom = 'runPLoM.py' # KZ: main script of PLoM
-            natafExe = 'nataf_gsa'          
+            natafExe = os.path.join('nataf_gsa','nataf_gsa')   
+            #natafExe = 'nataf_gsa'          
             osType = 'Linux'
             workflowDriver1 = 'workflowDriver1'
             python = 'python3'
@@ -53,7 +54,8 @@ def main(args):
             
             surrogate = 'surrogateBuild.py'  
             plom = 'runPLoM.py' # KZ: main script of PLoM
-            natafExe = 'nataf_gsa.exe'
+            natafExe = os.path.join('nataf_gsa','nataf_gsa.exe')   
+            #natafExe = 'nataf_gsa.exe'
             workflowDriver = workflowDriver + ".bat"            
             workflowDriver1 = 'workflowDriver1.bat'
             osType = 'Windows'
@@ -93,11 +95,11 @@ def main(args):
         #  
         
         if uq_data['uqType'] == 'Train GP Surrogate Model':
-            simCenterUQCommand = '"{}" "{}/{}" "{}" {} {} {} {}'.format(python,myScriptDir,surrogate,workdir_main,inputFile, workflowDriver, osType, runType)
+            simCenterUQCommand = '"{}" "{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(python,myScriptDir,surrogate,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Sensitivity Analysis':
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Forward Propagation':
-            simCenterUQCommand = '"{}/{}" "{}" {} {} {} {}'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
+            simCenterUQCommand = '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         # KZ: training calling runPLoM.py to launch the model training
         elif uq_data['uqType'] == 'PLoM Model':
             simCenterUQCommand = '"{}" "{}" "{}" {} {} {} {}'.format(python, os.path.join(myScriptDir,plom).replace('\\','/'),workdir_main.replace('\\','/'),inputFile,workflowDriver,osType,runType)
