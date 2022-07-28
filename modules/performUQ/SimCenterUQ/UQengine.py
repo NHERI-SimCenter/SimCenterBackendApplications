@@ -71,7 +71,7 @@ class UQengine:
             try:
                 os.remove(os.path.join(self.work_dir, "templatedir","results.out"))
             except:
-                msg = "Your main folder (where the main FEM script is located) already contains results.out. To make prevent any confusion, please delete this file first"
+                msg = "Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first"
                 self.exit(msg)
 
         print("working directory cleared")
