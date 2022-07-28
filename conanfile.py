@@ -23,6 +23,7 @@ class simCenterBackendApps(ConanFile):
                "mkl-static/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
                "nanoflann/1.3.2", \
+               "nlopt/2.6.2",\
                    
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
@@ -39,6 +40,11 @@ class simCenterBackendApps(ConanFile):
 
     def configure(self):
         self.options.shared = False
+
+        if self.settings.os == "Windows":
+            self.options["libcurl"].with_winssl = True
+            self.options["libcurl"].with_openssl = False
+
 
     def configure_cmake(self):
         cmake = CMake(self)
