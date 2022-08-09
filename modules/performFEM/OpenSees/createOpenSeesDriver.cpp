@@ -211,7 +211,9 @@ int main(int argc, const char **argv) {
     for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
       workflowDriverFile << " " << *itEDP;
     }
+    workflowDriverFile << " >> ops.out 2>&1";
   } 
+
   else if (scriptType == 2) { // tcl script
     templateFile << " source " << postprocessScript << "\n";      
   }
