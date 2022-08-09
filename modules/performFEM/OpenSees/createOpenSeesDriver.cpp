@@ -212,12 +212,14 @@ int main(int argc, const char **argv) {
       workflowDriverFile << " " << *itEDP;
     }
   } 
+
   else if (scriptType == 2) { // tcl script
     templateFile << " source " << postprocessScript << "\n";      
   }
   
   templateFile.close();
 
+  workflowDriverFile << " >> ops.out 2>&1";
   workflowDriverFile.close();
 
 
