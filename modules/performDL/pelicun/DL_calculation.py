@@ -46,7 +46,8 @@ DL_method_to_AT = {
     'HAZUS MH': 'HAZUS_EQ',
     'HAZUS MH EQ IM': 'HAZUS_EQ',
     'HAZUS MH HU': 'HAZUS_HU',
-    'HAZUS MH FL': 'HAZUS_FL'
+    'HAZUS MH FL': 'HAZUS_FL',
+    'HAZUS MH TN': 'HAZUS_TN' #SG add tsunami workflow
 }
 
 def log_msg(msg):
@@ -140,7 +141,7 @@ def run_pelicun(DL_input_path, demand_input_path,
     DL_method, realization_count, BIM_file, EDP_file, DM_file, DV_file,
     output_path=None, detailed_results=True, coupled_EDP=False,
     log_file=True, event_time=None, ground_failure=False,
-    auto_script_path=None, resource_dir=None):
+    auto_script_path=None, resource_dir=None, custom_fragility_dir=None):
 
     DL_input_path = os.path.abspath(DL_input_path) # BIM file
     demand_input_path = os.path.abspath(demand_input_path) # dakotaTab
@@ -254,13 +255,18 @@ def run_pelicun(DL_input_path, demand_input_path,
                                                     ground_failure,
                                                     auto_script_path)
 
-
         DL_method = DL_input['DamageAndLoss']['_method']
 
         stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
+        
+        if custom_fragility_dir is not None :
+            DL_input['DamageAndLoss']['ComponentDataFolder'] = custom_fragility_dir
+            
+            with open(DL_input_path, 'w') as f:
+                json.dump(DL_input, f, indent=2)
 
         # Copy the resources to the specified location - if needed
-        if resource_dir is not None:
+        elif resource_dir is not None:
             resource_dir = os.path.abspath(resource_dir)
 
             AT = DL_method_to_AT[DL_method]
@@ -314,6 +320,9 @@ def run_pelicun(DL_input_path, demand_input_path,
             A = HAZUS_Assessment(hazard = 'HU', log_file=log_file)
         elif DL_method == 'HAZUS MH FL':
             A = HAZUS_Assessment(hazard = 'FL', log_file=log_file)
+        #SG add tsunami workflow
+        elif DL_method == 'HAZUS MH TN':
+            A = HAZUS_Assessment(hazard = 'TN', log_file=log_file)
 
         A.read_inputs(DL_input_path, EDP_files[s_i], verbose=False) # make DL inputs into array of all BIM files
 
@@ -355,6 +364,7 @@ def main(args):
         type = str2bool, nargs='?', const=False)
     parser.add_argument('--auto_script', default=None)
     parser.add_argument('--resource_dir', default=None)
+    parser.add_argument('--custom_fragility_dir', default=None)
     args = parser.parse_args(args)
 
     log_msg('Initializing pelicun calculation...')
@@ -372,7 +382,8 @@ def main(args):
         event_time = args.event_time,
         ground_failure = args.ground_failure,
         auto_script_path = args.auto_script,
-        resource_dir = args.resource_dir)
+        resource_dir = args.resource_dir,
+        custom_fragility_dir = args.custom_fragility_dir)
 
     log_msg('pelicun calculation completed.')
 
