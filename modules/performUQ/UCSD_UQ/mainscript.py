@@ -541,8 +541,8 @@ if __name__ == "__main__":
     logFile.write("\n\tNumber of particles: {}".format(Np))
 
     # number of max MCMC steps
-    Nm_steps_max = 2
-    Nm_steps_maxmax = 5
+    Nm_steps_max = 10
+    Nm_steps_maxmax = 10
     logFile.write("\n\tNumber of MCMC steps in first stage: {}".format(Nm_steps_max))
     logFile.write(
         "\n\tMax. number of MCMC steps in any stage: {}".format(Nm_steps_maxmax)
