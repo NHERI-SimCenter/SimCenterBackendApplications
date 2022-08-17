@@ -46,6 +46,11 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
         else:
             min_beta = new_beta
 
+    if new_beta < 1e-3:
+        new_beta = 1e-3
+        inc_beta = new_beta - old_beta
+        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
+
     if new_beta >= 0.95:
         new_beta = 1
         # plausible weights of Sm corresponding to new beta
