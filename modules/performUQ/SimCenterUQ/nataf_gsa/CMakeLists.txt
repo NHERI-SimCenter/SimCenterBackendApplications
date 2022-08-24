@@ -1,8 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	set ( BUILDING_OPT "ONLY_CURRENT")
+	project(nataf_gsa_project)
+else()
+	set ( BUILDING_OPT "WHOLE")
+endif() 
+
+
 ADD_DEFINITIONS("-DBOOST_ALL_NO_LIB")
 
-# project(nataf_gsa_project)
 # Because we need CXX_STANDARD 17 instead of 14, we don't use simcenter_add_executable() here.
 if(UNIX)
 	if(NOT APPLE)
@@ -48,10 +55,12 @@ if(LINUX)
 	endif(HAS_FS)
 endif()
 
-# include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-# conan_basic_setup(TARGETS)
+if (BUILDING_OPT STREQUAL "ONLY_CURRENT")	
+	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+	conan_basic_setup(TARGETS)
+endif()
 
-# for visual studio IDE, do on commandline: conan install . -s build_type=Debug -if=C:/Users/SimCenter/Sangri/nataf_gsa_cpp_mpi/out/build/x64-Debug/
+# for visual studio IDE, do on commandline: conan install . -s build_type=Debug -if=C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/out/build/x64-Debug/
 
 set(SOURCES main.cpp
 	    ERADist.cpp
@@ -74,6 +83,7 @@ set(SOURCES main.cpp
 	    writeErrors.cpp)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib_armadillo/armadillo-10.1.0/include)
+
 
 if(PARALLEL_LIB STREQUAL  "MPI_RUN")
 	include_directories(${MPI_INCLUDE_PATH})
@@ -101,6 +111,12 @@ else()
 		OpenMP::OpenMP_CXX)
 	add_compile_definitions(OPENMP_RUN)
 endif() 
-get_current_module_dir(moduleDir)
-get_current_module_name(moduleName)    
-install(TARGETS nataf_gsa DESTINATION "${PROJECT_SOURCE_DIR}/applications/performUQ/SimCenterUQ")
+
+
+if(BUILDING_OPT STREQUAL "WHOLE")	
+	get_current_module_dir(moduleDir)
+	get_current_module_name(moduleName)    
+	install(TARGETS nataf_gsa DESTINATION "${PROJECT_SOURCE_DIR}/applications/performUQ/SimCenterUQ")
+else()
+	install(TARGETS nataf_gsa DESTINATION bin)
+endif() 

@@ -50,8 +50,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 {
 	this->workDir = workDir;
 
-	std::filesystem::path dakotaPath  = workDir + "/templatedir/" + inpFile;
-	std::ifstream myfile(dakotaPath.make_preferred());
+	//
+	// finding json file
+	//
+
+	std::filesystem::path jsonPath  = workDir + "/templatedir/" + inpFile;
+	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
 		std::string errMsg = "Error running UQ engine: Unable to open JSON";
 		theErrorFile.write(errMsg);
@@ -64,7 +68,10 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		theErrorFile.write(errMsg);
 	}
 
-	//json UQjson = json::parse(myfile);
+
+	//
+	// Check if I am the correct engine.
+	//
 
 	uqType = UQjson["UQ_Method"]["uqType"];
 	std::string uqEngine = UQjson["UQ_Method"]["uqEngine"];
@@ -90,28 +97,139 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		theErrorFile.write(errMsg);
 	}
 
-	nmc = UQjson["UQ_Method"]["samplingMethodData"]["samples"];
-	rseed = UQjson["UQ_Method"]["samplingMethodData"]["seed"];
+
+	//
+	// get EDP names
+	//
+
+	int count_qoi = 0;
+	for (auto& elem : UQjson["EDP"]) {
+		// *name of distribution
+		if (elem["length"] == 1) {
+			qoiNames.push_back(elem["name"]);
+			count_qoi++;
+		}
+		else if (elem["length"] > 1) {
+			qoiVectNames.push_back(elem["name"]); // to combine Sobol indices later
+			qoiVectRange.push_back({ count_qoi, count_qoi + int(elem["length"]) });
+			std::string name = elem["name"];
+			for (int j = 0; j < elem["length"]; j++) {
+				qoiNames.push_back(name + "_" + std::to_string(j + 1));
+				count_qoi++;
+			}
+		}
+	}
+	nqoi = count_qoi;
+	nqoiVects = qoiVectNames.size();
+
+
+	//
+	// Perform PCA?
+	//
+
+	// default
+	if (nqoi > 15) {
+		performPCA = true;
+	}
+	else {
+		performPCA = false;
+	}
+
+	if (UQjson["UQ_Method"].find("performPCA") != UQjson["UQ_Method"].end()) {
+
+		std::string PCAoption = UQjson["UQ_Method"]["performPCA"];
+		if ((PCAoption.compare("Yes") == 0)) {
+			performPCA = true;
+		}
+		else if ((PCAoption.compare("No") == 0)) {
+			performPCA = false;
+		}
+	}
+
+	if (performPCA && (uqType.compare("Sensitivity Analysis") == 0)) {
+		if (UQjson["UQ_Method"].find("PCAvarianceRatio") != UQjson["UQ_Method"].end()) {
+			PCAvarRatioThres = UQjson["UQ_Method"]["PCAvarianceRatio"];
+			if (PCAvarRatioThres <= 0) {
+				std::string errMsg = "Error reading input: PCA variance ratio should be greater than zero.";
+				theErrorFile.write(errMsg);
+			}
+			else if (PCAvarRatioThres > 1.0) {
+				std::string errMsg = "Error reading input: PCA variance ratio should not be greater than one.";
+				theErrorFile.write(errMsg);
+			}
+		}
+		else {
+			PCAvarRatioThres = 0.0;
+		}
+	}
+	else {
+		PCAvarRatioThres = 0.0;
+	}
+
+
+
+	//
+	// Basic Info
+	//
+
 	UQmethod = UQjson["UQ_Method"]["samplingMethodData"]["method"];
 
+
+	//
+	// Else if we read samples...
+	//
+
+	if (UQmethod.compare("Import Data Files") == 0) {
+
+		nrv = 0;
+		for (auto& elem : UQjson["randomVariables"])
+		{
+			nrv++;
+			rvNames.push_back(elem["name"]);
+		}
+		inpPath = UQjson["UQ_Method"]["samplingMethodData"]["inpFile"];
+		outPath = UQjson["UQ_Method"]["samplingMethodData"]["outFile"];
+
+		getGroupIdx(UQjson);
+		fileType = UQjson["UQ_Method"]["samplingMethodData"]["filetype"];
+
+		return;
+	}
+	else {
+		inpPath = "";
+		outPath = "";
+	}
+
+	//
+	// Else if we do sampling...
+	//
+
+	nmc = UQjson["UQ_Method"]["samplingMethodData"]["samples"];
+	rseed = UQjson["UQ_Method"]["samplingMethodData"]["seed"];
 
 	//
 	// Specify parameters in each distributions.
 	//
 
 	//std::vector<int> corrIdx;
-	std::vector<int> randIdx, constIdx, resampIdx;
+	std::vector<int> randIdx, constIdx, resampIdx; // random variables, constant variables, resampling variables
 	int count = 0;
 	nrv = 0;
 	nco = 0;
 	nre = 0;
 
 	std::string resampGroupTxt;
-	if (UQjson["UQ_Method"].find("RVdataGroup") != UQjson["UQ_Method"].end()) {
+	if (UQjson["UQ_Method"]["samplingMethodData"].find("RVdataGroup") != UQjson["UQ_Method"]["samplingMethodData"].end()) {
 		// if the key "sensitivityGroups" exists
+		resampGroupTxt = UQjson["UQ_Method"]["samplingMethodData"]["RVdataGroup"];
+		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
+	}
+	else if (UQjson["UQ_Method"].find("RVdataGroup") != UQjson["UQ_Method"].end()) {
+		// FOR VERSION COMPETIBILITY - TO BE REMOVED SOON.... sy 08/12/2022
 		resampGroupTxt = UQjson["UQ_Method"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
-	} else {
+	}
+	else {
 		resampGroupTxt = "";
 	}
 	std::cout << resampGroupTxt << std::endl;
@@ -379,30 +497,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 
-	//
-	// get edp names
-	//
-
-	
-	int count_qoi = 0;
-	for (auto& elem : UQjson["EDP"]) {
-		// *name of distribution
-		if (elem["length"] == 1) {
-			qoiNames.push_back(elem["name"]);
-			count_qoi++;
-		} else if (elem["length"] > 1) {
-			qoiVectNames.push_back(elem["name"]); // to combine Sobol indices later
-			qoiVectRange.push_back({ count_qoi, count_qoi + int(elem["length"]) });
-			std::string name = elem["name"];
-			for (int j=0; j < elem["length"]; j++) {
-				qoiNames.push_back(name + "_" + std::to_string(j+1));
-				count_qoi++;
-			}
-		}
-	}
-	nqoi = count_qoi;
-
-	nqoiVects = qoiVectNames.size();
 
 	//
 	// get correlation matrix
@@ -439,41 +533,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 //}
 	}
 
+	getGroupIdx(UQjson);
 
 	//
 	// get resampling group index matrix
 	//
 
 	fromTextToId(resampGroupTxt, rvNames, resamplingGroups);
-
-	//
-	// get group index matrix
-	//
-
-	bool generate_default_RVsensitivityGroup = true;
-	if (UQjson["UQ_Method"].find("RVsensitivityGroup") != UQjson["UQ_Method"].end()) {
-		// if the key "sensitivityGroups" exists
-		std::string groupTxt = UQjson["UQ_Method"]["RVsensitivityGroup"];
-		if (!groupTxt.empty()) {
-			// if value of "sensitivityGroups" is nonempty
-			groupTxt.erase(remove(groupTxt.begin(), groupTxt.end(), ' '), groupTxt.end()); // remove any white spaces
-			fromTextToId(groupTxt, rvNames, groups);
-			generate_default_RVsensitivityGroup = false;
-		}
-		
-	}
-	if (generate_default_RVsensitivityGroup) {
-		for (int i = 0; i < nrv; i++) {
-			groups.push_back({i});
-		}
-		for (int i = 0; i < nreg; i++) {
-			for (int j = 0; j < resamplingGroups[i].size(); j++) {
-				groups.push_back({ resamplingGroups[i][j] });
-			}
-		}
-
-	}
-	ngr = groups.size();
 
 
 
@@ -492,48 +558,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		resamplingSize.push_back(length_data);
 	}
 
-	//
-	// Perform PCA?
-	//
-
-	// default
-	if (nqoi > 15) {
-		performPCA = true;
-	}
-	else {
-		performPCA = false;
-	}
-
-	if (UQjson["UQ_Method"].find("performPCA") != UQjson["UQ_Method"].end()) {
-
-		std::string PCAoption = UQjson["UQ_Method"]["performPCA"];
-		if ((PCAoption.compare("Yes") == 0)) {
-			performPCA = true;
-		}
-		else if ((PCAoption.compare("No") == 0)) {
-			performPCA = false;
-		}
-	}
-
-	if (performPCA && (uqType.compare("Sensitivity Analysis") == 0)) {
-		if (UQjson["UQ_Method"].find("PCAvarianceRatio") != UQjson["UQ_Method"].end()) {
-			PCAvarRatioThres = UQjson["UQ_Method"]["PCAvarianceRatio"];
-			if (PCAvarRatioThres <= 0) {
-				std::string errMsg = "Error reading input: PCA variance ratio should be greater than zero.";
-				theErrorFile.write(errMsg);
-			}
-			else if (PCAvarRatioThres > 1.0) {
-				std::string errMsg = "Error reading input: PCA variance ratio should not be greater than one.";
-				theErrorFile.write(errMsg);
-			}
-		}
-		else {
-			PCAvarRatioThres = 0.0;
-		}
-	}
-	else {
-		PCAvarRatioThres = 0.0;
-	}
 }
 
 void
@@ -775,3 +799,36 @@ jsonInput::getPnames(string distname, string optname, vector<std::string>& par_c
 
 jsonInput::~jsonInput(void) {}
 
+void
+jsonInput::getGroupIdx(json UQjson) {
+
+	//
+	// get group index matrix
+	//
+
+	bool generate_default_RVsensitivityGroup = true;
+	if (UQjson["UQ_Method"].find("RVsensitivityGroup") != UQjson["UQ_Method"].end()) {
+		// if the key "sensitivityGroups" exists
+		std::string groupTxt = UQjson["UQ_Method"]["RVsensitivityGroup"];
+		if (!groupTxt.empty()) {
+			// if value of "sensitivityGroups" is nonempty
+			groupTxt.erase(remove(groupTxt.begin(), groupTxt.end(), ' '), groupTxt.end()); // remove any white spaces
+			fromTextToId(groupTxt, rvNames, groups);
+			generate_default_RVsensitivityGroup = false;
+		}
+
+	}
+	if (generate_default_RVsensitivityGroup) {
+		for (int i = 0; i < nrv; i++) {
+			groups.push_back({ i });
+		}
+		for (int i = 0; i < nreg; i++) {
+			for (int j = 0; j < resamplingGroups[i].size(); j++) {
+				groups.push_back({ resamplingGroups[i][j] });
+			}
+		}
+
+	}
+	ngr = groups.size();
+	std::cout << ngr << std:: endl;
+}
