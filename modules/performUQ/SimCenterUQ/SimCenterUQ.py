@@ -44,8 +44,8 @@ def main(args):
             # MAC
             surrogate = 'surrogateBuild.py' 
             plom = 'runPLoM.py' # KZ: main script of PLoM
-            natafExe = os.path.join('nataf_gsa','nataf_gsa')   
-            #natafExe = 'nataf_gsa'          
+            #natafExe = os.path.join('nataf_gsa','nataf_gsa')   
+            natafExe = 'nataf_gsa'          
             osType = 'Linux'
             workflowDriver1 = 'workflowDriver1'
             python = 'python3'
@@ -54,8 +54,8 @@ def main(args):
             
             surrogate = 'surrogateBuild.py'  
             plom = 'runPLoM.py' # KZ: main script of PLoM
-            natafExe = os.path.join('nataf_gsa','nataf_gsa.exe')   
-            #natafExe = 'nataf_gsa.exe'
+            #natafExe = os.path.join('nataf_gsa','nataf_gsa.exe')   
+            natafExe = 'nataf_gsa.exe'
             workflowDriver = workflowDriver + ".bat"            
             workflowDriver1 = 'workflowDriver1.bat'
             osType = 'Windows'
