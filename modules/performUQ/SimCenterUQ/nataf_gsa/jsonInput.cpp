@@ -191,7 +191,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		outPath = UQjson["UQ_Method"]["samplingMethodData"]["outFile"];
 
 		getGroupIdx(UQjson);
-		fileType = UQjson["UQ_Method"]["samplingMethodData"]["filetype"];
+		inpFileType = UQjson["UQ_Method"]["samplingMethodData"]["inpFiletype"];
+		outFileType = UQjson["UQ_Method"]["samplingMethodData"]["outFiletype"];
 
 		return;
 	}

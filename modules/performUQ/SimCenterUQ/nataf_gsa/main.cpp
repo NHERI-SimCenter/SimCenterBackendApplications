@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 	//	(3-1)(4-1) Read dataset
 
 	else if (inp.UQmethod.compare("Import Data Files") == 0) {
-		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.fileType, inp.nmc);
+		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc);
 	}
 	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.txt", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt", inp.nrv, inp.nqoi, "csv", inp.nmc);
 	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.bin", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.bin", inp.nrv, inp.nqoi, "binary", inp.nmc);

@@ -952,7 +952,7 @@ void ERANataf::readCSV(string filename, int ndim, vector<vector<double>>& mat, i
 }
 
 
-void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string option, int& nmc)
+void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int& nmc)
 {
 	int nsampx = -1; // some arbitrary value
 	int nsampy = -2;
@@ -964,10 +964,10 @@ void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int
 	//
 
 	std::cout << "Reading input datatext: " + inpFilePath+  "\n";
-	if (option.compare("bin") == 0)
+	if (inpOption.compare("bin") == 0)
 	{
 		readBin(inpFilePath, xdim, X, nsampx);
-	} else if (option.compare("txt") == 0) {
+	} else if (inpOption.compare("txt") == 0) {
 		readCSV(inpFilePath, xdim, X, nsampx);
 	}
 	else {
@@ -982,7 +982,7 @@ void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int
 	//
 
 	std::cout << "Reading output datatext: " + outFilePath + "\n";
-	if (option.compare("bin") == 0)
+	if (outOption.compare("bin") == 0)
 	{
 		readBin(outFilePath, ydim, G, nsampy);
 		if (nsampx != nsampy) {
@@ -990,7 +990,7 @@ void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int
 			theErrorFile.write(errMsg);
 		}
 	}
-	else if (option.compare("txt") == 0) {
+	else if (outOption.compare("txt") == 0) {
 		readCSV(outFilePath, ydim, G, nsampy);
 		if (nsampx != nsampy) {
 			std::string errMsg = "Error reading data: sample size inconsistency between RVs(" + std::to_string(nsampx) + ") and QoIs(" + std::to_string(nsampy) + ")";

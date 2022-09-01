@@ -98,7 +98,7 @@ public:
 	bool performPCA;
 	double PCAvarRatioThres;
 
-	string inpPath, outPath, fileType;
+	string inpPath, outPath, inpFileType, outFileType;
 
 private:
 	void getPnames(string distname, string optname, vector<std::string>& par_char);

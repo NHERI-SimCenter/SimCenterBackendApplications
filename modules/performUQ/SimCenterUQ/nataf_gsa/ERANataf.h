@@ -111,7 +111,7 @@ public:
 	void sample(jsonInput inp, int procno);
 	void readCSV(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
 	void readBin(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
-	void readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string option, int &nmcs);
+	void readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int &nmcs);
 
 
 private:
