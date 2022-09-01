@@ -81,8 +81,10 @@ import time
 from pathlib import Path
 import copy
 import socket
+import collections
 if 'stampede2' not in socket.gethostname():
 	from FetchOpenSHA import *
+import threading
 
 class IM_Calculator:
 
@@ -183,6 +185,7 @@ class IM_Calculator:
 		else:
 			res = compute_weighted_res([res_local, res_opensha], 
 			                           [np.sum(gmpe_weights_list_local, np.sum(gmpe_weights_list_opensha))])
+
 		# return
 		return res
 
@@ -420,7 +423,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 	return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(scenarios, stations, gmpe_info, im_info):
+def compute_im(scenarios, stations, gmpe_info, im_info, hazard_occur_info, mth_flag=True):
 
 	# Calling OpenSHA to compute median PSA
 	im_raw = []
@@ -440,6 +443,17 @@ def compute_im(scenarios, stations, gmpe_info, im_info):
 			station_list[j].update({'Vs30': int(stations[j]['Vs30'])})
 	station_info = {'Type': 'SiteList',
 					'SiteList': station_list}
+	# hazard occurrent model
+	if hazard_occur_info is not None:
+		# check if the period in the hazard curve is in the period list in the intensity measure
+		if hazard_occur_info.get('IntensityMeasure')=='SA':
+			ho_period = hazard_occur_info.get('Period')
+			if ho_period in im_info.get('Periods'):
+				pass
+			else:
+				tmp_periods = im_info['Periods']+[ho_period]
+				tmp_periods.sort()
+				im_info['Periods'] = tmp_periods
 	# Configuring site properties
 	siteSpec = []
 	sites = []
@@ -451,26 +465,79 @@ def compute_im(scenarios, stations, gmpe_info, im_info):
 		gmpe_dict, gmpe_weights_dict = get_gmpe_from_im_legency(im_info, gmpe_info)
 	# prepare intensity measure dict
 	im_dict = get_im_dict(im_info)
-
-	# create a IM calculator
-	im_calculator = IM_Calculator(im_dict=im_dict, gmpe_dict=gmpe_dict, 
-	                              gmpe_weights_dict=gmpe_weights_dict, site_info=station_info)
 	
+	t_start = time.time()
 	# Loop over scenarios
-	for i, s in enumerate(tqdm(scenarios, desc='Scenarios')):
-		# Rupture
-		source_info = scenarios[i]
-		im_calculator.set_source(source_info)
-		# Computing IM
+	if mth_flag is False:
+		# create a IM calculator
+		im_calculator = IM_Calculator(im_dict=im_dict, gmpe_dict=gmpe_dict, 
+									gmpe_weights_dict=gmpe_weights_dict, site_info=station_info)
+		for i, s in enumerate(scenarios):
+			print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(scenarios)))
+			# Rupture
+			source_info = scenarios[i]
+			im_calculator.set_source(source_info)
+			# Computing IM
+			res_list = []
+			for cur_im_type in list(im_dict.keys()):
+				im_calculator.set_im_type(cur_im_type)
+				res_list.append(im_calculator.calculate_im())
+			# Collecting outputs
+			im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
+
+	if mth_flag:
+		res_dict = {}
+		sub_ths = []
+		num_bins = 200
+		bin_size = int(np.ceil(len(scenarios)/num_bins))
+		ids_list = []
+		scen_list = []
+		for k in range(0, len(scenarios), bin_size):
+			ids_list.append(list(scenarios.keys())[k:k+bin_size])
+			scen_list.append([scenarios[x] for x in list(scenarios.keys())[k:k+bin_size]])
+		#print(ids_list)
+		for i in range(len(ids_list)):
+			th = threading.Thread(target=compute_im_para, args=(ids_list[i], scen_list[i], im_dict, gmpe_dict, gmpe_weights_dict, station_info, res_dict))
+			sub_ths.append(th)
+			th.start()
+
+		for th in sub_ths:
+			th.join()
+
+		# order the res_dict by id
+		res_ordered = collections.OrderedDict(sorted(res_dict.items()))
+		for i, cur_res in res_ordered.items():
+			im_raw.append(cur_res)
+
+	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
+
+	# return
+	return im_raw, im_info
+
+
+def compute_im_para(ids, scenario_infos, im_dict, gmpe_dict, gmpe_weights_dict, station_info, res_dict):
+	
+	for i, id in enumerate(ids):
+		print('ComputeIntensityMeasure: Scenario #{}.'.format(id+1))
+		scenario_info = scenario_infos[i]
+		# create a IM calculator
+		im_calculator = IM_Calculator(im_dict=im_dict, gmpe_dict=gmpe_dict, 
+									gmpe_weights_dict=gmpe_weights_dict, site_info=station_info)
+		# set scenario information
+		im_calculator.set_source(scenario_info)
+		# computing IM
 		res_list = []
 		for cur_im_type in list(im_dict.keys()):
 			im_calculator.set_im_type(cur_im_type)
 			res_list.append(im_calculator.calculate_im())
-		# Collecting outputs
-		im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
-
+		# clean
+		del im_calculator
+		# collect multiple ims
+		res = collect_multi_im_res(res_list)
+		# append res to res_dcit
+		res_dict[id] = res
 	# return
-	return im_raw
+	return
 
 
 class GM_Simulator:
@@ -823,17 +890,19 @@ def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info
 	gm_simulator = GM_Simulator(site_info=stations, num_simu=num_simu, correlation_info=correlation_info)
 	ln_im_mr = []
 	mag_maf = []
-	for cur_im_raw in tqdm(im_raw, desc='Scenarios'):
+	t_start = time.time()
+	for i, cur_im_raw in enumerate(im_raw):
+		print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(im_raw)))
 		# set im_raw
 		gm_simulator.set_im_raw(cur_im_raw)
 		# Computing inter event residuals
-		t_start = time.time()
+		#t_start = time.time()
 		epsilon = gm_simulator.compute_inter_event_residual()
-		print('ComputeIntensityMeasure: inter-event correlation {0} sec'.format(time.time() - t_start))
+		#print('ComputeIntensityMeasure: inter-event correlation {0} sec'.format(time.time() - t_start))
 		# Computing intra event residuals
-		t_start = time.time()
+		#t_start = time.time()
 		eta = gm_simulator.compute_intra_event_residual()
-		print('ComputeIntensityMeasure: intra-event correlation {0} sec'.format(time.time() - t_start))
+		#print('ComputeIntensityMeasure: intra-event correlation {0} sec'.format(time.time() - t_start))
 		ln_im_all = np.zeros((gm_simulator.num_sites, gm_simulator.num_im, num_simu))
 		for i in range(num_simu):
 			epsilon_m = np.array([epsilon[:, i] for j in range(gm_simulator.num_sites)])
@@ -844,7 +913,8 @@ def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info
 		ln_im_mr.append(ln_im_all)
 		mag_maf.append([cur_im_raw['Magnitude'], cur_im_raw.get('MeanAnnualRate',None), 
 		                cur_im_raw.get('SiteSourceDistance',None), cur_im_raw.get('SiteRuptureDistance',None)])
-
+	
+	print('ComputeIntensityMeasure: all inter- and intra-event correlation {0} sec'.format(time.time() - t_start))
 	im_list = copy.copy(gm_simulator.im_name_list)
 	# return
 	return ln_im_mr, mag_maf, im_list

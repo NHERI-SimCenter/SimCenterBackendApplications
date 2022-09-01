@@ -265,7 +265,13 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
             feature_collection.append(cur_dict)
         # end for j
     # end for i
-    erf_data.update({'features': feature_collection})
+    # sort the list
+    maf_list_n = [-x['properties']['MeanAnnualRate'] for x in feature_collection]
+    sort_ids = np.argsort(maf_list_n)
+    feature_collection_sorted = [feature_collection[i] for i in sort_ids]
+    del feature_collection
+    erf_data.update({'features': feature_collection_sorted})
+    print('FetchOpenSHA: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
     # Output
     if outfile is not None:
         with open(outfile, 'w') as f:
@@ -336,7 +342,7 @@ def get_site_prop(gmpe_name, siteSpec):
         availableSiteData = siteDataProviders.getAllAvailableData(sites)
     except:
         availableSiteData = []
-        print('remote getAllAvailableData is not available temporarily, please provide site Vs30 in the site csv file.')
+        print('remote getAllAvailableData is not available temporarily, will use site Vs30 in the site csv file.')
         #return 1
     siteTrans = SiteTranslator()
     # Looping over all sites

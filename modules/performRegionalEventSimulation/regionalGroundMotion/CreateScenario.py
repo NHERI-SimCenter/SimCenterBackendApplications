@@ -38,7 +38,7 @@
 # Kuanshi Zhong
 #
 
-import os
+import os, time
 import subprocess
 import json
 import random
@@ -77,6 +77,7 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
         ref_station = [mlat, mlon]
         # Getting earthquake rupture forecast data
         source_type = scenario_info['EqRupture']['Type']
+        t_start = time.time()
         if source_type == 'ERF':
             if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
                 source_model = scenario_info['EqRupture']['Model']
@@ -132,18 +133,25 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                 # Abstracting desired ruptures
                 s_tag = random.sample(tag, min(source_num, len(tag)))
                 """
+                t_start = time.time()
                 s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
+                print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))
                 erf_data['features'] = list(feat[i] for i in s_tag)
                 scenario_data = dict()
+                t_start = time.time()
                 for i, rup in enumerate(erf_data['features']):
                     scenario_data.update({i: {
                         'Type': source_type,
                         'RuptureForecast': source_model,
+                        'Name': rup['properties']['Name'],
+                        'Magnitude': rup['properties']['Magnitude'],
+                        'MeanAnnualRate': rup['properties']['MeanAnnualRate'],
                         'SourceIndex': rup['properties']['Source'],
                         'RuptureIndex': rup['properties']['Rupture'],
                         'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
                         'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
                     }})
+                print('CreateScenario: scenarios collected {0} sec'.format(time.time() - t_start))
                 # Cleaning tmp outputs
                 del erf_data
         elif source_type == 'PointSource':
@@ -162,6 +170,8 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                 }})
             except:
                 print('Please check point-source inputs.')
+
+        print('CreateScenario: all scenarios configured {0} sec'.format(time.time() - t_start))
     # return
     return scenario_data
 
