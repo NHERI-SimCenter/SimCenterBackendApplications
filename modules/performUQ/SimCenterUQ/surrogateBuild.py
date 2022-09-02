@@ -232,10 +232,11 @@ class surrogate(UQengine):
         else:
             pass
             # use default
-            # self.do_logtransform = False
-            # self.kernel = 'Matern 5/2'
-            # self.do_linear = False
-            # self.nugget_opt = "optimize"
+            self.do_logtransform = False
+            self.kernel = 'Matern 5/2'
+            self.do_linear = False
+            self.nugget_opt = "optimize"
+            self.nuggetVal= 1
 
         # Save model information
         if (surrogateJson["method"] == "Sampling and Simulation") or (
@@ -1650,47 +1651,21 @@ class surrogate(UQengine):
         time_tmp = time.time();
         X_hf = self.X_hf
         Y_hf = self.Y_hf
-        X_lf = self.X_lf
-        Y_lf = self.Y_lf
 
         e2 = np.zeros(Y_hf.shape)
         Y_pred = np.zeros(Y_hf.shape)
         Y_pred_var = np.zeros(Y_hf.shape)
 
+        #
+        # Efficient cross validation
+        #
         for ny in range(Y_hf.shape[1]):
-            # for ns in range(X_hf.shape[0]):
-            #     if self.do_logtransform:
-            #         Y_exact = np.log(Y_hf[ns, ny])
-            #     else:
-            #         Y_exact = Y_hf[ns, ny]
-            #     Y_pred[ns, ny] = Y_exact # remove this line
-            m_tmp = copy.deepcopy(self.m_list[ny])
-            m_tmp.inference_method.LOO(m_tmp.kern, m_tmp.X, m_tmp.Y, m_tmp.likelihood, m_tmp.posterior)
-            m_tmp = copy.deepcopy(self.m_list[ny])
-            for ns in range(X_hf.shape[0]):
-                X_tmp = np.delete(X_hf, ns, axis=0)
-                Y_tmp = np.delete(Y_hf, ns, axis=0)
-                #m_tmp.set_XY(X_tmp, Y_tmp[:, ny][np.newaxis].transpose())
-
-                m_tmp = self.set_XY(
-                    m_tmp,
-                    X_tmp,
-                    Y_tmp[:, ny][np.newaxis].transpose(),
-                    X_lf,
-                    Y_lf[:, ny][np.newaxis].transpose(),
-                )
-                x_loo = X_hf[ns, :][np.newaxis]
-                Y_pred_tmp, Y_err_tmp = self.predict(m_tmp, x_loo)
-
-                Y_pred[ns, ny] = Y_pred_tmp
-                Y_pred_var[ns, ny] = Y_err_tmp
-
-                if self.do_logtransform:
-                    Y_exact = np.log(Y_hf[ns, ny])
-                else:
-                    Y_exact = Y_hf[ns, ny]
-
-                e2[ns, ny] = pow((Y_pred_tmp - Y_exact), 2)  # for nD outputs
+            Rmat = self.m_list[ny].kern.K(X_hf,X_hf)
+            Rinv = np.linalg.inv(Rmat)
+            e = np.matmul(Rinv, Y_hf[:,ny]-self.m_list[ny].normalizer.mean)/np.diag(Rinv)
+            e2[:, ny] = e*e
+            Y_pred[:,ny] = Y_hf[:,ny] - e
+            Y_pred_var[:,ny] = 1/np.diag(Rinv)
 
         print("     Cross validation calculation time: {:.2f} s".format(time.time() - time_tmp),flush=True)
         return Y_pred, Y_pred_var, e2
