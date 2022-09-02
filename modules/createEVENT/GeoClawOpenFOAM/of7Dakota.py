@@ -63,42 +63,6 @@ class of7Dakota():
 
 		caseruntext = 'echo Starting Dakota preparation...\n'
 		caseruntext = caseruntext + 'python3 $HYDROBRAIN/GetOpenFOAMEvent.py -b '+args.b+'\n'
-		caseruntext = caseruntext + 'cp -f EVENT.json ${inputDirectory}/EVENT.json\n'
-		caseruntext = caseruntext + 'cp -f EVENT.json ${inputDirectory}/evt.j\n\n'
-
-		# Load necessary modules
-		caseruntext = caseruntext + 'echo Loading necessary modules for Dakota...\n'
-		caseruntext = caseruntext + 'module load intel/18.0.2  impi/18.0.2 dakota/6.8.0 python3\n\n'
-
-		# Initialize file names and scripts
-		caseruntext = caseruntext + 'echo Initializing file names and scripts...\n'
-		caseruntext = caseruntext + 'echo "inputScript is ${inputFile}"\n'
-		caseruntext = caseruntext + 'cd ${inputDirectory}\n'
-		caseruntext = caseruntext + 'chmod \'a+x\' workflow_driver\n'
-		caseruntext = caseruntext + 'cp workflow_driver ../\n'
-		caseruntext = caseruntext + 'cd ..\n\n'
-
-		# Run Dakota
-		caseruntext = caseruntext + 'echo Running dakota...\n'
-		caseruntext = caseruntext + 'ibrun dakota -in dakota.in -out dakota.out -err dakota.err\n\n'
-
-		# Cleanup
-		caseruntext = caseruntext + 'if [ -d ./workdir.1 ]\n'
-		caseruntext = caseruntext + 'then\n'
-		caseruntext = caseruntext + '\tmkdir ./workdir\n'
-		caseruntext = caseruntext + '\tmv workdir.* workdir\n'
-		caseruntext = caseruntext + '\ttar zcBf workdir.tar.gz workdir\n'
-		caseruntext = caseruntext + '\trm -fr workdir\n'
-		caseruntext = caseruntext + 'fi\n'
-		caseruntext = caseruntext + 'cp templatedir/dakota.json ./\n'
-		caseruntext = caseruntext + 'tar zcBf templatedir.tar.gz templatedir\n'
-		caseruntext = caseruntext + 'rm -fr templatedir\n\n'
-		caseruntext = caseruntext + 'cd ..\n\n'
-		# caseruntext = caseruntext + 'if [ ! $? ]; then\n'
-		# caseruntext = caseruntext + '\techo "dakota exited with an error status. $?" >&2\n'
-		# caseruntext = caseruntext + '\t${AGAVE_JOB_CALLBACK_FAILURE}\n'
-		# caseruntext = caseruntext + '\texit\n'
-		# caseruntext = caseruntext + 'fi\n\n'
 
 		# Openfoam cleanup
 		caseruntext = caseruntext + 'rm -fr processor*\n'
