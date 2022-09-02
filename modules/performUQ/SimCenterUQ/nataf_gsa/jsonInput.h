@@ -97,6 +97,7 @@ public:
 	vector<int> resamplingSize;
 	bool performPCA;
 	double PCAvarRatioThres;
+	string femAppName;
 
 	string inpPath, outPath, inpFileType, outFileType;
 

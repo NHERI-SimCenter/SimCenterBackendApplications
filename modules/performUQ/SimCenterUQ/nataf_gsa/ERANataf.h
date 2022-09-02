@@ -98,16 +98,23 @@ public:
 						vector<vector<double>>& xvals,
 						vector<vector<double>>& gvals,
 						int idx);
-	vector<double> simulateAppOnce(int i,
+	vector<vector<double>> simulateAppOnce(int i,
 						string workingDirs,
 						string copyDir,
 						int nrvcore,
 						int qoi,
 						vector<string> rvNames,
-						vector<double> xs,
+						vector<vector<double>> xs,
 						string workflowDriver,
 						string osType,
 						string runType);
+	void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
+						string osType,
+						string runType,
+						jsonInput inp,
+						int procno,
+						int nproc);
+
 	void sample(jsonInput inp, int procno);
 	void readCSV(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
 	void readBin(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);

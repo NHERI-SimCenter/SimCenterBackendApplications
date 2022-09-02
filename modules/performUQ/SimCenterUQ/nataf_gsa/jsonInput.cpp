@@ -99,6 +99,20 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	//
+	// Are we gonna use surrogate FEM? If so multiple columns will be created in params.in
+	//
+
+
+	// If "Applications" exists
+	femAppName="unknown";
+	if (UQjson.find("Applications") != UQjson.end()) {
+;		// If FEM exists
+		if (UQjson["Applications"].find("FEM") != UQjson["Applications"].end()) {
+			femAppName = UQjson["Applications"]["FEM"]["Application"];
+		}
+	}
+
+	//
 	// get EDP names
 	//
 

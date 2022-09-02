@@ -141,7 +141,12 @@ int main(int argc, char** argv)
 	//	(4-1) FE Analysis - (parallel)
 	//
 
-	if (inp.UQmethod.compare("Monte Carlo") == 0) {
+	if (inp.femAppName.compare("SurrogateGP") == 0) {
+
+		T.sample(inp, procno);
+		T.simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, procno, nprocs);
+
+	} else if (inp.UQmethod.compare("Monte Carlo") == 0) {
 
 		T.sample(inp, procno);
 		T.simulateAppBatch(workflowDriver, osType, runType, inp, procno, nprocs);
@@ -154,6 +159,7 @@ int main(int argc, char** argv)
 	else if (inp.UQmethod.compare("Import Data Files") == 0) {
 		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc);
 	}
+
 	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.txt", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt", inp.nrv, inp.nqoi, "csv", inp.nmc);
 	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.bin", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.bin", inp.nrv, inp.nqoi, "binary", inp.nmc);
 	//

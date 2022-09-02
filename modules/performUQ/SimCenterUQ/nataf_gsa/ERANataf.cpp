@@ -509,7 +509,6 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		// for constants
 		for (int j = 0; j < inp.nco; j++)
 			x[ns].push_back(inp.constants[j]);
-
 	}
 
 	std::string copyDir = inp.workDir + "/templatedir";
@@ -536,7 +535,6 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		// If we find result.out in the templete dir. emit error;
 		//
 
-
 		std::string existingResultsFile = inp.workDir + "/templatedir/results.out";
 		if (std::filesystem::exists(existingResultsFile)) {
 			//*ERROR*
@@ -556,9 +554,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	//
 	// Run Apps
 	//
-
-
-
+	
 	#ifdef MPI_RUN
 
 		std::cout << "==================== running FEM simulations (MPI) ================" << std::endl;
@@ -582,7 +578,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 
 			//std::cerr << "FEM simulation running in parallel: procno =" + std::to_string(procno) + " for id=" +std::to_string(id) + "\n";;
 			if (id < inp.nmc) {
-				vector<double> res = simulateAppOnce(id, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, x[id], workflowDriver, osType, runType);
+				vector<double> res = simulateAppOnce(id, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, { x[id] }, workflowDriver, osType, runType)[0];
 
 				for (int j = 0; j < inp.nqoi; j++) {
 					tmpres[i * inp.nqoi + j] = res[j];
@@ -620,7 +616,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		#pragma omp parallel for shared(gvals) private(i)
 		for (i = 0; i < inp.nmc; i++)
 		{
-			gvals[i] = simulateAppOnce(i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, x[i], workflowDriver, osType, runType);
+			//gvals[i] = simulateAppOnce(i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, x[i], workflowDriver, osType, runType);
+			gvals[i] = simulateAppOnce(i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, { x[i] }, workflowDriver, osType, runType)[0];
 		}
 
 	#endif
@@ -629,8 +626,9 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	G = gvals;
 }
 
-vector<double> ERANataf::simulateAppOnce(int i, string workingDirs, string copyDir, int nrvcore, int nqoi, vector<string> rvNames, vector<double> xs, string workflowDriver, string osType, string runType)
+vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, string copyDir, int nrvcore, int nqoi, vector<string> rvNames, vector<vector<double>> xss, string workflowDriver, string osType, string runType)
 {
+	int nsamp = xss.size();
 
 	//
 	// (1) create "workdir.i " folder :need C++17 to use the files system namespace
@@ -690,7 +688,11 @@ vector<double> ERANataf::simulateAppOnce(int i, string workingDirs, string copyD
 		writeFile << std::to_string(nrvcore) + "\n";
 		for (int j = 0; j < nrvcore; j++) {
 			writeFile << rvNames[j] + " ";
-			writeFile << std::to_string(xs[j]) + "\n";
+			for (int k = 0; k < nsamp ; k++)
+			{
+				writeFile << std::to_string(xss[k][j]) + " ";
+			}
+			writeFile << "\n";
 		}
 		writeFile.close();
 	}
@@ -699,9 +701,6 @@ vector<double> ERANataf::simulateAppOnce(int i, string workingDirs, string copyD
 	// (4) run workflow_driver.bat(e.g. It will make "SimCenterInput.tcl" and run OpenSees)
 	//
 
-	//std::string workflowDriver = "workflow_driver";
-	//if ((osType.compare("Windows") == 0) && (runType.compare("runningLocal") == 0))
-	//	workflowDriver = "workflow_driver.bat >nul 2>nul";
 
 	string workflowDriver_string = "cd \"" + workDir + "\" && \"" + workDir + "/" + workflowDriver + "\"" ;
 
@@ -717,11 +716,10 @@ vector<double> ERANataf::simulateAppOnce(int i, string workingDirs, string copyD
 
 	string results = workDir + "/results.out";
 	std::ifstream readFile(results.data());
-
 	if (!readFile.is_open()) {
 		//*ERROR*
 		std::string errMsg = "Error running FEM: results.out missing in workdir." + std::to_string(i + 1) + ".";
-		
+
 		// check of ops.out is created
 		string messageFromFEM = workDir + "/ops.out";
 		std::ifstream femFile(messageFromFEM.data());
@@ -734,55 +732,194 @@ vector<double> ERANataf::simulateAppOnce(int i, string workingDirs, string copyD
 		theErrorFile.write(errMsg);
 	}
 
-	vector<double> g_tmp;
-	if (readFile.is_open()) {
-		int j = 0;
+	vector<vector<double>> gmat_tmp;
 
-        string g_str;
-        while(readFile >> g_str)
-        {
-            if(g_str == "NaN")       //you could also add it with negative infinity
-            {
-                g_tmp.push_back(std::numeric_limits<double>::quiet_NaN());
-            }
-            else
-            {
-                g_tmp.push_back(atof(g_str.c_str()));
-            }
-            j++;
-        }
+	if (nsamp == 1) {
 
-        //readFile >> double_imanip();
-//		while (readFile >> g) {
-//			g_tmp.push_back(g);
-//			j++;
-//		}
-        //readFile >> double_imanip();
-        readFile.close();
-
-		if (j == 0) {
-			std::string errMsg = "Error running FEM: results.out file at workdir." + std::to_string(i + 1) + " is empty.";
-			//theErrorFile.write(errMsg);
-			// check of ops.out is created
-			string messageFromFEM = workDir + "/ops.out";
-			std::ifstream femFile(messageFromFEM.data());
-			if (femFile.is_open()) {
-				std::string msg((std::istreambuf_iterator<char>(femFile)),
-					std::istreambuf_iterator<char>());
-				errMsg += "\n *** Message from the FEM engine in workdir." + std::to_string(i + 1) + " says \n \"";
-				errMsg += msg + "\"";
+		vector<double> g_tmp;
+		if (readFile.is_open()) {
+			int j = 0;
+			string g_str;
+			while (readFile >> g_str)
+			{
+				if (g_str == "NaN")       //you could also add it with negative infinity
+				{
+					g_tmp.push_back(std::numeric_limits<double>::quiet_NaN());
+				}
+				else
+				{
+					g_tmp.push_back(atof(g_str.c_str()));
+				}
+				j++;
 			}
+
+			readFile.close();
+
+			if (j == 0) {
+				std::string errMsg = "Error running FEM: results.out file at workdir." + std::to_string(i + 1) + " is empty.";
+				//theErrorFile.write(errMsg);
+				// check of ops.out is created
+				string messageFromFEM = workDir + "/ops.out";
+				std::ifstream femFile(messageFromFEM.data());
+				if (femFile.is_open()) {
+					std::string msg((std::istreambuf_iterator<char>(femFile)),
+						std::istreambuf_iterator<char>());
+					errMsg += "\n *** Message from the FEM engine in workdir." + std::to_string(i + 1) + " says \n \"";
+					errMsg += msg + "\"";
+				}
+				theErrorFile.write(errMsg);
+			}
+			if (j != nqoi) {
+				//*ERROR*
+				std::string errMsg = "Error reading FEM results: the number of outputs in results.out (" + std::to_string(j) + ") does not match the number of QoIs specified (" + std::to_string(nqoi) + ")";
+				theErrorFile.write(errMsg);
+			}
+		}
+		gmat_tmp = { g_tmp };
+	} else {
+
+		int ns = 0; // will increment
+		if (readFile.is_open()) {
+
+			std::string g_line, g_str;
+
+			while (std::getline(readFile, g_line)) {
+				std::istringstream buffer(g_line);
+
+				vector<double> g_tmp;
+				int nq = 0;
+				while (buffer >> g_str)
+				{
+					if (g_str == "NaN")       //you could also add it with negative infinity
+					{
+						g_tmp.push_back(std::numeric_limits<double>::quiet_NaN());
+					}
+					else
+					{
+						g_tmp.push_back(atof(g_str.c_str()));
+					}
+					nq++;
+				}
+
+				gmat_tmp.push_back(g_tmp);
+
+				if (nq == 0) {
+					std::string errMsg = "Error running FEM: results.out file at workdir." + std::to_string(i + 1) + " is empty.";
+					//theErrorFile.write(errMsg);
+					// check of ops.out is created
+					string messageFromFEM = workDir + "/ops.out";
+					std::ifstream femFile(messageFromFEM.data());
+					if (femFile.is_open()) {
+						std::string msg((std::istreambuf_iterator<char>(femFile)),
+							std::istreambuf_iterator<char>());
+						errMsg += "\n *** Message from the FEM engine in workdir." + std::to_string(i + 1) + " says \n \"";
+						errMsg += msg + "\"";
+					}
+					theErrorFile.write(errMsg);
+				}
+				if (nq != nqoi) {
+					//*ERROR*
+					std::string errMsg = "Error reading FEM results: the number of outputs in results.out (" + std::to_string(nq) + ") does not match the number of QoIs specified (" + std::to_string(nqoi) + ")";
+					theErrorFile.write(errMsg);
+				}
+				ns++;
+			}
+			if (ns != nsamp) {
+				std::string errMsg = "Error reading FEM results: the number of outputs in results.out (" + std::to_string(ns) + ") does not match the number of samples in written in params.in file (" + std::to_string(nsamp) + ")";
+				theErrorFile.write(errMsg);
+			}
+		}
+	}
+	return gmat_tmp;
+	//return {0.,0,};
+}
+
+
+void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
+									string osType,
+									string runType,
+									jsonInput inp,
+									int procno,
+									int nproc)
+{
+	//
+	// Change from u to x;
+	//
+	
+	vector<vector<double>> u = U;
+	vector<vector<int>> resampIDs = resampID;
+
+	vector<vector<double>> x = U2X(inp.nmc, u);
+	std::vector<double> zero_vector(inp.nre, 0);
+	for (int ns = 0; ns < inp.nmc; ns++)
+	{
+		// for resampling
+		x[ns].insert(x[ns].end(), zero_vector.begin(), zero_vector.end());
+		for (int ng = 0; ng < inp.nreg; ng++)
+		{
+			for (int nr : inp.resamplingGroups[ng])
+			{
+				x[ns][nr] = inp.vals[nr][resampIDs[ns][ng]];
+			}
+		}
+		// for constants
+		for (int j = 0; j < inp.nco; j++)
+			x[ns].push_back(inp.constants[j]);
+	}
+
+	std::string copyDir = inp.workDir + "/templatedir";
+
+	//
+	// Display
+	//
+	if (procno == 0) {
+
+		std::cout << "[First " << std::min(inp.nmc, 10) << " samples]" << std::endl;
+		for (int ns = 0; ns < std::min(inp.nmc, 10); ns++)
+		{
+			for (int nr = 0; nr < inp.nrv; nr++)
+			{
+				std::cout << x[ns][nr] << "  ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+
+		std::cerr << "workdir:" << inp.workDir << "\n";
+		std::cerr << "copyDir:" << copyDir << "\n";
+		std::cerr << "runningFEM analysis.." << "\n\n";
+
+		//
+		// If we find result.out in the templete dir. emit error;
+		//
+
+		std::string existingResultsFile = inp.workDir + "/templatedir/results.out";
+		if (std::filesystem::exists(existingResultsFile)) {
+			//*ERROR*
+			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains results.out file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
-		if (j != nqoi) {
+
+		std::string existingParamsFile = inp.workDir + "/templatedir/params.in";
+		if (std::filesystem::exists(existingParamsFile)) {
 			//*ERROR*
-			std::string errMsg = "Error reading FEM results: the number of outputs in results.out (" + std::to_string(j) + ") does not match the number of QoIs specified (" + std::to_string(nqoi) + ")";
+			std::string errMsg = "Error running SimCenterUQ: your templete directory already contains params.in file. Please clean up the directory where input file is located.";
 			theErrorFile.write(errMsg);
 		}
 	}
 
-	return g_tmp;
-	//return {0.,0,};
+	std::cout << "==================== evaluating surrogate model ================" << std::endl;
+	std::cout << std::endl;
+
+	//
+	// Evaluate surrogate
+	//
+	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
+
+	gvals = simulateAppOnce(0, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, x, workflowDriver, osType, runType);
+	   	  
+	X = x;
+	G = gvals;
 }
 
 void ERANataf::readBin(string filename,int ndim, vector<vector<double>> &mat, int& nsamp)
