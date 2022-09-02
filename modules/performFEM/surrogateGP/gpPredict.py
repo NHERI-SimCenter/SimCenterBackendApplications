@@ -41,17 +41,26 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     # read json -- current input file
     #
 
+    def error_exit(msg):
+        error_file.write(msg) # local
+        error_file.close()
+        file_object.write(msg0 + msg) # global file
+        file_object.close()
+        print(msg)
+        exit(-1)
+
+    def error_warning(msg):
+        error_file.write(msg)
+        file_object.write(msg0 + msg)
+        print(msg)
+
     with open(dakota_path) as f: # current input file
         try:
             inp_tmp = json.load(f)
             inp_fem = inp_tmp["Applications"]["FEM"]
         except ValueError:
             msg = 'invalid json format - dakota.json'
-            error_file.write(msg)
-            error_file.close()
-            file_object.write(msg0+msg)
-            file_object.close()
-            exit(-1)
+            error_exit(msg)
 
     norm_var_thr = inp_fem["varThres"]
     when_inaccurate = inp_fem["femOption"]
@@ -72,9 +81,8 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         sur = json.load(f)
     except ValueError:
         msg = 'invalid json format'
-        error_file.write(msg)
-        error_file.close()
-        exit(-1)
+        error_exit(msg)
+
     f.close()
     did_logtransform = sur["doLogtransform"]
     kernel = sur["kernName"]
@@ -159,28 +167,30 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         nrv = int(data[0])
         if nrv != nrv_sur:
             msg = 'Error importing input data: Number of dimension inconsistent: surrogate model requires {} RV(s) but input has {} RV(s).\n'.format(nrv_sur, nrv)
-            print(msg)
-            error_file.write(msg)
-            error_file.close()
-            file_object.write(msg0 + msg)
-            file_object.close()
-            exit(-1)
+            error_exit(msg)
 
         #rv_name = list()
-        rv_val = np.zeros((1, nrv))
+
         for i in range(nrv):
-            name, val = data[i + 1].split()
+            name_values = data[i + 1].split()
+            name = name_values[0]
+            samples = [float(vals) for vals in name_values[1:]]
+            ns = len(samples)
             try:
                 id_map = rv_name_sur.index(name)
             except ValueError:
                 msg = 'Error importing input data: variable "{}" not identified.'.format(name)
-                print(msg)
-                error_file.write(msg)
-                error_file.close()
-                file_object.write(msg0 + msg)
-                file_object.close()
-                exit(-1)
-            rv_val[0, id_map] = float(val)
+                error_exit(msg)
+
+            if i==0:
+                nsamp = ns
+                rv_val = np.zeros((ns, nrv))
+
+            if ns!=nsamp:
+                msg = 'Error importing input data: sample size in params.in is not consistent.'
+                error_exit(msg)
+
+            rv_val[:, id_map] = samples
 
 
         g_idx = []
@@ -197,12 +207,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                     g_idx += [id_map]
             except ValueError:
                 msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
-                print(msg)
-                error_file.write(msg)
-                error_file.close()
-                file_object.write(msg0 + msg)
-                file_object.close()
-                exit(-1)
+                error_exit(msg)
 
 
 
@@ -230,48 +235,50 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     # read param in file and sort input
 
     y_dim = len(m_list)
-    nsamp = np.sum(m_list[0].X[:, -1] == 0)
 
-    y_pred_median = np.zeros(y_dim)
-    y_pred_var_tmp=np.zeros(y_dim)
-    y_pred_var=np.zeros(y_dim)
-    y_data_var=np.zeros(y_dim)
-    y_samp = np.zeros(y_dim)
-    y_q1 = np.zeros(y_dim)
-    y_q3 = np.zeros(y_dim)
+    y_pred_median = np.zeros([nsamp, y_dim])
+    y_pred_var_tmp=np.zeros([nsamp, y_dim])
+    y_pred_var=np.zeros([nsamp, y_dim])
+    y_data_var=np.zeros([nsamp, y_dim])
+    y_samp = np.zeros([nsamp, y_dim])
+    y_q1 = np.zeros([nsamp, y_dim])
+    y_q3 = np.zeros([nsamp, y_dim])
     for ny in range(y_dim):
-        y_data_var[ny] = np.var(m_list[ny].Y)
+        y_data_var[:,ny] = np.var(m_list[ny].Y)
         #y_pred_tmp, y_pred_var_tmp  = m_list[ny].predict(rv_val)
         if ny in constIdx:
-            y_pred_median_tmp, y_pred_var_tmp[ny] = constVal[constIdx.index(ny)], 0
+            y_pred_median_tmp, y_pred_var_tmp[ny] = np.ones([nsamp])*constVal[constIdx.index(ny)], np.zeros([nsamp])
         else:
-            y_pred_median_tmp, y_pred_var_tmp[ny] = predict(m_list[ny],rv_val,did_mf)
-
-        y_samp_tmp = np.random.normal(y_pred_median_tmp,np.sqrt(y_pred_var_tmp[ny]))
+            y_pred_median_tmp, y_pred_var_tmp_tmp  = predict(m_list[ny],rv_val,did_mf)
+            y_pred_median_tmp= np.squeeze(y_pred_median_tmp)
+            y_pred_var_tmp_tmp= np.squeeze(y_pred_var_tmp_tmp)
+        y_pred_var_tmp[:, ny] = y_pred_var_tmp_tmp
+        y_samp_tmp = np.random.normal(y_pred_median_tmp,np.sqrt(y_pred_var_tmp[:, ny] ))
         if did_logtransform:
-            y_pred_median[ny] = np.exp(y_pred_median_tmp)
+            y_pred_median[:,ny]= np.exp(y_pred_median_tmp)
             # y_var_val = np.var(np.log(m_list[ny].Y))
-            y_pred_var[ny] = np.exp(2 * y_pred_median_tmp + y_pred_var_tmp[ny]) * (np.exp(y_pred_var_tmp[ny]) - 1)
-            y_samp[ny] = np.exp(y_samp_tmp)
+            y_pred_var[:,ny] = np.exp(2 * y_pred_median_tmp + y_pred_var_tmp[:, ny] ) * (np.exp(y_pred_var_tmp[:, ny]) - 1)
+            y_samp[:,ny] = np.exp(y_samp_tmp)
 
             #mu = np.log(y_pred_median_tmp)
             #sig = np.sqrt(np.log(y_pred_var_tmp[ny]/ pow(y_pred_median_tmp, 2) + 1))
 
-            y_q1[ny] = lognorm.ppf(0.05, s=np.sqrt(y_pred_var_tmp[ny]), scale=np.exp(y_pred_median_tmp))
-            y_q3[ny] = lognorm.ppf(0.95, s=np.sqrt(y_pred_var_tmp[ny]), scale=np.exp(y_pred_median_tmp))
+            y_q1[:,ny] = lognorm.ppf(0.05, s=np.sqrt(y_pred_var_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
+            y_q3[:,ny]= lognorm.ppf(0.95, s=np.sqrt(y_pred_var_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
 
         else:
             
-            y_pred_median[ny]=y_pred_median_tmp
-            y_pred_var[ny] = y_pred_var_tmp[ny]
-            y_samp[ny] = y_samp_tmp
-            y_q1[ny] = norm.ppf(0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[ny]))
-            y_q3[ny] = norm.ppf(0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[ny]))
+            y_pred_median[:,ny]=y_pred_median_tmp
+            y_pred_var[:,ny]= y_pred_var_tmp[:, ny]
+            y_samp[:,ny] = y_samp_tmp
+            y_q1[:,ny] = norm.ppf(0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny] ))
+            y_q3[:,ny] = norm.ppf(0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny] ))
 
-        if np.isnan(y_samp[ny]):
-            y_samp[ny] = 0.0
-        if np.isnan(y_pred_var[ny]):
-            y_pred_var[ny]  = 0.0
+        if np.isnan(y_samp[:,ny]).any():
+            y_samp[:,ny] = np.nan_to_num(y_samp[:,ny])
+        if np.isnan(y_pred_var[:,ny]).any():
+            y_pred_var[:,ny] = np.nan_to_num(y_pred_var[:,ny])
+
 
         #for parname in m_list[ny].parameter_names():
         #    if (kern_name in parname) and parname.endswith('variance'):
@@ -279,7 +286,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
     #error_ratio1 = y_pred_var.T / y_pred_prior_var
     error_ratio2 = y_pred_var_tmp / y_data_var
-    idx = np.argmax(error_ratio2) + 1
+    idx = np.argmax(error_ratio2,axis=1) + 1
 
     '''
     if np.max(error_ratio1) > norm_var_thr:
@@ -291,93 +298,97 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             error_ratio1)*100, norm_var_thr*100)
     '''
 
-    if np.max(error_ratio2) > norm_var_thr:
-        is_accurate = False
-        msg1 = 'Prediction error of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx, np.max(
-            error_ratio2)*100, norm_var_thr*100)
-    else:
-        is_accurate = True
+    is_accurate_array = (np.max(error_ratio2,axis=1) < norm_var_thr)
 
-    if not is_accurate:
+    y_pred_subset = np.zeros([nsamp, len(g_idx)])
+    msg1 = []
+    for ns in range(nsamp):
+        if not is_accurate_array[ns]:
+            msg1 += ['Prediction error of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx[ns], np.max(
+            error_ratio2[ns]) * 100, norm_var_thr * 100)]
+        else:
+            msg1 += ['']
 
-        if when_inaccurate == 'doSimulation':
-            #
-            # run original simulations HERE
-            #
+        if not is_accurate_array[ns]:
 
-            # change directory, copy params.in
-            sim_dir = os.path.join(os.getcwd(), 'templatedir_SIM')
-            shutil.copyfile(os.path.join(os.getcwd(), 'params.in'), os.path.join(sim_dir, 'params.in'))
-            os.chdir(sim_dir)
 
-            # run workflowDriver
-            if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
-                workflowDriver = "driver.bat"
-            else:
-                workflowDriver = "driver"
+            if when_inaccurate == 'doSimulation':
 
-            workflow_run_command = '{}/{}'.format(sim_dir, workflowDriver)
-            subprocess.Popen(workflow_run_command, shell=True).wait()
+                #
+                # (1) create "workdir.idx " folder :need C++17 to use the files system namespace
+                #
+                templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')
 
-            # back to directory, copy result.out
-            #shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
+                current_dir_i = os.path.join(os.getcwd(), 'subworkdir.{}'.format(1+ns))
+                try:
+                    shutil.copytree(templatedirFolder, current_dir_i)
+                except Exception as ex:
+                    try:
+                        shutil.copytree(templatedirFolder, current_dir_i)
+                    except Exception as ex:
+                        msg = "Error running FEM: " + str(ex)
 
-            with open('results.out', 'r') as f:
-                y_pred = np.array([np.loadtxt(f)]).flatten()
-                y_pred_subset = y_pred[g_idx]
+                # change directory, create params.in
+                #shutil.copyfile(os.path.join(os.getcwd(), 'params.in'), os.path.join(current_dir_i, 'params.in'))
+                outF = open(current_dir_i + "/params.in", "w")
+                outF.write("{}\n".format(nrv))
+                for i in range(nrv):
+                    outF.write("{} {}\n".format(rv_name_sur[i], rv_val[ns, i]))
+                outF.close()
 
-            os.chdir("../")
+                os.chdir(current_dir_i)
 
-            # with open('results.out', 'w') as f:
-            #     if table.size==1:
-            #         #f.write(str(table))
-            #     else:
-            #
-            #         #result_values = table[g_idx].tolist()
-            #         #f.write(' '.join(map(str, result_values)))
+                # run workflowDriver
+                if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
+                    workflowDriver = "driver.bat"
+                else:
+                    workflowDriver = "driver"
 
-            msg2 = msg0+msg1+'- RUN original model\n'
-            print(msg2)
-            error_file.write(msg2)
-            file_object.write(msg2)
-            error_file.close()
-            file_object.close()
-            #exit(-1)
-        elif when_inaccurate == 'giveError':
-            msg2 = msg0+msg1+'- EXIT\n'
-            print(msg2)
-            error_file.write(msg2)
-            file_object.write(msg2)
-            error_file.close()
-            exit(-1)
-        elif when_inaccurate == 'continue':
-            msg2 = msg0+msg1+'- CONTINUE [Warning: results may not be accurate]\n'
-            print(msg2)
-            error_file.write(msg2)
-            file_object.write(msg2)
-            error_file.close()
+                workflow_run_command = '{}/{}'.format(current_dir_i, workflowDriver)
+                subprocess.Popen(workflow_run_command, shell=True).wait()
+
+                # back to directory, copy result.out
+                #shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
+
+                with open('results.out', 'r') as f:
+                    y_pred = np.array([np.loadtxt(f)]).flatten()
+                    y_pred_subset[ns,:] = y_pred[g_idx]
+
+                os.chdir("../")
+
+                msg2 = msg0+msg1[ns]+'- RUN original model\n'
+                error_warning(msg2)
+                #exit(-1)
+                
+            elif when_inaccurate == 'giveError':
+                msg2 = msg0+msg1[ns]+'- EXIT\n'
+                error_exit(msg2)
+
+            elif when_inaccurate == 'continue':
+                msg2 = msg0+msg1[ns]+'- CONTINUE [Warning: results may not be accurate]\n'
+                error_warning(msg2)
+
+                if inp_fem["predictionOption"].lower().startswith("median"):
+                    y_pred_subset[ns,:]  = y_pred_median[ns,g_idx]
+                elif inp_fem["predictionOption"].lower().startswith("rand"):
+                    y_pred_subset[ns,:]  = y_samp[ns,g_idx]
+
+        else:
+            msg3 = msg0+'Prediction error of output {} is {:.2f}%\n'.format(idx[ns], np.max(error_ratio2[ns])*100)
+            error_warning(msg3)
 
             if inp_fem["predictionOption"].lower().startswith("median"):
-                y_pred_subset = y_pred_median[g_idx]
+                y_pred_subset[ns,:]  = y_pred_median[ns,g_idx]
             elif inp_fem["predictionOption"].lower().startswith("rand"):
-                y_pred_subset = y_samp[g_idx]
+                y_pred_subset[ns,:]  = y_samp[ns,g_idx]
 
-    else:
-        msg3 = 'Prediction error of output {} is {:.2f}%\n'.format(idx, np.max(error_ratio2)*100)
-        file_object.write(msg0+msg3)
-        file_object.close()
+    np.savetxt(result_file, y_pred_subset, fmt='%.5e')
 
-        if inp_fem["predictionOption"].lower().startswith("median"):
-            y_pred_subset = y_pred_median[g_idx]
-        elif inp_fem["predictionOption"].lower().startswith("rand"):
-            y_pred_subset = y_samp[g_idx]
+    y_pred_median_subset=y_pred_median[:,g_idx]
+    y_q1_subset=y_q1[:,g_idx]
+    y_q3_subset=y_q3[:,g_idx]
+    y_pred_var_subset=y_pred_var[:,g_idx]
 
-    np.savetxt(result_file, np.array([y_pred_subset]), fmt='%.5e')
-
-    y_pred_median_subset=y_pred_median[g_idx]
-    y_q1_subset=y_q1[g_idx]
-    y_q3_subset=y_q3[g_idx]
-    y_pred_var_subset=y_pred_var[g_idx]
     #
     # tab file
     #
@@ -390,16 +401,18 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var \n")
         # write values
 
-        rv_list = " ".join("{:e}".format(rv)  for rv in rv_val[0])
-        ypred_list = " ".join("{:e}".format(yp) for yp in y_pred_subset)
-        ymedian_list = " ".join("{:e}".format(ym) for ym in y_pred_median_subset)
-        yQ1_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1_subset)
-        yQ3_list = " ".join("{:e}".format(yq3) for yq3 in y_q3_subset)
-        ypredvar_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_subset)
+        for ns in range(nsamp):
+            rv_list = " ".join("{:e}".format(rv)  for rv in rv_val[ns,:])
+            ypred_list = " ".join("{:e}".format(yp) for yp in y_pred_subset[ns,:])
+            ymedian_list = " ".join("{:e}".format(ym) for ym in y_pred_median_subset[ns,:])
+            yQ1_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1_subset[ns,:])
+            yQ3_list = " ".join("{:e}".format(yq3) for yq3 in y_q3_subset[ns,:])
+            ypredvar_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_subset[ns,:])
 
-        tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " \n")
+            tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " \n")
 
-
+    error_file.close()
+    file_object.close()
 
 def predict(m, X, did_mf):
 
@@ -418,21 +431,15 @@ if __name__ == "__main__":
 
     if not inputArgs[2].endswith('.json'):
         msg = 'ERROR: surrogte information file (.json) not set'
-        print(msg)
-        error_file.write(msg)
-        exit(-1)
+        print(msg); error_file.write(msg); exit(-1)
 
     elif not inputArgs[3].endswith('.pkl'):
         msg = 'ERROR: surrogte model file (.pkl) not set'
-        print(msg)
-        error_file.write(msg)
-        exit(-1)
+        print(msg); error_file.write(msg); exit(-1)
 
     elif len(inputArgs) < 4 or len(inputArgs) > 4:
         msg = 'ERROR: put right number of argv'
-        print(msg)
-        error_file.write(msg)
-        exit(-1)
+        print(msg); error_file.write(msg); exit(-1)
 
     '''
     params_dir = 'params.in'
