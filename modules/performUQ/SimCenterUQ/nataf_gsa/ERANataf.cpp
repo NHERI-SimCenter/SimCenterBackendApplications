@@ -943,7 +943,7 @@ void ERANataf::readBin(string filename,int ndim, vector<vector<double>> &mat, in
 	fin.read(reinterpret_cast<char*>(&data[0]), num_elements * sizeof(float));
 	
 	if (num_elements % ndim != 0) {
-		std::string errMsg = "Error reading " + filename + " : datasize inconsistency. Total number of entries is " + std::to_string(num_elements) + " and the dimension is " + std::to_string(ndim) + "which means the number of samples is not an integer";
+		std::string errMsg = "Error reading " + filename + " : datasize inconsistency. Total number of entries is " + std::to_string(num_elements) + " and the dimension is " + std::to_string(ndim) + " which means the number of samples is not an integer";
 		theErrorFile.write(errMsg);
 	}
 	else {
