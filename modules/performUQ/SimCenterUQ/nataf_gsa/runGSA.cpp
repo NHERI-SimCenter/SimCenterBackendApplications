@@ -44,6 +44,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include "runGSA.h"
 #include <iterator>
+using namespace arma::newarp;
 
 runGSA::runGSA() {}
 
@@ -1081,15 +1082,68 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		arma::vec r(gmat[nr]);
 		gmat_matrix.row(nr) = r.elem(idx).t();
     }
-	
+
+
 	//
 	// run SVD
 	//
 	std::cout << " - Running SVD\n";
 	auto readStart = std::chrono::high_resolution_clock::now();
-	svd_econ(U_matrix,svec,V_matrix,gmat_matrix);
+	svd_econ(U_matrix, svec, V_matrix, gmat_matrix);
 	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
 	std::cout << "  - SVD took " << readEnd << " s\n";
+	std::cout << "lambdas are " << std::endl << pow(svec, 2) << std::endl;
+
+
+	/*
+	//
+	// TESTING
+	//
+	std::cout << " - Creating gram matrix\n";
+	readStart = std::chrono::high_resolution_clock::now();
+	mat gramMat = gmat_matrix * trans(gmat_matrix);
+	readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+	std::cout << "  - Creating gram matrix - done. It took " << readEnd << " s\n";
+
+
+	//
+	// FULL EIGEN
+	//
+	std::cout << " - Full eigen using Lapack\n";
+	readStart = std::chrono::high_resolution_clock::now();
+	mat V_matrixe;
+	vec Lvece;
+	eig_sym(Lvece, V_matrixe, gramMat, "dc");
+	readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+	std::cout << "  - Full eigen using Lapack - done. It took " << readEnd << " s\n";
+	std::cout << "lambda is " << Lvece << std::endl;
+
+
+	//
+	// Partial EIGEN
+	//
+
+	std::cout << " - Partial eigen using Arpach\n";
+	readStart = std::chrono::high_resolution_clock::now();
+	// Construct matrix operation object using the wrapper class DenseGenMatProd
+	DenseGenMatProd<double> op(gramMat);
+
+	// Construct eigen solver object, requesting the largest three eigenvalues
+	SymEigsSolver< double, EigsSelect::LARGEST_ALGE, DenseGenMatProd<double> > eigs(op, 3, 6);
+
+	// Initialize and compute
+	eigs.init();
+	int nconv = eigs.compute();
+
+	// Retrieve results
+	arma::vec evalues;
+	if (nconv > 0)
+		evalues = eigs.eigenvalues();
+
+	evalues.print("Eigenvalues found:");
+
+	std::cout << "   - Partial eigen using Arpach - done. It took " << readEnd << " s\n";
+	*/
 
 	// Eigen SVD took 562 sec
 	/*

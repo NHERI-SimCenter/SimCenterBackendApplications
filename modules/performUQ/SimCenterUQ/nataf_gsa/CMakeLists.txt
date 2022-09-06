@@ -4,8 +4,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	#
 	# Only for debuging... I need mkl
 	#
-
 	project(nataf_gsa_project)
+	enable_language(Fortran)
+
 	if(UNIX)
 		if(NOT APPLE)
 			set(LINUX TRUE)
@@ -32,9 +33,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 	# sy - optimization flags
-	if(MSVC)
-		add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
-	endif()
+	#if(MSVC)
+	#	add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
+	#endif()
 
 	# sy - to check if filesystem is working
 
@@ -53,6 +54,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 	conan_basic_setup(TARGETS)
+	
+	add_subdirectory("${PROJECT_SOURCE_DIR}/ARPACK")
+	set (ARPACK_LIBRARIES ARPACK)
 
 	# for visual studio, do on commandline: conan install . -s build_type=Debug -if=C:/Users/SimCenter/Sangri/nataf_gsa_cpp_mpi/out/build/x64-Debug/
 
@@ -89,6 +93,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 			CONAN_PKG::mkl-static
 			${MPI_LIBRARIES}
 			stdc++fs
+       		${ARPACK_LIBRARIES}
 			)
 		add_compile_definitions(MPI_RUN)
 
@@ -100,11 +105,14 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 			CONAN_PKG::nlopt
 			CONAN_PKG::eigen
 			CONAN_PKG::mkl-static
-			OpenMP::OpenMP_CXX)
+			OpenMP::OpenMP_CXX
+       		${ARPACK_LIBRARIES}
+			)
 		add_compile_definitions(OPENMP_RUN)
 	endif() 
 
 	install(TARGETS nataf_gsa DESTINATION bin)
+	add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
 
 
 
