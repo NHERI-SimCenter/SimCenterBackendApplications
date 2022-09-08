@@ -310,6 +310,7 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
   dakotaFile << "     named \'workdir\' \n";
   dakotaFile << "     directory_tag\n";
   dakotaFile << "     directory_save\n";
+  dakotaFile << "     file_save\n";
 
   /*
     if uqData['keepSamples']:
