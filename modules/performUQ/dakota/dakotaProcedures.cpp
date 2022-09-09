@@ -73,7 +73,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 	dakotaFile << "variables \n";
     }
 
-      int numNormalUncertain = theRandomVariables.normalRVs.size();
+      // int numNormalUncertain = theRandomVariables.normalRVs.size();
 
     int numNormal = theRandomVariables.normalRVs.size();
     if (theRandomVariables.normalRVs.size() > 0) {
@@ -352,7 +352,7 @@ writeResponse(std::ostream &dakotaFile,
   dakotaFile << "responses\n";
 
   if (!idResponse.empty() && (idResponse.compare("calibration") != 0 || idResponse.compare("BayesCalibration") != 0))
-    dakotaFile << "  id_responses = '" << idResponse << "'\n";
+    dakotaFile << " id_responses = '" << idResponse << "'\n";
 
   //
   // quoFEM .. just a list of straight EDP
@@ -365,9 +365,11 @@ writeResponse(std::ostream &dakotaFile,
   int numFieldResponses = 0;
   int numScalarResponses = 0;
   
-  if (!(idResponse.compare("calibration") == 0 || idResponse.compare("BayesCalibration") == 0))
+  if (!(idResponse.compare("calibration") == 0 || idResponse.compare("BayesCalibration") == 0 || idResponse.compare("optimization") == 0)){
     dakotaFile << " response_functions = " << numResponses << "\n response_descriptors = ";
-  else
+  } else if (idResponse.compare("optimization") == 0) {
+    dakotaFile << " objective_functions = " << numResponses << "\n descriptors = ";
+  } else
     dakotaFile << " calibration_terms = " << numResponses << "\n response_descriptors = ";
   
   for (int j=0; j<numResponses; j++) {
@@ -895,6 +897,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
 		 << "\n  chains = " << chains
 		 << "\n  jump_step = " << jumpStep
 		 << "\n  burn_in_samples = " << burnInSamples
+     << "\n  seed = " << seed
 		 << "\n  calibrate_error_multipliers per_response";
 
 	  dakotaFile << "\n  scaling\n" << "\n";
@@ -925,6 +928,68 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
     writeResponse(dakotaFile, rootEDP, calibrationString, false, false, edpList, calFileName, scaleFactors);
 //    calDataFile.close();
+
+  } else if ((strcmp(type, "Optimization") == 0)) {
+
+    int numRVs = theRandomVariables.numRandomVariables;
+
+    json_t *methodData = json_object_get(uqData,"optimizationMethodData");
+
+    const char *method = json_string_value(json_object_get(methodData,"method"));
+
+    std::string methodString("coliny_pattern_search");
+    bool gradientBool = false;
+    bool hessianBool = false;
+    if (strcmp(method,"Derivative-Free Local Search")==0)
+      methodString = "coliny_pattern_search";
+      gradientBool = false;
+      hessianBool = false;
+
+    int maxIterations = json_integer_value(json_object_get(methodData,"maxIterations"));
+    double tol = json_number_value(json_object_get(methodData,"convergenceTol"));
+    double contractionFactor = json_number_value(json_object_get(methodData, "contractionFactor"));
+    double initialDelta = json_number_value(json_object_get(methodData, "initialDelta"));
+    int maxFunEvals = json_integer_value(json_object_get(methodData, "maxFunEvals"));
+    double thresholdDelta = json_number_value(json_object_get(methodData, "thresholdDelta"));
+    double solutionTarget = json_number_value(json_object_get(methodData, "solutionTarget"));
+//    const char *factors = json_string_value(json_object_get(methodData,"factors"));
+
+    dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
+
+    dakotaFile << "method, \n " << methodString 
+      << "\n  contraction_factor = " << contractionFactor
+      << "\n  convergence_tolerance = " << tol 
+      << "\n  initial_delta = " << initialDelta 
+      << "\n  max_function_evaluations = " << maxFunEvals 
+      << "\n  max_iterations = " << maxIterations 
+      << "\n  solution_target = " << solutionTarget
+      << "\n  total_pattern_size = " << 2*numRVs
+      << "\n  variable_tolerance = " << thresholdDelta;
+
+//    if (strcmp(factors,"") != 0)
+    dakotaFile << "\n  scaling\n";
+
+    dakotaFile << "\n\n";
+
+    std::string optimizationString("optimization");
+    std::string emptyString;
+    std::vector<double> scaleFactors;
+    writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
+    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+    writeResponse(dakotaFile, rootEDP, optimizationString, gradientBool, hessianBool, edpList, emptyString.c_str(), scaleFactors);
+
+//    dakotaFile << "\n  primary_scales = 1052.69 1.53\n";
+//    if (strcmp(factors,"") != 0) {
+//      dakotaFile << "\n  primary_scale_types = \"value\" \n  primary_scales = ";
+//      std::string factorString(factors);
+//      std::stringstream factors_stream(factorString);
+//      std::string tmp;
+//      while (factors_stream >> tmp) {
+//	// maybe some checks, i.e. ,
+//	dakotaFile << tmp << " ";
+//      }
+//      dakotaFile << "\n";
+//    }
 
   } else {
     std::cerr << "uqType: NOT KNOWN\n";
