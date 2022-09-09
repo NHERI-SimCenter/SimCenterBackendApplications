@@ -171,7 +171,7 @@ def create_EDP(EVENT_input_path, EDP_input_path):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM', default=None)
+    parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM', default=None)
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')

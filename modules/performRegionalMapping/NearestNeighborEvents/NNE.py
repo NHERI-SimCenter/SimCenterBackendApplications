@@ -46,7 +46,7 @@ from pathlib import Path
 
 from sklearn.neighbors import NearestNeighbors
 
-def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_label, seed):
+def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label, seed):
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -68,23 +68,23 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     nbrs = NearestNeighbors(n_neighbors = neighbors_to_get, algorithm='ball_tree').fit(X)
 
     # load the building data file
-    with open(building_file, 'r') as f:
-        bldg_dict = json.load(f)
+    with open(asset_file, 'r') as f:
+        asset_dict = json.load(f)
 
-    # prepare a dataframe that holds building filenames and locations
-    bim_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
-                          index=np.arange(len(bldg_dict)))
-    for i, bldg in enumerate(bldg_dict):
-        with open(bldg['file'], 'r') as f:
-            bldg_data = json.load(f)
+    # prepare a dataframe that holds asset filenames and locations
+    AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
+                          index=np.arange(len(asset_dict)))
+    for i, asset in enumerate(asset_dict):
+        with open(asset['file'], 'r') as f:
+            asset_data = json.load(f)
 
-        bldg_loc = bldg_data['GeneralInformation']['location']
-        bim_df.iloc[i]['Longitude'] = bldg_loc['longitude']
-        bim_df.iloc[i]['Latitude'] = bldg_loc['latitude']
-        bim_df.iloc[i]['file'] = bldg['file']
+        asset_loc = asset_data['GeneralInformation']['location']
+        AIM_df.iloc[i]['Longitude'] = asset_loc['longitude']
+        AIM_df.iloc[i]['Latitude'] = asset_loc['latitude']
+        AIM_df.iloc[i]['file'] = asset['file']
 
     # store building locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(bim_df['Longitude'], bim_df['Latitude'])])
+    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])])
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
@@ -96,26 +96,26 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
     else:
         rng = np.random.default_rng()
 
-    # iterate through the buildings and store the selected events in the BIM
-    for bldg_i, (bim_id, dist_list, ind_list) in enumerate(zip(bim_df.index,
+    # iterate through the buildings and store the selected events in the AIM
+    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(zip(AIM_df.index,
                                                           distances,
                                                           indices)):
 
-        # open the BIM file
-        bldg_file = bim_df.iloc[bim_id]['file']
-        with open(bldg_file, 'r') as f:
-            bldg_data = json.load(f)
+        # open the AIM file
+        asst_file = AIM_df.iloc[AIM_id]['file']
+        with open(asst_file, 'r') as f:
+            asset_data = json.load(f)
 
         if filter_label != '':
             # soil type of building
-            bldg_label = bldg_data['GeneralInformation'][filter_label]
+            asset_label = asset_data['GeneralInformation'][filter_label]
             # soil types of all initial neighbors
             grid_label = grid_df[filter_label][ind_list]
 
             # only keep the distances and indices corresponding to neighbors
             # with the same soil type
-            dist_list  = dist_list[(grid_label==bldg_label).values]
-            ind_list   = ind_list[(grid_label==bldg_label).values]
+            dist_list  = dist_list[(grid_label==asset_label).values]
+            ind_list   = ind_list[(grid_label==asset_label).values]
 
             # return dist_list & ind_list with a length equals neighbors
             # assuming that at least neighbors grid points exist with
@@ -210,8 +210,8 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
             #    })
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
-        # save the event dictionary to the BIM
-        bldg_data['Events'] = {
+        # save the event dictionary to the AIM
+        asset_data['Events'] = {
             #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
@@ -219,13 +219,13 @@ def find_neighbors(building_file, event_grid_file, samples, neighbors, filter_la
             #"type": "SimCenterEvents"
         }
 
-        with open(bldg_file, 'w') as f:
-            json.dump(bldg_data, f, indent=2)
+        with open(asst_file, 'w') as f:
+            json.dump(asset_data, f, indent=2)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--buildingFile')
+    parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
@@ -233,6 +233,6 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
 
-    find_neighbors(args.buildingFile, args.filenameEVENTgrid,
+    find_neighbors(args.assetFile, args.filenameEVENTgrid,
                    args.samples,args.neighbors, args.filter_label,
                    args.seed)
