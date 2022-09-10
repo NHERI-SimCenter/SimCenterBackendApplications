@@ -1688,7 +1688,6 @@ class surrogate(UQengine):
             Y_pred_var[:,ny] = 1/np.diag(Rinv)*self.normVars[ny]
 
 
-
         Y_pred2 = np.zeros(Y_hf.shape)
         Y_pred_var2 = np.zeros(Y_hf.shape)
         e22 = np.zeros(Y_hf.shape)
@@ -1725,7 +1724,14 @@ class surrogate(UQengine):
                 
                 # np.hstack([Y_pred_var,Y_pred_var2])
                 # np.hstack([e2,e22])
-
+                '''
+                
+                import matplotlib.pyplot as plt
+                plt.plot(Y_pred_var/self.normVars[ny]); plt.plot(Y_pred_var2/self.normVars[ny]); 
+                plt.title("With nugget (Linear)"); plt.xlabel("Training sample id"); plt.ylabel("LOOCV variance (before multiplying $\sigma_z^2$)"); plt.legend(["Closedform","iteration"]);
+                
+                plt.show(); 
+                '''
         print("     Cross validation calculation time: {:.2f} s".format(time.time() - time_tmp),flush=True)
         return Y_pred, Y_pred_var, e2
 
