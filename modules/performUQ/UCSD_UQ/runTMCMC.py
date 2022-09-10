@@ -28,8 +28,8 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
 
     # Initialize other TMCMC variables
     Nm_steps = Nm_steps_max
-    Adap_calc_Nsteps = 'yes'  # yes or no
-    Adap_scale_cov = 'yes'  # yes or no
+    Adap_calc_Nsteps = True
+    Adap_scale_cov = True  
     scalem = 1  # cov scale factor
     evidence = 1  # model evidence
     stageNum = 0  # stage number of TMCMC
@@ -246,7 +246,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
             logFile.write("\n\n\t\tacceptance rate = %.6f" % R)
 
         # Calculate Nm_steps based on observed acceptance rate
-        if Adap_calc_Nsteps == 'yes':
+        if Adap_calc_Nsteps:
             # increase max Nmcmc with stage number
             Nm_steps_max = min(Nm_steps_max + 1, Nm_steps_maxmax)
             logFile.write("\n\t\tadapted max MCMC steps = %d" % Nm_steps_max)
@@ -258,7 +258,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
         logFile.write('\n\t\t==========================')
 
         # scale factor based on observed acceptance ratio
-        if Adap_scale_cov == 'yes':
+        if Adap_scale_cov:
             scalem = (1 / 9) + ((8 / 9) * R)
 
         # for next beta
