@@ -124,26 +124,26 @@ def get_scale_factors(input_units, output_units):
 
     return scale_factors
 
-def write_RV(AIM_file, EVENT_file):
+def write_RV(BIM_file, EVENT_file):
 
-    # load the AIM file to get information about the assigned events
-    with open(AIM_file, 'r') as f:
-        aim_file = json.load(f)
+    # load the BIM file to get information about the assigned events
+    with open(BIM_file, 'r') as f:
+        bim_data = json.load(f)
 
     input_units = None
-    if 'RegionalEvent' in aim_file.keys():
-        input_units = aim_file['RegionalEvent'].get('units', None)
+    if 'RegionalEvent' in bim_data.keys():
+        input_units = bim_data['RegionalEvent'].get('units', None)
 
-    output_units = aim_file.get('units', None)
+    output_units = bim_data.get('units', None)
 
     # scale the input data to the event unit used internally
     f_scale_units = get_scale_factors(input_units, output_units)
 
     # get the location of the event input files
-    data_dir = Path(aim_file['Events']['EventFolderPath'])
+    data_dir = Path(bim_data['Events']['EventFolderPath'])
 
     # get the list of events assigned to this asset
-    events = aim_file['Events']['Events']
+    events = bim_data['Events']['Events']
 
     # initialize the dictionary that will become EVENT.json
     event_file = {
@@ -167,7 +167,7 @@ def write_RV(AIM_file, EVENT_file):
             # 'type': 'Seismic', I am pretty sure we are not using this now
             # or we are using it incorrectly, so I removed it for the time being
             # and replaced it with the information that is actually used
-            'type': aim_file['Events']['type'],
+            'type': bim_data['Events']['type'],
             'event_id': 'RV.eventID',
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
@@ -191,7 +191,7 @@ def write_RV(AIM_file, EVENT_file):
         # initialize the Events part of the EVENT file
         event_file['Events'].append({
             #'type': 'Seismic',
-            'type': aim_file['Events']['type'],
+            'type': bim_data['Events']['type'],
             'event_id': events[0][0],
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
@@ -201,7 +201,7 @@ def write_RV(AIM_file, EVENT_file):
     # TODO: this is needed by some other code that should be fixed and this
     #  part should be removed.
 
-    if aim_file['Events']['type'] == 'timeHistory':
+    if bim_data['Events']['type'] == 'timeHistory':
         event_file['Events'][0].update(
             load_record(events[0][0], data_dir, empty=len(events) > 1))
             #, event_class = event_class))
@@ -284,22 +284,22 @@ def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=
 
     return event_dic
 
-def get_records(AIM_file, EVENT_file):
+def get_records(BIM_file, EVENT_file):
     """
     This function is only called if UQ is part of the workflow. That is, it is
     not called if we are using IMasEDP and skipping the response simulation.
 
     """
 
-    # load the AIM file
-    with open(AIM_file, 'r') as f:
-        AIM_file = json.load(f)
+    # load the BIM file
+    with open(BIM_file, 'r') as f:
+        bim_file = json.load(f)
 
     # load the EVENT file
     with open(EVENT_file, 'r') as f:
         event_file = json.load(f)
 
-    #event_class = AIM_file['Events']['Events'][0]['EventClassification']
+    #event_class = bim_file['Events']['Events'][0]['EventClassification']
 
     # get the event_id to identify which event to load
     # (the event id might have been randomly generated earlier)
@@ -309,15 +309,15 @@ def get_records(AIM_file, EVENT_file):
     f_scale_units = event_file['Events'][0]['unitScaleFactor']
 
     # get the scale factor if a user specified it
-    event_data = np.array(AIM_file["Events"]["Events"]).T
+    event_data = np.array(bim_file["Events"]["Events"]).T
     event_loc = np.where(event_data == event_id)[1][0]
     f_scale_user = event_data.T[event_loc][1]
 
     #f_scale_user = dict([(evt['fileName'], evt.get('factor', 1.0))
-    #                     for evt in AIM_file["Events"]["Events"]])[event_id]
+    #                     for evt in bim_file["Events"]["Events"]])[event_id]
 
     # get the location of the event data
-    data_dir = Path(AIM_file['Events']['EventFolderPath'])
+    data_dir = Path(bim_file['Events']['EventFolderPath'])
 
     # load the event data and scale it
     event_file['Events'][0].update(
@@ -335,8 +335,8 @@ if __name__ == '__main__':
         allow_abbrev=False
     )
 
-    parser.add_argument('--filenameAIM',
-        help = "Name of the AIM file")
+    parser.add_argument('--filenameBIM',
+        help = "Name of the BIM file")
     parser.add_argument('--filenameEVENT',
         help = "Name of the EVENT file")
     parser.add_argument('--inputUnit',
@@ -351,6 +351,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT))
+        sys.exit(write_RV(args.filenameBIM, args.filenameEVENT))
     else:
-        sys.exit(get_records(args.filenameAIM, args.filenameEVENT))
+        sys.exit(get_records(args.filenameBIM, args.filenameEVENT))

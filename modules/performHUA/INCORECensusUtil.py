@@ -88,56 +88,16 @@ if __name__ == '__main__':
     state_counties = config_info['CountiesArray']
 
 
-    # Population demographics vintage, e.g., "2010"
-    popDemoVintage = config_info['PopulationDemographicsVintage']
-    
-    # Custom census vars
-    census_vars = config_info['CensusVariablesArray']
-    
-    # Custom ACS vars
-    acs_vars = config_info['ACSVariablesArray']
-    
-    if popDemoVintage != '2000' and popDemoVintage != '2010' and popDemoVintage != '2020':
-
-        print('Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',popDemoVintage,' is not supported')
-        
-        sys.exit(-1)
-    
-    # Vintage for household demographics
-    houseIncomeVintage = config_info['HouseholdIncomeVintage']
-
-    if houseIncomeVintage != '2010' and houseIncomeVintage != '2015' and houseIncomeVintage != '2020':
-
-        print('Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',houseIncomeVintage,' is not supported')
-        sys.exit(-1)
+    # Vintage, e.g., "2010"
+    vintage = config_info['Vintage']
 
     from pyincore_data.censusutil import CensusUtil
 
-    # Get the population demographics at the block level
-    CensusUtil.get_blockdata_for_demographics(state_counties,
-                                              census_vars,
-                                              popDemoVintage,out_csv=False,
-                                              out_shapefile=True,
-                                              out_geopackage=False,
-                                              out_geojson=False,
-                                              file_name="PopulationDemographicsCensus"+popDemoVintage,
-                                              output_dir=output_dir)
-    
-    #sys.exit(0)
-    
-    print('Done pulling census population demographics data')
 
-    # Get the household income at the tract (2010 ACS) or block group level (2015 and 2020 ACS)
-    CensusUtil.get_blockgroupdata_for_income(state_counties,
-                                             acs_vars,
-                                             houseIncomeVintage,
-                                             out_csv=False,
-                                             out_shapefile=True,
-                                             out_geopackage=False,
-                                             out_geojson=False,
-                                             file_name="HouseholdIncomeACS"+houseIncomeVintage,
-                                             output_dir=output_dir)
+    disloc_df = CensusUtil.get_blockgroupdata_for_dislocation(state_counties, vintage,out_csv=False, out_shapefile=True, out_geopackage=False,out_geojson=False,geo_name="CensusData"+vintage , program_name=output_dir)
+
    
-    print('Done pulling ACS household income data')
+   
+    print('Done pulling census data')
     
     sys.exit(0)

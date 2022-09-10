@@ -40,8 +40,6 @@
 # Wael Elhaddad
 # Michael Gardner
 # Chaofeng Wang
-# Kuanshi Zhong
-# Stevan Gavrilovic
 
 import sys, os, json
 import argparse
@@ -51,9 +49,6 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_msg, log_div
-
-from sWHALE import runSWhale
-
 
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
@@ -91,8 +86,8 @@ def main(run_type, input_file, app_registry,
         "LogShowMS": False,
         "PrintLog": True
         })
-        
-    log_msg('\nrWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
+    log_msg('\nrWHALE workflow\n',
+            prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
 
@@ -106,14 +101,16 @@ def main(run_type, input_file, app_registry,
         log_msg('Forced cleanup turned on.')
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Assets', 'RegionalEvent', 'RegionalMapping', 'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
+        app_type_list = ['Building', 'RegionalEvent', 'RegionalMapping',
+                         'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
         app_dir = app_dir)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
-        log_msg(f'Overriding simulation scope; running buildings {bldg_id_filter}')
+        log_msg(
+            f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
         # update the min and max values in the input file.
@@ -122,74 +119,54 @@ def main(run_type, input_file, app_registry,
     # initialize the working directory
     WF.init_workdir()
 
-    # prepare the basic inputs for individual assets
-    asset_files = WF.create_asset_files()
-
-    # perform the event simulation (if needed), commented by KZ
+    # perform the event simulation (if needed)
+    # commented by KZ
     if site_response == 'sequential' and 'RegionalEvent' in WF.workflow_apps.keys():
         # run anlaysis
         WF.perform_regional_event()
-        
-    for asset_type, assetIt in asset_files.items() :
 
-        # perform the regional mapping
-        WF.perform_regional_mapping(assetIt)
-        
-        # TODO: not elegant code, fix later
-        with open(assetIt, 'r') as f:
-            asst_data = json.load(f)
-        
-        # Mapping & Saving
-        #        import multiprocessing as mp
-        #        pool = mp.Pool(mp.cpu_count()-1)
-        #        results = pool.starmap(runAssetAnalysis, [[asst,asset_type,WF,force_cleanup] for asst in asst_data])
-        #        pool.close()
-        
-        # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network
-        run_asset_type = asset_type
+    # prepare the basic inputs for individual buildings
+    building_file = WF.create_building_files()
+    WF.perform_regional_mapping(building_file)
 
-        if asset_type == 'Buildings' :
-            pass
-        elif asset_type == 'WaterNetworkNodes' :
-            continue # Run the nodes with the pipelines, i.e., the water distribution network
-        elif asset_type == 'WaterNetworkPipelines' :
-            run_asset_type = 'WaterDistributionNetwork' # Run the pipelines with the entire water distribution network
-        else :
-            print("No support for asset type: ",asset_type)
-            
-            
-        # The preprocess app sequence (previously get_RV)
-        preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
-            
-        # The workflow app sequence
-        WF_app_sequence = ['Assets', 'Event', 'Modeling', 'EDP', 'Simulation']
+    # TODO: not elegant code, fix later
+    with open(building_file, 'r') as f:
+        bldg_data = json.load(f)
 
-        # For each asset
-        for asst in asst_data:
-            
-            log_msg('', prepend_timestamp=False)
-            log_div(prepend_blank_space=False)
-            log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
-            log_div()
-            
-            # Run sWhale
-            runSWhale(inputs = None, WF = WF, assetID = asst['id'], assetAIM = asst['file'], prep_app_sequence = preprocess_app_sequence,  WF_app_sequence = WF_app_sequence, asset_type = run_asset_type, copy_resources = True, force_cleanup = force_cleanup)
-            
-        # aggregate results
-        if asset_type == 'Buildings' :
-        
-            WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
-            
-        elif asset_type == 'WaterNetworkPipelines' :
-        
-            # Provide the headers and out types
-            headers = dict(DV = [0])
-                
-            out_types = ['DV']
-            
-            WF.aggregate_results(asst_data = asst_data,
-                asset_type = asset_type, out_types = out_types, headers = headers)
+    for bldg in bldg_data: #[:1]:
+        log_msg('', prepend_timestamp=False)
+        log_div(prepend_blank_space=False)
+        log_div(prepend_blank_space=False)
+        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
+        log_div()
 
+        # initialize the simulation directory
+        WF.init_simdir(bldg['id'], bldg['file'])
+
+        # prepare the input files for the simulation
+        WF.create_RV_files(
+            app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],
+            BIM_file = bldg['file'], bldg_id=bldg['id'])
+
+        # create the workflow driver file
+        WF.create_driver_file(
+            app_sequence = ['Building', 'Event', 'Modeling', 'EDP', 'Simulation'],
+            bldg_id=bldg['id'])
+
+        # run uq engine to simulate response
+        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
+
+        # run dl engine to estimate losses
+        WF.estimate_losses(
+            BIM_file = bldg['file'], bldg_id = bldg['id'],
+            copy_resources=True)
+
+        if force_cleanup:
+            #clean up intermediate files from the simulation
+            WF.cleanup_simdir(bldg['id'])
+
+    # aggregate results
+    WF.aggregate_results(bldg_data = bldg_data)
 
     if force_cleanup:
         # clean up intermediate files from the working directory

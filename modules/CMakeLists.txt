@@ -1,5 +1,5 @@
 add_subdirectory(common)
-add_subdirectory(createAIM)
+add_subdirectory(createBIM)
 add_subdirectory(createEDP)
 add_subdirectory(createEVENT)
 add_subdirectory(createSAM)
