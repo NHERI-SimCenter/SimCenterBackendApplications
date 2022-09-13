@@ -48,6 +48,9 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 jsonInput::jsonInput(string workDir, string inpFile, int procno)
 {
+
+	if (procno == 0)  std::cout << "Reading input json scripts.." << " \n";
+
 	this->workDir = workDir;
 
 	//
@@ -68,6 +71,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		theErrorFile.write(errMsg);
 	}
 
+	if (procno == 0)  std::cout << " - Checking the problem definition" << " \n";
 
 	//
 	// Check if I am the correct engine.
@@ -103,6 +107,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 
 
+	if (procno == 0)  std::cout << " - The FEM name? " ;
+
 	// If "Applications" exists
 	femAppName="unknown";
 	if (UQjson.find("Applications") != UQjson.end()) {
@@ -111,10 +117,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			femAppName = UQjson["Applications"]["FEM"]["Application"];
 		}
 	}
+	std::cout << femAppName << " \n";
 
 	//
 	// get EDP names
 	//
+	if (procno == 0)  std::cout << " - Getting EDP names" << " \n";
 
 	int count_qoi = 0;
 	for (auto& elem : UQjson["EDP"]) {
@@ -141,6 +149,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// Perform PCA?
 	//
 
+	if (procno == 0)  std::cout << "   - Perform PCA for EDPs?";
 	// default
 	if (nqoi > 15) {
 		performPCA = true;
@@ -179,7 +188,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	else {
 		PCAvarRatioThres = 0.0;
 	}
-
+	if (performPCA) {
+		if (procno == 0)  std::cout << " Yes\n";
+	}
+	else {
+		if (procno == 0)  std::cout << " Nope\n";
+	}
 
 
 	//
@@ -192,6 +206,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// Else if we read samples...
 	//
+	if (procno == 0)  std::cout << " - Import files?";
 
 	if (UQmethod.compare("Import Data Files") == 0) {
 
@@ -204,27 +219,33 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		inpPath = UQjson["UQ_Method"]["samplingMethodData"]["inpFile"];
 		outPath = UQjson["UQ_Method"]["samplingMethodData"]["outFile"];
 
-		getGroupIdx(UQjson);
-		inpFileType = UQjson["UQ_Method"]["samplingMethodData"]["inpFiletype"];
+		getGroupIdx(UQjson);		
+
+		inpFileType = UQjson["UQ_Method"]["samplingMethodData"]["inpFiletype"];		
 		outFileType = UQjson["UQ_Method"]["samplingMethodData"]["outFiletype"];
+
+		nmc = 0;
+		rseed = 0;
+
+		if (procno == 0)  std::cout << " Yes, no sampling\n";
 
 		return;
 	}
 	else {
 		inpPath = "";
 		outPath = "";
+		nmc = UQjson["UQ_Method"]["samplingMethodData"]["samples"];
+		rseed = UQjson["UQ_Method"]["samplingMethodData"]["seed"];
+
+		if (procno == 0)  std::cout << " Nope we do sampling\n";
+
 	}
 
-	//
-	// Else if we do sampling...
-	//
-
-	nmc = UQjson["UQ_Method"]["samplingMethodData"]["samples"];
-	rseed = UQjson["UQ_Method"]["samplingMethodData"]["seed"];
 
 	//
 	// Specify parameters in each distributions.
 	//
+	if (procno == 0)  std::cout << " - Reading RV Data groups";
 
 	//std::vector<int> corrIdx;
 	std::vector<int> randIdx, constIdx, resampIdx; // random variables, constant variables, resampling variables
@@ -262,6 +283,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		theErrorFile.write(errMsg);
 
 	}
+
+
+	//
+	// Specify parameters in each distributions.
+	//
+	if (procno == 0)  std::cout << " - Reading RV parameters";
 
 	for (auto& elem : UQjson["randomVariables"])
 	{
@@ -429,6 +456,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// get resamples
 	//
 
+	if (procno == 0)  std::cout << " - Getting resampling indices.. if any";
 
 	for (int i : resampIdx)
 	{
@@ -474,7 +502,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// get constants
 	//
-	
+
+	if (procno == 0)  std::cout << " - Getting constant variable names.. if any";
 	//for (auto& elem : UQjson["randomVariables"])
 	for (int i : constIdx)
 	{
@@ -526,7 +555,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//}
 
 	//corr.reserve(nrv*nrv);
-	
+
+	if (procno == 0)  std::cout << " - Checkking correlation matrix";
 	if (UQjson.find("correlationMatrix") != UQjson.end()) {
 		corr = *new vector<vector<double>>(nrv, vector<double>(nrv, 0.0));
 		// if key "correlationMatrix" exists
@@ -823,6 +853,7 @@ jsonInput::getGroupIdx(json UQjson) {
 
 	bool generate_default_RVsensitivityGroup = true;
 	if (UQjson["UQ_Method"].find("RVsensitivityGroup") != UQjson["UQ_Method"].end()) {
+
 		// if the key "sensitivityGroups" exists
 		std::string groupTxt = UQjson["UQ_Method"]["RVsensitivityGroup"];
 		if (!groupTxt.empty()) {
@@ -834,16 +865,17 @@ jsonInput::getGroupIdx(json UQjson) {
 
 	}
 	if (generate_default_RVsensitivityGroup) {
+
 		for (int i = 0; i < nrv; i++) {
 			groups.push_back({ i });
 		}
-		for (int i = 0; i < nreg; i++) {
+		for (int i = 0; i < resamplingGroups.size(); i++) {
 			for (int j = 0; j < resamplingGroups[i].size(); j++) {
 				groups.push_back({ resamplingGroups[i][j] });
 			}
 		}
 
 	}
+
 	ngr = groups.size();
-	std::cout << ngr << std:: endl;
 }
