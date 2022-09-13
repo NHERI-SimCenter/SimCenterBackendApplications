@@ -22,7 +22,10 @@ class UQengine:
         #    self.workflowDriver = "workflow_driver.bat"
 
     def cleanup_workdir(self):
+        # if template dir already contains results.out, give an error
+
         # Cleanup working directory if needed
+
         del_paths = glob.glob(os.path.join(self.work_dir, "workdir*"))
         for del_path in del_paths:
             # change permission for  workflow_driver.bat
@@ -62,6 +65,14 @@ class UQengine:
                 os.remove(del_err)
         except:
             pass
+
+
+        if glob.glob(os.path.join(self.work_dir, "templatedir","results.out")):
+            try:
+                os.remove(os.path.join(self.work_dir, "templatedir","results.out"))
+            except:
+                msg = "Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first"
+                self.exit(msg)
 
         print("working directory cleared")
 
@@ -238,23 +249,31 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
         outF.write("{} {}\n".format(rv_name[i], X[0, i]))
     outF.close()
 
+    if runIdx == 0:
+        print("RUNNING FEM: working directory {} created".format(id_sim + 1))
+    else:
+        print("RUNNING FEM: working directory {}-{} created".format(runIdx, id_sim + 1))
+
     #
     # (3) run workflow_driver.bat
     #
 
     os.chdir(current_dir_i)
     workflow_run_command = "{}/{}".format(current_dir_i, workflowDriver)
-    subprocess.check_call(
-        workflow_run_command,
-        shell=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.STDOUT,
-    )
-    if runIdx == 0:
-        print("RUNNING FEM: working directory {} created".format(id_sim + 1))
-    else:
-        print("RUNNING FEM: working directory {}-{} created".format(runIdx, id_sim + 1))
-    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    #subprocess.check_call(
+    #    workflow_run_command,
+    #    shell=True,
+    #    stdout=subprocess.DEVNULL,
+    #    stderr=subprocess.STDOUT,
+    #)    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    # => to end grasefully
+    returnCode = subprocess.call(
+       workflow_run_command,
+       shell=True,
+       stdout=subprocess.DEVNULL,
+       stderr=subprocess.STDOUT,
+    )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+
     #
     # (4) reading results
     #
@@ -263,6 +282,13 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
         g = np.loadtxt("results.out").flatten()
     else:
         msg = "Error running FEM: results.out missing at " + current_dir_i
+        if glob.glob("ops.out"):
+            with open("ops.out", "r") as text_file:
+                error_FEM = text_file.read()
+            msg += "\n"
+            msg += "your FEM model says...\n" 
+            msg += error_FEM
+
         return msg, id_sim
 
     if g.shape[0] == 0:

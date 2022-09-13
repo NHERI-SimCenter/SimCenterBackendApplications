@@ -1,2 +1,0 @@
-add_subdirectory(CSV_to_BIM)
-add_subdirectory(GeoJSON_to_BIM)

@@ -538,7 +538,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	    << "set lambda1 [lindex $lambdaN 0]\n"
 	    << "set omega1 [expr pow($lambda1,0.5)];\n"
 	    << "set omegaI [expr pow($lambdaI,0.5)];\n"
-	    << "set alphaM [expr 2.0*$xDamp/$omegaI];\n"
+	    << "set alphaM [expr 2.0*$xDamp*$omegaI];\n"
 	    << "rayleigh $alphaM 0. 0. 0.;\n";	  
 
 	} else if (mode1 == 0) {

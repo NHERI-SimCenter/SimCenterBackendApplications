@@ -191,7 +191,7 @@ int main(int argc, const char **argv) {
     workflowDriverFile << dpreproCommand << "  params.in  tmpSimCenter.params " << " " << parametersScript << "\n";
   }
   
-  workflowDriverFile << pythonCommand << " " << mainScript;
+  workflowDriverFile << pythonCommand << " " << mainScript; 
   
   if (strcmp(postprocessScript,"") != 0) {
     workflowDriverFile << "\n" << pythonCommand << " " << postprocessScript;
@@ -203,6 +203,8 @@ int main(int argc, const char **argv) {
       workflowDriverFile << " " << *itEDP;
     }
   }
+
+  workflowDriverFile << " 1> ops.out 2>&1\n"; 
 
   workflowDriverFile.close();
   
