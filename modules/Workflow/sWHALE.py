@@ -40,6 +40,7 @@
 # Wael Elhaddad
 # Michael Gardner
 # Chaofeng Wang
+# Stevan Gavrilovic
 
 import sys, os, json
 import argparse
@@ -49,6 +50,81 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
 from whale.main import log_msg, log_div
+
+
+def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json', prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], asset_type = None, copy_resources = False, force_cleanup = False) :
+
+    # update the runDir, if needed
+#    with open(input_file, 'r') as f:
+#        inputs = json.load(f)
+#    runDir = inputs['runDir']
+#
+#    if working_dir is not None:
+#        runDir = working_dir
+#    else:
+#        runDir = inputs['runDir']
+#
+#
+#    whale.log_file = runDir + '/log.txt'
+#
+#    # initialize log file
+#    whale.set_options({
+#        "LogFile": runDir + '/log.txt',
+#        "LogShowMS": False,
+#        "PrintLog": True
+#        })
+#
+    log_msg('\nStarting sWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
+
+#    whale.print_system_info()
+
+    # echo the inputs
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
+    log_msg('Running the workflow script')
+    log_div()
+
+    # If there is an external EDP file provided, change the run_type to loss_only
+    try:
+        if inputs['DamageAndLoss']['Demands']['DemandFilePath'] is not None:
+            run_type = 'loss_only'
+    except:
+        pass
+
+
+    if WF.run_type != 'loss_only':
+
+        # initialize the working directory
+        #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
+        WF.init_simdir(assetID, assetAIM)
+        
+        # prepare the input files for the simulation
+        WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID)
+
+        # create the workflow driver file
+        WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
+
+        # gather all Randomvariables and EDP's and place in new input file for UQ
+        WF.gather_workflow_inputs(assetID, assetAIM);
+
+        # run uq engine to simulate response
+        WF.simulate_response(AIM_file_path = assetAIM, asst_id = assetID)
+
+    if WF.run_type != 'set_up':
+
+        # run dl engine to estimate losses
+        WF.estimate_losses(AIM_file_path = assetAIM, asst_id = assetID,
+        asset_type = asset_type, input_file = inputs, copy_resources=copy_resources)
+    
+    if force_cleanup:
+        #clean up intermediate files from the simulation
+        WF.cleanup_simdir(assetID)
+
+    log_msg('Workflow completed.')
+    log_div(prepend_blank_space=False)
+    log_div(prepend_blank_space=False)
+
+
 
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
@@ -94,34 +170,11 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         working_dir = working_dir,
         app_dir = app_dir)
+        
+        
+    runSWhale(inputs = input_file, WF = WF, prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],  WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
 
-    if WF.run_type != 'loss_only':
 
-        # initialize the working directory
-        WF.init_simdir()
-
-        # prepare the input files for the simulation
-        WF.create_RV_files(
-            app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
-
-        # create the workflow driver file
-        WF.create_driver_file(
-            app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
-
-        # gather all Randomvariables and EDP's and place in new input file for UQ
-        WF.gather_workflow_inputs();
-
-        # run uq engine to simulate response
-        WF.simulate_response()
-
-    if WF.run_type != 'set_up':
-
-        # run dl engine to estimate losses
-        WF.estimate_losses(input_file = input_file)
-
-    log_msg('Workflow completed.')
-    log_div(prepend_blank_space=False)
-    log_div(prepend_blank_space=False)
 
 if __name__ == '__main__':
 

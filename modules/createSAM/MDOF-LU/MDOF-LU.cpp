@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -34,10 +33,13 @@ int main(int argc, char **argv)
 
   int arg = 1;
   while (arg < argc) {
+
     if ((strcmp(argv[arg], "-filenameBIM") ==0) || 
-	(strcmp(argv[arg], "--filenameBIM") ==0)) {
+	(strcmp(argv[arg], "--filenameBIM") ==0) ||
+	(strcmp(argv[arg], "-filenameAIM") ==0) ||
+	(strcmp(argv[arg], "--filenameAIM") ==0)) {	
       arg++;
-      filenameBIM = argv[arg];
+      filenameBIM = argv[arg];      
     }
     else if ((strcmp(argv[arg], "-filenameEVENT") == 0) ||
 	     (strcmp(argv[arg], "--filenameEVENT") == 0)) {
