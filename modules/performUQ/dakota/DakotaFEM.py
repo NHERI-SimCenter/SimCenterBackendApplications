@@ -42,7 +42,7 @@ def main(args):
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')
@@ -68,7 +68,7 @@ def main(args):
     args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
-    bimName = args.filenameBIM
+    aimName = args.filenameAIM
     samName = args.filenameSAM
     evtName = args.filenameEVENT
     edpName = args.filenameEDP
@@ -90,8 +90,8 @@ def main(args):
         keepSamples = args.keepSamples
     )
 
-    if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the BIM file
-        with open(bimName) as data_file:
+    if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the AIM file
+        with open(aimName) as data_file:
             uq_info = json.load(data_file)['UQ_Method']
 
         if 'samplingMethodData' in uq_info.keys():
@@ -104,7 +104,7 @@ def main(args):
 
     #Run Preprocess for Dakota
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
+    numRVs = preProcessDakota(aimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
 
     #Setting Workflow Driver Name
     workflowDriverName = 'workflow_driver'
@@ -116,7 +116,7 @@ def main(args):
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)
     #shutil.copy(workflowDriverName, "templatedir")
     #shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
-    shutil.move(bimName, "bim.j")
+    shutil.move(aimName, "aim.j")
     shutil.move(evtName, "evt.j")
     if os.path.isfile(samName): shutil.move(samName, "sam.j")
     shutil.move(edpName, "edp.j")

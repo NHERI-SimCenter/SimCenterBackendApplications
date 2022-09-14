@@ -10,18 +10,18 @@ class OpenSeesPostprocessor {
   OpenSeesPostprocessor();
   ~OpenSeesPostprocessor();
 
-  int processResults(const char *BIM, const char *SAM, const char *EDP);
+  int processResults(const char *AIM, const char *SAM, const char *EDP);
 
   int processEDPs();
 
  private:
   char *filenameEDP;
-  char *filenameBIM;
+  char *filenameAIM;
   char *filenameSAM;  
 
   json_t *rootEDP;
   json_t *rootSAM;
-  json_t *rootBIM;
+  json_t *rootAIM;
 
   double unitConversionFactorLength;
   double unitConversionFactorForce;

@@ -9,8 +9,8 @@ WindSpeedFromCloudData: $(OBJS)
 
 test: WindSpeedFromCloudData $(OBJS)
 	time python ./parseHurricaneScenario.py scenario.mat scenario.json
-	time ./WindSpeedFromCloudData -filenameBIM 2-BIM.json -filenameEVENT 1-EVENT.json -filenameWindSpeedCloudData scenario.json -getRV
-	time ./WindSpeedFromCloudData -filenameBIM 2-BIM.json -filenameEVENT 1-EVENT.json -filenameWindSpeedCloudData scenario.json 
+	time ./WindSpeedFromCloudData -filenameAIM 2-BIM.json -filenameEVENT 1-EVENT.json -filenameWindSpeedCloudData scenario.json -getRV
+	time ./WindSpeedFromCloudData -filenameAIM 2-BIM.json -filenameEVENT 1-EVENT.json -filenameWindSpeedCloudData scenario.json 
 
 clean:
 	$(RM) $(OBJS) *~ \#* *.o

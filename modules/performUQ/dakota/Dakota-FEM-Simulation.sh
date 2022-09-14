@@ -37,7 +37,7 @@ fi
 # input parameters
 #
 
-bimName=$2
+aimName=$2
 samName=$4
 evtName=$6
 edpName=$8
@@ -49,7 +49,7 @@ driverFile=${14}
 #outName=$7
 
 
-echo $bimName
+echo $aimName
 echo $samName
 echo $evtName
 echo $lossName
@@ -66,8 +66,8 @@ echo $scriptDir
 # parse json file, creating dakota input and other files
 #  note: done in python
 
-echo $scriptDIR/preprocessJSON.py $bimName $evtName $samName $edpName $lossName $simName $driverFile
-python $scriptDIR/preprocessJSON.py $bimName $evtName $samName $edpName $lossName $simName $driverFile $scriptDIR
+echo $scriptDIR/preprocessJSON.py $aimName $evtName $samName $edpName $lossName $simName $driverFile
+python $scriptDIR/preprocessJSON.py $aimName $evtName $samName $edpName $lossName $simName $driverFile $scriptDIR
 
 #
 # create a dir templatedir to place all files needed by a dakota run
@@ -82,7 +82,7 @@ chmod 'u+x' workflow_driver
 #cp -r $scriptDIR/createSAM/data ./templatedir
 cp workflow_driver ./templatedir
 cp $scriptDIR/dpreproSimCenter ./
-cp $bimName ./bim.j
+cp $aimName ./aim.j
 cp $evtName ./evt.j
 cp $samName ./sam.j
 cp $edpName ./edp.j

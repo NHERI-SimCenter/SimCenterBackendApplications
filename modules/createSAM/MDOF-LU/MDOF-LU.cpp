@@ -13,7 +13,7 @@
 
 int main(int argc, char **argv)
 {
-  char *filenameBIM = 0;
+  char *filenameAIM = 0;
   char *filenameEVENT = 0;
   char *filenameSAM = 0;
 
@@ -34,12 +34,12 @@ int main(int argc, char **argv)
   int arg = 1;
   while (arg < argc) {
 
-    if ((strcmp(argv[arg], "-filenameBIM") ==0) || 
-	(strcmp(argv[arg], "--filenameBIM") ==0) ||
+    if ((strcmp(argv[arg], "-filenameAIM") ==0) || 
+	(strcmp(argv[arg], "--filenameAIM") ==0) ||
 	(strcmp(argv[arg], "-filenameAIM") ==0) ||
 	(strcmp(argv[arg], "--filenameAIM") ==0)) {	
       arg++;
-      filenameBIM = argv[arg];      
+      filenameAIM = argv[arg];      
     }
     else if ((strcmp(argv[arg], "-filenameEVENT") == 0) ||
 	     (strcmp(argv[arg], "--filenameEVENT") == 0)) {
@@ -79,10 +79,10 @@ int main(int argc, char **argv)
   
   
   if(getRV == true) {
-    theBuilding->readBIM(filenameEVENT, filenameBIM);
+    theBuilding->readBIM(filenameEVENT, filenameAIM);
     theBuilding->writeRV(filenameSAM, stdStiffness, stdDamping);
   } else {
-    theBuilding->readBIM(filenameEVENT, filenameBIM, filenameSAM);
+    theBuilding->readBIM(filenameEVENT, filenameAIM, filenameSAM);
     aim->CalcBldgPara(theBuilding);
     theBuilding->writeSAM(filenameSAM);
   }

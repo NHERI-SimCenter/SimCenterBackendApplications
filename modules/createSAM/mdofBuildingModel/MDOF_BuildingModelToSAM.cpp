@@ -13,20 +13,20 @@ int
 main(int argc, char **argv) {
 
 
-  char *filenameBIM = NULL;
+  char *filenameAIM = NULL;
   char *filenameSAM = NULL;
 
-  // MDOF --filenameBIM file? --filenameEVENT file? --filenameSAM file? <--getRV>
+  // MDOF --filenameAIM file? --filenameEVENT file? --filenameSAM file? <--getRV>
 
   if (argc == 8 || argc == 7) {
 
     int arg = 1;
     while(arg < argc)
     {
-        if (strcmp(argv[arg], "--filenameBIM") == 0)
+        if (strcmp(argv[arg], "--filenameAIM") == 0)
         {
             arg++;
-            filenameBIM = argv[arg];
+            filenameAIM = argv[arg];
         }
         else if (strcmp(argv[arg], "--filenameSAM") == 0)
         {
@@ -37,12 +37,12 @@ main(int argc, char **argv) {
     }
 
   } else {
-    fprintf(stderr, "ERROR - MDOF - incorrect # args want: MDOF --filenameBIM file? --filenameEVENT file? --filenameSAM file? <--getRV>\n");
+    fprintf(stderr, "ERROR - MDOF - incorrect # args want: MDOF --filenameAIM file? --filenameEVENT file? --filenameSAM file? <--getRV>\n");
   }
 
 
   json_error_t error;
-  json_t *rootBIM = json_load_file(filenameBIM, 0, &error);
+  json_t *rootBIM = json_load_file(filenameAIM, 0, &error);
   json_t *rootSAM = json_object();
 
   //

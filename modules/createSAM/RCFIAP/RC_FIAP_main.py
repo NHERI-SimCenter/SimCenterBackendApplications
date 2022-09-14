@@ -2096,10 +2096,10 @@ class RCFIAP:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
     
-    sys.exit(runBuildingDesign(args.filenameBIM, args.filenameEVENT, args.filenameSAM, args.getRV))
+    sys.exit(runBuildingDesign(args.filenameAIM, args.filenameEVENT, args.filenameSAM, args.getRV))
