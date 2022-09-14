@@ -757,7 +757,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 				}
 			}
 		}
-		
+
 		nconst = 0;
 		for (int nq = 0; nq < nqoi_eff; nq++) {
 
@@ -1061,17 +1061,12 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
     mat U_matrix;
     vec svec;
     mat V_matrix;
-	
-    //mat gmat_matrix = conv_to<mat>::from(gmat);
 
     int n = gmat.size();
-    //int p = gmat[0].size();
 	int p = nqoi_eff;
 
-	
     mat gmat_matrix(n, p);
 
-	//arma::vec idx(constantQoiIdx);
 	arma::uvec idx(nonConstantQoiIdx.size());
 	for (int nqe = 0; nqe < nonConstantQoiIdx.size(); nqe++) {
 		idx(nqe) = nonConstantQoiIdx[nqe];
@@ -1083,47 +1078,113 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		gmat_matrix.row(nr) = r.elem(idx).t();
     }
 
-
 	//
 	// run SVD
 	//
-	std::cout << " - Running SVD\n";
 	auto readStart = std::chrono::high_resolution_clock::now();
-	svd_econ(U_matrix, svec, V_matrix, gmat_matrix);
 	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	std::cout << "  - SVD took " << readEnd << " s\n";
-	std::cout << "lambdas are " << std::endl << pow(svec, 2) << std::endl;
+	
+	if (n>p) {
+		//
+		// run SVD - took 386 s
+		//
+		std::cout << " - Running SVD\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		svd_econ(U_matrix, svec, V_matrix, gmat_matrix); // gmat_matrix = U*L*V^T
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - SVD took " << readEnd << " s\n";
+		//std::cout << "lambdas are " << std::endl << pow(svec, 2) << std::endl;
+	} else {
+		//
+		// run PCA -- gives memory error
+		//
+		//mat coeff, score;
+		//vec latent, tsquared;
+		//readStart = std::chrono::high_resolution_clock::now();
+		//princomp(coeff, score, latent, tsquared, gmat_matrix);
+		//readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		//std::cout << "  - PCA took " << readEnd << " s\n";
 
+		//
+		// Create gram - took 17 s
+		//
+		std::cout << " - Creating gram matrix\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		mat gramMat = gmat_matrix * trans(gmat_matrix);
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Creating gram matrix - done. It took " << readEnd << " s\n";
+
+		//
+		// FULL EIGEN - took 0.1 s
+		//
+
+		std::cout << " - Full eigen using Lapack2\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		vec Lvece;
+		eig_sym(Lvece, U_matrix, gramMat, "dc"); // gramMat = U*L*U^T
+		//std::cout << "lambda is " << Lvece << std::endl;
+		svec = sqrt(reverse(Lvece)); // becasue eigenvalues are ascending order
+		U_matrix = fliplr((U_matrix)); // because eigenvalues are ascending order
+		svec.replace(datum::nan, min(svec));
+
+		mat invSmat = arma::diagmat(1 / svec);
+		//V_matrix2 = (invSmat * U_matrix2.t() * gmat_matrix).t();
+		V_matrix = (gmat_matrix.t() * U_matrix * invSmat); // faster
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Full eigen using Lapack2 - done. It took " << readEnd << " s\n";
+
+
+		/*
+		std::cout << "U " << std::endl;
+		std::cout << U_matrix.n_cols << std::endl;// 500
+		std::cout << U_matrix.n_rows << std::endl;// 500
+
+		std::cout << "V " << std::endl;
+		std::cout << V_matrix.n_cols << std::endl;// 500
+		std::cout << V_matrix.n_rows << std::endl;// 1558663
+
+		
+		mat tmp = U_matrix * arma::diagmat(svec) * V_matrix.t();
+
+		std::cout << "G " << std::endl;
+
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 4; j++) {
+				std::cout << tmp(i, j) << " " << gmat_matrix(i, j) << std::endl;
+			}
+		}
+		*/
+	}
 
 	/*
-	//
-	// TESTING
-	//
-	std::cout << " - Creating gram matrix\n";
-	readStart = std::chrono::high_resolution_clock::now();
-	mat gramMat = gmat_matrix * trans(gmat_matrix);
-	readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	std::cout << "  - Creating gram matrix - done. It took " << readEnd << " s\n";
+	std::cout << "sqrt lambda "<< std::endl;
 
+	for (int i = 0; i < 10; i++) {
+			std::cout << svec(i) << " " << svec2(i) << std::endl;
+	}	
+	
+	std::cout << "U " << std::endl;
+
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << U_matrix(i,j) << " " << U_matrix2(i, j) << std::endl;
+		}
+	}
+
+	std::cout << "V " << std::endl;
+
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << V_matrix(i,j) << " " << V_matrix2(i, j) << std::endl;
+		}
+	}
+	*/
 
 	//
-	// FULL EIGEN
+	// Partial EIGEN - no decrease in time
 	//
-	std::cout << " - Full eigen using Lapack\n";
-	readStart = std::chrono::high_resolution_clock::now();
-	mat V_matrixe;
-	vec Lvece;
-	eig_sym(Lvece, V_matrixe, gramMat, "dc");
-	readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	std::cout << "  - Full eigen using Lapack - done. It took " << readEnd << " s\n";
-	std::cout << "lambda is " << Lvece << std::endl;
-
-
-	//
-	// Partial EIGEN
-	//
-
-	std::cout << " - Partial eigen using Arpach\n";
+	/*
+	std::cout << " - Partial eigen using Arpack\n";
 	readStart = std::chrono::high_resolution_clock::now();
 	// Construct matrix operation object using the wrapper class DenseGenMatProd
 	DenseGenMatProd<double> op(gramMat);
@@ -1145,7 +1206,9 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 	std::cout << "   - Partial eigen using Arpach - done. It took " << readEnd << " s\n";
 	*/
 
-	// Eigen SVD took 562 sec
+	//
+	// Eigen SVD function took 562 sec
+	//
 	/*
 	Eigen::MatrixXd gmat_matrix2 = Eigen::MatrixXd(n, p);
 
@@ -1167,23 +1230,18 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 
 
 	mat princ_dir, princ_comp;
-	int neigen;
-	if (n>p) {
-		princ_dir = V_matrix;       // projection matrix
-		//princ_comp = U_matrix.cols(0, p - 1) * arma::diagmat(svec); // reduced variables
-		princ_comp = U_matrix * arma::diagmat(svec);;
-		neigen = p;
-	} else {
-		//princ_dir = V_matrix.cols(0, p - 1);       // projection matrix pxp'
-		princ_dir = V_matrix;       // projection matrix pxp'
-		princ_comp = U_matrix * arma::diagmat(svec); // reduced variables nxp'
-		neigen = n;
-	}
+	int neigen = std::min(n,p);
+	princ_dir = V_matrix;       // projection matrix
+//princ_comp = U_matrix.cols(0, p - 1) * arma::diagmat(svec); // reduced variables
+	princ_comp = U_matrix * arma::diagmat(svec);;
+
 	double sum_var = 0;
 	//double totVar = sum(trace(C));
-	double totVar = sum(svec % svec);
+	vec lamb = pow(svec, 2);
+	double totVar = sum(lamb);
+
 	for (int i = 0; i < neigen; i++) {
-		sum_var = sum_var + pow(svec[i], 2) / totVar;
+		sum_var = sum_var + lamb[i] / totVar;
 		if (sum_var > PCAvarRatioThres) {
 			npc = i+1;
 			PCAvarRatio = sum_var;
