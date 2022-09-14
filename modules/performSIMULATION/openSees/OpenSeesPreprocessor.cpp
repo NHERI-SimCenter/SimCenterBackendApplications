@@ -992,25 +992,34 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventFactor = json_number_value(eventFactorObj);
   }
 
-  //First let's read units from bim
-  json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
-  json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
-  json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
-  json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
-  json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");
+  Units::UnitSystem samUnits;
 
   
-  //Parsing BIM Units
-  Units::UnitSystem bimUnits;
-  bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
-  bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
-  bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
-
+  // Read units
+  // NOTE: if no units use default in GI
+  json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
+  json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  if (samUnitsJson != NULL) {
+    json_t* samLengthJson = json_object_get(samUnitsJson, "length");
+    json_t* samForceJson = json_object_get(samUnitsJson, "force");
+    json_t* samTimeJson = json_object_get(samUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
+  } else {
+    json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
+    json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
+  }
+  
   // loop over time series & create the time series
   int index = 0;
   json_t *timeSeriesArray = json_object_get(event,"timeSeries");
   int numSeriesArray = json_array_size(timeSeriesArray);
-
 
   //We need to check units for conversion
   double unitConversionFactorAcceleration = 1.0;
@@ -1034,9 +1043,9 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       if(NULL != evtTimeJson)
 	eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
       
-      unitConversionFactorForce = Units::GetForceFactor(eventUnits, bimUnits);
-      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, bimUnits);
-      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorForce = Units::GetForceFactor(eventUnits, samUnits);
+      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, samUnits);
+      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, samUnits);
     }
   else
     {
@@ -1044,9 +1053,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventUnits.lengthUnit = Units::LengthUnit::Meter;
       eventUnits.timeUnit = Units::TimeUnit::Second;
       
-      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, samUnits);
     }
-  
   
   for (int i=0; i<numSeriesArray; i++) {
     timeSeries = json_array_get(timeSeriesArray, i);

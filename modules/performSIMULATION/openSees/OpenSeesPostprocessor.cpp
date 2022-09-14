@@ -8,6 +8,8 @@
 #include <vector>
 #include <iostream>
 
+#include "common/Units.h"
+
 
 int main(int argc, char **argv)
 {
@@ -23,14 +25,14 @@ int main(int argc, char **argv)
 
   OpenSeesPostprocessor thePostprocessor;
 
-  thePostprocessor.processResults(filenameBIM, filenameEDP);
+  thePostprocessor.processResults(filenameBIM, filenameSAM, filenameEDP);
 
   return 0;
 }
 
 
 OpenSeesPostprocessor::OpenSeesPostprocessor()
-  :filenameEDP(0), filenameBIM(0)
+  :filenameEDP(0), filenameBIM(0), filenameSAM(0)
 {
 
 }
@@ -40,10 +42,12 @@ OpenSeesPostprocessor::~OpenSeesPostprocessor(){
     delete [] filenameEDP;
   if (filenameBIM != 0)
     delete [] filenameBIM;
+  if (filenameSAM != 0)
+    delete [] filenameSAM;  
 }
 
 int 
-OpenSeesPostprocessor::processResults(const char *BIM, const char *EDP)
+OpenSeesPostprocessor::processResults(const char *BIM, const char *SAM, const char *EDP)
 {
   //
   // make copies of filenames in case methods need them
@@ -53,14 +57,59 @@ OpenSeesPostprocessor::processResults(const char *BIM, const char *EDP)
     delete [] filenameEDP;
   if (filenameBIM != 0)
     delete [] filenameBIM;
+  if (filenameSAM != 0)
+    delete [] filenameSAM;  
 
   filenameEDP=(char*)malloc((strlen(EDP)+1)*sizeof(char));
   strcpy(filenameEDP,EDP);
   filenameBIM=(char*)malloc((strlen(BIM)+1)*sizeof(char));
   strcpy(filenameBIM,BIM);
+  filenameSAM=(char*)malloc((strlen(SAM)+1)*sizeof(char));
+  strcpy(filenameSAM,SAM);  
 
   json_error_t error;
   rootEDP = json_load_file(filenameEDP, 0, &error);
+
+
+  //
+  // if SAM has units, determine length scale factor to get to BIM units
+  //
+  
+  rootSAM = json_load_file(filenameSAM, 0, &error);  
+  unitConversionFactorAcceleration = 1.0;
+  unitConversionFactorForce = 1.0;
+  unitConversionFactorLength = 1.0;
+  
+  json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  if (samUnitsJson != NULL) {
+
+    // read SAM units
+    Units::UnitSystem samUnits;
+    json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
+    json_t* samLengthJson = json_object_get(samUnitsJson, "length");
+    json_t* samForceJson = json_object_get(samUnitsJson, "force");    
+    json_t* samTimeJson = json_object_get(samUnitsJson, "time");
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
+
+    // read BIM  units
+    rootBIM = json_load_file(filenameBIM, 0, &error);
+    Units::UnitSystem bimUnits;    
+    json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
+    json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");    
+    bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
+    bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
+
+    // conversion factors
+    unitConversionFactorForce = Units::GetForceFactor(samUnits, bimUnits);
+    unitConversionFactorLength = Units::GetLengthFactor(samUnits, bimUnits);
+    unitConversionFactorAcceleration = Units::GetAccelerationFactor(samUnits, bimUnits);    
+  }
+    
   
   processEDPs();
 
@@ -145,6 +194,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  // read last row and add components to data
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+	    tmp *= unitConversionFactorAcceleration;
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -183,6 +233,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+	    tmp *= unitConversionFactorAcceleration;
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -226,6 +277,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  // read last row and add components to data
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+	    tmp *= unitConversionFactorLength;
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -306,7 +358,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  num = fabs(num1);
 	  if (fabs(num2) > num)
 	    num = fabs(num2);
-	  
+	  num *= unitConversionFactorLength;
 	  myfile.close();
 	}
 	
