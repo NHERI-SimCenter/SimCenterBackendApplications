@@ -276,7 +276,13 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
 
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
-
+    root_SAM['units'] = {
+            "force": "kN",
+            "length": "m",
+            "temperature": "C",
+            "time": "sec"
+        }
+    
     # Number of dimensions
     root_SAM['ndm'] = 2
 

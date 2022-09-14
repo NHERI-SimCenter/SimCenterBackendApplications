@@ -108,7 +108,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
-
+    root_SAM['units'] = {
+            "force": "kips",
+            "length": "in",
+            "temperature": "C",
+            "time": "sec"
+        }
+    
     # Number of dimensions (KZ & AZ: changed to integer)
     root_SAM['ndm'] = 2
 
