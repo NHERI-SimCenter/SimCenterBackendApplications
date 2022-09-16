@@ -1941,7 +1941,7 @@ class Workflow(object):
 
         run_path = self.run_dir
                 
-        if asset_type is not '' :
+        if asset_type != '' :
             run_path = posixpath.join(run_path,asset_type)
         
         os.chdir(run_path)
