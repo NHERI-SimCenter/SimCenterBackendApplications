@@ -10,15 +10,15 @@ NonIsolatedLowRiseTPU: $(OBJS) NonIsolatedLowRiseTPU.o
 
 
 test: NonIsolatedLowRiseTPU
-	time ./NonIsolatedLowRiseTPU --filenameBIM dakota.json --filenameEVENT event.json --getRV
-	time ./NonIsolatedLowRiseTPU --filenameBIM dakota.json --filenameEVENT event.json
+	time ./NonIsolatedLowRiseTPU --filenameAIM dakota.json --filenameEVENT event.json --getRV
+	time ./NonIsolatedLowRiseTPU --filenameAIM dakota.json --filenameEVENT event.json
 
 test1: testCallTPU.o $(OBJS)
 	$(CXX) $(CPPFLAGS) -c ../../common/Units.cpp -o Units.o
 	$(CXX) $(LDFLAGS) -o testCallTPU testCallTPU.o Units.o $(OBJS) $(LDLIBS) -lPython
 	time ./testCallTPU
-	time ./NonIsolatedLowRiseTPU --filenameBIM dakota.json --filenameEVENT event.json --getRV
-	time ./NonIsolatedLowRiseTPU --filenameBIM dakota.json --filenameEVENT event.json
+	time ./NonIsolatedLowRiseTPU --filenameAIM dakota.json --filenameEVENT event.json --getRV
+	time ./NonIsolatedLowRiseTPU --filenameAIM dakota.json --filenameEVENT event.json
 
 clean:
 	$(RM) $(OBJS) *~ \#* *.o 

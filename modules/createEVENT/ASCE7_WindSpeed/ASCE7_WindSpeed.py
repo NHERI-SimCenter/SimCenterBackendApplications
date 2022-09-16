@@ -84,7 +84,7 @@ def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--windDatabase', default=None)
     parser.add_argument('--severity', default=None)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameBIM, args.filenameEVENT))
+        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT))
     else:
-        sys.exit(get_windspeed(args.filenameBIM, args.filenameEVENT, 
+        sys.exit(get_windspeed(args.filenameAIM, args.filenameEVENT, 
             args.windDatabase, args.severity))

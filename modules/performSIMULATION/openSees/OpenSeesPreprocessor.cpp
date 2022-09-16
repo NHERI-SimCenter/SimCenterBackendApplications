@@ -10,8 +10,8 @@
 #include "common/Units.h"
 
 OpenSeesPreprocessor::OpenSeesPreprocessor()
-  :rootBIM(0), rootSAM(0), rootEVENT(0), rootEDP(0), rootSIM(0), 
-   fileBIM(0), fileSAM(0), fileEVENT(0), fileEDP(0), fileSIM(0),
+  :rootAIM(0), rootSAM(0), rootEVENT(0), rootEDP(0), rootSIM(0), 
+   fileAIM(0), fileSAM(0), fileEVENT(0), fileEDP(0), fileSIM(0),
    analysisType(-1), numSteps(0), dT(0.0), nStory(0), mapping(0)
 {
 
@@ -22,7 +22,7 @@ OpenSeesPreprocessor::~OpenSeesPreprocessor() {
 }
 
 int 
-OpenSeesPreprocessor::writeRV(const char *BIM,
+OpenSeesPreprocessor::writeRV(const char *AIM,
 			      const char *SAM,
 			      const char *EVENT,
 			      const char *SIM)
@@ -35,8 +35,8 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
   //
 
   json_error_t error;
-  rootBIM = json_load_file(BIM, 0, &error);
-  json_t *sim = json_object_get(rootBIM,"Simulation");
+  rootAIM = json_load_file(AIM, 0, &error);
+  json_t *sim = json_object_get(rootAIM,"Simulation");
 
   if (sim == NULL) {
     json_dump_file(rootSIM,SIM,0);
@@ -62,7 +62,7 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
 }
 
 int 
-OpenSeesPreprocessor::createInputFile(const char *BIM,
+OpenSeesPreprocessor::createInputFile(const char *AIM,
 				      const char *SAM,
 				      const char *EVENT,
 				      const char *EDP,
@@ -70,10 +70,10 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 				      const char *filenameTCL)
 {
   json_error_t error;
-  fileBIM = BIM;
+  fileAIM = AIM;
 
   //Loading Bim File
-  rootBIM = json_load_file(BIM, 0, &error);
+  rootAIM = json_load_file(AIM, 0, &error);
 
   //
   // open tcl script
@@ -690,7 +690,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -727,7 +727,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -764,7 +764,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -800,7 +800,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 		string fileString1;
 		ostringstream temp1;  //temp as in temporary
 		
-		temp1 << fileBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof[ii] << ".out";
+		temp1 << fileAIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof[ii] << ".out";
 		fileString1=temp1.str(); 
 		
 		const char *fileName1 = fileString1.c_str();
@@ -829,7 +829,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	    fileString=temp.str(); 
 	    
 	    const char *fileName = fileString.c_str();
@@ -992,25 +992,34 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventFactor = json_number_value(eventFactorObj);
   }
 
-  //First let's read units from bim
-  json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
-  json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
-  json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
-  json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
-  json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");
+  Units::UnitSystem samUnits;
 
   
-  //Parsing BIM Units
-  Units::UnitSystem bimUnits;
-  bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
-  bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
-  bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
-
+  // Read units
+  // NOTE: if no units use default in GI
+  json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
+  json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  if (samUnitsJson != NULL) {
+    json_t* samLengthJson = json_object_get(samUnitsJson, "length");
+    json_t* samForceJson = json_object_get(samUnitsJson, "force");
+    json_t* samTimeJson = json_object_get(samUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
+  } else {
+    json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
+    json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
+  }
+  
   // loop over time series & create the time series
   int index = 0;
   json_t *timeSeriesArray = json_object_get(event,"timeSeries");
   int numSeriesArray = json_array_size(timeSeriesArray);
-
 
   //We need to check units for conversion
   double unitConversionFactorAcceleration = 1.0;
@@ -1034,9 +1043,9 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       if(NULL != evtTimeJson)
 	eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
       
-      unitConversionFactorForce = Units::GetForceFactor(eventUnits, bimUnits);
-      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, bimUnits);
-      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorForce = Units::GetForceFactor(eventUnits, samUnits);
+      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, samUnits);
+      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, samUnits);
     }
   else
     {
@@ -1044,9 +1053,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventUnits.lengthUnit = Units::LengthUnit::Meter;
       eventUnits.timeUnit = Units::TimeUnit::Second;
       
-      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, samUnits);
     }
-  
   
   for (int i=0; i<numSeriesArray; i++) {
     timeSeries = json_array_get(timeSeriesArray, i);
@@ -1218,8 +1226,8 @@ OpenSeesPreprocessor:: getNode(const char * cline,const char * floor){
 
 int main(int argc, char **argv)
 {
-  // OpenSeesPreprocessor BIM.json SAM.json EVENT.json SIM.json --getRV
-  // OpenSeesPreprocessor BIM.json SAM.json EVENT.json EDP.json SIM.json script 
+  // OpenSeesPreprocessor AIM.json SAM.json EVENT.json SIM.json --getRV
+  // OpenSeesPreprocessor AIM.json SAM.json EVENT.json EDP.json SIM.json script 
 
   OpenSeesPreprocessor thePreprocessor;
 

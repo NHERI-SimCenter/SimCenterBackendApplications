@@ -954,16 +954,16 @@ class Workflow(object):
         assetObjs = requested_apps.get('Assets', None)
         
         # Check if an asset object exists
-        if assetObjs == None :
-            raise WorkFlowInputError('Need to define the assets for analysis')
+        if assetObjs != None :
+            #raise WorkFlowInputError('Need to define the assets for analysis')
         
-        # Check if asset list is not empty
-        if len(assetObjs) == 0 :
-            raise WorkFlowInputError('The provided asset object is empty')
+            # Check if asset list is not empty
+            if len(assetObjs) == 0 :
+                raise WorkFlowInputError('The provided asset object is empty')
         
-        # Iterate through the asset objects
-        for assetObj in assetObjs :
-            self._register_asset(assetObj, assetObjs[assetObj])
+            # Iterate through the asset objects
+            for assetObj in assetObjs :
+                self._register_asset(assetObj, assetObjs[assetObj])
                 
         
         # Iterate through the app type list which is set when you instantiate the workflow
@@ -1263,9 +1263,9 @@ class Workflow(object):
 
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
-            dst = Path(os.getcwd()) / AIM_file
+            dst = Path(os.getcwd()) / AIM_file_path
             #dst = posixpath.join(os.getcwd(),AIM_file)
-            if AIM_file != self.input_file:
+            if AIM_file_path != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
 
         log_msg('Simulation directory successfully initialized.\n',prepend_timestamp=False)
@@ -1511,8 +1511,9 @@ class Workflow(object):
                 arg_list.append('MacOS')
                 
             self.default_values['workflowInput']=pathToScFile
-#            self.default_values['driverFile']='sc_'+self.default_values['driverFile']
-            self.default_values['driverFile']='driver'
+            #self.default_values['driverFile']='sc_'+self.default_values['driverFile']
+            self.default_values['modDriverFile']='sc_'+self.default_values['driverFile']
+            #self.default_values['driverFile']='driver'
 
             self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
@@ -1655,7 +1656,7 @@ class Workflow(object):
             if (self.modifiedRun):
                 command_list[3] = self.default_values['workflowInput']
                                 
-                command_list[5] = self.default_values['driverFile']
+                command_list[5] = self.default_values['modDriverFile']
             
             # add the run type to the uq command list
             command_list.append(u'--runType')

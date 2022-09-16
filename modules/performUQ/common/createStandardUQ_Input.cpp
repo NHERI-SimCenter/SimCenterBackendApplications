@@ -31,7 +31,7 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
       
       json_array_foreach(defaultRVs, index, value) {
 	const char *fName = json_string_value(value);
-
+	std::cerr << "rvFILE: " << fName << "\n";
 	json_t *rootOther = json_load_file(fName, 0, &error);
 	json_t *fileRandomVariables =  json_object_get(rootOther, "randomVariables");
 	if (fileRandomVariables != NULL) {
@@ -40,9 +40,9 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
 	    json_array_append(rootRVs, fileRandomVariable);
 	  }
-    // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
+	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
-	    rvFiles.insert(std::string(fName));
+	  rvFiles.insert(std::string(fName));
 	  //}
 	}
       }
@@ -215,13 +215,14 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 
 int main(int argc, char **argv) {
 
+  
   const char *inputFile = argv[1];
   const char *outputFile = argv[2];
   const char *workflowOld = argv[3];
   const char *workflowNew = argv[4];  
   const char *runType = argv[5];
   const char *osType = argv[6];  
-  
+
   //
   // open file & read JSON contents into rootINPUT
   //
