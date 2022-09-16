@@ -106,7 +106,8 @@ def main(run_type, input_file, app_registry,
         log_msg('Forced cleanup turned on.')
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Assets', 'RegionalEvent', 'RegionalMapping', 'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
+        app_type_list = ['Assets', 'RegionalEvent', 'RegionalMapping', 
+        'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
         reference_dir = reference_dir,
         working_dir = working_dir,
         app_dir = app_dir)
@@ -173,7 +174,16 @@ def main(run_type, input_file, app_registry,
             log_div()
             
             # Run sWhale
-            runSWhale(inputs = None, WF = WF, assetID = asst['id'], assetAIM = asst['file'], prep_app_sequence = preprocess_app_sequence,  WF_app_sequence = WF_app_sequence, asset_type = run_asset_type, copy_resources = True, force_cleanup = force_cleanup)
+            runSWhale(
+                inputs = None, 
+                WF = WF, 
+                assetID = asst['id'], 
+                assetAIM = asst['file'], 
+                prep_app_sequence = preprocess_app_sequence,  
+                WF_app_sequence = WF_app_sequence, 
+                asset_type = run_asset_type, 
+                copy_resources = True, 
+                force_cleanup = force_cleanup)
             
         # aggregate results
         if asset_type == 'Buildings' :
@@ -253,7 +263,7 @@ if __name__ == '__main__':
 
     #Calling the main workflow method and passing the parsed arguments
     main(run_type = run_type,
-         input_file = wfArgs.configuration,
+         input_file = Path(wfArgs.configuration).resolve(), # to pass the absolute path to the input file
          app_registry = wfArgs.registry,
          force_cleanup = wfArgs.forceCleanup,
          bldg_id_filter = wfArgs.filter,
