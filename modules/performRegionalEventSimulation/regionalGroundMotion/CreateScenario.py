@@ -136,7 +136,8 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                 t_start = time.time()
                 s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
                 print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))
-                erf_data['features'] = list(feat[i] for i in s_tag)
+                #erf_data['features'] = list(feat[i] for i in s_tag)
+                erf_data['features'] = [feat[i] for i in range(source_num)]
                 scenario_data = dict()
                 t_start = time.time()
                 for i, rup in enumerate(erf_data['features']):

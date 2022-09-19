@@ -173,7 +173,7 @@ def hazard_job(hazard_info):
         if opensha_flag:
             im_raw, im_info = compute_im(scenarios, stations['Stations'],
                                 event_info['GMPE'], event_info['IntensityMeasure'],
-                                scenario_info.get('EqRupture').get('HazardOccurrence',None))
+                                scenario_info.get('EqRupture').get('HazardOccurrence',None), output_dir)
             # update the im_info
             event_info['IntensityMeasure'] = im_info
         elif oq_flag:
@@ -221,7 +221,7 @@ def hazard_job(hazard_info):
         if occurrence_sampling:
             # read all configurations
             occurrence_info = scenario_info.get('EqRupture').get('HazardOccurrence')
-            occ_dict = configure_hazard_occurrence(input_dir, hzo_config=occurrence_info, site_config=stations['Stations'])
+            occ_dict = configure_hazard_occurrence(input_dir, output_dir, hzo_config=occurrence_info, site_config=stations['Stations'])
             model_type = occ_dict.get('Model')
             num_target_eqs = occ_dict.get('NumTargetEQs')
             num_target_gmms = occ_dict.get('NumTargetGMMs')
@@ -243,6 +243,7 @@ def hazard_job(hazard_info):
                     id_selected_eqs.append(i)
             im_raw_sampled = [im_raw[i] for i in id_selected_eqs]
             im_raw = im_raw_sampled
+            num_per_eq_avg = int(np.ceil(num_target_gmms/len(id_selected_eqs)))
             # export sampled earthquakes
             _ = export_sampled_earthquakes(id_selected_eqs, scenarios, P, output_dir)
         

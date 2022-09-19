@@ -48,6 +48,7 @@ from tqdm import tqdm
 
 
 def configure_hazard_occurrence(input_dir, 
+                                output_dir,
                                 hzo_config=None,
                                 site_config=None,
                                 mth_flag=True):
@@ -146,7 +147,20 @@ def configure_hazard_occurrence(input_dir,
         ln_cur_maf = [np.log(x) for x in hc_data[i].get('ReturnPeriod')]
         ln_cur_sa = np.log(hc_data[i].get('IM')).tolist()
         hc_interp[i,:] = np.exp(np.interp(ln_maf,ln_cur_maf,ln_cur_sa,left=ln_cur_sa[0],right=ln_cur_sa[-1]))
-    # return
+    hc_interp_list = hc_interp.tolist()
+    # summary
+    occ_dict = {
+        "Model": model_type,
+        "NumTargetEQs": num_target_eqs,
+        "NumTargetGMMs": num_target_gmms,
+        "ReturnPeriods": return_periods,
+        "IntensityMeasure": im_type,
+        "Period": period,
+        "HazardCurves": hc_interp_list
+    }
+    # output the hazard occurrence information file
+    with open(os.path.join(output_dir,"HazardCurves.json"),"w") as f:
+        json.dump(occ_dict, f, indent=2)
     occ_dict = {
         "Model": model_type,
         "NumTargetEQs": num_target_eqs,
@@ -156,6 +170,7 @@ def configure_hazard_occurrence(input_dir,
         "Period": period,
         "HazardCurves": hc_interp
     }
+    # return
     return occ_dict
 
 

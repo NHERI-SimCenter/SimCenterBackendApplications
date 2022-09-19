@@ -272,10 +272,16 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print('FetchOpenSHA: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
+    num_preview = 1000
+    if len(feature_collection_sorted) > num_preview:
+        preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
+    else:
+        preview_erf_data = erf_data
     # Output
     if outfile is not None:
         with open(outfile, 'w') as f:
-            json.dump(erf_data, f, indent=2)
+            json.dump(preview_erf_data, f, indent=2)
+    del preview_erf_data
     # return
     return erf_data
 

@@ -423,7 +423,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 	return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(scenarios, stations, gmpe_info, im_info, hazard_occur_info, mth_flag=True):
+def compute_im(scenarios, stations, gmpe_info, im_info, hazard_occur_info, output_dir, filename='IntensityMeasureMeanStd.json', mth_flag=True):
 
 	# Calling OpenSHA to compute median PSA
 	im_raw = []
@@ -510,6 +510,11 @@ def compute_im(scenarios, stations, gmpe_info, im_info, hazard_occur_info, mth_f
 			im_raw.append(cur_res)
 
 	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
+
+	# save im_raw
+	im_raw_preview = {"IntensityMeasures": im_raw}
+	with open(os.path.join(output_dir, filename), "w") as f:
+		json.dump(im_raw_preview, f, indent=2)
 
 	# return
 	return im_raw, im_info
