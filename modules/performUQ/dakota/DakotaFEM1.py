@@ -67,7 +67,7 @@ def main(args):
     args,unknowns = parser.parse_known_args()
 
     #Reading input arguments
-    bimName = args.filenameBIM
+    aimName = args.filenameBIM
     samName = args.filenameSAM
     evtName = args.filenameEVENT
     edpName = args.filenameEDP
@@ -102,16 +102,16 @@ def main(args):
 
         print("RUNNING PREPROCESSOR\n")
         osType = platform.system()
-        preprocessorCommand = '"{}/preprocessDakota" {} {} {} {} {} {} {} {}'.format(myScriptDir, bimName, samName, evtName, edpName, simName, driverFile, runDakota, osType)
+        preprocessorCommand = '"{}/preprocessDakota" {} {} {} {} {} {} {} {}'.format(myScriptDir, aimName, samName, evtName, edpName, simName, driverFile, runDakota, osType)
         subprocess.Popen(preprocessorCommand, shell=True).wait()
         print("DONE RUNNING PREPROCESSOR\n")
 
     else:
 
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        numRVs = preProcessDakota(bimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
+        numRVs = preProcessDakota(aimName, evtName, samName, edpName, simName, driverFile, runDakota, uqData)
 
-        shutil.move(bimName, "bim.j")
+        shutil.move(aimName, "aim.j")
         shutil.move(evtName, "evt.j")
         if os.path.isfile(samName): shutil.move(samName, "sam.j")
         shutil.move(edpName, "edp.j")        

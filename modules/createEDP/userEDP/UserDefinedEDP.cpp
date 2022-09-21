@@ -13,13 +13,13 @@ using namespace std;
 int main(int argc, char **argv)
 {
 
-  // StandardEarthquakeEDP --filenameBIM file --filenameEVENT file? --filenameSAM file? --filenameEDP file? <--getRV>
+  // StandardEarthquakeEDP --filenameAIM file --filenameEVENT file? --filenameSAM file? --filenameEDP file? <--getRV>
 
   fprintf(stderr,"HELLO %d\n", argc);
 
   if (strcmp(argv[argc-1],"--getRV") == 0) { // only do if --getRV is passed
 
-    char *filenameBIM = argv[2];
+    char *filenameAIM = argv[2];
     char *filenameEVENT = argv[4];
     char *filenameSAM   = argv[6];
     char *filenameEDP   = argv[8];
@@ -33,9 +33,9 @@ int main(int argc, char **argv)
 
     int arg = 1;
     while (arg < argc) {
-      if (strcmp(argv[arg], "--filenameBIM") ==0) {
+      if (strcmp(argv[arg], "--filenameAIM") ==0) {
 	arg++;
-	filenameBIM = argv[arg];
+	filenameAIM = argv[arg];
       }
       else if (strcmp(argv[arg], "--filenameEVENT") ==0) {
 	arg++;
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     if (filenameEDP == 0 ||
         filenameEVENT == 0 ||
         filenameSAM == 0 ||
-        filenameBIM == 0) {
+        filenameAIM == 0) {
 
       std::cerr << "ERROR - missing input args\n";
       exit(-1);
@@ -91,9 +91,9 @@ int main(int argc, char **argv)
     // load SAM and EVENT files
     json_error_t error;
 
-    json_t *rootBIM = json_load_file(filenameBIM, 0, &error);
+    json_t *rootAIM = json_load_file(filenameAIM, 0, &error);
 
-    json_t *edpData = json_object_get(rootBIM,"EDP");
+    json_t *edpData = json_object_get(rootAIM,"EDP");
     json_t *additionalIn = NULL;
     json_t *postprocess = NULL;
     json_t *edpArray = NULL;
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
     }
 
     // first, try to see if there is an EDP file name in the GI part
-    json_t *GIData = json_object_get(rootBIM, "GeneralInformation");
+    json_t *GIData = json_object_get(rootAIM, "GeneralInformation");
     json_t *edpFileName = json_object_get(GIData,"fileNameCustomEDP");
     if (edpFileName == NULL) {
       // If not, then try to see if there is one in the EDP part

@@ -629,7 +629,7 @@ if __name__ == '__main__':
 
     # SVM(380, 0, 360, 0.5)
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM', default=None)
+    parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--pathEventData')
     parser.add_argument('--mainScript')
@@ -639,5 +639,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sys.exit(run_opensees(
-            args.filenameBIM, args.filenameEVENT, args.pathEventData, args.mainScript,
+            args.filenameAIM, args.filenameEVENT, args.pathEventData, args.mainScript,
             args.modelPath, args.ndm, args.getRV))

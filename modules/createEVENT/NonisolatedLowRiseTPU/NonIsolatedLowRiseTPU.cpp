@@ -47,16 +47,16 @@ main(int argc, char **argv) {
   // parse input args for filenames
   //
 
-  char *filenameBIM = NULL;   // inputfile
+  char *filenameAIM = NULL;   // inputfile
   char *filenameEVENT = NULL; // outputfile
 
   bool doRV = false;
 
   int arg = 1;
   while(arg < argc) {
-    if (strcmp(argv[arg], "--filenameBIM") == 0) {
+    if (strcmp(argv[arg], "--filenameAIM") == 0) {
       arg++;
-      filenameBIM = argv[arg];
+      filenameAIM = argv[arg];
     }
     else if (strcmp(argv[arg], "--filenameEVENT") == 0) {
       arg++;
@@ -68,7 +68,7 @@ main(int argc, char **argv) {
     arg++;
   }
 
-  if (filenameBIM == NULL || filenameEVENT == NULL) {
+  if (filenameAIM == NULL || filenameEVENT == NULL) {
     std::cerr << "FATAL ERROR - no bim or sam file provided\n";
   }
 
@@ -84,10 +84,10 @@ main(int argc, char **argv) {
   //
 
   json_error_t error;
-  json_t *input = json_load_file(filenameBIM, 0, &error);
+  json_t *input = json_load_file(filenameAIM, 0, &error);
   if (input == NULL) {
     std::cerr << "FATAL ERROR - input file does not exist or not a JSON file\n";
-    std::cerr << filenameBIM;
+    std::cerr << filenameAIM;
     exit(-1);
   }
   
