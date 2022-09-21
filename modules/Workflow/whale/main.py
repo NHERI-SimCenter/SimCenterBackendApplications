@@ -1016,6 +1016,10 @@ class Workflow(object):
 
         log_msg('Creating files for individual assets')
         
+        # Open the input file - we'll need it later
+        with open(self.input_file, 'r') as f:
+            input_data = json.load(f)["Applications"]
+
         # Get the workflow assets
         assetsWfapps = self.workflow_apps.get('Assets', None)
 
@@ -1087,6 +1091,23 @@ class Workflow(object):
     
             with open(asset_file, 'r') as f:
                 asset_data = json.load(f)
+
+            # extract the extra information from the input file for this asset type
+            extra_input = {
+                'Applications': {}
+            }
+
+            apps_of_interest = ['Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
+            for app_type in apps_of_interest:
+                if app_type in input_data.keys():
+                    if 'Application' in input_data[app_type]:
+                        app_info = input_data[app_type]
+                    elif asset_type in input_data[app_type]:
+                        app_info = input_data[app_type][asset_type]
+
+                    extra_input['Applications'][app_type] = {
+                        'Application': app_info['Application']}
+                    extra_input[app_type] = app_info['ApplicationData']
                     
             for asst in asset_data:
     
@@ -1110,6 +1131,8 @@ class Workflow(object):
                    
                 # Save the asset type
                 AIM_data['assetType'] = asset_type
+
+                AIM_data.update(extra_input)
  
                 with open(AIM_file, 'w') as f:
                     json.dump(AIM_data, f, indent=2)
@@ -1927,7 +1950,8 @@ class Workflow(object):
 
 
     def aggregate_results(self, asst_data, asset_type = '',
-        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], headers = None):
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        headers = None):
         """
         Short description
 
@@ -1941,7 +1965,7 @@ class Workflow(object):
 
         run_path = self.run_dir
                 
-        if asset_type is not '' :
+        if asset_type != '' :
             run_path = posixpath.join(run_path,asset_type)
         
         os.chdir(run_path)

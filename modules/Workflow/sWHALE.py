@@ -52,7 +52,10 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 
-def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json', prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], asset_type = None, copy_resources = False, force_cleanup = False) :
+def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json', 
+    prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
+    WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
+    asset_type = None, copy_resources = False, force_cleanup = False) :
 
     # update the runDir, if needed
 #    with open(input_file, 'r') as f:
@@ -222,7 +225,7 @@ if __name__ == '__main__':
 
     #Calling the main workflow method and passing the parsed arguments
     main(run_type = wfArgs.runType,
-         input_file = wfArgs.inputFile,
+         input_file = Path(wfArgs.inputFile).resolve(),
          app_registry = wfArgs.registry,
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,
