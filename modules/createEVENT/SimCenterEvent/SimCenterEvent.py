@@ -140,10 +140,12 @@ def write_RV(AIM_file, EVENT_file):
     f_scale_units = get_scale_factors(input_units, output_units)
 
     # get the location of the event input files
-    data_dir = Path(aim_file['Events']['EventFolderPath'])
+    # TODO: assuming a single event for now
+    aim_event_input = aim_file['Events'][0]
+    data_dir = Path(aim_event_input['EventFolderPath'])
 
     # get the list of events assigned to this asset
-    events = aim_file['Events']['Events']
+    events = aim_event_input['Events']
 
     # initialize the dictionary that will become EVENT.json
     event_file = {
@@ -167,7 +169,7 @@ def write_RV(AIM_file, EVENT_file):
             # 'type': 'Seismic', I am pretty sure we are not using this now
             # or we are using it incorrectly, so I removed it for the time being
             # and replaced it with the information that is actually used
-            'type': aim_file['Events']['type'],
+            'type': aim_event_input['type'],
             'event_id': 'RV.eventID',
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
@@ -191,7 +193,7 @@ def write_RV(AIM_file, EVENT_file):
         # initialize the Events part of the EVENT file
         event_file['Events'].append({
             #'type': 'Seismic',
-            'type': aim_file['Events']['type'],
+            'type': aim_event_input['type'],
             'event_id': events[0][0],
             'unitScaleFactor': f_scale_units,
             'data_dir': str(data_dir)
@@ -201,7 +203,7 @@ def write_RV(AIM_file, EVENT_file):
     # TODO: this is needed by some other code that should be fixed and this
     #  part should be removed.
 
-    if aim_file['Events']['type'] == 'timeHistory':
+    if aim_event_input['type'] == 'timeHistory':
         event_file['Events'][0].update(
             load_record(events[0][0], data_dir, empty=len(events) > 1))
             #, event_class = event_class))
