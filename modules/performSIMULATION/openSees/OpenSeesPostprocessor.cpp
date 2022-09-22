@@ -70,7 +70,6 @@ OpenSeesPostprocessor::processResults(const char *AIM, const char *SAM, const ch
   json_error_t error;
   rootEDP = json_load_file(filenameEDP, 0, &error);
 
-
   //
   // if SAM has units, determine length scale factor to get to AIM units
   //
@@ -81,20 +80,22 @@ OpenSeesPostprocessor::processResults(const char *AIM, const char *SAM, const ch
   unitConversionFactorLength = 1.0;
   
   json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  
   if (samUnitsJson != NULL) {
 
     // read SAM units
     Units::UnitSystem samUnits;
-    json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
     json_t* samLengthJson = json_object_get(samUnitsJson, "length");
     json_t* samForceJson = json_object_get(samUnitsJson, "force");    
     json_t* samTimeJson = json_object_get(samUnitsJson, "time");
     samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
     samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
     samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
-
+    
     // read AIM  units
     rootAIM = json_load_file(filenameAIM, 0, &error);
+    json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
+    
     Units::UnitSystem bimUnits;    
     json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
     json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
@@ -108,8 +109,7 @@ OpenSeesPostprocessor::processResults(const char *AIM, const char *SAM, const ch
     unitConversionFactorForce = Units::GetForceFactor(samUnits, bimUnits);
     unitConversionFactorLength = Units::GetLengthFactor(samUnits, bimUnits);
     unitConversionFactorAcceleration = Units::GetAccelerationFactor(samUnits, bimUnits);    
-  }
-    
+  } 
   
   processEDPs();
 
@@ -137,7 +137,7 @@ OpenSeesPostprocessor::processEDPs(){
   
   int numEvents = json_array_size(edps);
   char edpEventName[50];
-  
+
   //
   // try opening results.out file; unknown EDP results may be there or are already in ED"
   //
@@ -156,6 +156,7 @@ OpenSeesPostprocessor::processEDPs(){
 
     json_t *eventEDP = json_object_get(eventEDPs,"responses");
     int numResponses = json_array_size(eventEDP);
+    
     for (int k=0; k<numResponses; k++) {
 
       json_t *response = json_array_get(eventEDP, k);
@@ -173,7 +174,7 @@ OpenSeesPostprocessor::processEDPs(){
 	fileString=temp.str(); 
 	
 	const char *fileName = fileString.c_str();
-	
+
 	//
 	// open file & process data into a json array called: data
 	//
@@ -194,7 +195,9 @@ OpenSeesPostprocessor::processEDPs(){
 	  // read last row and add components to data
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+
 	    tmp *= unitConversionFactorAcceleration;
+	    
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
