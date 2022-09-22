@@ -1097,17 +1097,43 @@ class Workflow(object):
                 'Applications': {}
             }
 
-            apps_of_interest = ['Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
+            apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
                 if app_type in input_data.keys():
-                    if 'Application' in input_data[app_type]:
-                        app_info = input_data[app_type]
-                    elif asset_type in input_data[app_type]:
-                        app_info = input_data[app_type][asset_type]
+                    if app_type == 'Events':
+                        # Events are stored in an array, so they require special treatment
+                        app_data_array = input_data[app_type]
 
-                    extra_input['Applications'][app_type] = {
-                        'Application': app_info['Application']}
-                    extra_input[app_type] = app_info['ApplicationData']
+                        extra_input['Applications'][app_type] = []
+                        extra_input[app_type] = []
+
+                        for app_data in app_data_array:
+
+                            if 'Application' in app_data:
+                                app_info = app_data
+                            elif asset_type in app_data:
+                                app_info = app_data[asset_type]
+
+                            extra_input['Applications'][app_type].append({
+                                'Application': app_info['Application'],
+                                'ApplicationData': {}
+                                })
+                            extra_input[app_type].append(app_info['ApplicationData'])
+
+                    else:
+                        # Every other app type has a single app in it per asset type
+                        app_data = input_data[app_type]
+
+                        if 'Application' in app_data:
+                            app_info = app_data
+                        elif asset_type in app_data:
+                            app_info = app_data[asset_type]
+
+                        extra_input['Applications'][app_type] = {
+                            'Application': app_info['Application'],
+                            'ApplicationData': {}
+                            }
+                        extra_input[app_type] = app_info['ApplicationData']
                     
             for asst in asset_data:
     

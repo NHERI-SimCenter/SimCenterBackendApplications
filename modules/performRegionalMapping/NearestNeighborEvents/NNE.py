@@ -211,13 +211,15 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
-        asset_data['Events'] = {
+        # TODO: we assume there is only one event
+        # handling multiple events will require more sophisticated inputs
+        asset_data['Events'][0].update({
             #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
             "type": event_type
             #"type": "SimCenterEvents"
-        }
+        })
 
         with open(asst_file, 'w') as f:
             json.dump(asset_data, f, indent=2)
