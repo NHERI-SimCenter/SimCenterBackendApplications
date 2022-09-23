@@ -110,7 +110,7 @@ OpenSeesPostprocessor::processResults(const char *AIM, const char *SAM, const ch
     unitConversionFactorLength = Units::GetLengthFactor(samUnits, bimUnits);
     unitConversionFactorAcceleration = Units::GetAccelerationFactor(samUnits, bimUnits);    
   } 
-  
+
   processEDPs();
 
   json_dump_file(rootEDP,filenameEDP,0);
