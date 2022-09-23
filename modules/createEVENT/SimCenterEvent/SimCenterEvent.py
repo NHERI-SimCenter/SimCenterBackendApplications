@@ -212,7 +212,8 @@ def write_RV(AIM_file, EVENT_file):
     with open(EVENT_file, 'w') as f:
         json.dump(event_file, f, indent=2)
 
-def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=False):
+def load_record(file_name, data_dir, f_scale_user=1.0,
+                f_scale_units={'ALL':1.0}, empty=False):
                 #event_class=None):
 
     #just in case
@@ -248,9 +249,7 @@ def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=
            'pattern': []
          }
 
-    # (empty is used when generating only random variables in write_RV)
-    if not empty and not isEventFile:
-
+    if not isEventFile:
         f_scale_units = f_scale_units.get('TH_file',f_scale_units.get('ALL', None))
         if f_scale_units is None:
             raise ValueError("No unit scaling is defined for time history data.")
@@ -274,6 +273,10 @@ def load_record(file_name, data_dir, f_scale_user=1.0, f_scale_units=1.0, empty=
                     'dT': event_data['dT'],
                     'data': list(np.array(event_data[src_label]) * f_scale)
                 })
+
+                # (empty is used when generating only random variables in write_RV)
+                if empty:
+                    event_dic['timeSeries'][-1]['data'] = []
 
                 # TODO: We will need to generalize this as soon as we add
                 # different types of time histories
