@@ -127,7 +127,7 @@ main(int argc, char **argv) {
     double height = 0;
     double weight = 0;
     double G = Units::GetGravity(bimUnits);//used to be 386.41 before converting the units
-    std::cout << "G: " << G << std::endl;
+
     int ndf = 2;
     double floorHeight = 0.0;
     double buildingWeight = 0.0;
@@ -148,12 +148,10 @@ main(int argc, char **argv) {
 
     json_t *massXobj = json_object_get(SIM,"massX");  
     if (massXobj != NULL) {
-      std::cerr << "have massX\n";
       massX = json_number_value(massXobj);
     }
     json_t *massYobj = json_object_get(SIM,"massY");  
     if (massYobj != NULL) {
-      std::cerr << "have massY\n";
       massY = json_number_value(massYobj);
     }
 
@@ -329,7 +327,14 @@ main(int argc, char **argv) {
 
     json_array_append(nodes,node);
 
-    json_object_set(properties,"dampingRatio",json_real(0.02));
+    json_t *typeDR = json_object_get(SIM,"dampingRatio");
+    if (typeDR == NULL) {
+      json_object_set(properties,"dampingRatio",json_real(0.02));
+    }     else {
+      std::cerr << "SETTING DAMPING RATIO\n" << json_dumps(typeDR, JSON_ENCODE_ANY);
+      json_object_set(properties,"dampingRatio",typeDR);
+
+    }
   }
   
   //
