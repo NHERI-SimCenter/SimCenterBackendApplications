@@ -189,12 +189,15 @@ class surrogate(UQengine):
         #  Advanced
         #
 
-        self.do_logtransform = surrogateJson["logTransform"]
-        self.kernel = surrogateJson["kernel"]
-        self.do_linear = surrogateJson["linear"]
-        self.nugget_opt = surrogateJson["nuggetOpt"]
-
+        self.heteroscedastic = False
         if surrogateJson["advancedOpt"]:
+
+            self.do_logtransform = surrogateJson["logTransform"]
+            self.kernel = surrogateJson["kernel"]
+            self.do_linear = surrogateJson["linear"]
+            self.nugget_opt = surrogateJson["nuggetOpt"]
+            # self.heteroscedastic = surrogateJson["Heteroscedastic"]
+
             try:
                 self.nuggetVal = np.array(
                     json.loads("[{}]".format(surrogateJson["nuggetString"]))
@@ -202,6 +205,11 @@ class surrogate(UQengine):
             except json.decoder.JSONDecodeError:
                 msg = "Error reading json: improper format of nugget values/bounds. Provide nugget values/bounds of each QoI with comma delimiter"
                 self.exit(msg)
+
+            if self.nugget_opt == "Heteroscedastic":
+                self.stochastic =[True] * y_dim
+            else:
+                self.stochastic =[False] * y_dim
 
             if self.nuggetVal.shape[0] != self.y_dim and self.nuggetVal.shape[0] != 0:
                 msg = "Error reading json: Number of nugget quantities ({}) does not match # QoIs ({})".format(
@@ -230,12 +238,45 @@ class surrogate(UQengine):
                         msg = "Error reading json: the lower bound of a nugget value should be smaller than its upper bound"
                         self.exit(msg)
         else:
-            pass
             # use default
-            # self.do_logtransform = False
-            # self.kernel = 'Matern 5/2'
-            # self.do_linear = False
-            # self.nugget_opt = "optimize"
+            self.do_logtransform = False
+            self.kernel = 'Matern 5/2'
+            self.do_linear = False
+            self.nugget_opt = "optimize"
+            self.nuggetVal= 1
+
+
+
+        if self.stochastic[0]:
+
+            #
+            # Modify GPy package
+            #
+            def monkeypatch_method(cls):
+                def decorator(func):
+                    setattr(cls, func.__name__, func)
+                    return func
+
+                return decorator
+
+            @monkeypatch_method(GPy.likelihoods.Gaussian)
+            def gaussian_variance(self, Y_metadata=None):
+                if Y_metadata is None:
+                    return self.variance
+                else:
+                    return self.variance * Y_metadata['variance_structure']
+
+            @monkeypatch_method(GPy.core.GP)
+            def set_XY2(self, X=None, Y=None, Y_metadata=None):
+                if Y_metadata is not None:
+                    if self.Y_metadata is None:
+                        self.Y_metadata = Y_metadata
+                    else:
+                        self.Y_metadata.update(Y_metadata)
+                        print("metadata_updated")
+                self.set_XY(X, Y)
+
+
 
         # Save model information
         if (surrogateJson["method"] == "Sampling and Simulation") or (
@@ -366,21 +407,29 @@ class surrogate(UQengine):
         if self.do_linear:
             kr = kr + GPy.kern.Linear(input_dim=x_dim, ARD=True)
 
+
         X_dummy = np.zeros((1, x_dim))
         Y_dummy = np.zeros((1, y_dim))
         # for single fidelity case
+
+        self.set_normalizer = True
+
+        self.normMeans = [0] * y_dim
+        self.normVars = [1] * y_dim
         if not self.do_mf:
-            kg = kr
-            self.m_list = list()
+            self.kg = kr
+            self.m_list = [0] * self.y_dim
+            self.m_var_list, self.var_str, self.Y_mean =  [0] * self.y_dim, [1] * self.y_dim, [0] * self.y_dim
             for i in range(y_dim):
-                self.m_list = self.m_list + [
-                    GPy.models.GPRegression(
-                        X_dummy, Y_dummy, kernel=kg.copy(), normalizer=True
-                    )
-                ]
+                if not self.heteroscedastic:
+                    self.m_list[i] =GPy.models.GPRegression( X_dummy, Y_dummy, kernel=self.kg.copy(), normalizer=self.set_normalizer)
+                else:
+                    self.set_normalizer = False
+                    self.m_list[i] = GPy.models.GPHeteroscedasticRegression( X_dummy, Y_dummy, kernel=self.kg.copy())
                 for parname in self.m_list[i].parameter_names():
                     if parname.endswith("lengthscale"):
                         exec("self.m_list[i]." + parname + "=self.ll")
+
 
         # for multi fidelity case
         else:
@@ -389,17 +438,9 @@ class surrogate(UQengine):
                 [X_dummy, X_dummy], [Y_dummy, Y_dummy]
             )
 
-            self.m_list = list()
+            self.m_list = [0] * self.y_dim
             for i in range(y_dim):
-                self.m_list = self.m_list + [
-                    GPyMultiOutputWrapper(
-                        emf.models.GPyLinearMultiFidelityModel(
-                            X_list, Y_list, kernel=kgs.copy(), n_fidelities=2
-                        ),
-                        2,
-                        n_optimization_restarts=15,
-                    )
-                ]
+                self.m_list[i] = GPyMultiOutputWrapper(emf.models.GPyLinearMultiFidelityModel(X_list, Y_list, kernel=kgs.copy(), n_fidelities=2),2,n_optimization_restarts=15,)
 
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -407,13 +448,16 @@ class surrogate(UQengine):
         self.nc1 = min(200 * x_dim, 2000)  # candidate points
         self.nq = min(200 * x_dim, 2000)  # integration points
 
-    def predict(self, m_tmp, X):
+    def predict(self, m_tmp, X, noise=0):
 
         if not self.do_mf:
 
             if all(m_tmp.Y == np.mean(m_tmp.Y, axis=0)):
                 return m_tmp.Y[0], 0  # if response is constant - just return constant
+            elif self.heteroscedastic:
+                return m_tmp.predict_noiseless(X)
             else:
+                #TODO: check if this includes the noise
                 return m_tmp.predict(X)
         else:
 
@@ -428,7 +472,7 @@ class surrogate(UQengine):
                 X_list_h = X_list[X.shape[0]:]
                 return m_tmp.predict(X_list_h)
 
-    def set_XY(self, m_tmp, X_hf, Y_hf, X_lf=float("nan"), Y_lf=float("nan")):
+    def set_XY(self, m_tmp, ny, X_hf, Y_hf, X_lf=float("nan"), Y_lf=float("nan")):
 
         if self.do_logtransform:
             if np.min(Y_hf) < 0:
@@ -453,8 +497,79 @@ class surrogate(UQengine):
         #     X_lf = self.X_lf
         #     Y_lfs = self.Y_lf
 
-        if not self.do_mf:
-            m_tmp.set_XY(X_hf, Y_hfs)
+        if not self.do_mf :
+            if self.heteroscedastic:
+                m_tmp = GPy.models.GPHeteroscedasticRegression(
+                    X_hf, Y_hfs, kernel=self.kg.copy()
+                )
+                # TODO: temporary... need to find a way to not calibrate but update the variance
+                m_tmp.optimize()
+                self.var_str[ny] = np.ones((m_tmp.Y.shape[0],1))
+            elif self.stochastic[ny]:
+                #
+                # Get new matrix replIdx [1,2,2,2,3,3,3,4,...]
+                #
+                # set_XY()
+                X_new, X_idx, indices, counts = np.unique(X_hf, axis=0, return_index=True, return_counts=True,return_inverse=True)
+
+                n_unique = X_new.shape[0]
+                Y_mean, Y_var = np.zeros((n_unique,self.y_dim)), np.zeros((n_unique,self.y_dim))
+
+                for idx in range(n_unique):
+                    Y_subset = Y_hfs[ [i for i in np.where(indices==idx)[0] ],:]
+                    Y_mean[idx,:] = np.mean(Y_subset,axis=0)
+                    Y_var[idx,:] = np.var(Y_subset,axis=0)
+
+                idx_repl =[i for i in np.where(counts>1)[0] ]
+
+                if (np.max(Y_var)/np.var(Y_mean)<1.e-10):
+                    # No need for stochastic Kriging.....!!
+                    self.stochastic[ny] = False
+                    
+                    m_tmp = self.set_XY( m_tmp, ny, X_new, Y_mean, X_lf, Y_lf)
+                    return m_tmp
+                #
+                # Constructing secondary GP model - can we make use of the "variance of sample variance"
+                #
+                # TODO: log-variance
+                kernel_var = GPy.kern.Matern52(input_dim=self.x_dim,  ARD=True)
+                log_vars = np.log(Y_var[idx_repl])
+                m_var = GPy.models.GPRegression(X_new[idx_repl,:], log_vars, kernel_var, normalizer=True,Y_metadata=None)
+                print("Optimizing variance field of ny={}".format(ny))
+                m_var.optimize(messages=True, max_f_eval=1000)
+                m_var.optimize_restarts(20)
+                log_var_pred, dum = m_var.predict(X_new)
+                var_pred = np.exp(log_var_pred)
+                #
+                #
+                #
+
+                #norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
+                if  self.set_normalizer:
+                   norm_var_str = (var_pred.T[0]) / np.var(Y_mean) # if normalization was used..
+                   # norm_var_str = (var_pred.T[0] / counts) / np.mean((var_pred.T[0] / counts))*100  # if normalization was used..
+                else:
+                    norm_var_str = (var_pred.T[0])  # if normalization was used..
+
+                #norm_var_str = (X_new+2)**2/max((X_new+2)**2)
+                Y_metadata = {'variance_structure': norm_var_str/counts}
+                m_tmp.set_XY2(X_new, Y_mean,Y_metadata=Y_metadata)
+
+                self.m_var_list[ny] = m_var
+                self.var_str[ny] = norm_var_str
+                self.indices_unique = indices
+                self.n_unique_hf = X_new.shape[0]
+                self.Y_mean[ny] = Y_mean
+                '''
+                import matplotlib.pyplot as plt
+                plt.errorbar(X_new, Y_mean, np.sqrt(var_pred.T[0])); plt.show()
+                
+                
+                '''
+
+            else:
+                m_tmp.set_XY(X_hf, Y_hfs)
+                self.var_str[ny] = np.ones((m_tmp.Y.shape[0],1))
         else:
             (
                 X_list_tmp,
@@ -464,6 +579,11 @@ class surrogate(UQengine):
             )
             m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
 
+        if self.set_normalizer:
+            self.normMeans[ny] = m_tmp.normalizer.mean
+            self.normVars[ny] = m_tmp.normalizer.std ** 2
+
+
         return m_tmp
 
     def calibrate(self):
@@ -471,14 +591,21 @@ class surrogate(UQengine):
         warnings.filterwarnings("ignore")
         t_opt = time.time()
         nugget_opt_tmp = self.nugget_opt
+        nopt = 20
 
-        if self.do_parallel:
+        parallel_calib = False
+        # parallel_calib = self.do_parallel
+
+        if parallel_calib:
             iterables = (
                 (
-                    self.m_list[ny],
+                    copy.deepcopy(self.m_list[ny]),
                     nugget_opt_tmp,
                     self.nuggetVal,
+                    self.normVars[ny],
                     self.do_mf,
+                    self.heteroscedastic,
+                    nopt,
                     ny
                 )
                 for ny in range(self.y_dim)
@@ -494,17 +621,17 @@ class surrogate(UQengine):
 
         else:
             for ny in range(self.y_dim):
-                self.m_list[ny], msg, ny = calibrating(copy.deepcopy(self.m_list[ny]), nugget_opt_tmp, self.nuggetVal,
-                                                       self.do_mf, ny)
+                self.m_list[ny], msg, ny = calibrating(copy.deepcopy(self.m_list[ny]), nugget_opt_tmp, self.nuggetVal, self.normVars[ny],
+                                                       self.do_mf, self.heteroscedastic, nopt , ny)
                 if not msg == "":
                     self.exit(msg)
         ####
 
         self.calib_time = time.time() - t_opt
         print("     Calibration time: {:.2f} s".format(self.calib_time),flush=True)
-        Y_preds, Y_pred_vars, e2 = self.get_cross_validation_err()
+        Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2 = self.get_cross_validation_err()
 
-        return Y_preds, Y_pred_vars, e2
+        return Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2
 
     def train_surrogate(self, t_init):
         # FEM index
@@ -611,8 +738,9 @@ class surrogate(UQengine):
             self.exit(msg)
 
         for i in range(y_dim):
-            self.set_XY(
+            self.m_list[i] = self.set_XY(
                 self.m_list[i],
+                i,
                 self.X_hf,
                 self.Y_hf[:, i][np.newaxis].transpose(),
                 self.X_lf,
@@ -628,6 +756,11 @@ class surrogate(UQengine):
 
         print("======== RUNNING GP DoE ===========",flush=True)
 
+
+        #
+        # Run Design of experiments
+        #
+
         exit_flag = False
         nc1 = self.nc1
         nq = self.nq
@@ -636,7 +769,7 @@ class surrogate(UQengine):
             # Initial calibration
 
             # Calibrate self.m_list
-            self.Y_cvs, self.Y_cv_vars, e2 = self.calibrate()
+            self.Y_cvs, self.Y_cv_vars, self.Y_cv_var_w_measure, e2 = self.calibrate()
             if self.do_logtransform:
                 # self.Y_cv = np.exp(2*self.Y_cvs+self.Y_cv_vars)*(np.exp(self.Y_cv_vars)-1) # in linear space
                 # TODO: Let us use median instead of mean?
@@ -644,11 +777,16 @@ class surrogate(UQengine):
                 self.Y_cv_var = np.exp(2 * self.Y_cvs + self.Y_cv_vars) * (
                         np.exp(self.Y_cv_vars) - 1
                 )  # in linear space
+
+                self.Y_cv_var_w_measure = np.exp(2 * self.Y_cvs + self.Y_cv_var_w_measure) * (
+                        np.exp(self.Y_cv_var_w_measure) - 1
+                )  # in linear space
             else:
                 self.Y_cv = self.Y_cvs
                 self.Y_cv_var = self.Y_cv_vars
+                self.Y_cv_var_w_measure = self.Y_cv_var_w_measure
 
-            if self.id_sim_hf < model_hf.thr_count:
+            if self.n_unique_hf < model_hf.thr_count:
                 if self.doeIdx == "HF":
                     tmp_doeIdx = self.doeIdx  # single fideility
                 else:
@@ -688,9 +826,10 @@ class surrogate(UQengine):
             self.NRMSE_idx = np.vstack((self.NRMSE_idx, i))
 
             if (
-                    self.id_sim_hf >= model_hf.thr_count
+                    self.n_unique_hf >= model_hf.thr_count       # self.id_sim_hf >= model_hf.thr_count
                     and self.id_sim_lf >= model_lf.thr_count
             ):
+
                 n_iter = i
                 self.exit_code = "count"
                 if self.id_sim_hf == 0 and self.id_sim_lf == 0:
@@ -712,15 +851,15 @@ class surrogate(UQengine):
 
             if tmp_doeIdx.startswith("HF"):
                 n_new = x_new_hf.shape[0]
-                if n_new + self.id_sim_hf > model_hf.thr_count:
-                    n_new = model_hf.thr_count - self.id_sim_hf
+                if n_new +self.n_unique_hf > model_hf.thr_count:
+                    n_new = model_hf.thr_count -self.n_unique_hf
                     x_new_hf = x_new_hf[0:n_new, :]
                 x_hf_new, y_hf_new, self.id_sim_hf = FEM_batch_hf(
                     x_new_hf, self.id_sim_hf
                 )
                 self.X_hf = np.vstack([self.X_hf, x_hf_new])
                 self.Y_hf = np.vstack([self.Y_hf, y_hf_new])
-                i = self.id_sim_hf + n_new
+                i =self.n_unique_hf + n_new
 
             if tmp_doeIdx.startswith("LF"):
                 n_new = x_new_lf.shape[0]
@@ -738,8 +877,9 @@ class surrogate(UQengine):
             # print(">> {:.2f} s".format(time.time() - t_init))
 
             for ny in range(self.y_dim):
-                self.set_XY(
+                self.m_list[ny] = self.set_XY(
                     self.m_list[ny],
+                    ny,
                     self.X_hf,
                     self.Y_hf[:, ny][np.newaxis].transpose(),
                     self.X_lf,
@@ -750,13 +890,123 @@ class surrogate(UQengine):
         self.NRMSE_val = NRMSE_val
 
         self.verify()
-
         print("my exit code = {}".format(self.exit_code),flush=True)
         print("1. count = {}".format(self.id_sim_hf),flush=True)
+        print("1. count_unique = {}".format(self.n_unique_hf),flush=True)
         print("2. max(NRMSE) = {}".format(np.max(self.NRMSE_val)),flush=True)
         print("3. time = {:.2f} s".format(self.sim_time),flush=True)
 
         """
+        # visualize
+        dum, dum, indices, counts = np.unique(self.X_hf, axis=0, return_index=True, return_counts=True,
+                               return_inverse=True)
+
+        import matplotlib.pyplot as plt
+        xs1 = np.linspace(-2,2,100)
+        xs2 = np.linspace(1.4,1.6,100)
+        xv1, xv2 = np.meshgrid(xs1, xs2)
+        xa1 = np.array(xv1).flatten()
+        xa2 = np.array(xv2).flatten()
+        xs = np.vstack((xa1,xa2)).T
+        
+        ys_pred, ys_pred_var  = self.m_list[0].predict_noiseless(xs)
+        log_var_pred, dumm  = self.m_var_list[0].predict_noiseless(xs)
+        ys_pred_sig = np.sqrt(ys_pred_var)
+        std_pred = np.sqrt(np.exp(log_var_pred))
+        
+        
+        from mpl_toolkits import mplot3d
+        import numpy as np
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+
+        ax.scatter3D(xa1, xa2, ys_pred);
+        ax.scatter3D(xa1, xa2, ys_pred+np.sqrt(ys_pred_var));
+        plt.show()
+
+
+
+        import matplotlib.pyplot as plt
+         dum, dum, indices, counts = np.unique(self.X_hf, axis=0, return_index=True, return_counts=True,
+                               return_inverse=True)
+
+  
+        xs1 = np.linspace(-2,2,100)
+        xs = np.hstack((xs1[:,None],np.ones(xs1[:,None].shape)*1.5))
+        ys_pred, ys_pred_var  = self.m_list[0].predict_noiseless(xs)
+        log_var_pred, dumm  = self.m_var_list[0].predict_noiseless(xs)
+        var_pred = np.exp(log_var_pred)
+
+        norm_var_str = (var_pred.T[0])  # if normalization was used..
+        
+        ys_pred_sig = np.sqrt(ys_pred_var)
+        ys_pred_sig_w_measured = np.sqrt(norm_var_str[:,None]*self.m_list[0].Gaussian_noise.variance+ys_pred_var)
+        
+        
+
+        plt.figure()
+        #plt.plot(xa1, ys_pred, ':', c=(155/255, 34/255, 38/255), label="f(x)") #RED
+        #plt.scatter(X, Y, c=(155/255, 34/255, 38/255), label='Observations')
+       
+         
+        idx = np.argsort(self.X_hf[:,0])
+        sorted_x =self.X_hf[idx,0]
+        sorted_y =self.Y_cv[idx,0]
+        sorted_y_real =self.Y_hf[idx,0]
+        sorted_y_std = np.sqrt(self.Y_cv_var_w_measure[idx,0])
+        sorted_y_std0 = np.sqrt(self.Y_cv_var[idx,0])
+
+        ### cross validation predictions
+        
+        plt.fill(np.concatenate([sorted_x, sorted_x[::-1]]),
+                 np.concatenate([sorted_y - 1.9600 * sorted_y_std0,
+                                 (sorted_y  + 1.9600 * sorted_y_std0) [::-1]]),
+                 alpha=.5, fc=(200/255, 200/255, 33/255), ec='None', label='95% cross validation')     
+
+                 
+                 
+        plt.fill(np.concatenate([xs1, xs1[::-1]]),
+                 np.concatenate([ys_pred - 1.9600 * ys_pred_sig_w_measured,
+                                (ys_pred + 1.9600 * ys_pred_sig_w_measured)[::-1]]),
+                 alpha=.5, fc=(42/255, 111/255, 151/255), ec='None', label='95% PI')
+         
+        plt.fill(np.concatenate([xs1, xs1[::-1]]),
+                  np.concatenate([ys_pred - 1.9600 * ys_pred_sig,
+                                 (ys_pred + 1.9600 * ys_pred_sig)[::-1]]),
+                  alpha=.5, fc=(200/255, 33/255, 33/255), ec='None', label='95% CI')
+                  
+         #plt.scatter(self.m_list[0].X,self.m_list[0].Y, label='Mean of repls')
+        
+        plt.scatter(sorted_x,sorted_y, label='All observation')
+        plt.plot(xs1, ys_pred, '-', c=(0/255, 18/255, 25/255), label='Prediction mean')
+        plt.scatter(self.X_hf[:,0],self.Y_hf[:,0], label='All observation')
+        plt.scatter(self.m_list[0].X[counts>1,0],self.m_list[0].Y[counts>1,0], label='Mean of repls')
+        
+        plt.xlabel('$x$')
+        plt.ylabel('$f(x)$')
+        plt.legend(loc='upper left', frameon=False)
+        plt.ylim([-300,1800])
+        plt.show()
+        
+        
+        
+        
+        
+        from scipy.stats import norm, probplot
+        import matplotlib.pyplot as plt
+      
+        plt.hist((sorted_y-sorted_y_real)/sorted_y_std, bins=20,density=True)
+        x = np.linspace(-4,4, 100)
+        plt.plot(x, norm.pdf(x), 'r-', lw=5, alpha=0.6, label='norm pdf')       
+        plt.xlabel(r"$(Y_{CV}-Y_{obs})/\sigma_{CV}$")                 
+        plt.show()
+
+        probplot((sorted_y-sorted_y_real)/sorted_y_std, dist="norm", fit=True, rvalue=True, plot=plt)
+        plt.show()
+        
+        np.std((sorted_y-sorted_y_real)/sorted_y_std)
+        
         import matplotlib.pyplot as plt
         dof=0
         plt.plot(self.Y_cv[:,dof],self.Y_hf[:,dof],'x');
@@ -878,6 +1128,8 @@ class surrogate(UQengine):
 
         y_ub = np.zeros(self.Y_cv.shape)
         y_lb = np.zeros(self.Y_cv.shape)
+        y_ubm = np.zeros(self.Y_cv.shape) # with measruement
+        y_lbm = np.zeros(self.Y_cv.shape)
 
         if not self.do_logtransform:
             for ny in range(self.y_dim):
@@ -886,6 +1138,12 @@ class surrogate(UQengine):
                 ).tolist()
                 y_ub[:, ny] = norm.ppf(
                     0.95, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var[:, ny])
+                ).tolist()
+                y_lbm[:, ny] = norm.ppf(
+                    0.05, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var_w_measure[:, ny])
+                ).tolist()
+                y_ubm[:, ny] = norm.ppf(
+                    0.95, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var_w_measure[:, ny])
                 ).tolist()
         else:
             for ny in range(self.y_dim):
@@ -896,7 +1154,13 @@ class surrogate(UQengine):
                 y_lb[:, ny] = lognorm.ppf(0.05, s=sig, scale=np.exp(mu)).tolist()
                 y_ub[:, ny] = lognorm.ppf(0.95, s=sig, scale=np.exp(mu)).tolist()
 
-        xy_sur_data = np.hstack((xy_data, self.Y_cv, y_lb, y_ub, self.Y_cv_var))
+                sig_m = np.sqrt(
+                    np.log(self.Y_cv_var_w_measure[:, ny] / pow(self.Y_cv[:, ny], 2) + 1)
+                )
+                y_lbm[:, ny] = lognorm.ppf(0.05, s=sig_m, scale=np.exp(mu)).tolist()
+                y_ubm[:, ny] = lognorm.ppf(0.95, s=sig_m, scale=np.exp(mu)).tolist()
+
+        xy_sur_data = np.hstack((xy_data, self.Y_cv, y_lb, y_ub, self.Y_cv_var, y_lbm, y_ubm, self.Y_cv_var_w_measure))
         g_name_sur = self.g_name
         header_string_sur = (
                 header_string
@@ -908,7 +1172,13 @@ class surrogate(UQengine):
                 + ".q95 ".join(g_name_sur)
                 + ".q95 "
                 + ".var ".join(g_name_sur)
-                + ".var"
+                + ".var "
+                + ".q5_w_mnoise ".join(g_name_sur)
+                + ".q5_w_mnoise "
+                + ".q95_w_mnoise ".join(g_name_sur)
+                + ".q95_w_mnoise "
+                + ".var_w_mnoise ".join(g_name_sur)
+                + ".var_w_mnoise "
         )
 
         np.savetxt(
@@ -927,6 +1197,7 @@ class surrogate(UQengine):
         hfJson["DoEmethod"] = self.modelInfoHF.doe_method
         hfJson["thrNRMSE"] = self.modelInfoHF.thr_NRMSE
         hfJson["valSamp"] = self.modelInfoHF.n_existing + self.id_sim_hf
+        hfJson["valSampUnique"] = self.n_unique_hf
         hfJson["valSim"] = self.id_sim_hf
 
         constIdx = []
@@ -942,6 +1213,8 @@ class surrogate(UQengine):
         results["inpData"] = self.modelInfoHF.inpData
         results["outData"] = self.modelInfoHF.outData
         results["valSamp"] = self.X_hf.shape[0]
+        results["doStochastic"] = self.stochastic
+        results["doNormalization"] = self.set_normalizer
 
         results["highFidelityInfo"] = hfJson
 
@@ -990,16 +1263,15 @@ class surrogate(UQengine):
 
             if not self.do_logtransform:
                 results["yPredict_CI_lb"][self.g_name[ny]] = norm.ppf(
-                    0.25, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var[:, ny])
+                    0.25, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var_w_measure[:, ny])
                 ).tolist()
                 results["yPredict_CI_ub"][self.g_name[ny]] = norm.ppf(
-                    0.75, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var[:, ny])
+                    0.75, loc=self.Y_cv[:, ny], scale=np.sqrt(self.Y_cv_var_w_measure[:, ny])
                 ).tolist()
-
             else:
                 mu = np.log(self.Y_cv[:, ny])
                 sig = np.sqrt(
-                    np.log(self.Y_cv_var[:, ny] / pow(self.Y_cv[:, ny], 2) + 1)
+                    np.log(self.Y_cv_var_w_measure[:, ny] / pow(self.Y_cv[:, ny], 2) + 1)
                 )
                 results["yPredict_CI_lb"][self.g_name[ny]] = lognorm.ppf(
                     0.25, s=sig, scale=np.exp(mu)
@@ -1017,16 +1289,19 @@ class surrogate(UQengine):
                 results["valNugget1"] = {}
                 results["valNugget2"] = {}
                 results["valNugget1"][self.g_name[ny]] = float(
-                    self.m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]
+                    self.m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]*self.normVars[ny]
                 )
                 results["valNugget2"][self.g_name[ny]] = float(
-                    self.m_list[ny].gpy_model["mixed_noise.Gaussian_noise_1.variance"]
+                    self.m_list[ny].gpy_model["mixed_noise.Gaussian_noise_1.variance"]*self.normVars[ny]
                 )
             else:
-                results["valNugget"] = {}
-                results["valNugget"][self.g_name[ny]] = float(
-                    self.m_list[ny]["Gaussian_noise.variance"]
-                )
+
+                if not self.heteroscedastic:
+                    results["valNugget"] = {}
+                    results["valNugget"][self.g_name[ny]] = float(
+                        self.m_list[ny]["Gaussian_noise.variance"]*self.normVars[ny]
+                    )
+                
             results["valNRMSE"][self.g_name[ny]] = self.NRMSE_val[ny]
             results["valR2"][self.g_name[ny]] = self.R2_val[ny]
             results["valCorrCoeff"][self.g_name[ny]] = self.corr_val[ny]
@@ -1054,6 +1329,14 @@ class surrogate(UQengine):
 
         ### Used for surrogate
         results["modelInfo"] = {}
+
+        if self.stochastic:
+            for ny in range(self.y_dim):
+                results["modelInfo"][self.g_name[ny]+"_Var"] = {}
+                for parname in self.m_list[ny].parameter_names():
+                    results["modelInfo"][self.g_name[ny]+"_Var"][parname] = list(
+                        eval("self.m_var_list[ny]." + parname)
+                    )
 
         if not self.do_mf:
             for ny in range(self.y_dim):
@@ -1306,9 +1589,9 @@ class surrogate(UQengine):
                     Y_stack = np.vstack([Y_stack, np.zeros((1, 1))])  # any variables
 
                     if doeIdx.startswith("HF"):
-                        self.set_XY(m_stack, X_stack, Y_stack)
+                        m_stack = self.set_XY(m_stack, y_idx, X_stack, Y_stack)
                     elif doeIdx.startswith("LF"):  # any variables
-                        self.set_XY(m_tmp, self.X_hf, self.Y_hf, X_stack, Y_stack)
+                        m_tmp = self.set_XY(m_tmp, y_idx, self.X_hf, self.Y_hf, X_stack, Y_stack)
 
                     dummy, Yq_var = self.predict(m_stack, xc1[idx_pareto_candi, :])
                     cri1 = Yq_var * VOI[idx_pareto_candi]
@@ -1412,18 +1695,20 @@ class surrogate(UQengine):
                 update_point[ni, :] = x_point
 
                 if doeIdx == "HFHF":
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         X_stack,
                         Y_stack,
                         self.X_lf,
                         self.Y_lf[:, y_idx][np.newaxis].T,
                     )
                 elif doeIdx == "HF":
-                    self.set_XY(m_stack, X_stack, Y_stack)
+                    m_stack = self.set_XY(m_stack, y_idx, X_stack, Y_stack)
                 elif doeIdx == "LF":  # any variables
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         self.X_hf,
                         self.Y_hf[:, y_idx][np.newaxis].T,
                         X_stack,
@@ -1514,18 +1799,20 @@ class surrogate(UQengine):
                 update_point[ni, :] = x_point
 
                 if doeIdx == "HFHF":
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         X_stack,
                         Y_stack,
                         self.X_lf,
                         self.Y_lf[:, y_idx][np.newaxis].T,
                     )
                 elif doeIdx == "HF":
-                    self.set_XY(m_stack, X_stack, Y_stack)
+                    m_stack = self.set_XY(m_stack, y_idx, X_stack, Y_stack)
                 elif doeIdx == "LF":  # any variables
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         self.X_hf,
                         self.Y_hf[:, y_idx][np.newaxis].T,
                         X_stack,
@@ -1565,9 +1852,9 @@ class surrogate(UQengine):
                 Y_stack = np.vstack([Y_stack, np.zeros((1, 1))])  # any variables
                 # m_stack.set_XY(X=X_stack, Y=Y_stack)
                 if doeIdx.startswith("HF"):
-                    self.set_XY(m_stack, X_stack, Y_stack)
+                    m_stack = self.set_XY(m_stack, y_idx, X_stack, Y_stack)
                 elif doeIdx.startswith("LF"):  # any variables
-                    self.set_XY(m_tmp, self.X_hf, self.Y_hf, X_stack, Y_stack)
+                    m_tmp = self.set_XY(m_tmp, y_idx,self.X_hf, self.Y_hf, X_stack, Y_stack)
                 update_point[ni, :] = x_point
 
             score = np.max(MMSEc1, axis=0)
@@ -1605,18 +1892,20 @@ class surrogate(UQengine):
                 #     self.set_XY(m_stack, self.X_hf, self.Y_hf, X_stack, Y_stack)
 
                 if doeIdx == "HFHF":
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         X_stack,
                         Y_stack,
                         self.X_lf,
                         self.Y_lf[:, y_idx][np.newaxis].T,
                     )
                 elif doeIdx == "HF":
-                    self.set_XY(m_stack, X_stack, Y_stack)
+                    m_stack = self.set_XY(m_stack, y_idx,X_stack, Y_stack)
                 elif doeIdx == "LF":  # any variables
-                    self.set_XY(
+                    m_stack = self.set_XY(
                         m_stack,
+                        y_idx,
                         self.X_hf,
                         self.Y_hf[:, y_idx][np.newaxis].T,
                         X_stack,
@@ -1648,52 +1937,97 @@ class surrogate(UQengine):
 
         print("Calculating cross validation errors",flush=True)
         time_tmp = time.time();
-        X_hf = self.X_hf
+        X_hf = self.X_hf # contains separate samples
         Y_hf = self.Y_hf
-        X_lf = self.X_lf
-        Y_lf = self.Y_lf
 
-        e2 = np.zeros(Y_hf.shape)
+        e2 = np.zeros(Y_hf.shape)  # only for unique...
         Y_pred = np.zeros(Y_hf.shape)
         Y_pred_var = np.zeros(Y_hf.shape)
+        Y_pred_var_w_measure = np.zeros(Y_hf.shape)
+        #
+        # Efficient cross validation TODO: check if it works for heteroskedacstic
+        #
 
-        for ny in range(Y_hf.shape[1]):
-            # for ns in range(X_hf.shape[0]):
-            #     if self.do_logtransform:
-            #         Y_exact = np.log(Y_hf[ns, ny])
-            #     else:
-            #         Y_exact = Y_hf[ns, ny]
-            #     Y_pred[ns, ny] = Y_exact # remove this line
-            m_tmp = copy.deepcopy(self.m_list[ny])
-            m_tmp.inference_method.LOO(m_tmp.kern, m_tmp.X, m_tmp.Y, m_tmp.likelihood, m_tmp.posterior)
-            m_tmp = copy.deepcopy(self.m_list[ny])
-            for ns in range(X_hf.shape[0]):
-                X_tmp = np.delete(X_hf, ns, axis=0)
-                Y_tmp = np.delete(Y_hf, ns, axis=0)
-                #m_tmp.set_XY(X_tmp, Y_tmp[:, ny][np.newaxis].transpose())
+        if not self.heteroscedastic: # note: heteroscedastic is not our stochastic kriging
 
-                m_tmp = self.set_XY(
-                    m_tmp,
-                    X_tmp,
-                    Y_tmp[:, ny][np.newaxis].transpose(),
-                    X_lf,
-                    Y_lf[:, ny][np.newaxis].transpose(),
-                )
-                x_loo = X_hf[ns, :][np.newaxis]
-                Y_pred_tmp, Y_err_tmp = self.predict(m_tmp, x_loo)
+            #X_unique, dum, indices, dum = np.unique(X_hf, axis=0, return_index=True, return_counts=True,
+            #                                   return_inverse=True)
+            #self.n_unique_hf = indices.shape[0]
 
-                Y_pred[ns, ny] = Y_pred_tmp
-                Y_pred_var[ns, ny] = Y_err_tmp
+            indices = self.indices_unique
 
-                if self.do_logtransform:
-                    Y_exact = np.log(Y_hf[ns, ny])
-                else:
-                    Y_exact = Y_hf[ns, ny]
+            for ny in range(Y_hf.shape[1]):
 
-                e2[ns, ny] = pow((Y_pred_tmp - Y_exact), 2)  # for nD outputs
+                Xm = self.m_list[ny].X  # contains unique samples
+                Ym = self.m_list[ny].Y
 
+                # works both for stochastic/stochastic
+                nugget_mat = np.diag(self.var_str[ny]) * self.m_list[ny].Gaussian_noise.parameters
+
+                Rmat = self.m_list[ny].kern.K(Xm)
+                #K(X_hf,X_hf)
+                Rinv = np.linalg.inv(Rmat+nugget_mat)
+                e = np.squeeze(np.matmul(Rinv, Ym-self.normMeans[ny]))/np.squeeze(np.diag(Rinv))
+
+                
+                # works both for stochastic/stochastic
+                for nx in range(X_hf.shape[0]):
+                    e2[nx, ny] = e[indices[nx]] ** 2
+                    #Y_pred_var[nx, ny] = 1 / np.diag(Rinv)[indices[nx]]  * self.normVars[ny]
+                    Y_pred[nx, ny] = self.Y_mean[ny][indices[nx]] -  e[indices[nx]]
+                    #Y_pred_var_w_measure[nx, ny] = Y_pred_var[nx, ny]  + self.m_list[ny].Gaussian_noise.parameters[0]*self.var_str[ny][indices[nx]] * self.normVars[ny]
+                    Y_pred_var_w_measure[nx, ny] = 1 / np.diag(Rinv)[indices[nx]] * self.normVars[ny]
+                    Y_pred_var[nx, ny] = max(0, Y_pred_var_w_measure[nx, ny] - self.m_list[ny].Gaussian_noise.parameters[0] *  self.var_str[ny][indices[nx]] * self.normVars[ny])
+
+        else:
+            Y_pred2 = np.zeros(Y_hf.shape)
+            Y_pred_var2 = np.zeros(Y_hf.shape)
+            e22 = np.zeros(Y_hf.shape)
+
+            for ny in range(Y_hf.shape[1]):
+                m_tmp = copy.deepcopy(self.m_list[ny])
+                for ns in range(X_hf.shape[0]):
+                    X_tmp = np.delete(X_hf, ns, axis=0)
+                    Y_tmp = np.delete(Y_hf, ns, axis=0)
+                    # m_tmp.set_XY(X_tmp, Y_tmp[:, ny][np.newaxis].transpose())
+                    print(ns)
+                    m_tmp = self.set_XY(
+                        m_tmp,
+                        ny,
+                        X_tmp,
+                        Y_tmp[:, ny][np.newaxis].transpose(),
+                        self.X_lf,
+                        self.Y_lf[:, ny][np.newaxis].transpose(),
+                    )
+                    x_loo = X_hf[ns, :][np.newaxis]
+                    Y_pred_tmp, Y_err_tmp = self.predict(m_tmp, x_loo)
+
+                    Y_pred2[ns, ny] = Y_pred_tmp
+                    Y_pred_var2[ns, ny] = Y_err_tmp
+
+                    if self.do_logtransform:
+                        Y_exact = np.log(Y_hf[ns, ny])
+                    else:
+                        Y_exact = Y_hf[ns, ny]
+
+                    e22[ns, ny] = pow((Y_pred_tmp - Y_exact), 2)  # for nD outputs
+
+                Y_pred = Y_pred2
+                Y_pred_var = Y_pred_var2
+                Y_pred_var_w_measure = Y_pred_var2 + self.m_list[ny].Gaussian_noise.parameters * self.normVars[ny]
+                e2 = e22
+                # np.hstack([Y_pred_var,Y_pred_var2])
+                # np.hstack([e2,e22])
+                '''
+                
+                import matplotlib.pyplot as plt
+                plt.plot(Y_pred_var/self.normVars[ny]); plt.plot(Y_pred_var2/self.normVars[ny]); 
+                plt.title("With nugget (Linear)"); plt.xlabel("Training sample id"); plt.ylabel("LOOCV variance (before multiplying $\sigma_z^2$)"); plt.legend(["Closedform","iteration"]);
+                
+                plt.show(); 
+                '''
         print("     Cross validation calculation time: {:.2f} s".format(time.time() - time_tmp),flush=True)
-        return Y_pred, Y_pred_var, e2
+        return Y_pred, Y_pred_var, Y_pred_var_w_measure, e2
 
 
 def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx="HF"):
@@ -1790,7 +2124,6 @@ class model_info:
             self.is_model = surrogateJson["fromModel"]
             if self.is_model:
                 self.is_data = surrogateJson["existingDoE"]
-
         elif idx == -1:
             self.is_data = False
             self.is_model = False
@@ -1847,6 +2180,8 @@ class model_info:
 
         if self.is_model:
             self.doe_method = surrogateJson["DoEmethod"]
+            self.doe_method = surrogateJson["DoEmethod"]
+
             self.thr_count = surrogateJson["samples"]  # number of samples
             if self.doe_method == "None":
                 self.user_init = self.thr_count
@@ -1855,6 +2190,31 @@ class model_info:
                     self.user_init = surrogateJson["initialDoE"]
                 except:
                     self.user_init = -1  # automate
+
+            self.nugget_opt = surrogateJson["nuggetOpt"]
+            if self.nugget_opt == "Heteroscedastic":
+
+                self.numSampToBeRepl = surrogateJson["numSampToBeRepl"]
+                self.numRepl = surrogateJson["numRepl"]
+
+                if self.numRepl == -1:  # use default
+                    self.numRepl = 10
+                elif self.numRepl < 2:
+                    msg = "Error reading json: number of replications should be greater than 1 and a value greater than 5 is recommended"
+                    self.exit(msg)
+
+                if self.numSampToBeRepl == -1:  # use default
+                    self.numSampToBeRepl = 8 * x_dim
+                elif self.numSampToBeRepl < 2 or self.numSampToBeRepl > self.thr_count:
+                    msg = "Error reading json: number of samples to be replicated should be greater than 1 and smaller than the number of the original samples. A value greater than 4*#RV is recommended"
+                    self.exit(msg)
+
+                self.numSampRepldone = False
+            else:
+                self.numSampToBeRepl = 0
+                self.numRepl = 0
+                self.numSampRepldone = True
+                
             ## convergence criteria
             self.thr_NRMSE = surrogateJson["accuracyLimit"]
             self.thr_t = surrogateJson["timeLimit"] * 60
@@ -1892,18 +2252,31 @@ class model_info:
         # self.n_init = 4
         self.doe_method = self.doe_method.lower()
 
+
+
+
+
     def sampling(self, n):
+        # n is "total" samples
+
         if n > 0:
-            X_tmp = np.zeros((n, self.x_dim))
+            X_samples = np.zeros((n, self.x_dim))
             U = lhs(self.x_dim, samples=n)
             for nx in range(self.x_dim):
-                X_tmp[:, nx] = (
+                X_samples[:, nx] = (
                         U[:, nx] * (self.xrange[nx, 1] - self.xrange[nx, 0])
                         + self.xrange[nx, 0]
                 )
+
+            if (self.numRepl)*self.numSampToBeRepl >0 and not self.numSampRepldone:
+                X_samples = np.vstack([X_samples,np.tile(X_samples[0:self.numSampToBeRepl,:],(self.numRepl-1,1))])
+                self.numSampRepldone = True;
+
         else:
-            X_tmp = np.zeros((0, self.x_dim))
-        return X_tmp
+            X_samples = np.zeros((0, self.x_dim))
+
+
+        return X_samples
 
     # def set_FEM(self, rv_name, do_parallel, y_dim, t_init):
     #     self.rv_name = rv_name
@@ -1944,18 +2317,30 @@ def weights_node2(node, nodes, ls):
     return weig / sum(weig)
 
 
-def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, do_mf, ny):  # nuggetVal = self.nuggetVal[ny]
+def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heteroscedastic, nopt, ny):  # nuggetVal = self.nuggetVal[ny]
 
     msg = ""
+
+    if do_heteroscedastic:
+        variance_keyword = "het_Gauss.variance"
+    else:
+        variance_keyword = "Gaussian_noise.variance"
+
     if not do_mf:
         if nugget_opt_tmp == "Optimize":
-            m_tmp["Gaussian_noise.variance"].unfix()
+            pass
+            m_tmp[variance_keyword].unfix()
         elif nugget_opt_tmp == "Fixed Values":
-            m_tmp["Gaussian_noise.variance"].constrain_fixed(nuggetVal[ny])
+            m_tmp[variance_keyword].constrain_fixed(nuggetVal[ny]/normVar)
         elif nugget_opt_tmp == "Fixed Bounds":
-            m_tmp["Gaussian_noise.variance"].constrain_bounded(nuggetVal[ny][0], nuggetVal[ny][1])
+            m_tmp[variance_keyword].constrain_bounded(nuggetVal[ny][0]/normVar, nuggetVal[ny][1]/normVar)
         elif nugget_opt_tmp == "Zero":
-            m_tmp["Gaussian_noise.variance"].constrain_fixed(0)
+            m_tmp[variance_keyword].constrain_fixed(0)
+        elif nugget_opt_tmp == "Heteroscedastic":
+            pass
+        else:
+            msg = "Nugget keyword not identified: " + nugget_opt_tmp
+
 
     if do_mf:
         # TODO: is this right?
@@ -1983,8 +2368,16 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, do_mf, ny):  # nuggetVal = sel
             m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0)
 
     if msg == "":
-        m_tmp.optimize_restarts(num_restarts=10)
         m_tmp.optimize()
+        n=0;
+        m_tmp.optimize_restarts(num_restarts=nopt)
+        # while n+20 <= nopt:
+        #     m_tmp.optimize_restarts(num_restarts=20)
+        #     n = n+20
+        # if not nopt==n:
+        #     m_tmp.optimize_restarts(num_restarts=nopt-n)
+
+
         print("",flush=True)
 
     return m_tmp, msg, ny
@@ -2011,6 +2404,8 @@ def read_txt(text_dir, exit_fun):
         for line in f:
             if line.replace(" ", "").startswith("%"):
                 header_count = header_count + 1
+            else:
+                break
                 # print(line)
         try:
             with open(text_dir) as f:
@@ -2019,13 +2414,18 @@ def read_txt(text_dir, exit_fun):
             with open(text_dir) as f:
                 try:
                     X = np.genfromtxt(f, skip_header=header_count, delimiter=",")
+                    X=np.atleast_2d(X)
                     # if there are extra delimiter, remove nan
                     if np.isnan(X[-1, -1]):
                         X = np.delete(X, -1, 1)
                     # X = np.loadtxt(f, skiprows=header_count, delimiter=',')
                 except ValueError:
-                    msg = "Error: file format is not supported " + text_dir
+                    msg = "Error: unsupported file format " + text_dir
                     exit_fun(msg)
+        if np.isnan(X).any():
+            msg = "Error: unsupported file format " + text_dir + ".\nThe header should have % character in front."
+            exit_fun(msg)
+
     if X.ndim == 1:
         X = np.array([X]).transpose()
 

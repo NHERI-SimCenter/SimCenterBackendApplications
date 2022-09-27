@@ -97,11 +97,15 @@ public:
 	vector<int> resamplingSize;
 	bool performPCA;
 	double PCAvarRatioThres;
+	string femAppName;
+
+	string inpPath, outPath, inpFileType, outFileType;
 
 private:
 	void getPnames(string distname, string optname, vector<std::string>& par_char);
 	void fromTextToStr(string groupTxt, vector<vector<string>>& groupStringVector, vector<string>& flattenStringVect);
 	void fromTextToId(string groupTxt, vector<string>& groupPool, vector<vector<int>>& groupIdVect);
+	void getGroupIdx(json UQjson);
 
 };
 
