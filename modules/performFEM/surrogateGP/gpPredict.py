@@ -84,8 +84,13 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         error_exit(msg)
 
     f.close()
+
+    did_stochastic = sur["doStochastic"]
     did_logtransform = sur["doLogtransform"]
+    did_normalization = sur["doNormalization"]
     kernel = sur["kernName"]
+
+
     if kernel == 'Radial Basis':
         kern_name = 'rbf'
     elif kernel == 'Exponential':
@@ -121,6 +126,127 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         constVal = []
 
         # Read pickles
+
+    if did_stochastic:
+        #
+        # Modify GPy package
+        #
+        def monkeypatch_method(cls):
+            def decorator(func):
+                setattr(cls, func.__name__, func)
+                return func
+
+            return decorator
+
+        @monkeypatch_method(GPy.likelihoods.Gaussian)
+        def gaussian_variance(self, Y_metadata=None):
+            if Y_metadata is None:
+                return self.variance
+            else:
+                return self.variance * Y_metadata['variance_structure']
+
+        @monkeypatch_method(GPy.core.GP)
+        def set_XY2(self, X=None, Y=None, Y_metadata=None):
+            if Y_metadata is not None:
+                if self.Y_metadata is None:
+                    self.Y_metadata = Y_metadata
+                else:
+                    self.Y_metadata.update(Y_metadata)
+                    print("metadata_updated")
+
+            self.set_XY(X, Y)
+
+        def get_stochastic_variance(X, Y, x, ny):
+            X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
+            n_unique = X_unique.shape[0]
+            Y_mean, Y_var = np.zeros((n_unique, ng_sur)), np.zeros((n_unique, ng_sur))
+
+            for idx in range(n_unique):
+                Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]
+                Y_mean[idx, :] = np.mean(Y_subset, axis=0)
+                Y_var[idx, :] = np.var(Y_subset, axis=0)
+
+            idx_repl = [i for i in np.where(counts > 1)[0]]
+
+            if (np.max(Y_var) / np.var(Y_mean) < 1.e-10):
+                return np.ones((X.shape[0],1))
+
+            kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+            log_vars = np.log(Y_var[idx_repl])
+            m_var = GPy.models.GPRegression(X_unique[idx_repl, :], log_vars, kernel_var, normalizer=True, Y_metadata=None)
+            print("Optimizing variance field of ny={}".format(ny))
+            for key, val in sur["modelInfo"][g_name_sur[ny]+"_Var"].items():
+                exec('m_var.' + key + '= np.array(val)')
+            #m_var.optimize(messages=True, max_f_eval=1000)
+            #m_var.optimize_restarts(20)
+
+            log_var_pred, dum = m_var.predict(X_unique)
+            var_pred = np.exp(log_var_pred)
+
+            if did_normalization:
+                Y_normFact = np.var(Y_mean)
+            else:
+                Y_normFact = 1
+
+            norm_var_str = (var_pred.T[0]) / Y_normFact  # if normalization was used..
+
+
+            log_var_pred_x, dum = m_var.predict(x)
+            nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
+
+            return X_unique, Y_mean, norm_var_str, counts, nugget_var_pred_x,  np.var(Y_mean)
+
+    # REQUIRED: rv_name, y_var
+
+    t_total = time.process_time()
+
+    with open(params_dir, "r") as x_file:
+        data = x_file.readlines()
+        nrv = int(data[0])
+        if nrv != nrv_sur:
+            msg = 'Error importing input data: Number of dimension inconsistent: surrogate model requires {} RV(s) but input has {} RV(s).\n'.format(
+                nrv_sur, nrv)
+            error_exit(msg)
+
+        # rv_name = list()
+
+        for i in range(nrv):
+            name_values = data[i + 1].split()
+            name = name_values[0]
+            samples = [float(vals) for vals in name_values[1:]]
+            ns = len(samples)
+            try:
+                id_map = rv_name_sur.index(name)
+            except ValueError:
+                msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+                error_exit(msg)
+
+            if i == 0:
+                nsamp = ns
+                rv_val = np.zeros((ns, nrv))
+
+            if ns != nsamp:
+                msg = 'Error importing input data: sample size in params.in is not consistent.'
+                error_exit(msg)
+
+            rv_val[:, id_map] = samples
+
+        g_idx = []
+        for edp in (inp_tmp["EDP"]):
+            edp_names = []
+            if edp["length"] == 1:
+                edp_names += [edp["name"]]
+            else:
+                for i in range(0, edp["length"]):
+                    edp_names += [edp["name"] + "_" + str(i + 1)]
+            try:
+                for i in range(0, edp["length"]):
+                    id_map = g_name_sur.index(edp_names[i])
+                    g_idx += [id_map]
+            except ValueError:
+                msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
+                error_exit(msg)
+
     # todo: fix for different nys
 
     if kernel == 'Radial Basis':
@@ -138,7 +264,26 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     if did_logtransform:
         Y = np.log(Y)
 
-    if not did_mf:
+
+
+    if did_stochastic:
+
+        kg = kr
+        m_list = list()
+        nugget_var_list = [0]*ng_sur
+        for ny in range(ng_sur):
+
+            m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]
+            X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)
+            Y_metadata = {'variance_structure': norm_var_str / counts}
+            m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
+            for key, val in sur["modelInfo"][g_name_sur[ny]].items():
+                exec('m_list[ny].' + key + '= np.array(val)')
+
+            nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
+
+
+    elif not did_mf:
         kg = kr
         m_list = list()
         for ny in range(ng_sur):
@@ -146,70 +291,23 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             for key, val in sur["modelInfo"][g_name_sur[ny]].items():
                 exec('m_list[ny].' + key + '= np.array(val)')
 
+            Y_normFact = np.var(Y[:, ny])
+            nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact
+
     else:
         with open(surrogate_dir, "rb") as file:
             m_list=pickle.load(file)
+
+        for ny in range(ng_sur):
+            Y_normFact = np.var(Y[:, ny])
+            nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact
+
 
     # to read:::
     # kern_name='Mat52'
     #did_logtransform=True
 
     # at ui
-
-
-
-    # REQUIRED: rv_name, y_var
-
-    t_total = time.process_time()
-
-    with open(params_dir, "r") as x_file:
-        data = x_file.readlines()
-        nrv = int(data[0])
-        if nrv != nrv_sur:
-            msg = 'Error importing input data: Number of dimension inconsistent: surrogate model requires {} RV(s) but input has {} RV(s).\n'.format(nrv_sur, nrv)
-            error_exit(msg)
-
-        #rv_name = list()
-
-        for i in range(nrv):
-            name_values = data[i + 1].split()
-            name = name_values[0]
-            samples = [float(vals) for vals in name_values[1:]]
-            ns = len(samples)
-            try:
-                id_map = rv_name_sur.index(name)
-            except ValueError:
-                msg = 'Error importing input data: variable "{}" not identified.'.format(name)
-                error_exit(msg)
-
-            if i==0:
-                nsamp = ns
-                rv_val = np.zeros((ns, nrv))
-
-            if ns!=nsamp:
-                msg = 'Error importing input data: sample size in params.in is not consistent.'
-                error_exit(msg)
-
-            rv_val[:, id_map] = samples
-
-
-        g_idx = []
-        for edp in (inp_tmp["EDP"]):
-            edp_names = []
-            if edp["length"]==1:
-                edp_names += [edp["name"]]
-            else:
-                for i in range(0,edp["length"]):
-                    edp_names += [edp["name"] + "_" + str(i+1)]
-            try:
-                for i in range(0,edp["length"]):
-                    id_map = g_name_sur.index(edp_names[i])
-                    g_idx += [id_map]
-            except ValueError:
-                msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
-                error_exit(msg)
-
-
 
 
     # f = open(work_dir + '/templatedir/dakota.json')
@@ -233,51 +331,62 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
 
     # read param in file and sort input
-
     y_dim = len(m_list)
 
     y_pred_median = np.zeros([nsamp, y_dim])
-    y_pred_var_tmp=np.zeros([nsamp, y_dim])
+    y_pred_var_tmp=np.zeros([nsamp, y_dim]) # might be log space
+    y_pred_var_m_tmp=np.zeros([nsamp, y_dim]) # might be log space
+
     y_pred_var=np.zeros([nsamp, y_dim])
+    y_pred_var_m=np.zeros([nsamp, y_dim])
+
     y_data_var=np.zeros([nsamp, y_dim])
     y_samp = np.zeros([nsamp, y_dim])
     y_q1 = np.zeros([nsamp, y_dim])
     y_q3 = np.zeros([nsamp, y_dim])
+    y_q1m = np.zeros([nsamp, y_dim])
+    y_q3m = np.zeros([nsamp, y_dim])
     for ny in range(y_dim):
         y_data_var[:,ny] = np.var(m_list[ny].Y)
-        #y_pred_tmp, y_pred_var_tmp  = m_list[ny].predict(rv_val)
         if ny in constIdx:
-            y_pred_median_tmp, y_pred_var_tmp[ny] = np.ones([nsamp])*constVal[constIdx.index(ny)], np.zeros([nsamp])
+            y_pred_median_tmp, y_pred_var_tmp[ny], y_pred_var_m_tmp[ny] = np.ones([nsamp])*constVal[constIdx.index(ny)], np.zeros([nsamp]), np.zeros([nsamp])
         else:
-            y_pred_median_tmp, y_pred_var_tmp_tmp  = predict(m_list[ny],rv_val,did_mf)
-            y_pred_median_tmp= np.squeeze(y_pred_median_tmp)
-            y_pred_var_tmp_tmp= np.squeeze(y_pred_var_tmp_tmp)
+            y_pred_median_tmp, y_pred_var_tmp_tmp = predict(m_list[ny], rv_val, did_mf) ## noiseless
+            y_pred_median_tmp = np.squeeze(y_pred_median_tmp)
+            y_pred_var_tmp_tmp = np.squeeze(y_pred_var_tmp_tmp)
         y_pred_var_tmp[:, ny] = y_pred_var_tmp_tmp
-        y_samp_tmp = np.random.normal(y_pred_median_tmp,np.sqrt(y_pred_var_tmp[:, ny] ))
+        y_pred_var_m_tmp[:, ny] = y_pred_var_tmp_tmp + np.squeeze(nugget_var_list[ny])
+        y_samp_tmp = np.random.normal(y_pred_median_tmp, np.sqrt(y_pred_var_m_tmp[:, ny]))
+
         if did_logtransform:
             y_pred_median[:,ny]= np.exp(y_pred_median_tmp)
-            # y_var_val = np.var(np.log(m_list[ny].Y))
             y_pred_var[:,ny] = np.exp(2 * y_pred_median_tmp + y_pred_var_tmp[:, ny] ) * (np.exp(y_pred_var_tmp[:, ny]) - 1)
-            y_samp[:,ny] = np.exp(y_samp_tmp)
+            y_pred_var_m[:,ny] = np.exp(2 * y_pred_median_tmp + y_pred_var_m_tmp[:, ny] ) * (np.exp(y_pred_var_m_tmp[:, ny]) - 1)
 
-            #mu = np.log(y_pred_median_tmp)
-            #sig = np.sqrt(np.log(y_pred_var_tmp[ny]/ pow(y_pred_median_tmp, 2) + 1))
+            y_samp[:,ny] = np.exp(y_samp_tmp)
 
             y_q1[:,ny] = lognorm.ppf(0.05, s=np.sqrt(y_pred_var_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
             y_q3[:,ny]= lognorm.ppf(0.95, s=np.sqrt(y_pred_var_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
+            y_q1m[:,ny] = lognorm.ppf(0.05, s=np.sqrt(y_pred_var_m_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
+            y_q3m[:,ny]= lognorm.ppf(0.95, s=np.sqrt(y_pred_var_m_tmp[:, ny] ), scale=np.exp(y_pred_median_tmp))
 
         else:
-            
             y_pred_median[:,ny]=y_pred_median_tmp
             y_pred_var[:,ny]= y_pred_var_tmp[:, ny]
+            y_pred_var_m[:,ny]= y_pred_var_m_tmp[:, ny]
             y_samp[:,ny] = y_samp_tmp
             y_q1[:,ny] = norm.ppf(0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny] ))
             y_q3[:,ny] = norm.ppf(0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_tmp[:, ny] ))
+            y_q1m[:,ny] = norm.ppf(0.05, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_m_tmp[:, ny] ))
+            y_q3m[:,ny] = norm.ppf(0.95, loc=y_pred_median_tmp, scale=np.sqrt(y_pred_var_m_tmp[:, ny] ))
 
         if np.isnan(y_samp[:,ny]).any():
             y_samp[:,ny] = np.nan_to_num(y_samp[:,ny])
         if np.isnan(y_pred_var[:,ny]).any():
             y_pred_var[:,ny] = np.nan_to_num(y_pred_var[:,ny])
+        if np.isnan(y_pred_var_m[:,ny]).any():
+            y_pred_m_var[:,ny] = np.nan_to_num(y_pred_m_var[:,ny])
+
 
 
         #for parname in m_list[ny].parameter_names():
@@ -285,7 +394,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         #        exec('y_pred_prior_var[ny]=m_list[ny].' + parname)
 
     #error_ratio1 = y_pred_var.T / y_pred_prior_var
-    error_ratio2 = y_pred_var_tmp / y_data_var
+    error_ratio2 = y_pred_var_m_tmp / y_data_var
     idx = np.argmax(error_ratio2,axis=1) + 1
 
     '''
@@ -304,13 +413,12 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     msg1 = []
     for ns in range(nsamp):
         if not is_accurate_array[ns]:
-            msg1 += ['Prediction error of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx[ns], np.max(
+            msg1 += ['Prediction error level of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx[ns], np.max(
             error_ratio2[ns]) * 100, norm_var_thr * 100)]
         else:
             msg1 += ['']
 
         if not is_accurate_array[ns]:
-
 
             if when_inaccurate == 'doSimulation':
 
@@ -374,7 +482,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                     y_pred_subset[ns,:]  = y_samp[ns,g_idx]
 
         else:
-            msg3 = msg0+'Prediction error of output {} is {:.2f}%\n'.format(idx[ns], np.max(error_ratio2[ns])*100)
+            msg3 = msg0+'Prediction error level of output {} is {:.2f}%\n'.format(idx[ns], np.max(error_ratio2[ns])*100)
             error_warning(msg3)
 
             if inp_fem["predictionOption"].lower().startswith("median"):
@@ -387,7 +495,10 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     y_pred_median_subset=y_pred_median[:,g_idx]
     y_q1_subset=y_q1[:,g_idx]
     y_q3_subset=y_q3[:,g_idx]
+    y_q1m_subset=y_q1m[:,g_idx]
+    y_q3m_subset=y_q3m[:,g_idx]
     y_pred_var_subset=y_pred_var[:,g_idx]
+    y_pred_var_m_subset=y_pred_var_m[:,g_idx]
 
     #
     # tab file
@@ -398,7 +509,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     with open('../surrogateTab.out', 'a') as tab_file:
         # write header
         if os.path.getsize('../surrogateTab.out') == 0:
-            tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var \n")
+            tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
         # write values
 
         for ns in range(nsamp):
@@ -408,8 +519,11 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             yQ1_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1_subset[ns,:])
             yQ3_list = " ".join("{:e}".format(yq3) for yq3 in y_q3_subset[ns,:])
             ypredvar_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_subset[ns,:])
+            yQ1m_list = " ".join("{:e}".format(yq1)  for yq1 in y_q1m_subset[ns,:])
+            yQ3m_list = " ".join("{:e}".format(yq3) for yq3 in y_q3m_subset[ns,:])
+            ypredvarm_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_m_subset[ns,:])
 
-            tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " \n")
+            tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " "+ yQ1m_list + " "+ yQ3m_list +" "+ ypredvarm_list + " \n")
 
     error_file.close()
     file_object.close()
@@ -417,8 +531,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 def predict(m, X, did_mf):
 
     if not did_mf:
-        return m.predict(X)
+        return m.predict_noiseless(X)
     else:
+        #TODO change below to noiseless
         X_list = convert_x_list_to_array([X, X])
         X_list_l = X_list[:X.shape[0]]
         X_list_h = X_list[X.shape[0]:]
