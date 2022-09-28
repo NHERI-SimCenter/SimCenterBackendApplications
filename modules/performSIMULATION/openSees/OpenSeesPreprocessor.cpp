@@ -529,9 +529,7 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
       if (dampingRatio == 0.0) {
 	
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+	;
 
       } else {
 	
@@ -596,9 +594,10 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	    << "rayleigh 0.0 0.0 $betaKinit 0.0;\n";
 	}
       } else {
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+	;
+	//  s << "set lambdaN [eigen 1];\n"
+	//  << "set lambda1 [lindex $lambdaN 0]\n"
+	//  << "set omega1 [expr pow($lambda1,0.5)];\n";	
       }
     }
   }
