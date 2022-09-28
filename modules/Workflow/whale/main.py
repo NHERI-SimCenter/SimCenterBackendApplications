@@ -592,7 +592,7 @@ class Workflow(object):
         # Create the asset registry
         self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
-        
+
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
@@ -725,6 +725,9 @@ class Workflow(object):
         
         if app_in == None :
             return
+
+        if app_in == 'None' :
+            return        
         
         if app_type_obj == None :
             err = 'The application ' +app_type+' is not found in the app registry'
@@ -732,7 +735,7 @@ class Workflow(object):
         
         # Finally check to see if the app registry contains the provided application
         if app_type_obj.get(app_in) == None :
-            err = 'Could not find the provided application in the internal app registry'
+            err = 'Could not find the provided application in the internal app registry, app name: ' + app_in
             print("Error",app_in)
             raise WorkFlowInputError(err)
             
@@ -1200,7 +1203,7 @@ class Workflow(object):
         log_div()
 
 
-    def perform_regional_mapping(self, AIM_file_path):
+    def perform_regional_mapping(self, AIM_file_path, assetType):
         
         """
         Performs the regional mapping between the asset and a hazard event.
@@ -1215,7 +1218,7 @@ class Workflow(object):
         log_msg('', prepend_timestamp=False, prepend_blank_space=False)
         log_msg('Creating regional mapping...')
 
-        reg_mapping_app = self.workflow_apps['RegionalMapping']
+        reg_mapping_app = self.workflow_apps['RegionalMapping'][assetType]
 
         # TODO: not elegant code, fix later
         for input_ in reg_mapping_app.inputs:
