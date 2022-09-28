@@ -14,7 +14,7 @@ OpenSeesPreprocessor::OpenSeesPreprocessor()
    fileAIM(0), fileSAM(0), fileEVENT(0), fileEDP(0), fileSIM(0),
    analysisType(-1), numSteps(0), dT(0.0), nStory(0), mapping(0)
 {
-
+  dampingRatio = -1.0;
 }
 
 OpenSeesPreprocessor::~OpenSeesPreprocessor() {
@@ -53,8 +53,6 @@ OpenSeesPreprocessor::writeRV(const char *AIM,
   // get the Simulation data & write to SIM file
   //  duplicating data with intent not to open 2 files later
   //
-
-
 
   json_dump_file(sim, SIM,0);
 
@@ -146,6 +144,7 @@ OpenSeesPreprocessor::createInputFile(const char *AIM,
 
   // process damping
   rootSIM = json_load_file(SIM, 0, &error);
+  
   // do not prescribe damping for custom analysis scripts
   json_t *fileScript = json_object_get(rootSIM,"fileName");
 
@@ -437,16 +436,38 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 int
 OpenSeesPreprocessor::processDamping(ofstream &s){
 
+  //
+  // determine dampingRatio .. should be in SAM, use SIM if not there
+  //
+  
+  // get ratio from SAM, either mainbody or in Properties
+  json_t *dampingT = json_object_get(rootSAM,"dampingRatio");
+  if (dampingT == NULL) {
+    json_t *propertiesT = json_object_get(rootSAM,"Properties");
+    if (propertiesT != NULL) 
+      dampingT = json_object_get(propertiesT,"dampingRatio");
+
+    // get from SIM instead
+    if (dampingT == NULL) 
+      dampingT = json_object_get(rootSIM,"dampingRatio");
+  } 
+  
+  // read the ratio
+  if (dampingT != NULL) {
+    dampingRatio = json_number_value(dampingT);
+  } else {
+    std::cerr << "OpenSeesPreprocessor - no damping ratio found in JSON, using 0.0\n";
+    dampingRatio = 0.0;
+  }
+
   if (json_object_get(rootSIM, "dampingModel") == NULL) {
 
     //
     // old legacy code
     //
-
-    double damping = json_number_value(json_object_get(rootSIM,"dampingRatio"));
     
-    if (damping != 0.0) {
-      s << "set xDamp " << damping << ";\n"
+    if (dampingRatio != 0.0) {
+      s << "set xDamp " << dampingRatio << ";\n"
 	<< "set MpropSwitch 1.0;\n"
 	<< "set KcurrSwitch 0.0;\n"
 	<< "set KinitSwitch 1.0;\n"
@@ -492,29 +513,27 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
     if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
 
-      double damping = json_real_value(json_object_get(rootSIM,"dampingRatio"));
-
       int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
       int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));	
-      const char *dampingTangent = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
+      const char *dampingT = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
       int KcurrSwitch = 0;
       int KcommSwitch = 0;
       int KinitSwitch = 0;
 
-      if (strcmp(dampingTangent,"Initial"))
+      if (strcmp(dampingT,"Initial"))
 	KinitSwitch = 1;
-      else if (strcmp(dampingTangent,"Current"))
+      else if (strcmp(dampingT,"Current"))
 	KcurrSwitch = 1;
-      else if (strcmp(dampingTangent,"Committed"))
+      else if (strcmp(dampingT,"Committed"))
 	KcommSwitch = 1;
 
-      if (damping == 0.0) {
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+      if (dampingRatio == 0.0) {
+	
+	;
 
       } else {
-	s << "set xDamp " << damping << ";\n";
+	
+	s << "set xDamp " << dampingRatio << ";\n";
 
 	if (mode1 != 0 && mode2 != 0) {
 	  
@@ -556,16 +575,15 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       }
     } else {
 
-      double damping = json_number_value(json_object_get(rootSIM,"dampingRatioModal"));	
       int numModes = json_integer_value(json_object_get(rootSIM,"numModesModal"));	
       double dampingTangent = json_number_value(json_object_get(rootSIM,"modalRayleighTangentRatio"));	
 
-      if (damping != 0.0) {
+      if (dampingRatio != 0.0 || dampingTangent != 0.0) {
 
 	//	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
       
 	s << "set lambdaN [eigen " << numModes << "];\n"
-	  << "modalDamping " << damping << "\n"
+	  << "modalDamping " << dampingRatio << "\n"
 	  << "set lambda1 [lindex $lambdaN 0]\n"
 	  << "set omega1 [expr pow($lambda1,0.5)];\n";
 
@@ -576,13 +594,13 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	    << "rayleigh 0.0 0.0 $betaKinit 0.0;\n";
 	}
       } else {
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+	;
+	//  s << "set lambdaN [eigen 1];\n"
+	//  << "set lambda1 [lindex $lambdaN 0]\n"
+	//  << "set omega1 [expr pow($lambda1,0.5)];\n";	
       }
     }
   }
-
 
   return 0;
 }

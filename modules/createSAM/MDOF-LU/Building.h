@@ -62,10 +62,10 @@ public:
     double T2;
 
     int ndf;
-
+  
     double kFactor;
     double dampFactor;
-
+     
     double lambda(int n) {
       return 0.4053*(double)(n*n)+0.405*(double)(n)+0.1869;
     }

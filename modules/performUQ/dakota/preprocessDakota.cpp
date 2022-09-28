@@ -67,8 +67,11 @@ int main(int argc, const char **argv) {
 
   json_t *uqData =  json_object_get(rootINPUT, "UQ_Method");
   if (uqData == NULL) {
-    std::cerr << "preprocessJSON - no UQ Data in inputfile\n";
-    exit(-1); // no random variables is allowed
+    uqData =  json_object_get(rootINPUT, "UQ");
+    if (uqData == NULL) {    
+      std::cerr << "preprocessJSON - no UQ Data in inputfile\n";
+      exit(-1); // no random variables is allowed
+    }
   }
 
   json_t *rootEDP =  json_object_get(rootINPUT, "EDP");
