@@ -213,6 +213,12 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
         # save the event dictionary to the AIM
         # TODO: we assume there is only one event
         # handling multiple events will require more sophisticated inputs
+
+        if 'Events' not in asset_data:
+            asset_data['Events'] = [{}]
+        elif len(asset_data['Events']==0):
+            asset_data['Events'].append({})
+
         asset_data['Events'][0].update({
             #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
