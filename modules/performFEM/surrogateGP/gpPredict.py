@@ -51,7 +51,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
     def error_warning(msg):
         error_file.write(msg)
-        file_object.write(msg0 + msg)
+        file_object.write(msg)
         print(msg)
 
     with open(dakota_path) as f: # current input file
@@ -159,7 +159,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         def get_stochastic_variance(X, Y, x, ny):
             X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             n_unique = X_unique.shape[0]
-            Y_mean, Y_var = np.zeros((n_unique, ng_sur)), np.zeros((n_unique, ng_sur))
+            Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))
 
             for idx in range(n_unique):
                 Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]
@@ -171,28 +171,30 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             if (np.max(Y_var) / np.var(Y_mean) < 1.e-10):
                 return np.ones((X.shape[0],1))
 
-            kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
-            log_vars = np.log(Y_var[idx_repl])
-            m_var = GPy.models.GPRegression(X_unique[idx_repl, :], log_vars, kernel_var, normalizer=True, Y_metadata=None)
-            print("Optimizing variance field of ny={}".format(ny))
-            for key, val in sur["modelInfo"][g_name_sur[ny]+"_Var"].items():
-                exec('m_var.' + key + '= np.array(val)')
-            #m_var.optimize(messages=True, max_f_eval=1000)
-            #m_var.optimize_restarts(20)
+            if len(idx_repl)>0:
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+                log_vars = np.log(Y_var[idx_repl])
+                m_var = GPy.models.GPRegression(X_unique[idx_repl, :], log_vars, kernel_var, normalizer=True, Y_metadata=None)
+                print("Optimizing variance field of ny={}".format(ny))
+                for key, val in sur["modelInfo"][g_name_sur[ny]+"_Var"].items():
+                    exec('m_var.' + key + '= np.array(val)')
+                #m_var.optimize(messages=True, max_f_eval=1000)
+                #m_var.optimize_restarts(20)
 
-            log_var_pred, dum = m_var.predict(X_unique)
-            var_pred = np.exp(log_var_pred)
+                log_var_pred, dum = m_var.predict(X_unique)
+                var_pred = np.exp(log_var_pred)
 
-            if did_normalization:
-                Y_normFact = np.var(Y_mean)
-            else:
-                Y_normFact = 1
+                if did_normalization:
+                    Y_normFact = np.var(Y_mean)
+                else:
+                    Y_normFact = 1
 
-            norm_var_str = (var_pred.T[0]) / Y_normFact  # if normalization was used..
+                norm_var_str = (var_pred.T[0]) / Y_normFact  # if normalization was used..
 
 
-            log_var_pred_x, dum = m_var.predict(x)
-            nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
+                log_var_pred_x, dum = m_var.predict(x)
+                nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
+
 
             return X_unique, Y_mean, norm_var_str, counts, nugget_var_pred_x,  np.var(Y_mean)
 
@@ -264,43 +266,82 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     if did_logtransform:
         Y = np.log(Y)
 
+    kg = kr
+    m_list = list()
+    nugget_var_list = [0] * ng_sur
 
+    if not did_mf:
 
-    if did_stochastic:
-
-        kg = kr
-        m_list = list()
-        nugget_var_list = [0]*ng_sur
         for ny in range(ng_sur):
 
-            m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]
-            X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)
-            Y_metadata = {'variance_structure': norm_var_str / counts}
-            m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
-            for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-                exec('m_list[ny].' + key + '= np.array(val)')
+            if did_stochastic[ny]:
 
-            nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
+                m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),
+                                                           normalizer=did_normalization)]
+                X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X,
+                                                                                                              Y[:, ny][
+                                                                                                                  np.newaxis].T,
+                                                                                                              rv_val,
+                                                                                                              ny)
+                Y_metadata = {'variance_structure': norm_var_str / counts}
+                m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
+                for key, val in sur["modelInfo"][g_name_sur[ny]].items():
+                    exec('m_list[ny].' + key + '= np.array(val)')
 
+                nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
 
-    elif not did_mf:
-        kg = kr
-        m_list = list()
-        for ny in range(ng_sur):
-            m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=True)]
-            for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-                exec('m_list[ny].' + key + '= np.array(val)')
+            else:
+                m_list = m_list + [
+                    GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(), normalizer=True)]
+                for key, val in sur["modelInfo"][g_name_sur[ny]].items():
+                    exec('m_list[ny].' + key + '= np.array(val)')
 
-            Y_normFact = np.var(Y[:, ny])
-            nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact
+                Y_normFact = np.var(Y[:, ny])
+                nugget_var_list[ny] = np.squeeze(np.array(m_list[ny].Gaussian_noise.parameters) * np.array(Y_normFact))
 
     else:
         with open(surrogate_dir, "rb") as file:
-            m_list=pickle.load(file)
+            m_list = pickle.load(file)
 
         for ny in range(ng_sur):
             Y_normFact = np.var(Y[:, ny])
-            nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact
+            nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"] * Y_normFact
+
+    # if did_stochastic:
+    #
+    #     kg = kr
+    #     m_list = list()
+    #     nugget_var_list = [0]*ng_sur
+    #     for ny in range(ng_sur):
+    #
+    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]
+    #         X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)
+    #         Y_metadata = {'variance_structure': norm_var_str / counts}
+    #         m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
+    #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
+    #             exec('m_list[ny].' + key + '= np.array(val)')
+    #
+    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
+    #
+    #
+    # elif not did_mf:
+    #     kg = kr
+    #     m_list = list()
+    #     for ny in range(ng_sur):
+    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=True)]
+    #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
+    #             exec('m_list[ny].' + key + '= np.array(val)')
+    #
+    #         Y_normFact = np.var(Y[:, ny])
+    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact
+    #
+    # else:
+    #     with open(surrogate_dir, "rb") as file:
+    #         m_list=pickle.load(file)
+    #
+    #     for ny in range(ng_sur):
+    #         Y_normFact = np.var(Y[:, ny])
+    #         nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact
 
 
     # to read:::
@@ -412,6 +453,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     y_pred_subset = np.zeros([nsamp, len(g_idx)])
     msg1 = []
     for ns in range(nsamp):
+
+        msg0 = folderName.split(".")[0] + "." + str(int(sampNum)+ns) + " : "
+
         if not is_accurate_array[ns]:
             msg1 += ['Prediction error level of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx[ns], np.max(
             error_ratio2[ns]) * 100, norm_var_thr * 100)]
@@ -523,7 +567,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             yQ3m_list = " ".join("{:e}".format(yq3) for yq3 in y_q3m_subset[ns,:])
             ypredvarm_list=" ".join("{:e}".format(ypv)  for ypv in y_pred_var_m_subset[ns,:])
 
-            tab_file.write(str(sampNum)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " "+ yQ1m_list + " "+ yQ3m_list +" "+ ypredvarm_list + " \n")
+            tab_file.write(str(int(sampNum)+ns)+" NO_ID "+ rv_list + " "+ ypred_list + " " + ymedian_list+ " "+ yQ1_list + " "+ yQ3_list +" "+ ypredvar_list + " "+ yQ1m_list + " "+ yQ3m_list +" "+ ypredvarm_list + " \n")
 
     error_file.close()
     file_object.close()
