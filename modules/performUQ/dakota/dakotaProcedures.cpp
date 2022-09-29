@@ -959,7 +959,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     double initialDelta = json_number_value(json_object_get(methodData, "initialDelta"));
     int maxFunEvals = json_integer_value(json_object_get(methodData, "maxFunEvals"));
     double thresholdDelta = json_number_value(json_object_get(methodData, "thresholdDelta"));
-    double solutionTarget = json_number_value(json_object_get(methodData, "solutionTarget"));
+    // double solutionTarget = json_number_value(json_object_get(methodData, "solutionTarget"));
 //    const char *factors = json_string_value(json_object_get(methodData,"factors"));
 
     dakotaFile << "environment \n tabular_data \n tabular_data_file = 'dakotaTab.out' \n\n";
@@ -970,9 +970,9 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       << "\n  initial_delta = " << initialDelta 
       << "\n  max_function_evaluations = " << maxFunEvals 
       << "\n  max_iterations = " << maxIterations 
-      << "\n  solution_target = " << solutionTarget
       << "\n  total_pattern_size = " << 2*numRVs
       << "\n  variable_tolerance = " << thresholdDelta;
+      // << "\n  solution_target = " << solutionTarget
 
 //    if (strcmp(factors,"") != 0)
     dakotaFile << "\n  scaling\n";
