@@ -58,7 +58,11 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write("\n\t\tProcessing UQ inputs")
     seedValue = uqInputs["seed"]
     nSamples = uqInputs["numParticles"]
-    maxRunTime = uqInputs["maxRunTime"]
+    #maxRunTime = uqInputs["maxRunTime"]
+    if "maxRunTime" in uqInputs.keys():
+        maxRunTime = uqInputs["maxRunTime"]
+    else:
+        maxRunTime = float("inf")
     logLikelihoodFile = uqInputs["logLikelihoodFile"]
     calDataFile = uqInputs["calDataFile"]
 
@@ -321,7 +325,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     return (
         nSamples,
         seedValue,
-        maxRunTime,
         calDataFile,
         logLikeModule,
         writeFEMOutputs,
