@@ -206,7 +206,8 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
     with open(BIM_file, 'r') as f:
         rootBIM = json.load(f)
     try:
-        rootSIM = rootBIM['StructuralInformation']
+        #rootSIM = rootBIM['StructuralInformation']
+        rootSIM = rootBIM['Modeling']
     except:
         raise ValueError("RC_FIAP - structural information missing")
 
