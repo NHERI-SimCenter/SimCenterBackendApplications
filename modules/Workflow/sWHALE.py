@@ -87,14 +87,6 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
     log_msg('Running the workflow script')
     log_div()
 
-    # If there is an external EDP file provided, change the run_type to loss_only
-    try:
-        if inputs['DamageAndLoss']['Demands']['DemandFilePath'] is not None:
-            run_type = 'loss_only'
-    except:
-        pass
-
-
     if WF.run_type != 'loss_only':
 
         # initialize the working directory
@@ -166,7 +158,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
     # If there is an external EDP file provided, change the run_type to loss_only
     try:
-        if inputs['DamageAndLoss']['Demands']['DemandFilePath'] is not None:
+        if inputs['DL']['Demands']['DemandFilePath'] is not None:
             run_type = 'loss_only'
     except:
         pass
