@@ -1141,9 +1141,7 @@ class Workflow(object):
                         for app_data in app_data_array:
 
                             if asset_type in app_data:
-                                app_info = app_data[asset_type]
-
-                                extra_input[app_type].append(app_info)
+                                extra_input[app_type].append(app_data[asset_type])
 
                     else:
                         # Every other app type has a single app in it per asset type
