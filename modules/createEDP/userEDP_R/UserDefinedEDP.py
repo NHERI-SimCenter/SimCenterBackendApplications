@@ -41,15 +41,15 @@
 import sys
 import argparse, json
 
-def write_RV(BIM_file, EVENT_file, EDP_file, EDP_specs):
+def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
     # We do this to provide an option for different behavior under setup,
     # even though it is unlikely to have random variables for EDPs.
-    write_EDP(BIM_file, EVENT_file, EDP_file, EDP_specs)
+    write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs)
 
-def write_EDP(BIM_file, EVENT_file, EDP_file, EDP_specs):
+def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
-    with open(BIM_file, 'r') as f:
+    with open(AIM_file, 'r') as f:
         bim_file = json.load(f)
 
     with open(EVENT_file, 'r') as f:
@@ -112,7 +112,7 @@ def write_EDP(BIM_file, EVENT_file, EDP_file, EDP_specs):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEDP')
@@ -122,8 +122,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameBIM, args.filenameEVENT,
+        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT,
                           args.filenameEDP, args.EDPspecs))
     else:
-        sys.exit(write_EDP(args.filenameBIM, args.filenameEVENT,
+        sys.exit(write_EDP(args.filenameAIM, args.filenameEVENT,
                            args.filenameEDP, args.EDPspecs))

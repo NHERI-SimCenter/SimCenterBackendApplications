@@ -13,12 +13,12 @@ class OpenSeesPreprocessor {
   OpenSeesPreprocessor();
   ~OpenSeesPreprocessor();
 
-  int writeRV(const char *BIM,
+  int writeRV(const char *AIM,
 	      const char *SAM,
 	      const char *EVENT,
 	      const char *SIM);
 
-  int createInputFile(const char *BIM,
+  int createInputFile(const char *AIM,
 		      const char *SAM,
 		      const char *EVENT,
 		      const char *EDP,
@@ -39,13 +39,13 @@ class OpenSeesPreprocessor {
   int getNode(const char *cline, const char *floor);
 
  private:
-  const char *fileBIM;
+  const char *fileAIM;
   const char *fileSAM;
   const char *fileEVENT;
   const char *fileEDP;
   const char *fileSIM;
 
-  json_t *rootBIM;
+  json_t *rootAIM;
   json_t *rootSIM;
   json_t *rootSAM;
   json_t *rootEDP;
@@ -56,6 +56,8 @@ class OpenSeesPreprocessor {
   int numSteps;
   double dT;
   int nStory;   //number of stories
+
+  double dampingRatio;
 
   int NDM;
   int NDF;

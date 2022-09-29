@@ -13,8 +13,8 @@ test: testCallTPU.o $(OBJS)
 	$(CXX) $(CPPFLAGS) -c ../../common/Units.cpp -o Units.o
 	$(CXX) $(LDFLAGS) -o testCallTPU testCallTPU.o Units.o $(OBJS) $(LDLIBS) -lPython
 	time ./testCallTPU
-	time ./LowRiseTPU --filenameBIM testTPU.json --filenameEVENT event.json --getRV
-	time ./LowRiseTPU --filenameBIM testTPU.json --filenameEVENT event.json
+	time ./LowRiseTPU --filenameAIM testTPU.json --filenameEVENT event.json --getRV
+	time ./LowRiseTPU --filenameAIM testTPU.json --filenameEVENT event.json
 
 clean:
 	$(RM) $(OBJS) *~ \#* *.o

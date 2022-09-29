@@ -1,0 +1,452 @@
+{
+    "status": "usage",
+    "description": "Compute hazard curve data at a location",
+    "syntax": "https://earthquake.usgs.gov/nshmp-haz-ws/hazard/{edition}/{region}/{longitude}/{latitude}/{imt}/{vs30}",
+    "server": {
+      "threads": 1,
+      "servlet": "426.9 μs",
+      "calc": "0.000 ns",
+      "nshmp-haz": {
+        "url": "https://github.com/usgs/nshmp-haz",
+        "version": "v1.3.2-8-g1e0853b2"
+      },
+      "nshmp-haz-ws": {
+        "url": "https://github.com/usgs/nshmp-haz-ws",
+        "version": "v1.2.3-64-g7c23631"
+      }
+    },
+    "parameters": {
+      "imt": {
+        "label": "Intensity measure type",
+        "type": "string",
+        "values": [
+          {
+            "id": 0,
+            "value": "PGA",
+            "display": "Peak Ground Acceleration",
+            "displayorder": 0
+          },
+          {
+            "id": 21,
+            "value": "SA0P1",
+            "display": "0.10 Second Spectral Acceleration",
+            "displayorder": 21
+          },
+          {
+            "id": 28,
+            "value": "SA0P2",
+            "display": "0.20 Second Spectral Acceleration",
+            "displayorder": 28
+          },
+          {
+            "id": 30,
+            "value": "SA0P3",
+            "display": "0.30 Second Spectral Acceleration",
+            "displayorder": 30
+          },
+          {
+            "id": 34,
+            "value": "SA0P5",
+            "display": "0.50 Second Spectral Acceleration",
+            "displayorder": 34
+          },
+          {
+            "id": 37,
+            "value": "SA0P75",
+            "display": "0.75 Second Spectral Acceleration",
+            "displayorder": 37
+          },
+          {
+            "id": 40,
+            "value": "SA1P0",
+            "display": "1.00 Second Spectral Acceleration",
+            "displayorder": 40
+          },
+          {
+            "id": 43,
+            "value": "SA2P0",
+            "display": "2.00 Second Spectral Acceleration",
+            "displayorder": 43
+          },
+          {
+            "id": 45,
+            "value": "SA3P0",
+            "display": "3.00 Second Spectral Acceleration",
+            "displayorder": 45
+          },
+          {
+            "id": 47,
+            "value": "SA4P0",
+            "display": "4.00 Second Spectral Acceleration",
+            "displayorder": 47
+          },
+          {
+            "id": 49,
+            "value": "SA5P0",
+            "display": "5.00 Second Spectral Acceleration",
+            "displayorder": 49
+          }
+        ]
+      },
+      "vs30": {
+        "label": "Site soil (Vs30)",
+        "type": "string",
+        "values": [
+          {
+            "id": 0,
+            "value": "2000",
+            "display": "2000 m/s (Site class A)",
+            "displayorder": 0
+          },
+          {
+            "id": 1,
+            "value": "1150",
+            "display": "1150 m/s (Site class B)",
+            "displayorder": 1
+          },
+          {
+            "id": 2,
+            "value": "760",
+            "display": "760 m/s (B/C boundary)",
+            "displayorder": 2
+          },
+          {
+            "id": 3,
+            "value": "537",
+            "display": "537 m/s (Site class C)",
+            "displayorder": 3
+          },
+          {
+            "id": 4,
+            "value": "360",
+            "display": "360 m/s (C/D boundary)",
+            "displayorder": 4
+          },
+          {
+            "id": 5,
+            "value": "259",
+            "display": "259 m/s (Site class D)",
+            "displayorder": 5
+          },
+          {
+            "id": 6,
+            "value": "180",
+            "display": "180 m/s (D/E boundary)",
+            "displayorder": 6
+          }
+        ]
+      },
+      "edition": {
+        "label": "Model edition",
+        "type": "string",
+        "values": [
+          {
+            "id": 0,
+            "value": "E2008",
+            "version": "v3.3.3",
+            "display": "Dynamic: Conterminous U.S. 2008 (v3.3.3)",
+            "displayorder": 100,
+            "supports": {
+              "region": [
+                "COUS",
+                "CEUS",
+                "WUS"
+              ],
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA0P75",
+                "SA1P0",
+                "SA2P0",
+                "SA3P0"
+              ],
+              "vs30": [
+                "2000",
+                "1150",
+                "760",
+                "537",
+                "360",
+                "259",
+                "180"
+              ]
+            }
+          },
+          {
+            "id": 1,
+            "value": "E2014",
+            "version": "v4.1.4",
+            "display": "Dynamic: Conterminous U.S. 2014 (v4.1.4)",
+            "displayorder": 0,
+            "supports": {
+              "region": [
+                "COUS",
+                "CEUS",
+                "WUS"
+              ],
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA1P0",
+                "SA2P0"
+              ],
+              "vs30": [
+                "2000",
+                "1150",
+                "760",
+                "537",
+                "360",
+                "259",
+                "180"
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "value": "E2014B",
+            "version": "v4.2.0",
+            "display": "Dynamic: Conterminous U.S. 2014 (update) (v4.2.0)",
+            "displayorder": -10,
+            "supports": {
+              "region": [
+                "COUS",
+                "CEUS",
+                "WUS"
+              ],
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA0P75",
+                "SA1P0",
+                "SA2P0",
+                "SA3P0",
+                "SA4P0",
+                "SA5P0"
+              ],
+              "vs30": [
+                "2000",
+                "1150",
+                "760",
+                "537",
+                "360",
+                "259",
+                "180"
+              ]
+            }
+          },
+          {
+            "id": 3,
+            "value": "E2007",
+            "version": "v2.1.2",
+            "display": "Dynamic: Alaska 2007 (v2.1.2)",
+            "displayorder": -100,
+            "supports": {
+              "region": [
+                "AK"
+              ],
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA1P0",
+                "SA2P0"
+              ],
+              "vs30": [
+                "760"
+              ]
+            }
+          }
+        ]
+      },
+      "region": {
+        "label": "Model region",
+        "type": "string",
+        "values": [
+          {
+            "id": 0,
+            "value": "AK",
+            "display": "Alaska",
+            "displayorder": 0,
+            "minlatitude": 48.0,
+            "maxlatitude": 72.0,
+            "minlongitude": -200.0,
+            "maxlongitude": -125.0,
+            "uiminlatitude": 48.0,
+            "uimaxlatitude": 72.0,
+            "uiminlongitude": -200.0,
+            "uimaxlongitude": -125.0,
+            "supports": {
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA1P0",
+                "SA2P0"
+              ],
+              "vs30": [
+                "760"
+              ]
+            }
+          },
+          {
+            "id": 1,
+            "value": "COUS",
+            "display": "Conterminous US",
+            "displayorder": 1,
+            "minlatitude": 24.6,
+            "maxlatitude": 50.0,
+            "minlongitude": -125.0,
+            "maxlongitude": -65.0,
+            "uiminlatitude": 24.6,
+            "uimaxlatitude": 50.0,
+            "uiminlongitude": -125.0,
+            "uimaxlongitude": -65.0,
+            "supports": {
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA1P0",
+                "SA2P0"
+              ],
+              "vs30": [
+                "760"
+              ]
+            }
+          },
+          {
+            "id": 2,
+            "value": "CEUS",
+            "display": "Central & Eastern US",
+            "displayorder": 2,
+            "minlatitude": 24.6,
+            "maxlatitude": 50.0,
+            "minlongitude": -115.0,
+            "maxlongitude": -65.0,
+            "uiminlatitude": 24.6,
+            "uimaxlatitude": 50.0,
+            "uiminlongitude": -100.0,
+            "uimaxlongitude": -65.0,
+            "supports": {
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA1P0",
+                "SA2P0"
+              ],
+              "vs30": [
+                "2000",
+                "760"
+              ]
+            }
+          },
+          {
+            "id": 3,
+            "value": "HI",
+            "display": "Hawaii",
+            "displayorder": 3,
+            "minlatitude": 18.0,
+            "maxlatitude": 23.0,
+            "minlongitude": -161.0,
+            "maxlongitude": -154.0,
+            "uiminlatitude": 18.0,
+            "uimaxlatitude": 23.0,
+            "uiminlongitude": -161.0,
+            "uimaxlongitude": -154.0,
+            "supports": {
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA0P75",
+                "SA1P0",
+                "SA2P0",
+                "SA3P0",
+                "SA5P0"
+              ],
+              "vs30": [
+                "1150",
+                "760",
+                "537",
+                "360",
+                "259",
+                "180"
+              ]
+            }
+          },
+          {
+            "id": 4,
+            "value": "WUS",
+            "display": "Western US",
+            "displayorder": 4,
+            "minlatitude": 24.6,
+            "maxlatitude": 50.0,
+            "minlongitude": -125.0,
+            "maxlongitude": -100.0,
+            "uiminlatitude": 24.6,
+            "uimaxlatitude": 50.0,
+            "uiminlongitude": -125.0,
+            "uimaxlongitude": -115.0,
+            "supports": {
+              "imt": [
+                "PGA",
+                "SA0P1",
+                "SA0P2",
+                "SA0P3",
+                "SA0P5",
+                "SA0P75",
+                "SA1P0",
+                "SA2P0",
+                "SA3P0",
+                "SA4P0",
+                "SA5P0"
+              ],
+              "vs30": [
+                "1150",
+                "760",
+                "537",
+                "360",
+                "259",
+                "180"
+              ]
+            }
+          }
+        ]
+      },
+      "longitude": {
+        "label": "Longitude (in decimal degrees)",
+        "type": "number",
+        "values": {
+          "minimum": -360.0,
+          "maximum": 360.0
+        }
+      },
+      "latitude": {
+        "label": "Latitude (in decimal degrees)",
+        "type": "number",
+        "values": {
+          "minimum": -90.0,
+          "maximum": 90.0
+        }
+      }
+    }
+  }

@@ -12,8 +12,8 @@ DEDM_HRP: DEDM_HRP.o $(OBJS)
 test: DEDM_HRP testDedmCall.o
 	$(CXX) $(LDFLAGS) -o testDedmCall testDedmCall.o Units.o $(OBJS) $(LDLIBS)
 	./testDedmCall
-	python ./DEDM_HRP.py --filenameBIM testInput.json --filenameEVENT evt.json --getRV
-	python ./DEDM_HRP.py --filenameBIM testInput.json --filenameEVENT evt.json 
+	python ./DEDM_HRP.py --filenameAIM testInput.json --filenameEVENT evt.json --getRV
+	python ./DEDM_HRP.py --filenameAIM testInput.json --filenameEVENT evt.json 
 
 clean:
 	$(RM) $(OBJS) *~ \#* *.o

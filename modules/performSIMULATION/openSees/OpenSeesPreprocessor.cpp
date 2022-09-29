@@ -10,11 +10,11 @@
 #include "common/Units.h"
 
 OpenSeesPreprocessor::OpenSeesPreprocessor()
-  :rootBIM(0), rootSAM(0), rootEVENT(0), rootEDP(0), rootSIM(0), 
-   fileBIM(0), fileSAM(0), fileEVENT(0), fileEDP(0), fileSIM(0),
+  :rootAIM(0), rootSAM(0), rootEVENT(0), rootEDP(0), rootSIM(0), 
+   fileAIM(0), fileSAM(0), fileEVENT(0), fileEDP(0), fileSIM(0),
    analysisType(-1), numSteps(0), dT(0.0), nStory(0), mapping(0)
 {
-
+  dampingRatio = -1.0;
 }
 
 OpenSeesPreprocessor::~OpenSeesPreprocessor() {
@@ -22,7 +22,7 @@ OpenSeesPreprocessor::~OpenSeesPreprocessor() {
 }
 
 int 
-OpenSeesPreprocessor::writeRV(const char *BIM,
+OpenSeesPreprocessor::writeRV(const char *AIM,
 			      const char *SAM,
 			      const char *EVENT,
 			      const char *SIM)
@@ -35,8 +35,8 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
   //
 
   json_error_t error;
-  rootBIM = json_load_file(BIM, 0, &error);
-  json_t *sim = json_object_get(rootBIM,"Simulation");
+  rootAIM = json_load_file(AIM, 0, &error);
+  json_t *sim = json_object_get(rootAIM,"Simulation");
 
   if (sim == NULL) {
     json_dump_file(rootSIM,SIM,0);
@@ -54,15 +54,13 @@ OpenSeesPreprocessor::writeRV(const char *BIM,
   //  duplicating data with intent not to open 2 files later
   //
 
-
-
   json_dump_file(sim, SIM,0);
 
   return 0;
 }
 
 int 
-OpenSeesPreprocessor::createInputFile(const char *BIM,
+OpenSeesPreprocessor::createInputFile(const char *AIM,
 				      const char *SAM,
 				      const char *EVENT,
 				      const char *EDP,
@@ -70,10 +68,10 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 				      const char *filenameTCL)
 {
   json_error_t error;
-  fileBIM = BIM;
+  fileAIM = AIM;
 
   //Loading Bim File
-  rootBIM = json_load_file(BIM, 0, &error);
+  rootAIM = json_load_file(AIM, 0, &error);
 
   //
   // open tcl script
@@ -146,6 +144,7 @@ OpenSeesPreprocessor::createInputFile(const char *BIM,
 
   // process damping
   rootSIM = json_load_file(SIM, 0, &error);
+  
   // do not prescribe damping for custom analysis scripts
   json_t *fileScript = json_object_get(rootSIM,"fileName");
 
@@ -437,16 +436,38 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 int
 OpenSeesPreprocessor::processDamping(ofstream &s){
 
+  //
+  // determine dampingRatio .. should be in SAM, use SIM if not there
+  //
+  
+  // get ratio from SAM, either mainbody or in Properties
+  json_t *dampingT = json_object_get(rootSAM,"dampingRatio");
+  if (dampingT == NULL) {
+    json_t *propertiesT = json_object_get(rootSAM,"Properties");
+    if (propertiesT != NULL) 
+      dampingT = json_object_get(propertiesT,"dampingRatio");
+
+    // get from SIM instead
+    if (dampingT == NULL) 
+      dampingT = json_object_get(rootSIM,"dampingRatio");
+  } 
+  
+  // read the ratio
+  if (dampingT != NULL) {
+    dampingRatio = json_number_value(dampingT);
+  } else {
+    std::cerr << "OpenSeesPreprocessor - no damping ratio found in JSON, using 0.0\n";
+    dampingRatio = 0.0;
+  }
+
   if (json_object_get(rootSIM, "dampingModel") == NULL) {
 
     //
     // old legacy code
     //
-
-    double damping = json_number_value(json_object_get(rootSIM,"dampingRatio"));
     
-    if (damping != 0.0) {
-      s << "set xDamp " << damping << ";\n"
+    if (dampingRatio != 0.0) {
+      s << "set xDamp " << dampingRatio << ";\n"
 	<< "set MpropSwitch 1.0;\n"
 	<< "set KcurrSwitch 0.0;\n"
 	<< "set KinitSwitch 1.0;\n"
@@ -492,29 +513,27 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 
     if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
 
-      double damping = json_real_value(json_object_get(rootSIM,"dampingRatio"));
-
       int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
       int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));	
-      const char *dampingTangent = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
+      const char *dampingT = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
       int KcurrSwitch = 0;
       int KcommSwitch = 0;
       int KinitSwitch = 0;
 
-      if (strcmp(dampingTangent,"Initial"))
+      if (strcmp(dampingT,"Initial"))
 	KinitSwitch = 1;
-      else if (strcmp(dampingTangent,"Current"))
+      else if (strcmp(dampingT,"Current"))
 	KcurrSwitch = 1;
-      else if (strcmp(dampingTangent,"Committed"))
+      else if (strcmp(dampingT,"Committed"))
 	KcommSwitch = 1;
 
-      if (damping == 0.0) {
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+      if (dampingRatio == 0.0) {
+	
+	;
 
       } else {
-	s << "set xDamp " << damping << ";\n";
+	
+	s << "set xDamp " << dampingRatio << ";\n";
 
 	if (mode1 != 0 && mode2 != 0) {
 	  
@@ -556,16 +575,15 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       }
     } else {
 
-      double damping = json_number_value(json_object_get(rootSIM,"dampingRatioModal"));	
       int numModes = json_integer_value(json_object_get(rootSIM,"numModesModal"));	
       double dampingTangent = json_number_value(json_object_get(rootSIM,"modalRayleighTangentRatio"));	
 
-      if (damping != 0.0) {
+      if (dampingRatio != 0.0 || dampingTangent != 0.0) {
 
 	//	std::cerr << "MODAL: " << damping << " " << numModes << "\n";
       
 	s << "set lambdaN [eigen " << numModes << "];\n"
-	  << "modalDamping " << damping << "\n"
+	  << "modalDamping " << dampingRatio << "\n"
 	  << "set lambda1 [lindex $lambdaN 0]\n"
 	  << "set omega1 [expr pow($lambda1,0.5)];\n";
 
@@ -576,13 +594,13 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
 	    << "rayleigh 0.0 0.0 $betaKinit 0.0;\n";
 	}
       } else {
-	s << "set lambdaN [eigen 1];\n"
-	  << "set lambda1 [lindex $lambdaN 0]\n"
-	  << "set omega1 [expr pow($lambda1,0.5)];\n";
+	;
+	//  s << "set lambdaN [eigen 1];\n"
+	//  << "set lambda1 [lindex $lambdaN 0]\n"
+	//  << "set omega1 [expr pow($lambda1,0.5)];\n";	
       }
     }
   }
-
 
   return 0;
 }
@@ -690,7 +708,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -727,7 +745,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -764,7 +782,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
 
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 
 	    fileString=temp.str(); 
 
@@ -800,7 +818,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 		string fileString1;
 		ostringstream temp1;  //temp as in temporary
 		
-		temp1 << fileBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof[ii] << ".out";
+		temp1 << fileAIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof[ii] << ".out";
 		fileString1=temp1.str(); 
 		
 		const char *fileName1 = fileString1.c_str();
@@ -829,7 +847,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	    string fileString;
 	    ostringstream temp;  //temp as in temporary
-	    temp << fileBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	    fileString=temp.str(); 
 	    
 	    const char *fileName = fileString.c_str();
@@ -909,7 +927,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	processDamping(s);
 
-	s << "set T1 [expr 2*3.14159/$lambda1]\n"
+	s << "set lambdaN [eigen 1];\n"
+    << "set lambda1 [lindex $lambdaN 0]\n"
+    << "set T1 [expr 2*3.14159/$lambda1]\n"
 	  << "set dTana [expr $T1/20.]\n"
 	  << "if {$dt < $dTana} {set dTana $dt}\n";
 	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
@@ -992,25 +1012,34 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventFactor = json_number_value(eventFactorObj);
   }
 
-  //First let's read units from bim
-  json_t* genInfoJson = json_object_get(rootBIM, "GeneralInformation");
-  json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
-  json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
-  json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
-  json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");
+  Units::UnitSystem samUnits;
 
   
-  //Parsing BIM Units
-  Units::UnitSystem bimUnits;
-  bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
-  bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
-  bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
-
+  // Read units
+  // NOTE: if no units use default in GI
+  json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
+  json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  if (samUnitsJson != NULL) {
+    json_t* samLengthJson = json_object_get(samUnitsJson, "length");
+    json_t* samForceJson = json_object_get(samUnitsJson, "force");
+    json_t* samTimeJson = json_object_get(samUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
+  } else {
+    json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
+    json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");    
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
+  }
+  
   // loop over time series & create the time series
   int index = 0;
   json_t *timeSeriesArray = json_object_get(event,"timeSeries");
   int numSeriesArray = json_array_size(timeSeriesArray);
-
 
   //We need to check units for conversion
   double unitConversionFactorAcceleration = 1.0;
@@ -1034,9 +1063,9 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       if(NULL != evtTimeJson)
 	eventUnits.timeUnit = Units::ParseTimeUnit(json_string_value(evtTimeJson));
       
-      unitConversionFactorForce = Units::GetForceFactor(eventUnits, bimUnits);
-      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, bimUnits);
-      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorForce = Units::GetForceFactor(eventUnits, samUnits);
+      unitConversionFactorLength = Units::GetLengthFactor(eventUnits, samUnits);
+      unitConversionFactorAcceleration = Units::GetAccelerationFactor(eventUnits, samUnits);
     }
   else
     {
@@ -1044,9 +1073,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
       eventUnits.lengthUnit = Units::LengthUnit::Meter;
       eventUnits.timeUnit = Units::TimeUnit::Second;
       
-      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, bimUnits);
+      unitConversionFactorAcceleration = 9.81 * Units::GetAccelerationFactor(eventUnits, samUnits);
     }
-  
   
   for (int i=0; i<numSeriesArray; i++) {
     timeSeries = json_array_get(timeSeriesArray, i);
@@ -1218,8 +1246,8 @@ OpenSeesPreprocessor:: getNode(const char * cline,const char * floor){
 
 int main(int argc, char **argv)
 {
-  // OpenSeesPreprocessor BIM.json SAM.json EVENT.json SIM.json --getRV
-  // OpenSeesPreprocessor BIM.json SAM.json EVENT.json EDP.json SIM.json script 
+  // OpenSeesPreprocessor AIM.json SAM.json EVENT.json SIM.json --getRV
+  // OpenSeesPreprocessor AIM.json SAM.json EVENT.json EDP.json SIM.json script 
 
   OpenSeesPreprocessor thePreprocessor;
 

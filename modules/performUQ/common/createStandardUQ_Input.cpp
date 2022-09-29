@@ -9,12 +9,17 @@
 
 int
 gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
+
+  std::cerr << "creareStandardUQINput:: gatherRV\n";
   
   json_error_t error;
   json_t *rootRVs = json_object_get(rootINPUT,"randomVariables");
   if (rootRVs == 0) {
-    std::cerr << "createStandardInput::gatherRV() - no randomVariables in rootINPUT\n";
-    return -1;
+    rootRVs = json_object_get(rootINPUT,"RandomVariables");
+    if (rootRVs == 0) {    
+      std::cerr << "createStandardInput::gatherRV() - no randomVariables in rootINPUT\n";
+      return -1;
+    }
   }
 
   //
@@ -30,20 +35,28 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
       json_t *value;
       
       json_array_foreach(defaultRVs, index, value) {
+	
 	const char *fName = json_string_value(value);
-
+	std::cerr << "rvFILE: " << fName << "\n";
 	json_t *rootOther = json_load_file(fName, 0, &error);
 	json_t *fileRandomVariables =  json_object_get(rootOther, "randomVariables");
+	if (fileRandomVariables == NULL) {
+	  fileRandomVariables =  json_object_get(rootOther, "RandomVariables");
+	}
 	if (fileRandomVariables != NULL) {
+	  std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
 	  int numRVs = json_array_size(fileRandomVariables);
+	  std::cerr << "rvFILE: " << fName << " " << numRVs << "\n";	    
 	  for (int i=0; i<numRVs; i++) {
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
 	    json_array_append(rootRVs, fileRandomVariable);
 	  }
-    // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
+	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
-	    rvFiles.insert(std::string(fName));
+	  rvFiles.insert(std::string(fName));
 	  //}
+	} else {
+	  ; //	std::cerr << "NO RANDOM VARIABLES: " << json_dumps(rootOther, JSON_ENCODE_ANY) << "\n\n";
 	}
       }
     }
@@ -55,6 +68,9 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 int
 gatherEDP(json_t *rootINPUT, std::string &edpFile){
 
+
+  std::cerr << "creareStandardUQINput:: gatherRV\n";
+  
   //
   // get rootEPDs
   //
@@ -64,12 +80,11 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
   
   if (rootEDPs == 0) {
     std::cerr << "createStandardInput::gatherRV() - no EDPs in rootINPUT\n";
-    return -1;
   }
 
   // if not an array, we are going to create new one and update
   bool createdNew = false;
-  if (!json_is_array(rootEDPs)) {
+  if ((rootEDPs == NULL) || (!json_is_array(rootEDPs))) {
     rootEDPs = json_array();
     createdNew = true;
   }
@@ -215,13 +230,14 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 
 int main(int argc, char **argv) {
 
+  
   const char *inputFile = argv[1];
   const char *outputFile = argv[2];
   const char *workflowOld = argv[3];
   const char *workflowNew = argv[4];  
   const char *runType = argv[5];
   const char *osType = argv[6];  
-  
+
   //
   // open file & read JSON contents into rootINPUT
   //
