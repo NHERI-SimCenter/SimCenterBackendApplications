@@ -51,8 +51,6 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import whale.main as whale
 from whale.main import log_msg, log_div
 
-from sWHALE import runSWhale
-
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file, output_dir):
@@ -121,14 +119,12 @@ def main(run_type, input_file, app_registry,
         "randomVariables" : randomVariables,
         "Applications": {
             "RegionalMapping": inputApplications["RegionalMapping"],
-            "UQ": inputApplications["UQ"],
-            "Assets" : {
-                "Buildings": {
-                    "Application": "CSV_to_AIM",
-                    "ApplicationData": {
-                        "assetSourceFile": appData["soilGridParametersFilePath"] + "/" +     appData["soilGridParametersFile"],
-                        "filter": siteFilter
-                    }
+            "UQ": inputApplications["UQ"],            
+            "Building": {
+                "Application": "CSV_to_BIM",
+                "ApplicationData": {
+                    "buildingSourceFile": appData["soilGridParametersFilePath"] + "/" + appData["soilGridParametersFile"],
+                    "filter": siteFilter 
                 }
             },
             "EDP": {
@@ -157,7 +153,7 @@ def main(run_type, input_file, app_registry,
         json_file.write(json.dumps(siteResponseInput, indent=2))    
     
     WF = whale.Workflow(run_type, siteResponseInputFile, app_registry,
-        app_type_list = ['Assets', 'RegionalMapping', 'Event', 'EDP', 'UQ'],
+        app_type_list = ['Building', 'RegionalMapping', 'Event', 'EDP', 'UQ'],
         reference_dir = reference_dir,
         working_dir = working_dir,
         app_dir = app_dir)
@@ -179,66 +175,45 @@ def main(run_type, input_file, app_registry,
         WF.perform_regional_event()
 
     # prepare the basic inputs for individual buildings
-    asset_files = WF.create_asset_files()
+    building_file = WF.create_building_files()
+    WF.perform_regional_mapping(building_file)
+
+    # TODO: not elegant code, fix later
+    with open(building_file, 'r') as f:
+        bldg_data = json.load(f)
+
+    for bldg in bldg_data: #[:1]:
+        log_msg('', prepend_timestamp=False)
+        log_div(prepend_blank_space=False)
+        log_div(prepend_blank_space=False)
+        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
+        log_div()
+
+        # initialize the simulation directory
+        WF.init_simdir(bldg['id'], bldg['file'])
+
+        # prepare the input files for the simulation
+        WF.create_RV_files(
+            app_sequence = ['Event', 'EDP'],
+            BIM_file = bldg['file'], bldg_id=bldg['id'])
+
+        # create the workflow driver file
+        WF.create_driver_file(
+            app_sequence = ['Building', 'Event', 'EDP'],
+            bldg_id=bldg['id'])
+
+        # run uq engine to simulate response
+        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
+
+        # run dl engine to estimate losses
+        #WF.estimate_losses(
+        #    BIM_file = bldg['file'], bldg_id = bldg['id'],
+        #    copy_resources=True)
+
+        if force_cleanup:
+            #clean up intermediate files from the simulation
+            WF.cleanup_simdir(bldg['id'])
     
-    for asset_type, assetIt in asset_files.items() :
-
-        # perform the regional mapping
-        WF.perform_regional_mapping(assetIt)
-        
-        # TODO: not elegant code, fix later
-        with open(assetIt, 'r') as f:
-            asst_data = json.load(f)
-        
-        # The preprocess app sequence (previously get_RV)
-        preprocess_app_sequence = ['Event', 'EDP']
-        
-        # The workflow app sequence
-        WF_app_sequence = ['Assets', 'Event', 'EDP']
-
-        # For each asset
-        for asst in asst_data:
-        
-            log_msg('', prepend_timestamp=False)
-            log_div(prepend_blank_space=False)
-            log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
-            log_div()
-        
-            # Run sWhale
-            runSWhale(inputs = None, WF = WF, assetID = asst['id'], assetAIM = asst['file'], prep_app_sequence = preprocess_app_sequence,  WF_app_sequence = WF_app_sequence, asset_type = asset_type, copy_resources = True, force_cleanup = force_cleanup)
-            
-#    for bldg in bldg_data: #[:1]:
-#        log_msg('', prepend_timestamp=False)
-#        log_div(prepend_blank_space=False)
-#        log_div(prepend_blank_space=False)
-#        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
-#        log_div()
-#
-#        # initialize the simulation directory
-#        WF.init_simdir(bldg['id'], bldg['file'])
-#
-#        # prepare the input files for the simulation
-#        WF.create_RV_files(
-#            app_sequence = ['Event', 'EDP'],
-#            BIM_file = bldg['file'], bldg_id=bldg['id'])
-#
-#        # create the workflow driver file
-#        WF.create_driver_file(
-#            app_sequence = ['Building', 'Event', 'EDP'],
-#            bldg_id=bldg['id'])
-#
-#        # run uq engine to simulate response
-#        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
-#
-#        # run dl engine to estimate losses
-#        #WF.estimate_losses(
-#        #    BIM_file = bldg['file'], bldg_id = bldg['id'],
-#        #    copy_resources=True)
-#
-#        if force_cleanup:
-#            #clean up intermediate files from the simulation
-#            WF.cleanup_simdir(bldg['id'])
-#
     createFilesForEventGrid(working_dir,
                             output_dir,
                             force_cleanup)

@@ -44,6 +44,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include "runGSA.h"
 #include <iterator>
+using namespace arma::newarp;
 
 runGSA::runGSA() {}
 
@@ -89,8 +90,10 @@ runGSA::runGSA(vector<vector<double>> xval,
 	//mat princ_dir_red;
     if (performPCA) {
 		std::cout << "Running PCA ..." << std::endl;
+		auto readStart = std::chrono::high_resolution_clock::now();
         runPCA(gmat_eff, gmat_red, princ_dir_red);
-		std::cout << "PCA done..." << std::endl;
+		auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << " - Done PCA... Elapsed total time: " << readEnd  << "s\n";
     } else {
         //copy
         //for (int i = 0; i < gmat_eff.size(); i++) {
@@ -99,7 +102,7 @@ runGSA::runGSA(vector<vector<double>> xval,
 		std::cout << "Processing without PCA ..." << std::endl;
 
 		for (int nq = constantQoiIdx.size() - 1; nq >= 0; nq--) {
-			for (auto& row : gmat_eff) row.erase(next(row.begin(), nq));
+			for (auto& row : gmat_eff) row.erase(next(row.begin(), constantQoiIdx[nq]));
 		}
 		gmat_red = gmat_eff;
 		princ_dir_red.eye(nqoi, nqoi);
@@ -110,64 +113,78 @@ runGSA::runGSA(vector<vector<double>> xval,
 	//
 	// Post processing
 	//
+
 	if (qoiVectRange.size()!=0){
+		std::cout << "Calculating the aggregated GSA outputs for field QoIs ...\n";
 		for (int nc = 0; nc < ncombs; nc++) {
 			vector<double> Siagg_tmp, Stagg_tmp;
 
-			double sum = 0;
-			int startIdx = qoiVectRange[0][0];
-			int endIdx = qoiVectRange[0][1];
-			int uniqueCount;
-
 			for (int nu = 0; nu < qoiVectRange.size(); nu++) {
 				double numerSi = 0, numerSt = 0, denom = 0;
-				for (int nq = qoiVectRange[0][0]; nq < qoiVectRange[0][1]; nq++)
+				for (int nq = qoiVectRange[nu][0]; nq < qoiVectRange[nu][1]; nq++)
 				{
-					if (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), nq) != constantQoiIdx.end())
-						continue;
+					//if (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), nq) != constantQoiIdx.end())
+					//	continue;
 					numerSi += varQoI[nq] * Simat[nc][nq];
 					numerSt += varQoI[nq] * Stmat[nc][nq];
 					denom += varQoI[nq];
 				}
-				if (denom == 0) denom = 1.0; // for numerical stability. Si is anyways zero
-				if (numerSi > numerSt) numerSt = numerSt;
+				if (denom == 0) denom = 1.0; // just for numerical stability. Si is anyways zero regardless.
+				//if (numerSi > numerSt) numerSt = numerSi; // enforcing Si < St
 				Siagg_tmp.push_back(numerSi / denom);
 				Stagg_tmp.push_back(numerSt / denom);
 			}
 			Simatagg.push_back(Siagg_tmp);
-			Stmatagg.push_back(Siagg_tmp);
+			Stmatagg.push_back(Stagg_tmp);
 		}
+		std::cout << " - Done calculating the aggregated GSA ...\n";
+
 	}
 }
 
 void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>& gmat_eff)
 {
-	// Make the matrix centered...
+	// Make the matrix centered and have unit variance...
 
 
 
-	std::cout << "Preprocessing function for QoIs.." << std::endl;
+	std::cout << "Preprocessing.." << std::endl;
 
 	std::vector<double> avg(nqoi, 0.0);
 	std::vector<double> var(nqoi, 0.0);
-	for (auto& row : gmat_eff)
+	std::vector<double> normVar(nqoi, 0.0);
+	for (std::vector<double>& row : gmat_eff)
 	{
 		std::transform(avg.begin(), avg.end(), row.begin(), avg.begin(), std::plus<double>()); // sum
-		std::transform(var.begin(), var.end(), row.begin(), var.begin(), [](double i, double j) {return i + j*j; }); // square sum
+		std::transform(var.begin(), var.end(), row.begin(), var.begin(), [](double a, double b) {return a + b*b; }); // square sum
 	}
 	const double scale(1/(double)nmc);
 	std::transform(avg.begin(), avg.end(), avg.begin() ,[scale](double element) { return element *= scale; }); // avg of value
 	std::transform(var.begin(), var.end(), var.begin(), [scale](double element) { return element *= scale; }); // avg of squared value
-	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double i, double j) {return i - j * j; });// avg of square - square of avg
 
+	// Final Variance
+	std::transform(var.begin(), var.end(), avg.begin(), var.begin(), [](double a, double b) {return abs(a - b * b); });
+	varQoI = var;
+
+	// Normalized effective matrix
 	for (auto& row : gmat_eff)
 	{
 		// zero mean
-		std::transform(row.begin(), row.end(), avg.begin(), row.begin(), std::minus<double>());
+		std::transform(row.begin(), row.end(), avg.begin(), row.begin(), std::minus<double>()); 
+		std::transform(row.begin(), row.end(), var.begin(), row.begin(), [](double a, double b) { return a / sqrt(b); });  // do not need to worry about constants yet
 	}
 
-	std::cout << "  - QoI now has zero mean  " << std::endl;
-	std::cout << "  - Checking if QoI is constant  " << std::endl;
+	std::transform(var.begin(), var.end(), avg.begin(), normVar.begin(), [](double a, double b) {
+		if ((b * b) == 0) {
+			return a; // don't normalize..
+		}
+		else {
+			return a/b/b; // normalize..
+		}});// avg of square - square of avg
+	
+
+	std::cout << " - QoI now has zero mean  " << std::endl;
+	std::cout << " - Checking if there are constant QoIs  " << std::endl;
 
 	/*
 	while ((it = std::find_if(it, var.end(), [](double x) {return abs(x)<1.e-15; })) != var.end())
@@ -186,8 +203,8 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 	*/
 
 	int i = 0;
-	for (auto it = var.begin(); it != var.end(); it++) {
-		if (abs(*it) < 1.e-15) {
+	for (auto it = normVar.begin(); it != normVar.end(); it++) {
+		if (abs(*it) < 1.e-13) { // double precision 1.e-15
 			constantQoiIdx.push_back(i);
 		}
 		else {
@@ -195,8 +212,8 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 		}
 		i++;
 	} 
-	std::cout << "   - Number of constant QoIs:  " << constantQoiIdx.size() << std::endl;
-	std::cout << "   - Number of nonconstant QoIs:  " << nonConstantQoiIdx.size() << std::endl;
+	std::cout << "  - Number of constant QoIs:  " << constantQoiIdx.size() << std::endl;
+	std::cout << "  - Number of nonconstant QoIs:  " << nonConstantQoiIdx.size() << std::endl;
 
 /*
 	int count = 0;
@@ -204,7 +221,7 @@ void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>
 		bool isConstant = true;
 		
 		
-		std::cout << gmat_eff[0][nq] << " " << gmat_eff[1][nq] << std::endl;
+		std::cout << gmat_eff[0][nq] << " " << gmat_eff][nq] << std::endl;
 		int testcount = 0;
 		for (int i = 0; i < nmc-1; i++)
 		{ 
@@ -405,21 +422,30 @@ void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 
 	vector<vector<int>> combsM;
 	combsM = combs_tmp;
+	auto readStart = std::chrono::high_resolution_clock::now();
+	double readEnd;
 
 	for (int nc = 0; nc < combsM.size(); nc++) {
 
 		// check if the variance is zero
 		std::cout << "RV (combinations) " + std::to_string(nc + 1) + " among " + std::to_string(combsM.size()) << std::endl;
 		vector<double> Sij, Stj;
-		std::cout << ">> For main :" << std::endl;
+		std::cout << " >> Main :" << std::endl;
+		readStart = std::chrono::high_resolution_clock::now();
 		runSingleCombGSA(gmat_red, Kos, combsM[nc], Sij, 'M');
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Main took " << readEnd << " s\n";
 
-		std::cout << ">> For total :" << std::endl;
+
+		std::cout << " >> Total :" << std::endl;
+		readStart = std::chrono::high_resolution_clock::now();
 		runSingleCombGSA(gmat_red, Kos, combsM[nc], Stj, 'T');
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Total took " << readEnd << " s\n";
 
 		vector<double> Si_temp, Kos, St_temp;
 
-		for (int nq = 0; nq < nqoi_eff; nq++) {
+		for (int nq = 0; nq < nqoi; nq++) {
 			if (Stj[nq] < Sij[nq]) {
 				Stj[nq] = Sij[nq];
 			}
@@ -434,16 +460,16 @@ void runGSA::runMultipleGSA(vector<vector<double>> gmat_red, int Kos)
 	//
 	// Postprocess
 	//
-	for (int nq = 0; nq < nqoi; nq++)
-	{
-		if (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), nq) != constantQoiIdx.end()) {
-			for (int nc = 0; nc < Simat.size(); nc++)
-			{
-				Simat[nc].insert(Simat[nc].begin() + nq, 0.0);
-				Stmat[nc].insert(Stmat[nc].begin() + nq, 0.0);
-			}
-		}
-	}
+	//for (int nq = 0; nq < nqoi; nq++)
+	//{
+	//	if (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), nq) != constantQoiIdx.end()) {
+	//		for (int nc = 0; nc < Simat.size(); nc++)
+	//		{
+	//			Simat[nc].insert(Simat[nc].begin() + nq, 0.0);
+	//			Stmat[nc].insert(Stmat[nc].begin() + nq, 0.0);
+	//		}
+	//	}
+	//}
 
 	/*
 	for (int nc = 0; nc < Simat.size(); nc++)
@@ -480,7 +506,12 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 	//vector<double> Si;
 	vector<vector<double>> Ei;
 	vector<double> Si_tmp;
-	Si.reserve(nqoi_eff);
+	vector<double> Var_tmp;
+	Si_tmp.reserve(nqoi); // with zeros
+	//Var_tmp.reserve(nqoi); // with zeros
+	
+	int	total_qoi_count = 0;
+	int nconst = 0;
 
 	for (int nq = 0; nq < nqoi_red; nq++) {
 		vector<double> gvec;
@@ -556,7 +587,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		{
 			int idx = comb[ne];
 
-			if (idx > nrv - 1) {
+  			if (idx > nrv - 1) {
 				std::string errMsg = "Error running UQ engine: combination index exceeds the bound";
 				theErrorFile.write(errMsg);
 			}
@@ -669,16 +700,54 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		double V_approx = var1 - var2 * var2;
 
 		if (!performPCA) {
+			//while (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), total_qoi_count) != constantQoiIdx.end())
+			//{
+			//	if (Opt == 'T') {
+			//		Si_tmp.push_back(1.0);
+			//	}
+			//	else if (Opt == 'M') {
+			//		Si_tmp.push_back(0.0);
+			//	}
+			//	Var_tmp.push_back(0.0);
+			//	total_qoi_count++;
+			//}
+			if (nqoi != nqoi_eff) {
+				while (constantQoiIdx[nconst] == total_qoi_count)
+				{
+					if (Opt == 'T') {
+						Si_tmp.push_back(1.0);
+					}
+					else if (Opt == 'M') {
+						Si_tmp.push_back(0.0);
+					}
+					Var_tmp.push_back(0.0);
+					total_qoi_count++;
+					nconst++;
+				}
+			}
+			//In this case, (nqoi_eff == nqoi_red)
 			Si_tmp.push_back(calVar(mui)/ V_approx);
-			varQoI.push_back(V_approx);
+			Var_tmp.push_back(V_approx);
+			total_qoi_count++;
+
+
+
+
 		}
 		else {
 			Ei.push_back(mui);
 		}
-		
+				
 	}
 
 	if (performPCA) {
+		std::cout << "  - Converting PCA sobol incides (" << nqoi_red << ") to orginal domain values (" << nqoi << ")...\n";
+
+		auto readStart = std::chrono::high_resolution_clock::now();
+
+
+		total_qoi_count=0;
+
 		mat Sigmaij(nqoi_red, nqoi_red);
 		for (int nq1 = 0; nq1 < nqoi_red; nq1++) {
 			for (int nq2 = 0; nq2 < nqoi_red; nq2++) {
@@ -689,15 +758,61 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			}
 		}
 
-
+		nconst = 0;
 		for (int nq = 0; nq < nqoi_eff; nq++) {
+
+			//while (std::find(constantQoiIdx.begin(), constantQoiIdx.end(), total_qoi_count) != constantQoiIdx.end())
+			//{
+			//	if (Opt == 'T') {
+			//		Si_tmp.push_back(1.0);
+			//	} else if (Opt == 'M') {
+			//		Si_tmp.push_back(0.0);
+			//	}
+			//	Var_tmp.push_back(0.0);
+			//	total_qoi_count++;
+			//}
+
+			if (nqoi!=nqoi_eff) {
+				while (constantQoiIdx[nconst]==total_qoi_count)
+				{
+				if (Opt == 'T') {
+					Si_tmp.push_back(1.0);
+				} else if (Opt == 'M') {
+					Si_tmp.push_back(0.0);
+				}
+				Var_tmp.push_back(0.0);
+				total_qoi_count++;
+				nconst++;
+				}
+			}
 			rowvec aa = princ_dir_red.row(nq);
 			double Vi = (aa * Sigmaij * trans(aa)).eval()(0, 0);
+			//double Vi = 0.1;
 			double V = sum(aa % trans(lambs_red) % aa);
+			//double V = 0.1;
 			Si_tmp.push_back(Vi / V);
-			varQoI.push_back(V);
+			Var_tmp.push_back(V);
+			total_qoi_count++;
 		}
 
+		auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Done conversion elapsed time " << readEnd << " s\n";
+		std::cout << "  - QoI count after reconstruction: " << total_qoi_count << " \n";
+	}
+
+	if (total_qoi_count < nqoi) {
+		while (nconst < constantQoiIdx.size())
+		{
+			if (Opt == 'T') {
+				Si_tmp.push_back(1.0);
+			}
+			else if (Opt == 'M') {
+				Si_tmp.push_back(0.0);
+			}
+			Var_tmp.push_back(0.0);
+			total_qoi_count++;
+			nconst++;
+		}
 	}
 
 	//Si.push_back(Vi / V);
@@ -706,7 +821,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		std::for_each(Si_tmp.begin(), Si_tmp.end(), [](double& S) { S = 1.0 - S; });
 	}
 	Si= Si_tmp;   
-
+	//varQoI = Var_tmp;
 
 	for (int nq = 0; nq < nqoi_eff; nq++) {
 		//printf("GSA nq=%i, Si=%.2f, %c \n", nq + 1, Si[nq], Opt);
@@ -947,16 +1062,11 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
     vec svec;
     mat V_matrix;
 
-	
-    //mat gmat_matrix = conv_to<mat>::from(gmat);
-
     int n = gmat.size();
-    //int p = gmat[0].size();
 	int p = nqoi_eff;
 
     mat gmat_matrix(n, p);
 
-	//arma::vec idx(constantQoiIdx);
 	arma::uvec idx(nonConstantQoiIdx.size());
 	for (int nqe = 0; nqe < nonConstantQoiIdx.size(); nqe++) {
 		idx(nqe) = nonConstantQoiIdx[nqe];
@@ -966,39 +1076,172 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
     {
 		arma::vec r(gmat[nr]);
 		gmat_matrix.row(nr) = r.elem(idx).t();
-        //for (int nc = 0; nc < p; nc++)
-        //{
-        //    gmat_matrix(nr, nc) = gmat[nr][nc];
-        //}
     }
-	
+
 	//
 	// run SVD
 	//
+	auto readStart = std::chrono::high_resolution_clock::now();
+	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+	
+	if (n>p) {
+		//
+		// run SVD - took 386 s
+		//
+		std::cout << " - Running SVD\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		svd_econ(U_matrix, svec, V_matrix, gmat_matrix); // gmat_matrix = U*L*V^T
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - SVD took " << readEnd << " s\n";
+		//std::cout << "lambdas are " << std::endl << pow(svec, 2) << std::endl;
+	} else {
+		//
+		// run PCA -- gives memory error
+		//
+		//mat coeff, score;
+		//vec latent, tsquared;
+		//readStart = std::chrono::high_resolution_clock::now();
+		//princomp(coeff, score, latent, tsquared, gmat_matrix);
+		//readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		//std::cout << "  - PCA took " << readEnd << " s\n";
+
+		//
+		// Create gram - took 17 s
+		//
+		std::cout << " - Creating gram matrix\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		mat gramMat = gmat_matrix * trans(gmat_matrix);
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Creating gram matrix - done. It took " << readEnd << " s\n";
+
+		//
+		// FULL EIGEN - took 0.1 s
+		//
+
+		std::cout << " - Full eigen using Lapack2\n";
+		readStart = std::chrono::high_resolution_clock::now();
+		vec Lvece;
+		eig_sym(Lvece, U_matrix, gramMat, "dc"); // gramMat = U*L*U^T
+		//std::cout << "lambda is " << Lvece << std::endl;
+		svec = sqrt(reverse(Lvece)); // becasue eigenvalues are ascending order
+		U_matrix = fliplr((U_matrix)); // because eigenvalues are ascending order
+		svec.replace(datum::nan, min(svec));
+
+		mat invSmat = arma::diagmat(1 / svec);
+		//V_matrix2 = (invSmat * U_matrix2.t() * gmat_matrix).t();
+		V_matrix = (gmat_matrix.t() * U_matrix * invSmat); // faster
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "  - Full eigen using Lapack2 - done. It took " << readEnd << " s\n";
+
+
+		/*
+		std::cout << "U " << std::endl;
+		std::cout << U_matrix.n_cols << std::endl;// 500
+		std::cout << U_matrix.n_rows << std::endl;// 500
+
+		std::cout << "V " << std::endl;
+		std::cout << V_matrix.n_cols << std::endl;// 500
+		std::cout << V_matrix.n_rows << std::endl;// 1558663
+
+		
+		mat tmp = U_matrix * arma::diagmat(svec) * V_matrix.t();
+
+		std::cout << "G " << std::endl;
+
+		for (int i = 0; i < 10; i++) {
+			for (int j = 0; j < 4; j++) {
+				std::cout << tmp(i, j) << " " << gmat_matrix(i, j) << std::endl;
+			}
+		}
+		*/
+	}
+
+	/*
+	std::cout << "sqrt lambda "<< std::endl;
+
+	for (int i = 0; i < 10; i++) {
+			std::cout << svec(i) << " " << svec2(i) << std::endl;
+	}	
+	
+	std::cout << "U " << std::endl;
+
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << U_matrix(i,j) << " " << U_matrix2(i, j) << std::endl;
+		}
+	}
+
+	std::cout << "V " << std::endl;
+
+	for (int i = 0; i < 10; i++) {
+		for (int j = 0; j < 10; j++) {
+			std::cout << V_matrix(i,j) << " " << V_matrix2(i, j) << std::endl;
+		}
+	}
+	*/
+
+	//
+	// Partial EIGEN - no decrease in time
+	//
+	/*
+	std::cout << " - Partial eigen using Arpack\n";
+	readStart = std::chrono::high_resolution_clock::now();
+	// Construct matrix operation object using the wrapper class DenseGenMatProd
+	DenseGenMatProd<double> op(gramMat);
+
+	// Construct eigen solver object, requesting the largest three eigenvalues
+	SymEigsSolver< double, EigsSelect::LARGEST_ALGE, DenseGenMatProd<double> > eigs(op, 3, 6);
+
+	// Initialize and compute
+	eigs.init();
+	int nconv = eigs.compute();
+
+	// Retrieve results
+	arma::vec evalues;
+	if (nconv > 0)
+		evalues = eigs.eigenvalues();
+
+	evalues.print("Eigenvalues found:");
+
+	std::cout << "   - Partial eigen using Arpach - done. It took " << readEnd << " s\n";
+	*/
+
+	//
+	// Eigen SVD function took 562 sec
+	//
+	/*
+	Eigen::MatrixXd gmat_matrix2 = Eigen::MatrixXd(n, p);
+
+	for (int nr = 0; nr < n; nr++)
+	{
+		
+		for (int nc = 0; nc < p; nc++)
+		{
+			gmat_matrix2(nr, nc) = gmat_matrix(nr,nc);
+		}
+	}
 
 	auto readStart = std::chrono::high_resolution_clock::now();
-	svd_econ(U_matrix,svec,V_matrix,gmat_matrix);
+	std::cout << " - Running SVD\n";
+	Eigen::BDCSVD<Eigen::MatrixXd> SVD(gmat_matrix2, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	std::cout << "Elapsed time SVD: " << readEnd << " s\n";
+	std::cout << "  - SVD took " << readEnd << " s\n";
+	*/
+
 
 	mat princ_dir, princ_comp;
-	int neigen;
-	if (n>p) {
-		princ_dir = V_matrix;       // projection matrix
-		//princ_comp = U_matrix.cols(0, p - 1) * arma::diagmat(svec); // reduced variables
-		princ_comp = U_matrix;
-		neigen = p;
-	} else {
-		//princ_dir = V_matrix.cols(0, p - 1);       // projection matrix pxp'
-		princ_dir = V_matrix;       // projection matrix pxp'
-		princ_comp = U_matrix * arma::diagmat(svec); // reduced variables nxp'
-		neigen = n;
-	}
+	int neigen = std::min(n,p);
+	princ_dir = V_matrix;       // projection matrix
+//princ_comp = U_matrix.cols(0, p - 1) * arma::diagmat(svec); // reduced variables
+	princ_comp = U_matrix * arma::diagmat(svec);;
+
 	double sum_var = 0;
 	//double totVar = sum(trace(C));
-	double totVar = sum(svec % svec);
+	vec lamb = pow(svec, 2);
+	double totVar = sum(lamb);
+
 	for (int i = 0; i < neigen; i++) {
-		sum_var = sum_var + pow(svec[i], 2) / totVar;
+		sum_var = sum_var + lamb[i] / totVar;
 		if (sum_var > PCAvarRatioThres) {
 			npc = i+1;
 			PCAvarRatio = sum_var;
@@ -1006,7 +1249,7 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		}
 	}
 
-	std::cout << "Number of the PC components " << npc << std::endl;
+	std::cout << " - Number of the final PC components are " << npc << " to capture " << PCAvarRatioThres*100 << "% of variance" << std::endl;
 
 	princ_dir_red = princ_dir.cols(0, npc - 1); // projection matrix
 	mat princ_comp_red = princ_comp.cols(0, npc - 1);           // reduced variables
@@ -1015,27 +1258,28 @@ void runGSA::runPCA(vector<vector<double>> gmat, vector<vector<double>>& gmat_re
 		gmat_red.push_back(arma::conv_to< vector<double> >::from(princ_comp_red.row(i)));
 	};
 	lambs_red = pow(svec.rows(0, npc - 1), 2) / nmc;
-
 	/*
-	std::cout << "print this first" << std::endl;
-	std::cout << princ_comp_red* trans(princ_dir_red) << std::endl;
-	std::cout << "print this second" << std::endl;
-	std::cout << gmat_matrix << std::endl;
+	//std::cout << "print this first" << std::endl;
+	//std::cout << princ_comp_red* trans(princ_dir_red) << std::endl;
+	//std::cout << "print this second" << std::endl;
+	//std::cout << gmat_matrix << std::endl;
 
 
-	//mat V_matrixe;
-	//vec Lvece;
-	//mat C = gmat_matrix * trans(gmat_matrix);
-	//eig_sym(Lvece, V_matrixe, C, "dc");
+	mat V_matrixe;
+	vec Lvece;
+	mat C = gmat_matrix * trans(gmat_matrix);
+	eig_sym(Lvece, V_matrixe, C, "dc");
 
 	std::cout << ">>eigenvalue analysis" << std::endl;
 	std::cout << "total variance is " << trace(C) << std::endl;
 	std::cout << "normalized lambdas are " << std::endl  << pow(svec, 2) / sum(trace(C)) << std::endl;
 	std::cout << "sum of lambdas " << sum(pow(svec, 2) / sum(trace(C))) << std::endl;
 
+
 	//std::cout << "singularvalue decomposition" << std::endl;
 	//std::cout << "lambda is " << Lvece << std::endl;
 	//std::cout << "normalized lambda is " << Lvece / sum(trace(C)) << std::endl;
+	
 	*/
 }
 
@@ -1127,13 +1371,17 @@ void runGSA::writeTabOutputs(jsonInput inp, int procno)
 				Taboutfile << std::to_string(gmat[i][j]) << "    ";
 			}
 			Taboutfile << std::endl;
-		}
+		} 
 	}
 }
 
 void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 {
 	if (procno == 0) {
+		std::cout << "Writing global sensitivity analysis outputs ...\n";
+		auto readStart = std::chrono::high_resolution_clock::now();
+		double readEnd;
+
 		// dakota.out
 		string writingloc = inp.workDir + "/dakota.out";
 		std::ofstream outfile(writingloc);
@@ -1148,6 +1396,13 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 		outfile.setf(std::ios::fixed, std::ios::floatfield); // set fixed floating format
 		outfile.precision(8); // for fixed format
 
+		outfile << "* data generation" << std::endl;
+		outfile << inp.UQmethod << std::endl;
+		if (inp.UQmethod.compare("Import Data Files")==0) {
+			outfile << inp.inpPath << std::endl;
+			outfile << inp.outPath << std::endl;
+		}
+
 		outfile << "* number of input combinations" << std::endl;
 		outfile << inp.ngr << std::endl;
 
@@ -1159,8 +1414,12 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 			outfile << inp.rvNames[inp.groups[i][inp.groups[i].size() - 1]] << std::endl;
 		}
 
+
+		outfile << "* number of aggregated outputs" << std::endl;
+		outfile << inp.nqoiVects << std::endl;
+
 		outfile << "* number of outputs" << std::endl;
-		outfile << inp.nqoi + inp.nqoiVects << std::endl;
+		outfile << inp.nqoi << std::endl;
 
 		outfile << "* output names" << std::endl;
 		for (int nu = 0; nu < inp.nqoiVects; nu++) {
@@ -1199,6 +1458,14 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 			outfile << std::endl;
 		}
 
+
+
+
+		// let us display writing status if the file size is big
+		auto dispInterv = 1.e7;
+		int dispCount = 1;
+		int thres = dispInterv * dispCount / inp.nrv * 2;
+
 		for (int i = 0; i < inp.nqoi; i++) {
 
 			for (int j = 0; j < inp.ngr; j++) {
@@ -1208,6 +1475,23 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 				outfile << Stmat[j][i] << " ";
 			}
 			outfile << std::endl;
+
+			if (i > thres) {
+				std::cout << " - Writing output file in progress: " << (double)i / (double)inp.nqoi * 100 << "% \n";
+				dispCount += 1;
+				if (dispCount == 1) {
+					readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3; // before Si is trivial
+					double expWriteTime = readEnd * (double)inp.nqoi / (double)1;
+					if (expWriteTime > 5.0) {
+						if (expWriteTime > 60.0) {
+							expWriteTime = expWriteTime / 60.0;
+						}
+						std::cout << "  - Expected writing time: " << expWriteTime << " min\n";
+
+					}
+				}
+				thres = dispInterv * dispCount / inp.nrv * 2;
+			}
 		}
 
 		outfile << "* number of samples" << std::endl;
@@ -1233,6 +1517,9 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 		}
 
 		outfile.close();
+
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3; // before Si is trivial
+		std::cout << " - Done writing output files: " << readEnd << " sec\n";
 
 	}
 

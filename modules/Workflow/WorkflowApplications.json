@@ -1,73 +1,73 @@
 {
   "DefaultValues": {
       "workflowInput": "scInput.json",
-      "filenameAIM": "AIM.json",
+      "filenameBIM": "BIM.json",
       "filenameEVENT": "EVENT.json",
       "filenameSAM": "SAM.json",
       "filenameEDP": "EDP.json",
       "filenameSIM": "SIM.json",
       "driverFile": "driver",
-      "filenameDL": "AIM.json",
+      "filenameDL": "BIM.json",
       "workflowOutput": "EDP.json"
   },
-  "AssetsApplications": {
+  "BuildingApplications": {
     "API": {
       "Inputs": [
       ],
       "Outputs": [
         {
-          "id": "assetFile",
+          "id": "buildingFile",
           "type": "string",
-          "description": "name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
-          "default": "assetsFile.json"
+          "description": "name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildingsFile.json"
         }
       ]
     },
     "Applications": [
       {
-        "Name": "GenericAimDatabase",
-        "ExecutablePath": "applications/createAIM/genericAimDatabase/GenericAimDatabase",
+        "Name": "GenericBimDatabase",
+        "ExecutablePath": "applications/createBIM/genericBimDatabase/GenericBimDatabase",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of asset to obtain AIM for"
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of asset to obtain AIM for"
+            "description": "max id of building to obtain BIM for"
           },
           {
-            "id": "assetSourceFile",
+            "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to asset file"
+            "description": "path to buildings file"
           },
           {
             "id": "config",
             "type": "path",
-            "description": "path to asset config file"
+            "description": "path to buildings config file"
           }
         ]
       },
       {
-        "Name": "GeoJSON_to_AIM",
-        "ExecutablePath": "applications/createAIM/GeoJSON_to_AIM/GeoJSON_to_AIM.py",
+        "Name": "GeoJSON_to_BIM",
+        "ExecutablePath": "applications/createBIM/GeoJSON_to_BIM/GeoJSON_to_BIM.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of asset to obtain AIM for"
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of asset to obtain AIM for"
+            "description": "max id of building to obtain BIM for"
           },
           {
-            "id": "assetSourceFile",
+            "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to asset database file"
+            "description": "path to buildings database file"
           },
           {
             "id": "configFile",
@@ -77,94 +77,62 @@
         ]
       },
       {
-        "Name": "CSV_to_AIM",
-        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",
+        "Name": "CSV_to_BIM",
+        "ExecutablePath": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of asset to obtain AIM for"
+            "description": "min id of building to obtain BIM for"
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of asset to obtain AIM for"
+            "description": "max id of building to obtain BIM for"
           },
           {
             "id": "filter",
             "type": "string",
-            "description": "string with the asset ids to run"
+            "description": "string with the building ids to run"
           },
           {
-            "id": "assetSourceFile",
+            "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to asset database file"
+            "description": "path to buildings database file"
           }
         ]
       },
       {
-        "Name": "GIS_to_AIM",
-        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",
+        "Name": "GIS_to_BIM",
+        "ExecutablePath": "applications/createBIM/CSV_to_BIM/CSV_to_BIM.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
             "type": "int",
-            "description": "min id of asset to obtain AIM for",
+            "description": "min id of building to obtain BIM for",
             "default": 1
           },
           {
             "id": "Max",
             "type": "int",
-            "description": "max id of asset to obtain AIM for",
+            "description": "max id of building to obtain BIM for",
             "default": 10
           },
           {
             "id": "filter",
             "type": "string",
-            "description": "string with the asset ids to run",
+            "description": "string with the building ids to run",
             "default": ""
           },
           {
-            "id": "assetSourceFile",
+            "id": "buildingSourceFile",
             "type": "path",
-            "description": "path to asset database file",
+            "description": "path to buildings database file",
             "default": ""
-          }
-        ]
-      },
-      {
-        "Name": "CSV_to_WATERNETWORK",
-        "ExecutablePath": null,
-        "ApplicationSpecificInputs": [
-          {
-            "id": "WaterNetworkNodes",
-            "type": "json",
-            "description": "water network node information"
-          },
-          {
-            "id": "WaterNetworkPipelines",
-            "type": "json",
-            "description": "water network node information"
-          }
-        ]
-      },
-      {
-        "Name": "GIS_to_WATERNETWORK",
-        "ExecutablePath": null,
-        "ApplicationSpecificInputs": [
-          {
-            "id": "WaterNetworkNodes",
-            "type": "json",
-            "description": "water network node information"
-          },
-          {
-            "id": "WaterNetworkPipelines",
-            "type": "json",
-            "description": "water network node information"
           }
         ]
       }
-	]
+    ]
   },
   "RegionalEventApplications": {
     "API": {
@@ -238,10 +206,10 @@
     "API": {
       "Inputs":[
         {
-          "id": "assetFile",
+          "id": "buildingFile",
           "type": "path",
-          "description": "Name of JSON file containing an array of id,filename pairs. For each asset id the aplication creates a AIM file with name filename",
-          "default": "assets.json"
+          "description": "Name of JSON file containing an array of id,filename pairs. For each building id the aplication creates a BIM file with name filename",
+          "default": "buildings.json"
         }
       ],
       "Outputs":[
@@ -296,9 +264,9 @@
     "API": {
       "Inputs": [
       {
-          "id": "filenameAIM",
+          "id": "filenameBIM",
           "type": "workflowDefault",
-          "description": "name of AIM file"
+          "description": "name of bim file"
       }
       ],
       "Outputs": [
@@ -477,9 +445,9 @@
     "API": {
       "Inputs": [
       {
-          "id": "filenameAIM",
+          "id": "filenameBIM",
           "type": "workflowDefault",
-          "description": "name of AIM file"
+          "description": "name of bim file"
       },
       {
           "id": "filenameEVENT",
@@ -616,9 +584,9 @@
     "API": {
       "Inputs": [
       {
-          "id": "filenameAIM",
+          "id": "filenameBIM",
           "type": "workflowDefault",
-          "description": "name of AIM file"
+          "description": "name of bim file"
       },
       {
           "id": "filenameEVENT",
@@ -703,9 +671,9 @@
     "API": {
       "Inputs": [
       {
-          "id": "filenameAIM",
+          "id": "filenameBIM",
           "type": "workflowDefault",
-          "description": "name of file containing the AIM"
+          "description": "name of file containing the BIM"
       },
       {
           "id": "filenameSAM",
@@ -943,12 +911,6 @@
       {
         "Name": "Pelicun3",
         "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
-        "ApplicationSpecificInputs": [
-        ]
-      },
-      {
-        "Name": "CBCitiesDL",
-        "ExecutablePath": "applications/performDL/CBCities/CBCitiesWDNDL.py",
         "ApplicationSpecificInputs": [
         ]
       }
