@@ -293,7 +293,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 }
 
 int
-writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDriver, std::string idInterface, int evalConcurrency) {
+writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDriver, std::string idInterface, int evalConcurrency, bool saveWorkDirs) {
 
   dakotaFile << "interface \n";
   if (!idInterface.empty())
@@ -308,8 +308,10 @@ writeInterface(std::ostream &dakotaFile, json_t *uqData, std::string &workflowDr
   dakotaFile << "   aprepro \n";
   dakotaFile << "   work_directory\n";
   dakotaFile << "     named \'workdir\' \n";
-  dakotaFile << "     directory_tag\n";
-  dakotaFile << "     directory_save\n";
+  if (saveWorkDirs) {
+    dakotaFile << "     directory_tag\n";
+    dakotaFile << "     directory_save\n";
+  }
   dakotaFile << "     file_save\n";
 
   /*
@@ -497,7 +499,13 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     if (json_is_false(parallelExe))
       evaluationConcurrency = 1;
   }
-
+  // Save all the working dirs?
+  bool saveWorkDirs = true;
+  json_t *saveDirs = json_object_get(uqData,"saveWorkDir");
+  if (saveDirs != NULL) {
+    if (json_is_false(saveDirs))
+      saveWorkDirs = false;
+  }
   const char *type = json_string_value(json_object_get(uqData, "uqType"));
 
   bool sensitivityAnalysis = false;
@@ -536,7 +544,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::string emptyString;
       std::vector<double> scaleFactors;
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList, true);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
       writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList, calFileName, scaleFactors);
     }
 
@@ -558,7 +566,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::string emptyString;
       std::vector<double> scaleFactors;
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
 
       writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList, calFileName, scaleFactors);
     }
@@ -619,7 +627,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::vector<double> scaleFactors;
       std::string interfaceString("SimulationInterface");
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evaluationConcurrency, saveWorkDirs);
       writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList, calFileName, scaleFactors);
 
     }
@@ -654,7 +662,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::vector<double> scaleFactors;
       std::string interfaceString("SimulationInterface");
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, interfaceString, evaluationConcurrency, saveWorkDirs);
       int numResponse = writeResponse(dakotaFile, rootEDP, emptyString, false, false, edpList, calFileName, scaleFactors);
 
       dakotaFile << "method \n polynomial_chaos \n " << pceMethod << intValue;
@@ -727,7 +735,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::string emptyString;
       std::vector<double> scaleFactors;
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
       writeResponse(dakotaFile, rootEDP, emptyString, true, true, edpList, calFileName, scaleFactors);
     }
 
@@ -768,7 +776,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::string emptyString;
       std::vector<double> scaleFactors;
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
       writeResponse(dakotaFile, rootEDP, emptyString, true, false, edpList, calFileName, scaleFactors);
     }
 
@@ -811,7 +819,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
       std::string emptyString;
       std::vector<double> scaleFactors;
       writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+      writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
       writeResponse(dakotaFile, rootEDP, emptyString, true, false, edpList, calFileName, scaleFactors);
     }
 
@@ -844,7 +852,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     std::string emptyString;
     std::vector<double> scaleFactors;
     writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
     writeResponse(dakotaFile, rootEDP, calibrationString, true, false, edpList, calFileName, scaleFactors);
 
 //    dakotaFile << "\n  primary_scales = 1052.69 1.53\n";
@@ -925,7 +933,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     std::string emptyString;
     std::vector<double> scaleFactors;
     writeRV(dakotaFile, theRandomVariables, emptyString, rvList, false);
-    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
     writeResponse(dakotaFile, rootEDP, calibrationString, false, false, edpList, calFileName, scaleFactors);
 //    calDataFile.close();
 
@@ -975,7 +983,7 @@ writeDakotaInputFile(std::ostream &dakotaFile,
     std::string emptyString;
     std::vector<double> scaleFactors;
     writeRV(dakotaFile, theRandomVariables, emptyString, rvList);
-    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency);
+    writeInterface(dakotaFile, uqData, workflowDriver, emptyString, evaluationConcurrency, saveWorkDirs);
     writeResponse(dakotaFile, rootEDP, optimizationString, gradientBool, hessianBool, edpList, emptyString.c_str(), scaleFactors);
 
 //    dakotaFile << "\n  primary_scales = 1052.69 1.53\n";
