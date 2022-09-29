@@ -811,6 +811,7 @@ if __name__ == "__main__":
     inputArgs = sys.argv
     # working diretory
     work_dir = inputArgs[1].replace(os.sep, '/')
+    print('work_dir = {}'.format(work_dir))
     # print the work_dir
     errlog = errorLog(work_dir)
     # job type
@@ -820,7 +821,8 @@ if __name__ == "__main__":
     # default output file: results.out
     result_file = "results.out"
     # input file name
-    input_file = inputArgs[2]
+    input_file = os.path.basename(inputArgs[2])
+    print('input_file = {}'.format(input_file))
     # workflowDriver
     workflow_driver = inputArgs[3]
     # start build the surrogate

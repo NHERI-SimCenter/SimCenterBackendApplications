@@ -927,7 +927,9 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 
 	processDamping(s);
 
-	s << "set T1 [expr 2*3.14159/$lambda1]\n"
+	s << "set lambdaN [eigen 1];\n"
+    << "set lambda1 [lindex $lambdaN 0]\n"
+    << "set T1 [expr 2*3.14159/$lambda1]\n"
 	  << "set dTana [expr $T1/20.]\n"
 	  << "if {$dt < $dTana} {set dTana $dt}\n";
 	s << "analyze [expr int($numStep*$dt/$dTana)] $dTana \n";
