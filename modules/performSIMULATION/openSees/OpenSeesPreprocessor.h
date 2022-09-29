@@ -57,6 +57,8 @@ class OpenSeesPreprocessor {
   double dT;
   int nStory;   //number of stories
 
+  double dampingRatio;
+
   int NDM;
   int NDF;
 };

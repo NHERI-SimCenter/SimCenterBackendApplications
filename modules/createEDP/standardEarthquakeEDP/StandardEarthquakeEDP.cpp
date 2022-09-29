@@ -114,10 +114,10 @@ int main(int argc, char **argv)
       
       //      fprintf(stderr, "EventType: %s\n", eventType);
 
-      if (strcmp(eventType,"Seismic") != 0) {
-      	json_object_clear(rootEVENT);
-      	printf("WARNING event type %s not Seismic NO OUTPUT", eventType);
-      }
+      //if (strcmp(eventType,"Seismic") != 0) {
+      //	json_object_clear(rootEVENT);
+      //	printf("WARNING event type %s not Seismic NO OUTPUT", eventType);
+      //}
       
       // add the EDP for the event
       json_t *eventObj = json_object();

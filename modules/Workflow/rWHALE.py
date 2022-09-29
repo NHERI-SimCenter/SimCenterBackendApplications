@@ -134,7 +134,7 @@ def main(run_type, input_file, app_registry,
     for asset_type, assetIt in asset_files.items() :
 
         # perform the regional mapping
-        WF.perform_regional_mapping(assetIt)
+        WF.perform_regional_mapping(assetIt, asset_type)
         
         # TODO: not elegant code, fix later
         with open(assetIt, 'r') as f:
@@ -163,7 +163,8 @@ def main(run_type, input_file, app_registry,
         preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
             
         # The workflow app sequence
-        WF_app_sequence = ['Assets', 'Event', 'Modeling', 'EDP', 'Simulation']
+        #FMKWF_app_sequence = ['Assets', 'Event', 'Modeling', 'EDP', 'Simulation']
+        WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']        
 
         # For each asset
         for asst in asst_data:
@@ -172,6 +173,8 @@ def main(run_type, input_file, app_registry,
             log_div(prepend_blank_space=False)
             log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
             log_div()
+
+            
             
             # Run sWhale
             runSWhale(

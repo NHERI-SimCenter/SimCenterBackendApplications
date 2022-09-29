@@ -592,7 +592,7 @@ class Workflow(object):
         # Create the asset registry
         self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
-        
+
         self.run_type = run_type
         self.input_file = input_file
         self.app_registry_file = app_registry
@@ -725,6 +725,9 @@ class Workflow(object):
         
         if app_in == None :
             return
+
+        if app_in == 'None' :
+            return        
         
         if app_type_obj == None :
             err = 'The application ' +app_type+' is not found in the app registry'
@@ -732,7 +735,7 @@ class Workflow(object):
         
         # Finally check to see if the app registry contains the provided application
         if app_type_obj.get(app_in) == None :
-            err = 'Could not find the provided application in the internal app registry'
+            err = 'Could not find the provided application in the internal app registry, app name: ' + app_in
             print("Error",app_in)
             raise WorkFlowInputError(err)
             
@@ -1018,7 +1021,7 @@ class Workflow(object):
         
         # Open the input file - we'll need it later
         with open(self.input_file, 'r') as f:
-            input_data = json.load(f)["Applications"]
+            input_data = json.load(f)
 
         # Get the workflow assets
         assetsWfapps = self.workflow_apps.get('Assets', None)
@@ -1097,17 +1100,55 @@ class Workflow(object):
                 'Applications': {}
             }
 
-            apps_of_interest = ['Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
+            apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
-                if app_type in input_data.keys():
-                    if 'Application' in input_data[app_type]:
-                        app_info = input_data[app_type]
-                    elif asset_type in input_data[app_type]:
-                        app_info = input_data[app_type][asset_type]
+                # Start with the app data under Applications
+                if app_type in input_data['Applications'].keys():
+                    if app_type == 'Events':
+                        # Events are stored in an array, so they require special treatment
+                        app_data_array = input_data['Applications'][app_type]
 
-                    extra_input['Applications'][app_type] = {
-                        'Application': app_info['Application']}
-                    extra_input[app_type] = app_info['ApplicationData']
+                        extra_input['Applications'][app_type] = []
+
+                        for app_data in app_data_array:
+
+                            if 'Application' in app_data:
+                                app_info = app_data
+                            elif asset_type in app_data:
+                                app_info = app_data[asset_type]
+
+                            extra_input['Applications'][app_type].append(app_info)
+
+                    else:
+                        # Every other app type has a single app in it per asset type
+                        app_data = input_data['Applications'][app_type]
+
+                        if 'Application' in app_data:
+                            app_info = app_data
+                        elif asset_type in app_data:
+                            app_info = app_data[asset_type]
+
+                        extra_input['Applications'][app_type] = app_info
+
+                # Then, look at the app data in the root of the input json
+                if app_type in input_data.keys():
+                    if app_type == 'Events':
+                        # Events are stored in an array, so they require special treatment
+                        app_data_array = input_data[app_type]
+
+                        extra_input[app_type] = []
+
+                        for app_data in app_data_array:
+
+                            if asset_type in app_data:
+                                extra_input[app_type].append(app_data[asset_type])
+
+                    else:
+                        # Every other app type has a single app in it per asset type
+                        app_data = input_data[app_type]
+
+                        if asset_type in app_data:
+                            extra_input[app_type] = app_data[asset_type]
                     
             for asst in asset_data:
     
@@ -1174,7 +1215,7 @@ class Workflow(object):
         log_div()
 
 
-    def perform_regional_mapping(self, AIM_file_path):
+    def perform_regional_mapping(self, AIM_file_path, assetType):
         
         """
         Performs the regional mapping between the asset and a hazard event.
@@ -1189,7 +1230,7 @@ class Workflow(object):
         log_msg('', prepend_timestamp=False, prepend_blank_space=False)
         log_msg('Creating regional mapping...')
 
-        reg_mapping_app = self.workflow_apps['RegionalMapping']
+        reg_mapping_app = self.workflow_apps['RegionalMapping'][assetType]
 
         # TODO: not elegant code, fix later
         for input_ in reg_mapping_app.inputs:

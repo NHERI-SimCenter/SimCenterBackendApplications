@@ -9,6 +9,7 @@
 #include "Building.h"
 #include <cstring>
 #include "whereami.h"
+#include <jansson.h>
 
 
 int main(int argc, char **argv)
@@ -25,8 +26,6 @@ int main(int argc, char **argv)
   strncpy(&filenameHazusData[dirname_length],"/data/HazusData.txt",19);
   filenameHazusData[dirname_length+19] = '\0';
 
-  //  std::cerr << "My path: " <<  filenameHazusData << "\n";
-  
   double stdStiffness = 0.1;
   double stdDamping = 0.1;
   bool getRV = false;
@@ -72,11 +71,27 @@ int main(int argc, char **argv)
     }
     arg++;
   }
-  
-  
+  json_error_t error;
+  json_t *rootBIM = json_load_file(filenameAIM, 0, &error);  
+  json_t *modType = json_object_get(rootBIM,"Modeling");
+  if (modType != NULL) {
+    json_t *hType = json_object_get(modType,"hazusData");
+    json_t *dType = json_object_get(modType,"stdDamping");
+    json_t *kType = json_object_get(modType,"stdStiffness");      
+    if (dType != NULL) {
+      stdDamping = json_number_value(dType);
+    }
+    if (kType != NULL) {
+      stdStiffness = json_number_value(kType);
+    }
+    if (hType != NULL) {
+      const char *filename = json_string_value(hType);
+      strcpy(filenameHazusData, filename);
+    }
+  }
+    
   HazusSAM_Generator* aim = new HazusSAM_Generator(filenameHazusData);
   Building *theBuilding = new Building();
-  
   
   if(getRV == true) {
     theBuilding->readBIM(filenameEVENT, filenameAIM);

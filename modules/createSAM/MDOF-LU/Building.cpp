@@ -163,7 +163,8 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
     nType = json_object_get(GI,"stories");
   nStory=json_integer_value(nType);  
   area=json_number_value(aType);
-  
+
+
   double unitConversionFactorLength = 1.0;  
   json_t* bimUnitsJson = json_object_get(GI, "units");
   if (bimUnitsJson != NULL) {
