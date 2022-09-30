@@ -172,18 +172,18 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 		Taboutfile << '\n';
 
 
-		for (int i = 0; i < inp.nmc; i++) {
-			Taboutfile << std::to_string(i + 1) << "\t";
-			for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
-				Taboutfile << std::to_string(xval[i][j]) << "\t";
+		for (int ns = 0; ns < inp.nmc; ns++) {
+			Taboutfile << std::to_string(ns + 1) << "\t";
+			for (int nr = 0; nr < inp.nrv + inp.nco + inp.nre; nr++) {
+				Taboutfile << std::to_string(xval[ns][nr]) << "\t";
 			}
-			for (int j = 0; j < inp.nqoi; j++) {
-				Taboutfile << std::to_string(gval[i][j]) << "\t";
+			for (int nq = 0; nq < inp.nqoi; nq++) {
+				Taboutfile << std::to_string(gval[ns][nq]) << "\t";
 			}
 			Taboutfile << '\n';
 
-			if (i*inp.nqoi > dispInterv*dispCount) {
-				std::cout << "  - Writing Tab file in progress: " << (double)i/(double)inp.nmc*100 << "% \n";
+			if (ns*inp.nqoi > dispInterv*dispCount) {
+				std::cout << "  - Writing Tab file in progress: " << (double)ns /(double)inp.nmc*100 << "% \n";
 				dispCount += 1;
 
 				if (dispCount == 1) {

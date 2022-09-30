@@ -15,7 +15,7 @@ CommandParser::CommandParser(int& number_of_arguments, char* arguments[]) {
           "Location where generated time history should be stored")
           .required() |
       clara::detail::Opt(configuration_.bim_file,
-                         "BIM file location")["--filenameBIM"](
+                         "BIM file location")["--filenameAIM"](
           "Location where building information model is stored")
           .required() |
       clara::detail::Opt(configuration_.seed, "Seed value")["--seed"](

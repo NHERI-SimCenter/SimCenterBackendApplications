@@ -100,13 +100,13 @@ def get_records(BIM_file, EVENT_file, data_dir):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--pathSW4results')
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
     if args.getRV:
-    	sys.exit(write_RV(args.filenameBIM, args.filenameEVENT, args.pathSW4results))
+    	sys.exit(write_RV(args.filenameAIM, args.filenameEVENT, args.pathSW4results))
     else:
-    	sys.exit(get_records(args.filenameBIM, args.filenameEVENT, args.pathSW4results))
+    	sys.exit(get_records(args.filenameAIM, args.filenameEVENT, args.pathSW4results))

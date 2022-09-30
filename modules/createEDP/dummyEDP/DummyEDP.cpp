@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
   if (argc == 10) { // only do if --getRV is passed
 
-    char *filenameBIM = argv[2];     
+    char *filenameAIM = argv[2];     
     char *filenameEVENT = argv[4]; 
     char *filenameSAM   = argv[6];
     char *filenameEDP   = argv[8];

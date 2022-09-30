@@ -59,7 +59,7 @@ struct PointCloud
 
 int main(int argc, char **argv) {
 
-  const char *filenameBIM =0;
+  const char *filenameAIM =0;
   const char *filenameEVENT =0;
   const char *filenameWindCloudData =0;
 
@@ -71,9 +71,9 @@ int main(int argc, char **argv) {
 
   int arg = 1;
   while (arg < argc) {
-    if (strcmp(argv[arg], "--filenameBIM") ==0) {
+    if (strcmp(argv[arg], "--filenameAIM") ==0) {
       arg++;
-      filenameBIM = argv[arg];
+      filenameAIM = argv[arg];
     }
     else if (strcmp(argv[arg], "--filenameEVENT") ==0) {
       arg++;
@@ -92,10 +92,10 @@ int main(int argc, char **argv) {
   }
 
   // check inputs all there
-  if(filenameWindCloudData == 0 || filenameBIM == 0 || filenameEVENT == 0) {
+  if(filenameWindCloudData == 0 || filenameAIM == 0 || filenameEVENT == 0) {
     if (filenameWindCloudData == 0)
       std::cerr << "no cloudDataFile file\n";
-    else if (filenameBIM == 0)
+    else if (filenameAIM == 0)
       std::cerr << "no BIM file\n";
     else
       std::cerr << "no EVENT file\n";
@@ -158,10 +158,10 @@ int main(int argc, char **argv) {
     // now parse the bim file for the location and 
     //
     
-    json_t *root = json_load_file(filenameBIM, 0, &error);
+    json_t *root = json_load_file(filenameAIM, 0, &error);
     
     if(!root) {
-      printf("ERROR reading BIM file: %s\n", filenameBIM);
+      printf("ERROR reading BIM file: %s\n", filenameAIM);
     }
     
     json_t *GI = json_object_get(root,"GeneralInformation");

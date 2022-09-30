@@ -206,7 +206,10 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
     with open(BIM_file, 'r') as f:
         rootBIM = json.load(f)
     try:
-        rootSIM = rootBIM['StructuralInformation']
+        #rootSIM = rootBIM['StructuralInformation']
+        rootSIM = rootBIM['Modeling']
+        # KZ: append simulation attribute
+        rootSIM['Simulation'] = rootBIM.get('Simulation',None)
     except:
         raise ValueError("RC_FIAP - structural information missing")
 
@@ -276,7 +279,13 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
 
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
-
+    root_SAM['units'] = {
+            "force": "kN",
+            "length": "m",
+            "temperature": "C",
+            "time": "sec"
+        }
+    
     # Number of dimensions
     root_SAM['ndm'] = 2
 
@@ -1557,6 +1566,48 @@ class RCFIAP:
         
         print("Model Nonlinear Built")
 
+        # KZ: gravity analysis
+        outputLogger.add_array(['timeSeries Linear 1'])
+        outputLogger.add_array(['pattern Plain 1 Constant {'])
+        for Ele in EleCol:
+            outputLogger.add_array(['eleLoad -ele {} -type -beamUniform 0 {}'.format(Ele.EleTag, -Ele.AEle*GConc)])
+        for Ele in EleBeam:
+            outputLogger.add_array(['eleLoad -ele {} -type -beamUniform {}'.format(Ele.EleTag, -Ele.AEle*GConc - WDL)])
+        outputLogger.add_array(['}'])
+        outputLogger.add_array(['set Tol 1.0e-6'])
+        outputLogger.add_array(['constraints Plain'])
+        outputLogger.add_array(['numberer Plain'])
+        outputLogger.add_array(['system BandGeneral'])
+        outputLogger.add_array(['test NormDispIncr 1e-6 100'])
+        outputLogger.add_array(['algorithm KrylovNewton'])
+        outputLogger.add_array(['integrator LoadControl 0.1'])
+        outputLogger.add_array(['analysis Static'])
+        outputLogger.add_array(['analyze 10'])
+        outputLogger.add_array(['loadConst -time 0.0'])
+
+        # KZ: user defined damping
+        xi = rootSIM.get('dampingRatio',0.05)
+        # KZ: modes
+        if rootSIM.get('Simulation',None) is not None:
+            tmp = rootSIM.get('Simulation')
+            mode1 = tmp.get('firstMode',1)
+            mode2 = tmp.get('secnondMode',3)
+        else:
+            mode1 = 1
+            mode2 = 3
+        outputLogger.add_array(['set nEigenI {}'.format(mode1)])
+        outputLogger.add_array(['set nEigenJ {}'.format(mode2)])
+        outputLogger.add_array(['set lambdaN [eigen [expr $nEigenJ]]'])
+        outputLogger.add_array(['set lambdaI [lindex $lambdaN [expr $nEigenI-1]]'])
+        outputLogger.add_array(['set lambdaJ [lindex $lambdaN [expr $nEigenJ-1]]'])
+        outputLogger.add_array(['set lambda1 [expr pow($lambdaI,0.5)]'])
+        outputLogger.add_array(['set lambda2 [expr pow($lambdaJ,0.5)]'])
+        outputLogger.add_array(['set T1 [expr 2.0*3.14/$lambda1]'])
+        outputLogger.add_array(['puts "T1 = $T1"'])
+        outputLogger.add_array(['set a0 [expr {}*2.0*$lambda1*$lambda2/($lambda1+$lambda2)]'.format(xi)])
+        outputLogger.add_array(['set a1 [expr {}*2.0/($lambda1+$lambda2)]'.format(xi)])
+        outputLogger.add_array(['rayleigh $a0 0.0 $a1 0.0'])
+
         if preparePushover == False:
             return
 
@@ -1606,7 +1657,7 @@ class RCFIAP:
         op.analyze(NstepGravity)  # apply gravity
         op.loadConst('-time', 0.0)
 
-        xi = 0.05  # damping ratio
+        #xi = 0.05  # damping ratio
         MpropSwitch = 1.0
         KcurrSwitch = 0.0
         KcommSwitch = 1.0
@@ -2090,10 +2141,10 @@ class RCFIAP:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
     
-    sys.exit(runBuildingDesign(args.filenameBIM, args.filenameEVENT, args.filenameSAM, args.getRV))
+    sys.exit(runBuildingDesign(args.filenameAIM, args.filenameEVENT, args.filenameSAM, args.getRV))

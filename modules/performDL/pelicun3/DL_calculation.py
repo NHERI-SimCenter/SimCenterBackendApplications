@@ -169,7 +169,7 @@ def run_pelicun(config_path):
     with open(config_path, 'r') as f:
         config = json.load(f)
 
-    DL_config = config.get('DamageAndLoss', None)
+    DL_config = config.get('DL', None)
     if DL_config is None:
 
         log_msg("Damage and Loss configuration missing from input file. "
@@ -973,7 +973,7 @@ def main(args):
     parser.add_argument('--outputEDP', default='EDP.csv')
     parser.add_argument('--outputDM', default = 'DM.csv')
     parser.add_argument('--outputDV', default = 'DV.csv')
-    #parser.add_argument('--dirnameOutput', default = None)
+    parser.add_argument('--dirnameOutput', default = None)
     #parser.add_argument('--event_time', default=None)
     #parser.add_argument('--detailed_results', default = True,
     #    type = str2bool, nargs='?', const=True)

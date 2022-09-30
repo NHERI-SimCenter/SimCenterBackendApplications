@@ -8,29 +8,31 @@
 #include <vector>
 #include <iostream>
 
+#include "common/Units.h"
+
 
 int main(int argc, char **argv)
 {
   if (argc != 5) {
-    printf("ERROR %d: correct usage: postprocessOpenSees fileNameBIM fileNameSAM fileNameEVENT filenameEDP\n", argc);
+    printf("ERROR %d: correct usage: postprocessOpenSees fileNameAIM fileNameSAM fileNameEVENT filenameEDP\n", argc);
     return -1;
   }
 
-  char *filenameBIM = argv[1];
+  char *filenameAIM = argv[1];
   char *filenameSAM = argv[2];
   char *filenameEVENT = argv[3];
   char *filenameEDP = argv[4];
 
   OpenSeesPostprocessor thePostprocessor;
 
-  thePostprocessor.processResults(filenameBIM, filenameEDP);
+  thePostprocessor.processResults(filenameAIM, filenameSAM, filenameEDP);
 
   return 0;
 }
 
 
 OpenSeesPostprocessor::OpenSeesPostprocessor()
-  :filenameEDP(0), filenameBIM(0)
+  :filenameEDP(0), filenameAIM(0), filenameSAM(0)
 {
 
 }
@@ -38,12 +40,14 @@ OpenSeesPostprocessor::OpenSeesPostprocessor()
 OpenSeesPostprocessor::~OpenSeesPostprocessor(){
   if (filenameEDP != 0)
     delete [] filenameEDP;
-  if (filenameBIM != 0)
-    delete [] filenameBIM;
+  if (filenameAIM != 0)
+    delete [] filenameAIM;
+  if (filenameSAM != 0)
+    delete [] filenameSAM;  
 }
 
 int 
-OpenSeesPostprocessor::processResults(const char *BIM, const char *EDP)
+OpenSeesPostprocessor::processResults(const char *AIM, const char *SAM, const char *EDP)
 {
   //
   // make copies of filenames in case methods need them
@@ -51,17 +55,62 @@ OpenSeesPostprocessor::processResults(const char *BIM, const char *EDP)
 
   if (filenameEDP != 0)
     delete [] filenameEDP;
-  if (filenameBIM != 0)
-    delete [] filenameBIM;
+  if (filenameAIM != 0)
+    delete [] filenameAIM;
+  if (filenameSAM != 0)
+    delete [] filenameSAM;  
 
   filenameEDP=(char*)malloc((strlen(EDP)+1)*sizeof(char));
   strcpy(filenameEDP,EDP);
-  filenameBIM=(char*)malloc((strlen(BIM)+1)*sizeof(char));
-  strcpy(filenameBIM,BIM);
+  filenameAIM=(char*)malloc((strlen(AIM)+1)*sizeof(char));
+  strcpy(filenameAIM,AIM);
+  filenameSAM=(char*)malloc((strlen(SAM)+1)*sizeof(char));
+  strcpy(filenameSAM,SAM);  
 
   json_error_t error;
   rootEDP = json_load_file(filenameEDP, 0, &error);
+
+  //
+  // if SAM has units, determine length scale factor to get to AIM units
+  //
   
+  rootSAM = json_load_file(filenameSAM, 0, &error);  
+  unitConversionFactorAcceleration = 1.0;
+  unitConversionFactorForce = 1.0;
+  unitConversionFactorLength = 1.0;
+  
+  json_t* samUnitsJson = json_object_get(rootSAM, "units");
+  
+  if (samUnitsJson != NULL) {
+
+    // read SAM units
+    Units::UnitSystem samUnits;
+    json_t* samLengthJson = json_object_get(samUnitsJson, "length");
+    json_t* samForceJson = json_object_get(samUnitsJson, "force");    
+    json_t* samTimeJson = json_object_get(samUnitsJson, "time");
+    samUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(samLengthJson));
+    samUnits.forceUnit = Units::ParseForceUnit(json_string_value(samForceJson));
+    samUnits.timeUnit = Units::ParseTimeUnit(json_string_value(samTimeJson));
+    
+    // read AIM  units
+    rootAIM = json_load_file(filenameAIM, 0, &error);
+    json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
+    
+    Units::UnitSystem bimUnits;    
+    json_t* bimUnitsJson = json_object_get(genInfoJson, "units");
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    json_t* bimForceJson = json_object_get(bimUnitsJson, "force");
+    json_t* bimTimeJson = json_object_get(bimUnitsJson, "time");    
+    bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    bimUnits.forceUnit = Units::ParseForceUnit(json_string_value(bimForceJson));
+    bimUnits.timeUnit = Units::ParseTimeUnit(json_string_value(bimTimeJson));
+
+    // conversion factors
+    unitConversionFactorForce = Units::GetForceFactor(samUnits, bimUnits);
+    unitConversionFactorLength = Units::GetLengthFactor(samUnits, bimUnits);
+    unitConversionFactorAcceleration = Units::GetAccelerationFactor(samUnits, bimUnits);    
+  } 
+
   processEDPs();
 
   json_dump_file(rootEDP,filenameEDP,0);
@@ -88,7 +137,7 @@ OpenSeesPostprocessor::processEDPs(){
   
   int numEvents = json_array_size(edps);
   char edpEventName[50];
-  
+
   //
   // try opening results.out file; unknown EDP results may be there or are already in ED"
   //
@@ -107,6 +156,7 @@ OpenSeesPostprocessor::processEDPs(){
 
     json_t *eventEDP = json_object_get(eventEDPs,"responses");
     int numResponses = json_array_size(eventEDP);
+    
     for (int k=0; k<numResponses; k++) {
 
       json_t *response = json_array_get(eventEDP, k);
@@ -120,11 +170,11 @@ OpenSeesPostprocessor::processEDPs(){
 
 	string fileString;
 	ostringstream temp;  //temp as in temporary
-	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	temp << filenameAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	fileString=temp.str(); 
 	
 	const char *fileName = fileString.c_str();
-	
+
 	//
 	// open file & process data into a json array called: data
 	//
@@ -145,6 +195,9 @@ OpenSeesPostprocessor::processEDPs(){
 	  // read last row and add components to data
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+
+	    tmp *= unitConversionFactorAcceleration;
+	    
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -163,7 +216,7 @@ OpenSeesPostprocessor::processEDPs(){
 
 	string fileString;
 	ostringstream temp;  //temp as in temporary
-	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	temp << filenameAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	fileString=temp.str(); 
 	
 	const char *fileName = fileString.c_str();
@@ -183,6 +236,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+	    tmp *= unitConversionFactorAcceleration;
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -201,7 +255,7 @@ OpenSeesPostprocessor::processEDPs(){
 	
 	string fileString;
 	ostringstream temp;  //temp as in temporary
-	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	temp << filenameAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	fileString=temp.str(); 
 	
 	const char *fileName = fileString.c_str();
@@ -226,6 +280,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  // read last row and add components to data
 	  for (int jj=0; jj<numDOFs; jj++) {
 	    myfile >> tmp;
+	    tmp *= unitConversionFactorLength;
 	    json_array_append(data, json_real(tmp));
 	  }
 	  myfile.close();
@@ -251,7 +306,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  string fileString1;
 	  ostringstream temp1;  //temp as in temporary
 	  
-	  temp1 << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof << ".out";
+	  temp1 << filenameAIM << edpEventName << "." << type << "." << cline << "." << floor1 << "." << floor2 << "." << dof << ".out";
 	  fileString1=temp1.str(); 
 	  
 	  const char *fileName1 = fileString1.c_str();	
@@ -283,7 +338,7 @@ OpenSeesPostprocessor::processEDPs(){
 	
 	string fileString;
 	ostringstream temp;  //temp as in temporary
-	temp << filenameBIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+	temp << filenameAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
 	fileString=temp.str(); 
 	
 	const char *fileName = fileString.c_str();
@@ -306,7 +361,7 @@ OpenSeesPostprocessor::processEDPs(){
 	  num = fabs(num1);
 	  if (fabs(num2) > num)
 	    num = fabs(num2);
-	  
+	  num *= unitConversionFactorLength;
 	  myfile.close();
 	}
 	

@@ -84,7 +84,7 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     sys.exit(create_SAM(
-        args.filenameBIM, args.filenameEVENT, args.filenameSAM,
+        args.filenameAIM, args.filenameEVENT, args.filenameSAM,
         args.mainScript, args.modelPath, args.ndm,
         args.dofMap, args.columnLine, args.getRV))

@@ -211,7 +211,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--filenameBIM',
+    parser.add_argument('--filenameAIM',
         default=None)
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEVENT')
@@ -229,5 +229,5 @@ if __name__ == '__main__':
         sys.exit(write_RV())
     else:
         sys.exit(run_openseesPy(
-            args.filenameEVENT, args.filenameSAM, args.filenameBIM,
+            args.filenameEVENT, args.filenameSAM, args.filenameAIM,
             args.filenameEDP))

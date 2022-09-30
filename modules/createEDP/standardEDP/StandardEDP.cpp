@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   // parse input args for filenames
   //
 
-  char *filenameBIM = NULL;  
+  char *filenameAIM = NULL;  
   char *filenameEVENT = NULL; 
   char *filenameSAM = NULL; 
   char *filenameEDP = NULL; 
@@ -26,9 +26,9 @@ int main(int argc, char **argv)
 
   int arg = 1;
   while(arg < argc) {
-    if (strcmp(argv[arg], "--filenameBIM") == 0) {
+    if (strcmp(argv[arg], "--filenameAIM") == 0) {
       arg++;
-      filenameBIM = argv[arg];
+      filenameAIM = argv[arg];
     }
     else if (strcmp(argv[arg], "--filenameEVENT") == 0) {
       arg++;
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     arg++;
   }
 
-  if (filenameBIM == NULL || filenameEVENT == NULL || filenameSAM == NULL || filenameEDP == NULL) {
+  if (filenameAIM == NULL || filenameEVENT == NULL || filenameSAM == NULL || filenameEDP == NULL) {
     std::cerr << "FATAL ERROR - no bim, sam, evt, or edp filefile provided\n";
   }
 
