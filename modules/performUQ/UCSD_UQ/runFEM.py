@@ -73,9 +73,12 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     p_status = p.wait()
 
     # Read in the model prediction
-    prediction = np.atleast_2d(np.genfromtxt('results.out')).reshape((1, -1))
+    if os.path.exists('results.out'):
+        prediction = np.atleast_2d(np.genfromtxt('results.out')).reshape((1, -1))
 
-    # os.chdir(workdirMain)
+        # os.chdir(workdirMain)
 
-    return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
-                          edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
+        return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
+                            edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
+    else:
+        return -np.inf
