@@ -10,7 +10,8 @@ int writeInterface(std::ostream &dakotaFile,
 		   json_t *uqData, 
 		   std::string &workflowDriver, 
 		   std::string idInterface,
-		   int evalConcurrency);
+		   int evalConcurrency,
+		   bool saveWorkDirs);
 
 int writeResponse(std::ostream &dakotaFile, 
 		  json_t *rootEDP,  

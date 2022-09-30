@@ -128,7 +128,7 @@ RegionalSiteResponse
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createEVENT/siteResponse/RegionalSiteResponse.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --pathEventData /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/records/ \
 --mainScript FreeField3D_Dry.tcl \
@@ -137,7 +137,7 @@ RegionalSiteResponse
 --getRV 
 ```
 
-* filenameBIM: BIM file name.
+* filenameAIM: BIM file name.
 * filenameEVENT: Event file name
 * pathEventData: Path to directory containing event data files in SimCenter format.
 * mainScript: The name of the main model file.
@@ -172,7 +172,7 @@ The above command will produce a template file (EVENT.json) for event, which con
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createSAM/openSeesPyInput/OpenSeesPyInput.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --filenameSAM SAM.json \
 --mainScript cantilever_light.py \
@@ -209,7 +209,7 @@ The above command will produce the file SAM.json, which contains the name of ran
 
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createEDP/standardEarthquakeEDP_R/StandardEarthquakeEDP \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --filenameSAM SAM.json \
 --filenameEDP EDP.json \
@@ -241,7 +241,7 @@ The above command creates the EDP.json file containing standard EDPs for earthqu
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameSAM SAM.json \
 --filenameEVENT EVENT.json \
 --filenameEDP EDP.json \
@@ -275,7 +275,7 @@ The above command does nothing at this stage.
 
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createEVENT/siteResponse/RegionalSiteResponse.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --pathEventData /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/records/ \
 --mainScript FreeField3D_Dry.tcl --modelPath /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/Example-siteresponse/input_Data/model/ \
@@ -283,7 +283,7 @@ The above command does nothing at this stage.
 
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createSAM/openSeesPyInput/OpenSeesPyInput.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --filenameSAM SAM.json \
 --mainScript cantilever_light.py \
@@ -292,14 +292,14 @@ The above command does nothing at this stage.
 --dofMap 1,2,3 
 
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/createEDP/standardEarthquakeEDP_R/StandardEarthquakeEDP \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameEVENT EVENT.json \
 --filenameSAM SAM.json \
 --filenameEDP EDP.json 
 
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/applications/performSIMULATION/openSeesPy/OpenSeesPySimulation.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameSAM SAM.json \
 --filenameEVENT EVENT.json \
 --filenameEDP EDP.json \
@@ -320,7 +320,7 @@ results.out \
 ```
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/venv3.8.7/bin/python \
 /Users/simcenter/Codes/SimCenter/SimCenterBackendApplications/v2.3.1/applications/performUQ/dakota/DakotaFEM.py \
---filenameBIM 1-BIM.json \
+--filenameAIM 1-BIM.json \
 --filenameSAM SAM.json \
 --filenameEVENT EVENT.json \
 --filenameEDP EDP.json \

@@ -242,8 +242,9 @@ class surrogate(UQengine):
             self.do_logtransform = False
             self.kernel = 'Matern 5/2'
             self.do_linear = False
-            self.nugget_opt = "optimize"
+            self.nugget_opt = "Optimize"
             self.nuggetVal= 1
+            self.stochastic =[False] * y_dim
 
 
 
@@ -498,78 +499,98 @@ class surrogate(UQengine):
         #     Y_lfs = self.Y_lf
 
         if not self.do_mf :
-            if self.heteroscedastic:
-                m_tmp = GPy.models.GPHeteroscedasticRegression(
-                    X_hf, Y_hfs, kernel=self.kg.copy()
-                )
-                # TODO: temporary... need to find a way to not calibrate but update the variance
-                m_tmp.optimize()
-                self.var_str[ny] = np.ones((m_tmp.Y.shape[0],1))
-            elif self.stochastic[ny]:
-                #
-                # Get new matrix replIdx [1,2,2,2,3,3,3,4,...]
-                #
-                # set_XY()
-                X_new, X_idx, indices, counts = np.unique(X_hf, axis=0, return_index=True, return_counts=True,return_inverse=True)
 
-                n_unique = X_new.shape[0]
-                Y_mean, Y_var = np.zeros((n_unique,self.y_dim)), np.zeros((n_unique,self.y_dim))
+            # if self.heteroscedastic:
+            #     m_tmp = GPy.models.GPHeteroscedasticRegression(
+            #         X_hf, Y_hfs, kernel=self.kg.copy()
+            #     )
+            #     # TODO: temporary... need to find a way to not calibrate but update the variance
+            #     m_tmp.optimize()
+            #     self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
 
-                for idx in range(n_unique):
-                    Y_subset = Y_hfs[ [i for i in np.where(indices==idx)[0] ],:]
-                    Y_mean[idx,:] = np.mean(Y_subset,axis=0)
-                    Y_var[idx,:] = np.var(Y_subset,axis=0)
+            X_new, X_idx, indices, counts = np.unique(X_hf, axis=0, return_index=True, return_counts=True,
+                                                      return_inverse=True)
+            n_unique = X_new.shape[0]
 
-                idx_repl =[i for i in np.where(counts>1)[0] ]
+            if n_unique == X_hf.shape[0]:
+                # unique set p - just to homogeneous GP
 
-                if (np.max(Y_var)/np.var(Y_mean)<1.e-10):
-                    # No need for stochastic Kriging.....!!
-                    self.stochastic[ny] = False
-                    
-                    m_tmp = self.set_XY( m_tmp, ny, X_new, Y_mean, X_lf, Y_lf)
-                    return m_tmp
-                #
-                # Constructing secondary GP model - can we make use of the "variance of sample variance"
-                #
-                # TODO: log-variance
-                kernel_var = GPy.kern.Matern52(input_dim=self.x_dim,  ARD=True)
-                log_vars = np.log(Y_var[idx_repl])
-                m_var = GPy.models.GPRegression(X_new[idx_repl,:], log_vars, kernel_var, normalizer=True,Y_metadata=None)
-                print("Optimizing variance field of ny={}".format(ny))
-                m_var.optimize(messages=True, max_f_eval=1000)
-                m_var.optimize_restarts(20)
-                log_var_pred, dum = m_var.predict(X_new)
-                var_pred = np.exp(log_var_pred)
-                #
-                #
-                #
-
-                #norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
-                if  self.set_normalizer:
-                   norm_var_str = (var_pred.T[0]) / np.var(Y_mean) # if normalization was used..
-                   # norm_var_str = (var_pred.T[0] / counts) / np.mean((var_pred.T[0] / counts))*100  # if normalization was used..
-                else:
-                    norm_var_str = (var_pred.T[0])  # if normalization was used..
-
-                #norm_var_str = (X_new+2)**2/max((X_new+2)**2)
-                Y_metadata = {'variance_structure': norm_var_str/counts}
-                m_tmp.set_XY2(X_new, Y_mean,Y_metadata=Y_metadata)
-
-                self.m_var_list[ny] = m_var
-                self.var_str[ny] = norm_var_str
-                self.indices_unique = indices
-                self.n_unique_hf = X_new.shape[0]
-                self.Y_mean[ny] = Y_mean
-                '''
-                import matplotlib.pyplot as plt
-                plt.errorbar(X_new, Y_mean, np.sqrt(var_pred.T[0])); plt.show()
-                
-                
-                '''
+                m_tmp.set_XY(X_hf, Y_hfs)
+                self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
+                self.Y_mean[ny] = Y_hfs
+                self.indices_unique =  range(0,Y_hfs.shape[0])
+                self.n_unique_hf = X_hf.shape[0]
+                self.stochastic[ny] = False
 
             else:
-                m_tmp.set_XY(X_hf, Y_hfs)
-                self.var_str[ny] = np.ones((m_tmp.Y.shape[0],1))
+                # nonunique set - check if nugget is zero
+                Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))
+
+                for idx in range(n_unique):
+                    Y_subset = Y_hfs[[i for i in np.where(indices == idx)[0]], :]
+                    Y_mean[idx, :] = np.mean(Y_subset, axis=0)
+                    Y_var[idx, :] = np.var(Y_subset, axis=0)
+
+                idx_repl = [i for i in np.where(counts > 1)[0]]
+
+                if (np.max(Y_var) / np.var(Y_mean) < 1.e-10):
+                    # NUGGET IS ZERO - no need for stochastic kriging
+
+                    if self.do_logtransform:
+                        Y_mean = np.exp(Y_mean)
+
+                    m_tmp = self.set_XY(m_tmp, ny, X_new, Y_mean, X_lf, Y_lf) # send only unique to nonstochastic
+
+                    self.indices_unique = indices
+                    return m_tmp
+
+                else:
+                    # NUGGET IS NONZERO - Do either stochastic/nonstochastic kriging
+                    if self.nugget_opt == "Heteroscedastic":
+
+                        #
+                        # Constructing secondary GP model - can we make use of the "variance of sample variance"
+                        #
+                        # TODO: log-variance
+                        kernel_var = GPy.kern.Matern52(input_dim=self.x_dim, ARD=True)
+                        log_vars = np.log(Y_var[idx_repl])
+                        m_var = GPy.models.GPRegression(X_new[idx_repl, :], log_vars, kernel_var, normalizer=True,
+                                                        Y_metadata=None)
+                        print("Optimizing variance field of ny={}".format(ny))
+                        m_var.optimize(messages=True, max_f_eval=1000)
+                        m_var.optimize_restarts(20)
+                        log_var_pred, dum = m_var.predict(X_new)
+                        var_pred = np.exp(log_var_pred)
+                        #
+                        #
+
+                        # norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
+                        if self.set_normalizer:
+                            norm_var_str = (var_pred.T[0]) / np.var(Y_mean)  # if normalization was used..
+                            # norm_var_str = (var_pred.T[0] / counts) / np.mean((var_pred.T[0] / counts))*100  # if normalization was used..
+                        else:
+                            norm_var_str = (var_pred.T[0])  # if normalization was used..
+
+                        # norm_var_str = (X_new+2)**2/max((X_new+2)**2)
+                        Y_metadata = {'variance_structure': norm_var_str / counts}
+                        m_tmp.set_XY2(X_new, Y_mean, Y_metadata=Y_metadata)
+
+                        self.m_var_list[ny] = m_var
+                        self.var_str[ny] = norm_var_str
+                        self.indices_unique = indices
+                        self.n_unique_hf = X_new.shape[0]
+                        self.Y_mean[ny] = Y_mean
+                        self.stochastic[ny] = True
+
+                    else:
+                        # still nonstochastic gp
+                        m_tmp.set_XY(X_hf, Y_hfs)
+                        self.var_str[ny] = np.ones((m_tmp.Y.shape[0],1))
+                        self.indices_unique = range(0,Y_hfs.shape[0])
+                        self.Y_mean[ny] = Y_hfs
+                        self.n_unique_hf = X_hf.shape[0]
+                        self.stochastic[ny] = False
+
         else:
             (
                 X_list_tmp,
@@ -578,11 +599,16 @@ class surrogate(UQengine):
                 [X_hf, X_lf], [Y_hfs, Y_lfs]
             )
             m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
+            self.n_unique_hf = X_hf.shape[0]
 
         if self.set_normalizer:
-            self.normMeans[ny] = m_tmp.normalizer.mean
-            self.normVars[ny] = m_tmp.normalizer.std ** 2
-
+            if not self.do_mf:
+                self.normMeans[ny] = m_tmp.normalizer.mean
+                self.normVars[ny] = m_tmp.normalizer.std ** 2
+            else:
+                self.normMeans[ny] = 0
+                self.normVars[ny] = 1
+                
 
         return m_tmp
 
@@ -1330,13 +1356,16 @@ class surrogate(UQengine):
         ### Used for surrogate
         results["modelInfo"] = {}
 
-        if self.stochastic:
-            for ny in range(self.y_dim):
+
+        for ny in range(self.y_dim):
+            if self.stochastic[ny]:
                 results["modelInfo"][self.g_name[ny]+"_Var"] = {}
-                for parname in self.m_list[ny].parameter_names():
+                for parname in self.m_var_list[ny].parameter_names():
                     results["modelInfo"][self.g_name[ny]+"_Var"][parname] = list(
                         eval("self.m_var_list[ny]." + parname)
                     )
+            else:
+                results["modelInfo"][self.g_name[ny]+"_Var"] = 0
 
         if not self.do_mf:
             for ny in range(self.y_dim):
@@ -1948,7 +1977,7 @@ class surrogate(UQengine):
         # Efficient cross validation TODO: check if it works for heteroskedacstic
         #
 
-        if not self.heteroscedastic: # note: heteroscedastic is not our stochastic kriging
+        if (not self.do_mf) and (not self.heteroscedastic): # note: heteroscedastic is not our stochastic kriging
 
             #X_unique, dum, indices, dum = np.unique(X_hf, axis=0, return_index=True, return_counts=True,
             #                                   return_inverse=True)
@@ -1966,7 +1995,7 @@ class surrogate(UQengine):
 
                 Rmat = self.m_list[ny].kern.K(Xm)
                 #K(X_hf,X_hf)
-                Rinv = np.linalg.inv(Rmat+nugget_mat)
+                Rinv = np.linalg.inv(Rmat + nugget_mat)
                 e = np.squeeze(np.matmul(Rinv, Ym-self.normMeans[ny]))/np.squeeze(np.diag(Rinv))
 
                 
@@ -2014,7 +2043,11 @@ class surrogate(UQengine):
 
                 Y_pred = Y_pred2
                 Y_pred_var = Y_pred_var2
-                Y_pred_var_w_measure = Y_pred_var2 + self.m_list[ny].Gaussian_noise.parameters * self.normVars[ny]
+                if not self.do_mf:
+                    Y_pred_var_w_measure[:, ny] = Y_pred_var2[:, ny] + self.m_list[ny].Gaussian_noise.parameters * self.normVars[ny]
+                else:
+                    # TODO account for Gaussian_noise.parameters as well
+                    Y_pred_var_w_measure[:, ny] = Y_pred_var2[:, ny] + self.m_list[ny].gpy_model.mixed_noise.Gaussian_noise_1.parameters * self.normVars[ny]
                 e2 = e22
                 # np.hstack([Y_pred_var,Y_pred_var2])
                 # np.hstack([e2,e22])
@@ -2369,8 +2402,11 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
 
     if msg == "":
         m_tmp.optimize()
-        n=0;
-        m_tmp.optimize_restarts(num_restarts=nopt)
+        #n=0;
+        if not do_mf:
+            m_tmp.optimize_restarts(num_restarts=nopt)
+        else:
+            m_tmp.gpy_model.optimize_restarts(num_restarts=nopt)
         # while n+20 <= nopt:
         #     m_tmp.optimize_restarts(num_restarts=20)
         #     n = n+20

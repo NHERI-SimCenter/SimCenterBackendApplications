@@ -5,7 +5,7 @@ import subprocess
 def main(args):
 
     # set filenames
-    bimName = args[1]
+    aimName = args[1]
     samName = args[3]
     evtName = args[5]
     edpName = args[7]
@@ -16,18 +16,18 @@ def main(args):
     #If requesting random variables run getUncertainty
     #Otherwise, Run Opensees 
     if "--getRV" in args:
-        getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {}'.format(scriptDir, bimName, samName, evtName, simName)
+        getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, simName)
         subprocess.Popen(getUncertaintyCommand, shell=True).wait()
     else:
         #Run preprocessor
-        preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(scriptDir, bimName, samName, evtName, edpName, simName)
+        preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(scriptDir, aimName, samName, evtName, edpName, simName)
         subprocess.Popen(preprocessorCommand, shell=True).wait()        
 
         #Run OpenSees
         subprocess.Popen("OpenSees example.tcl", shell=True).wait()
 
         #Run postprocessor
-        postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(scriptDir, bimName, samName, evtName, edpName)
+        postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, edpName)
         subprocess.Popen(postprocessorCommand, shell=True).wait()
 
 if __name__ == '__main__':

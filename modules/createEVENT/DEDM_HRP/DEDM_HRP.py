@@ -103,12 +103,12 @@ def parseDEDM_MatFile(matFileIn, windFileOut):
 
 
 if "--getRV" in inputArgs:
-    getDataFromDEDM_HRP = '"{}/DEDM_HRP" --filenameBIM {} --filenameEVENT {} --getRV'.format(scriptDir, bimName, evtName)
+    getDataFromDEDM_HRP = '"{}/DEDM_HRP" --filenameAIM {} --filenameEVENT {} --getRV'.format(scriptDir, bimName, evtName)
     subprocess.Popen(getDataFromDEDM_HRP, shell=True).wait()
     print("DONE. NOW PROCESSING RETURN")
     parseDEDM_MatFile("tmpSimCenterDEDM.mat",evtName)
     os.remove("tmpSimCenterDEDM.mat")
 else:
-    getDataFromDEDM_HRP = '"{}/DEDM_HRP" --filenameBIM {} --filenameEVENT {}'.format(scriptDir, bimName, evtName)
+    getDataFromDEDM_HRP = '"{}/DEDM_HRP" --filenameAIM {} --filenameEVENT {}'.format(scriptDir, bimName, evtName)
     subprocess.Popen(getDataFromDEDM_HRP, shell=True).wait()
   

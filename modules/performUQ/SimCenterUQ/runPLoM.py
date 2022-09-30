@@ -51,6 +51,7 @@ import numpy as np
 from multiprocessing import Pool
 from PLoM.PLoM import *
 import pandas as pd
+import subprocess
 
 # ==========================================================================================
 
@@ -167,7 +168,8 @@ class runPLoM:
                 # no local app directory is found, let's try to use system python
                 pass
             else:
-                pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
+                #pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
+                pythonEXE = '\"' + sys.executable + '\"'
         else:
             # for remote run and macOS, let's use system python
             pass
@@ -206,10 +208,11 @@ class runPLoM:
         ## KZ modified 0331
         command_line = f"{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}"
         print(command_line)
-
         # run command
+
         try:
-            os.system(command_line)
+            #os.system(command_line)
+            subprocess.call(command_line)
         except:
             print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
             print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
@@ -811,6 +814,7 @@ if __name__ == "__main__":
     inputArgs = sys.argv
     # working diretory
     work_dir = inputArgs[1].replace(os.sep, '/')
+    print('work_dir = {}'.format(work_dir))
     # print the work_dir
     errlog = errorLog(work_dir)
     # job type
@@ -820,7 +824,8 @@ if __name__ == "__main__":
     # default output file: results.out
     result_file = "results.out"
     # input file name
-    input_file = inputArgs[2]
+    input_file = os.path.basename(inputArgs[2])
+    print('input_file = {}'.format(input_file))
     # workflowDriver
     workflow_driver = inputArgs[3]
     # start build the surrogate

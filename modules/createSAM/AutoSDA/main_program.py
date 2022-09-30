@@ -108,7 +108,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
-
+    root_SAM['units'] = {
+            "force": "kips",
+            "length": "in",
+            "temperature": "C",
+            "time": "sec"
+        }
+    
     # Number of dimensions (KZ & AZ: changed to integer)
     root_SAM['ndm'] = 2
 
@@ -174,7 +180,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM')
+    parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--fileName')
@@ -182,5 +188,5 @@ if __name__ == '__main__':
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
-    sys.exit(main(args.filenameBIM, args.filenameEVENT, args.filenameSAM,
+    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameSAM,
                   args.fileName, args.filePath, args.getRV))

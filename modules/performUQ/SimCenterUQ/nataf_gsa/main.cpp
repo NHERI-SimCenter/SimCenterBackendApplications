@@ -69,6 +69,7 @@ writeErrors theErrorFile; // Error log
 
 int main(int argc, char** argv)
 {
+
 	int nprocs, procno;
 	#ifdef MPI_RUN
 		MPI_Comm comm;
@@ -133,13 +134,33 @@ int main(int argc, char** argv)
 	//
 	//	(2) Construct Nataf Object
 	//
-
 	ERANataf T(inp, procno);
 
 	//
 	//	(3-1) Random number generator Gaussian(mean=0,var=1) - (batch samples)
 	//	(4-1) FE Analysis - (parallel)
 	//
+
+	/*
+	auto readStart = std::chrono::high_resolution_clock::now();
+	mat C;
+	field<std::string> header;
+	C.load(csv_name("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt"));
+	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+	std::cout << "  - reading took " << readEnd << " s\n";
+	std::cout << C.size() << " s\n";
+
+	for (int i=0; i < 10; i++) {
+		std::cout << C(0,i) << " s\n";
+	}
+	readStart = std::chrono::high_resolution_clock::now();
+	std::vector< std::vector<double> >  V(C.n_rows);
+	for (size_t i = 0; i < C.n_rows; ++i) {
+		V[i] = arma::conv_to< std::vector<double> >::from(C.row(i));
+	};
+	std::cout << "  - conversion took " << readEnd << " s\n";
+	*/
+
 
 	if (inp.femAppName.compare("SurrogateGP") == 0) {
 
@@ -153,10 +174,15 @@ int main(int argc, char** argv)
 
 	}
 
+
 	//
 	//	(3-1)(4-1) Read dataset
 
 	else if (inp.UQmethod.compare("Import Data Files") == 0) {
+		if (runType.compare("runningLocal") != 0) {
+			std::string errMsg = "Error running SimCenterUQ: No need to run remotely when the data set is provided. Please try running it locally.";
+			theErrorFile.write(errMsg);
+		}
 		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc);
 	}
 

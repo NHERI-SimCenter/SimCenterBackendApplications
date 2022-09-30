@@ -12,7 +12,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-  char *filenameBIM = 0;
+  char *filenameAIM = 0;
   char *filenameEVENT = 0;
   char *filenameEDP = 0;
   char *filenameSAM = 0;
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     if ((strcmp(argv[arg], "-filenameBIM") ==0) ||
         (strcmp(argv[arg], "--filenameBIM") ==0)) {
       arg++;
-      filenameBIM = argv[arg];
+      filenameAIM = argv[arg];
     }
     else if ((strcmp(argv[arg], "-filenameEVENT") == 0) ||
              (strcmp(argv[arg], "--filenameEVENT") == 0)) {
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
   if (filenameEDP == 0 ||
       filenameEVENT == 0 ||
       filenameSAM == 0 ||
-      filenameBIM == 0) {
+      filenameAIM == 0) {
 
     std::cerr << "ERROR - missing input args\n";
     exit(-1);
@@ -85,11 +85,11 @@ int main(int argc, char **argv)
 
   json_t *eventArray = json_array(); // for each analysis event
 
-  // load BIM, SAM and EVENT files
+  // load AIM, SAM and EVENT files
   json_error_t error;
 
-  json_t *rootBIM = json_load_file(filenameBIM, 0, &error);
-  json_t *giROOT = json_object_get(rootBIM,"GeneralInformation");
+  json_t *rootAIM = json_load_file(filenameAIM, 0, &error);
+  json_t *giROOT = json_object_get(rootAIM,"GeneralInformation");
   int numStory =  json_integer_value(json_object_get(giROOT,"NumberOfStories"));
   //printf("number of stories: %d\n", numStory);
 

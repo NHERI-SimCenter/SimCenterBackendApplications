@@ -146,7 +146,7 @@ def main():
         sys.exit(0)
 
     #First let's process the arguments
-    argBIM = inputArgs.index("--filenameBIM") + 1
+    argBIM = inputArgs.index("--filenameAIM") + 1
     bimFilePath = inputArgs[argBIM]
     argEVENT = inputArgs.index("--filenameEVENT") + 1
     eventFilePath = inputArgs[argEVENT]

@@ -94,7 +94,7 @@ def createEvent(recordsFolder, h1File, h2File, eventFilePath):
 def main():
     #Input Argument Specifications
     gmArgsParser = argparse.ArgumentParser("Characterize ground motion using seismic hazard analysis and record selection")
-    gmArgsParser.add_argument("-filenameBIM", "--filenameBIM", required=True, help="Path to the BIM file")
+    gmArgsParser.add_argument("-filenameAIM", "--filenameAIM", required=True, help="Path to the BIM file")
     gmArgsParser.add_argument("-filenameEVENT", "--filenameEVENT", required=True, help="Path to the EVENT file")
     gmArgsParser.add_argument("-groundMotions", "--groundMotions", required=True, help="Path to the ground motions configuration file")
     gmArgsParser.add_argument("-recordsFolder", "--recordsFolder", required=True, help="Path to the ground motions records folder")
@@ -111,7 +111,7 @@ def main():
         return 0
 
     #First let's process the arguments
-    bimFilePath = gmArgs.filenameBIM
+    bimFilePath = gmArgs.filenameAIM
     eventFilePath = gmArgs.filenameEVENT
     gmConfigPath = gmArgs.groundMotions
     recordsFolder = gmArgs.recordsFolder

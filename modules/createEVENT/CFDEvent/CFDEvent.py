@@ -83,7 +83,7 @@ if __name__ == "__main__":
     """
     #CLI parser
     parser = argparse.ArgumentParser(description="Get sample EVENT file produced by CFD")
-    parser.add_argument('-b', '--filenameBIM', help="BIM File", required=True)
+    parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
     parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
     parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     if arguments.getRV == True:
         #Read the number of floors
-        floorsCount = GetFloorsCount(arguments.filenameBIM)
+        floorsCount = GetFloorsCount(arguments.filenameAIM)
         forces = []
         for i in range(floorsCount):
             forces.append(FloorForces())

@@ -40,6 +40,7 @@
 # Wael Elhaddad
 # Michael Gardner
 # Chaofeng Wang
+# Stevan Gavrilovic
 
 """
 This module has classes and methods that handle everything at the moment.
@@ -65,6 +66,7 @@ import subprocess
 from copy import deepcopy
 
 import warnings
+import posixpath
 
 import numpy as np
 import pandas as pd
@@ -407,6 +409,7 @@ class WorkFlowInputError(Exception):
     def __str__(self):
         return repr(self.value)
 
+
 class WorkflowApplication(object):
     """
     Short description.
@@ -585,6 +588,10 @@ class Workflow(object):
         log_div()
 
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
+        
+        # Create the asset registry
+        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
+        self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
 
         self.run_type = run_type
         self.input_file = input_file
@@ -608,14 +615,12 @@ class Workflow(object):
 
         self.app_type_list = app_type_list
 
-        # initialize app registry
-        self._init_app_registry()
-
         # parse the application registry
         self._parse_app_registry()
 
         # parse the input file
         self.workflow_apps = {}
+        self.workflow_assets = {}
         self._parse_inputs()
 
     def _init_app_registry(self):
@@ -683,7 +688,125 @@ class Workflow(object):
         log_msg('Successfully parsed application registry',
                 prepend_timestamp=False)
         log_div()
+        
 
+    def _register_app_type(self, app_type, app_dict, sub_app = ''):
+    
+        """
+        Function to register the applications provided in the input file into memory, i.e., the 'App registry'
+
+        Parameters
+        ----------
+        
+        app_type - the type of application
+        
+        app_dict - dictionary containing app data
+
+        """
+        
+        if type(app_dict) is not dict :
+            return
+        else :
+            for itmKey, itm in  app_dict.items() :
+                self._register_app_type(app_type,itm,itmKey)
+  
+
+        # The provided application
+        app_in = app_dict.get('Application')
+    
+        # Check to ensure the applications key is provided in the input
+        if app_in == None :
+            return
+            err = 'Need to provide the \'Application\' key in ' + app_type
+            raise WorkFlowInputError(err)
+    
+        # Check to see if the app type is in the application registry
+        app_type_obj = self.app_registry.get(app_type)
+        
+        if app_in == None :
+            return
+
+        if app_in == 'None' :
+            return        
+        
+        if app_type_obj == None :
+            err = 'The application ' +app_type+' is not found in the app registry'
+            raise WorkFlowInputError(err)
+        
+        # Finally check to see if the app registry contains the provided application
+        if app_type_obj.get(app_in) == None :
+            err = 'Could not find the provided application in the internal app registry, app name: ' + app_in
+            print("Error",app_in)
+            raise WorkFlowInputError(err)
+            
+
+        appData = app_dict['ApplicationData']
+#
+#        for itmKey, itm in  appData.items() :
+#            self._register_app_type(app_type,itm,itmKey)
+        
+        # Make a deep copy of the app object
+        app_object = deepcopy(app_type_obj.get(app_in))
+        
+        # Check if the app object was created successfully
+        if app_object is None:
+            raise WorkFlowInputError('Application deep copy failed for {}'.format(app_type))
+        
+        # only assign the app to the workflow if it has an executable
+        if app_object.rel_path is None:
+            log_msg(
+                f'{app_dict["Application"]} is '
+                'a passive application (i.e., it does not invoke '
+                'any calculation within the workflow.',
+                prepend_timestamp=False)
+
+        else:
+            app_object.set_pref(appData, self.reference_dir)
+            
+            if len(sub_app) == 0 :
+                log_msg(f'For {app_type}',prepend_timestamp=False)
+                self.workflow_apps[app_type] = app_object
+            else :
+            
+                if self.workflow_apps.get(app_type,None) is None :
+                    self.workflow_apps[app_type] = {}
+                    
+                log_msg(f'For {sub_app} in {app_type}',prepend_timestamp=False)
+                self.workflow_apps[app_type][sub_app] = app_object
+                
+            log_msg(f'  Registering application {app_dict["Application"]} ',prepend_timestamp=False)
+            
+        
+            
+    def _register_asset(self, asset_type, asset_dict):
+    
+        """
+        Function to register the assets provided in the input file into memory
+        
+        Parameters
+        ----------
+        
+        asset_type - the type of asset, e.g., buildings, water pipelines
+        
+        app_dict - dictionary containing asset data
+
+        """
+  
+
+        # Check to see if the app type is in the application registry
+        asset_object = self.asset_registry.get(asset_type)
+        
+        if asset_object is None :
+            err = 'The asset ' +asset_type+' is not found in the asset registry. Supported assets are '+' '.join(self.asset_type_list)
+            raise WorkFlowInputError(err)
+        
+    
+        # Add the incoming asset to the workflow assets
+        self.workflow_assets[asset_type] = asset_dict
+        
+        log_msg(f'Found asset: {asset_type} ',prepend_timestamp=False)
+                        
+        
     def _parse_inputs(self):
         """
         Load the information about the workflow to run
@@ -716,7 +839,7 @@ class Workflow(object):
 
         if self.output_types is None:
             default_output_types = {
-                "BIM": False,
+                "AIM": False,
                 "EDP": True,
                 "DM": True,
                 "DV": True,
@@ -728,8 +851,7 @@ class Workflow(object):
             self.output_types = default_output_types
 
         else:
-            log_msg("The following output_types were requested: ",
-                prepend_timestamp=False)
+            log_msg("The following output_types were requested: ", prepend_timestamp=False)
             for out_type, flag in self.output_types.items():
                 if flag:
                     log_msg(f'  {out_type}', prepend_timestamp=False)
@@ -739,15 +861,13 @@ class Workflow(object):
 
         if default_values is None:
             default_values = {}
-        print(default_values)
-
+        
         # workflow input is input file
         default_values['workflowInput']=os.path.basename(self.input_file)
         
         if default_values is not None:
 
-            log_msg("The following workflow defaults were overwritten:",
-                prepend_timestamp=False)
+            log_msg("The following workflow defaults were overwritten:", prepend_timestamp=False)
 
             for key, value in default_values.items():
 
@@ -798,18 +918,9 @@ class Workflow(object):
             log_msg('{} : {}'.format(loc_name, loc_val),
                     prepend_timestamp=False)
 
-        if 'Building' in self.app_type_list:
-            self.building_file_name = "buildings.json"
-            #if 'buildingFile' in input_data:
-            #    self.building_file_name = input_data['buildingFile']
-            #else:
-            #    self.building_file_name = "buildings.json"
-            #log_msg('\tbuilding file name: {}'.format(self.building_file_name))
-
-
         # get the list of requested applications
-        log_msg('\nParsing the requested list of applications...',
-                prepend_timestamp=False)
+        log_msg('\nParsing the requested list of applications...', prepend_timestamp=False)
+        
         if 'Applications' in input_data:
             requested_apps = input_data['Applications']
         else:
@@ -826,15 +937,12 @@ class Workflow(object):
                     eventClassification = event['EventClassification']
                     if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro', 'Tsunami'] :
 
-                        app_object = deepcopy(
-                            self.app_registry['Event'].get(event['Application']))
+                        app_object = deepcopy(self.app_registry['Event'].get(event['Application']))
 
                         if app_object is None:
-                            raise WorkFlowInputError(
-                                'Application entry missing for {}'.format('Events'))
+                            raise WorkFlowInputError('Application entry missing for {}'.format('Events'))
 
-                        app_object.set_pref(event['ApplicationData'],
-                                            self.reference_dir)
+                        app_object.set_pref(event['ApplicationData'],self.reference_dir)
                         self.workflow_apps['Event'] = app_object
 
                     else:
@@ -844,54 +952,61 @@ class Workflow(object):
                              ).format(eventClassification))
                 else:
                     raise WorkFlowInputError('Need Event Classification')
-
+                        
+        # Figure out what types of assets are coming into the analysis
+        assetObjs = requested_apps.get('Assets', None)
+        
+        # Check if an asset object exists
+        if assetObjs != None :
+            #raise WorkFlowInputError('Need to define the assets for analysis')
+        
+            # Check if asset list is not empty
+            if len(assetObjs) == 0 :
+                raise WorkFlowInputError('The provided asset object is empty')
+        
+            # Iterate through the asset objects
+            for assetObj in assetObjs :
+                self._register_asset(assetObj, assetObjs[assetObj])
+                
+        
+        # Iterate through the app type list which is set when you instantiate the workflow
         for app_type in self.app_type_list:
-            if app_type != 'Event':
-                if app_type in requested_apps:
-
-                    app_object = deepcopy(
-                        self.app_registry[app_type].get(
-                            requested_apps[app_type]['Application']))
-
-                    if app_object is None:
-                        raise WorkFlowInputError(
-                            'Application entry missing for {}'.format(app_type))
-
-                    # only assign the app to the workflow if it has an executable
-                    if app_object.rel_path is None:
-                        log_msg(
-                            f'  {requested_apps[app_type]["Application"]} is '
-                            'a passive application (i.e., it does not invoke '
-                            'any calculation within the workflow.',
-                            prepend_timestamp=False)
-
-                    else:
-                        app_object.set_pref(requested_apps[app_type]['ApplicationData'],
-                                            self.reference_dir)
-                        self.workflow_apps[app_type] = app_object
-
-                else:
-                    if app_type in self.optional_apps:
-                        self.app_registry.pop(app_type, None)
-                        log_msg(f'  No {app_type} among requested applications.',
-                                prepend_timestamp=False)
-                    else:
-                        raise WorkFlowInputError(
-                            f'Need {app_type} entry in Applications')
+        
+            # If the app_type is not an event
+            if app_type == 'Event':
+                continue
+            
+           # Check to make sure the required app type is in the list of requested apps
+           # i.e., the apps in provided in the input.json file
+            if app_type in requested_apps:
+                self._register_app_type(app_type, requested_apps[app_type])
+                
 
         for app_type in self.optional_apps:
             if (app_type not in self.app_registry) and (app_type in self.app_type_list):
                 self.app_type_list.remove(app_type)
+                
+                
+        def recursiveLog(app_type, app_object) :
+            
+            if type(app_object) is dict :
+                for sub_app_type, sub_object in app_object.items() :
+                    log_msg('   {} : '.format(app_type), prepend_timestamp=False)
+                    recursiveLog(sub_app_type,sub_object)
+            else :
+                log_msg('       {} : {}'.format(app_type, app_object.name), prepend_timestamp=False)
 
         log_msg('\nRequested workflow:', prepend_timestamp=False)
+        
+        
         for app_type, app_object in self.workflow_apps.items():
-            log_msg('  {} : {}'.format(app_type, app_object.name),
-                    prepend_timestamp=False)
+            recursiveLog(app_type, app_object)
 
         log_msg('\nSuccessfully parsed workflow inputs', prepend_timestamp=False)
         log_div()
 
-    def create_building_files(self):
+
+    def create_asset_files(self):
         """
         Short description
 
@@ -902,86 +1017,172 @@ class Workflow(object):
 
         """
 
-        log_msg('Creating files for individual buildings')
+        log_msg('Creating files for individual assets')
+        
+        # Open the input file - we'll need it later
+        with open(self.input_file, 'r') as f:
+            input_data = json.load(f)
 
-        building_file = self.run_dir / self.building_file_name
-        #building_file = posixpath.join(self.run_dir, self.building_file_name)
+        # Get the workflow assets
+        assetsWfapps = self.workflow_apps.get('Assets', None)
 
-        bldg_app = self.workflow_apps['Building']
-
+        assetWfList = self.workflow_assets.keys()
+        
         # TODO: not elegant code, fix later
         os.chdir(self.run_dir)
+        
+        assetFilesList = {}
 
-        # filter buildings (if needed)
-        bldg_filter = bldg_app.pref.get('filter', None)
-        if bldg_filter == "":
-            del bldg_app.pref['filter']
-            bldg_filter = None
+        #Iterate through the asset workflow apps
+        for asset_type, asset_app in assetsWfapps.items() :
+                
+            asset_folder = posixpath.join(self.run_dir, asset_type)
+                        
+            # Make a new directory for each asset
+            os.mkdir(asset_folder)
+            
+            asset_file = posixpath.join(asset_folder, asset_type) + '.json'
+            
+            assetPrefs = asset_app.pref
+           
+            # filter assets (if needed)
+            asset_filter = asset_app.pref.get('filter', None)
+            if asset_filter == "":
+                del asset_app.pref['filter']
+                asset_filter = None
 
-        if bldg_filter is not None:
-            bldgs = [bs.split('-') for bs in bldg_filter.split(',')]
+            if asset_filter is not None:
+                atag = [bs.split('-') for bs in asset_filter.split(',')]
 
-            building_file = Path(str(building_file).replace(
-                ".json", f"{bldgs[0][0]}-{bldgs[-1][-1]}.json"))
+                asset_file = Path(str(asset_file).replace(".json", f"{atag[0][0]}-{atag[-1][-1]}.json"))
+                
 
-        # store the path to the building file
-        self.building_file_path = building_file
+            # store the path to the asset file
+            
+            assetFilesList[asset_type] = str(asset_file)
+            
+            for output in asset_app.outputs:
+                if output['id'] == 'assetFile':
+                    output['default'] = asset_file
 
-        for output in bldg_app.outputs:
-            if output['id'] == 'buildingFile':
-                output['default'] = building_file
+            asset_command_list = asset_app.get_command_list(app_path = self.app_dir_local)
 
-        bldg_command_list = bldg_app.get_command_list(
-            app_path = self.app_dir_local)
+            asset_command_list.append(u'--getRV')
 
-        bldg_command_list.append(u'--getRV')
+            # Create the asset command list
+            command = create_command(asset_command_list)
 
-        command = create_command(bldg_command_list)
+            log_msg('\nCreating initial asset information model (AIM) files for '+asset_type, prepend_timestamp=False)
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+            
+            result, returncode = run_command(command)
+            
+            
+            # Check if the command was completed successfully
+            if returncode != 0 :
+                print(result)
+                raise WorkFlowInputError('Failed to create the AIM file for '+asset_type)
+            else :
+                log_msg('AIM files created for '+asset_type+'\n', prepend_timestamp=False)
 
-        log_msg('Creating initial building files...',
-                prepend_timestamp=False)
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                prepend_blank_space=False)
+            
+            log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+    
+            # Append workflow settings to the BIM file
+            log_msg('Appending additional settings to the AIM files...\n')
+    
+            with open(asset_file, 'r') as f:
+                asset_data = json.load(f)
 
-        result, returncode = run_command(command)
+            # extract the extra information from the input file for this asset type
+            extra_input = {
+                'Applications': {}
+            }
 
-        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
-                prepend_blank_space=False)
+            apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
+            for app_type in apps_of_interest:
+                # Start with the app data under Applications
+                if app_type in input_data['Applications'].keys():
+                    if app_type == 'Events':
+                        # Events are stored in an array, so they require special treatment
+                        app_data_array = input_data['Applications'][app_type]
 
-        # Append workflow settings to the BIM file
-        log_msg('Appending additional settings to the BIM files...')
+                        extra_input['Applications'][app_type] = []
 
-        with open(building_file, 'r') as f:
-            bldg_data = json.load(f)
+                        for app_data in app_data_array:
 
-        for bldg in bldg_data:
+                            if 'Application' in app_data:
+                                app_info = app_data
+                            elif asset_type in app_data:
+                                app_info = app_data[asset_type]
 
-            BIM_file = bldg['file']
+                            extra_input['Applications'][app_type].append(app_info)
 
-            # Open the BIM file and add the unit information to it
-            with open(BIM_file, 'r') as f:
-                BIM_data = json.load(f)
+                    else:
+                        # Every other app type has a single app in it per asset type
+                        app_data = input_data['Applications'][app_type]
 
-            if self.units != None:
-                BIM_data.update({'units': self.units})
+                        if 'Application' in app_data:
+                            app_info = app_data
+                        elif asset_type in app_data:
+                            app_info = app_data[asset_type]
 
-                # TODO: remove this after all apps have been updated to use the
-                # above location to get units
-                BIM_data['GeneralInformation'].update({'units': self.units})
+                        extra_input['Applications'][app_type] = app_info
 
-            BIM_data.update({'outputs': self.output_types})
+                # Then, look at the app data in the root of the input json
+                if app_type in input_data.keys():
+                    if app_type == 'Events':
+                        # Events are stored in an array, so they require special treatment
+                        app_data_array = input_data[app_type]
 
-            for key, value in self.shared_data.items():
-                BIM_data[key] = value
+                        extra_input[app_type] = []
 
-            with open(BIM_file, 'w') as f:
-                json.dump(BIM_data, f, indent=2)
+                        for app_data in app_data_array:
 
-        log_msg('Building files successfully created.', prepend_timestamp=False)
+                            if asset_type in app_data:
+                                extra_input[app_type].append(app_data[asset_type])
+
+                    else:
+                        # Every other app type has a single app in it per asset type
+                        app_data = input_data[app_type]
+
+                        if asset_type in app_data:
+                            extra_input[app_type] = app_data[asset_type]
+                    
+            for asst in asset_data:
+    
+                AIM_file = asst['file']
+    
+                # Open the AIM file and add the unit information to it
+                with open(AIM_file, 'r') as f:
+                    AIM_data = json.load(f)
+                        
+                if self.units != None:
+                    AIM_data.update({'units': self.units})
+    
+                    # TODO: remove this after all apps have been updated to use the
+                    # above location to get units
+                    AIM_data['GeneralInformation'].update({'units': self.units})
+    
+                AIM_data.update({'outputs': self.output_types})
+    
+                for key, value in self.shared_data.items():
+                    AIM_data[key] = value
+                   
+                # Save the asset type
+                AIM_data['assetType'] = asset_type
+
+                AIM_data.update(extra_input)
+ 
+                with open(AIM_file, 'w') as f:
+                    json.dump(AIM_data, f, indent=2)
+    
+        
+        log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
         log_div()
-
-        return building_file
+    
+        return assetFilesList
 
     def perform_regional_event(self):
         """
@@ -998,8 +1199,7 @@ class Workflow(object):
 
         reg_event_app = self.workflow_apps['RegionalEvent']
 
-        reg_event_command_list = reg_event_app.get_command_list(
-            app_path = self.app_dir_local)
+        reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
         command = create_command(reg_event_command_list)
 
@@ -1009,32 +1209,33 @@ class Workflow(object):
         result, returncode = run_command(command)
 
         log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
-                prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-        log_msg('Regional event successfully simulated.',
-                prepend_timestamp=False)
+        log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
 
-    def perform_regional_mapping(self, building_file):
-        """
-        Short description
 
-        Longer description
+    def perform_regional_mapping(self, AIM_file_path, assetType):
+        
+        """
+        Performs the regional mapping between the asset and a hazard event.
+
+        
 
         Parameters
         ----------
 
         """
-
+        
+        log_msg('', prepend_timestamp=False, prepend_blank_space=False)
         log_msg('Creating regional mapping...')
 
-        reg_mapping_app = self.workflow_apps['RegionalMapping']
+        reg_mapping_app = self.workflow_apps['RegionalMapping'][assetType]
 
         # TODO: not elegant code, fix later
         for input_ in reg_mapping_app.inputs:
-            if input_['id'] == 'buildingFile':
-                input_['default'] = str(building_file)
+            if input_['id'] == 'assetFile':
+                input_['default'] = str(AIM_file_path)
 
         reg_mapping_app.inputs.append({
             'id': 'filenameEVENTgrid',
@@ -1049,56 +1250,65 @@ class Workflow(object):
 
         command = create_command(reg_mapping_command_list)
 
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                prepend_blank_space=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
 
         result, returncode = run_command(command)
 
-        log_msg('Output: ', prepend_timestamp=False,
-                prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False,
-                prepend_blank_space=False)
-
-        log_msg('Regional mapping successfully created.',
-                prepend_timestamp=False)
+        log_msg('Output: ' + str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('Regional mapping successfully created.', prepend_timestamp=False)
         log_div()
 
-    def init_simdir(self, bldg_id=None, BIM_file = 'BIM.json'):
-        """
-        Short description
 
-        Longer description
+    def init_simdir(self, asst_id=None, AIM_file_path = 'AIM.json'):
+        """
+        Initializes the simulation directory for each asset.
+        
+        In the current directory where the Asset Information Model (AIM) file resides, e.g., ./Buildings/2000-AIM.json, a new directory is created with the asset id, e.g., ./Buildings/2000, and within that directory a template directory is created (templatedir) ./Buildings/2000/templatedir. The AIM file is copied over to the template dir. It is within this template dir that the analysis is run for the individual asset.
 
         Parameters
         ----------
+        
+        asst_id - the asset id
+        AIM_file_path - file path to the AIM file
 
         """
-        log_msg('Initializing the simulation directory')
+        log_msg('Initializing the simulation directory\n')
 
-        os.chdir(self.run_dir)
+        aimDir = os.path.dirname(AIM_file_path)
+        aimFileName = os.path.basename(AIM_file_path)
+        
+        # If the path is not provided, assume the AIM file is in the run dir
+        if os.path.exists(aimDir) == False :
+            aimDir = self.run_dir
+            aimFileName = AIM_file_path
 
-        if bldg_id is not None:
+        os.chdir(aimDir)
+
+        if asst_id is not None:
 
             # if the directory already exists, remove its contents
-            if bldg_id in os.listdir(self.run_dir):
-                shutil.rmtree(bldg_id, ignore_errors=True)
+            if asst_id in os.listdir(aimDir):
+                shutil.rmtree(asst_id, ignore_errors=True)
 
-            # create the building_id dir and the template dir
-            os.mkdir(bldg_id)
-            os.chdir(bldg_id)
+            # create the asset_id dir and the template dir
+            os.mkdir(asst_id)
+            os.chdir(asst_id)
             os.mkdir('templatedir')
             os.chdir('templatedir')
 
-            # Make a copy of the BIM file
-            shutil.copy(
-                src = self.run_dir / BIM_file,
-                dst = self.run_dir / f'{bldg_id}/templatedir/{BIM_file}')
-
-            #src = posixpath.join(self.run_dir, BIM_file),
-            #dst = posixpath.join(
-            #    self.run_dir,
-            #    '{}/templatedir/{}'.format(bldg_id, BIM_file)))
-
+            # Make a copy of the AIM file
+            src = posixpath.join(aimDir,aimFileName)
+            dst = posixpath.join(aimDir, f'{asst_id}/templatedir/{aimFileName}')
+            
+            try:
+                shutil.copy(src,dst)
+            
+                print("Copied AIM file to: ",dst)
+ 
+            except:
+                print("Error occurred while copying file: ",dst)
+      
         else:
 
             for dir_or_file in os.listdir(os.getcwd()):
@@ -1117,16 +1327,15 @@ class Workflow(object):
 
             # Make a copy of the input file and rename it to BIM.json
             # This is a temporary fix, will be removed eventually.
-            dst = Path(os.getcwd()) / BIM_file
-            #dst = posixpath.join(os.getcwd(),BIM_file)
-            if BIM_file != self.input_file:
+            dst = Path(os.getcwd()) / AIM_file_path
+            #dst = posixpath.join(os.getcwd(),AIM_file)
+            if AIM_file_path != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
 
-        log_msg('Simulation directory successfully initialized.',
-                prepend_timestamp=False)
+        log_msg('Simulation directory successfully initialized.\n',prepend_timestamp=False)
         log_div()
 
-    def cleanup_simdir(self, bldg_id):
+    def cleanup_simdir(self, asst_id):
         """
         Short description
 
@@ -1140,8 +1349,8 @@ class Workflow(object):
 
         os.chdir(self.run_dir)
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)
+        if asst_id is not None:
+            os.chdir(asst_id)
 
         workdirs = os.listdir(os.getcwd())
         for workdir in workdirs:
@@ -1201,7 +1410,7 @@ class Workflow(object):
         log_div()
 
 
-    def create_RV_files(self, app_sequence, BIM_file = 'BIM.json', bldg_id=None): # we will probably need to rename this one
+    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None) :
         """
         Short description
 
@@ -1212,13 +1421,22 @@ class Workflow(object):
 
         """
 
-        log_msg('Creating files with random variables')
+        log_msg('Running preprocessing step random variables')
 
-        os.chdir(self.run_dir)
+        # Get the directory to the asset class dir, e.g., buildings
+        aimDir = os.path.dirname(AIM_file_path)
+        aimFileName = os.path.basename(AIM_file_path)
+        
+        # If the path is not provided, assume the AIM file is in the run dir
+        if os.path.exists(aimDir) == False :
+            aimDir = self.run_dir
 
-        if bldg_id is not None:
-            os.chdir(bldg_id)
+        os.chdir(aimDir)
 
+        if asst_id is not None:
+            os.chdir(asst_id)
+
+        # Change the directory to the templatedir that was previously created in init_simdir
         os.chdir('templatedir')
 
         for app_type in self.optional_apps:
@@ -1227,47 +1445,64 @@ class Workflow(object):
                 app_sequence.remove(app_type)
 
         for app_type in app_sequence:
-
+        
             workflow_app = self.workflow_apps[app_type]
-
+            
             if (app_type != 'FEM'):
-                if BIM_file is not None:
-                    workflow_app.defaults['filenameBIM'] = BIM_file
-                    #for input_var in workflow_app.inputs:
-                    #    if input_var['id'] == 'filenameBIM':
-                    #        input_var['default'] = BIM_file
+            
+                if AIM_file_path is not None:
+                
+                    if type(workflow_app) is dict :
                     
-                command_list = workflow_app.get_command_list(
-                    app_path = self.app_dir_local)
+                        for itemKey, item in workflow_app.items() :
+                        
+                            item.defaults['filenameAIM'] = AIM_file_path
+                            
+                            command_list = item.get_command_list(app_path = self.app_dir_local)
 
-                command_list.append(u'--getRV')
-                
-                command = create_command(command_list)
-                
-                log_msg('\nRunning {} app for RV...'.format(app_type),
-                        prepend_timestamp=False)
-                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                        prepend_blank_space=False)
-                
-                result, returncode = run_command(command)
+                            command_list.append(u'--getRV')
+                            
+                            command = create_command(command_list)
+                                                        
+                            log_msg('\nRunning {} app at preprocessing step...'.format(app_type), prepend_timestamp=False)
+                            log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                            
+                            result, returncode = run_command(command)
 
-                log_msg('Output: ', prepend_timestamp=False,
-                        prepend_blank_space=False)
-                log_msg('\n{}\n'.format(result), prepend_timestamp=False,
-                        prepend_blank_space=False)
+                            log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+                            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-                log_msg('Files with random variables successfully created.',
-                        prepend_timestamp=False)
-                log_div()
+                            log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                            log_div()
+                            
+                    else:
+                        workflow_app.defaults['filenameAIM'] = AIM_file_path
+                    
+                        command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
+        
+                        command_list.append(u'--getRV')
+                        
+                        command = create_command(command_list)
+                                                
+                        log_msg('\nRunning {} app at preprocessing step...'.format(app_type), prepend_timestamp=False)
+                        log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                        
+                        result, returncode = run_command(command)
+        
+                        log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+                        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+        
+                        log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                        log_div()
 
             else:
 
-                old_command_list = workflow_app.get_command_list(
-                    app_path = self.app_dir_local)
+                old_command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
 
                 command_list = []
                 command_list.append(old_command_list[0])
                 command_list.append(self.input_file)
+                
                 if self.run_type in ['set_up', 'runningRemote']:
                     command_list.append('runningRemote')
                     command_list.append('MacOS')
@@ -1276,19 +1511,18 @@ class Workflow(object):
                     if any(platform.win32_ver()):
                         command_list.append('Windows')
                     else:
-                        command_list.append('MacOS')                    
+                        command_list.append('MacOS')
+                        
                 command_list.append(old_command_list[4])
                 
                 command = create_command(command_list)
 
-                log_msg('\nRunning FEM app',
-                        prepend_timestamp=False)
-                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                        prepend_blank_space=False)
+                log_msg('\nRunning FEM app', prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
                 
                 result, returncode = run_command(command)
 
-                log_msg('Output: ', prepend_timestamp=False,
+                log_msg('Output: '+str(returncode), prepend_timestamp=False,
                         prepend_blank_space=False)
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False,
                         prepend_blank_space=False)
@@ -1297,34 +1531,53 @@ class Workflow(object):
                         prepend_timestamp=False)
                 log_div()
 
-    def gather_workflow_inputs(self, bldg_id=None):
+
+    def gather_workflow_inputs(self, asst_id=None, AIM_file_path = 'AIM.json'):
 
         if 'UQ' in self.workflow_apps.keys():        
-            os.chdir(self.run_dir)
             
-            if bldg_id is not None:
-                os.chdir(bldg_id)
+            # Get the directory to the asset class dir, e.g., buildings
+            aimDir = os.path.dirname(AIM_file_path)
                 
+            # If the path is not provided, assume the AIM file is in the run dir
+            if os.path.exists(aimDir) == False :
+                aimDir = self.run_dir
+    
+            os.chdir(aimDir)
+                
+            if asst_id is not None:
+                os.chdir(asst_id)
+            
             os.chdir('templatedir')
-                
+
             relPathCreateCommon = 'applications/performUQ/common/createStandardUQ_Input'
             abs_path = Path(self.app_dir_local) / relPathCreateCommon
             
             arg_list = []
             arg_list.append(u'{}'.format(abs_path.as_posix()))
             # arg_list.append(u'{}'.format(abs_path))
+            
+            inputFilePath = os.path.dirname(self.input_file)
+            
             inputFilename = os.path.basename(self.input_file)
-            arg_list.append(u'{}'.format(inputFilename))
-            arg_list.append(u'{}'.format('sc_'+inputFilename))
+                        
+            pathToScFile = posixpath.join(inputFilePath,'sc_'+inputFilename)
+
+            arg_list.append(u'{}'.format(self.input_file))
+            arg_list.append(u'{}'.format(pathToScFile))
             arg_list.append(u'{}'.format(self.default_values['driverFile']))
             arg_list.append(u'{}'.format('sc_'+self.default_values['driverFile']))
             arg_list.append(u'{}'.format(self.run_type))
+            
             if any(platform.win32_ver()):
                 arg_list.append('Windows')
             else:
-                arg_list.append('MacOS')                                
-            self.default_values['workflowInput']='sc_'+inputFilename
-            self.default_values['driverFile']='sc_'+self.default_values['driverFile']
+                arg_list.append('MacOS')
+                
+            self.default_values['workflowInput']=pathToScFile
+            #self.default_values['driverFile']='sc_'+self.default_values['driverFile']
+            self.default_values['modDriverFile']='sc_'+self.default_values['driverFile']
+            #self.default_values['driverFile']='driver'
 
             self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
@@ -1342,11 +1595,9 @@ class Workflow(object):
             log_div()
             
                 
-    def create_driver_file(self, app_sequence, bldg_id=None):
+    def create_driver_file(self, app_sequence, asst_id=None, AIM_file_path = 'AIM.json'):
         """
-        Short description
-
-        Longer description
+        This functipon creates a UQ driver file. This is only done if UQ is in the workflow apps
 
         Parameters
         ----------
@@ -1355,11 +1606,17 @@ class Workflow(object):
         if 'UQ' in self.workflow_apps.keys():
             
             log_msg('Creating the workflow driver file')
+                        
+            aimDir = os.path.dirname(AIM_file_path)
+                    
+            # If the path is not provided, assume the AIM file is in the run dir
+            if os.path.exists(aimDir) == False :
+                aimDir = self.run_dir
+                
+            os.chdir(aimDir)
 
-            os.chdir(self.run_dir)
-
-            if bldg_id is not None:
-                os.chdir(bldg_id)
+            if asst_id is not None:
+                os.chdir(asst_id)
 
             os.chdir('templatedir')
 
@@ -1371,24 +1628,39 @@ class Workflow(object):
                     app_sequence.remove(app_type)
 
             for app_type in app_sequence:
+            
+                workflow_app = self.workflow_apps[app_type]
 
                 if self.run_type in ['set_up', 'runningRemote']:
-                    command_list = self.workflow_apps[app_type].get_command_list(
-                        app_path = self.app_dir_remote, force_posix = True)
-
-                    driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+                
+                    if type(workflow_app) is dict :
+                        for itemKey, item in workflow_app.items() :
+                            
+                            command_list = item.get_command_list(app_path = self.app_dir_remote, force_posix = True)
+                            driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+                        
+                    else :
+                        command_list = workflow_app.get_command_list(app_path = self.app_dir_remote, force_posix = True)
+                        driver_script += create_command(command_list, enforced_python='python3') + u'\n'
+                
                 else:
-                    command_list = self.workflow_apps[app_type].get_command_list(
-                        app_path = self.app_dir_local)
+                
+                    if type(workflow_app) is dict :
+                        for itemKey, item in workflow_app.items() :
+                            
+                            command_list = item.get_command_list(app_path = self.app_dir_local)
+                            driver_script += create_command(command_list) + u'\n'
+                            
+                    else:
+                        command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
 
-                    driver_script += create_command(command_list) + u'\n'
-
+                        driver_script += create_command(command_list) + u'\n'
 
             log_msg('Workflow driver script:', prepend_timestamp=False)
-            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False,
-                    prepend_blank_space=False)
+            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
 
             driverFile = self.default_values['driverFile']
+            
             # KZ: for windows, to write bat
             if platform.system() == 'Windows':
                 driverFile = driverFile+'.bat'
@@ -1396,8 +1668,7 @@ class Workflow(object):
             with open(driverFile,'w') as f:
                 f.write(driver_script)
 
-            log_msg('Workflow driver file successfully created.',
-                    prepend_timestamp=False)
+            log_msg('Workflow driver file successfully created.',prepend_timestamp=False)
             log_div()
         else:
             log_msg('No UQ requested, workflow driver is not needed.')
@@ -1405,7 +1676,7 @@ class Workflow(object):
 
 
 
-    def simulate_response(self, BIM_file = 'BIM.json', bldg_id=None):
+    def simulate_response(self, AIM_file_path = 'AIM.json', asst_id=None):
         """
         Short description
 
@@ -1414,25 +1685,33 @@ class Workflow(object):
         Parameters
         ----------
         """
+        
+        # Get the directory to the asset class dir, e.g., buildings
+        aimDir = os.path.dirname(AIM_file_path)
+        aimFileName = os.path.basename(AIM_file_path)
+        
+        # If the path is not provided, assume the AIM file is in the run dir
+        if os.path.exists(aimDir) == False :
+            aimDir = self.run_dir
 
+        os.chdir(aimDir)
+            
+        if asst_id is not None:
+            os.chdir(asst_id)
+                
         if 'UQ' in self.workflow_apps.keys():
 
             log_msg('Running response simulation')
 
-            os.chdir(self.run_dir)
-
-            if bldg_id is not None:
-                os.chdir(bldg_id)
-
             os.chdir('templatedir')
-
+            
             workflow_app = self.workflow_apps['UQ']
 
-            if BIM_file is not None:
-                workflow_app.defaults['filenameBIM'] = BIM_file
+            if AIM_file_path is not None:
+                workflow_app.defaults['filenameAIM'] = AIM_file_path
                 #for input_var in workflow_app.inputs:
-                #    if input_var['id'] == 'filenameBIM':
-                #        input_var['default'] = BIM_file
+                #    if input_var['id'] == 'filenameAIM':
+                #        input_var['default'] = AIM_file_path
 
             command_list = workflow_app.get_command_list(
                 app_path=self.app_dir_local)
@@ -1440,7 +1719,8 @@ class Workflow(object):
             #ADAM to fix FMK
             if (self.modifiedRun):
                 command_list[3] = self.default_values['workflowInput']
-                command_list[5] = self.default_values['driverFile']
+                                
+                command_list[5] = self.default_values['modDriverFile']
             
             # add the run type to the uq command list
             command_list.append(u'--runType')
@@ -1475,9 +1755,11 @@ class Workflow(object):
                         prepend_blank_space=False)
 
                 # create the response.csv file from the dakotaTab.out file
-                os.chdir(self.run_dir)
-                if bldg_id is not None:
-                    os.chdir(bldg_id)
+                os.chdir(aimDir)
+                
+                if asst_id is not None:
+                    os.chdir(asst_id)
+                    
                 try:
                 # sy, abs - added try-statement because dakota-reliability does not write DakotaTab.out
                     dakota_out = pd.read_csv('dakotaTab.out', sep=r'\s+', header=0, index_col=0)
@@ -1512,15 +1794,13 @@ class Workflow(object):
             log_msg('No UQ requested, response simulation step is skipped.')
 
             # copy the response.csv from the templatedir to the run dir
-            os.chdir(self.run_dir)
-            if bldg_id is not None:
-                os.chdir(bldg_id)
             shutil.copy(src = 'templatedir/response.csv', dst = 'response.csv')
 
             log_div()
 
-    def estimate_losses(self, BIM_file = 'BIM.json', bldg_id = None,
-        input_file = None, copy_resources=False):
+
+    def estimate_losses(self, AIM_file_path = 'AIM.json', asst_id = None,
+        asset_type = None, input_file = None, copy_resources=False):
         """
         Short description
 
@@ -1531,67 +1811,132 @@ class Workflow(object):
         """
 
         if 'DL' in self.workflow_apps.keys():
+        
             log_msg('Running damage and loss assessment')
+            
+            # Get the directory to the asset class dir, e.g., buildings
+            aimDir = os.path.dirname(AIM_file_path)
+            aimFileName = os.path.basename(AIM_file_path)
+        
+            # If the path is not provided, assume the AIM file is in the run dir
+            if os.path.exists(aimDir) == False :
+                aimDir = self.run_dir
+                aimFileName = AIM_file_path
 
-            os.chdir(self.run_dir)
+            os.chdir(aimDir)
 
-            if 'Building' not in self.app_type_list:
+            if 'Assets' not in self.app_type_list:
+            
                 # Copy the dakota.json file from the templatedir to the run_dir so that
                 # all the required inputs are in one place.
                 input_file = PurePath(input_file).name
                 #input_file = ntpath.basename(input_file)
                 shutil.copy(
-                    src = self.run_dir / f'templatedir/{input_file}',
-                    dst = self.run_dir / BIM_file)
+                    src = aimDir / f'templatedir/{input_file}',
+                    dst = posixpath.join(aimDir,aimFileName))
                 #src = posixpath.join(self.run_dir,'templatedir/{}'.format(input_file)),
-                #dst = posixpath.join(self.run_dir,BIM_file))
+                #dst = posixpath.join(self.run_dir,AIM_file_path))
             else:
-                # copy the BIM file from the main dir to the building dir
-                shutil.copy(
-                    src = self.run_dir / BIM_file,
-                    dst = self.run_dir / f'{bldg_id}/{BIM_file}')
-                #src = posixpath.join(self.run_dir, BIM_file),
+            
+                src = posixpath.join(aimDir,aimFileName)
+                dst = posixpath.join(aimDir, f'{asst_id}/{aimFileName}')
+            
+                # copy the AIM file from the main dir to the building dir
+                shutil.copy(src,dst)
+    
+                #src = posixpath.join(self.run_dir, AIM_file_path),
                 #dst = posixpath.join(self.run_dir,
-                #                     '{}/{}'.format(bldg_id, BIM_file)))
-                os.chdir(str(bldg_id))
+                #                     '{}/{}'.format(asst_id, AIM_file_path)))
+                os.chdir(str(asst_id))
 
             workflow_app = self.workflow_apps['DL']
-
-            if BIM_file is not None:
-                workflow_app.defaults['filenameDL'] = BIM_file
-                #for input_var in workflow_app.inputs:
-                #    if input_var['id'] == 'filenameDL':
-                #        input_var['default'] = BIM_file
-
-            command_list = self.workflow_apps['DL'].get_command_list(
-                app_path=self.app_dir_local)
-
-            if copy_resources:
-                command_list.append('--resource_dir')
-                command_list.append(self.working_dir)
-
-            command = create_command(command_list)
-
-            log_msg('Damage and loss assessment command:',
-                    prepend_timestamp=False)
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                    prepend_blank_space=False)
-
-            result, returncode = run_command(command)
-
-            log_msg(result, prepend_timestamp=False)
-
-            # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
-            if 'Building' in self.app_type_list:
-
-                try:
-                    shutil.copy(
-                        src = self.run_dir / f'{bldg_id}/{"pelicun_log.txt"}',
-                        dst = self.run_dir / f'pelicun_log_{bldg_id}.txt')
-                    #src = posixpath.join(self.run_dir, '{}/{}'.format(bldg_id, 'pelicun_log.txt')),
-                    #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(bldg_id)))
-                except:
-                    pass
+            
+            
+            if type(workflow_app) is dict :
+                    
+                    for itemKey, item in workflow_app.items() :
+                    
+                        if AIM_file_path is not None:
+                            item.defaults['filenameDL'] = AIM_file_path
+                            #for input_var in workflow_app.inputs:
+                            #    if input_var['id'] == 'filenameDL':
+                            #        input_var['default'] = AIM_file_path
+                                                    
+                        if asset_type != itemKey :
+                            continue
+            
+                        command_list = item.get_command_list(app_path=self.app_dir_local)
+            
+                        if copy_resources:
+                            command_list.append('--resource_dir')
+                            command_list.append(self.working_dir)
+            
+                        command_list.append('--dirnameOutput')
+                        command_list.append(f'{aimDir}/{asst_id}')
+            
+                        command = create_command(command_list)
+            
+                        log_msg('Damage and loss assessment command:', prepend_timestamp=False)
+                        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                                prepend_blank_space=False)
+            
+                        result, returncode = run_command(command)
+            
+                        log_msg(result, prepend_timestamp=False)
+            
+                        # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+                        if 'Assets' in self.app_type_list:
+            
+                            try:
+                                shutil.copy(
+                                    src = aimDir / f'{asst_id}/{"pelicun_log.txt"}',
+                                    dst = aimDir / f'pelicun_log_{asst_id}.txt')
+                                    
+                                #src = posixpath.join(self.run_dir, '{}/{}'.format(asst_id, 'pelicun_log.txt')),
+                                #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(asst_id)))
+                            except:
+                                pass
+                                
+            else:
+            
+                if AIM_file_path is not None:
+                    workflow_app.defaults['filenameDL'] = AIM_file_path
+                    #for input_var in workflow_app.inputs:
+                    #    if input_var['id'] == 'filenameDL':
+                    #        input_var['default'] = AIM_file_path
+    
+                command_list = self.workflow_apps['DL'].get_command_list(
+                    app_path=self.app_dir_local)
+                    
+                command_list.append('--dirnameOutput')
+                command_list.append(f'{aimDir}/{asst_id}')
+    
+                if copy_resources:
+                    command_list.append('--resource_dir')
+                    command_list.append(self.working_dir)
+    
+                command = create_command(command_list)
+    
+                log_msg('Damage and loss assessment command:',
+                        prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                        prepend_blank_space=False)
+    
+                result, returncode = run_command(command)
+    
+                log_msg(result, prepend_timestamp=False)
+    
+                # if multiple buildings are analyzed, copy the pelicun_log file to the root dir
+                if 'Building' in self.app_type_list:
+    
+                    try:
+                        shutil.copy(
+                            src = self.run_dir / f'{asst_id}/{"pelicun_log.txt"}',
+                            dst = self.run_dir / f'pelicun_log_{asst_id}.txt')
+                        #src = posixpath.join(self.run_dir, '{}/{}'.format(asst_id, 'pelicun_log.txt')),
+                        #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(asst_id)))
+                    except:
+                        pass
 
             log_msg('Damage and loss assessment finished successfully.',
                     prepend_timestamp=False)
@@ -1600,8 +1945,8 @@ class Workflow(object):
         else:
             log_msg('No DL requested, loss assessment step is skipped.')
 
-            # Only regional simulations send in a bldg id
-            if bldg_id != None:
+            # Only regional simulations send in a asst id
+            if asst_id != None:
 
                 EDP_df = pd.read_csv('response.csv', header=0, index_col=0)
 
@@ -1644,7 +1989,10 @@ class Workflow(object):
 
             log_div()
 
-    def aggregate_results(self, bldg_data):
+
+    def aggregate_results(self, asst_data, asset_type = '',
+        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        headers = None):
         """
         Short description
 
@@ -1654,21 +2002,26 @@ class Workflow(object):
         ----------
         """
 
-        log_msg('Collecting damage and loss results')
+        log_msg('Collecting '+asset_type+' damage and loss results')
 
-        os.chdir(self.run_dir)
+        run_path = self.run_dir
+                
+        if asset_type != '' :
+            run_path = posixpath.join(run_path,asset_type)
+        
+        os.chdir(run_path)
+        
+        min_id = int(asst_data[0]['id'])
+        max_id = int(asst_data[0]['id'])
 
-        min_id = int(bldg_data[0]['id'])
-        max_id = int(bldg_data[0]['id'])
 
-        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
-
-        headers = dict(
-            IM = [0, 1, 2, 3],
-            BIM = [0, ],
-            EDP = [0, 1, 2, 3],
-            DM = [0, 1, 2],
-            DV = [0, 1, 2, 3])
+        if headers is None :
+            headers = dict(
+                IM = [0, 1, 2, 3],
+                BIM = [0, ],
+                EDP = [0, 1, 2, 3],
+                DM = [0, 1, 2],
+                DV = [0, 1, 2, 3])
 
         for out_type in out_types:
             if ((self.output_types is None) or
@@ -1679,21 +2032,27 @@ class Workflow(object):
                         realizations_EDP = None
                         realizations_DL = None
 
-                        for bldg in bldg_data:
-                            bldg_id = bldg['id']
-                            min_id = min(int(bldg_id), min_id)
-                            max_id = max(int(bldg_id), max_id)
+                        for asst in asst_data:
+                        
+                            asst_file = asst['file']
+                        
+                            # Get the folder containing the results
+                            aimDir = os.path.dirname(asst_file)
+                        
+                            asst_id = asst['id']
+                            min_id = min(int(asst_id), min_id)
+                            max_id = max(int(asst_id), max_id)
 
                             # save all EDP realizations
 
-                            df_i = pd.read_csv(bldg_id+'/response.csv', header=0, index_col=0)
+                            df_i = pd.read_csv(aimDir+'/'+asst_id+'/response.csv', header=0, index_col=0)
 
                             if realizations_EDP == None:
                                 realizations_EDP = dict([(col, []) for col in df_i.columns])
 
                             for col in df_i.columns:
                                 vals = df_i.loc[:,col].to_frame().T
-                                vals.index = [bldg_id,]
+                                vals.index = [asst_id,]
                                 realizations_EDP[col].append(vals)
 
                             # If damage and loss assessment is part of the workflow
@@ -1702,19 +2061,19 @@ class Workflow(object):
 
                                 try:
                                 #if True:
-                                    df_i = pd.read_csv(bldg_id+f'/DL_summary.csv',
+                                    df_i = pd.read_csv(aimDir+'/'+asst_id+f'/DL_summary.csv',
                                                        header=0, index_col=0)
-
+                                    
                                     if realizations_DL == None:
                                         realizations_DL = dict([(col, []) for col in df_i.columns])
 
                                     for col in df_i.columns:
                                         vals = df_i.loc[:,col].to_frame().T
-                                        vals.index = [bldg_id,]
+                                        vals.index = [asst_id,]
                                         realizations_DL[col].append(vals)
 
                                 except:
-                                    log_msg(f'Error reading DL realization data for building {bldg_id}',
+                                    log_msg(f'Error reading DL realization data for asset {asset_type} {asst_id}',
                                             prepend_timestamp=False)
 
                         for d_type in realizations_EDP.keys():
@@ -1734,30 +2093,41 @@ class Workflow(object):
                 else:
                     out_list = []
 
-                    for bldg in bldg_data:
-                        bldg_id = bldg['id']
-                        min_id = min(int(bldg_id), min_id)
-                        max_id = max(int(bldg_id), max_id)
+                    for asst in asst_data:
+                                            
+                        asst_file = asst['file']
+                        
+                        # Get the folder containing the results
+                        aimDir = os.path.dirname(asst_file)
+                    
+                        asst_id = asst['id']
+                        min_id = min(int(asst_id), min_id)
+                        max_id = max(int(asst_id), max_id)
 
                         try:
                         #if True:
+                        
+                            csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
+                                                        
                             # EDP data
-                            df_i = pd.read_csv(bldg_id+f'/{out_type}.csv',
-                                               header=headers[out_type], index_col=0)
-                            df_i.index = [bldg_id,]
+                            df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
+                        
+                            df_i.index = [asst_id,]
+                            
                             out_list.append(df_i)
-
+                            
                         except:
-                            log_msg(f'Error reading {out_type} data for building {bldg_id}',
-                                    prepend_timestamp=False)
+                            log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
 
                     #out_agg = pd.concat(out_list, axis=0, sort=False)
                     out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
                     #out_agg.sort_index(axis=0, inplace=True)
-
+                    
+                    outPath = posixpath.join(run_path,f'{out_type}_{min_id}-{max_id}.csv')
+                    
                     # save the collected DataFrames as csv files
-                    out_agg.to_csv(f'{out_type}_{min_id}-{max_id}.csv')
+                    out_agg.to_csv(outPath)
 
-        log_msg('Damage and loss results collected successfully.',
-                prepend_timestamp=False)
+        log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
+

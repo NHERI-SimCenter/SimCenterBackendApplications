@@ -40,8 +40,7 @@ void HazusSAM_Generator::ReadHazusData()
     hazus = new map<string, HazusData>[nCodeLevel];
 
     string temps="";
-    //    string path="data/HazusData.txt";
-
+    
     ifstream fHazus(pathHazusData.c_str());
     if( !fHazus.is_open() )
     {
@@ -67,6 +66,7 @@ void HazusSAM_Generator::ReadHazusData()
             }
             fHazus>>hd.T1>>hd.T2>>hd.hos>>hd.damp;
             hazus[i].insert(pair<string,HazusData>(type,hd));
+	    
             fHazus >> std::ws;//to ignore any remaining white space and move to the next line
         }
     }
@@ -86,91 +86,89 @@ void HazusSAM_Generator::CalcBldgPara(Building *bldg)
 
     //Determine seismic design level
     int codelevel=0;
-	switch (bldg->zone)
-	{
-  case 0:
-		codelevel = 3;	//pre-code
-		if (strucType == "W1")
-		{
-			codelevel = 2;	//low-code
-		}
-		break;
-	case 1:
-		if (1975 < bldg->year)
-			codelevel = 2;	//low-code
-		else {
-			codelevel = 3;	//pre-code
-			if (strucType == "W1")
-			{
-				codelevel = 2;	//low-code
-			}
-		}
-		break;
-	case 2:
-		if (1941 <= bldg->year)
-			codelevel = 2;	//low-code
-		else{
-			codelevel = 3;	//pre-code
-			if (strucType == "W1")
-			{
-				codelevel = 2;	//low-code
-			}
-		}
-		break;
-	case 3:
-		if (1975 < bldg->year)
-			codelevel = 1;	//moderate-code
-		else if (1941 <= bldg->year && bldg->year <= 1975)
-			codelevel = 2;	//low-code
-		else {
-			codelevel = 3;	//pre-code
-			if (strucType == "W1")
-			{
-				codelevel = 2;	//low-code
-			}
-		}
-		break;
-	case 4:
-		if (1941 <= bldg->year)
-			codelevel = 1;	//moderate-code
-		else{
-			codelevel = 3;	//pre-code
-			if (strucType == "W1")
-			{
-				codelevel = 1;	//moderate-code
-			}
-		}
-		break;
-	case 5:
-		if (1975 < bldg->year)
-			codelevel = 0;	//high-code
-		else if (1941 <= bldg->year && bldg->year <= 1975)
-			codelevel = 1;	//moderate-code
-		else{
-			codelevel = 3;	//pre-code
-			if (strucType=="W1")
-			{
-				codelevel = 1;	//moderate-code
-			}
-		}
-		break;
-	default:
-		if (1975 < bldg->year)
-			codelevel = 0;	//high-code
-		else if (1941 <= bldg->year && bldg->year <= 1975)
-			codelevel = 1;	//moderate-code
-		else{
-			codelevel = 3;	//pre-code
-			if (strucType == "W1")
-			{
-				codelevel = 1;	//moderate-code
-			}
-		}
-		break;
+    switch (bldg->zone) {
+      case 0:
+	codelevel = 3;	//pre-code
+	if (strucType == "W1")
+	  {
+	    codelevel = 2;	//low-code
+	  }
+	break;
+      case 1:
+	if (1975 < bldg->year)
+	  codelevel = 2;	//low-code
+	else {
+	  codelevel = 3;	//pre-code
+	  if (strucType == "W1")
+	    {
+	      codelevel = 2;	//low-code
+	    }
 	}
-
+	break;
+      case 2:
+	if (1941 <= bldg->year)
+	  codelevel = 2;	//low-code
+	else{
+	  codelevel = 3;	//pre-code
+	  if (strucType == "W1")
+	    {
+	      codelevel = 2;	//low-code
+	    }
+	}
+	break;
+      case 3:
+	if (1975 < bldg->year)
+	  codelevel = 1;	//moderate-code
+	else if (1941 <= bldg->year && bldg->year <= 1975)
+	  codelevel = 2;	//low-code
+	else {
+	  codelevel = 3;	//pre-code
+	  if (strucType == "W1")
+	    {
+	      codelevel = 2;	//low-code
+	    }
+	}
+	break;
+      case 4:
+	if (1941 <= bldg->year)
+	  codelevel = 1;	//moderate-code
+	else{
+	  codelevel = 3;	//pre-code
+	  if (strucType == "W1")
+	    {
+	      codelevel = 1;	//moderate-code
+	    }
+	}
+	break;
+      case 5:
+	if (1975 < bldg->year)
+	  codelevel = 0;	//high-code
+	else if (1941 <= bldg->year && bldg->year <= 1975)
+	  codelevel = 1;	//moderate-code
+	else{
+	  codelevel = 3;	//pre-code
+	  if (strucType=="W1")
+	    {
+	      codelevel = 1;	//moderate-code
+	    }
+	}
+	break;
+      default:
+	if (1975 < bldg->year)
+	  codelevel = 0;	//high-code
+	else if (1941 <= bldg->year && bldg->year <= 1975)
+	  codelevel = 1;	//moderate-code
+	else{
+	  codelevel = 3;	//pre-code
+	  if (strucType == "W1")
+	    {
+	      codelevel = 1;	//moderate-code
+	    }
+	}
+	break;
+      }
+    
     bldg->dampingRatio=hazus[codelevel][strucType].damp;
-
 
     /*
     for (int i=0;i<4;i++)
@@ -178,9 +176,11 @@ void HazusSAM_Generator::CalcBldgPara(Building *bldg)
         bldg->damageCriteria[i]=hazus[codelevel][strucType].damage[i];
     }
     */
+    
     bldg->T0=bldg->nStory*hazus[codelevel][strucType].T1;
     bldg->T2=bldg->T0*hazus[codelevel][strucType].T2;
     double alpha1=GetAlpha1(bldg->nStory);
+    
     for (int i=0;i<bldg->nStory;++i)
     {
         bldg->floorParams[i].floor=i+1;

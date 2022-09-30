@@ -8,15 +8,15 @@ else:
 
 import argparse, posixpath, ntpath, json
 
-def write_RV(BIM_input_path, EDP_input_path, EDP_type):
+def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     
-    # load the BIM file
-    with open(BIM_input_path, 'r') as f:
-        BIM_in = json.load(f)
+    # load the AIM file
+    with open(AIM_input_path, 'r') as f:
+        AIM_in = json.load(f)
 
     EDP_list = []
-    if "EDP" in BIM_in.keys():
-        for edp in BIM_in["EDP"]:
+    if "EDP" in AIM_in.keys():
+        for edp in AIM_in["EDP"]:
             EDP_list.append({
                 "type": edp["type"],
                 "cline": edp.get("cline", "1"),
@@ -44,13 +44,13 @@ def write_RV(BIM_input_path, EDP_input_path, EDP_type):
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_json, f, indent=2)
 
-def create_EDP(BIM_input_path, EDP_input_path, EDP_type):
+def create_EDP(AIM_input_path, EDP_input_path, EDP_type):
     pass   
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--filenameBIM', default=None)
+    parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM', default=None)
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameEDP')
@@ -59,6 +59,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameBIM, args.filenameEDP, args.type))
+        sys.exit(write_RV(args.filenameAIM, args.filenameEDP, args.type))
     else:
-        sys.exit(create_EDP(args.filenameBIM, args.filenameEDP, args.type))
+        sys.exit(create_EDP(args.filenameAIM, args.filenameEDP, args.type))
