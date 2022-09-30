@@ -36,7 +36,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write("\n\tParsing the inputs read in from json file")
     applications = jsonInputs["Applications"]
     edpInputs = jsonInputs["EDP"]
-    uqInputs = jsonInputs["UQ_Method"]
+    uqInputs = jsonInputs["UQ"]
     # femInputs = jsonInputs['fem']
     # localAppDirInputs = jsonInputs['localAppDir']
     # pythonInputs = jsonInputs['python']
@@ -58,6 +58,11 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write("\n\t\tProcessing UQ inputs")
     seedValue = uqInputs["seed"]
     nSamples = uqInputs["numParticles"]
+    #maxRunTime = uqInputs["maxRunTime"]
+    if "maxRunTime" in uqInputs.keys():
+        maxRunTime = uqInputs["maxRunTime"]
+    else:
+        maxRunTime = float("inf")
     logLikelihoodFile = uqInputs["logLikelihoodFile"]
     calDataFile = uqInputs["calDataFile"]
 
@@ -141,7 +146,8 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
 
     # Processing FEM inputs .. FMK
-    logFile.write("\n\n\t\tNO LONGER Processing FEM inputs")
+    # logFile.write("\n\n\t\tNO LONGER Processing FEM inputs")
+    logFile.write("\n\n\t\tProcessing FEM inputs")
     # Processing number of models
     # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
     # inputFileList = []

@@ -285,14 +285,41 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
         if glob.glob("ops.out"):
             with open("ops.out", "r") as text_file:
                 error_FEM = text_file.read()
-            msg += "\n"
-            msg += "your FEM model says...\n" 
-            msg += error_FEM
+
+            startingCharId = error_FEM.lower().find("error")
+
+            if startingCharId >0:
+                startingCharId = max(0,startingCharId-20)
+                endingID = max(len(error_FEM),startingCharId+200)
+                errmsg = error_FEM[startingCharId:endingID]
+                errmsg=errmsg.split(" ", 1)[1]
+                errmsg=errmsg[0:errmsg.rfind(" ")]
+                msg += "\n"
+                msg += "your FEM model says...\n"
+                msg += "........\n" + errmsg + "\n........ \n"
+                msg += "to read more, see " + os.path.join(os. getcwd(),"ops.out")
 
         return msg, id_sim
 
     if g.shape[0] == 0:
         msg = "Error running FEM: results.out is empty"
+        if glob.glob("ops.out"):
+            with open("ops.out", "r") as text_file:
+                error_FEM = text_file.read()
+
+            startingCharId = error_FEM.lower().find("error")
+
+            if startingCharId >0:
+                startingCharId = max(0,startingCharId-20)
+                endingID = max(len(error_FEM),startingCharId+200)
+                errmsg = error_FEM[startingCharId:endingID]
+                errmsg=errmsg.split(" ", 1)[1]
+                errmsg=errmsg[0:errmsg.rfind(" ")]
+                msg += "\n"
+                msg += "your FEM model says...\n"
+                msg += "........\n" + errmsg + "\n........ \n"
+                msg += "to read more, see " + os.path.join(os. getcwd(),"ops.out")
+
         return msg, id_sim
 
     os.chdir("../")

@@ -100,7 +100,7 @@
         "type": "MDOF_BuildingModel",
         "weight": 144
     },
-    "UQ_Method": {
+    "UQ": {
         "samplingMethodData": {
             "method": "LHS",
             "samples": 10,

@@ -13,6 +13,7 @@ from typing import List, TextIO
 
 # from importlib import import_module
 import numpy as np
+from scipy.linalg import block_diag
 
 import pdfs
 from parseData import parseDataFunction
@@ -458,6 +459,11 @@ class CovarianceMatrixPreparer:
                     logFile.write("\n\t\tCovariance matrix: {}".format(scalarVariance))
         self.covarianceMatrixList = covarianceMatrixList
         self.covarianceTypeList = covarianceTypeList
+        logFile.write(f"\n\nThe covariance matrix for prediction errors being used is:")
+        tmp = block_diag(*covarianceMatrixList)
+        for row in tmp:
+            rowString = " ".join([f"{col:14.8g}" for col in row])
+            logFile.write("\n\t{}".format(rowString))
         return self.covarianceMatrixList
 # ======================================================================================================================
 
@@ -541,8 +547,8 @@ if __name__ == "__main__":
     logFile.write("\n\tNumber of particles: {}".format(Np))
 
     # number of max MCMC steps
-    Nm_steps_max = 2
-    Nm_steps_maxmax = 5
+    Nm_steps_max = 10
+    Nm_steps_maxmax = 10
     logFile.write("\n\tNumber of MCMC steps in first stage: {}".format(Nm_steps_max))
     logFile.write(
         "\n\tMax. number of MCMC steps in any stage: {}".format(Nm_steps_maxmax)
