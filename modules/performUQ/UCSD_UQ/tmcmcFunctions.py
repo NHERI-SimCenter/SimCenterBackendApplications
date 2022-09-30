@@ -33,7 +33,7 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
     # rN = int(len(likelihoods) * 0.95)   #pymc3 uses 0.5
     rN = threshold * prev_ESS  # purdue prof uses 0.95
     new_beta = beta
-    while max_beta - min_beta > 1e-6:
+    while max_beta - min_beta > 1e-3:
         new_beta = 0.5 * (max_beta + min_beta)
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
@@ -46,7 +46,12 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
         else:
             min_beta = new_beta
 
-    if new_beta >= 1:
+    if new_beta < 1e-3:
+        new_beta = 1e-3
+        inc_beta = new_beta - old_beta
+        Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
+
+    if new_beta >= 0.95:
         new_beta = 1
         # plausible weights of Sm corresponding to new beta
         inc_beta = new_beta - old_beta
