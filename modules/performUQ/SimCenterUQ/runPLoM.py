@@ -100,7 +100,7 @@ class runPLoM:
         # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)
 
         # read PLoM parameters
-        surrogateInfo = job_config["UQ_Method"]["surrogateMethodInfo"]
+        surrogateInfo = job_config["UQ"]["surrogateMethodInfo"]
         if self._parse_plom_parameters(surrogateInfo):
             msg = 'runPLoM.__init__: Error in reading PLoM parameters.'
             self.errlog.exit(msg)
@@ -192,15 +192,15 @@ class runPLoM:
         ## KZ modified 0331
         with open(self.input_file,'r') as f:
             tmp = json.load(f)
-        tmp['UQ_Method']['uqType'] = 'Forward Propagation'
-        tmp['UQ_Method']['parallelExecution'] = True
-        samplingObj = tmp['UQ_Method']['surrogateMethodInfo']['samplingMethod']
-        tmp['UQ_Method']['samplingMethodData']=dict()
+        tmp['UQ']['uqType'] = 'Forward Propagation'
+        tmp['UQ']['parallelExecution'] = True
+        samplingObj = tmp['UQ']['surrogateMethodInfo']['samplingMethod']
+        tmp['UQ']['samplingMethodData']=dict()
         ## KZ modified 0331
-        tmp['UQ_Method']['uqEngine'] = 'Dakota'
+        tmp['UQ']['uqEngine'] = 'Dakota'
         tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
-            tmp['UQ_Method']['samplingMethodData'][key] = item
+            tmp['UQ']['samplingMethodData'][key] = item
         with open('sc_dakota_plom.json','w') as f:
             json.dump(tmp, f, indent=2)
 
@@ -788,8 +788,8 @@ def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
     f.close()
 
     # check the uq type
-    if job_config['UQ_Method']['uqType'] != 'PLoM Model':
-        msg = 'UQ type inconsistency : user wanted <' + job_config['UQ_Method']['uqType'] + \
+    if job_config['UQ']['uqType'] != 'PLoM Model':
+        msg = 'UQ type inconsistency : user wanted <' + job_config['UQ']['uqType'] + \
             '> but called <PLoM Model> program'
         errlog.exit(msg)
 

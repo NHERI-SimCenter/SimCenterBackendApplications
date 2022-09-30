@@ -94,7 +94,7 @@
         "type": "MDOF_BuildingModel",
         "weight": "RV.weigh"
     },
-    "UQ_Method": {
+    "UQ": {
         "samplingMethodData": {
             "evalID": "RV.DAKOTA_EVAL_ID",
             "method": "LHS",

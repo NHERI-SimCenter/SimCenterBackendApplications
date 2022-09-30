@@ -57,7 +57,7 @@ def main():
     applicationsData = inputData["Applications"]
 
     # Get data to pass to UQ driver
-    uqData = inputData["UQ_Method"]
+    uqData = inputData["UQ"]
     simulationData = applicationsData["FEM"]
     randomVarsData = inputData["randomVariables"]
     demandParams = inputData["EDP"]
