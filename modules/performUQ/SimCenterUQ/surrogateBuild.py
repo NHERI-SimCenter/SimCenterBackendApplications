@@ -110,15 +110,15 @@ class surrogate(UQengine):
         except ValueError:
             msg = "invalid json format - dakota.json"
             self.exit(msg)
-        if dakotaJson["UQ_Method"]["uqType"] != "Train GP Surrogate Model":
+        if dakotaJson["UQ"]["uqType"] != "Train GP Surrogate Model":
             msg = (
                     "UQ type inconsistency : user wanted <"
-                    + dakotaJson["UQ_Method"]["uqType"]
+                    + dakotaJson["UQ"]["uqType"]
                     + "> but we called <Global Surrogate Modeling> program"
             )
             self.exit(msg)
 
-        surrogateJson = dakotaJson["UQ_Method"]["surrogateMethodInfo"]
+        surrogateJson = dakotaJson["UQ"]["surrogateMethodInfo"]
 
         if surrogateJson["method"] == "Sampling and Simulation":
             random.seed(surrogateJson["seed"])

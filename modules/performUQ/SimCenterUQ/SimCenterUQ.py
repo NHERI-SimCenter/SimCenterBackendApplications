@@ -71,7 +71,7 @@ def main(args):
         with open(inputFile) as data_file:    
             data = json.load(data_file)
 
-        uq_data = data["UQ_Method"]
+        uq_data = data["UQ"]
 
         myScriptDir = os.path.dirname(os.path.realpath(__file__))
 

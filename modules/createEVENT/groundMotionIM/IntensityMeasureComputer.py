@@ -548,8 +548,8 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     bim_im = bim_file.get('IntensityMeasure', None)
     output_periods = []
     if bim_im is None:
-        # search it again under UQ_Method/surrogateMethodInfo
-        bim_im = bim_file['UQ_Method']['surrogateMethodInfo'].get('IntensityMeasure',None)
+        # search it again under UQ/surrogateMethodInfo
+        bim_im = bim_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure',None)
     if bim_im is None or len(bim_im)==0:
         # no intensity measure calculation requested
         return
