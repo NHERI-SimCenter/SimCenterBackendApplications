@@ -75,10 +75,14 @@ def main(args):
 
         myScriptDir = os.path.dirname(os.path.realpath(__file__))
 
-        os.chmod(workflowDriver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
-        
-        st = os.stat(workflowDriver)
-        os.chmod(workflowDriver, st.st_mode | stat.S_IEXEC)
+        if os.path.exists(workflowDriver):
+            os.chmod(workflowDriver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+            
+            st = os.stat(workflowDriver)
+            os.chmod(workflowDriver, st.st_mode | stat.S_IEXEC)
+        else:            
+            print(workflowDriver + " not found.")
+
 
         # change dir to the main working dir for the structure
         os.chdir("../")
