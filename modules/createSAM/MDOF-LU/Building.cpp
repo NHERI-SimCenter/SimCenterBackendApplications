@@ -2,6 +2,7 @@
 #include <jansson.h> // for Json
 #include <cstring>
 #include <iostream>
+#include "common/Units.h"
 
 Building::Building()
   :kFactor(1.0), dampFactor(1.0)
@@ -101,6 +102,8 @@ Building::SeismicZone Building::s2SeismicZone(string s)
 	return UNKNOWNZONE;
 }
 
+// readBIM for writeRV
+
 void
 Building::readBIM(const char *event, const char *bim)
 {
@@ -109,41 +112,34 @@ Building::readBIM(const char *event, const char *bim)
   json_t *rootBIM = json_load_file(bim, 0, &error);
 
   json_t *GI = json_object_get(rootBIM,"GeneralInformation");
-  json_t *sType = json_object_get(GI,"StructureType");
-  json_t *aType = json_object_get(GI,"PlanArea");
   json_t *nType = json_object_get(GI,"NumberOfStories");
-  json_t *yType = json_object_get(GI,"YearBuilt");
-
-  // optional
-  json_t *hType = json_object_get(GI,"Height");
-  json_t *dRatio = json_object_get(GI,"DampingRatio");
-
-  const char *type = json_string_value(sType);
-  string s(type);
-
-  strutype=s2StruType(s);
-
-  year=json_integer_value(yType);
+  if (nType == NULL)
+    nType = json_object_get(GI,"stories");
+  
   nStory=json_integer_value(nType);
-  area=json_number_value(aType);
 
+  double unitConversionFactorLength = 1.0;  
+  json_t* bimUnitsJson = json_object_get(GI, "units");
+  if (bimUnitsJson != NULL) {
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    Units::UnitSystem bimUnits;
+    bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    Units::UnitSystem myUnits;
+    myUnits.lengthUnit = Units::ParseLengthUnit("m");
+    unitConversionFactorLength = Units::GetLengthFactor(bimUnits, myUnits);    
+  }
+  json_t *hType = json_object_get(GI,"height");
   if (hType == NULL) {
-    storyheight=3.6; // meters
+    storyheight=3.6; // meters, I assume it uses standard units
   } else {
     storyheight=json_number_value(hType)/(nStory*1.);
+    storyheight *= unitConversionFactorLength;    
   }
+  
+  std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
+  
+  ndf = 6;
 
-  if (dRatio == NULL) {
-    dampingRatio_IN = 0;
-  } else {
-    dampingRatio_IN = json_number_value(dRatio);
-  }
-
-  // parse EVENT (to see dimensionality needed
-  ndf = 1;
-  ndf = 2;
-
-  // clean up
   json_object_clear(rootBIM);
 }
 
@@ -163,10 +159,36 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_t *sType = json_object_get(GI,"StructureType");
   json_t *aType = json_object_get(GI,"PlanArea");
   json_t *nType = json_object_get(GI,"NumberOfStories");
-  json_t *yType = json_object_get(GI,"YearBuilt");
+  if (nType == NULL)
+    nType = json_object_get(GI,"stories");
+  nStory=json_integer_value(nType);  
+  area=json_number_value(aType);
 
+
+  double unitConversionFactorLength = 1.0;  
+  json_t* bimUnitsJson = json_object_get(GI, "units");
+  if (bimUnitsJson != NULL) {
+    json_t* bimLengthJson = json_object_get(bimUnitsJson, "length");
+    Units::UnitSystem bimUnits;
+    bimUnits.lengthUnit = Units::ParseLengthUnit(json_string_value(bimLengthJson));
+    Units::UnitSystem myUnits;
+    myUnits.lengthUnit = Units::ParseLengthUnit("m");
+    unitConversionFactorLength = Units::GetLengthFactor(bimUnits, myUnits);
+    area *= unitConversionFactorLength*unitConversionFactorLength;
+  }
+  json_t *hType = json_object_get(GI,"height");
+  if (hType == NULL) {
+    storyheight=3.6; // meters, I assume it uses standard units
+  } else {
+    storyheight=json_number_value(hType)/(nStory*1.);
+    storyheight *= unitConversionFactorLength;    
+  }
+  
+  std::cerr << "Story height: " << storyheight << " " << nStory << "\n";
+  
+  ndf = 6;
+  
   // optional
-  json_t *hType = json_object_get(GI,"Height");
   json_t *dRatio = json_object_get(GI,"DampingRatio");
 
   json_t *zType = json_object_get(GI, "seismicZone");
@@ -177,24 +199,18 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   const char *seismicZoneType = NULL;
   if (NULL == zType)
   {
-	  std::cout << "No seismic zone specificed, Assuming seismic zone 4.\n";
-	  seismicZoneType = "Z4";
+    std::cout << "No seismic zone specificed, Assuming seismic zone 4.\n";
+    seismicZoneType = "Z4";
   }
   else
-	  seismicZoneType = json_string_value(zType);
+    seismicZoneType = json_string_value(zType);
 
   string s1(seismicZoneType);
   zone = s2SeismicZone(s1);
-
+  
+  json_t *yType = json_object_get(GI,"YearBuilt");
   year=json_integer_value(yType);
-  nStory=json_integer_value(nType);
-  area=json_number_value(aType);
 
-  if (hType == NULL) {
-    storyheight=3.6; // meters, I assume it uses standard units
-  } else {
-    storyheight=json_number_value(hType)/(nStory*1.);
-  }
 
   if (dRatio == NULL) {
     dampingRatio_IN = 0;
@@ -205,8 +221,7 @@ Building::readBIM(const char *event, const char *bim, const char *sam)
   json_object_clear(rootBIM);
 
   // parse EVENT (to see dimensionality needed
-  ndf = 1;
-  ndf = 2;
+
 
   // parse EVENT to see factors
   json_t *rootSAM = json_load_file(sam, 0, &error);
@@ -252,6 +267,25 @@ Building::writeRV(const char *path, double stdStiffness, double stdDamping)
     json_array_append(randomVariables, dampFactor);
     json_object_set(root,"RandomVariables", randomVariables);
 
+    json_t *nodeMapping = json_array();    
+    json_t *nodeMap = json_object();
+    json_object_set(nodeMap,"cline",json_string("response"));
+    json_object_set(nodeMap,"floor",json_string(std::to_string(0).c_str()));
+    json_object_set(nodeMap,"node",json_integer(1));
+    json_array_append(nodeMapping, nodeMap);
+    
+    for(int i=0;i<nStory;++i) {
+      nodeMap = json_object();
+      json_object_set(nodeMap,"cline",json_string("response"));
+      json_object_set(nodeMap,"floor",json_string(std::to_string(i+1).c_str()));
+      json_object_set(nodeMap,"node",json_integer(i+2));
+      json_array_append(nodeMapping, nodeMap);
+    }
+    json_object_set(root,"NodeMapping",nodeMapping);
+    
+    json_object_set(root,"ndm",json_integer(3));
+    json_object_set(root,"numStory",json_integer(nStory));        
+    
     // write the file & clean memory
     json_dump_file(root,path,0);
     json_object_clear(root);
@@ -260,13 +294,13 @@ Building::writeRV(const char *path, double stdStiffness, double stdDamping)
 void
 Building::writeSAM(const char *path)
 {
+    ndf = 6;
     json_t *root = json_object();
     json_t *properties = json_object();
     json_t *geometry = json_object();
     json_t *materials = json_array();
     json_t *nodes = json_array();
-    json_t *elements = json_array();
-    json_t *nodeMapping = json_array();
+    json_t *elements = json_array();    
 
     // add node at ground
     json_t *node = json_object();
@@ -274,17 +308,32 @@ Building::writeSAM(const char *path)
     json_t *nodePosn = json_array();
     json_array_append(nodePosn,json_real(0.0));
     json_array_append(nodePosn,json_real(0.0));
+    json_array_append(nodePosn,json_real(0.0));    
     json_object_set(node, "crd", nodePosn);
     json_object_set(node, "ndf", json_integer(ndf));
+    json_t *constraints = json_array();
+    for (int i=0; i<ndf; i++) {
+      json_array_append(constraints, json_integer(1));
+    }
+    json_object_set(node, "constraints", constraints);
+    
     json_array_append(nodes,node);
 
+
+    json_t *nodeMapping = json_array();    
     json_t *nodeMap = json_object();
-    json_object_set(nodeMap,"cline",json_integer(1));
-    json_object_set(nodeMap,"floor",json_integer(1));
+    json_object_set(nodeMap,"cline",json_string("response"));
+    json_object_set(nodeMap,"floor",json_string(std::to_string(0).c_str()));
     json_object_set(nodeMap,"node",json_integer(1));
     json_array_append(nodeMapping, nodeMap);
-
+    
     for(int i=0;i<nStory;++i) {
+      
+      nodeMap = json_object();
+      json_object_set(nodeMap,"cline",json_string("response"));
+      json_object_set(nodeMap,"floor",json_string(std::to_string(i+1).c_str()));
+      json_object_set(nodeMap,"node",json_integer(i+2));
+      json_array_append(nodeMapping, nodeMap);
 
       json_t *node = json_object();
       json_t *element = json_object();
@@ -293,17 +342,22 @@ Building::writeSAM(const char *path)
       json_object_set(node, "name", json_integer(i+2)); // +2 as we need node at 1
       json_object_set(node, "mass", json_real(floorParams[i].mass));
       json_t *nodePosn = json_array();
-      json_array_append(nodePosn,json_real(floorParams[i].floor*storyheight));
       json_array_append(nodePosn,json_real(0.0));
+      json_array_append(nodePosn,json_real(0.0));            
+      json_array_append(nodePosn,json_real(floorParams[i].floor*storyheight));
+
       json_object_set(node, "crd", nodePosn);
       json_object_set(node, "ndf", json_integer(ndf));
+      json_t *constraints = json_array();
+      for (int j=0; j<ndf; j++) {
+	if (j == 0 || j == 1)
+	  json_array_append(constraints, json_integer(0));	  
+	else
+	  json_array_append(constraints, json_integer(1));	  
+      }
+      json_object_set(node, "constraints", constraints);
 
-      nodeMap = json_object();
-      json_object_set(nodeMap,"cline",json_integer(1));
-      json_object_set(nodeMap,"floor",json_integer(i+2));
-      json_object_set(nodeMap,"node",json_integer(i+2));
-      json_array_append(nodeMapping, nodeMap);
-
+      
       json_object_set(element, "name", json_integer(interstoryParams[i].story));
       if (ndf == 1)
 	json_object_set(element, "type", json_string("shear_beam"));
@@ -346,9 +400,15 @@ Building::writeSAM(const char *path)
     json_object_set(geometry,"nodes",nodes);
     json_object_set(geometry,"elements",elements);
     json_object_set(root,"Geometry",geometry);
+    json_object_set(root,"NodeMapping",nodeMapping);    
 
-    json_object_set(root,"NodeMapping",nodeMapping);
-
+    json_t *units = json_object();
+    json_object_set(units,"force", json_string("kN"));
+    json_object_set(units,"length", json_string("m"));
+    json_object_set(units,"temperature", json_string("C"));
+    json_object_set(units,"time", json_string("sec"));           
+    json_object_set(root, "units", units);
+    
     // write the file & clean memory
     json_dump_file(root,path,0);
     json_object_clear(root);

@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	arg++;
 	filenameEDP = argv[arg];
       }
-      else if (strcmp(argv[arg], "--filenameBIM") ==0) {
+      else if (strcmp(argv[arg], "--filenameAIM") ==0) {
 	arg++;
 	filenameINPUT = argv[arg];
       }

@@ -7,6 +7,9 @@
 #include <clara.hpp>
 #include "command_parser.h"
 
+#include <filesystem>
+#include <iostream>
+
 CommandParser::CommandParser(int& number_of_arguments, char* arguments[]) {
   command_parser_ =
       clara::detail::Help(configuration_.help).optional() |
@@ -19,7 +22,7 @@ CommandParser::CommandParser(int& number_of_arguments, char* arguments[]) {
           "Location where generated time history should be stored")
           .required() |
       clara::detail::Opt(configuration_.bim_file,
-                         "BIM file location")["--filenameBIM"](
+                         "BIM file location")["--filenameAIM"](
           "Location where building information model is stored")
           .required() |
       clara::detail::Opt(configuration_.seed, "Seed value")["--seed"](
@@ -57,9 +60,16 @@ bool CommandParser::seed_provided() const {
 }
 
 int CommandParser::get_seed() const {
+
+
+  std::filesystem::path cwd = std::filesystem::current_path(); // "filename.txt";
+  std::string filePathString = cwd.string();
+  std::size_t loc_dot = filePathString.find_last_of(".");
+  int id =  std::stoi(filePathString.substr(loc_dot+1)) ;
+  
   int seed_value = 0;
   try {
-    seed_value = std::stoi(configuration_.seed);
+    seed_value = std::stoi(configuration_.seed )+ id;
   } catch (const std::exception& e) {
     std::cerr << "ERROR: In CommandParser::get_seed(): Invalid string to int "
                  "conversion. Check input seed value: "

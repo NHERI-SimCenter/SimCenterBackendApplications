@@ -69,6 +69,7 @@ writeErrors theErrorFile; // Error log
 
 int main(int argc, char** argv)
 {
+
 	int nprocs, procno;
 	#ifdef MPI_RUN
 		MPI_Comm comm;
@@ -83,6 +84,10 @@ int main(int argc, char** argv)
 		procno = 0;
 		nprocs = 1;
 		if (procno == 0) std::cerr << "running OpenMP" << std::endl;
+
+		#if !defined(ARMA_USE_OPENMP)
+			#define ARMA_USE_OPENMP
+		#endif
 	#endif
 
 
@@ -125,10 +130,10 @@ int main(int argc, char** argv)
 
 	jsonInput inp(workDir, inpFile, procno);
 
+
 	//
 	//	(2) Construct Nataf Object
 	//
-
 	ERANataf T(inp, procno);
 
 	//
@@ -136,17 +141,60 @@ int main(int argc, char** argv)
 	//	(4-1) FE Analysis - (parallel)
 	//
 
-	T.sample(inp, procno);
-	T.simulateAppBatch(workflowDriver, osType, runType, inp, procno, nprocs);
+	/*
+	auto readStart = std::chrono::high_resolution_clock::now();
+	mat C;
+	field<std::string> header;
+	C.load(csv_name("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt"));
+	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+	std::cout << "  - reading took " << readEnd << " s\n";
+	std::cout << C.size() << " s\n";
+
+	for (int i=0; i < 10; i++) {
+		std::cout << C(0,i) << " s\n";
+	}
+	readStart = std::chrono::high_resolution_clock::now();
+	std::vector< std::vector<double> >  V(C.n_rows);
+	for (size_t i = 0; i < C.n_rows; ++i) {
+		V[i] = arma::conv_to< std::vector<double> >::from(C.row(i));
+	};
+	std::cout << "  - conversion took " << readEnd << " s\n";
+	*/
+
+
+	if (inp.femAppName.compare("SurrogateGP") == 0) {
+
+		T.sample(inp, procno);
+		T.simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, procno, nprocs);
+
+	} else if (inp.UQmethod.compare("Monte Carlo") == 0) {
+
+		T.sample(inp, procno);
+		T.simulateAppBatch(workflowDriver, osType, runType, inp, procno, nprocs);
+
+	}
+
 
 	//
-	//	
-	
-	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.txt", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt", inp.nrv, inp.nqoi, "csv", inp.nmc);
+	//	(3-1)(4-1) Read dataset
 
+	else if (inp.UQmethod.compare("Import Data Files") == 0) {
+		if (runType.compare("runningLocal") != 0) {
+			std::string errMsg = "Error running SimCenterUQ: No need to run remotely when the data set is provided. Please try running it locally.";
+			theErrorFile.write(errMsg);
+		}
+		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc);
+	}
+
+	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.txt", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt", inp.nrv, inp.nqoi, "csv", inp.nmc);
+	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.bin", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.bin", inp.nrv, inp.nqoi, "binary", inp.nmc);
+	//
 
 	//std::cout<<"Just testing this location 1\n";
-
+	else {
+		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " NOT unknown.";
+		theErrorFile.write(errMsg);
+	}
 
 	//
 	//	(5) Run UQ analysis
@@ -159,12 +207,13 @@ int main(int argc, char** argv)
 		//
 
 
-		std::cout << "Writing Tab.out" << std::endl;
-		runForward ForwardResults(T.X, T.G, procno);
-		ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
-
-		std::cout << "Running sensitivity analysis" << std::endl;
-		runGSA GsaResults(T.X, T.G, inp.groups, inp.PCAvarRatioThres, inp.qoiVectRange, 1, procno, nprocs); // int Kos = 25;
+		if (inp.UQmethod.compare("Import Data Files") != 0) {
+			std::cout << "Writing Tab.out" << std::endl;
+			runForward ForwardResults(T.X, T.G, procno);
+			ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
+		}
+		std::cout << "Preparing sensitivity analysis" << std::endl;
+		runGSA GsaResults(T.X, T.G, inp.groups, inp.PCAvarRatioThres, inp.qoiVectRange, 10, procno, nprocs); // int Kos = 25;
 		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count()/1.e3;
 		GsaResults.writeOutputs(inp, elapsedTime, procno); //	Write dakota.out
 	}
@@ -181,7 +230,7 @@ int main(int argc, char** argv)
 		ForwardResults.writeOutputs(inp, procno);		//	Write dakota.out <- curretly not being used anywhere
 	}
 	theErrorFile.close();
-	if (procno == 0) std::cout << "Elapsed time: " << elapsedTime << " s\n";
+	if (procno == 0) std::cout << "Elapsed TOTAL ANALYSIS time: " << elapsedTime << " s\n";
 
 	#ifdef MPI_RUN
 		MPI_Finalize();

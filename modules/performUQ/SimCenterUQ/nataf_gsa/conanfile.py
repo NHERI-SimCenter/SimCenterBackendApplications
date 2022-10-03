@@ -2,23 +2,21 @@ from conans import ConanFile, CMake, tools
 import os
 
 class simCenterBackendApps(ConanFile):
-    name = "SimCenterBackendApplications"
-    version = "1.2.2"
-    description = "Backend applications for SimCenter software"
-    license = "BSD 3-Clause"
-    author = "Michael Gardner mhgardner@berkeley.edu"
-    url = "https://github.com/NHERI-SimCenter/SimCenterBackendApplications"
+    name = "nataf_gsa_cpp_mpi"
+    version = "1.0.0"
+    description = "Software for creating nataf_gsa"
+    license = "BSD 2-Clause"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
     default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True}    
     generators = "cmake"
     build_policy = "missing"
-    requires = "nlopt/2.6.2", \
-               "boost/1.74.0", \
-               "eigen/3.3.7", \
+    requires = "eigen/3.3.7", \
                "jsonformoderncpp/3.7.0", \
                "mkl-static/2019.4@simcenter/stable", \
-                   
+               "boost/1.74.0", \
+               "nlopt/2.6.2",\
+
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
@@ -34,6 +32,10 @@ class simCenterBackendApps(ConanFile):
 
     def configure(self):
         self.options.shared = False
+
+        if self.settings.os == "Windows":
+            self.options["libcurl"].with_winssl = True
+            self.options["libcurl"].with_openssl = False
 
     def configure_cmake(self):
         cmake = CMake(self)
@@ -52,14 +54,3 @@ class simCenterBackendApps(ConanFile):
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
-
-
-# [requires]
-
-# [generators]
-# 	cmake
-	
-# [options]
-#     mkl-static:threaded=False
-
-

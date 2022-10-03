@@ -13,6 +13,8 @@ Release
 *.user
 *~
 build
+build_w_arpack
+
 
 # Libraries
 *.lib

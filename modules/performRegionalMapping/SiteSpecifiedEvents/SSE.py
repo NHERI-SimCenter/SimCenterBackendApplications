@@ -44,8 +44,9 @@ import argparse, json
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from scipy.cluster.vq import vq
 
-def create_event(building_file, event_grid_file):
+def create_event(asset_file, event_grid_file):
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -54,78 +55,66 @@ def create_event(building_file, event_grid_file):
 
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
     
-    # The subgrid that will hold the grid points only for the building
-    sub_grid = pd.DataFrame()
+    # store the locations of the grid points in X
+    lat_E = grid_df['Latitude']
+    lon_E = grid_df['Longitude']
+    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
     
+    # load the asset data file
+    with open(asset_file, 'r') as f:
+        asset_dict = json.load(f)
 
-    # load the building data file
-    with open(building_file, 'r') as f:
-        bldg_dict = json.load(f)
 
-
-    # prepare a dataframe that holds building filenames and locations
-    bim_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
-                          index=np.arange(len(bldg_dict)))
+    # prepare a dataframe that holds asset filenames and locations
+    AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict)))
     
-    for i, bldg in enumerate(bldg_dict):
-        with open(bldg['file'], 'r') as f:
-            bldg_data = json.load(f)
+    for i, asset in enumerate(asset_dict):
+        with open(asset['file'], 'r') as f:
+            asset_data = json.load(f)
 
-        bldg_loc = bldg_data['GeneralInformation']['location']
-        bim_df.iloc[i]['Longitude'] = bldg_loc['longitude']
-        bim_df.iloc[i]['Latitude'] = bldg_loc['latitude']
-        bim_df.iloc[i]['file'] = bldg['file']
+        asset_loc = asset_data['GeneralInformation']['location']
+        AIM_df.iloc[i]['Longitude'] = asset_loc['longitude']
+        AIM_df.iloc[i]['Latitude'] = asset_loc['latitude']
+        AIM_df.iloc[i]['file'] = asset['file']
         
         
-    # store building locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(bim_df['Longitude'], bim_df['Latitude'])])
+    # store asset locations in Y
+    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])])
     
-    # iterate through the buildings and find the overlapping grid points
-    for it in Y:
-    
-        bldLon = it[0]
-        bldLat = it[1]
-        
-        # Get the grid point for the building
-        for idx, row in grid_df.iterrows():
-            lon = row['Longitude']
-            lat = row['Latitude']
-            
-            #print(it[0],it[1])
-            if np.isclose(bldLon,lon,1.0e-6,1.0e-6) == True and np.isclose(bldLat,lat,1.0e-6,1.0e-6) == True:
-                sub_grid = sub_grid.append(row)
-                break
+#    print("****Y",Y)
     
     #print(Y)
     #print(sub_grid)
     
-    if sub_grid.empty :
-        print('Could not find any grid points that overlap with the buildings!')
-        return
+    # Find the index of the closest point - each index corresponds to the gridpoint index
+    closest, distances = vq(Y, X)
     
-    # store the locations of the grid points in X
-    lat_E = sub_grid['Latitude']
-    lon_E = sub_grid['Longitude']
-    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
+#    print("****closest",closest)
+#    print("****distances",distances)
+#
+#    print("****num found",len(closest))
+#    print("****num Y",np.size(Y, 0))
+#    print("****num X",np.size(X, 0))
 
-    # check to ensure we found all of the buildings
-    if Y.size != X.size :
-        print("Error, the number of buildings needs to be equal to the number of grid points")
-        print("The number of buildings is "+str(Y.size/2)+" and the number of grid points is " + str(X.size/2))
-        return
+
+    # check to ensure we found all of the assets
+    if len(closest) != np.size(Y, 0) :
+        print("Error, the number of assets needs to be equal to the number of grid points")
+        print("The number of assets is "+str(np.size(Y, 0))+" and the number of grid points is " + len(closest))
+        return 1
         
         
-    # iterate through the buildings and store the selected events in the BIM
-    for idx, bim_id in enumerate(bim_df.index):
+    # iterate through the assets and store the selected events in the AIM
+    for idx, AIM_id in enumerate(AIM_df.index):
 
-        # open the BIM file
-        bldg_file = bim_df.iloc[bim_id]['file']
-        with open(bldg_file, 'r') as f:
-            bldg_data = json.load(f)
-
-
-        # this is the preferred behavior, the else clause is left for legacy inputs
-        if sub_grid.iloc[0]['GP_file'][-3:] == 'csv':
+        # open the AIM file
+        asset_file = AIM_df.iloc[AIM_id]['file']
+       
+        with open(asset_file, 'r') as f:
+            asset_data = json.load(f)
+        
+        # this is the preferred behavior, the else caluse is left for legacy inputs
+        if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
 
             # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and
@@ -135,26 +124,28 @@ def create_event(building_file, event_grid_file):
             # Load the first file and identify if this is a grid of IM or GM
             # information. GM grids have GM record filenames defined in the
             # grid point files.
-            first_file = pd.read_csv(event_dir / sub_grid.iloc[0]['GP_file'],
-                                     header=0)
+            first_file = pd.read_csv(event_dir / grid_df.iloc[0]['GP_file'],header=0)
+            
             if first_file.columns[0]=='TH_file':
                 event_type = 'timeHistory'
             else:
                 event_type = 'intensityMeasure'
+                
             event_count = first_file.shape[0]
 
             # collect the list of events and scale factors
             event_list = []
             scale_list = []
-
+            
+            closestPnt = grid_df.iloc[closest[idx]]
 
             # if the grid has ground motion records...
             if event_type == 'timeHistory':
 
                 # load the file for the selected grid point
-                event_collection_file = sub_grid.iloc[idx]['GP_file']
-                event_df = pd.read_csv(event_dir / event_collection_file,
-                                       header=0)
+                event_collection_file = closestPnt['GP_file']
+                
+                event_df = pd.read_csv(event_dir / event_collection_file, header=0)
 
                 # append the GM record name to the event list
                 event_list.append(event_df.iloc[idx,0])
@@ -169,7 +160,7 @@ def create_event(building_file, event_grid_file):
             elif event_type == 'intensityMeasure':
 
                 # save the collection file name and the IM row id
-                event_list.append(sub_grid.iloc[idx]['GP_file']+f'x{0}')
+                event_list.append(closestPnt['GP_file']+f'x{0}')
 
                 # IM collections are not scaled
                 scale_list.append(1.0)
@@ -178,7 +169,7 @@ def create_event(building_file, event_grid_file):
         else:
             event_list = []
             for e, i in zip(nbr_samples, ind_list):
-                event_list += [sub_grid.iloc[i]['GP_file'],]*e
+                event_list += [closestPnt['GP_file'],]*e
 
             scale_list = np.ones(len(event_list))
 
@@ -193,23 +184,25 @@ def create_event(building_file, event_grid_file):
             #    })
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
-        # save the event dictionary to the BIM
-        bldg_data['Events'] = {
+        # save the event dictionary to the AIM
+        # TODO: we assume there is only one event
+        # handling multiple events will require more sophisticated inputs
+        asset_data['Events'][0].update({
             #"EventClassification": "Earthquake",
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
             "type": event_type
             #"type": "SimCenterEvents"
-        }
+        })
 
-        with open(bldg_file, 'w') as f:
-            json.dump(bldg_data, f, indent=2)
+        with open(asset_file, 'w') as f:
+            json.dump(asset_data, f, indent=2)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--buildingFile')
+    parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
     args = parser.parse_args()
 
-    create_event(args.buildingFile, args.filenameEVENTgrid)
+    create_event(args.assetFile, args.filenameEVENTgrid)

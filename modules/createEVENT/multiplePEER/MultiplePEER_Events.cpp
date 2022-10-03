@@ -16,9 +16,9 @@ int createSimCenterEvent(json_t *obj);
 
 int main(int argc, char **argv)
 {
-  // StandardEarthquakeEDP --filenameBIM file --filenameEVENT file? <--getRV>
+  // StandardEarthquakeEDP --filenameAIM file --filenameEVENT file? <--getRV>
 
-  char *filenameBIM = argv[2];     
+  char *filenameAIM = argv[2];     
   char *filenameEVENT = argv[4]; 
 
   // create output JSON object for EVENT file and create events array
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
   // load INPUT file
   json_error_t error;
-  json_t *rootINPUT = json_load_file(filenameBIM, 0, &error);
+  json_t *rootINPUT = json_load_file(filenameAIM, 0, &error);
   json_t *eventsArray = json_object_get(rootINPUT,"Events");  
 
   if (argc == 6) { 
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     // then copy file to replace EVENT
     // 
 
-    json_t *rootINPUT = json_load_file(filenameBIM, 0, &error);
+    json_t *rootINPUT = json_load_file(filenameAIM, 0, &error);
     json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
     
     // load INPUT file

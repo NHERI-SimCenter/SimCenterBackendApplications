@@ -548,8 +548,8 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     bim_im = bim_file.get('IntensityMeasure', None)
     output_periods = []
     if bim_im is None:
-        # search it again under UQ_Method/surrogateMethodInfo
-        bim_im = bim_file['UQ_Method']['surrogateMethodInfo'].get('IntensityMeasure',None)
+        # search it again under UQ/surrogateMethodInfo
+        bim_im = bim_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure',None)
     if bim_im is None or len(bim_im)==0:
         # no intensity measure calculation requested
         return
@@ -663,7 +663,7 @@ if __name__ == '__main__':
     )
 
     # BIM file - getting units
-    parser.add_argument('--filenameBIM', help = "Name of the BIM file")
+    parser.add_argument('--filenameAIM', help = "Name of the BIM file")
     # Event file - getting time histories
     parser.add_argument('--filenameEVENT', help = "Name of the EVENT file")
     # IM file - getting time histories
@@ -677,4 +677,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # run and return
-    sys.exit(main(args.filenameBIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled))
+    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled))
