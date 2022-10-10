@@ -1,4 +1,3 @@
-
 /* *****************************************************************************
 Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 All rights reserved.
@@ -78,18 +77,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 
 	uqType = UQjson["UQ"]["uqType"];
-	std::string uqEngine = UQjson["UQ"]["uqEngine"];
-
-	if ((uqEngine.compare("SimCenterUQ")==0)) {
-		// pass
-	}
-	else
-	{
-		//*ERROR*
-		std::string errMsg = "Error reading json: this is SimCenterUQ(forward) backend, but the user requested " + uqEngine;
-		theErrorFile.write(errMsg);
-	}
-
 
 	if ((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) {
 		// pass
