@@ -14,7 +14,7 @@ import os
 import csv
 
 
-def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variables, workdirMain, seed,
+def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variables, workdirMain, seed,
              calibrationData, numExperiments, covarianceMatrixList, edpNamesList, edpLengthsList, scaleFactors,
              shiftFactors, run_type, logFile, MPI_size, workflowDriver, parallelizeMCMC=True):
     """ Runs TMCMC Algorithm """
@@ -28,7 +28,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
 
     # Initialize other TMCMC variables
     Nm_steps = Nm_steps_max
-    Adap_calc_Nsteps = True
+    Adap_calc_Nsteps = False
     Adap_scale_cov = True  
     scalem = 1  # cov scale factor
     evidence = 1  # model evidence
@@ -187,7 +187,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
         # perform MCMC starting at each Smcap (total: N) for Nm_steps
         Em = (scalem ** 2) * Cm  # Proposal dist covariance matrix
 
-        numProposals = N * Nm_steps
+        numProposals = numChains * Nm_steps
         totalNumberOfModelEvaluations += numProposals
         logFile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(numProposals))
         logFile.flush()
@@ -205,7 +205,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
                                          calibrationData, numExperiments, covarianceMatrixList,
                                          edpNamesList, edpLengthsList, scaleFactors,
                                          shiftFactors, workflowDriver)
-                                        for j1 in range(N)], )
+                                        for j1 in range(N)], chunksize=numChains)
             else:
                 logFile.write("\n\n\t\tRemote run - MCMC steps")
                 logFile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
@@ -216,7 +216,7 @@ def RunTMCMC(N, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variable
                               edpNamesList, edpLengthsList, scaleFactors,
                               shiftFactors, workflowDriver)
                              for j1 in range(N)]
-                results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
+                results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables, chunksize=numChains))
         else:
             logFile.write("\n\n\t\tLocal run - MCMC steps, not parallelized")
             logFile.write("\n\t\t\tNumber of processors being used: {}".format(1))
