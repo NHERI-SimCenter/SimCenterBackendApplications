@@ -100,7 +100,7 @@ class runPLoM:
         # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)
 
         # read PLoM parameters
-        surrogateInfo = job_config["UQ_Method"]["surrogateMethodInfo"]
+        surrogateInfo = job_config["UQ"]["surrogateMethodInfo"]
         if self._parse_plom_parameters(surrogateInfo):
             msg = 'runPLoM.__init__: Error in reading PLoM parameters.'
             self.errlog.exit(msg)
@@ -192,15 +192,15 @@ class runPLoM:
         ## KZ modified 0331
         with open(self.input_file,'r') as f:
             tmp = json.load(f)
-        tmp['UQ_Method']['uqType'] = 'Forward Propagation'
-        tmp['UQ_Method']['parallelExecution'] = True
-        samplingObj = tmp['UQ_Method']['surrogateMethodInfo']['samplingMethod']
-        tmp['UQ_Method']['samplingMethodData']=dict()
+        tmp['UQ']['uqType'] = 'Forward Propagation'
+        tmp['UQ']['parallelExecution'] = True
+        samplingObj = tmp['UQ']['surrogateMethodInfo']['samplingMethod']
+        tmp['UQ']['samplingMethodData']=dict()
         ## KZ modified 0331
-        tmp['UQ_Method']['uqEngine'] = 'Dakota'
+        tmp['UQ']['uqEngine'] = 'Dakota'
         tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
-            tmp['UQ_Method']['samplingMethodData'][key] = item
+            tmp['UQ']['samplingMethodData'][key] = item
         with open('sc_dakota_plom.json','w') as f:
             json.dump(tmp, f, indent=2)
 
@@ -210,12 +210,26 @@ class runPLoM:
         print(command_line)
         # run command
 
+        dakotaTabPath = os.path.join(self.work_dir,"dakotaTab.out")
+        print(dakotaTabPath)
+
         try:
             #os.system(command_line)
             subprocess.call(command_line)
         except:
             print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
             print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
+
+        if not os.path.exists(dakotaTabPath):
+            try: 
+                subprocess.call(command_line)
+            except:
+                print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
+                print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
+
+        if not os.path.exists(dakotaTabPath):
+            msg = 'Dakota preprocessor did not run successfully'
+            self.errlog.exit(msg)
 
         # remove the new dakota.json
         #os.remove('sc_dakota_plom.json')
@@ -788,8 +802,8 @@ def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
     f.close()
 
     # check the uq type
-    if job_config['UQ_Method']['uqType'] != 'PLoM Model':
-        msg = 'UQ type inconsistency : user wanted <' + job_config['UQ_Method']['uqType'] + \
+    if job_config['UQ']['uqType'] != 'PLoM Model':
+        msg = 'UQ type inconsistency : user wanted <' + job_config['UQ']['uqType'] + \
             '> but called <PLoM Model> program'
         errlog.exit(msg)
 

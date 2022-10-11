@@ -97,9 +97,11 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
         WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID)
 
         # create the workflow driver file
+        print("sWHALE CREATE DRIVER")
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
 
         # gather all Randomvariables and EDP's and place in new input file for UQ
+        print("sWHALE GATHER INPUTS")        
         WF.gather_workflow_inputs(assetID, assetAIM);
 
         # run uq engine to simulate response

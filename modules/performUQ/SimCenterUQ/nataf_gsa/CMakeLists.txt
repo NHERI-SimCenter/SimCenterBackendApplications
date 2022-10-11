@@ -111,9 +111,9 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 		add_compile_definitions(OPENMP_RUN)
 	endif() 
 
-	install(TARGETS nataf_gsa DESTINATION bin)
-	add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
 
+	install(TARGETS nataf_gsa DESTINATION ../..)
+	add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
 
 
 else()
@@ -234,6 +234,7 @@ else()
 	endif() 
 
 
-	install(TARGETS nataf_gsa DESTINATION bin)
+	install(TARGETS nataf_gsa DESTINATION ${PROJECT_SOURCE_DIR}/applications/performUQ)
 	
 endif()
+

@@ -92,7 +92,7 @@ def main(args):
 
     if uqData['samples'] is None: # this happens when the uq details are stored at the wrong place in the AIM file
         with open(aimName) as data_file:
-            uq_info = json.load(data_file)['UQ_Method']
+            uq_info = json.load(data_file)['UQ']
 
         if 'samplingMethodData' in uq_info.keys():
             uq_info = uq_info['samplingMethodData']
