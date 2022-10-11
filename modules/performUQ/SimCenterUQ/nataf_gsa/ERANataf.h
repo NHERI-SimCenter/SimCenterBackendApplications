@@ -108,7 +108,7 @@ public:
 						string workflowDriver,
 						string osType,
 						string runType);
-	void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
+	void simulateAppBatchSurrogate(string workflowDriver,
 						string osType,
 						string runType,
 						jsonInput inp,
