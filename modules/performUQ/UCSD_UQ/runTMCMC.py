@@ -205,7 +205,7 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
                                          calibrationData, numExperiments, covarianceMatrixList,
                                          edpNamesList, edpLengthsList, scaleFactors,
                                          shiftFactors, workflowDriver)
-                                        for j1 in range(N)], chunksize=numChains)
+                                        for j1 in range(N)])
             else:
                 logFile.write("\n\n\t\tRemote run - MCMC steps")
                 logFile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
@@ -216,7 +216,7 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
                               edpNamesList, edpLengthsList, scaleFactors,
                               shiftFactors, workflowDriver)
                              for j1 in range(N)]
-                results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables, chunksize=numChains))
+                results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
         else:
             logFile.write("\n\n\t\tLocal run - MCMC steps, not parallelized")
             logFile.write("\n\t\t\tNumber of processors being used: {}".format(1))

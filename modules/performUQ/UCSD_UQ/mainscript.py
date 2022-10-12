@@ -728,7 +728,7 @@ if __name__ == "__main__":
 
         mytrace, log_evidence = RunTMCMC(
             Np,
-            TMCMC.numChains,
+            Np,
             AllPars,
             Nm_steps_max,
             Nm_steps_maxmax,
