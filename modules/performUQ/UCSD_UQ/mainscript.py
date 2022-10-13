@@ -233,13 +233,16 @@ class TMCMCquoFEM:
         self.MPI_size = self.getMPI_size()
         self.parallelizeMCMC = True
 
+        self.recommendedNumChains = 50
+        self.numBurnInSteps = 10
+        self.numSkipSteps = 1
+
 
     def getMPI_size(self):
         if self.runType == "runningRemote":
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
-
 
     def syncLogFile(self):
         self.logFile.flush()
@@ -249,6 +252,35 @@ class TMCMCquoFEM:
     def updateUQInfo(self, numberOfSamples, seedVal):
         self.numberOfSamples = numberOfSamples
         self.seedVal = seedVal
+    
+    def findNumProcessorsAvailable(self):
+        if self.runType == "runningLocal":
+            import multiprocessing as mp
+            self.numProcessors = mp.cpu_count()
+        elif self.runType == "runningRemote":
+            from mpi4py import MPI
+            self.comm = MPI.COMM_WORLD
+            self.numProcessors = self.comm.Get_size()
+        else:
+            self.numProcessors = 1
+    
+    def getNumChains(self, numberOfSamples, runType, numProcessors):
+        if runType == "runningLocal":
+            self.numChains = int(min(numProcessors, self.recommendedNumChains))
+        elif runType == "runningRemote":
+            self.numChains = int(max(numProcessors, self.recommendedNumChains))
+        else:
+            self.numChains = self.recommendedNumChains
+        
+        if self.numChains < numberOfSamples:
+            self.numChains = numberOfSamples
+    
+    def getNumStepsPerChainAfterBurnIn(self, numParticles, numChains):
+        self.numStepsAfterBurnIn = int(np.ceil(numParticles/numChains)) * self.numSkipSteps
+        # self.numStepsPerChain = numBurnInSteps + numStepsAfterBurnIn
+
+    
+
 
 # ======================================================================================================================
 
@@ -497,7 +529,10 @@ if __name__ == "__main__":
     # # ================================================================================================================
 
     TMCMC = TMCMCquoFEM(mainscriptPath, workdirMain, runType, workflowDriver, logFile) 
-    TMCMC.updateUQInfo(numberOfSamples, seedVal)   
+    TMCMC.updateUQInfo(numberOfSamples, seedVal)  
+    TMCMC.findNumProcessorsAvailable() 
+    TMCMC.getNumChains(numberOfSamples, runType, TMCMC.numProcessors)
+    TMCMC.getNumStepsPerChainAfterBurnIn(numberOfSamples, TMCMC.numChains)
 
     # # ================================================================================================================
 
@@ -547,8 +582,8 @@ if __name__ == "__main__":
     logFile.write("\n\tNumber of particles: {}".format(Np))
 
     # number of max MCMC steps
-    Nm_steps_max = 10
-    Nm_steps_maxmax = 10
+    Nm_steps_max = TMCMC.numBurnInSteps + TMCMC.numStepsAfterBurnIn
+    Nm_steps_maxmax = Nm_steps_max
     logFile.write("\n\tNumber of MCMC steps in first stage: {}".format(Nm_steps_max))
     logFile.write(
         "\n\tMax. number of MCMC steps in any stage: {}".format(Nm_steps_maxmax)
@@ -692,6 +727,7 @@ if __name__ == "__main__":
         syncLogFile(logFile)
 
         mytrace, log_evidence = RunTMCMC(
+            Np,
             Np,
             AllPars,
             Nm_steps_max,
