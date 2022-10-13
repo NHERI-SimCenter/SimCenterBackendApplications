@@ -431,7 +431,10 @@ class WorkflowApplication(object):
 
         self.inputs = api_info['Inputs']
         self.outputs = api_info['Outputs']
-        self.defaults = api_info['DefaultValues']
+        if 'DefaultValues' in api_info.keys():        
+            self.defaults = api_info['DefaultValues']
+        else:
+            self.defaults = None;                        
 
     def set_pref(self, preferences, ref_path):
         """
@@ -808,6 +811,7 @@ class Workflow(object):
                         
         
     def _parse_inputs(self):
+        
         """
         Load the information about the workflow to run
 
@@ -864,7 +868,6 @@ class Workflow(object):
         
         # workflow input is input file
         default_values['workflowInput']=os.path.basename(self.input_file)
-        
         if default_values is not None:
 
             log_msg("The following workflow defaults were overwritten:", prepend_timestamp=False)
@@ -909,6 +912,7 @@ class Workflow(object):
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
+
 
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
@@ -998,7 +1002,6 @@ class Workflow(object):
 
         log_msg('\nRequested workflow:', prepend_timestamp=False)
         
-        
         for app_type, app_object in self.workflow_apps.items():
             recursiveLog(app_type, app_object)
 
@@ -1023,6 +1026,9 @@ class Workflow(object):
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
 
+        #print("INPUT FILE", self.input_file)
+        #print("INPUT_DATA", input_data)
+        
         # Get the workflow assets
         assetsWfapps = self.workflow_apps.get('Assets', None)
 
@@ -1157,7 +1163,18 @@ class Workflow(object):
                 # Open the AIM file and add the unit information to it
                 with open(AIM_file, 'r') as f:
                     AIM_data = json.load(f)
-                        
+
+                if 'DefaultValues' in input_data.keys():
+                    AIM_data.update({'DefaultValues':input_data['DefaultValues']})
+
+                if 'commonFileDir' in input_data.keys():
+                    AIM_data.update({'commonFileDir':input_data['commonFileDir']})
+                if 'remoteAppDir' in input_data.keys():
+                    AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
+
+                if 'localAppDir' in input_data.keys():
+                    AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
+                                    
                 if self.units != None:
                     AIM_data.update({'units': self.units})
     
@@ -1270,8 +1287,7 @@ class Workflow(object):
         ----------
         
         asst_id - the asset id
-        AIM_file_path - file path to the AIM file
-
+        AIM_file  - file path to the existing AIM file
         """
         log_msg('Initializing the simulation directory\n')
 
@@ -1300,6 +1316,7 @@ class Workflow(object):
             # Make a copy of the AIM file
             src = posixpath.join(aimDir,aimFileName)
             dst = posixpath.join(aimDir, f'{asst_id}/templatedir/{aimFileName}')
+            # dst = posixpath.join(aimDir, f'{asst_id}/templatedir/AIM.json')
             
             try:
                 shutil.copy(src,dst)
@@ -1325,7 +1342,7 @@ class Workflow(object):
                 if file.endswith('.j'):
                     os.remove(file)
 
-            # Make a copy of the input file and rename it to BIM.json
+            # Make a copy of the input file and rename it to AIM.json
             # This is a temporary fix, will be removed eventually.
             dst = Path(os.getcwd()) / AIM_file_path
             #dst = posixpath.join(os.getcwd(),AIM_file)
@@ -1531,9 +1548,10 @@ class Workflow(object):
                         prepend_timestamp=False)
                 log_div()
 
-
     def gather_workflow_inputs(self, asst_id=None, AIM_file_path = 'AIM.json'):
 
+        #print("gather_workflow_inputs")
+        
         if 'UQ' in self.workflow_apps.keys():        
             
             # Get the directory to the asset class dir, e.g., buildings
@@ -1557,13 +1575,14 @@ class Workflow(object):
             arg_list.append(u'{}'.format(abs_path.as_posix()))
             # arg_list.append(u'{}'.format(abs_path))
             
-            inputFilePath = os.path.dirname(self.input_file)
-            
+            #inputFilePath = os.path.dirname(self.input_file)
+            inputFilePath = os.getcwd()
             inputFilename = os.path.basename(self.input_file)
-                        
             pathToScFile = posixpath.join(inputFilePath,'sc_'+inputFilename)
+            
 
-            arg_list.append(u'{}'.format(self.input_file))
+            #arg_list.append(u'{}'.format(self.input_file))
+            arg_list.append(u'{}'.format(AIM_file_path))            
             arg_list.append(u'{}'.format(pathToScFile))
             arg_list.append(u'{}'.format(self.default_values['driverFile']))
             arg_list.append(u'{}'.format('sc_'+self.default_values['driverFile']))
@@ -1581,7 +1600,6 @@ class Workflow(object):
 
             self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
-            print(command)
 
             result, returncode = run_command(command)
             
@@ -1596,6 +1614,7 @@ class Workflow(object):
             
                 
     def create_driver_file(self, app_sequence, asst_id=None, AIM_file_path = 'AIM.json'):
+
         """
         This functipon creates a UQ driver file. This is only done if UQ is in the workflow apps
 
@@ -1606,19 +1625,24 @@ class Workflow(object):
         if 'UQ' in self.workflow_apps.keys():
             
             log_msg('Creating the workflow driver file')
+            #print('ASSET_ID', asst_id)
+            #print('AIM_FILE_PATH', AIM_file_path)
                         
             aimDir = os.path.dirname(AIM_file_path)
-                    
+            aimFile = os.path.basename(AIM_file_path)
+            
             # If the path is not provided, assume the AIM file is in the run dir
             if os.path.exists(aimDir) == False :
                 aimDir = self.run_dir
-                
+            
             os.chdir(aimDir)
 
             if asst_id is not None:
                 os.chdir(asst_id)
 
             os.chdir('templatedir')
+
+            #print('PWD', os.getcwd())
 
             driver_script = u''
 
@@ -1656,9 +1680,10 @@ class Workflow(object):
 
                         driver_script += create_command(command_list) + u'\n'
 
-            log_msg('Workflow driver script:', prepend_timestamp=False)
-            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
-
+                        
+            #log_msg('Workflow driver script:', prepend_timestamp=False)
+            #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
+            
             driverFile = self.default_values['driverFile']
             
             # KZ: for windows, to write bat
@@ -1707,7 +1732,12 @@ class Workflow(object):
             
             workflow_app = self.workflow_apps['UQ']
 
+            # FMK
+            if asst_id is not None:
+                workflow_app=workflow_app['Buildings']
+            
             if AIM_file_path is not None:
+            
                 workflow_app.defaults['filenameAIM'] = AIM_file_path
                 #for input_var in workflow_app.inputs:
                 #    if input_var['id'] == 'filenameAIM':
@@ -1739,7 +1769,6 @@ class Workflow(object):
             #        command_list.append(edpFile)
                     
             command = create_command(command_list)
-            print('FMK COMMAND: ' + command)
 
             log_msg('Simulation command:', prepend_timestamp=False)
             log_msg('\n{}\n'.format(command), prepend_timestamp=False,
@@ -1766,8 +1795,15 @@ class Workflow(object):
 
                     # if the DL is coupled with response estimation, we need to sort the results
                     DL_app = self.workflow_apps.get('DL', None)
+
+                    # FMK
+                    if asst_id is not None:
+                        DL_app=DL_app['Buildings']
+
                     if DL_app is not None:
+
                         is_coupled = DL_app.pref.get('coupled_EDP', None)
+
                         if is_coupled:
                             if 'eventID' in dakota_out.columns:
                                 events = dakota_out['eventID'].values
@@ -1776,11 +1812,13 @@ class Workflow(object):
                                 dakota_out = dakota_out.iloc[sorter, :]
                                 dakota_out.index = np.arange(dakota_out.shape[0])
 
-                    dakota_out.to_csv('response.csv')                
+                    
+                    dakota_out.to_csv('response.csv')
+
                     log_msg('Response simulation finished successfully.',
                         prepend_timestamp=False)
                 except:
-                    log_msg('DakotaTab.out not found. Response.csv not created.',
+                    log_msg('dakotaTab.out not found. Response.csv not created.',
                             prepend_timestamp=False)
 
             elif self.run_type in ['set_up', 'runningRemote']:
