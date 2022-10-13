@@ -92,21 +92,19 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
         # initialize the working directory
         #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
         WF.init_simdir(assetID, assetAIM)
-        
+
         # prepare the input files for the simulation
         WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID)
-
+        
         # create the workflow driver file
-        print("sWHALE CREATE DRIVER")
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
 
         # gather all Randomvariables and EDP's and place in new input file for UQ
-        print("sWHALE GATHER INPUTS")        
         WF.gather_workflow_inputs(assetID, assetAIM);
 
         # run uq engine to simulate response
         WF.simulate_response(AIM_file_path = assetAIM, asst_id = assetID)
-
+        
     if WF.run_type != 'set_up':
 
         # run dl engine to estimate losses
@@ -120,7 +118,6 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
     log_msg('Workflow completed.')
     log_div(prepend_blank_space=False)
     log_div(prepend_blank_space=False)
-
 
 
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
@@ -168,9 +165,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         working_dir = working_dir,
         app_dir = app_dir)
         
-        
     runSWhale(inputs = input_file, WF = WF, prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],  WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
-
 
 
 if __name__ == '__main__':
