@@ -1,16 +1,13 @@
-# Based on the IN-CORE censusutil method
-# Modified by Dr. Stevan Gavrilovic, UC Berkeley, SimCenter
-
-
 # Copyright (c) 2021 University of Illinois and others. All rights reserved.
 #
 # This program and the accompanying materials are made available under the
 # terms of the Mozilla Public License v2.0 which accompanies this distribution,
 # and is available at https://www.mozilla.org/en-US/MPL/2.0/
 
+# Modified by Dr. Stevan Gavrilovic, UC Berkeley, SimCenter to reduce number of required dependencies
+
 import json
 from math import isnan
-from pathlib import Path
 
 import requests
 import os
@@ -27,6 +24,31 @@ logger = globals.LOGGER
 class CensusUtil():
     """Utility methods for Census data and API"""
 
+    @staticmethod
+    def get_census_data(state:str=None, county:str=None, year:str=None, data_source:str=None, columns:str=None,
+                         geo_type:str = None, data_name:str = None):
+        """Create json and pandas DataFrame for census api request result.
+
+            Args:
+                state (str): A string of state FIPS with comma separated format. e.g, '41, 42' or '*'
+                county (str): A string of county FIPS with comma separated format. e.g, '017,029,045,091,101' or '*'
+                year (str): Census Year.
+                data_source (str): Census dataset name. Can be found from https://api.census.gov/data.html
+                columns (str): Column names for request data with comma separated format.
+                    e.g, 'GEO_ID,NAME,P005001,P005003,P005004,P005010'
+                geo_type (str): Name of geo area. e.g, 'tract:*' or 'block%20group:*'
+                data_name (str): Optional for getting different dataset. e.g, 'component'
+
+            Returns:
+                dict, object: A json list and a dataframe for census api result
+
+        """
+        # create census api data url
+        data_url = CensusUtil.generate_census_api_url(state, county, year, data_source, columns, geo_type, data_name)
+
+        api_json, api_df = CensusUtil.request_census_api(data_url)
+
+        return api_json, api_df
 
     @staticmethod
     def generate_census_api_url(state:str=None, county:str=None, year:str=None, data_source:str=None, columns:str=None,
@@ -74,7 +96,6 @@ class CensusUtil():
                 data_url = f'{data_url}&for={geo_type}&in=state:{state}&in=county:{county}'
 
         return data_url
-        
 
     @staticmethod
     def request_census_api(data_url):
@@ -99,103 +120,116 @@ class CensusUtil():
         api_json = request_json.json()
         api_df = pd.DataFrame(columns=api_json[0], data=api_json[1:])
 
-        return api_df
-
+        return api_json, api_df
 
     @staticmethod
-    def get_blockdata_for_demographics(state_counties: list, census_vars: list, vintage: str = "2010",
-                                       out_csv: bool = False, out_shapefile: bool = False,
-                                       out_geopackage: bool = False, out_geojson: bool = False,
-                                       file_name: str = "file_name", output_dir: str = "output_dir"):
+    def get_fips_by_state_county(state:str, county:str, year:str=2010):
+        """Get FIPS code by using state and county name.
 
-        """Generate population demographics dataset from census
+            Args:
+                state (str): State name. e.g, 'illinois'
+                county (str): County name. e.g, 'champaign'
+            Returns:
+                str: A string of FIPS code
+
+        """
+        api_url = f'https://api.census.gov/data/{year}/dec/sf1?get=NAME&for=county:*'
+        out_fips = None
+        api_json = requests.get(api_url)
+        query_value = county + ' County, ' + state
+        if api_json.status_code != 200:
+            error_msg = "Failed to download the data from Census API. Please look up Google for getting the FIPS code."
+            raise Exception(error_msg)
+
+        # content_json = api_json.json()
+        df = pd.DataFrame(columns=api_json.json()[0], data=api_json.json()[1:])
+        selected_row = df.loc[df['NAME'].str.lower() == query_value.lower()]
+        if selected_row.size > 0:
+            out_fips = selected_row.iloc[0]['state'] + selected_row.iloc[0]['county']
+        else:
+            error_msg = "There is no FIPS code for given state and county combination."
+            logger.error(error_msg)
+            raise Exception(error_msg)
+
+        return out_fips
+
+    @staticmethod
+    def get_fips_by_state(state:str, year:str=2010):
+        """Create Geopandas DataFrame for population dislocation analysis from census dataset.
+
+            Args:
+                state (str): State name. e.g, 'illinois'
+
+            Returns:
+                obj: A json list of county FIPS code in the given state
+
+        """
+        api_url = f'https://api.census.gov/data/{year}/dec/sf1?get=NAME&for=county:*'
+        api_json = requests.get(api_url)
+        if api_json.status_code != 200:
+            error_msg = "Failed to download the data from Census API."
+            logger.error(error_msg)
+            raise Exception(error_msg)
+
+        # content_json = api_json.json()
+        out_fips = api_json.json()
+
+        return out_fips
+
+    @staticmethod
+    def get_blockgroupdata_for_dislocation(state_counties: list, vintage: str = "2010", dataset_name: str = 'dec/sf1',
+                                           out_csv: bool = False, out_shapefile: bool = False,
+                                           out_geopackage: bool = False, out_geojson: bool = False,
+                                           geo_name: str = "geo_name", program_name: str = "program_name"):
+
+        """Create Geopandas DataFrame for population dislocation analysis from census dataset.
 
         Args:
             state_counties (list): A List of concatenated State and County FIPS Codes.
                 see full list https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143_013697
             vintage (str): Census Year.
+            dataset_name (str): Census dataset name.
             out_csv (bool): Save output dataframe as csv.
             out_shapefile (bool): Save processed census geodataframe as shapefile.
             out_geopackage (bool): Save processed census geodataframe as geopackage
             out_geojson (bool): Save processed census geodataframe as geojson
-            file_name (str): Name of the output files.
-            output_dir (str): Name of directory used to save output files.
-            
+            geo_name (str): Name of geo area - used for naming output files.
+            program_name (str): Name of directory used to save output files.
+
+        Returns:
+            obj, dict: A dataframe for dislocation analysis, and
+            a dictionary containing geodataframe and folium map
+
         """
         
-        # ***********************
-        # Get the population data
-        # ***********************
-        
-        # dataset_name (str): Census dataset name.
-        dataset_name = 'dec'
-        
-        
-        get_pop_vars = 'GEO_ID,NAME'
-        int_vars = census_vars
-                    
-        if vintage == '2000' or vintage == '2010' :
-                    
-            dataset_name += '/sf1'
-            
-            # If no variable parameters passed by the user, use the default for 2000 and 2010 vintage
-            if not census_vars:
-                get_pop_vars += ',P005001,P005003,P005004,P005010'
-                
-                # GEO_ID  = Geographic ID
-                # NAME    = Geographic Area Name
-                # P005001 = Total
-                # P005003 = Total!!Not Hispanic or Latino!!White alone
-                # P005004 = Total!!Not Hispanic or Latino!!Black or African American alone
-                # P005010 = Total!!Hispanic or Latino
-                
-                # List variables to convert from dtype object to integer
-                int_vars = ['P005001', 'P005003', 'P005004', 'P005010']
-            else:
-                # Add the variables provided by the user
-                for var in census_vars:
-                    get_pop_vars +=','+var
-        
-        elif vintage == '2020' :
-                        
-            dataset_name += '/pl'
-            
+        if vintage == '2000' or '2010' :
             # Variable parameters
-            # If no variable parameters passed by the user, use the default for 2000 and 2010 vintage
-            if not census_vars:
-                get_pop_vars += ',P2_001N,P2_002N,P2_005N,P2_006N'
-                
-                # GEO_ID  = Geographic ID
-                # NAME    = Geographic Area Name
-                # P2_001N=!!Total:
-                # P2_002N=!!Total:!!Hispanic or Latino
-                # P2_005N=!!Total:!!Not Hispanic or Latino:!!Population of one race:!!White alone
-                # P2_006N=!!Total:!!Not Hispanic or Latino:!!Population of one race:!!Black or African American alone
+            get_vars = 'GEO_ID,NAME,P005001,P005003,P005004,P005010'
             
-                # List variables to convert from dtype object to integer
-                int_vars = ['P2_001N', 'P2_002N', 'P2_005N', 'P2_006N']
-            else:
-                # Add the variables provided by the user
-                for var in census_vars:
-                    get_pop_vars +=','+var
-
+            # List variables to convert from dtype object to integer
+            int_vars = ['P005001', 'P005003', 'P005004', 'P005010']
+            
+            # GEO_ID  = Geographic ID
+            # NAME    = Geographic Area Name
+            # P005001 = Total
+            # P005003 = Total!!Not Hispanic or Latino!!White alone
+            # P005004 = Total!!Not Hispanic or Latino!!Black or African American alone
+            # P005010 = Total!!Hispanic or Latino
+#        elif vintage == '2020' :
+            # TODO: 2020 support
         else :
-            print('Only 2000, 2010, and 2020 decennial census supported')
+            print('Only 2000 and 2010 decennial census supported')
             return
-        
-        # Make directory to save output
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
 
-        # Make a directory to save downloaded shapefiles
-        shapefile_dir = Path(output_dir)/'shapefiletemp'
-        
+        # Make directory to save output
+        if not os.path.exists(program_name):
+            os.mkdir(program_name)
+
+        # Make a directory to save downloaded shapefiles - folder will be made then deleted
+        shapefile_dir = 'shapefiletemp'
         if not os.path.exists(shapefile_dir):
             os.mkdir(shapefile_dir)
 
-        # Set to hold the states - needed for 2020 census shapefile download
-        stateSet = set()
-        
         # loop through counties
         appended_countydata = []  # start an empty container for the county data
         for state_county in state_counties:
@@ -204,86 +238,51 @@ class CensusUtil():
             county = state_county[2:5]
             logger.debug('State:  '+state)
             logger.debug('County: '+county)
-            
-            # Add the state to the set
-            stateSet.add(state)
 
             # Set up hyperlink for Census API
             api_hyperlink = CensusUtil.generate_census_api_url(
-                state, county, vintage, dataset_name, get_pop_vars, 'block:*')
+                state, county, vintage, dataset_name, get_vars, 'block%20group')
 
             logger.info("Census API data from: " + api_hyperlink)
 
             # Obtain Census API JSON Data
-            apidf = CensusUtil.request_census_api(api_hyperlink)
-
+            apijson, apidf = CensusUtil.request_census_api(api_hyperlink)
+            print(apidf.size)
             # Append county data makes it possible to have multiple counties
             appended_countydata.append(apidf)
-            
+
         # Create dataframe from appended county data
-        cen_block = pd.concat(appended_countydata, ignore_index=True)
+        cen_blockgroup = pd.concat(appended_countydata, ignore_index=True)
 
         # Add variable named "Survey" that identifies Census survey program and survey year
-        cen_block['Survey'] = vintage+' '+dataset_name
+        cen_blockgroup['Survey'] = vintage+' '+dataset_name
 
-        # Set block group FIPS code by concatenating state, county, tract, block fips
-        cen_block['blockid'] = (cen_block['state']+cen_block['county'] +
-                                  cen_block['tract']+cen_block['block'])
-                                  
+        # Set block group FIPS code by concatenating state, county, tract and block group fips
+        cen_blockgroup['bgid'] = (cen_blockgroup['state']+cen_blockgroup['county'] +
+                                  cen_blockgroup['tract']+cen_blockgroup['block group'])
 
         # To avoid problems with how the block group id is read saving it
         # as a string will reduce possibility for future errors
-        cen_block['blockidstr'] = cen_block['blockid'].apply(lambda x: "BLOCK"+str(x).zfill(15))
+        cen_blockgroup['bgidstr'] = cen_blockgroup['bgid'].apply(lambda x: "BG"+str(x).zfill(12))
 
         # Convert variables from dtype object to integer
         for var in int_vars:
-            cen_block[var] = cen_block[var].astype(int)
-            #cen_block[var] = pd.to_numeric(cen_block[var], errors='coerce').convert_dtypes()
+            cen_blockgroup[var] = cen_blockgroup[var].astype(int)
             print(var+' converted from object to integer')
-            
-        
-        if (vintage == '2000' or vintage == '2010') and not census_vars:
-            # Generate new variables
-            cen_block['pwhitebg'] = cen_block['P005003'] / cen_block['P005001'] * 100
-            cen_block['pblackbg'] = cen_block['P005004'] / cen_block['P005001'] * 100
-            cen_block['phispbg'] = cen_block['P005010'] / cen_block['P005001'] * 100
-        
-            # GEO_ID  = Geographic ID
-            # NAME    = Geographic Area Name
-            # P005001 = Total
-            # P005003 = Total!!Not Hispanic or Latino!!White alone
-            # P005004 = Total!!Not Hispanic or Latino!!Black or African American alone
-            # P005010 = Total!!Hispanic or Latino
-        
-        elif vintage == '2020' and not census_vars:
-            
-            cen_block['pwhitebg'] = cen_block['P2_005N'] / cen_block['P2_001N'] * 100
-            cen_block['pblackbg'] = cen_block['P2_006N'] / cen_block['P2_001N'] * 100
-            cen_block['phispbg'] = cen_block['P2_002N'] / cen_block['P2_001N'] * 100
-            
-            # GEO_ID  = Geographic ID
-            # NAME    = Geographic Area Name
-            # P2_001N=!!Total:
-            # P2_002N=!!Total:!!Hispanic or Latino
-            # P2_005N=!!Total:!!Not Hispanic or Latino:!!Population of one race:!!White alone
-            # P2_006N=!!Total:!!Not Hispanic or Latino:!!Population of one race:!!Black or African American alone
-            
-        
-        # *******************************
-        # Download and extract shapefiles
-        # *******************************
-    
-    
-        # Download the shapefile information for the block groups in the select counties.
+
+        # Generate new variables
+        cen_blockgroup['pwhitebg'] = cen_blockgroup['P005003'] / cen_blockgroup['P005001'] * 100
+        cen_blockgroup['pblackbg'] = cen_blockgroup['P005004'] / cen_blockgroup['P005001'] * 100
+        cen_blockgroup['phispbg'] = cen_blockgroup['P005010'] / cen_blockgroup['P005001'] * 100
+
+        # ### Obtain Data - Download and extract shapefiles
+        # The Block Group IDs in the Census data are associated with the Block Group boundaries that can be mapped.
+        # To map this data, we need the shapefile information for the block groups in the select counties.
         #
         # These files can be found online at:
-        
-        # For 2010 Census
-        # https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/2010/
-        
-        # For 2020 Census
-        # https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/
-        
+        # https://www2.census.gov/geo/tiger/TIGER2010/BG/2010/
+
+        # ### Download and extract shapefiles
         # Block group shapefiles are downloaded for each of the selected counties from
         # the Census TIGER/Line Shapefiles at https://www2.census.gov/geo/tiger.
         # Each counties file is downloaded as a zipfile and the contents are extracted.
@@ -293,471 +292,73 @@ class CensusUtil():
         # *EPSG: 4326 uses a coordinate system (Lat, Lon)
         # This coordinate system is required for mapping with folium.
 
-
-        appended_shp_files = []  # start an empty container for the county shapefiles
-        
-        merge_id = 'GEOID'+vintage[2:4]
-
-        # Tigerline provides the blocks for each county, thus each county needs to be downloaded individually
-        if vintage == '2000' or vintage == '2010' :
-        
-            if vintage == '2000' :
-                merge_id = 'BLKIDFP00'
-        
-            # loop through counties
-            for state_county in state_counties:
-    
-                # county_fips = state+county
-                filename = f'tl_2010_{state_county}_tabblock'+vintage[2:4]
-    
-                # Use wget to download the TIGER Shapefile for a county
-                # options -quiet = turn off wget output
-                # add directory prefix to save files to folder named after program name
-                shapefile_url = f'https://www2.census.gov/geo/tiger/TIGER2010/TABBLOCK/{vintage}/' + filename + '.zip'
-                print(('Downloading Census Block Shapefiles for State_County: '
-                    + state_county + ' from: '+shapefile_url).format(filename=filename))
-    
-                zip_file = os.path.join(shapefile_dir, filename + '.zip')
-                urllib.request.urlretrieve(shapefile_url, zip_file)
-    
-                with ZipFile(zip_file, 'r') as zip_obj:
-                    zip_obj.extractall(path=shapefile_dir)
-                    
-                # Delete the zip file
-                os.remove(zip_file)
-                    
-                if Path(zip_file).is_file() == True :
-                    print("Error deleting the zip file ",zip_file)
-                
-                print('filename',f'{filename}.shp')
-                
-                # Read shapefile to GeoDataFrame
-                gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
-    
-                # Set projection to EPSG 4326, which is required for folium
-                gdf = gdf.to_crs(epsg=4326)
-    
-                # Append county data
-                appended_shp_files.append(gdf)
-            
-            
-        elif vintage == '2020' :
-                
-            # loop through the states
-            for state in stateSet:
-
-                filename = f'tl_2020_{state}_tabblock20'
-                
-                # Check if file is cached
-                path = Path(f'{shapefile_dir}/{filename}.shp')
-
-                # if file does not exist
-                if path.is_file() == False :
-                    # Use wget to download the TIGER Shapefile for a county
-                    # options -quiet = turn off wget output
-                    # add directory prefix to save files to folder named after program name
-                    shapefile_url = 'https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/' + filename + '.zip'
-                    
-                    print(('Downloading Census Block Shapefiles for State: '
-                        + state + ' from: '+shapefile_url).format(filename=filename))
-    
-                    zip_file = os.path.join(shapefile_dir, filename + '.zip')
-                    urllib.request.urlretrieve(shapefile_url, zip_file)
-    
-                    with ZipFile(zip_file, 'r') as zip_obj:
-                        zip_obj.extractall(path=shapefile_dir)
-                    
-                    # Delete the zip file
-                    os.remove(zip_file)
-                    
-                    if Path(zip_file).is_file() == True :
-                        print("Error deleting the zip file ",zip_file)
-                                            
-                else:
-                    print(f'Found file {filename}.shp in cache')
-                
-                # Read shapefile to GeoDataFrame
-                gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
-    
-                # Set projection to EPSG 4326, which is required for folium
-                gdf = gdf.to_crs(epsg=4326)
-    
-                # Append county data
-                appended_shp_files.append(gdf)
-        
-           
-        # Create dataframe from appended block files
-        shp_block = pd.concat(appended_shp_files)
-        
-        print('Merging the census population demographics information to the shapefile')
-
-        # Clean Data - Merge Census demographic data to the appended shapefiles
-        cen_shp_block_merged = pd.merge(shp_block, cen_block, left_on=merge_id, right_on='blockid', how='left')
-
-        # Set paramaters for file save
-        save_columns = ['blockid', 'blockidstr', 'Survey']  # set column names to save
-        
-        if not census_vars:
-            save_columns.extend(['pblackbg', 'phispbg', 'pwhitebg'])
-
-        # ### Explore Data - Map merged block group shapefile and Census data
-
-        savefile = file_name  # set file name
-
-        if out_csv:
-            CensusUtil.convert_dislocation_pd_to_csv(cen_block, save_columns, output_dir, savefile)
-
-        if out_shapefile:
-            CensusUtil.convert_dislocation_gpd_to_shapefile(cen_shp_block_merged, output_dir, savefile)
-
-        if out_geopackage:
-            CensusUtil.convert_dislocation_gpd_to_geopackage(cen_shp_block_merged, output_dir, savefile)
-            
-        if out_geojson:
-            CensusUtil.convert_dislocation_gpd_to_geojson(cen_shp_block_merged, output_dir, savefile)
-
-        # clean up shapefile temp directory
-        # Try to remove tree; if failed show an error using try...except on screen
-#        try:
-#            shutil.rmtree(shapefile_dir)
-#            if not out_shapefile and not out_csv and not out_html and not out_geopackage and not out_geojson:
-#                shutil.rmtree(output_dir)
-#        except OSError as e:
-#            error_msg = "Error: Failed to remove either " + shapefile_dir \
-#                        + " or " + output_dir + " directory"
-#            logger.error(error_msg)
-#            raise Exception(error_msg)
-
-        
-        print("Done creating population demographics shapefile")
-        
-        return cen_block[save_columns]
-
-
-    @staticmethod
-    def get_blockgroupdata_for_income(state_counties: list, acs_vars: list, vintage: str = "2010",
-                                      out_csv: bool = False, out_shapefile: bool = False,
-                                      out_geopackage: bool = False, out_geojson: bool = False,
-                                      file_name: str = "file_name", output_dir: str = "output_dir"):
-
-        """Generate household income dataset from census
-
-        Args:
-            state_counties (list): A List of concatenated State and County FIPS Codes.
-                see full list https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143_013697
-            vintage (str): Census Year.
-            out_csv (bool): Save output dataframe as csv.
-            out_shapefile (bool): Save processed census geodataframe as shapefile.
-            out_geopackage (bool): Save processed census geodataframe as geopackage
-            out_geojson (bool): Save processed census geodataframe as geojson
-            file_name (str): Name of the output files.
-            output_dir (str): Name of directory used to save output files.
-            
-        """
-
-        # dataset_name (str): ACS dataset name.
-        dataset_name = 'acs/acs5'
-
-        # *****************************
-        # Get the household income data
-        # *****************************
-        
-        get_income_vars = 'GEO_ID,NAME'
-        int_vars = acs_vars
-        
-        # Use the default vars if none provided by the user
-        if not acs_vars :
-                
-            # Income data varaible tags for 2010, 2015, and 2020 5-year ACS
-            # B19001_001E - Estimate!!Total
-            # B19001_002E - Estimate!!Total!!Less than $10,000
-            # B19001_003E - Estimate!!Total!!$10,000 to $14,999
-            # B19001_004E - Estimate!!Total!!$15,000 to $19,999
-            # B19001_005E - Estimate!!Total!!$20,000 to $24,999
-            # B19001_006E - Estimate!!Total!!$25,000 to $29,999
-            # B19001_007E - Estimate!!Total!!$30,000 to $34,999
-            # B19001_008E - Estimate!!Total!!$35,000 to $39,999
-            # B19001_009E - Estimate!!Total!!$40,000 to $44,999
-            # B19001_010E - Estimate!!Total!!$45,000 to $49,999
-            # B19001_011E - Estimate!!Total!!$50,000 to $59,999
-            # B19001_012E - Estimate!!Total!!$60,000 to $74,999
-            # B19001_013E - Estimate!!Total!!$75,000 to $99,999
-            # B19001_014E - Estimate!!Total!!$100,000 to $124,999
-            # B19001_015E - Estimate!!Total!!$125,000 to $149,999
-            # B19001_016E - Estimate!!Total!!$150,000 to $199,999
-            # B19001_017E - Estimate!!Total!!$200,000 or more
-            # B19013_001E - Estimate!!Median household income in the past 12 months (in 2016 inflation-adjusted dollars)
-            
-            get_income_vars += ',B19001_001E,B19001_002E,B19001_003E,B19001_004E,\
-B19001_005E,B19001_006E,B19001_007E,B19001_008E,B19001_009E,B19001_010E,\
-B19001_011E,B19001_012E,B19001_013E,B19001_014E,B19001_015E,\
-B19001_016E,B19001_017E,B19013_001E'
-        
-            int_vars = ['B19001_001E','B19001_002E','B19001_003E','B19001_004E',\
-                        'B19001_005E','B19001_006E','B19001_007E','B19001_008E','B19001_009E','B19001_010E',\
-                        'B19001_011E','B19001_012E','B19001_013E','B19001_014E','B19001_015E',\
-                        'B19001_016E','B19001_017E','B19013_001E']
-
-        else:
-            # Add the variables provided by the user
-            for var in acs_vars:
-                get_income_vars +=','+var
-        
-
-        # Make directory to save output
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-
-        # Make a directory to save downloaded shapefiles
-        shapefile_dir = Path(output_dir)/'shapefiletemp'
-        
-        if not os.path.exists(shapefile_dir):
-            os.mkdir(shapefile_dir)
-            
-        # Set to hold the states - needed for 2020 census shapefile download
-        stateSet = set()
-
         # loop through counties
-        appended_countydata = []  # start an empty container for the county data
+        appended_countyshp = []  # start an empty container for the county shapefiles
         for state_county in state_counties:
-            # deconcatenate state and county values
-            state = state_county[0:2]
-            county = state_county[2:5]
-            logger.debug('State:  '+state)
-            logger.debug('County: '+county)
-            
-            # Add the state to the set
-            stateSet.add(state)
 
-            # Set up hyperlink for Census API
-            api_hyperlink = ''
-            
-            if vintage == '2010' :
-                api_hyperlink = CensusUtil.generate_census_api_url(
-                    state, county, vintage, dataset_name, get_income_vars, 'tract')
-            else:
-                # Set up hyperlink for Census API
-                api_hyperlink = CensusUtil.generate_census_api_url(
-                    state, county, vintage, dataset_name, get_income_vars, 'block%20group')
+            # county_fips = state+county
+            filename = f'tl_2010_{state_county}_bg10'
 
-            logger.info("Census API data from: " + api_hyperlink)
+            # Use wget to download the TIGER Shapefile for a county
+            # options -quiet = turn off wget output
+            # add directory prefix to save files to folder named after program name
+            shapefile_url = 'https://www2.census.gov/geo/tiger/TIGER2010/BG/2010/' + filename + '.zip'
+            print(('Downloading Shapefiles for State_County: '
+                   + state_county + ' from: '+shapefile_url).format(filename=filename))
 
-            # Obtain Census API JSON Data
-            apidf = CensusUtil.request_census_api(api_hyperlink)
+            zip_file = os.path.join(shapefile_dir, filename + '.zip')
+            urllib.request.urlretrieve(shapefile_url, zip_file)
 
-            # Append county data makes it possible to have multiple counties
-            appended_countydata.append(apidf)
-            
+            with ZipFile(zip_file, 'r') as zip_obj:
+                zip_obj.extractall(path="shapefiletemp")
+            # Read shapefile to GeoDataFrame
+            gdf = gpd.read_file(f'shapefiletemp/{filename}.shp')
+
+            # Set projection to EPSG 4326, which is required for folium
+            gdf = gdf.to_crs(epsg=4326)
+
+            # Append county data
+            appended_countyshp.append(gdf)
 
         # Create dataframe from appended county data
-        cen_blockgroup = pd.concat(appended_countydata, ignore_index=True)
-
-        # Add variable named "Survey" that identifies Census survey program and survey year
-        cen_blockgroup['Survey'] = vintage+' '+dataset_name
-
-        # 2010 ACS API does not support block group level resolution, use tract
-        if vintage == '2010' :
-            # Set tract FIPS code by concatenating state, county, and tract
-            cen_blockgroup['tractid'] = (cen_blockgroup['state']+cen_blockgroup['county'] +
-                                      cen_blockgroup['tract'])
-            
-            # To avoid problems with how the tract id is read saving it
-            # as a string will reduce possibility for future errors
-            cen_blockgroup['tractidstr'] = cen_blockgroup['tractid'].apply(lambda x:  "TRACT"+str(x).zfill(11))
-        else:
-            # Set block group FIPS code by concatenating state, county, tract and block group fips
-            cen_blockgroup['bgid'] = (cen_blockgroup['state']+cen_blockgroup['county'] +
-                                      cen_blockgroup['tract']+cen_blockgroup['block group'])
-    
-            # To avoid problems with how the block group id is read saving it
-            # as a string will reduce possibility for future errors
-            cen_blockgroup['bgidstr'] = cen_blockgroup['bgid'].apply(lambda x:  "BG"+str(x).zfill(12))
-
-        # Convert variables from dtype object to integer
-        for var in int_vars:
-            cen_blockgroup[var] = pd.to_numeric(cen_blockgroup[var], errors='coerce').convert_dtypes()
-            #cen_blockgroup[var] = cen_blockgroup[var].astype(int)
-            print(var+' converted from object to integer')
-
-            
-        # ### Obtain Data - Download and extract shapefiles
-        # The Block Group IDs in the Census data are associated with the Block Group boundaries that can be mapped.
-        # To map this data, we need the shapefile information for the block groups in the select counties.
-        #
-        # These files can be found online at:
-        # https://www2.census.gov/geo/tiger/TIGER2010/BG/2010/
-      
-        
-
-        # *******************************
-        # Download and extract shapefiles
-        # *******************************
-    
-    
-        # Download the shapefile information for the block groups in the select counties.
-        #
-        # These files can be found online at:
-        
-        # For 2010 ACS - API only supports up to the tract level
-        # https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/
-        
-        # For 2015 and 2020 ACS - API supports up to the block group level
-        # https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/
-        
-        # Block group shapefiles are downloaded for each of the selected counties from
-        # the Census TIGER/Line Shapefiles at https://www2.census.gov/geo/tiger.
-        
-        # Each state/counties file is downloaded as a zipfile and the contents are extracted.
-        # The shapefiles are reprojected to EPSG 4326 and appended as a single shapefile
-        # (as a GeoPandas GeoDataFrame) containing block groups for all of the selected counties.
-        #
-        # *EPSG: 4326 uses a coordinate system (Lat, Lon)
-        # This coordinate system is required for mapping with folium.
-
-
-        appended_shp_files = []  # start an empty container for the county/state shapefiles
-        
-        # Feature attributes that need to match to join layers
-        merge_id_left = 'GEOID'
-        merge_id_right = ''
-        
-        # Tigerline provides the blocks for each county, thus each county needs to be downloaded individually
-        if vintage == '2010' :
-        
-            merge_id_left += '10'
-            
-            merge_id_right = 'tractid'
-            
-            # loop through counties
-            for state_county in state_counties:
-    
-                # county_fips = state+county
-                filename = f'tl_2010_{state_county}_tract10'
-    
-                # Use wget to download the TIGER Shapefile for a county
-                # options -quiet = turn off wget output
-                # add directory prefix to save files to folder named after program name
-                shapefile_url = 'https://www2.census.gov/geo/tiger/TIGER2010/TRACT/2010/' + filename + '.zip'
-                
-                print(('Downloading Census Block Shapefiles for State_County: '
-                    + state_county + ' from: '+shapefile_url).format(filename=filename))
-    
-                zip_file = os.path.join(shapefile_dir, filename + '.zip')
-                urllib.request.urlretrieve(shapefile_url, zip_file)
-    
-                with ZipFile(zip_file, 'r') as zip_obj:
-                    zip_obj.extractall(path=shapefile_dir)
-                    
-                # Delete the zip file
-                os.remove(zip_file)
-                    
-                if Path(zip_file).is_file() == True :
-                    print("Error deleting the zip file ",zip_file)
-                    
-                # Read shapefile to GeoDataFrame
-                gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
-
-                # Set projection to EPSG 4326, which is required for folium
-                gdf = gdf.to_crs(epsg=4326)
-    
-                # Append county data
-                appended_shp_files.append(gdf)
-            
-            
-        elif vintage == '2015' or vintage == '2020' :
-            
-            merge_id_right = 'bgid'
-        
-            # loop through the states
-            for state in stateSet:
-
-                filename = f'tl_{vintage}_{state}_bg'
-                
-                # Check if file is cached
-                path = Path(f'{shapefile_dir}/{filename}.shp')
-
-                # if file does not exist
-                if path.is_file() == False :
-                    # Use wget to download the TIGER Shapefile for the state
-                    # options -quiet = turn off wget output
-                    # add directory prefix to save files to folder named after program name
-                    shapefile_url = f'https://www2.census.gov/geo/tiger/TIGER{vintage}/BG/' + filename + '.zip'
-                    
-                    print(('Downloading Census Block Shapefiles for State: '
-                        + state + ' from: '+shapefile_url).format(filename=filename))
-    
-                    zip_file = os.path.join(shapefile_dir, filename + '.zip')
-                    urllib.request.urlretrieve(shapefile_url, zip_file)
-    
-                    with ZipFile(zip_file, 'r') as zip_obj:
-                        zip_obj.extractall(path=shapefile_dir)
-                    
-                    # Delete the zip file
-                    os.remove(zip_file)
-                    
-                    if Path(zip_file).is_file() == True :
-                        print("Error deleting the zip file ",zip_file)
-                                            
-                else:
-                    print(f'Found file {filename}.shp in cache: ',path)
-                
-                # Read shapefile to GeoDataFrame
-                gdf = gpd.read_file(f'{shapefile_dir}/{filename}.shp')
-    
-                # Set projection to EPSG 4326, which is required for folium
-                gdf = gdf.to_crs(epsg=4326)
-    
-                # Append county data
-                appended_shp_files.append(gdf)
-
-        # Create dataframe from appended county data
-        shp_blockgroup = pd.concat(appended_shp_files)
-        
-        print('Merging the ACS household income information to the shapefile')
+        shp_blockgroup = pd.concat(appended_countyshp)
 
         # Clean Data - Merge Census demographic data to the appended shapefiles
         cen_shp_blockgroup_merged = pd.merge(shp_blockgroup, cen_blockgroup,
-                                             left_on=merge_id_left, right_on=merge_id_right, how='left')
+                                             left_on='GEOID10', right_on='bgid', how='left')
 
         # Set paramaters for file save
-        if vintage == '2010' :
-            save_columns = ['tractid', 'tractidstr', 'Survey']  # set column names to save
-        else:
-            save_columns = ['bgid', 'bgidstr', 'Survey']  # set column names to save
+        save_columns = ['bgid', 'bgidstr', 'Survey', 'pblackbg', 'phispbg']  # set column names to save
 
         # ### Explore Data - Map merged block group shapefile and Census data
 
-        savefile = file_name  # set file name
+        savefile = geo_name  # set file name
 
         if out_csv:
-            CensusUtil.convert_dislocation_pd_to_csv(cen_blockgroup, save_columns, output_dir, savefile)
+            CensusUtil.convert_dislocation_pd_to_csv(cen_blockgroup, save_columns, program_name, savefile)
 
         if out_shapefile:
-            CensusUtil.convert_dislocation_gpd_to_shapefile(cen_shp_blockgroup_merged, output_dir, savefile)
+            CensusUtil.convert_dislocation_gpd_to_shapefile(cen_shp_blockgroup_merged, program_name, savefile)
 
         if out_geopackage:
-            CensusUtil.convert_dislocation_gpd_to_geopackage(cen_shp_blockgroup_merged, output_dir, savefile)
+            CensusUtil.convert_dislocation_gpd_to_geopackage(cen_shp_blockgroup_merged, program_name, savefile)
             
         if out_geojson:
-            CensusUtil.convert_dislocation_gpd_to_geojson(cen_shp_blockgroup_merged, output_dir, savefile)
+            CensusUtil.convert_dislocation_gpd_to_geojson(cen_shp_blockgroup_merged, program_name, savefile)
 
         # clean up shapefile temp directory
         # Try to remove tree; if failed show an error using try...except on screen
-#        try:
-#            shutil.rmtree(shapefile_dir)
-#            if not out_shapefile and not out_csv and not out_html and not out_geopackage and not out_geojson:
-#                shutil.rmtree(output_dir)
-#        except OSError as e:
-#            error_msg = "Error: Failed to remove either " + shapefile_dir \
-#                        + " or " + output_dir + " directory"
-#            logger.error(error_msg)
-#            raise Exception(error_msg)
-
-        print("Done creating household income shapefile")
+        try:
+            shutil.rmtree(shapefile_dir)
+            if not out_shapefile and not out_csv and not out_html and not out_geopackage and not out_geojson:
+                shutil.rmtree(program_name)
+        except OSError as e:
+            error_msg = "Error: Failed to remove either " + shapefile_dir \
+                        + " or " + program_name + " directory"
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
         return cen_blockgroup[save_columns]
-
-
 
     @staticmethod
     def convert_dislocation_gpd_to_shapefile(in_gpd, programname, savefile):
@@ -820,3 +421,27 @@ B19001_016E,B19001_017E,B19013_001E'
         in_pd[save_columns].to_csv(programname+'/'+savefile+".csv", index=False)
 
 
+
+    @staticmethod
+    def create_choro_data_from_pd(pd, key):
+        """Create choropleth's choro-data from dataframe.
+
+        Args:
+            pd (object): an Input dataframe.
+            key (str): a string for dictionary key
+        Returns:
+            obj : A dictionary of dataframe
+
+        """
+        temp_id = list(range(len(pd[key])))
+        temp_id = [str(i) for i in temp_id]
+        choro_data = dict(zip(temp_id, pd[key]))
+        # check the minimum value to use it to nan value, since nan value makes an error.
+        min_val = pd[key].min()
+        for item in choro_data:
+            if isnan(choro_data[item]):
+                choro_data[item] = 0
+
+        return choro_data
+
+    

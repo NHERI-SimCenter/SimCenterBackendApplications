@@ -38,91 +38,85 @@
 # Frank McKenna
 # Adam Zsarnóczay
 # Wael Elhaddad
-# Stevan Gavrilovic
 
-import argparse, sys, os
+import argparse, sys
 
-def create_asset_files(output_file, asset_source_file, asset_filter):
+def create_building_files(output_file, building_source_file, bldg_filter):
 
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import json
     import numpy as np
     import pandas as pd
-    
-    # Get the out dir, may not always be in the results folder if multiple assets are used
-    outDir = os.path.dirname(output_file)
-    
-    # check if a filter is provided
-    if asset_filter is not None:
-        assets_requested = []
-        for assets in asset_filter.split(','):
-            if "-" in assets:
-                asset_low, asset_high = assets.split("-")
-                assets_requested += list(range(int(asset_low), int(asset_high)+1))
-            else:
-                assets_requested.append(int(assets))
-        assets_requested = np.array(assets_requested)
-        
-    # load the CSV file with the asset information
-    assets_df = pd.read_csv(asset_source_file, header=0, index_col=0)
 
-    # if there is a filter, then pull out only the required assets
-    if asset_filter is not None:
-        assets_available = assets_df.index.values
-        assets_to_run = assets_requested[
-            np.where(np.in1d(assets_requested, assets_available))[0]]
-        selected_assets = assets_df.loc[assets_to_run]
+    # check if a filter is provided
+    if bldg_filter is not None:
+        bldgs_requested = []
+        for bldgs in bldg_filter.split(','):
+            if "-" in bldgs:
+                bldg_low, bldg_high = bldgs.split("-")
+                bldgs_requested += list(range(int(bldg_low), int(bldg_high)+1))
+            else:
+                bldgs_requested.append(int(bldgs))
+        bldgs_requested = np.array(bldgs_requested)
+
+    # load the CSV file with the building information
+    bldgs_df = pd.read_csv(building_source_file, header=0, index_col=0)
+
+    # if there is a filter, then pull out only the required buildings
+    if bldg_filter is not None:
+        bldgs_available = bldgs_df.index.values
+        bldgs_to_run = bldgs_requested[
+            np.where(np.in1d(bldgs_requested, bldgs_available))[0]]
+        selected_bldgs = bldgs_df.loc[bldgs_to_run]
     else:
-        selected_assets = assets_df
+        selected_bldgs = bldgs_df
 
     # identify the labels
-    labels = selected_assets.columns.values
+    labels = selected_bldgs.columns.values
 
-    assets_array = []
+    buildings_array = []
 
-    # for each asset...
-    for asset_id, asset in selected_assets.iterrows():
+    # for each building...
+    for bldg_id, bldg in selected_bldgs.iterrows():
 
-        # initialize the AIM file
-        AIM_i = {
+        # initialize the BIM file
+        BIM_i = {
             "RandomVariables": [],
             "GeneralInformation": dict(
-                AIM_id = str(int(asset_id)),
+                BIM_id = str(int(bldg_id)),
                 location = {
-                    'latitude': asset["Latitude"],
-                    'longitude': asset["Longitude"]
+                    'latitude': bldg["Latitude"],
+                    'longitude': bldg["Longitude"]
                 }
             )
         }
 
         # save every label as-is
         for label in labels:
-            AIM_i["GeneralInformation"].update({label: asset[label]})
+            BIM_i["GeneralInformation"].update({label: bldg[label]})
 
-        AIM_file_name = "{}-AIM.json".format(asset_id)
-        
-        AIM_file_name = os.path.join(outDir,AIM_file_name)
-            
-        with open(AIM_file_name, 'w') as f:
-            json.dump(AIM_i, f, indent=2)
+        BIM_file_name = "{}-BIM.json".format(bldg_id)
 
-        assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+        with open(BIM_file_name, 'w') as f:
+            json.dump(BIM_i, f, indent=2)
+
+        buildings_array.append(dict(id=str(bldg_id), file=BIM_file_name))
 
     with open(output_file, 'w') as f:
-        json.dump(assets_array, f, indent=2)
+        json.dump(buildings_array, f, indent=2)
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--assetFile',
-        help = "Path to the file that will contain a list of asset ids and "
-               "corresponding AIM filenames")
-    parser.add_argument('--assetSourceFile',
-        help = "Path to the CSV file with the asset inventory")
+    parser.add_argument('--buildingFile',
+        help = "Path to the file that will contain a list of building ids and "
+               "corresponding BIM filenames")
+    parser.add_argument('--buildingSourceFile',
+        help = "Path to the CSV file with the building inventory")
     parser.add_argument('--filter',
-        help = "Filter applied to select a subset of assets from the "
+        help = "Filter applied to select a subset of buildings from the "
                "inventory",
         default=None)
     parser.add_argument('--getRV',
@@ -135,6 +129,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(create_asset_files(args.assetFile, args.assetSourceFile, args.filter))
+        sys.exit(create_building_files(args.buildingFile,
+                                       args.buildingSourceFile, args.filter))
     else:
         pass # not used

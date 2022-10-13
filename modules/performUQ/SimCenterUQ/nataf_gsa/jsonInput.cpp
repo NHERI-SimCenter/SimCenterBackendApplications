@@ -59,7 +59,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	std::filesystem::path jsonPath  = workDir + "/templatedir/" + inpFile;
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
-		std::string errMsg = "Error running UQ engine: Unable to open JSON";
+		std::string errMsg = "Error running UQ engine: Unable to open JSON file: " + jsonPath.u8string();
 		theErrorFile.write(errMsg);
 	}
 
@@ -145,9 +145,11 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		performPCA = false;
 	}
 
+
 	if (UQjson["UQ"].find("performPCA") != UQjson["UQ"].end()) {
 
 		std::string PCAoption = UQjson["UQ"]["performPCA"];
+
 		if ((PCAoption.compare("Yes") == 0)) {
 			performPCA = true;
 		}
@@ -157,8 +159,10 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	}
 
 	if (performPCA && (uqType.compare("Sensitivity Analysis") == 0)) {
+
 		if (UQjson["UQ"].find("PCAvarianceRatio") != UQjson["UQ"].end()) {
 			PCAvarRatioThres = UQjson["UQ"]["PCAvarianceRatio"];
+
 			if (PCAvarRatioThres <= 0) {
 				std::string errMsg = "Error reading input: PCA variance ratio should be greater than zero.";
 				theErrorFile.write(errMsg);
@@ -186,6 +190,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// Basic Info
 	//
+
 
 	UQmethod = UQjson["UQ"]["samplingMethodData"]["method"];
 
@@ -227,6 +232,46 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		if (procno == 0)  std::cout << " Nope we do sampling\n";
 
 	}
+>>>>>>> upstream/master
+
+
+	//
+	// Else if we read samples...
+	//
+	if (procno == 0)  std::cout << " - Import files?";
+
+	if (UQmethod.compare("Import Data Files") == 0) {
+
+		nrv = 0;
+		for (auto& elem : UQjson["randomVariables"])
+		{
+			nrv++;
+			rvNames.push_back(elem["name"]);
+		}
+		inpPath = UQjson["UQ_Method"]["samplingMethodData"]["inpFile"];
+		outPath = UQjson["UQ_Method"]["samplingMethodData"]["outFile"];
+
+		getGroupIdx(UQjson);		
+
+		inpFileType = UQjson["UQ_Method"]["samplingMethodData"]["inpFiletype"];		
+		outFileType = UQjson["UQ_Method"]["samplingMethodData"]["outFiletype"];
+
+		nmc = 0;
+		rseed = 0;
+
+		if (procno == 0)  std::cout << " Yes, no sampling\n";
+
+		return;
+	}
+	else {
+		inpPath = "";
+		outPath = "";
+		nmc = UQjson["UQ_Method"]["samplingMethodData"]["samples"];
+		rseed = UQjson["UQ_Method"]["samplingMethodData"]["seed"];
+
+		if (procno == 0)  std::cout << " Nope we do sampling\n";
+
+	}
 
 
 	//
@@ -242,6 +287,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	nre = 0;
 
 	std::string resampGroupTxt;
+
 	if (UQjson["UQ"]["samplingMethodData"].find("RVdataGroup") != UQjson["UQ"]["samplingMethodData"].end()) {
 		// if the key "sensitivityGroups" exists
 		resampGroupTxt = UQjson["UQ"]["samplingMethodData"]["RVdataGroup"];
@@ -252,6 +298,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		resampGroupTxt = UQjson["UQ"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
 	}
+
 	else {
 		resampGroupTxt = "";
 	}
@@ -839,10 +886,12 @@ jsonInput::getGroupIdx(json UQjson) {
 	//
 
 	bool generate_default_RVsensitivityGroup = true;
+
 	if (UQjson["UQ"].find("RVsensitivityGroup") != UQjson["UQ"].end()) {
 
 		// if the key "sensitivityGroups" exists
 		std::string groupTxt = UQjson["UQ"]["RVsensitivityGroup"];
+
 		if (!groupTxt.empty()) {
 			// if value of "sensitivityGroups" is nonempty
 			groupTxt.erase(remove(groupTxt.begin(), groupTxt.end(), ' '), groupTxt.end()); // remove any white spaces
@@ -865,4 +914,5 @@ jsonInput::getGroupIdx(json UQjson) {
 	}
 
 	ngr = groups.size();
+
 }

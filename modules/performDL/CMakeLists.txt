@@ -1,3 +1,2 @@
 add_subdirectory(pelicun)
 add_subdirectory(pelicun3)
-add_subdirectory(CBCities)
