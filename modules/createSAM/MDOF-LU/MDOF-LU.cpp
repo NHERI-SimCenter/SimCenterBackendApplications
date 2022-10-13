@@ -41,7 +41,7 @@ int main(int argc, char **argv)
       filenameAIM = argv[arg];      
     }
     else if ((strcmp(argv[arg], "-filenameEVENT") == 0) ||
-	     (strcmp(argv[arg], "--filenameEVENT") == 0)) {
+	    (strcmp(argv[arg], "--filenameEVENT") == 0)) {
       arg++;
       filenameEVENT = argv[arg];
     }
@@ -71,9 +71,12 @@ int main(int argc, char **argv)
     }
     arg++;
   }
+  
   json_error_t error;
   json_t *rootBIM = json_load_file(filenameAIM, 0, &error);  
   json_t *modType = json_object_get(rootBIM,"Modeling");
+  json_t *constPath = json_object_get(rootBIM,"commonFileDir");
+  
   if (modType != NULL) {
     json_t *hType = json_object_get(modType,"hazusData");
     json_t *dType = json_object_get(modType,"stdDamping");
@@ -86,10 +89,23 @@ int main(int argc, char **argv)
     }
     if (hType != NULL) {
       const char *filename = json_string_value(hType);
-      strcpy(filenameHazusData, filename);
+      if (constPath == NULL)
+	strcpy(filenameHazusData, filename);
+      else {
+	free(filenameHazusData);
+	const char *constPathString = json_string_value(constPath);
+	int lengthPath = strlen(constPathString);
+	int lengthFile = strlen(filename);
+	filenameHazusData = (char *) malloc(sizeof(char)*lengthPath+lengthFile+2);
+	strcpy(filenameHazusData, constPathString);
+	strcpy(&filenameHazusData[lengthPath], "/");
+	strcpy(&filenameHazusData[lengthPath+1], filename);
+      } 
     }
   }
-    
+
+  // fprintf(stderr, "HAZUS PATH %s\n", filenameHazusData);
+  
   HazusSAM_Generator* aim = new HazusSAM_Generator(filenameHazusData);
   Building *theBuilding = new Building();
   
