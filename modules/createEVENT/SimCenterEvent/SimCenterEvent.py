@@ -314,7 +314,8 @@ def get_records(AIM_file, EVENT_file):
     f_scale_units = event_file['Events'][0]['unitScaleFactor']
 
     # get the scale factor if a user specified it
-    event_data = np.array(AIM_file["Events"]["Events"]).T
+
+    event_data = np.array(AIM_file["Events"][0]["Events"]).T
     event_loc = np.where(event_data == event_id)[1][0]
     f_scale_user = event_data.T[event_loc][1]
 
@@ -322,7 +323,7 @@ def get_records(AIM_file, EVENT_file):
     #                     for evt in AIM_file["Events"]["Events"]])[event_id]
 
     # get the location of the event data
-    data_dir = Path(AIM_file['Events']['EventFolderPath'])
+    data_dir = Path(AIM_file['Events'][0]['EventFolderPath'])
 
     # load the event data and scale it
     event_file['Events'][0].update(
