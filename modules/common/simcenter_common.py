@@ -176,3 +176,32 @@ GPa = 1e9 * Pa
 psi = lbf / inch2
 ksi = 1e3 * psi
 Mpsi = 1e6 * psi
+
+# KZ: unit bases decouple
+unit_bases = {
+    'm2' :{'length': 'm'},
+    'mm2': {'length': 'mm'},
+    'cm2': {'length': 'cm'},
+    'km2': {'length': 'km'},
+    'inch2': {'length': 'in'},
+    'ft2': {'length': 'ft'},
+    'mile2': {'length': 'mile'},
+    'm3' :{'length': 'm'},
+    'mm3': {'length': 'mm'},
+    'cm3': {'length': 'cm'},
+    'km3': {'length': 'km'},
+    'inch3': {'length': 'in'},
+    'ft3': {'length': 'ft'},
+    'mile3': {'length': 'mile'},
+    'cmps': {'length': 'cm', 'time': 'sec'},
+    'mps': {'length': 'm', 'time': 'sec'},
+    'mph': {'length': 'mile', 'time': 'h'},
+    'inchps': {'length': 'inch', 'time': 'sec'},
+    'ftps': {'length': 'ft', 'time': 'sec'},
+    'mps2': {'length': 'm', 'time': 'sec'},
+    'cmps2': {'length': 'cm', 'time': 'sec'},
+    'inchps2': {'length': 'in', 'time': 'sec'},
+    'ftps2': {'length': 'ft', 'time': 'sec'},
+    'g': {}
+}
+unit_decoupling_type_list = ['TH_file']
