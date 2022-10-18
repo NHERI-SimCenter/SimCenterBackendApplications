@@ -1,16 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <jansson.h>
-#include <string.h>
 #include <string>
+#include <list>
+#include <vector>
 #include <set>
 
 // parses JSON for random variables & returns number found
 
+
 int
 gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 
-  std::cerr << "creareStandardUQINput:: gatherRV\n";
+  // std::cerr << "creareStandardUQINput:: gatherRV\n";
   
   json_error_t error;
   json_t *rootRVs = json_object_get(rootINPUT,"randomVariables");
@@ -20,6 +22,24 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
       std::cerr << "createStandardInput::gatherRV() - no randomVariables in rootINPUT\n";
       return -1;
     }
+    json_t *newRootRVs = json_copy(rootRVs);
+    json_object_del(rootINPUT, "RandomVariables");
+    json_object_set(rootINPUT, "randomVariables", newRootRVs);
+    rootRVs = newRootRVs;
+    // std::cerr << "createStandardInput::gatherRV() - renaming rootRVs\n";    
+  } 
+
+  // vector of names so don't add duplicates
+  std::vector<std::string> randomVariableNames;
+  if ((rootRVs != NULL) && json_is_array(rootRVs)) {
+      size_t index;
+      json_t *value;
+      
+      json_array_foreach(rootRVs, index, value) {
+	json_t *nameValue = json_object_get(value, "name");
+	const char *name = json_string_value(nameValue);
+	randomVariableNames.push_back(std::string(name));
+      }
   }
 
   //
@@ -37,20 +57,28 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
       json_array_foreach(defaultRVs, index, value) {
 	
 	const char *fName = json_string_value(value);
-	std::cerr << "rvFILE: " << fName << "\n";
+	// std::cerr << "rvFILE: " << fName << "\n";
 	json_t *rootOther = json_load_file(fName, 0, &error);
 	json_t *fileRandomVariables =  json_object_get(rootOther, "randomVariables");
 	if (fileRandomVariables == NULL) {
 	  fileRandomVariables =  json_object_get(rootOther, "RandomVariables");
 	}
 	if (fileRandomVariables != NULL) {
-	  std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
+	  // std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
 	  int numRVs = json_array_size(fileRandomVariables);
-	  std::cerr << "rvFILE: " << fName << " " << numRVs << "\n";	    
 	  for (int i=0; i<numRVs; i++) {
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
-	    json_array_append(rootRVs, fileRandomVariable);
+	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
+	    const char *name = json_string_value(nameValue);
+	    std::string nameS(name);
+	    if (std::find(randomVariableNames.begin(),
+			  randomVariableNames.end(), nameS)
+		== randomVariableNames.end() ) {
+	      randomVariableNames.push_back(nameS);
+	      json_array_append(rootRVs, fileRandomVariable);
+	    }
 	  }
+	  
 	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
 	  rvFiles.insert(std::string(fName));
@@ -69,7 +97,7 @@ int
 gatherEDP(json_t *rootINPUT, std::string &edpFile){
 
 
-  std::cerr << "creareStandardUQINput:: gatherRV\n";
+  // std::cerr << "creareStandardUQINput:: gatherRV\n";
   
   //
   // get rootEPDs
@@ -104,7 +132,7 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
       
       json_array_foreach(defaultEDPs, index, value) {
 	const char *fName = json_string_value(value);
-	std::cerr << "Parsing file: " << fName << "\n";
+	// std::cerr << "Parsing file: " << fName << "\n";
 	json_t *rootOther = json_load_file(fName, 0, &error);
 	json_t *fileEDPs =  json_object_get(rootOther, "EngineeringDemandParameters");
 	if (fileEDPs != NULL) {
@@ -137,7 +165,7 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 	      std::string edpAcronym("");
 	      std::string edpName("");
 	      const char *floor = NULL;
-	      std::cerr << "writeResponse: type: " << edpEngType;
+	      // std::cerr << "writeResponse: type: " << edpEngType << " " << j << " " << numResponses << "\n";
 	      // based on edp do something
 	      if (strcmp(edpEngType,"max_abs_acceleration") == 0) {
 		edpAcronym = "PFA";
@@ -200,16 +228,16 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
 		}		  
 	      }
 
-        // KZ: for not standard edp (known==false)
-        else {
-          // add new EDP as defined by users
-          json_t *newEDP = json_object();
-          json_object_set(newEDP, "length", json_integer(1));
-          json_object_set(newEDP, "type", json_string("scalar"));
-          json_object_set(newEDP, "name", json_string(edpName.c_str()));
-          json_array_append(rootEDPs, newEDP);	   
-
-        }
+	      // KZ: for not standard edp (known==false)
+	      else {
+		// add new EDP as defined by users
+		json_t *newEDP = json_object();
+		json_object_set(newEDP, "length", json_integer(1));
+		json_object_set(newEDP, "type", json_string("scalar"));
+		json_object_set(newEDP, "name", json_string(edpName.c_str()));
+		json_array_append(rootEDPs, newEDP);	   
+		
+	      }
 	    }
 	  }
 	} else {
@@ -221,6 +249,8 @@ gatherEDP(json_t *rootINPUT, std::string &edpFile){
     }
   }
 
+  // std::cerr << "DONE PARSING EDP\n";
+  
   if (createdNew == true)
     json_object_set(rootINPUT,"EDP", rootEDPs);
       
@@ -253,16 +283,16 @@ int main(int argc, char **argv) {
   // gather other RV and EDP & place in rootINPUT
   //
 
+  
   std::set<std::string> rvFiles;
   std::string edpFile;
-    
+
   gatherRV(rootINPUT, rvFiles);
   gatherEDP(rootINPUT, edpFile);
 
   //
-  // creeate new workflow file
+  // create new workflow file
   //
-
 
   std::string dpreproCommand;
   std::string edpCommand;
@@ -276,6 +306,7 @@ int main(int argc, char **argv) {
   {
     workflowNew_os = std::string(workflowNew)+std::string(".bat");
   }
+
   std::ofstream workflowDriverFile(workflowNew_os, std::ios::binary);
   //std::ofstream workflowDriverFile(workflowNew, std::ios::binary);
   if (!workflowDriverFile.is_open()) {
@@ -309,7 +340,7 @@ int main(int argc, char **argv) {
 
     callOldWorkflow = std::string("source ./") + std::string(workflowOld);
   }
-    
+
   if (rvFiles.size() != 0) {
 
     std::set<std::string>::iterator iter = rvFiles.begin();
@@ -324,7 +355,7 @@ int main(int argc, char **argv) {
       iter++;
     }
   }
-
+  
   // commands to source the workflow driver, extract the edp's into results.ot & close file
   workflowDriverFile << callOldWorkflow;
   workflowDriverFile << "\n" << edpCommand << " " << edpFile << " results.out\n";

@@ -61,6 +61,7 @@ class OpenSeesPreprocessor {
 
   int NDM;
   int NDF;
+  int numStories;
 };
 
 #endif // OPENSEES_PREPROCESSOR_H

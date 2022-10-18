@@ -209,13 +209,25 @@ class runPLoM:
         command_line = f"{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}"
         print(command_line)
         # run command
+        dakotaTabPath = os.path.join(self.work_dir,"dakotaTab.out")
+        print(dakotaTabPath)
 
         try:
-            #os.system(command_line)
-            subprocess.call(command_line)
+            os.system(command_line)
         except:
             print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
             print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
+
+        if not os.path.exists(dakotaTabPath):
+            try: 
+                subprocess.call(command_line)
+            except:
+                print('runPLoM._run_simulation: error in running dakota to generate the initial sample.')
+                print('runPLoM._run_simulation: please check if the dakota is installed correctly on the system.')
+
+        if not os.path.exists(dakotaTabPath):
+            msg = 'Dakota preprocessor did not run successfully'
+            self.errlog.exit(msg)
 
         # remove the new dakota.json
         #os.remove('sc_dakota_plom.json')
