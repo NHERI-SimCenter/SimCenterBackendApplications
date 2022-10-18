@@ -4,8 +4,10 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <algorithm>
 #include <set>
-
+#include <string.h>
+using namespace std;
 // parses JSON for random variables & returns number found
 
 
@@ -31,6 +33,7 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 
   // vector of names so don't add duplicates
   std::vector<std::string> randomVariableNames;
+
   if ((rootRVs != NULL) && json_is_array(rootRVs)) {
       size_t index;
       json_t *value;
@@ -71,9 +74,13 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
 	    const char *name = json_string_value(nameValue);
 	    std::string nameS(name);
-	    if (std::find(randomVariableNames.begin(),
-			  randomVariableNames.end(), nameS)
-		== randomVariableNames.end() ) {
+	    std::vector<std::string>::iterator it;
+
+	    it = std::find(randomVariableNames.begin(), 
+			   randomVariableNames.end(), 
+			   nameS);
+
+	    if (it == randomVariableNames.end() ) {
 	      randomVariableNames.push_back(nameS);
 	      json_array_append(rootRVs, fileRandomVariable);
 	    }
