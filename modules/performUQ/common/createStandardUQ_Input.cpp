@@ -74,7 +74,9 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	    const char *name = json_string_value(nameValue);
 	    std::string nameS(name);
 
-	     it = std::find(randomVariableNames.begin(),
+	    std::vector<std::string>::iterator it;
+	    
+	    it = std::find(randomVariableNames.begin(),
                            randomVariableNames.end(),
                            nameS);
 
