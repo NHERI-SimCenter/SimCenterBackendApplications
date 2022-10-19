@@ -1,11 +1,15 @@
 #include <iostream>
 #include <fstream>
 #include <jansson.h>
-#include <string.h>
 #include <string>
+#include <string.h>
+#include <list>
+#include <algorithm>
+#include <vector>
 #include <set>
 
 // parses JSON for random variables & returns number found
+
 
 int
 gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
@@ -26,6 +30,19 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
     rootRVs = newRootRVs;
     // std::cerr << "createStandardInput::gatherRV() - renaming rootRVs\n";    
   } 
+
+  // vector of names so don't add duplicates
+  std::vector<std::string> randomVariableNames;
+  if ((rootRVs != NULL) && json_is_array(rootRVs)) {
+      size_t index;
+      json_t *value;
+      
+      json_array_foreach(rootRVs, index, value) {
+	json_t *nameValue = json_object_get(value, "name");
+	const char *name = json_string_value(nameValue);
+	randomVariableNames.push_back(std::string(name));
+      }
+  }
 
   //
   // look for DefaultValues section & if rvFiles go parse each
@@ -53,8 +70,22 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	  int numRVs = json_array_size(fileRandomVariables);
 	  for (int i=0; i<numRVs; i++) {
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
-	    json_array_append(rootRVs, fileRandomVariable);
+	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
+	    const char *name = json_string_value(nameValue);
+	    std::string nameS(name);
+
+	    std::vector<std::string>::iterator it;
+	    
+	    it = std::find(randomVariableNames.begin(),
+                           randomVariableNames.end(),
+                           nameS);
+
+            if (it == randomVariableNames.end() ) {
+	      randomVariableNames.push_back(nameS);
+	      json_array_append(rootRVs, fileRandomVariable);
+	    }
 	  }
+	  
 	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
 	  rvFiles.insert(std::string(fName));
