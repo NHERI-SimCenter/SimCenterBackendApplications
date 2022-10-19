@@ -2,7 +2,9 @@
 #include <fstream>
 #include <jansson.h>
 #include <string>
+#include <string.h>
 #include <list>
+#include <algorithm>
 #include <vector>
 #include <algorithm>
 #include <set>
@@ -74,6 +76,7 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
 	    const char *name = json_string_value(nameValue);
 	    std::string nameS(name);
+
 	    std::vector<std::string>::iterator it;
 
 	    it = std::find(randomVariableNames.begin(), 

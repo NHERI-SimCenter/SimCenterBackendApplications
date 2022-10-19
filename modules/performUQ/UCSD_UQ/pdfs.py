@@ -152,9 +152,9 @@ class BetaDist:
 
 class LogNormDist:
     def __init__(self, mu, sigma):
-        self.mu = mu
-        self.sigma = sigma
-        self.s = self.sigma
+        # self.sigma = np.sqrt(np.log(zeta**2/lamda**2 + 1))
+        # self.mu = np.log(lamda) - 1/2*self.sigma**2
+        self.s = sigma
         self.loc = 0
         self.scale = np.exp(mu)
         self.dist = stats.lognorm(s=self.s, loc=self.loc, scale=self.scale)
