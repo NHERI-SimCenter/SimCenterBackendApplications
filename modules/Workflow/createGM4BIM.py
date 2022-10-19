@@ -136,7 +136,9 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
     
-    siteFiles = glob(f"{inputDir}/*BIM.json")
+    #siteFiles = glob(f"{inputDir}/*BIM.json")
+    # KZ: changing BIM to AIM
+    siteFiles = glob(f"{inputDir}/*AIM.json")
 
     GP_file	= []
     Longitude = []
@@ -190,14 +192,16 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                             ('SA({}s)'.format(Ti),0,2,'beta'):[]})
             dict_im_site.update({'1-SA({}s)-0-1'.format(Ti):[],
                                  '1-SA({}s)-0-2'.format(Ti):[]})
-
+        
         with open(site, 'r') as f:
 
             All_json = json.load(f)
             generalInfo = All_json['GeneralInformation']
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
-            siteID = generalInfo['BIM_id']
+            #siteID = generalInfo['BIM_id']
+            # KZ: changing BIM to AIM
+            siteID = generalInfo['AIM_id']
             # get unit info (needed for determining the simulated acc unit)
             unitInfo = All_json['units']
             # get scaling factor for surface acceleration
