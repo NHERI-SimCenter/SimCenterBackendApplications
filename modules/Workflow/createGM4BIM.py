@@ -411,7 +411,8 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
         os.mkdir(os.path.join(im_csv_path,'Results'))
     except:
         print(f"Results folder already exists")
-    df_im_all.to_csv(os.path.join(im_csv_path,'Results','IM_{}-{}.csv'.format(min(id),max(id))),index=False)
+    # KZ: 10/19/2022, minor patch for Buildings
+    df_im_all.to_csv(os.path.join(im_csv_path,'Results','Buildings','IM_{}-{}.csv'.format(min(id),max(id))),index=False)
     df_im_all.to_csv(os.path.join(im_csv_path,'IM_{}-{}.csv'.format(min(id),max(id))),index=False)    
 
     # remove original files
