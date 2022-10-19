@@ -2040,7 +2040,8 @@ class Workflow(object):
 
 
     def aggregate_results(self, asst_data, asset_type = '',
-        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description
