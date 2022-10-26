@@ -124,15 +124,17 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
 
         try:
             response['scalar_data'] = [float(EDP_res[response['type']]),]
-            results_txt += str(EDP_res[response['type']])
+            #results_txt += str(EDP_res[response['type']])
+            results_txt += str(float(EDP_res[response['type']])) + ' '
         except:
             response['scalar_data'] = ['NaN',]
-            results_txt += 'NaN'
+            results_txt += 'NaN '
         #edp = EDP_res[response['type']][response['id']]
         #print(edp)
 
         #response['scalar_data'] = edp # [val for dof, val in edp.items()]
         #print(response)
+    results_txt = results_txt[:-1]
 
     os.chdir(working_dir)
 
