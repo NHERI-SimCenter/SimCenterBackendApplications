@@ -153,8 +153,12 @@ def hazard_job(hazard_info):
     print('HazardSimulation: creating scenarios.')
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
+        # KZ-10/31/2022: checking user-provided scenarios
+        user_scenarios = scenario_info.get('EqRupture').get('UserScenarioFile', False)
+        if user_scenarios:
+            scenarios = load_earthquake_scenarios(scenario_info, stations, dir_info)
         # Creating earthquake scenarios
-        if scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
             scenarios = create_earthquake_scenarios(scenario_info, stations, dir_info)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
@@ -221,6 +225,9 @@ def hazard_job(hazard_info):
         if occurrence_sampling:
             # read all configurations
             occurrence_info = scenario_info.get('EqRupture').get('HazardOccurrence')
+            reweight_only = occurrence_info.get('ReweightOnly',False)
+            # KZ-10/31/22: adding a flag for whether to re-sample ground motion maps or just monte-carlo
+            sampling_gmms = occurrence_info.get('SamplingGMMs', True)
             occ_dict = configure_hazard_occurrence(input_dir, output_dir, hzo_config=occurrence_info, site_config=stations['Stations'])
             model_type = occ_dict.get('Model')
             num_target_eqs = occ_dict.get('NumTargetEQs')
@@ -233,7 +240,11 @@ def hazard_job(hazard_info):
             # get im exceedance probabilities
             im_exceedance_prob = get_im_exceedance_probility(im_raw, im_type, period, hc_curves)
             # sample the earthquake scenario occurrence
-            occurrence_model = sample_earthquake_occurrence(model_type,num_target_eqs,return_periods,im_exceedance_prob)
+            if reweight_only:
+                occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
+            else:
+                occurrence_rate_origin = None
+            occurrence_model = sample_earthquake_occurrence(model_type,num_target_eqs,return_periods,im_exceedance_prob,reweight_only,occurrence_rate_origin)
             #print(occurrence_model)
             P, Z = occurrence_model.get_selected_earthquake()
             # now update the im_raw with selected eqs with Z > 0
@@ -252,7 +263,7 @@ def hazard_job(hazard_info):
         print('HazardSimulation: uncorrelated response spectra computed.')
         #print(im_raw)
         # KZ-08/23/22: adding method to do hazard occurrence model
-        if occurrence_sampling:
+        if occurrence_sampling and sampling_gmms:
             num_gm_per_site = num_per_eq_avg
         else:
             num_gm_per_site = event_info['NumberPerSite']
@@ -265,7 +276,7 @@ def hazard_job(hazard_info):
                                                                 event_info['IntensityMeasure'])
             print('HazardSimulation: correlated response spectra computed.')
         # KZ-08/23/22: adding method to do hazard occurrence model
-        if occurrence_sampling:
+        if occurrence_sampling and sampling_gmms:
             # get im exceedance probabilities for individual ground motions
             #print('im_list = ',im_list)
             im_exceedance_prob_gmm = get_im_exceedance_probability_gm(np.exp(ln_im_mr), im_list, im_type, period, hc_curves)
