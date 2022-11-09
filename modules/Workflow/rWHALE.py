@@ -54,11 +54,10 @@ from whale.main import log_msg, log_div
 
 from sWHALE import runSWhale
 
-
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file, site_response):
-
+    
     # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
@@ -95,7 +94,7 @@ def main(run_type, input_file, app_registry,
     log_msg('\nrWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
 
     whale.print_system_info()
-
+    
     # echo the inputs
     log_div(prepend_blank_space=False)
     log_div(prepend_blank_space=False)
@@ -135,7 +134,7 @@ def main(run_type, input_file, app_registry,
 
         # perform the regional mapping
         WF.perform_regional_mapping(assetIt, asset_type)
-        
+
         # TODO: not elegant code, fix later
         with open(assetIt, 'r') as f:
             asst_data = json.load(f)
@@ -158,14 +157,11 @@ def main(run_type, input_file, app_registry,
         else :
             print("No support for asset type: ",asset_type)
             
-            
         # The preprocess app sequence (previously get_RV)
         preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
             
         # The workflow app sequence
-        #FMKWF_app_sequence = ['Assets', 'Event', 'Modeling', 'EDP', 'Simulation']
         WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']        
-
         # For each asset
         for asst in asst_data:
             
@@ -174,8 +170,6 @@ def main(run_type, input_file, app_registry,
             log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
             log_div()
 
-            
-            
             # Run sWhale
             runSWhale(
                 inputs = None, 
@@ -262,7 +256,7 @@ if __name__ == '__main__':
     if wfArgs.check:
         run_type = 'set_up'
     else:
-        run_type = 'run'
+        run_type = 'runningLocal'
 
     #Calling the main workflow method and passing the parsed arguments
     main(run_type = run_type,

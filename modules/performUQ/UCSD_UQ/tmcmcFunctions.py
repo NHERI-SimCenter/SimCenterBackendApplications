@@ -109,6 +109,51 @@ def compute_beta_evidence(beta, log_likelihoods, log_evidence, prev_ESS, thresho
     return new_beta, log_evidence, Wm_n, ESS
 
 # MCMC
+def MCMC_MH_old(ParticleNum, Em, Nm_steps, current, likelihood_current, posterior_current, beta, numAccepts, AllPars,
+            log_likelihood, variables, resultsLocation, rng, calibrationData, numExperiments, covarianceMatrixList,
+            edpNamesList, edpLengthsList, normalizingFactors, locShiftList, workflowDriver):
+    all_proposals = []
+    all_PLP = []
+
+    # deltas = propose(np.zeros(len(current)), Em, Nm_steps)
+    deltas = rng.multivariate_normal(np.zeros(len(current)), Em, Nm_steps)
+
+    for j2 in range(Nm_steps):
+        delta = deltas[j2]
+        proposal = current + delta
+        prior_proposal = log_prior(proposal, AllPars)
+
+        if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
+            # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
+            likelihood_proposal = runFEM(ParticleNum, proposal, variables, resultsLocation, log_likelihood,
+                                         calibrationData, numExperiments, covarianceMatrixList,
+                                         edpNamesList, edpLengthsList, normalizingFactors, locShiftList,
+                                         workflowDriver)
+            
+            if np.isnan(likelihood_proposal):
+                likelihood_proposal = -np.Inf
+            posterior_proposal = prior_proposal + likelihood_proposal * beta
+        else:
+            likelihood_proposal = -np.Inf  # dont run the FE model
+            posterior_proposal = -np.Inf
+
+        log_acceptance = posterior_proposal - posterior_current
+        all_proposals.append(proposal)
+        all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
+
+        # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
+        if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
+            # accept
+            current = proposal
+            posterior_current = posterior_proposal
+            likelihood_current = likelihood_proposal
+            numAccepts += 1
+
+    # gather all last samples
+    return current, likelihood_current, posterior_current, numAccepts, all_proposals, all_PLP
+
+
+# MCMC
 def MCMC_MH(ParticleNum, Em, Nm_steps, current, likelihood_current, posterior_current, beta, numAccepts, AllPars,
             log_likelihood, variables, resultsLocation, rng, calibrationData, numExperiments, covarianceMatrixList,
             edpNamesList, edpLengthsList, normalizingFactors, locShiftList, workflowDriver):

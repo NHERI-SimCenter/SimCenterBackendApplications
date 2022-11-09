@@ -356,7 +356,8 @@ def write_RV(BIM_file, EVENT_file, data_dir):
         'Events': []
     }
 
-    events = bim_data['Events']['Events']
+    #events = bim_data['Events']['Events']
+    events = bim_data['Events'][0]['Events']
 
     if len(events) > 1:
         event_file['randomVariables'].append({
@@ -367,7 +368,8 @@ def write_RV(BIM_file, EVENT_file, data_dir):
         })
         event_file['Events'].append({
             #'type': 'Seismic',
-            'type': bim_data['Events']['type'],
+            #'type': bim_data['Events']['type'],
+            'type': bim_data['Events'][0]['type'],
             'event_id': 'RV.eventID',
             'unitScaleFactor': 1.0,            
             'data_dir': data_dir
@@ -386,14 +388,16 @@ def write_RV(BIM_file, EVENT_file, data_dir):
         event_file['randomVariables'][0]['elements'] = RV_elements
     else:
         event_file['Events'].append({
-            'type': bim_data['Events']['type'],
+            #'type': bim_data['Events']['type'],
+            'type': bim_data['Events'][0]['type'],
             'event_id': events[0]['fileName'],
             'unitScaleFactor': 1.0,
             'data_dir': str(data_dir)
             })
 
     # if time histories are used, then load the first event
-    if bim_data['Events']['type'] == 'timeHistory':
+    #if bim_data['Events']['type'] == 'timeHistory':
+    if bim_data['Events'][0]['type'] == 'timeHistory':
         event_file['Events'][0].update(load_record(events[0][0],
                                                    data_dir,
                                                    empty=len(events) > 1))
