@@ -112,7 +112,7 @@ def create_event(asset_file, event_grid_file):
        
         with open(asset_file, 'r') as f:
             asset_data = json.load(f)
-        
+
         # this is the preferred behavior, the else caluse is left for legacy inputs
         if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
 
@@ -184,17 +184,20 @@ def create_event(asset_file, event_grid_file):
             #    })
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
+        
         # save the event dictionary to the AIM
         # TODO: we assume there is only one event
         # handling multiple events will require more sophisticated inputs
-        asset_data['Events'][0].update({
-            #"EventClassification": "Earthquake",
+        # save the event dictionary to the BIM                                          
+        asset_data['Events'] = [{}]        
+        asset_data['Events'][0] = {
+            #"EventClassification": "Earthquake",                               
             "EventFolderPath": str(event_dir),
             "Events": event_list_json,
             "type": event_type
-            #"type": "SimCenterEvents"
-        })
-
+            #"type": "SimCenterEvents"                                          
+        }
+        
         with open(asset_file, 'w') as f:
             json.dump(asset_data, f, indent=2)
 

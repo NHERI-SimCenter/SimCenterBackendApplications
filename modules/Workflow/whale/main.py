@@ -1796,7 +1796,9 @@ class Workflow(object):
                     DL_app = self.workflow_apps.get('DL', None)
 
                     # FMK
-                    if asst_id is not None:
+                    #if asst_id is not None:
+                    # KZ: 10/19/2022, minor patch
+                    if asst_id is not None and DL_app is not None:
                         DL_app=DL_app['Buildings']
 
                     if DL_app is not None:
@@ -1990,6 +1992,10 @@ class Workflow(object):
                 col_info = []
                 for col in EDP_df.columns:
                     try:
+                        # KZ: 10/19/2022, patches for masking dummy edps (TODO: this part could be optimized)
+                        if col in ['dummy']:
+                            col_info.append(['dummy','1','1'])
+                            continue
                         split_col = col.split('-')
                         if len(split_col[1]) == 3:
                             col_info.append(split_col[1:])
@@ -2012,6 +2018,11 @@ class Workflow(object):
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):
+                    # KZ: 10/19/2022, patches for masking dummy edps (TODO: this part could be optimized)
+                    if 'dummy' in col:
+                        df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df['dummy'].median()
+                        df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(EDP_df['dummy']).std()
+                        continue
                     df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
                         '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
                     df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
@@ -2028,7 +2039,8 @@ class Workflow(object):
 
 
     def aggregate_results(self, asst_data, asset_type = '',
-        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description

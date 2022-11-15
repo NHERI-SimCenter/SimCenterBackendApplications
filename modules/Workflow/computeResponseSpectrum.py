@@ -7,6 +7,7 @@ import numpy as np
 from math import sqrt
 from scipy.integrate import cumtrapz
 from scipy.constants import g
+from scipy.interpolate import interp1d
 
 def convert_accel_units(acceleration, from_, to_='cm/s/s'): 
     """
@@ -71,7 +72,7 @@ class NewmarkBeta:
     Evaluates the response spectrum using the Newmark-Beta methodology
     """
 
-    def __init__(self, acceleration, time_step, periods, damping=0.05,
+    def __init__(self, acceleration, time_step, periods, damping=0.05, dt_disc = 0.002,
             units="g"):
         """
         Setup the response spectrum calculator
@@ -81,6 +82,8 @@ class NewmarkBeta:
             Spectral periods (s) for calculation
         :param float damping:
             Fractional coefficient of damping
+        :param float dt_disc:
+            Sampling rate of the acceleartion
         :param str units:
             Units of the acceleration time history {"g", "m/s", "cm/s/s"}
         """
@@ -94,6 +97,7 @@ class NewmarkBeta:
         self.num_steps = len(self.acceleration)
         self.omega = (2. * np.pi) / self.periods
         self.response_spectrum = None
+        self.dt_disc = dt_disc
 
     def run(self):
         """
@@ -159,23 +163,32 @@ class NewmarkBeta:
             disp - Displacement response of a SDOF oscillator
             a_t - Acceleration response of a SDOF oscillator
         """
+        # Parameters
+        dt = self.d_t
+        ground_acc = self.acceleration
+        num_steps = self.num_steps
+        dt_disc = self.dt_disc
+        # discritize
+        num_steps_disc = int(np.floor(num_steps*dt/dt_disc))
+        f = interp1d([dt*x for x in range(num_steps)], ground_acc, bounds_error=False, fill_value=(ground_acc[0], ground_acc[-1]))
+        tmp_time = [dt_disc*x for x in range(num_steps_disc)]
+        ground_acc = f(tmp_time)
         # Pre-allocate arrays
-        accel = np.zeros([self.num_steps, self.num_per], dtype=float)
-        vel = np.zeros([self.num_steps, self.num_per], dtype=float)
-        disp = np.zeros([self.num_steps, self.num_per], dtype=float)
-        a_t = np.zeros([self.num_steps, self.num_per], dtype=float)
+        accel = np.zeros([num_steps_disc, self.num_per], dtype=float)
+        vel = np.zeros([num_steps_disc, self.num_per], dtype=float)
+        disp = np.zeros([num_steps_disc, self.num_per], dtype=float)
+        a_t = np.zeros([num_steps_disc, self.num_per], dtype=float)
         # Initial line
-        accel[0, :] =(-self.acceleration[0] - (cval * vel[0, :])) - \
-                      (kval * disp[0, :])
-        a_t[0, :] = accel[0, :] + accel[0, :]
-        for j in range(1, self.num_steps):
-            disp[j, :] = disp[j-1, :] + (self.d_t * vel[j-1, :]) + \
-                (((self.d_t ** 2.) / 2.) * accel[j-1, :])
-                         
-            accel[j, :] = (1./ (1. + self.d_t * 0.5 * cval)) * \
-                (-self.acceleration[j] - kval * disp[j, :] - cval *
-                (vel[j-1, :] + (self.d_t * 0.5) * accel[j-1, :]))
-            vel[j, :] = vel[j - 1, :] + self.d_t * (0.5 * accel[j - 1, :] +
-                0.5 * accel[j, :])
-            a_t[j, :] = self.acceleration[j] + accel[j, :]
+        accel[0, :] = (-ground_acc[0] - (cval * vel[0, :])) - (kval * disp[0, :])
+        for j in range(1, num_steps_disc):
+            delta_acc = ground_acc[j]-ground_acc[j-1]
+            delta_d2u = (-delta_acc-dt_disc*cval*accel[j-1,:]-dt_disc*kval*(vel[j-1,:]+0.5*dt_disc*accel[j-1,:]))/ \
+                (1.0+0.5*dt_disc*cval+0.25*dt_disc**2*kval)
+            delta_du = dt_disc*accel[j-1,:]+0.5*dt_disc*delta_d2u
+            delta_u = dt_disc*vel[j-1,:]+0.5*dt_disc**2*accel[j-1,:]+0.25*dt_disc**2*delta_d2u
+            accel[j,:] = delta_d2u+accel[j-1,:]
+            vel[j,:] = delta_du+vel[j-1,:]
+            disp[j,:] = delta_u+disp[j-1,:]
+            a_t[j, :] = ground_acc[j] + accel[j, :]
+
         return accel, vel, disp, a_t

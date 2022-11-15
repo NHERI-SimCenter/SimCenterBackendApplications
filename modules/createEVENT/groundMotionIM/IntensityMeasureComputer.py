@@ -142,7 +142,7 @@ class IntensityMeasureComputer:
             'DS595': 'sec',
             'SaRatio': 'scalar'
         }
-def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
+    def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
         """
         Converts acceleration from/to different units
         """      

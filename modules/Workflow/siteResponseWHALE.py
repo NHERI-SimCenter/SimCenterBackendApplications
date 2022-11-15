@@ -107,13 +107,14 @@ def main(run_type, input_file, app_registry,
 
     siteFilter = appData["filter"]
 
+    # KZ: 10/19/2022, adding new attributes for the refactored whale
     siteResponseInput = {
         "units": inputs["units"],
         "outputs": {
             "IM": True,
             "EDP": False,
             "DM": False,
-            "BIM": False,            
+            "AIM": False,            
             "DV": False,
             "every_realization": False
         },        
@@ -147,11 +148,35 @@ def main(run_type, input_file, app_registry,
                     }
                 }
             ]
+        },
+        "UQ": inputs.get('UQ', dict()),
+        "localAppDir": inputs.get('localAppDir', ""),
+        "remoteAppDir": inputs.get('remoteAppDir', ""),
+        "runType": inputs.get('runType', ""),
+        "DefaultValues": {
+            "driverFile": "driver",
+            "edpFiles": [
+                "EDP.json"
+            ],
+            "filenameDL": "BIM.json",
+            "filenameEDP": "EDP.json",
+            "filenameEVENT": "EVENT.json",
+            "filenameSAM": "SAM.json",
+            "filenameSIM": "SIM.json",
+            "rvFiles": [
+                "SAM.json",
+                "EVENT.json",
+                "SIM.json"
+            ],
+            "workflowInput": "scInput.json",
+            "workflowOutput": "EDP.json"
         }
     }        
 
     #siteResponseInputFile = 'tmpSiteResponseInput.json'
-    siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
+    #siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
+    # KZ: 10/19/2022, fixing the json file path
+    siteResponseInputFile = os.path.join(os.path.dirname(reference_dir),'tmpSiteResponseInput.json')
 
     with open(siteResponseInputFile, 'w') as json_file:
         json_file.write(json.dumps(siteResponseInput, indent=2))    
@@ -184,7 +209,9 @@ def main(run_type, input_file, app_registry,
     for asset_type, assetIt in asset_files.items() :
 
         # perform the regional mapping
-        WF.perform_regional_mapping(assetIt)
+        #WF.perform_regional_mapping(assetIt)
+        # KZ: 10/19/2022, adding the required argument for the new whale
+        WF.perform_regional_mapping(assetIt, asset_type)
         
         # TODO: not elegant code, fix later
         with open(assetIt, 'r') as f:
@@ -239,12 +266,18 @@ def main(run_type, input_file, app_registry,
 #            #clean up intermediate files from the simulation
 #            WF.cleanup_simdir(bldg['id'])
 #
-    createFilesForEventGrid(working_dir,
+    #createFilesForEventGrid(working_dir,
+    #                        output_dir,
+    #                        force_cleanup)
+    # KZ: 10/19/2022, *AIM.json files are now inside a "Buildings" folder
+    createFilesForEventGrid(os.path.join(working_dir,'Buildings'),
                             output_dir,
                             force_cleanup)
 
     # aggregate results
-    WF.aggregate_results(bldg_data = bldg_data)
+    #WF.aggregate_results(bldg_data = bldg_data)
+    # KZ: 10/19/2022, chaning bldg_data to asst_data
+    WF.aggregate_results(asst_data= asst_data)
 
     if force_cleanup:
         # clean up intermediate files from the working directory
@@ -328,7 +361,9 @@ if __name__ == '__main__':
     if wfArgs.check:
         run_type = 'set_up'
     else:
-        run_type = 'run'
+        #run_type = 'run'
+        # KZ: 10/19/22, changing to the new run type for the refactored whale
+        run_type = 'runningLocal'
 
     #
     # Calling the main workflow method and passing the parsed arguments
