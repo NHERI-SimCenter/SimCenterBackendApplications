@@ -1,5 +1,5 @@
-#ifndef JSON_INPUT_H
-#define JSON_INPUT_H
+#ifndef DISCRETE_STR_DIST_H
+#define DISCRETE_STR_DIST_H
 
 /* *****************************************************************************
 Copyright (c) 2016-2017, The Regents of the University of California (Regents).
@@ -41,68 +41,38 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *  @author  Sang-ri Yi
  *  @date    8/2021
  *  @section DESCRIPTION
- *  To to read in dakota.json file
+ *  Discrete distribution class
  */
 
-#include <nlohmann/json.hpp>
-#include <fstream>
-#include <sstream>
+#include "RVDist.h"
+
 #include <string>
-#include <iostream>
-#include <algorithm>
 #include <vector>
-#include <string>
-#include <regex>
-#include "writeErrors.h"
-#include <filesystem>
 
-extern writeErrors theErrorFile; // Error log
-
-using json = nlohmann::json;
 using std::string;
 using std::vector;
 
-class jsonInput
+#include "writeErrors.h"
+extern writeErrors theErrorFile; // Error log
+
+class discreteStrDist : public RVDist
 {
 public:
-	jsonInput(string workDir, string inpFile, int procno);
-	virtual ~jsonInput(void);
-
-	string workDir;
-	string uqType;
-
-	int nmc, nrv, nco, nre, nst, nreg, nqoi, rseed, ngr;
-	int nqoiVects;
-	string UQmethod;
-	vector<string> distNames;
-	vector<vector<double>> vals;
-	vector<vector<double>> resampleCandidates;
-	vector<double> constants;
-	vector<vector<string>> discreteStrValues;
-	vector<string> opts;
-	vector<string> rvNames;
-	vector<string> qoiNames;
-	vector<string> qoiVectNames;
-	vector<vector<int>> qoiVectRange;
-	vector<vector<double>> corr;
-	vector<vector<double>> adds;
-	vector<vector<string>> addStrs;
-	vector<vector<int>> groups;
-	vector<vector<int>> resamplingGroups;
-	vector<int> resamplingSize;
-	bool performPCA;
-	double PCAvarRatioThres;
-	string femAppName;
-
-	string inpPath, outPath, inpFileType, outFileType;
+	discreteStrDist(string opt = "", vector<double> val = {}, vector<string> addStrs = {});
+	virtual ~discreteStrDist();
+	double getCdf(double x);
+	double getPdf(double x);
+	double getMean(void);
+	double getStd(void);
+	double getQuantile(double p);
+	string getName(void);
+	vector<double> getParam(void);
 
 private:
-	void getPnames(string distname, string optname, vector<std::string>& par_char);
-	void fromTextToStr(string groupTxt, vector<vector<string>>& groupStringVector, vector<string>& flattenStringVect);
-	void fromTextToId(string groupTxt, vector<string>& groupPool, vector<vector<int>>& groupIdVect);
-	void getGroupIdx(json UQjson);
+	vector<double> value;
+	vector<double> weight;
+	int nv;
+	vector<int> sortIdx;
 
 };
-
-
-#endif //  JSON_INPUT_H
+#endif // DISCRETE_DIST_H

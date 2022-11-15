@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 
 	//std::cout<<"Just testing this location 1\n";
 	else {
-		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " NOT unknown.";
+		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " unknown.";
 		theErrorFile.write(errMsg);
 	}
 
