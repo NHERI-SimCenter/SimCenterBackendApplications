@@ -98,6 +98,7 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
         
         # create the workflow driver file
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
+        WF.add_intensity_measures(assetAIM) #sy
 
         # gather all Randomvariables and EDP's and place in new input file for UQ
         WF.gather_workflow_inputs(assetID, assetAIM);
