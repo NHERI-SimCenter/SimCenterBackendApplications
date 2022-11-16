@@ -40,19 +40,25 @@
 
 import sys, argparse,json
 
-def create_SAM(BIM_file, EVENT_file, SAM_file,
+def create_SAM(AIM_file, EVENT_file, SAM_file,
     model_script, model_path, ndm, dof_map, column_line, getRV):
 
-    with open(BIM_file, 'r') as f:
-        root_BIM = json.load(f)['GeneralInformation']
+    # KZ: modifying BIM to AIM
+    with open(AIM_file, 'r') as f:
+        root_AIM = json.load(f)
+    root_GI = root_AIM['GeneralInformation']
 
     try:
-        stories = root_BIM['NumberOfStories']
+        stories = root_GI['NumberOfStories']
     except:
         raise ValueError("number of stories information missing")
 
     if column_line is None:
-        nodes = list(range(stories+1))
+        # KZ: looking into SAM
+        root_SAM = root_AIM.get('Modeling', {})
+        nodes = root_SAM.get('centroidNodes', [])
+        if len(nodes) == 0:
+            nodes = list(range(stories+1))
     else:
         nodes = [int(node) for node in column_line.split(',')]
         nodes = nodes[:stories+1]
@@ -61,7 +67,8 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
     for floor, node in enumerate(nodes):
         node_entry = {}
         node_entry['node'] = node
-        node_entry['cline'] = '1'
+        # KZ: correcting the cline
+        node_entry['cline'] = 'response'
         node_entry['floor'] = f'{floor}'
         node_map.append(node_entry)
 
@@ -73,7 +80,8 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
         'type': 'CustomPyInput',
         'NodeMapping': node_map,
         'numStory': stories,
-        'ndm': ndm,
+        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
+        'ndm': int(ndm),
         # TODO: improve this if we want random vars in the structure
         'randomVar': []
     }
