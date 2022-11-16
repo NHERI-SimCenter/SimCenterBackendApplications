@@ -56,7 +56,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// finding json file
 	//
 
-	std::filesystem::path jsonPath  = workDir + "/templatedir/" + inpFile;
+	std::filesystem::path jsonPath(inpFile);
+
+	if (jsonPath.is_relative()){
+		jsonPath  = workDir + "/templatedir/" + inpFile;
+	}
+
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
 		std::string errMsg = "Error running UQ engine: Unable to open JSON";

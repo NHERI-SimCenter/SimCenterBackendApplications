@@ -78,6 +78,7 @@ public:
 	vector<vector<int>> resampID;
 	vector<vector<string>> discreteStr;
 	vector<vector<double>> X;
+	vector<vector<string>> Xstr;
 	vector<vector<double>> G;
 	Eigen::MatrixXd RhozMat, RhozInv;
 

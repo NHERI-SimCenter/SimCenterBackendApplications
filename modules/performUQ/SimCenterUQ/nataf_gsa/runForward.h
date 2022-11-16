@@ -67,6 +67,7 @@ class runForward
 public:
 	runForward();
 	runForward(vector<vector<double>> xval,
+			vector<vector<string>> xstrval,
 			vector<vector<double>> gval,
 			int procno);
 	~runForward();
@@ -76,6 +77,7 @@ public:
 	//vector<double> Si;
 
 	vector<vector<double>> xval;
+	vector<vector<string>> xstrval;
 	vector<vector<double>> gval;
 
 private:

@@ -55,7 +55,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "weibullDist.h"
 #include "truncExponentialDist.h"
 #include "discreteDist.h"
-#include "discreteStrDist.h"
+//#include "discreteStrDist.h"
 
 #include <string>
 #include <vector>

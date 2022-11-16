@@ -627,6 +627,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	#endif
 
 	X = x;
+	Xstr = xstr;
 	G = gvals;
 }
 
@@ -704,7 +705,7 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 
 			for (int k = 0; k < nsamp; k++)
 			{
-				writeFile << xst[k][j] + " ";
+				writeFile << "\""+ xst[k][j] + "\" "; //string with quotation mark
 			}
 			writeFile << "\n";
 		}
@@ -938,6 +939,7 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 	gvals = simulateAppOnce(0, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, x, xstr, workflowDriver, osType, runType);
 	   	  
 	X = x;
+	Xstr = xstr;
 	G = gvals;
 }
 
