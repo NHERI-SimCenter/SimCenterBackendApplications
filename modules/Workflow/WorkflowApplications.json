@@ -851,7 +851,7 @@
         "ApplicationSpecificInputs": []
       }	,
       {
-        "Name": "MultipleModels",
+        "Name": "MultiModel-FEM",
         "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
         "ApplicationSpecificInputs": []
       } 
