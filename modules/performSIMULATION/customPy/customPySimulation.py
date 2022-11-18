@@ -102,10 +102,11 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
     with open(EDP_input_path, 'r') as f:
         EDP_in = json.load(f)
 
-    sys.path.insert(0, SAM_in['modelPath'])
-    os.chdir(SAM_in['modelPath'])
-
-    print(os.listdir(os.getcwd()))
+    # KZ: commented out --> we're running at the current workdir
+    #sys.path.insert(0, SAM_in['modelPath'])
+    #os.chdir(SAM_in['modelPath'])
+    #print(os.listdir(os.getcwd()))
+    #print(os.getcwd())
 
     custom_script_path = SAM_in['mainScript']
 
@@ -117,24 +118,61 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
     # run the analysis
     EDP_res = custom_analysis(BIM=BIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)
 
+    os.chdir(working_dir)
     results_txt = ""
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
+    # KZ: rewriting the parsing step of EDP_res to EDP_list
     for response in EDP_list:
-
+        print('response = ', response)
+        response['scalar_data'] = []
         try:
-            response['scalar_data'] = [float(EDP_res[response['type']]),]
-            results_txt += str(EDP_res[response['type']])
+            val = EDP_res.get(response['type'], None)
+            print('val = ', val)
+            if val is None:
+                # try conversion
+                edp_name = convert_EDP.get(response['type'], None)
+                print('edp_name = ', edp_name)
+                if edp_name is not None:
+                    if 'PID' in edp_name:
+                        cur_floor = response['floor2']
+                        dofs = response.get('dofs',[])
+                    elif 'PRD' in edp_name:
+                        cur_floor = response['floor2']
+                        dofs = response['dofs']
+                    else:
+                        cur_floor = response['floor']
+                        dofs = response['dofs']
+                    if len(dofs) == 0:
+                        dofs = [1, 2] #default is bidirection
+                        response['dofs'] = dofs
+                    print('dofs = ', dofs)
+                    for cur_dof in dofs:
+                        key_name = '1-'+edp_name+'-{}-{}'.format(int(cur_floor), int(cur_dof))
+                        print('key_name = ', key_name)
+                        res = EDP_res.get(key_name, None)
+                        if res is None:
+                            response['scalar_data'].append('NaN')
+                            results_txt += 'NaN '
+                        else:
+                            response['scalar_data'].append(float(EDP_res[key_name]))
+                            results_txt += str(float(EDP_res[key_name])) + ' '
+                            print('response = ', response)
+                else:
+                    response['scalar_data'] = ['NaN']
+                    results_txt += 'NaN '
+            else:
+                response['scalar_data'] = [float(val)]
+                results_txt += str(float(EDP_res[response['type']])) + ' '
         except:
-            response['scalar_data'] = ['NaN',]
-            results_txt += 'NaN'
+            response['scalar_data'] = ['NaN']
+            results_txt += 'NaN '
         #edp = EDP_res[response['type']][response['id']]
         #print(edp)
 
         #response['scalar_data'] = edp # [val for dof, val in edp.items()]
         #print(response)
-
-    os.chdir(working_dir)
+    results_txt = results_txt[:-1]
 
     with open(EDP_input_path, 'w') as f:
         json.dump(EDP_in, f, indent=2)
