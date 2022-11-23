@@ -609,6 +609,11 @@
         "Name": "ConcreteBuildingModel",
         "ExecutablePath": "applications/createSAM/RCFIAP/RC_FIAP_main.py",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "MultiModel-SIM",
+        "ExecutablePath": "applications/createSAM/multimodel/multipleSIMs.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -755,6 +760,10 @@
       {
         "Name": "IMasEDP",
         "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
+      },
+      {
+        "Name": "MultiModel-FEA",
+        "ExecutablePath": "applications/performSIMULATION/multimodel/multipleSimulations.py"
       }
     ]
   },
