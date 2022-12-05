@@ -514,7 +514,10 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
     if ((strcmp(dampingModel,"Rayleigh Damping")) == 0) {
 
       int mode1 = json_integer_value(json_object_get(rootSIM,"firstMode"));	
-      int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));	
+      int mode2 = json_integer_value(json_object_get(rootSIM,"secondMode"));
+      if (mode2 == -1)
+	mode2 = 2*numStories-1;
+	  
       const char *dampingT = json_string_value(json_object_get(rootSIM,"rayleighTangent"));
       int KcurrSwitch = 0;
       int KcommSwitch = 0;
@@ -575,7 +578,10 @@ OpenSeesPreprocessor::processDamping(ofstream &s){
       }
     } else {
 
-      int numModes = json_integer_value(json_object_get(rootSIM,"numModesModal"));	
+      int numModes = json_integer_value(json_object_get(rootSIM,"numModesModal"));
+      if (numModes == -1)
+	numModes = 2*numStories-1;
+	
       double dampingTangent = json_number_value(json_object_get(rootSIM,"modalRayleighTangentRatio"));	
 
       if (dampingRatio != 0.0 || dampingTangent != 0.0) {
@@ -709,7 +715,8 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	    ostringstream temp;  //temp as in temporary
 
 	    temp << fileAIM << edpEventName << "." << type << "." << cline << "." << floor << ".out";
-
+	    // temp << edpEventName << "." << type << "." << cline << "." << floor << ".out";
+ 
 	    fileString=temp.str(); 
 
 	    const char *fileName = fileString.c_str();
@@ -925,8 +932,11 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 	else
 	  s << "analysis " << json_string_value(json_object_get(rootSIM,"analysis")) << "\n";
 
+	
 	processDamping(s);
 
+	
+	
 	s << "set lambdaN [eigen 1];\n"
     << "set lambda1 [lindex $lambdaN 0]\n"
     << "set T1 [expr 2*3.14159/$lambda1]\n"
@@ -985,8 +995,10 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
 
   if (strcmp(eventType,"Seismic") == 0 ||
       strcmp(eventType,"Wind") == 0    ||
+      strcmp(eventType,"timeHistory") == 0    ||      
       strcmp(eventType,"Hydro") == 0      ) {
     analysisType = 1;
+
 
     if ((strcmp(eventType,"Wind") == 0) || (strcmp(eventType,"Hydro") == 0))
       analysisType = 2;
@@ -1018,6 +1030,13 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   // Read units
   // NOTE: if no units use default in GI
   json_t* genInfoJson = json_object_get(rootAIM, "GeneralInformation");
+  json_t* numStoriesJson = json_object_get(genInfoJson, "NumberOfStories");
+  
+  if (numStoriesJson != NULL)
+    numStories = json_integer_value(numStoriesJson);
+  else
+    numStories = 1;
+  
   json_t* samUnitsJson = json_object_get(rootSAM, "units");
   if (samUnitsJson != NULL) {
     json_t* samLengthJson = json_object_get(samUnitsJson, "length");
@@ -1220,7 +1239,8 @@ OpenSeesPreprocessor::processEvent(ofstream &s,
   }
 
   //  printf("%d %d %f\n",analysisType, numSteps, dT);
-
+  s << "set numberOfStories " << numStories << "\n";
+  
   return 0;
 }
 

@@ -11,6 +11,10 @@ def main(args):
     edpName = args[7]
     simName = args[9]
 
+    # remove path to AIM file, so recorders are not messed up
+    #      .. AIM file ro be read is in current dir (copy elsewhere)
+    aimName = os.path.basename(aimName)
+
     scriptDir = os.path.dirname(os.path.realpath(__file__))
 
     #If requesting random variables run getUncertainty
