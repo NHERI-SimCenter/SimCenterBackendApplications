@@ -424,9 +424,19 @@ class WorkflowApplication(object):
 
     def __init__(self, app_type, app_info, api_info):
 
+        #print('APP_TYPE', app_type)
+        #print('APP_INFO', app_info)
+        #print('API_INFO', api_info)
+        
         self.name = app_info['Name']
         self.app_type = app_type
         self.rel_path = app_info['ExecutablePath']
+        
+        if 'RunsParallel' in app_info.keys():
+          self.runsParallel = app_info['RunsParallel']
+        else:
+          self.runsParallel = False;
+          
         self.app_spec_inputs = app_info.get('ApplicationSpecificInputs',[])
 
         self.inputs = api_info['Inputs']
@@ -578,9 +588,18 @@ class Workflow(object):
 
     """
 
-    def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None, app_dir=None):
-
+    def __init__(self,
+                 run_type,
+                 input_file,
+                 app_registry,
+                 app_type_list,
+                 reference_dir = None,
+                 working_dir = None,
+                 app_dir = None,
+                 parType="seqRUN",
+                 mpiExec="mpiExec",
+                 numProc=8):
+        
         log_msg('Inputs provided:')
         log_msg('workflow input file: {}'.format(input_file),
             prepend_timestamp=False)
@@ -600,7 +619,17 @@ class Workflow(object):
         self.input_file = input_file
         self.app_registry_file = app_registry
         self.modifiedRun = False # ADAM to fix
-        
+        self.parType = parType;
+        self.mpiExec = mpiExec
+        self.numProc = numProc
+
+        # if parallel setup, open script file to run
+        inputFilePath = os.path.dirname(input_file)
+        parCommandFileName = os.path.join(inputFilePath, 'sc_parScript.sh')
+        if (parType == 'parSETUP'):
+            self.parCommandFile = open(parCommandFileName, "w")
+            self.parCommandFile.write("#!/bin/sh" + "\n")
+            
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
         else:
@@ -626,6 +655,25 @@ class Workflow(object):
         self.workflow_assets = {}
         self._parse_inputs()
 
+    def __del__(self):
+
+        # if parallel setup, add command to run this scipt with parellel option
+        if (self.parType == 'parSETUP'):
+            inputArgs = sys.argv
+            length = len(inputArgs)
+            i = 0
+            while i < length:
+                if 'parSETUP' == inputArgs[i]:
+                    inputArgs[i] = 'parRUN'
+                i += 1
+                
+            inputArgs.insert(0,'python')        
+            command = create_command(inputArgs)
+
+            self.parCommandFile.write(self.mpiExec + "\n# Writing Final command to run this application in parallel\n")            
+            self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
+            self.parCommandFile.close()
+        
     def _init_app_registry(self):
         """
         Initialize the dictionary where we keep the data on available apps.
@@ -673,8 +721,7 @@ class Workflow(object):
                     api_info.update({'DefaultValues': self.default_values})
 
                 # and store their name and executable location
-                for app in available_apps:
-                    self.app_registry[app_type][app['Name']] = WorkflowApplication(
+                for app in available_apps: self.app_registry[app_type][app['Name']] = WorkflowApplication(
                          app_type=app_type, app_info=app, api_info=api_info)
 
         log_msg('  OK', prepend_timestamp=False)
@@ -1026,12 +1073,8 @@ class Workflow(object):
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
 
-        #print("INPUT FILE", self.input_file)
-        #print("INPUT_DATA", input_data)
-        
         # Get the workflow assets
         assetsWfapps = self.workflow_apps.get('Assets', None)
-
         assetWfList = self.workflow_assets.keys()
         
         # TODO: not elegant code, fix later
@@ -1077,23 +1120,97 @@ class Workflow(object):
 
             # Create the asset command list
             command = create_command(asset_command_list)
+            
+            if (self.parType == 'parSETUP'):
 
-            log_msg('\nCreating initial asset information model (AIM) files for '+asset_type, prepend_timestamp=False)
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\nWriting Asset Info command for asset type: '+asset_type+ ' to script', prepend_timestamp=False)                
+                self.parCommandFile.write("\n# Perform Asset File Creation for type: " + asset_type + " \n")
+
+                if asset_app.runsParallel == False:
+                    self.parCommandFile.write(command + "\n")
+                else:
+                    self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+
+            else:
+
+                log_msg('\nCreating initial asset information model (AIM) files for '+asset_type, prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                
+                result, returncode = run_command(command)
             
-            result, returncode = run_command(command)
+                # Check if the command was completed successfully
+                if returncode != 0 :
+                    print(result)
+                    raise WorkFlowInputError('Failed to create the AIM file for '+asset_type)
+                else :
+                    log_msg('AIM files created for '+asset_type+'\n', prepend_timestamp=False)
+
             
+                log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
+                
+        log_div()
+    
+        return assetFilesList
+
+
+    def augment_asset_files(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Augmenting files for individual assets for Workflow')
+        
+        # Open the input file - we'll need it later
+        with open(self.input_file, 'r') as f:
+            input_data = json.load(f)
+
+        # Get the workflow assets
+        assetsWfapps = self.workflow_apps.get('Assets', None)
+        assetWfList = self.workflow_assets.keys()
+        
+        # TODO: not elegant code, fix later
+        os.chdir(self.run_dir)
+        
+        assetFilesList = {}
+
+        #Iterate through the asset workflow apps
+        for asset_type, asset_app in assetsWfapps.items() :
+                
+            asset_folder = posixpath.join(self.run_dir, asset_type)
+                        
+            asset_file = posixpath.join(asset_folder, asset_type) + '.json'
             
+            assetPrefs = asset_app.pref
+           
+            # filter assets (if needed)
+            asset_filter = asset_app.pref.get('filter', None)
+            if asset_filter == "":
+                del asset_app.pref['filter']
+                asset_filter = None
+
+            if asset_filter is not None:
+                atag = [bs.split('-') for bs in asset_filter.split(',')]
+
+                asset_file = Path(str(asset_file).replace(".json", f"{atag[0][0]}-{atag[-1][-1]}.json"))
+                
+
+            # store the path to the asset file
+            assetFilesList[asset_type] = str(asset_file)
+            
+            for output in asset_app.outputs:
+                if output['id'] == 'assetFile':
+                    output['default'] = asset_file
+
             # Check if the command was completed successfully
-            if returncode != 0 :
-                print(result)
-                raise WorkFlowInputError('Failed to create the AIM file for '+asset_type)
-            else :
-                log_msg('AIM files created for '+asset_type+'\n', prepend_timestamp=False)
-
-            
-            log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
-            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+            # FMK check AIM file exists
     
             # Append workflow settings to the BIM file
             log_msg('Appending additional settings to the AIM files...\n')
@@ -1199,7 +1316,7 @@ class Workflow(object):
         log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
         log_div()
     
-        return assetFilesList
+        return assetFilesList    
 
     def perform_regional_event(self):
         """
@@ -1214,23 +1331,44 @@ class Workflow(object):
 
         log_msg('Simulating regional event...')
 
-        reg_event_app = self.workflow_apps['RegionalEvent']
+        if 'RegionalEvent' in self.workflow_apps.keys():
+            reg_event_app = self.workflow_apps['RegionalEvent']
+        else:
+            log_msg('No Regional Event Application to run.', prepend_timestamp=False)
+            log_div()
+            return;
+
+        if reg_event_app.rel_path == None:
+            log_msg('No regional Event Application to run.', prepend_timestamp=False)
+            log_div()            
+            return;
 
         reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
         command = create_command(reg_event_command_list)
 
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                prepend_blank_space=False)
+        if (self.parType == 'parSETUP'):
 
-        result, returncode = run_command(command)
+            log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
+            self.parCommandFile.write("\n# Perform Regional Event Simulation\n")
 
-        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+            if reg_event_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
 
-        log_msg('Regional event successfully simulated.', prepend_timestamp=False)
+        else:
+        
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
+
+            result, returncode = run_command(command)        
+
+            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
-
 
     def perform_regional_mapping(self, AIM_file_path, assetType):
         
@@ -1269,11 +1407,27 @@ class Workflow(object):
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
 
-        result, returncode = run_command(command)
+        if (self.parType == 'parSETUP'):
 
-        log_msg('Output: ' + str(returncode), prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('Regional mapping successfully created.', prepend_timestamp=False)
+            self.parCommandFile.write("\n# Regional Mapping for asset type: "
+                                      + assetType + " \n")
+
+            if reg_mapping_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")            
+
+            log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
+                
+        else:
+            
+            result, returncode = run_command(command)
+
+            log_msg('Output: ' + str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('Regional mapping successfully created.', prepend_timestamp=False)
+            
         log_div()
 
 
