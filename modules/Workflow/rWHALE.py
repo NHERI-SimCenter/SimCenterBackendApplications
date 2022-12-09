@@ -79,7 +79,7 @@ def main(run_type, input_file, app_registry,
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()
-        procID = comm.Get_size();
+        procID = comm.Get_rank();
         if numP < 2:
             doParallel = False
             numP = 1
@@ -115,7 +115,7 @@ def main(run_type, input_file, app_registry,
         else:
             log_file_path = log_file
     else:
-        log_file_path = working_dir + '/log.txt' + '.' + procID 
+        log_file_path = working_dir + '/log.txt' + '.' + str(procID)
 
     whale.set_options({
         "LogFile": log_file_path,
@@ -125,7 +125,8 @@ def main(run_type, input_file, app_registry,
         
     log_msg('\nrWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
 
-    whale.print_system_info()
+    if procID == 0:
+        whale.print_system_info()
     
     # echo the inputs
     log_div(prepend_blank_space=False)
@@ -151,7 +152,6 @@ def main(run_type, input_file, app_registry,
                         numProc = numPROC)
 
     if bldg_id_filter is not None:
-        print(bldg_id_filter)
         log_msg(f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
@@ -173,18 +173,18 @@ def main(run_type, input_file, app_registry,
     if parallelType == 'seqRUN' or parallelType == 'parSETUP':
         
         # run event
-        print('REGIONAL EVENT')
         WF.perform_regional_event()
 
         # now for each asset, do regional mapping
         for asset_type, assetIt in asset_files.items() :
-            print('ASSET TYPE before mapping:', asset_type)
             WF.perform_regional_mapping(assetIt, asset_type)
+
         
     if parallelType == 'parSETUP':
         return
     
-    # now for each asset, do event mapping and run dl workflow
+    # now for each asset run dl workflow .. in parallel if requested
+    count = 0
     for asset_type, assetIt in asset_files.items() :
 
         # perform the regional mapping
@@ -213,28 +213,37 @@ def main(run_type, input_file, app_registry,
         WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']        
         # For each asset
         for asst in asst_data:
-            
-            log_msg('', prepend_timestamp=False)
-            log_div(prepend_blank_space=False)
-            log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
-            log_div()
 
-            # Run sWhale
-            runSWhale(
-                inputs = None, 
-                WF = WF, 
-                assetID = asst['id'], 
-                assetAIM = asst['file'], 
-                prep_app_sequence = preprocess_app_sequence,  
-                WF_app_sequence = WF_app_sequence, 
-                asset_type = run_asset_type, 
-                copy_resources = True, 
-                force_cleanup = force_cleanup)
-            
+            if count % numP == procID:
+                
+                log_msg('', prepend_timestamp=False)
+                log_div(prepend_blank_space=False)
+                log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
+                log_div()
+
+                # Run sWhale
+                runSWhale(
+                    inputs = None, 
+                    WF = WF, 
+                    assetID = asst['id'], 
+                    assetAIM = asst['file'], 
+                    prep_app_sequence = preprocess_app_sequence,  
+                    WF_app_sequence = WF_app_sequence, 
+                    asset_type = run_asset_type, 
+                    copy_resources = True, 
+                    force_cleanup = force_cleanup)
+
+            count = count + 1
+
+        # wait for every process to finish
+        if doParallel == True:
+            comm.Barrier()
+                
         # aggregate results
         if asset_type == 'Buildings' :
-        
-            WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
+
+            if procID == 0:
+                WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
             
         elif asset_type == 'WaterNetworkPipelines' :
         
@@ -242,15 +251,24 @@ def main(run_type, input_file, app_registry,
             headers = dict(DV = [0])
                 
             out_types = ['DV']
-            
-            WF.aggregate_results(asst_data = asst_data,
-                asset_type = asset_type, out_types = out_types, headers = headers)
 
+            if procID == 0:            
+                WF.aggregate_results(asst_data = asst_data,
+                                     asset_type = asset_type,
+                                     out_types = out_types,
+                                     headers = headers)
+
+        if doParallel == True:
+            comm.Barrier()                
 
     if force_cleanup:
         # clean up intermediate files from the working directory
-        WF.cleanup_workdir()
+        if procID == 0:                    
+            WF.cleanup_workdir()
 
+        if doParallel == True:
+            comm.Barrier()
+            
     log_msg('Workflow completed.')
     log_div(prepend_blank_space=False)
     log_div(prepend_blank_space=False)

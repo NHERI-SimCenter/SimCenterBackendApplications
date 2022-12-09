@@ -57,6 +57,7 @@ from time import strftime
 from datetime import datetime
 import sys, os, json
 import argparse
+import importlib
 
 import pprint
 
@@ -621,7 +622,7 @@ class Workflow(object):
         self.modifiedRun = False # ADAM to fix
         self.parType = parType;
         self.mpiExec = mpiExec
-        self.numProc = numProc
+        self.numProc = numProc 
 
         # if parallel setup, open script file to run
         inputFilePath = os.path.dirname(input_file)
@@ -629,6 +630,24 @@ class Workflow(object):
         if (parType == 'parSETUP'):
             self.parCommandFile = open(parCommandFileName, "w")
             self.parCommandFile.write("#!/bin/sh" + "\n")
+
+        self.numP = 1
+        self.procID = 0
+        if (parType == 'parRUN'):
+            mpi_spec = importlib.util.find_spec("mpi4py")
+            found = mpi_spec is not None
+            if found:
+                import mpi4py
+                from mpi4py import MPI
+                self.comm = MPI.COMM_WORLD
+                self.numP = self.comm.Get_size()
+                self.procID = self.comm.Get_rank();
+                if self.numP < 2:
+                    self.doParallel = False
+                    self.numP = 1
+                    self.procID = 0
+                else:
+                    self.doParallel = True;
             
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
@@ -670,7 +689,7 @@ class Workflow(object):
             inputArgs.insert(0,'python')        
             command = create_command(inputArgs)
 
-            self.parCommandFile.write(self.mpiExec + "\n# Writing Final command to run this application in parallel\n")            
+            self.parCommandFile.write("\n# Writing Final command to run this application in parallel\n")            
             self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
             self.parCommandFile.close()
         
@@ -1214,7 +1233,7 @@ class Workflow(object):
     
             # Append workflow settings to the BIM file
             log_msg('Appending additional settings to the AIM files...\n')
-    
+            
             with open(asset_file, 'r') as f:
                 asset_data = json.load(f)
 
@@ -1272,48 +1291,52 @@ class Workflow(object):
 
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
-                    
+            
+            count = 0
             for asst in asset_data:
-    
-                AIM_file = asst['file']
-    
-                # Open the AIM file and add the unit information to it
-                with open(AIM_file, 'r') as f:
-                    AIM_data = json.load(f)
 
-                if 'DefaultValues' in input_data.keys():
-                    AIM_data.update({'DefaultValues':input_data['DefaultValues']})
+                if count % self.numP == self.procID:
 
-                if 'commonFileDir' in input_data.keys():
-                    AIM_data.update({'commonFileDir':input_data['commonFileDir']})
-                if 'remoteAppDir' in input_data.keys():
-                    AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
+                    AIM_file = asst['file']
+                    
+                    # Open the AIM file and add the unit information to it
+                    with open(AIM_file, 'r') as f:
+                        AIM_data = json.load(f)
 
-                if 'localAppDir' in input_data.keys():
-                    AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
+                    if 'DefaultValues' in input_data.keys():
+                        AIM_data.update({'DefaultValues':input_data['DefaultValues']})
+
+                    if 'commonFileDir' in input_data.keys():
+                        AIM_data.update({'commonFileDir':input_data['commonFileDir']})
+                    if 'remoteAppDir' in input_data.keys():
+                        AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
+
+                    if 'localAppDir' in input_data.keys():
+                        AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
                                     
-                if self.units != None:
-                    AIM_data.update({'units': self.units})
+                    if self.units != None:
+                        AIM_data.update({'units': self.units})
     
                     # TODO: remove this after all apps have been updated to use the
                     # above location to get units
                     AIM_data['GeneralInformation'].update({'units': self.units})
     
-                AIM_data.update({'outputs': self.output_types})
+                    AIM_data.update({'outputs': self.output_types})
     
-                for key, value in self.shared_data.items():
-                    AIM_data[key] = value
+                    for key, value in self.shared_data.items():
+                        AIM_data[key] = value
                    
-                # Save the asset type
-                AIM_data['assetType'] = asset_type
+                    # Save the asset type
+                    AIM_data['assetType'] = asset_type
 
-                AIM_data.update(extra_input)
+                    AIM_data.update(extra_input)
  
-                with open(AIM_file, 'w') as f:
-                    json.dump(AIM_data, f, indent=2)
+                    with open(AIM_file, 'w') as f:
+                        json.dump(AIM_data, f, indent=2)
     
-        
-        log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
+                count = count + 1
+                
+        log_msg('\nAsset Information Model (AIM) files successfully augmented.', prepend_timestamp=False)
         log_div()
     
         return assetFilesList    
@@ -1375,7 +1398,6 @@ class Workflow(object):
         """
         Performs the regional mapping between the asset and a hazard event.
 
-        
 
         Parameters
         ----------
@@ -1415,7 +1437,7 @@ class Workflow(object):
             if reg_mapping_app.runsParallel == False:
                 self.parCommandFile.write(command + "\n")
             else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")            
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
 
             log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
                 
@@ -2070,10 +2092,10 @@ class Workflow(object):
             
                         command = create_command(command_list)
             
-                        log_msg('Damage and loss assessment command:', prepend_timestamp=False)
+                        log_msg('Damage and loss assessment command (1):', prepend_timestamp=False)
                         log_msg('\n{}\n'.format(command), prepend_timestamp=False,
                                 prepend_blank_space=False)
-            
+
                         result, returncode = run_command(command)
             
                         log_msg(result, prepend_timestamp=False)
@@ -2111,7 +2133,7 @@ class Workflow(object):
     
                 command = create_command(command_list)
     
-                log_msg('Damage and loss assessment command:',
+                log_msg('Damage and loss assessment command (2):',
                         prepend_timestamp=False)
                 log_msg('\n{}\n'.format(command), prepend_timestamp=False,
                         prepend_blank_space=False)
@@ -2194,6 +2216,7 @@ class Workflow(object):
 
 
     def aggregate_results(self, asst_data, asset_type = '',
+
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
