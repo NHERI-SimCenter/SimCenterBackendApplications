@@ -26,7 +26,7 @@
     "Applications": [
       {
         "Name": "GenericAimDatabase",
-        "ExecutablePath": "applications/createAIM/genericAimDatabase/GenericAimDatabase",
+          "ExecutablePath": "applications/createAIM/genericAimDatabase/GenericAimDatabase",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -52,7 +52,7 @@
       },
       {
         "Name": "GeoJSON_to_AIM",
-        "ExecutablePath": "applications/createAIM/GeoJSON_to_AIM/GeoJSON_to_AIM.py",
+          "ExecutablePath": "applications/createAIM/GeoJSON_to_AIM/GeoJSON_to_AIM.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -78,7 +78,8 @@
       },
       {
         "Name": "CSV_to_AIM",
-        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",
+        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
+        "RunsParallel": false,	  
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -251,6 +252,7 @@
       {
         "Name": "NearestNeighborEvents",
         "ExecutablePath": "applications/performRegionalMapping/NearestNeighborEvents/NNE.py",
+	"RunsParallel": true,
         "ApplicationSpecificInputs": [
           {
             "id": "filenameEVENTgrid",
@@ -281,7 +283,8 @@
       },
       {
         "Name": "SiteSpecifiedEvents",
-        "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
+          "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
+	"RunsParallel": true,	  
         "ApplicationSpecificInputs": [
           {
             "id": "filenameEVENTgrid",
