@@ -5,6 +5,7 @@ import stat
 import subprocess
 import sys
 import time
+import pandas as pd
 
 import numpy as np
 
@@ -84,7 +85,9 @@ class UQengine:
         self.t_thr = t_thr
         self.total_sim_time = 0
 
-    def run_FEM_batch(self, X, id_sim, runIdx=0):
+    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=False):
+        alterInput = True # for testing
+            
         if runIdx == -1:
             # dummy run
             return X, np.zeros((0, self.y_dim)), id_sim
@@ -165,7 +168,55 @@ class UQengine:
                 else:
                     Y[id - id_sim, :] = val
 
+            if alterInput:
+                IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+                X = IM_vals.to_numpy()[:,1:]
+
+
         return X, Y, id_sim + Nsim
+
+    def compute_IM(self, i_begin, i_end):
+        workdir_list = [os.path.join(self.work_dir,'workdir.{}'.format(int(i))) for i in range(i_begin,i_end+1)]
+
+        # intensity measure app
+        computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                 'createEVENT', 'groundMotionIM', 'IntensityMeasureComputer.py')
+
+        pythonEXE = sys.executable
+        # compute IMs
+        for cur_workdir in workdir_list:
+            os.chdir(cur_workdir)
+            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
+                os.system(
+                    f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
+            os.chdir(self.work_dir)
+
+        # collect IMs from different workdirs
+        for i, cur_workdir in enumerate(workdir_list):
+            cur_id = int(cur_workdir.split('.')[-1])
+            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
+                print("IM.csv found in wordir.{}".format(cur_id))
+                tmp1 = pd.read_csv(os.path.join(cur_workdir, 'IM.csv'), index_col=None)
+                if tmp1.empty:
+                    print("IM.csv in wordir.{} is empty.".format(cur_id))
+                    return
+                tmp2 = pd.DataFrame({'%eval_id': [cur_id for x in range(len(tmp1.index))]})
+                if i == 0:
+                    im_collector = pd.concat([tmp2, tmp1], axis=1)
+                else:
+                    tmp3 = pd.concat([tmp2, tmp1], axis=1)
+                    im_collector = pd.concat([im_collector, tmp3])
+            else:
+                print("IM.csv NOT found in wordir.{}".format(cur_id))
+                return
+        im_collector = im_collector.sort_values(by=['%eval_id'])
+
+        return im_collector
+        #im_collector.to_csv('IM.csv', index=False)
+
+
+
+
 
     def readJson(self):
         pass
@@ -340,6 +391,16 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     # def makePool(self):
     #     pass
 
+#
+# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP
+#
+
+# def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):
+#     g, id_sim = run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0)
+
+
+
+                                                                         
 
 #
 # class simcenterUQ(UQengine):
