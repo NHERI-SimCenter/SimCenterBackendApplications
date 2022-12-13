@@ -1,3 +1,45 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2021 Leland Stanford Junior University
+# Copyright (c) 2021 The Regents of the University of California
+#
+# This file is part of the SimCenter Backend Applications
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# You should have received a copy of the BSD 3-Clause License along with
+# this file. If not, see <http://www.opensource.org/licenses/>.
+#
+# This module is to create a Gaussian Process surrogate model for quoFEM
+#
+# Initial Writer:
+# Sang-ri Yi
+#
+
 import copy
 import glob
 import json
@@ -61,21 +103,11 @@ class surrogate(UQengine):
         super(surrogate, self).__init__(inputArgs)
         t_init = time.time()
 
-        if error_tag == True:
-            if self.os_type.lower().startswith("win"):
-                msg = (
-                        "Failed to load python module ["
-                        + moduleName
-                        + "]. Go to <File-Preference-Python> and reset the path."
-                )
-            else:
-                msg = (
-                        "Failed to load python module ["
-                        + moduleName
-                        + "]. Did you forget <pip3 install nheri_simcenter --upgrade>?"
-                )
-            self.exit(msg)
+        #
+        # Check if there was error in importing python packages
+        #
 
+        self.check_packages(error_tag, moduleName)
         self.cleanup_workdir()
         self.create_errLog()
 
@@ -97,16 +129,37 @@ class surrogate(UQengine):
         self.train_surrogate(t_init)
 
         #
-        # save model
+        # save model as
         #
 
         self.save_model("SimGpModel")
 
+    def check_packages(self,error_tag, moduleName):
+        if error_tag == True:
+            if self.os_type.lower().startswith("win"):
+                msg = (
+                        "Failed to load python module ["
+                        + moduleName
+                        + "]. Go to <File-Preference-Python> and reset the path."
+                )
+            else:
+                msg = (
+                        "Failed to load python module ["
+                        + moduleName
+                        + "]. Did you forget <pip3 install nheri_simcenter --upgrade>?"
+                )
+            self.exit(msg)
+
     def readJson(self):
 
         try:
-            with open(self.work_dir + "/templatedir/" + self.inputFile) as f:
+            jsonPath = self.inputFile # for EEUQ
+            if not os.path.isabs(jsonPath):
+                jsonPath = self.work_dir + "/templatedir/" + self.inputFile # for quoFEM
+
+            with open(jsonPath) as f:
                 dakotaJson = json.load(f)
+
         except ValueError:
             msg = "invalid json format - dakota.json"
             self.exit(msg)
@@ -374,14 +427,20 @@ class surrogate(UQengine):
         self.rvName = []
         self.rvDist = []
         self.rvVal = []
+        self.rvDiscStr = []
+        self.rvDiscIdx = []
         for nx in range(x_dim):
             rvInfo = dakotaJson["randomVariables"][nx]
             self.rvName = self.rvName + [rvInfo["name"]]
             self.rvDist = self.rvDist + [rvInfo["distribution"]]
             if self.modelInfoHF.is_model:
-                self.rvVal = self.rvVal + [
-                    (rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2
-                ]
+                if rvInfo["distribution"]=="Uniform":
+                    self.rvVal += [(rvInfo["upperbound"] + rvInfo["lowerbound"]) / 2]
+                    self.rvDiscStr += [[]]
+                elif rvInfo["distribution"]=="discrete_design_set_string":
+                    self.rvVal += [1]
+                    self.rvDiscStr += [rvInfo["elements"]]
+                    self.rvDiscIdx = [nx]
             elif self.modelInfoHF.is_data:
                 self.rvVal = self.rvVal + [np.mean(self.modelInfoHF.X_existing[:, nx])]
             else:
@@ -682,9 +741,16 @@ class surrogate(UQengine):
         self.set_FEM(self.rv_name, self.do_parallel, self.y_dim, t_init, model_hf.thr_t)
 
         def FEM_batch_hf(X, id_sim):
+
+            Xstr = X.astype(np.str)     # DiscStr: Xstr will be replaced with the string
+
+            for nx in self.rvDiscIdx:
+                for ns in range(X.shape[0]):
+                    Xstr[ns][nx] = "\""+self.rvDiscStr[nx][int(X[ns][nx]-1)]+"\""
+
             tmp = time.time()
             if model_hf.is_model or model_hf.model_without_sampling:
-                res = self.run_FEM_batch(X, id_sim, runIdx=model_hf.runIdx)
+                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_hf.runIdx)
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
             self.time_hf_tot += time.time() - tmp
@@ -695,9 +761,16 @@ class surrogate(UQengine):
             return res
 
         def FEM_batch_lf(X, id_sim):
+
+            Xstr = X.astype(np.str)  # DiscStr: Xstr will be replaced with the string
+
+            for nx in self.rvDiscIdx:
+                for ns in range(X.shape[0]):
+                    Xstr[ns][nx] = self.rvDiscStr[nx][int(X[ns][nx] - 1)]
+
             tmp = time.time()
             if model_lf.is_model:
-                res = self.run_FEM_batch(X, id_sim, runIdx=model_lf.runIdx)
+                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_lf.runIdx)
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
             self.time_lf_tot += time.time() - tmp
@@ -722,10 +795,18 @@ class surrogate(UQengine):
         if model_hf.model_without_sampling:
             X_hf_tmp, model_hf.X_existing = model_hf.X_existing, X_hf_tmp
         X_hf_tmp, Y_hf_tmp, self.id_sim_hf = FEM_batch_hf(X_hf_tmp, self.id_sim_hf)
+        
 
-        self.X_hf, self.Y_hf = np.vstack([model_hf.X_existing, X_hf_tmp]), np.vstack(
-            [model_hf.Y_existing, Y_hf_tmp]
-        )
+        if model_hf.X_existing.shape[0]==0:
+            self.X_hf, self.Y_hf = X_hf_tmp, Y_hf_tmp
+        else:
+            if model_hf.X_existing.shape[1]!=X_hf_tmp.shape[1]:
+                msg = "Error importing input dimension specified {} is different from the written {}.".format(model_hf.X_existing.shape[1],X_hf_tmp.shape[1])
+                self.exit(msg)
+
+            self.X_hf, self.Y_hf = np.vstack([model_hf.X_existing, X_hf_tmp]), np.vstack(
+                [model_hf.Y_existing, Y_hf_tmp]
+            )
 
         X_lf_tmp = model_lf.sampling(max([model_lf.n_init - model_lf.n_existing, 0]))
 
@@ -751,17 +832,18 @@ class surrogate(UQengine):
             [model_lf.X_existing, new_x_lf_tmp]
         ), np.vstack([model_lf.Y_existing, new_y_lf_tmp])
 
-        if self.X_hf.shape[1] != self.X_lf.shape[1]:
-            msg = "Error importing input data: dimension inconsistent: high fidelity model have {} RV(s) but low fidelity model have {}.".format(
-                self.X_hf.shape[1], self.X_lf.shape[1]
-            )
-            self.exit(msg)
+        if self.X_lf.shape[0]!=0:
+            if self.X_hf.shape[1] != self.X_lf.shape[1]:
+                msg = "Error importing input data: dimension inconsistent: high fidelity model have {} RV(s) but low fidelity model have {}.".format(
+                    self.X_hf.shape[1], self.X_lf.shape[1]
+                )
+                self.exit(msg)
 
-        if self.Y_hf.shape[1] != self.Y_lf.shape[1]:
-            msg = "Error importing input data: dimension inconsistent: high fidelity model have {} QoI(s) but low fidelity model have {}.".format(
-                self.Y_hf.shape[1], self.Y_lf.shape[1]
-            )
-            self.exit(msg)
+            if self.Y_hf.shape[1] != self.Y_lf.shape[1]:
+                msg = "Error importing input data: dimension inconsistent: high fidelity model have {} QoI(s) but low fidelity model have {}.".format(
+                    self.Y_hf.shape[1], self.Y_lf.shape[1]
+                )
+                self.exit(msg)
 
         for i in range(y_dim):
             self.m_list[i] = self.set_XY(
@@ -923,6 +1005,10 @@ class surrogate(UQengine):
         print("3. time = {:.2f} s".format(self.sim_time),flush=True)
 
         """
+        
+        
+        
+        
         # visualize
         dum, dum, indices, counts = np.unique(self.X_hf, axis=0, return_index=True, return_counts=True,
                                return_inverse=True)
@@ -985,12 +1071,12 @@ class surrogate(UQengine):
 
         ### cross validation predictions
         
-        plt.fill(np.concatenate([sorted_x, sorted_x[::-1]]),
-                 np.concatenate([sorted_y - 1.9600 * sorted_y_std0,
-                                 (sorted_y  + 1.9600 * sorted_y_std0) [::-1]]),
-                 alpha=.5, fc=(200/255, 200/255, 33/255), ec='None', label='95% cross validation')     
-
-                 
+        # plt.fill(np.concatenate([sorted_x, sorted_x[::-1]]),
+        #          np.concatenate([sorted_y - 1.9600 * sorted_y_std0,
+        #                          (sorted_y  + 1.9600 * sorted_y_std0) [::-1]]),
+        #          alpha=.5, fc=(200/255, 200/255, 33/255), ec='None', label='95% cross validation')     
+        # 
+        #          
                  
         plt.fill(np.concatenate([xs1, xs1[::-1]]),
                  np.concatenate([ys_pred - 1.9600 * ys_pred_sig_w_measured,
@@ -1004,10 +1090,10 @@ class surrogate(UQengine):
                   
          #plt.scatter(self.m_list[0].X,self.m_list[0].Y, label='Mean of repls')
         
-        plt.scatter(sorted_x,sorted_y, label='All observation')
+        #plt.scatter(sorted_x,sorted_y, label='All observation')
         plt.plot(xs1, ys_pred, '-', c=(0/255, 18/255, 25/255), label='Prediction mean')
-        plt.scatter(self.X_hf[:,0],self.Y_hf[:,0], label='All observation')
-        plt.scatter(self.m_list[0].X[counts>1,0],self.m_list[0].Y[counts>1,0], label='Mean of repls')
+        plt.scatter(self.X_hf[:,0],self.Y_hf[:,0], label='All observations')
+        #plt.scatter(self.m_list[0].X[counts>1,0],self.m_list[0].Y[counts>1,0], label='Mean of repls')
         
         plt.xlabel('$x$')
         plt.ylabel('$f(x)$')
@@ -2253,13 +2339,22 @@ class model_info:
             self.thr_t = surrogateJson["timeLimit"] * 60
 
             self.xrange = np.empty((0, 2), float)
+            self.xDistTypeArr=[]
             for rv in rvJson:
-                if "lowerbound" not in rv:
+                if rv["distribution"]=="Uniform":
+                    self.xrange = np.vstack(
+                        (self.xrange, [rv["lowerbound"], rv["upperbound"]])
+                    )
+                    self.xDistTypeArr += ["U"]
+                elif rv["distribution"]=="discrete_design_set_string":
+                    self.xrange = np.vstack(
+                        (self.xrange, [1, len(rv["elements"])])
+                    )
+                    self.xDistTypeArr += ["DS"]
+                else:
                     msg = "Error in input RV: all RV should be set to Uniform distribution"
                     exit_tmp(msg)
-                self.xrange = np.vstack(
-                    (self.xrange, [rv["lowerbound"], rv["upperbound"]])
-                )
+
 
         else:
             self.doe_method = "None"
@@ -2296,10 +2391,14 @@ class model_info:
             X_samples = np.zeros((n, self.x_dim))
             U = lhs(self.x_dim, samples=n)
             for nx in range(self.x_dim):
-                X_samples[:, nx] = (
-                        U[:, nx] * (self.xrange[nx, 1] - self.xrange[nx, 0])
-                        + self.xrange[nx, 0]
-                )
+
+                if (self.xDistTypeArr[nx]=="U"):
+                    X_samples[:, nx] = (
+                            U[:, nx] * (self.xrange[nx, 1] - self.xrange[nx, 0])
+                            + self.xrange[nx, 0]
+                    )
+                else:
+                    X_samples[:, nx] =  np.ceil(U[:, nx]*self.xrange[nx, 1])
 
             if (self.numRepl)*self.numSampToBeRepl >0 and not self.numSampRepldone:
                 X_samples = np.vstack([X_samples,np.tile(X_samples[0:self.numSampToBeRepl,:],(self.numRepl-1,1))])
