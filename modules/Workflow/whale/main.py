@@ -2180,39 +2180,3 @@ class Workflow(object):
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
 
-    def add_intensity_measures(self, assetAIM):
-            # SY- This is needed somewhare. it will be better if it is in multipleEventPEER
-
-            with open(self.input_file, 'r') as f:
-                input_data = json.load(f)
-
-            if "Applications" in input_data.keys() and "Events" in input_data.keys():
-
-                UQ_app_name = input_data["Applications"]["UQ"]["Application"]
-                EVENT_type = input_data["Events"][0]["EventClassification"] #this limitation can be relaxed in the future
-
-                if  UQ_app_name  == "SimCenter-UQ" and   EVENT_type == "Earthquake" :
-
-                    computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                        'createEVENT','groundMotionIM','IntensityMeasureComputer.py')
-
-                    pythonEXE = sys.executable  
-
-                    arg_list = [pythonEXE]
-                    arg_list.append(computeIM)
-                    arg_list.append("--filenameAIM")
-                    arg_list.append(assetAIM)
-                    arg_list.append("--filenameEVENT")
-                    arg_list.append("EVENT.json")
-                    arg_list.append("--filenameIM")
-                    arg_list.append("IM.json")
-                    driverLine = create_command(arg_list)
-                    driverFile = self.default_values['driverFile']
-                    
-                    if platform.system() == 'Windows':
-                        driverFile = driverFile+'.bat'
-                    with open(driverFile,'a') as f:
-                        f.write(driverLine)
-
-                else:
-                    pass
