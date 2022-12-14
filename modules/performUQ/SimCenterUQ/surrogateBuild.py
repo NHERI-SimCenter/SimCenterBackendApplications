@@ -441,10 +441,30 @@ class surrogate(UQengine):
                     self.rvVal += [1]
                     self.rvDiscStr += [rvInfo["elements"]]
                     self.rvDiscIdx = [nx]
+
             elif self.modelInfoHF.is_data:
                 self.rvVal = self.rvVal + [np.mean(self.modelInfoHF.X_existing[:, nx])]
             else:
                 self.rvVal = [0] * self.x_dim
+
+
+        #
+        # EE-UQ
+        #
+
+        self.rv_name_ee=[]
+        if surrogateJson.get("IntensityMeasure") != None:
+            self.isEEUQ=True
+            for imName, imChar in surrogateJson["IntensityMeasure"].items():
+                if imChar.get("Periods") != None:
+                    for pers in imChar["Periods"]:
+                        self.rv_name_ee += [imName+str(pers)]
+                else:
+                    self.rv_name_ee += [imName]
+        else:
+            self.isEEUQ=False
+
+
 
     def create_gp_model(self):
         kernel = self.kernel
@@ -507,6 +527,7 @@ class surrogate(UQengine):
 
         self.nc1 = min(200 * x_dim, 2000)  # candidate points
         self.nq = min(200 * x_dim, 2000)  # integration points
+
 
     def predict(self, m_tmp, X, noise=0):
 
@@ -1204,6 +1225,9 @@ class surrogate(UQengine):
         self.R2_val = R2_val
 
     def save_model(self, filename):
+
+        if self.isEEUQ:
+            self.rv_name = self.rv_name_ee
 
         with open(self.work_dir + "/" + filename + ".pkl", "wb") as file:
             pickle.dump(self.m_list, file)
