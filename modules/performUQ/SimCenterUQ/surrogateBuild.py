@@ -456,11 +456,12 @@ class surrogate(UQengine):
         if surrogateJson.get("IntensityMeasure") != None:
             self.isEEUQ=True
             for imName, imChar in surrogateJson["IntensityMeasure"].items():
-                if imChar.get("Periods") != None:
-                    for pers in imChar["Periods"]:
-                        self.rv_name_ee += [imName+str(pers)]
-                else:
-                    self.rv_name_ee += [imName]
+                # if imChar.get("Periods") != None:
+                #     for pers in imChar["Periods"]:
+                #         self.rv_name_ee += [imName+str(pers)]
+                # else:
+                #     self.rv_name_ee += [imName]
+                self.rv_name_ee += [imName]
         else:
             self.isEEUQ=False
 
@@ -771,7 +772,7 @@ class surrogate(UQengine):
 
             tmp = time.time()
             if model_hf.is_model or model_hf.model_without_sampling:
-                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_hf.runIdx)
+                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_hf.runIdx, alterInput=self.rvDiscIdx)
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
             self.time_hf_tot += time.time() - tmp
@@ -791,7 +792,7 @@ class surrogate(UQengine):
 
             tmp = time.time()
             if model_lf.is_model:
-                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_lf.runIdx)
+                res = self.run_FEM_batch(Xstr, id_sim, runIdx=model_lf.runIdx, alterInput=self.rvDiscIdx)
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
             self.time_lf_tot += time.time() - tmp
@@ -965,7 +966,14 @@ class surrogate(UQengine):
                     self.exit_code = "data"
                 exit_flag = True
                 break
-
+                
+            if self.X_hf.shape[0] ==  model_hf.thr_count  and np.sum(self.stochastic)==0:
+                # This is when replicated unwantedly
+                n_iter = i
+                self.exit_code = "count"
+                exit_flag = True
+                break
+                
             if np.max(NRMSE_val) < model_hf.thr_NRMSE:
                 n_iter = i
                 self.exit_code = "accuracy"
@@ -1227,7 +1235,15 @@ class surrogate(UQengine):
     def save_model(self, filename):
 
         if self.isEEUQ:
-            self.rv_name = self.rv_name_ee
+            self.rv_name_new=[]
+            for nx in range(self.x_dim):
+                if (self.modelInfoHF.xDistTypeArr[nx] == "U"):
+                    self.rv_name_new += [self.rv_name[nx]]
+                else:
+                    self.rv_name_new += self.rv_name_ee
+
+            self.rv_name=self.rv_name_new
+            self.x_dim=len(self.rv_name_new)
 
         with open(self.work_dir + "/" + filename + ".pkl", "wb") as file:
             pickle.dump(self.m_list, file)
@@ -1455,7 +1471,7 @@ class surrogate(UQengine):
         # results["fem"] = self.femInfo
 
         rv_list = []
-        for nx in range(self.x_dim):
+        for nx in range(len(self.rvName)):
             rvs = {}
             rvs["name"] = self.rvName[nx]
             rvs["distribution"] = self.rvDist[nx]
@@ -2101,7 +2117,7 @@ class surrogate(UQengine):
                 Ym = self.m_list[ny].Y
 
                 # works both for stochastic/stochastic
-                nugget_mat = np.diag(self.var_str[ny]) * self.m_list[ny].Gaussian_noise.parameters
+                nugget_mat = np.diag(np.squeeze(self.var_str[ny])) * self.m_list[ny].Gaussian_noise.parameters
 
                 Rmat = self.m_list[ny].kern.K(Xm)
                 #K(X_hf,X_hf)
@@ -2339,20 +2355,20 @@ class model_info:
 
                 self.numSampToBeRepl = surrogateJson["numSampToBeRepl"]
                 self.numRepl = surrogateJson["numRepl"]
+                self.numSampRepldone = False
 
                 if self.numRepl == -1:  # use default
                     self.numRepl = 10
                 elif self.numRepl < 2:
                     msg = "Error reading json: number of replications should be greater than 1 and a value greater than 5 is recommended"
-                    self.exit(msg)
+                    exit_tmp(msg)
 
                 if self.numSampToBeRepl == -1:  # use default
                     self.numSampToBeRepl = 8 * x_dim
                 elif self.numSampToBeRepl < 2 or self.numSampToBeRepl > self.thr_count:
                     msg = "Error reading json: number of samples to be replicated should be greater than 1 and smaller than the number of the original samples. A value greater than 4*#RV is recommended"
-                    self.exit(msg)
-
-                self.numSampRepldone = False
+                    exit_tmp(msg)
+                    #self.numSampRepldone = True
             else:
                 self.numSampToBeRepl = 0
                 self.numRepl = 0

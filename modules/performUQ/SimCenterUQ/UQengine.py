@@ -85,9 +85,8 @@ class UQengine:
         self.t_thr = t_thr
         self.total_sim_time = 0
 
-    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=False):
-        alterInput = True # for testing
-            
+    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=[]):
+
         if runIdx == -1:
             # dummy run
             return X, np.zeros((0, self.y_dim)), id_sim
@@ -168,9 +167,12 @@ class UQengine:
                 else:
                     Y[id - id_sim, :] = val
 
-            if alterInput:
-                IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
-                X = IM_vals.to_numpy()[:,1:]
+        if len(alterInput)>0:
+            IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+            idx = alterInput[0]
+            X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
+            X_new = np.hstack([X_new, X[:,idx+1:]])
+            X = X_new.astype(np.double)
 
 
         return X, Y, id_sim + Nsim
