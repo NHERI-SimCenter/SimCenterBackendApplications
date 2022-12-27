@@ -18,6 +18,8 @@ class UQengine:
         self.workflowDriver = inputArgs[3]
         self.os_type = inputArgs[4]
         self.run_type = inputArgs[5]
+
+        self.IM_names = [] # used in EEUQ
         # self.workflowDriver = "workflow_driver"
         # if self.os_type.lower().startswith('win'):
         #    self.workflowDriver = "workflow_driver.bat"
@@ -169,11 +171,11 @@ class UQengine:
 
         if len(alterInput)>0:
             IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+            self.IM_names = list(map(str, IM_vals))[1:]
             idx = alterInput[0]
             X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
             X_new = np.hstack([X_new, X[:,idx+1:]])
             X = X_new.astype(np.double)
-
 
         return X, Y, id_sim + Nsim
 

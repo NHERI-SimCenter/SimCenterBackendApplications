@@ -1240,7 +1240,7 @@ class surrogate(UQengine):
                 if (self.modelInfoHF.xDistTypeArr[nx] == "U"):
                     self.rv_name_new += [self.rv_name[nx]]
                 else:
-                    self.rv_name_new += self.rv_name_ee
+                    self.rv_name_new += self.IM_names 
 
             self.rv_name=self.rv_name_new
             self.x_dim=len(self.rv_name_new)
