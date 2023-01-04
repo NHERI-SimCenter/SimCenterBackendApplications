@@ -164,7 +164,7 @@
           }
         ]
       }
-	]
+  ]
   },
   "RegionalEventApplications": {
     "API": {
@@ -314,19 +314,19 @@
         "Name": "ExistingSimCenterEvents",
         "ExecutablePath": "applications/createEVENT/multipleSimCenter/MultipleSCEvents",
         "ApplicationSpecificInputs": [
-	]
+  ]
       },
       {
         "Name": "ExistingPEER_Events",
         "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
         "ApplicationSpecificInputs": [
-	]
+  ]
       },
       {
         "Name": "Site Response",
         "ExecutablePath": "applications/createEVENT/siteResponse/SiteResponse.py",
         "ApplicationSpecificInputs": [
-	]
+  ]
       },
       {
         "Name": "RegionalSiteResponse",
@@ -399,29 +399,29 @@
         "Name": "CFDEvent",
         "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
         "ApplicationSpecificInputs":[
-		{
-			"id":"OpenFOAMCase",
-			"type":"string",
+    {
+      "id":"OpenFOAMCase",
+      "type":"string",
             "description": "Remote directory containing OpenFOAM case input"
-		},{
-			"id":"OpenFOAMSolver",
-			"type":"string",
+    },{
+      "id":"OpenFOAMSolver",
+      "type":"string",
             "description": "OpenFOAM solver used"
-		}]
+    }]
       },
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
         "ApplicationSpecificInputs":[
-		{
-			"id":"OpenFOAMCase",
-			"type":"string",
+    {
+      "id":"OpenFOAMCase",
+      "type":"string",
             "description": "Remote directory containing OpenFOAM case input"
-		},{
-			"id":"OpenFOAMSolver",
-			"type":"string",
+    },{
+      "id":"OpenFOAMSolver",
+      "type":"string",
             "description": "OpenFOAM solver used"
-		}]
+    }]
       },
       {
         "Name": "NNGM",
@@ -470,6 +470,10 @@
         "Name": "pointWindSpeed",
         "ExecutablePath": "applications/createEVENT/pointWindSpeed/pointWindSpeed",
         "ApplicationSpecificInputs":["filenameWindSpeedCloudData"]
+      },
+      {
+        "Name": "gridGroundMoionSelection",
+        "ExecutablePath": "applications/createEVENT/uniformPEER/gridGroundMoion.py"
       }
     ]
   },
@@ -635,7 +639,7 @@
       {
           "id": "filenameEDP",
           "type": "workflowDefault",
-	  "description": "name of file containing the EDP to be determined from the analysis"
+    "description": "name of file containing the EDP to be determined from the analysis"
       }
       ]
     },
@@ -760,25 +764,25 @@
   },
   "UQApplications": {
       "API": {
-	  "Inputs": [
-	      {
-		  "id": "workflowInput",
-		  "type": "workflowDefault",
-		  "description": "name of input file"
-	      },
-	      {
-		  "id": "driverFile",
-		  "type": "workflowDefault",
-		  "description": "name of file containing the simulation driver"
-	      }
-	  ],
-	  "Outputs": [
-	      {
-		  "id": "workflowOutput",
-		  "type": "workflowDefault",
-		  "description": "name of EDP file to be added to"
-	      }
-	  ]
+    "Inputs": [
+        {
+      "id": "workflowInput",
+      "type": "workflowDefault",
+      "description": "name of input file"
+        },
+        {
+      "id": "driverFile",
+      "type": "workflowDefault",
+      "description": "name of file containing the simulation driver"
+        }
+    ],
+    "Outputs": [
+        {
+      "id": "workflowOutput",
+      "type": "workflowDefault",
+      "description": "name of EDP file to be added to"
+        }
+    ]
     },
     "Applications": [
       {
@@ -792,7 +796,7 @@
       {
         "Name": "UCSD-UQ",
         "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
-      },		
+      },    
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
@@ -849,7 +853,7 @@
         "Name": "Custom",
         "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
         "ApplicationSpecificInputs": []
-      }	,
+      } ,
       {
         "Name": "MultipleModels",
         "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
