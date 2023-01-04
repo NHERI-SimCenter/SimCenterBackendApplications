@@ -664,7 +664,7 @@ class surrogate(UQengine):
                                                         Y_metadata=None)
                         print("Optimizing variance field of ny={}".format(ny))
                         m_var.optimize(messages=True, max_f_eval=1000)
-                        m_var.optimize_restarts(20)
+                        m_var.optimize_restarts(20,parallel=True, num_processes=self.n_processor)
                         log_var_pred, dum = m_var.predict(X_new)
                         var_pred = np.exp(log_var_pred)
                         #
@@ -723,7 +723,7 @@ class surrogate(UQengine):
         warnings.filterwarnings("ignore")
         t_opt = time.time()
         nugget_opt_tmp = self.nugget_opt
-        nopt = 20
+        nopt =max([20, self.n_processor])
 
         parallel_calib = False
         # parallel_calib = self.do_parallel
@@ -738,7 +738,8 @@ class surrogate(UQengine):
                     self.do_mf,
                     self.heteroscedastic,
                     nopt,
-                    ny
+                    ny,
+                    self.n_processor
                 )
                 for ny in range(self.y_dim)
             )
@@ -754,28 +755,29 @@ class surrogate(UQengine):
         else:
             for ny in range(self.y_dim):
                 self.m_list[ny], msg, ny = calibrating(copy.deepcopy(self.m_list[ny]), nugget_opt_tmp, self.nuggetVal, self.normVars[ny],
-                                                       self.do_mf, self.heteroscedastic, nopt , ny)
+                                                       self.do_mf, self.heteroscedastic, nopt , ny, self.n_processor)
                 if not msg == "":
                     self.exit(msg)
         ####
         
         # because EE-UQ results are more likely to have huge nugget.
+        #if False:
         if self.isEEUQ:
 
             if self.heteroscedastic:
                 variance_keyword = "het_Gauss.variance"
             else:
                 variance_keyword = "Gaussian_noise.variance"
-                
-                
+
+
             for ny in range(self.y_dim):
                 for parname in self.m_list[ny].parameter_names():
                     if parname.endswith("variance") and (not "Gauss" in parname):
-                        exec("my_new_var = max(self.m_list[ny]." + variance_keyword + ", 5*self.m_list[ny]." + parname+")")
+                        exec("my_new_var = max(self.m_list[ny]." + variance_keyword + ", 10*self.m_list[ny]." + parname+")")
                         exec("self.m_list[ny]." + variance_keyword + "= my_new_var")
 
                 self.m_list[ny].optimize()
-        
+
         self.calib_time = time.time() - t_opt
         print("     Calibration time: {:.2f} s".format(self.calib_time),flush=True)
         Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2 = self.get_cross_validation_err()
@@ -1082,7 +1084,32 @@ class surrogate(UQengine):
 
         """
         
+        ## The plot in quoFEM
+        import matplotlib.pyplot as plt
+        ny = 0;
+        plt.scatter(self.Y_hf[:, ny],self.Y_cv[:, ny]); plt.show()
         
+        ##
+        
+        x1 = np.log(self.X_hf[:, 1])
+        x2 = np.log(self.X_hf[:, 2])
+        y = np.log(self.Y_hf[:, 0])
+        
+        
+        
+        my_test_X = self.X_hf*1.05
+        x1t = np.log(my_test_X[:, 1])
+        x2t = np.log(my_test_X[:, 2])
+        #yt = (self.m_list[0].predict(my_test_X)[0])
+        yt = e22[:, 0] 
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(x1, x2, y)
+        ax.scatter(x1t, x2t, yt)
+        ax.view_init(15, 60)
+
+        plt.show()
         
         
         # visualize
@@ -1297,7 +1324,7 @@ class surrogate(UQengine):
         self.inbound50 = np.zeros((self.y_dim,))
         self.Gaisspvalue = np.zeros((self.y_dim,))
 
-        if model_hf.is_model:
+        if not self.do_mf:
 
             for ny in range(self.y_dim):
                 if not self.do_logtransform:
@@ -2207,7 +2234,6 @@ class surrogate(UQengine):
         #
 
         if (not self.do_mf) and (not self.heteroscedastic): # note: heteroscedastic is not our stochastic kriging
-
             #X_unique, dum, indices, dum = np.unique(X_hf, axis=0, return_index=True, return_counts=True,
             #                                   return_inverse=True)
             #self.n_unique_hf = indices.shape[0]
@@ -2609,7 +2635,7 @@ def weights_node2(node, nodes, ls):
     return weig / sum(weig)
 
 
-def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heteroscedastic, nopt, ny):  # nuggetVal = self.nuggetVal[ny]
+def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heteroscedastic, nopt, ny, n_processor):  # nuggetVal = self.nuggetVal[ny]
 
     msg = ""
 
@@ -2663,9 +2689,9 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
         m_tmp.optimize()
         #n=0;
         if not do_mf:
-            m_tmp.optimize_restarts(num_restarts=nopt)
+            m_tmp.optimize_restarts(num_restarts=nopt, parallel=True, num_processes=n_processor)
         else:
-            m_tmp.gpy_model.optimize_restarts(num_restarts=nopt)
+            m_tmp.gpy_model.optimize_restarts(num_restarts=nopt, parallel=True, num_processes=n_processor)
         # while n+20 <= nopt:
         #     m_tmp.optimize_restarts(num_restarts=20)
         #     n = n+20
