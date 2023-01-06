@@ -398,7 +398,7 @@ class gmCluster():
 
         flat_gm_ID = selected_gm_ID
         flat_gm_scale = selected_gm_scale
-        flat_grid_error = err_sum.flatten()/npergrid
+        flat_grid_error = err_sum.T.flatten()/npergrid
 
         #
         # Write the results
@@ -455,11 +455,9 @@ class gmCluster():
             ax = fig.add_subplot(projection='3d')
 
             sc = ax.scatter(X.reshape(-1), Y.reshape(-1), Z.reshape(-1), c=flat_grid_error, cmap='seismic', vmin=0,
-                            vmax=1, s=95,alpha=0.7)
+                            vmax=1, s=95,alpha=0.7, edgecolors='k')
 
             ax.scatter(theLogIM[idx1], theLogIM[idx2], theLogIM[idx3], s=20, color='y', edgecolors='k', alpha=1)
-
-            fig.colorbar(sc,label= "coverage (error level)")
 
             plt.xlabel(im_names[idx1] + myunits[idx1]);
             plt.ylabel(im_names[idx2] +  myunits[idx2])
@@ -479,9 +477,16 @@ class gmCluster():
 
             ax.set_zticks(np.log(ticks_final[idx3]))
             ax.set_zticklabels(ticks_final[idx3])
+            plt.legend(["anchor points", "selected ground motions"], ncol=2, bbox_to_anchor=(0,0.02,1,0.05), loc="upper left")
+            plt.title("Ground motion coverage", x=0.5, y=0.9)
 
-            ax.view_init(10, 50)
-            plt.legend(["anchor points", "collected samples"])
+            cax = fig.add_axes([ax.get_position().x1 + 0.05,
+                                ax.get_position().y0 + 0.2,
+                                0.03,
+                                ax.get_position().height/2])
+            fig.colorbar(sc,label= "coverage (error level)", cax=cax)
+
+            ax.view_init(10, 30)
 
         if nim==2:
 
@@ -495,7 +500,7 @@ class gmCluster():
             #
 
 
-            X, Y = np.meshgrid(LogIMre[0], LogIMref[1])
+            X, Y = np.meshgrid(LogIMref[0], LogIMref[1])
 
             #
             # interpolated area
@@ -507,9 +512,11 @@ class gmCluster():
             f = interpolate.interp2d((X.reshape(-1)), (Y.reshape(-1)) , flat_grid_error)
             zzz = f(xx,yy)
 
-            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.2,cmap='seismic')
-            ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error, cmap = 'seismic', vmin=0, vmax=1, s = 95)
-            ax.plot(np.exp(theLogIM[0]), np.exp(theLogIM[1]) ,'.',markersize=10,markerfacecolor='y',color='k')
+            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.5,cmap='seismic', vmin=0, vmax=1)
+            sc = ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error,edgecolors='k',  cmap = 'seismic', vmin=0, vmax=1, s = 95)
+            ax.scatter(np.exp(theLogIM[0]),  np.exp(theLogIM[1]), c='y', edgecolors='k', cmap='seismic', vmin=0, vmax=1,  s=55)
+
+            #ax.plot(np.exp(theLogIM[0]), np.exp(theLogIM[1]) ,'.',markersize=10,markerfacecolor='y',color='k')
 
             plt.xlabel(im_names[0] + myunits[0]);
             plt.ylabel(im_names[1] + myunits[1]);
@@ -527,6 +534,9 @@ class gmCluster():
             ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
             ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
             plt.grid()
+            plt.legend(["anchor points", "selected ground motions"], ncol=2, bbox_to_anchor=(0,0.02,1,-0.15), loc="upper left")
+            plt.title("Ground motion coverage", x=0.5, y=1.05)
+            fig.colorbar(sc,label= "coverage (error level)")
 
         if nim==1:
 
@@ -554,7 +564,7 @@ class gmCluster():
             ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)
             plt.xlabel(im_names[idx1]);
 
-        plt.savefig('res.png')
+        plt.savefig('gridIM_coverage.png',bbox_inches='tight')
 
 
 if __name__ == "__main__":
