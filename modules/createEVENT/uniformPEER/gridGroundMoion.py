@@ -111,14 +111,24 @@ class gmCluster():
         id_im_scaling_ancher = -1
         found_scaling_anchor = False
         nim_eff = nim
+
+        ## For the scaling anchor, we prioritize PSA and PGA
         for ni in range(len(im_names)):
-            if im_names[ni].startswith("PSA") and not im_names[ni] == "SaRatio" :
+            if (im_names[ni].startswith("PSA") or im_names[ni].startswith("PGA")):
                 # scaling anchor
                 if not found_scaling_anchor:
                     id_im_scaling_ancher = ni  # TODO
                     found_scaling_anchor = True
                     nim_eff = nim-1
 
+        ## Only if we didn't find PSA or PGA, we consider PGV, PGD, Ia as scaling anchor
+        if not found_scaling_anchor:
+            for ni in range(len(im_names)):
+                if (im_names[ni].startswith("PG") or im_names[ni].startswith("Ia")):
+                    if not found_scaling_anchor:
+                        id_im_scaling_ancher = ni  # TODO
+                        found_scaling_anchor = True
+                        nim_eff = nim - 1
 
         if nim<=0:
             # ERROR
@@ -278,7 +288,7 @@ class gmCluster():
                 scaling_exponent[ni] = 1
                 myunits += ['('+ units["PGD"]+')']
 
-            elif im_names[ni]=="Arias":
+            elif im_names[ni]=="Ia":
                 ai_pool = (np.array(geomIa))[np.newaxis].T
                 IM_log_data_pool = np.hstack([IM_log_data_pool, np.log(ai_pool)])
                 scaling_exponent[ni] = 2
@@ -290,19 +300,24 @@ class gmCluster():
                 errf.close()
                 exit(-1)
 
-        if id_im_scaling_ancher>=0:
+        if found_scaling_anchor:
             IM_log_data_scaling_anchor = IM_log_data_pool[:,id_im_scaling_ancher]
             #IM_log_ref_scaling_anchor = IM_log_ref[:,id_im_scaling_ancher]
             IM_log_ref_scaling_anchor = Scaling_ref
 
-            IM_log_data_pool2 = np.delete(IM_log_data_pool, id_im_scaling_ancher, 1)
+            IM_log_data_pool2 = np.delete(IM_log_data_pool.copy(), id_im_scaling_ancher, 1)
             IM_log_ref2 = IM_log_ref.copy()
-            scaling_exponent2 = np.delete(scaling_exponent, id_im_scaling_ancher)
 
+            scaling_exponent = scaling_exponent/scaling_exponent[id_im_scaling_ancher]
+            scaling_exponent2 = np.delete(scaling_exponent.copy(), id_im_scaling_ancher)
             log_im_range2 = np.delete(log_im_range.copy(), id_im_scaling_ancher)
-
-            lenRef2 = np.linalg.norm(1 / np.delete(im_nbins.copy(), id_im_scaling_ancher))
-
+            lenRef2 = np.mean(1 / np.delete(im_nbins.copy(), id_im_scaling_ancher))
+        else:
+            IM_log_data_pool2 = IM_log_data_pool
+            IM_log_ref2 = IM_log_ref
+            scaling_exponent2 = scaling_exponent
+            log_im_range2 = log_im_range
+            lenRef2 = np.linalg.norm(1 /im_nbins)
 
         if id_im_scaling_ancher>=0:
             if isGrid:
@@ -335,11 +350,13 @@ class gmCluster():
 
             if not found_scaling_anchor:
                 # If there is a scaling anchor
-                T_cond = 2
-                Sa_T1 = np.zeros((numgm,))
-                for ng in range(numgm):
-                    Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
-                SaT_ref = min(1.5, 0.9 / T_cond)
+                # T_cond = 2
+                # Sa_T1 = np.zeros((numgm,))
+                # for ng in range(numgm):
+                #     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
+                # SaT_ref = min(1.5, 0.9 / T_cond)
+                sf_pool = np.ones((numgm,))
+                penalty_pool = np.zeros((numgm,))
 
             else:
                 SaT_ref = np.exp(IM_log_ref_scaling_anchor[nsa])
@@ -347,17 +364,17 @@ class gmCluster():
 
             # penalty for scaling factor
 
-            sf_pool = SaT_ref / Sa_T1  # scaling factors
-            penalty_pool = np.zeros((numgm,))
-            temptag1 = np.where(sf_pool < sf_min)
-            penalty_pool[temptag1] = (sf_min - sf_pool[temptag1]) ** 2
-            temptag2 = np.where(sf_pool > sf_max)
-            penalty_pool[temptag2] = (sf_max - sf_pool[temptag2]) ** 2;
-
-            IM_log_data_pool3 = IM_log_data_pool2 + np.log(sf_pool[np.newaxis]).T * scaling_exponent2[np.newaxis]
+                sf_pool = SaT_ref / Sa_T1  # scaling factors
+                penalty_pool = np.zeros((numgm,))
+                temptag1 = np.where(sf_pool < sf_min)
+                penalty_pool[temptag1] = (sf_min - sf_pool[temptag1]) ** 2
+                temptag2 = np.where(sf_pool > sf_max)
+                penalty_pool[temptag2] = (sf_max - sf_pool[temptag2]) ** 2;
 
 
-            if IM_log_data_pool3.shape[1]>0:
+
+            if IM_log_data_pool2.shape[1]>0:
+                IM_log_data_pool3 = IM_log_data_pool2 + np.log(sf_pool[np.newaxis]).T * scaling_exponent2[np.newaxis]
                 normData = IM_log_data_pool3/log_im_range2
                 normRefGrid  =IM_log_ref2/log_im_range2
                 err_mat = distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2 + np.tile(penalty_pool,(int(nGridPerIM), 1)).T * sf_penalty
@@ -398,7 +415,6 @@ class gmCluster():
 
         flat_gm_ID = selected_gm_ID
         flat_gm_scale = selected_gm_scale
-        flat_grid_error = err_sum.T.flatten()/npergrid
 
         #
         # Write the results
@@ -439,11 +455,17 @@ class gmCluster():
             LogIMref += [np.linspace(log_im_lb[idx], log_im_ub[idx], int(im_nbins[idx]))]
 
         if nim==3:
+            flat_grid_error = err_sum.T.flatten() / npergrid
 
-            aa = np.delete(np.array([0,1,2]), id_im_scaling_ancher)
-            idx1 = aa[0]
-            idx2 = aa[1]
-            idx3 = id_im_scaling_ancher
+            if found_scaling_anchor:
+                aa = np.delete(np.array([0,1,2]), id_im_scaling_ancher)
+                idx1 = aa[0]
+                idx2 = aa[1]
+                idx3 = id_im_scaling_ancher
+            else:
+                idx1 = 0
+                idx2 = 1
+                idx3 = 2
 
             #
             # reference points
@@ -467,7 +489,7 @@ class gmCluster():
             for idx in range(nim):
                 myticks = np.array([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e-0, 1e1, 1e2, 1e3, 1e4])
                 tick_idx = np.argwhere((myticks>im_lb[idx]) * (myticks<im_ub[idx])).T[0]
-                ticks_final += [np.hstack([myticks[int(tick_idx)], np.array([im_lb[idx], im_ub[idx]])])]
+                ticks_final += [np.hstack([myticks[tick_idx.astype(int)], np.array([im_lb[idx], im_ub[idx]])])]
 
             ax.set_xticks(np.log(ticks_final[idx1]))
             ax.set_xticklabels(ticks_final[idx1])
@@ -486,31 +508,39 @@ class gmCluster():
                                 ax.get_position().height/2])
             fig.colorbar(sc,label= "coverage (error level)", cax=cax)
 
-            ax.view_init(10, 30)
+            ax.view_init(15, 30)
 
         if nim==2:
+            flat_grid_error = err_sum.flatten() / npergrid
 
             fig = plt.figure();
             ax = fig.add_subplot()
-
             ax.set_xscale('log')
             ax.set_yscale('log')
+
             #
             # data points
             #
-
 
             X, Y = np.meshgrid(LogIMref[0], LogIMref[1])
 
             #
             # interpolated area
             #
+            lowerboundX = np.min(( np.log(im_lb[0])-log_im_range[0]*0.05 ))
+            upperboundX = np.max(( np.log(im_ub[0])+log_im_range[0]*0.05))
+            lowerboundY = np.min(( np.log(im_lb[1])-log_im_range[1]*0.05 ))
+            upperboundY = np.max(( np.log(im_ub[1])+log_im_range[1]*0.05))
 
-            xx =  np.linspace(np.log(im_lb[0])-log_im_range[0]*0.05, np.log(im_ub[0])+log_im_range[0]*0.05, 20)
-            yy =  np.linspace(np.log(im_lb[1])-log_im_range[1]*0.05, np.log(im_ub[1])+log_im_range[1]*0.05, 20)
+            xx =  np.linspace(lowerboundX, upperboundX, 20)
+            yy =  np.linspace(lowerboundY, upperboundY, 20)
             xxx, yyy = np.meshgrid(xx, yy)
             f = interpolate.interp2d((X.reshape(-1)), (Y.reshape(-1)) , flat_grid_error)
             zzz = f(xx,yy)
+
+            #
+            # Start plotting
+            #
 
             C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.5,cmap='seismic', vmin=0, vmax=1)
             sc = ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error,edgecolors='k',  cmap = 'seismic', vmin=0, vmax=1, s = 95)
@@ -527,10 +557,19 @@ class gmCluster():
             idx1 = 0; idx2 = 1;
             tick_idx1 = np.argwhere((ax.get_xticks()>im_lb[idx1]) * (ax.get_xticks()<im_ub[idx1])).T[0]
             tick_idx2 = np.argwhere((ax.get_yticks()>im_lb[idx2]) * (ax.get_yticks()<im_ub[idx2])).T[0]
-            plt.xticks(np.hstack([ax.get_xticks()[tick_idx1], np.array([im_lb[idx1], im_ub[idx1]])]))
-            plt.yticks(np.hstack([ax.get_yticks()[tick_idx2], np.array([im_lb[idx2], im_ub[idx2]])]))
-            plt.xlim([im_lb[idx1]/np.exp(log_im_range[idx1]*0.1), im_ub[idx1]*np.exp(log_im_range[idx1]*0.1)])
-            plt.ylim([im_lb[idx2]/np.exp(log_im_range[idx2]*0.1), im_ub[idx2]*np.exp(log_im_range[idx2]*0.1)])
+            plt.xticks(np.hstack([ax.get_xticks(), np.array([im_lb[idx1], im_ub[idx1]])]))
+            plt.yticks(np.hstack([ax.get_yticks(), np.array([im_lb[idx2], im_ub[idx2]])]))
+
+
+
+            #
+            lowerboundX = np.min(( np.log(im_lb[0])-log_im_range[0]*0.05 , np.min(theLogIM[0])))
+            upperboundX = np.max(( np.log(im_ub[0])+log_im_range[0]*0.05 , np.max(theLogIM[0])))
+            lowerboundY = np.min(( np.log(im_lb[1])-log_im_range[1]*0.05 , np.min(theLogIM[1])))
+            upperboundY = np.max(( np.log(im_ub[1])+log_im_range[1]*0.05 , np.max(theLogIM[1])))
+            plt.xlim([np.exp(lowerboundX - log_im_range[idx1]*0.1), np.exp(upperboundX + log_im_range[idx1]*0.1)])
+            plt.ylim([np.exp(lowerboundY - log_im_range[idx2]*0.1), np.exp(upperboundY + log_im_range[idx2]*0.1)])
+
             ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
             ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
             plt.grid()
@@ -539,6 +578,8 @@ class gmCluster():
             fig.colorbar(sc,label= "coverage (error level)")
 
         if nim==1:
+            flat_grid_error = err_sum.flatten() / npergrid
+
 
             import matplotlib.pyplot as plt
 
