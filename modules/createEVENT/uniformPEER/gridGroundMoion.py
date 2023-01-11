@@ -57,6 +57,8 @@ import os
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from matplotlib.colors import LinearSegmentedColormap
+import itertools
 
 
 def main(inputArgs,err):
@@ -346,7 +348,19 @@ class gmCluster():
         selected_gm_scale = []
 
         err_sum = np.zeros((int(nScalingGrid),int(nGridPerIM)))
-        for nsa in range(int(nScalingGrid)):
+
+
+
+        nsa_tmp,ngr_tmp = np.meshgrid(range(int(nScalingGrid)), range(int(nGridPerIM)))
+        nsas=list(nsa_tmp.reshape(-1))*npergrid
+        ngrs=list(ngr_tmp.reshape(-1))*npergrid
+
+        randid = np.random.permutation(range(len(nsas)))
+
+        for nc in range(len(nsas)):
+
+            nsa = nsas[randid[nc]]
+            ngr = ngrs[randid[nc]]
 
             if not found_scaling_anchor:
                 # If there is a scaling anchor
@@ -386,32 +400,98 @@ class gmCluster():
             minerr = np.sort(err_mat,axis=0)
             minerr_tag = np.argsort(err_mat,axis=0)
 
-            for nrep in range(npergrid):
-                for ngr in np.random.permutation(int(nGridPerIM)):
-                    count = 0
-                    error_sum = 0
-                    for ng in minerr_tag[:,ngr]:
+            count = 0
+            for ng in minerr_tag[:,ngr]:
 
-                        cureqID = eqnameID[ng]
-                        cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))
+                cureqID = eqnameID[ng]
+                cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))
 
-                        if (selected_gm_ID.count(ng)==0) and(cureqID_existnum<numEQmax):
-                            break  # we only consider this
+                if (selected_gm_ID.count(ng)==0) and(cureqID_existnum<numEQmax):
+                    break  # we only consider this
 
-                        count += 1
-                        if ng==minerr_tag[-1,ngr]:
-                            msg = "not enough ground motion to match your criteria"
-                            print(msg)
-                            errf.write(msg)
-                            errf.close()
-                            exit(-1)
+                count += 1
+                if ng==minerr_tag[-1,ngr]:
+                    msg = "not enough ground motion to match your criteria"
+                    print(msg)
+                    errf.write(msg)
+                    errf.close()
+                    exit(-1)
 
-                    selected_gm_ID += [ng]
-                    selected_gm_err += [minerr[count,ngr]]
-                    selected_gm_eqID += [cureqID]
-                    selected_gm_scale += [sf_pool[ng]]
+            selected_gm_ID += [ng]
+            selected_gm_err += [minerr[count,ngr]]
+            selected_gm_eqID += [cureqID]
+            selected_gm_scale += [sf_pool[ng]]
 
-                    err_sum[nsa,ngr] += err_pure[ng,ngr]
+            err_sum[nsa,ngr] += err_pure[ng,ngr]
+
+
+
+        # for nsa in range(int(nScalingGrid)-1,0,-1):
+        #
+        #     if not found_scaling_anchor:
+        #         # If there is a scaling anchor
+        #         # T_cond = 2
+        #         # Sa_T1 = np.zeros((numgm,))
+        #         # for ng in range(numgm):
+        #         #     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
+        #         # SaT_ref = min(1.5, 0.9 / T_cond)
+        #         sf_pool = np.ones((numgm,))
+        #         penalty_pool = np.zeros((numgm,))
+        #
+        #     else:
+        #         SaT_ref = np.exp(IM_log_ref_scaling_anchor[nsa])
+        #         Sa_T1 = np.exp(IM_log_data_scaling_anchor)
+        #
+        #     # penalty for scaling factor
+        #
+        #         sf_pool = SaT_ref / Sa_T1  # scaling factors
+        #         penalty_pool = np.zeros((numgm,))
+        #         temptag1 = np.where(sf_pool < sf_min)
+        #         penalty_pool[temptag1] = (sf_min - sf_pool[temptag1]) ** 2
+        #         temptag2 = np.where(sf_pool > sf_max)
+        #         penalty_pool[temptag2] = (sf_max - sf_pool[temptag2]) ** 2;
+        #
+        #
+        #
+        #     if IM_log_data_pool2.shape[1]>0:
+        #         IM_log_data_pool3 = IM_log_data_pool2 + np.log(sf_pool[np.newaxis]).T * scaling_exponent2[np.newaxis]
+        #         normData = IM_log_data_pool3/log_im_range2
+        #         normRefGrid  =IM_log_ref2/log_im_range2
+        #         err_mat = distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2 + np.tile(penalty_pool,(int(nGridPerIM), 1)).T * sf_penalty
+        #         err_pure = distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2
+        #     else:
+        #         err_mat = np.tile(penalty_pool,(int(nGridPerIM), 1)).T * sf_penalty
+        #         err_pure = np.tile(penalty_pool,(int(nGridPerIM), 1)).T
+        #
+        #     minerr = np.sort(err_mat,axis=0)
+        #     minerr_tag = np.argsort(err_mat,axis=0)
+        #
+        #     for nrep in range(npergrid):
+        #         for ngr in np.random.permutation(int(nGridPerIM)):
+        #             count = 0
+        #             error_sum = 0
+        #             for ng in minerr_tag[:,ngr]:
+        #
+        #                 cureqID = eqnameID[ng]
+        #                 cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))
+        #
+        #                 if (selected_gm_ID.count(ng)==0) and(cureqID_existnum<numEQmax):
+        #                     break  # we only consider this
+        #
+        #                 count += 1
+        #                 if ng==minerr_tag[-1,ngr]:
+        #                     msg = "not enough ground motion to match your criteria"
+        #                     print(msg)
+        #                     errf.write(msg)
+        #                     errf.close()
+        #                     exit(-1)
+        #
+        #             selected_gm_ID += [ng]
+        #             selected_gm_err += [minerr[count,ngr]]
+        #             selected_gm_eqID += [cureqID]
+        #             selected_gm_scale += [sf_pool[ng]]
+        #
+        #             err_sum[nsa,ngr] += err_pure[ng,ngr]
 
         flat_gm_ID = selected_gm_ID
         flat_gm_scale = selected_gm_scale
@@ -454,6 +534,13 @@ class gmCluster():
             theLogIM += [np.array(IM_log_data_pool[selected_gm_ID, idx]) + theLogSF]
             LogIMref += [np.linspace(log_im_lb[idx], log_im_ub[idx], int(im_nbins[idx]))]
 
+
+        # my color map
+        colors = [(0, 0, 1), (1, 0, 0)]  # first color is black, last is red
+        mycm = LinearSegmentedColormap.from_list(
+            "Custom", colors, N=20)
+
+
         if nim==3:
             flat_grid_error = err_sum.T.flatten() / npergrid
 
@@ -476,7 +563,7 @@ class gmCluster():
             fig = plt.figure();
             ax = fig.add_subplot(projection='3d')
 
-            sc = ax.scatter(X.reshape(-1), Y.reshape(-1), Z.reshape(-1), c=flat_grid_error, cmap='seismic', vmin=0,
+            sc = ax.scatter(X.reshape(-1), Y.reshape(-1), Z.reshape(-1), c=flat_grid_error, cmap=mycm, vmin=0,
                             vmax=1, s=95,alpha=0.7, edgecolors='k')
 
             ax.scatter(theLogIM[idx1], theLogIM[idx2], theLogIM[idx3], s=20, color='y', edgecolors='k', alpha=1)
@@ -499,7 +586,7 @@ class gmCluster():
 
             ax.set_zticks(np.log(ticks_final[idx3]))
             ax.set_zticklabels(ticks_final[idx3])
-            plt.legend(["anchor points", "selected ground motions"], ncol=2, bbox_to_anchor=(0,0.02,1,0.05), loc="upper left")
+            plt.legend(["anchor point", "selected ground motion"], ncol=2, bbox_to_anchor=(0,0.02,1,0.05), loc="upper left")
             plt.title("Ground motion coverage", x=0.5, y=0.9)
 
             cax = fig.add_axes([ax.get_position().x1 + 0.05,
@@ -508,7 +595,7 @@ class gmCluster():
                                 ax.get_position().height/2])
             fig.colorbar(sc,label= "coverage (error level)", cax=cax)
 
-            ax.view_init(15, 30)
+            ax.view_init(10, 30)
 
         if nim==2:
             flat_grid_error = err_sum.flatten() / npergrid
@@ -542,9 +629,9 @@ class gmCluster():
             # Start plotting
             #
 
-            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.5,cmap='seismic', vmin=0, vmax=1)
-            sc = ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error,edgecolors='k',  cmap = 'seismic', vmin=0, vmax=1, s = 95)
-            ax.scatter(np.exp(theLogIM[0]),  np.exp(theLogIM[1]), c='y', edgecolors='k', cmap='seismic', vmin=0, vmax=1,  s=55)
+            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.5,cmap=mycm, vmin=0, vmax=1)
+            sc = ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error,edgecolors='k',  cmap = mycm, vmin=0, vmax=1, s = 250)
+            ax.scatter(np.exp(theLogIM[0]),  np.exp(theLogIM[1]), c='y', edgecolors='k', cmap=mycm, vmin=0, vmax=1,  s=55)
 
             #ax.plot(np.exp(theLogIM[0]), np.exp(theLogIM[1]) ,'.',markersize=10,markerfacecolor='y',color='k')
 
@@ -573,7 +660,7 @@ class gmCluster():
             ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
             ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
             plt.grid()
-            plt.legend(["anchor points", "selected ground motions"], ncol=2, bbox_to_anchor=(0,0.02,1,-0.15), loc="upper left")
+            plt.legend(["anchor point", "selected ground motion"], ncol=2, bbox_to_anchor=(0,0.02,1,-0.15), loc="upper left")
             plt.title("Ground motion coverage", x=0.5, y=1.05)
             fig.colorbar(sc,label= "coverage (error level)")
 
