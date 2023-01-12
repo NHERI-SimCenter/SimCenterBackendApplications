@@ -42,31 +42,31 @@
 import argparse, json
 import numpy as np
 import pandas as pd
+import importlib
+
 from pathlib import Path
 
 from sklearn.neighbors import NearestNeighbors
 
-def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label, seed):
+def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label, seed, doParallel):
 
     # check if running parallel
     numP = 1
     procID = 0
-    doParallel = False
-    
-    mpi_spec = importlib.util.find_spec("mpi4py")
-    found = mpi_spec is not None
-    if found:
-        import mpi4py
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        numP = comm.Get_size()
-        procID = comm.Get_rank();
-        if numP < 2:
-            doParallel = False
-            numP = 1
-            procID = 0
-        else:
-            doParallel = True;
+
+    if doParallel == True:
+        mpi_spec = importlib.util.find_spec("mpi4py")
+        found = mpi_spec is not None
+        if found:
+            import mpi4py
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            numP = comm.Get_size()
+            procID = comm.Get_rank();
+            if numP < 2:
+                doParallel = False
+                numP = 1
+                procID = 0
             
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -98,7 +98,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
 
     count = 0
     for i, asset in enumerate(asset_dict):
-        if doParallel == True and i % numP == procID:
+        if i % numP == procID:
             with open(asset['file'], 'r') as f:
                 asset_data = json.load(f)
 
@@ -241,7 +241,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
 
         if 'Events' not in asset_data:
             asset_data['Events'] = [{}]
-        elif len(asset_data['Events']==0):
+        elif len(asset_data['Events'])==0:
             asset_data['Events'].append({})
 
         asset_data['Events'][0].update({
@@ -263,9 +263,10 @@ if __name__ == '__main__':
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
     parser.add_argument('--filter_label', default="")
+    parser.add_argument('--doParallel', default=False)    
     parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
 
     find_neighbors(args.assetFile, args.filenameEVENTgrid,
                    args.samples,args.neighbors, args.filter_label,
-                   args.seed)
+                   args.seed, args.doParallel)

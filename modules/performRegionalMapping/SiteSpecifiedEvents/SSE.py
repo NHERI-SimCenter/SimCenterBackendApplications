@@ -45,6 +45,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.cluster.vq import vq
+import importlib
 
 def create_event(asset_file, event_grid_file):
 
@@ -91,7 +92,7 @@ def create_event(asset_file, event_grid_file):
 
     count = 0    
     for i, asset in enumerate(asset_dict):
-        if doParallel == True and i % numP == procID:        
+        if i % numP == procID:        
             with open(asset['file'], 'r') as f:
                 asset_data = json.load(f)
 
