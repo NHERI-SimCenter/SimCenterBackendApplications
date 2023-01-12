@@ -1350,7 +1350,7 @@ class DamageModel(PelicunModel):
 
             data_list.append(data)
 
-        damage_params = pd.concat(data_list, axis=0)
+        damage_params = pd.concat(data_list, axis=0)     
 
         # drop redefinitions of components
         damage_params = damage_params.groupby(damage_params.index).first()
@@ -3125,15 +3125,16 @@ class BldgRepairModel(LossModel):
 
         res_list = []
         key_list = []
-        if std_sample is not None:
-            prob_cmp_list = std_sample.columns.unique(level=1)
-        else:
-            prob_cmp_list = []
 
         dmg_quantities.columns = dmg_quantities.columns.reorder_levels([0, 3, 1, 2])
         dmg_quantities.sort_index(axis=1, inplace=True)
 
         for DV_type, _ in zip(['COST', 'TIME'], ['Cost', 'Time']):
+
+            if std_sample is not None:
+                prob_cmp_list = std_sample[DV_type].columns.unique(level=0)
+            else:
+                prob_cmp_list = []
 
             cmp_list = []
 
