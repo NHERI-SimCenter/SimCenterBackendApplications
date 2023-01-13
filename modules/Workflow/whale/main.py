@@ -57,6 +57,7 @@ from time import strftime
 from datetime import datetime
 import sys, os, json
 import argparse
+import importlib
 
 import pprint
 
@@ -424,14 +425,27 @@ class WorkflowApplication(object):
 
     def __init__(self, app_type, app_info, api_info):
 
+        #print('APP_TYPE', app_type)
+        #print('APP_INFO', app_info)
+        #print('API_INFO', api_info)
+        
         self.name = app_info['Name']
         self.app_type = app_type
         self.rel_path = app_info['ExecutablePath']
+        
+        if 'RunsParallel' in app_info.keys():
+          self.runsParallel = app_info['RunsParallel']
+        else:
+          self.runsParallel = False;
+          
         self.app_spec_inputs = app_info.get('ApplicationSpecificInputs',[])
 
         self.inputs = api_info['Inputs']
         self.outputs = api_info['Outputs']
-        self.defaults = api_info['DefaultValues']
+        if 'DefaultValues' in api_info.keys():        
+            self.defaults = api_info['DefaultValues']
+        else:
+            self.defaults = None;                        
 
     def set_pref(self, preferences, ref_path):
         """
@@ -575,9 +589,18 @@ class Workflow(object):
 
     """
 
-    def __init__(self, run_type, input_file, app_registry, app_type_list,
-        reference_dir=None, working_dir=None, app_dir=None):
-
+    def __init__(self,
+                 run_type,
+                 input_file,
+                 app_registry,
+                 app_type_list,
+                 reference_dir = None,
+                 working_dir = None,
+                 app_dir = None,
+                 parType="seqRUN",
+                 mpiExec="mpiExec",
+                 numProc=8):
+        
         log_msg('Inputs provided:')
         log_msg('workflow input file: {}'.format(input_file),
             prepend_timestamp=False)
@@ -597,7 +620,35 @@ class Workflow(object):
         self.input_file = input_file
         self.app_registry_file = app_registry
         self.modifiedRun = False # ADAM to fix
-        
+        self.parType = parType;
+        self.mpiExec = mpiExec
+        self.numProc = numProc 
+
+        # if parallel setup, open script file to run
+        inputFilePath = os.path.dirname(input_file)
+        parCommandFileName = os.path.join(inputFilePath, 'sc_parScript.sh')
+        if (parType == 'parSETUP'):
+            self.parCommandFile = open(parCommandFileName, "w")
+            self.parCommandFile.write("#!/bin/sh" + "\n")
+
+        self.numP = 1
+        self.procID = 0
+        if (parType == 'parRUN'):
+            mpi_spec = importlib.util.find_spec("mpi4py")
+            found = mpi_spec is not None
+            if found:
+                import mpi4py
+                from mpi4py import MPI
+                self.comm = MPI.COMM_WORLD
+                self.numP = self.comm.Get_size()
+                self.procID = self.comm.Get_rank();
+                if self.numP < 2:
+                    self.doParallel = False
+                    self.numP = 1
+                    self.procID = 0
+                else:
+                    self.doParallel = True;
+            
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
         else:
@@ -623,6 +674,25 @@ class Workflow(object):
         self.workflow_assets = {}
         self._parse_inputs()
 
+    def __del__(self):
+
+        # if parallel setup, add command to run this scipt with parellel option
+        if (self.parType == 'parSETUP'):
+            inputArgs = sys.argv
+            length = len(inputArgs)
+            i = 0
+            while i < length:
+                if 'parSETUP' == inputArgs[i]:
+                    inputArgs[i] = 'parRUN'
+                i += 1
+                
+            inputArgs.insert(0,'python')        
+            command = create_command(inputArgs)
+
+            self.parCommandFile.write("\n# Writing Final command to run this application in parallel\n")            
+            self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
+            self.parCommandFile.close()
+        
     def _init_app_registry(self):
         """
         Initialize the dictionary where we keep the data on available apps.
@@ -670,8 +740,7 @@ class Workflow(object):
                     api_info.update({'DefaultValues': self.default_values})
 
                 # and store their name and executable location
-                for app in available_apps:
-                    self.app_registry[app_type][app['Name']] = WorkflowApplication(
+                for app in available_apps: self.app_registry[app_type][app['Name']] = WorkflowApplication(
                          app_type=app_type, app_info=app, api_info=api_info)
 
         log_msg('  OK', prepend_timestamp=False)
@@ -808,6 +877,7 @@ class Workflow(object):
                         
         
     def _parse_inputs(self):
+        
         """
         Load the information about the workflow to run
 
@@ -864,7 +934,6 @@ class Workflow(object):
         
         # workflow input is input file
         default_values['workflowInput']=os.path.basename(self.input_file)
-        
         if default_values is not None:
 
             log_msg("The following workflow defaults were overwritten:", prepend_timestamp=False)
@@ -909,6 +978,7 @@ class Workflow(object):
 
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
+
 
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
@@ -998,7 +1068,6 @@ class Workflow(object):
 
         log_msg('\nRequested workflow:', prepend_timestamp=False)
         
-        
         for app_type, app_object in self.workflow_apps.items():
             recursiveLog(app_type, app_object)
 
@@ -1025,7 +1094,6 @@ class Workflow(object):
 
         # Get the workflow assets
         assetsWfapps = self.workflow_apps.get('Assets', None)
-
         assetWfList = self.workflow_assets.keys()
         
         # TODO: not elegant code, fix later
@@ -1071,27 +1139,101 @@ class Workflow(object):
 
             # Create the asset command list
             command = create_command(asset_command_list)
+            
+            if (self.parType == 'parSETUP'):
 
-            log_msg('\nCreating initial asset information model (AIM) files for '+asset_type, prepend_timestamp=False)
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\nWriting Asset Info command for asset type: '+asset_type+ ' to script', prepend_timestamp=False)                
+                self.parCommandFile.write("\n# Perform Asset File Creation for type: " + asset_type + " \n")
+
+                if asset_app.runsParallel == False:
+                    self.parCommandFile.write(command + "\n")
+                else:
+                    self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+
+            else:
+
+                log_msg('\nCreating initial asset information model (AIM) files for '+asset_type, prepend_timestamp=False)
+                log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+                
+                result, returncode = run_command(command)
             
-            result, returncode = run_command(command)
+                # Check if the command was completed successfully
+                if returncode != 0 :
+                    print(result)
+                    raise WorkFlowInputError('Failed to create the AIM file for '+asset_type)
+                else :
+                    log_msg('AIM files created for '+asset_type+'\n', prepend_timestamp=False)
+
             
+                log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+                log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
+                
+        log_div()
+    
+        return assetFilesList
+
+
+    def augment_asset_files(self):
+        """
+        Short description
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Augmenting files for individual assets for Workflow')
+        
+        # Open the input file - we'll need it later
+        with open(self.input_file, 'r') as f:
+            input_data = json.load(f)
+
+        # Get the workflow assets
+        assetsWfapps = self.workflow_apps.get('Assets', None)
+        assetWfList = self.workflow_assets.keys()
+        
+        # TODO: not elegant code, fix later
+        os.chdir(self.run_dir)
+        
+        assetFilesList = {}
+
+        #Iterate through the asset workflow apps
+        for asset_type, asset_app in assetsWfapps.items() :
+                
+            asset_folder = posixpath.join(self.run_dir, asset_type)
+                        
+            asset_file = posixpath.join(asset_folder, asset_type) + '.json'
             
+            assetPrefs = asset_app.pref
+           
+            # filter assets (if needed)
+            asset_filter = asset_app.pref.get('filter', None)
+            if asset_filter == "":
+                del asset_app.pref['filter']
+                asset_filter = None
+
+            if asset_filter is not None:
+                atag = [bs.split('-') for bs in asset_filter.split(',')]
+
+                asset_file = Path(str(asset_file).replace(".json", f"{atag[0][0]}-{atag[-1][-1]}.json"))
+                
+
+            # store the path to the asset file
+            assetFilesList[asset_type] = str(asset_file)
+            
+            for output in asset_app.outputs:
+                if output['id'] == 'assetFile':
+                    output['default'] = asset_file
+
             # Check if the command was completed successfully
-            if returncode != 0 :
-                print(result)
-                raise WorkFlowInputError('Failed to create the AIM file for '+asset_type)
-            else :
-                log_msg('AIM files created for '+asset_type+'\n', prepend_timestamp=False)
-
-            
-            log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
-            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+            # FMK check AIM file exists
     
             # Append workflow settings to the BIM file
             log_msg('Appending additional settings to the AIM files...\n')
-    
+            
             with open(asset_file, 'r') as f:
                 asset_data = json.load(f)
 
@@ -1149,40 +1291,55 @@ class Workflow(object):
 
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
-                    
+            
+            count = 0
             for asst in asset_data:
-    
-                AIM_file = asst['file']
-    
-                # Open the AIM file and add the unit information to it
-                with open(AIM_file, 'r') as f:
-                    AIM_data = json.load(f)
-                        
-                if self.units != None:
-                    AIM_data.update({'units': self.units})
+
+                if count % self.numP == self.procID:
+
+                    AIM_file = asst['file']
+                    
+                    # Open the AIM file and add the unit information to it
+                    with open(AIM_file, 'r') as f:
+                        AIM_data = json.load(f)
+
+                    if 'DefaultValues' in input_data.keys():
+                        AIM_data.update({'DefaultValues':input_data['DefaultValues']})
+
+                    if 'commonFileDir' in input_data.keys():
+                        AIM_data.update({'commonFileDir':input_data['commonFileDir']})
+                    if 'remoteAppDir' in input_data.keys():
+                        AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
+
+                    if 'localAppDir' in input_data.keys():
+                        AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
+                                    
+                    if self.units != None:
+                        AIM_data.update({'units': self.units})
     
                     # TODO: remove this after all apps have been updated to use the
                     # above location to get units
                     AIM_data['GeneralInformation'].update({'units': self.units})
     
-                AIM_data.update({'outputs': self.output_types})
+                    AIM_data.update({'outputs': self.output_types})
     
-                for key, value in self.shared_data.items():
-                    AIM_data[key] = value
+                    for key, value in self.shared_data.items():
+                        AIM_data[key] = value
                    
-                # Save the asset type
-                AIM_data['assetType'] = asset_type
+                    # Save the asset type
+                    AIM_data['assetType'] = asset_type
 
-                AIM_data.update(extra_input)
+                    AIM_data.update(extra_input)
  
-                with open(AIM_file, 'w') as f:
-                    json.dump(AIM_data, f, indent=2)
+                    with open(AIM_file, 'w') as f:
+                        json.dump(AIM_data, f, indent=2)
     
-        
-        log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
+                count = count + 1
+                
+        log_msg('\nAsset Information Model (AIM) files successfully augmented.', prepend_timestamp=False)
         log_div()
     
-        return assetFilesList
+        return assetFilesList    
 
     def perform_regional_event(self):
         """
@@ -1197,30 +1354,50 @@ class Workflow(object):
 
         log_msg('Simulating regional event...')
 
-        reg_event_app = self.workflow_apps['RegionalEvent']
+        if 'RegionalEvent' in self.workflow_apps.keys():
+            reg_event_app = self.workflow_apps['RegionalEvent']
+        else:
+            log_msg('No Regional Event Application to run.', prepend_timestamp=False)
+            log_div()
+            return;
+
+        if reg_event_app.rel_path == None:
+            log_msg('No regional Event Application to run.', prepend_timestamp=False)
+            log_div()            
+            return;
 
         reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
         command = create_command(reg_event_command_list)
 
-        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                prepend_blank_space=False)
+        if (self.parType == 'parSETUP'):
 
-        result, returncode = run_command(command)
+            log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
+            self.parCommandFile.write("\n# Perform Regional Event Simulation\n")
 
-        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+            if reg_event_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
 
-        log_msg('Regional event successfully simulated.', prepend_timestamp=False)
+        else:
+        
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
+
+            result, returncode = run_command(command)        
+
+            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
-
 
     def perform_regional_mapping(self, AIM_file_path, assetType):
         
         """
         Performs the regional mapping between the asset and a hazard event.
 
-        
 
         Parameters
         ----------
@@ -1252,11 +1429,27 @@ class Workflow(object):
 
         log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
 
-        result, returncode = run_command(command)
+        if (self.parType == 'parSETUP'):
 
-        log_msg('Output: ' + str(returncode), prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
-        log_msg('Regional mapping successfully created.', prepend_timestamp=False)
+            self.parCommandFile.write("\n# Regional Mapping for asset type: "
+                                      + assetType + " \n")
+
+            if reg_mapping_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+
+            log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
+                
+        else:
+            
+            result, returncode = run_command(command)
+
+            log_msg('Output: ' + str(returncode), prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('Regional mapping successfully created.', prepend_timestamp=False)
+            
         log_div()
 
 
@@ -1270,8 +1463,7 @@ class Workflow(object):
         ----------
         
         asst_id - the asset id
-        AIM_file_path - file path to the AIM file
-
+        AIM_file  - file path to the existing AIM file
         """
         log_msg('Initializing the simulation directory\n')
 
@@ -1300,6 +1492,7 @@ class Workflow(object):
             # Make a copy of the AIM file
             src = posixpath.join(aimDir,aimFileName)
             dst = posixpath.join(aimDir, f'{asst_id}/templatedir/{aimFileName}')
+            # dst = posixpath.join(aimDir, f'{asst_id}/templatedir/AIM.json')
             
             try:
                 shutil.copy(src,dst)
@@ -1325,7 +1518,7 @@ class Workflow(object):
                 if file.endswith('.j'):
                     os.remove(file)
 
-            # Make a copy of the input file and rename it to BIM.json
+            # Make a copy of the input file and rename it to AIM.json
             # This is a temporary fix, will be removed eventually.
             dst = Path(os.getcwd()) / AIM_file_path
             #dst = posixpath.join(os.getcwd(),AIM_file)
@@ -1531,9 +1724,10 @@ class Workflow(object):
                         prepend_timestamp=False)
                 log_div()
 
-
     def gather_workflow_inputs(self, asst_id=None, AIM_file_path = 'AIM.json'):
 
+        #print("gather_workflow_inputs")
+        
         if 'UQ' in self.workflow_apps.keys():        
             
             # Get the directory to the asset class dir, e.g., buildings
@@ -1557,13 +1751,14 @@ class Workflow(object):
             arg_list.append(u'{}'.format(abs_path.as_posix()))
             # arg_list.append(u'{}'.format(abs_path))
             
-            inputFilePath = os.path.dirname(self.input_file)
-            
+            #inputFilePath = os.path.dirname(self.input_file)
+            inputFilePath = os.getcwd()
             inputFilename = os.path.basename(self.input_file)
-                        
             pathToScFile = posixpath.join(inputFilePath,'sc_'+inputFilename)
+            
 
-            arg_list.append(u'{}'.format(self.input_file))
+            #arg_list.append(u'{}'.format(self.input_file))
+            arg_list.append(u'{}'.format(AIM_file_path))            
             arg_list.append(u'{}'.format(pathToScFile))
             arg_list.append(u'{}'.format(self.default_values['driverFile']))
             arg_list.append(u'{}'.format('sc_'+self.default_values['driverFile']))
@@ -1581,7 +1776,6 @@ class Workflow(object):
 
             self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
-            print(command)
 
             result, returncode = run_command(command)
             
@@ -1596,6 +1790,7 @@ class Workflow(object):
             
                 
     def create_driver_file(self, app_sequence, asst_id=None, AIM_file_path = 'AIM.json'):
+
         """
         This functipon creates a UQ driver file. This is only done if UQ is in the workflow apps
 
@@ -1606,19 +1801,24 @@ class Workflow(object):
         if 'UQ' in self.workflow_apps.keys():
             
             log_msg('Creating the workflow driver file')
+            #print('ASSET_ID', asst_id)
+            #print('AIM_FILE_PATH', AIM_file_path)
                         
             aimDir = os.path.dirname(AIM_file_path)
-                    
+            aimFile = os.path.basename(AIM_file_path)
+            
             # If the path is not provided, assume the AIM file is in the run dir
             if os.path.exists(aimDir) == False :
                 aimDir = self.run_dir
-                
+            
             os.chdir(aimDir)
 
             if asst_id is not None:
                 os.chdir(asst_id)
 
             os.chdir('templatedir')
+
+            #print('PWD', os.getcwd())
 
             driver_script = u''
 
@@ -1656,9 +1856,10 @@ class Workflow(object):
 
                         driver_script += create_command(command_list) + u'\n'
 
-            log_msg('Workflow driver script:', prepend_timestamp=False)
-            log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
-
+                        
+            #log_msg('Workflow driver script:', prepend_timestamp=False)
+            #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
+            
             driverFile = self.default_values['driverFile']
             
             # KZ: for windows, to write bat
@@ -1707,7 +1908,12 @@ class Workflow(object):
             
             workflow_app = self.workflow_apps['UQ']
 
+            # FMK
+            if asst_id is not None:
+                workflow_app=workflow_app['Buildings']
+            
             if AIM_file_path is not None:
+            
                 workflow_app.defaults['filenameAIM'] = AIM_file_path
                 #for input_var in workflow_app.inputs:
                 #    if input_var['id'] == 'filenameAIM':
@@ -1739,7 +1945,6 @@ class Workflow(object):
             #        command_list.append(edpFile)
                     
             command = create_command(command_list)
-            print('FMK COMMAND: ' + command)
 
             log_msg('Simulation command:', prepend_timestamp=False)
             log_msg('\n{}\n'.format(command), prepend_timestamp=False,
@@ -1766,8 +1971,17 @@ class Workflow(object):
 
                     # if the DL is coupled with response estimation, we need to sort the results
                     DL_app = self.workflow_apps.get('DL', None)
+
+                    # FMK
+                    #if asst_id is not None:
+                    # KZ: 10/19/2022, minor patch
+                    if asst_id is not None and DL_app is not None:
+                        DL_app=DL_app['Buildings']
+
                     if DL_app is not None:
+
                         is_coupled = DL_app.pref.get('coupled_EDP', None)
+
                         if is_coupled:
                             if 'eventID' in dakota_out.columns:
                                 events = dakota_out['eventID'].values
@@ -1776,11 +1990,13 @@ class Workflow(object):
                                 dakota_out = dakota_out.iloc[sorter, :]
                                 dakota_out.index = np.arange(dakota_out.shape[0])
 
-                    dakota_out.to_csv('response.csv')                
+                    
+                    dakota_out.to_csv('response.csv')
+
                     log_msg('Response simulation finished successfully.',
                         prepend_timestamp=False)
                 except:
-                    log_msg('DakotaTab.out not found. Response.csv not created.',
+                    log_msg('dakotaTab.out not found. Response.csv not created.',
                             prepend_timestamp=False)
 
             elif self.run_type in ['set_up', 'runningRemote']:
@@ -1876,10 +2092,10 @@ class Workflow(object):
             
                         command = create_command(command_list)
             
-                        log_msg('Damage and loss assessment command:', prepend_timestamp=False)
+                        log_msg('Damage and loss assessment command (1):', prepend_timestamp=False)
                         log_msg('\n{}\n'.format(command), prepend_timestamp=False,
                                 prepend_blank_space=False)
-            
+
                         result, returncode = run_command(command)
             
                         log_msg(result, prepend_timestamp=False)
@@ -1917,7 +2133,7 @@ class Workflow(object):
     
                 command = create_command(command_list)
     
-                log_msg('Damage and loss assessment command:',
+                log_msg('Damage and loss assessment command (2):',
                         prepend_timestamp=False)
                 log_msg('\n{}\n'.format(command), prepend_timestamp=False,
                         prepend_blank_space=False)
@@ -1953,6 +2169,10 @@ class Workflow(object):
                 col_info = []
                 for col in EDP_df.columns:
                     try:
+                        # KZ: 10/19/2022, patches for masking dummy edps (TODO: this part could be optimized)
+                        if col in ['dummy']:
+                            col_info.append(['dummy','1','1'])
+                            continue
                         split_col = col.split('-')
                         if len(split_col[1]) == 3:
                             col_info.append(split_col[1:])
@@ -1975,6 +2195,11 @@ class Workflow(object):
 
                 # store the EDP statistics in the output DF
                 for col in np.transpose(col_info):
+                    # KZ: 10/19/2022, patches for masking dummy edps (TODO: this part could be optimized)
+                    if 'dummy' in col:
+                        df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df['dummy'].median()
+                        df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(EDP_df['dummy']).std()
+                        continue
                     df_res.loc[0, (col[0], col[1], col[2], 'median')] = EDP_df[
                         '1-{}-{}-{}'.format(col[0], col[1], col[2])].median()
                     df_res.loc[0, (col[0], col[1], col[2], 'beta')] = np.log(
@@ -1991,7 +2216,9 @@ class Workflow(object):
 
 
     def aggregate_results(self, asst_data, asset_type = '',
-        out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+
+        #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description

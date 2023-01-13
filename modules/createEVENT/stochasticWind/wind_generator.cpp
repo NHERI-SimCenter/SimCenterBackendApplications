@@ -30,5 +30,5 @@ WindGenerator::WindGenerator(std::string model_name,
 
 utilities::JsonObject
 WindGenerator::generate_time_history(const std::string &event_name) {
-  return wind_model_->generate(event_name, true);
+  return wind_model_->generate(event_name, false);
 }
