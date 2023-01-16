@@ -308,19 +308,29 @@ def run_pelicun(config_path):
     else:
         demands = raw_demands
 
+    # load the available demand sample
+    PAL.demand.load_sample(demands)
+
     # get the calibration information
     if demand_config.get('Calibration', False):
-
-        # load the available demand sample
-        PAL.demand.load_sample(demands)
 
         # then use it to calibrate the demand model
         PAL.demand.calibrate_model(demand_config['Calibration'])
 
-        # and generate a new demand sample
-        sample_size = int(demand_config['SampleSize'])
+    else:
+        # if no calibration is requested, 
+        # set all demands to use empirical distribution
+        PAL.demand.calibrate_model({
+            "ALL": {"DistributionFamily": "empirical"}
+            })
 
-        PAL.demand.generate_sample({"SampleSize": sample_size})
+    # and generate a new demand sample
+    sample_size = int(demand_config['SampleSize'])
+
+    PAL.demand.generate_sample({
+        "SampleSize": sample_size,
+        'PreserveRawOrder': demand_config.get('CoupledDemands', False)
+        })
 
     # get the generated demand sample
     demand_sample, demand_units = PAL.demand.save_sample(save_units=True)
@@ -784,6 +794,7 @@ def run_pelicun(config_path):
                 consequence_db = bldg_repair_config['ConsequenceDatabasePath']
                 conseq_df = load_data(
                     bldg_repair_config['ConsequenceDatabasePath'],
+                    unit_conversion_factors={},
                     orientation=1, reindex=False, convert=[])
 
             # add the replacement consequence to the data
@@ -792,7 +803,9 @@ def run_pelicun(config_path):
                 index=pd.MultiIndex.from_tuples(
                     [('replacement', 'Cost'), ('replacement', 'Time')]))
 
-            DL_method = bldg_repair_config['ConsequenceDatabase']
+            #DL_method = bldg_repair_config['ConsequenceDatabase']
+            DL_method = damage_config.get('DamageProcess', 'User Defined')
+
             rc = ('replacement', 'Cost')
             if 'ReplacementCost' in bldg_repair_config.keys():
                 rCost_config = bldg_repair_config['ReplacementCost']
@@ -934,9 +947,7 @@ def run_pelicun(config_path):
             # prepare additional loss map entries, if needed
             if 'DMG-collapse' not in loss_map.index:
                 loss_map.loc['DMG-collapse',    'BldgRepair'] = 'replacement'
-                loss_map.loc['DMG-irreparable', 'BldgRepair'] = 'replacement'
-
-            print(adf)
+                loss_map.loc['DMG-irreparable', 'BldgRepair'] = 'replacement'            
 
             PAL.bldg_repair.load_model([conseq_df, adf], loss_map)
 
