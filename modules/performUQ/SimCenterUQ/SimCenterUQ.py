@@ -36,8 +36,9 @@ def main(args):
     workflowDriver = args.driverFile
     outputFile = args.workflowOutput
     
-    f = open(inputFile)
-    data = json.load(f)
+    with open(inputFile, 'r') as f:
+        data = json.load(f)
+
     
     if runType in ['runningLocal',]:
         if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
