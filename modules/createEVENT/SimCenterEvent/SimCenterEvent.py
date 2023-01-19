@@ -124,6 +124,36 @@ def get_scale_factors(input_units, output_units):
 
     return scale_factors
 
+
+def get_unit_bases(input_units):
+    """
+    Decouple input units
+
+    """
+
+    # special case: if the input unit is not specified then do nothing
+    if input_units is None:
+
+        input_unit_bases = {}
+
+    else:
+        input_unit_bases = {}
+        unit_bases_dict = globals()['unit_bases']
+        for unit_type, input_unit in input_units.items():
+            if unit_type in globals()['unit_decoupling_type_list']:
+                cur_unit_bases = {"length": "m", 
+                                  "force": "N",
+                                  "time": "sec"}
+                for unit_name, unit_bases in unit_bases_dict.items():
+                    if unit_name == input_unit:
+                        for x, y in unit_bases.items():
+                            cur_unit_bases.update({x: y})
+                        break
+                input_unit_bases = cur_unit_bases
+                break
+
+    return input_unit_bases
+
 def write_RV(AIM_file, EVENT_file):
 
     # load the AIM file to get information about the assigned events
@@ -138,6 +168,9 @@ def write_RV(AIM_file, EVENT_file):
 
     # scale the input data to the event unit used internally
     f_scale_units = get_scale_factors(input_units, output_units)
+
+    # get input unit bases
+    input_unit_bases = get_unit_bases(input_units)
 
     # get the location of the event input files
     # TODO: assuming a single event for now
@@ -172,6 +205,7 @@ def write_RV(AIM_file, EVENT_file):
             'type': aim_event_input['type'],
             'event_id': 'RV.eventID',
             'unitScaleFactor': f_scale_units,
+            'units': input_unit_bases,
             'data_dir': str(data_dir)
             })
 
@@ -196,6 +230,7 @@ def write_RV(AIM_file, EVENT_file):
             'type': aim_event_input['type'],
             'event_id': events[0][0],
             'unitScaleFactor': f_scale_units,
+            'units': input_unit_bases,
             'data_dir': str(data_dir)
             })
 
