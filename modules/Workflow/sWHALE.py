@@ -52,31 +52,37 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 
 
-def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json', 
-    prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
-    WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
-    asset_type = None, copy_resources = False, force_cleanup = False) :
+def runSWhale(inputs,
+              WF,
+              assetID = None,
+              assetAIM = 'AIM.json', 
+              prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
+              WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'], 
+              asset_type = None,
+              copy_resources = False,
+              force_cleanup = False) :
 
     # update the runDir, if needed
-#    with open(input_file, 'r') as f:
-#        inputs = json.load(f)
-#    runDir = inputs['runDir']
-#
-#    if working_dir is not None:
-#        runDir = working_dir
-#    else:
-#        runDir = inputs['runDir']
-#
-#
-#    whale.log_file = runDir + '/log.txt'
-#
-#    # initialize log file
-#    whale.set_options({
-#        "LogFile": runDir + '/log.txt',
-#        "LogShowMS": False,
-#        "PrintLog": True
-#        })
-#
+    #    with open(input_file, 'r') as f:
+    #        inputs = json.load(f)
+    #    runDir = inputs['runDir']
+    #
+    #    if working_dir is not None:
+    #        runDir = working_dir
+    #    else:
+    #        runDir = inputs['runDir']
+    #
+    #
+    #    whale.log_file = runDir + '/log.txt'
+    #
+    #    # initialize log file
+    #    whale.set_options({
+    #        "LogFile": runDir + '/log.txt',
+    #        "LogShowMS": False,
+    #        "PrintLog": True
+    #        })
+    #
+    
     log_msg('\nStarting sWHALE workflow\n', prepend_timestamp=False, prepend_blank_space=False)
 
 #    whale.print_system_info()
@@ -108,8 +114,11 @@ def runSWhale(inputs, WF, assetID = None, assetAIM = 'AIM.json',
     if WF.run_type != 'set_up':
 
         # run dl engine to estimate losses
-        WF.estimate_losses(AIM_file_path = assetAIM, asst_id = assetID,
-        asset_type = asset_type, input_file = inputs, copy_resources=copy_resources)
+        WF.estimate_losses(AIM_file_path = assetAIM,
+                           asst_id = assetID,
+                           asset_type = asset_type,
+                           input_file = inputs,
+                           copy_resources=copy_resources)
     
     if force_cleanup:
         #clean up intermediate files from the simulation
@@ -165,7 +174,10 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         working_dir = working_dir,
         app_dir = app_dir)
         
-    runSWhale(inputs = input_file, WF = WF, prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],  WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
+    runSWhale(inputs = input_file,
+              WF = WF,
+              prep_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],
+              WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'])
 
 
 if __name__ == '__main__':

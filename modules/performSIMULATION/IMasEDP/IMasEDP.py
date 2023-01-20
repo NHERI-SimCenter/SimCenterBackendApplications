@@ -77,8 +77,9 @@ def write_RV(EVENT_input_path):
 
         # get the header
         header_data = np.genfromtxt(data_dir / filename, delimiter=',',
-                                    names=True, max_rows=1)
-        header = header_data.dtype.names
+                                    names=None, max_rows=1, dtype=str,
+                                    ndmin=1)
+        header = header_data #.dtype.
 
         data = np.genfromtxt(data_dir / filename, delimiter=',',
                              skip_header=1)
@@ -109,7 +110,7 @@ def write_RV(EVENT_input_path):
     for c_i, col in enumerate(header):
         f_i = f_scale.get(col.strip(), f_scale.get('ALL', None))
         if f_i is None:
-            raise ValueError("No units defined for {col}")
+            raise ValueError(f"No units defined for {col}")
 
         EDP_output[c_i] *= f_i
 
