@@ -55,11 +55,12 @@ from scipy.stats import gmean
 from scipy.spatial import distance_matrix
 import os
 
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
-from matplotlib.colors import LinearSegmentedColormap
+#import matplotlib.pyplot as plt
+#import matplotlib.ticker as mticker
+#from matplotlib.colors import LinearSegmentedColormap
 import itertools
-
+import pandas as pd # later clear packages
+import plotly.express as px
 
 def main(inputArgs,err):
     gms = gmCluster(inputArgs,err)
@@ -426,75 +427,9 @@ class gmCluster():
 
 
 
-        # for nsa in range(int(nScalingGrid)-1,0,-1):
-        #
-        #     if not found_scaling_anchor:
-        #         # If there is a scaling anchor
-        #         # T_cond = 2
-        #         # Sa_T1 = np.zeros((numgm,))
-        #         # for ng in range(numgm):
-        #         #     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
-        #         # SaT_ref = min(1.5, 0.9 / T_cond)
-        #         sf_pool = np.ones((numgm,))
-        #         penalty_pool = np.zeros((numgm,))
-        #
-        #     else:
-        #         SaT_ref = np.exp(IM_log_ref_scaling_anchor[nsa])
-        #         Sa_T1 = np.exp(IM_log_data_scaling_anchor)
-        #
-        #     # penalty for scaling factor
-        #
-        #         sf_pool = SaT_ref / Sa_T1  # scaling factors
-        #         penalty_pool = np.zeros((numgm,))
-        #         temptag1 = np.where(sf_pool < sf_min)
-        #         penalty_pool[temptag1] = (sf_min - sf_pool[temptag1]) ** 2
-        #         temptag2 = np.where(sf_pool > sf_max)
-        #         penalty_pool[temptag2] = (sf_max - sf_pool[temptag2]) ** 2;
-        #
-        #
-        #
-        #     if IM_log_data_pool2.shape[1]>0:
-        #         IM_log_data_pool3 = IM_log_data_pool2 + np.log(sf_pool[np.newaxis]).T * scaling_exponent2[np.newaxis]
-        #         normData = IM_log_data_pool3/log_im_range2
-        #         normRefGrid  =IM_log_ref2/log_im_range2
-        #         err_mat = distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2 + np.tile(penalty_pool,(int(nGridPerIM), 1)).T * sf_penalty
-        #         err_pure = distance_matrix(normData, normRefGrid, p=2) ** 2 / lenRef2**2
-        #     else:
-        #         err_mat = np.tile(penalty_pool,(int(nGridPerIM), 1)).T * sf_penalty
-        #         err_pure = np.tile(penalty_pool,(int(nGridPerIM), 1)).T
-        #
-        #     minerr = np.sort(err_mat,axis=0)
-        #     minerr_tag = np.argsort(err_mat,axis=0)
-        #
-        #     for nrep in range(npergrid):
-        #         for ngr in np.random.permutation(int(nGridPerIM)):
-        #             count = 0
-        #             error_sum = 0
-        #             for ng in minerr_tag[:,ngr]:
-        #
-        #                 cureqID = eqnameID[ng]
-        #                 cureqID_existnum = np.sum(cureqID == np.array(selected_gm_eqID))
-        #
-        #                 if (selected_gm_ID.count(ng)==0) and(cureqID_existnum<numEQmax):
-        #                     break  # we only consider this
-        #
-        #                 count += 1
-        #                 if ng==minerr_tag[-1,ngr]:
-        #                     msg = "not enough ground motion to match your criteria"
-        #                     print(msg)
-        #                     errf.write(msg)
-        #                     errf.close()
-        #                     exit(-1)
-        #
-        #             selected_gm_ID += [ng]
-        #             selected_gm_err += [minerr[count,ngr]]
-        #             selected_gm_eqID += [cureqID]
-        #             selected_gm_scale += [sf_pool[ng]]
-        #
-        #             err_sum[nsa,ngr] += err_pure[ng,ngr]
-
         flat_gm_ID = selected_gm_ID
         flat_gm_scale = selected_gm_scale
+        flat_RSN = [RSN[myid] for myid in flat_gm_ID]
 
         #
         # Write the results
@@ -513,18 +448,18 @@ class gmCluster():
         # Drawing starts
         #
 
-        import matplotlib.pyplot as plt
-        import matplotlib.ticker as mticker
+        #import matplotlib.pyplot as plt
+        #import matplotlib.ticker as mticker
         from scipy import interpolate
 
-        plt.style.use('default')
-
-        # Option 1
-        plt.rcParams['font.size'] = 14
-        try:
-            plt.rcParams["font.family"] = "Times New Roman"
-        except:
-            pass
+        # plt.style.use('default')
+        #
+        # # Option 1
+        # plt.rcParams['font.size'] = 14
+        # try:
+        #     plt.rcParams["font.family"] = "Times New Roman"
+        # except:
+        #     pass
 
 
         theLogIM =[]
@@ -536,10 +471,12 @@ class gmCluster():
 
 
         # my color map
-        colors = [(0, 0, 1), (1, 0, 0)]  # first color is black, last is red
-        mycm = LinearSegmentedColormap.from_list(
-            "Custom", colors, N=20)
+        # colors = [(0, 0, 1), (1, 0, 0)]  # first color is black, last is red
+        # mycm = LinearSegmentedColormap.from_list(
+        #     "Custom", colors, N=20)
 
+        colorscale = [[0, "rgb(0,0,255)"],
+                      [1, "rgb(255,0,0)"]]
 
         if nim==3:
             flat_grid_error = err_sum.T.flatten() / npergrid
@@ -560,6 +497,71 @@ class gmCluster():
 
             X, Y, Z = np.meshgrid(LogIMref[idx1], LogIMref[idx2], LogIMref[idx3])
 
+            fig = px.scatter_3d(x=np.exp(X.reshape(-1)),
+                                y=np.exp(Y.reshape(-1)),
+                                z=np.exp(Z.reshape(-1)),
+                                color=flat_grid_error,
+                                log_x=True,
+                                log_y=True,
+                                log_z=True,
+                                color_continuous_scale=colorscale,
+                                )
+
+            fig.update_traces(marker=dict(size= 7,
+                                         line=dict(width=2),))
+
+            fig['data'][0]['showlegend'] = True
+            fig['data'][0]['name'] = "anchor point"
+            fig.layout.coloraxis.colorbar.title = 'Ground <br>motion <br>coverage <br>(error level)'
+            fig.update_coloraxes(cmin=0,cmax=1,)
+
+            fig.add_scatter3d(
+                            x= np.exp(theLogIM[idx1]),
+                            y= np.exp(theLogIM[idx2]),
+                            z=np.exp(theLogIM[idx3]),
+                            mode='markers',
+                            marker=dict(
+                                size=4,
+                                line=dict(width=1,color='black'),
+                                color='orange',
+                            ),
+                            name  ="selected ground motion"
+                            )
+
+            fig.update_layout(
+                scene = dict(
+                    xaxis = dict(
+                        tickmode='array',
+                        #tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),
+                        tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50,100],
+                        title = im_names[idx1] + myunits[idx1]),
+                    yaxis = dict(
+                        tickmode='array',
+                        #tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),
+                        tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50,100],
+                        title = im_names[idx2] + myunits[idx2]),
+                    zaxis = dict(
+                        tickmode='array',
+                        #tickvals=[im_lb[idx3],im_ub[idx3],0.001,0.01,0.1,1,10,100],),
+                        tickvals=[im_lb[idx3],im_ub[idx3],0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50,100],
+                        title = im_names[idx3] + myunits[idx3],
+                 ),
+                aspectmode= 'cube',),
+                legend=dict(
+                    x=0,
+                    y=0,
+                    xanchor="left",
+                    yanchor="top",
+                ),
+                #paper_bgcolor='rgba(0,0,0,0)',
+                autosize=False, height=500, width=550,legend_orientation="h",
+                scene_camera= dict(
+                    eye=dict(x=2, y=2, z=0.6)
+                ),
+                margin=dict(l=20, r=20, t=20, b=20),
+            )
+
+            '''
             fig = plt.figure();
             ax = fig.add_subplot(projection='3d')
 
@@ -596,9 +598,94 @@ class gmCluster():
             fig.colorbar(sc,label= "coverage (error level)", cax=cax)
 
             ax.view_init(10, 30)
-
+            '''
         if nim==2:
+
             flat_grid_error = err_sum.flatten() / npergrid
+
+            idx1=0
+            idx2=1
+
+            #
+            # data points
+            #
+
+            X, Y = np.meshgrid(LogIMref[idx1], LogIMref[idx2])
+
+
+            #
+            # interpolated area
+            #
+            lowerboundX = np.min(( np.log(im_lb[0])-log_im_range[0]*0.05 ))
+            upperboundX = np.max(( np.log(im_ub[0])+log_im_range[0]*0.05))
+            lowerboundY = np.min(( np.log(im_lb[1])-log_im_range[1]*0.05 ))
+            upperboundY = np.max(( np.log(im_ub[1])+log_im_range[1]*0.05))
+
+            xx =  np.linspace(lowerboundX, upperboundX, 20)
+            yy =  np.linspace(lowerboundY, upperboundY, 20)
+            xxx, yyy = np.meshgrid(xx, yy)
+            f = interpolate.interp2d((X.reshape(-1)), (Y.reshape(-1)) , flat_grid_error)
+            zzz = f(xx,yy)
+
+
+            #
+            # Figure
+            #
+
+            fig = px.scatter(x=np.exp(X.reshape(-1)),
+                                y=np.exp(Y.reshape(-1)),
+                                color=flat_grid_error,
+                                log_x=True,
+                                log_y=True,
+                                color_continuous_scale=colorscale,
+                            )
+            fig.update_traces(marker=dict(size= 15,
+                                         line=dict(width=2,color='black'),))
+
+            fig['data'][0]['showlegend'] = True
+            fig['data'][0]['name'] = "anchor point"
+
+            fig.add_scatter(
+                            x= np.exp(theLogIM[idx1]),
+                            y= np.exp(theLogIM[idx2]),
+                            mode='markers',
+                            marker=dict(
+                                size=5,
+                                line=dict(width=1,color='black'),
+                                color='orange',
+                            ),
+                            name  ="selected ground motion"
+                            )
+
+            #fig = px.scatter(x=[None],y=[None],log_x=True,log_y=True,)
+            #fig.update(layout_coloraxis_showscale=False)
+            fig.layout.coloraxis.colorbar.title = 'Ground <br>motion <br>coverage <br>(error level)'
+            fig.add_heatmap(x=np.exp(xx) ,y= np.exp(yy),z = zzz, zmin=0,zmax=1, colorscale =colorscale,coloraxis='coloraxis',opacity=0.5,hoverinfo='skip')
+
+            fig.update_layout(
+                    xaxis = dict(
+                        tickmode='array',
+                        #tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),
+                        tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50,100],
+                        title = im_names[idx1] + myunits[idx1]),
+                    yaxis = dict(
+                        tickmode='array',
+                        #tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),
+                        tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.005,0.01,0.05,0.1,0.5,1,5,10,50,100],
+                        title = im_names[idx2] + myunits[idx2]),
+                legend=dict(
+                    x=0,
+                    y=-0.1,
+                    xanchor="left",
+                    yanchor="top",
+                ),
+                #paper_bgcolor='rgba(0,0,0,0)',
+                autosize=False, height=500, width=550,legend_orientation="h",
+                margin=dict(l=20, r=20, t=20, b=20),
+            )
+            fig.update_coloraxes(cmin=0,cmax=1,)
+
+            '''
 
             fig = plt.figure();
             ax = fig.add_subplot()
@@ -629,7 +716,7 @@ class gmCluster():
             # Start plotting
             #
 
-            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',alpha=0.5,cmap=mycm, vmin=0, vmax=1)
+            C = ax.pcolormesh(np.exp(xxx), np.exp(yyy), zzz, shading='nearest',cmap=mycm, vmin=0, vmax=1)
             sc = ax.scatter(np.exp(X.reshape(-1)), np.exp(Y.reshape(-1)) , c=  flat_grid_error,edgecolors='k',  cmap = mycm, vmin=0, vmax=1, s = 250)
             ax.scatter(np.exp(theLogIM[0]),  np.exp(theLogIM[1]), c='y', edgecolors='k', cmap=mycm, vmin=0, vmax=1,  s=55)
 
@@ -663,7 +750,7 @@ class gmCluster():
             plt.legend(["anchor point", "selected ground motion"], ncol=2, bbox_to_anchor=(0,0.02,1,-0.15), loc="upper left")
             plt.title("Ground motion coverage", x=0.5, y=1.05)
             fig.colorbar(sc,label= "coverage (error level)")
-
+            '''
         if nim==1:
             flat_grid_error = err_sum.flatten() / npergrid
 
@@ -692,7 +779,10 @@ class gmCluster():
             ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)
             plt.xlabel(im_names[idx1]);
 
-        plt.savefig('gridIM_coverage.png',bbox_inches='tight')
+        #plt.savefig('gridIM_coverage.png',bbox_inches='tight')
+        with open(r"gridIM_coverage.html", 'w') as f:
+            f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+        f.close()
 
 
 if __name__ == "__main__":
