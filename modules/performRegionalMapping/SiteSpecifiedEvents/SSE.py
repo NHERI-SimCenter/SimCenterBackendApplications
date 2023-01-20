@@ -45,9 +45,31 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.cluster.vq import vq
+import importlib
 
 def create_event(asset_file, event_grid_file):
 
+
+    # check if running parallel
+    numP = 1
+    procID = 0
+    doParallel = False
+    
+    mpi_spec = importlib.util.find_spec("mpi4py")
+    found = mpi_spec is not None
+    if found:
+        import mpi4py
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        numP = comm.Get_size()
+        procID = comm.Get_rank();
+        if numP < 2:
+            doParallel = False
+            numP = 1
+            procID = 0
+        else:
+            doParallel = True;    
+    
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
@@ -67,16 +89,18 @@ def create_event(asset_file, event_grid_file):
 
     # prepare a dataframe that holds asset filenames and locations
     AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict)))
-    
-    for i, asset in enumerate(asset_dict):
-        with open(asset['file'], 'r') as f:
-            asset_data = json.load(f)
 
-        asset_loc = asset_data['GeneralInformation']['location']
-        AIM_df.iloc[i]['Longitude'] = asset_loc['longitude']
-        AIM_df.iloc[i]['Latitude'] = asset_loc['latitude']
-        AIM_df.iloc[i]['file'] = asset['file']
-        
+    count = 0    
+    for i, asset in enumerate(asset_dict):
+        if i % numP == procID:        
+            with open(asset['file'], 'r') as f:
+                asset_data = json.load(f)
+
+            asset_loc = asset_data['GeneralInformation']['location']
+            AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
+            AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
+            AIM_df.iloc[count]['file'] = asset['file']
+            count = count + 1
         
     # store asset locations in Y
     Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])])

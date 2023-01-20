@@ -49,6 +49,19 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
     heights[i] = heights[i - 1] + height / num_floors;
   }
 
+  // Calculate areas
+  auto areas = std::vector<double>(num_floors);
+  areas[0] = width * 0.5 * (heights[0] + (heights[1]-heights[0]));
+
+  for (unsigned int i = 1; i < areas.size(); ++i) {
+    if (i < areas.size()-1){
+      areas[i] = width * 0.5 * ((heights[i] - heights[i-1]) + (heights[i+1] - heights[i]));
+    }
+    else {
+      areas[i] = width * 0.5 * (heights[i] - heights[i-1]);
+    }
+  }
+
   // Get dynamic wind velocities
   auto dynamic_wind =
       wind_model.generate_time_history("DynamicWindSpeed").get_library_json();
@@ -75,7 +88,7 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
     // Calculate dynamic wind force
     for (auto& vel : velocity) {
       vel = force_conversion * density * drag_coeff * vel *
-            static_wind[counter] * width * heights[counter] / num_floors;
+            static_wind[counter] * areas[counter];
     }
     // Set data to be wind force
     it->at("data") = velocity;
@@ -85,8 +98,7 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
   // Calculate static wind force
   for (unsigned int i = 0; i < static_wind.size(); ++i) {
     static_wind[i] = force_conversion * 0.5 * density * drag_coeff *
-                     static_wind[i] * static_wind[i] * width *
-                     heights[i] / num_floors;
+                     static_wind[i] * static_wind[i] * areas[i];
   }
 
   return std::make_tuple(static_wind, dynamic_wind);
@@ -128,6 +140,18 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
     heights[i] = heights[i - 1] + height / num_floors;
   }
 
+  // Calculate areas
+  auto areas = std::vector<double>(num_floors);
+  areas[0] = width * 0.5 * (heights[0] + (heights[1]-heights[0]));
+
+  for (unsigned int i = 1; i < areas.size(); ++i) {
+    if (i < areas.size()-1){
+      areas[i] = width * 0.5 * ((heights[i] - heights[i-1]) + (heights[i+1] - heights[i]));
+    }
+    else {
+      areas[i] = width * 0.5 * (heights[i] - heights[i-1]);
+    }
+  }
   // Get dynamic wind velocities
   auto dynamic_wind =
       wind_model.generate_time_history("DynamicWindSpeed").get_library_json();
@@ -154,7 +178,7 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
     // Calculate dynamic wind force
     for (auto& vel : velocity) {
       vel = force_conversion * density * drag_coeff * vel *
-            static_wind[counter] * width * heights[counter] / num_floors;
+            static_wind[counter] * areas[counter];
     }
     // Set data to be wind force
     it->at("data") = velocity;
@@ -164,8 +188,7 @@ std::function<std::tuple<std::vector<double>, nlohmann::json>(
   // Calculate static wind force
   for (unsigned int i = 0; i < static_wind.size(); ++i) {
     static_wind[i] = force_conversion * 0.5 * density * drag_coeff *
-                     static_wind[i] * static_wind[i] * width *
-                     heights[i] / num_floors;
+                     static_wind[i] * static_wind[i] * areas[i];
   }
 
   return std::make_tuple(static_wind, dynamic_wind);

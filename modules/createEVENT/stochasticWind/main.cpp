@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
         if (!inputs.get_rv_flag()) {
           drag_coeff = it->at("dragCoefficient");
           gust_wind_speed = it->at("gustSpeed");
+          gust_wind_speed = gust_wind_speed * 0.44704; // Convert from mph to m/s
 
 	  if (drag_coeff <= 0.0 || gust_wind_speed <= 0.0) {
             throw std::runtime_error(
