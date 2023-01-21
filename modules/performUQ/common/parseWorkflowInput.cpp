@@ -294,6 +294,50 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
       }
     }
 
+    else if (strcmp(variableType, "Discrete") == 0) {
+
+      struct discreteRV theRV;
+
+      theRandomVariables.theNames.insert(rvName);
+      theRV.name = rvName; 
+
+      std::list<int> theValues;
+      json_t *elementsSet =  json_object_get(fileRandomVariable, "Values");
+      if (elementsSet != NULL) {
+        int numValues = json_array_size(elementsSet);
+        for (int j=0; j<numValues; j++) {
+          json_t *element = json_array_get(elementsSet, j);
+          int value = json_integer_value(element);
+          theValues.push_back(value);
+          // if (value != 0) {
+          //   theValues.push_back(value);
+          // } else {
+          //     std::cout << "ERROR: The value at index " << j << " of the Discrete RV " << rvName << 
+          //     " must be an integer, but was " << element << std::endl;
+          //     return EXIT_FAILURE;
+          // }
+          }
+        theRV.elements = theValues;
+
+        std::list<double> theWeights;
+        json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");
+        if (weightsSet != NULL) {
+          int numWeights = json_array_size(weightsSet);
+          for (int j=0; j<numWeights; j++) {
+            json_t *wt = json_array_get(weightsSet, j);
+            double weight = json_number_value(wt);
+            theWeights.push_back(weight);
+          }
+        }
+        theRV.weights = theWeights;
+
+        theRandomVariables.discreteRVs.push_back(theRV);
+        theRandomVariables.numRandomVariables += 1;
+        //theRandomVariables.ordering.push_back(-1);
+        numberRVs++;
+        }
+    }
+
     //correlation
     json_t* corrMatJson =  json_object_get(root,"correlationMatrix");
     if (corrMatJson != NULL) {
