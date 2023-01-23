@@ -296,7 +296,7 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
 
     else if (strcmp(variableType, "Discrete") == 0) {
 
-      struct discreteRV theRV;
+      struct discreteUncertainIntegerSetRV theRV;
 
       theRandomVariables.theNames.insert(rvName);
       theRV.name = rvName; 
@@ -331,7 +331,7 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
         }
         theRV.weights = theWeights;
 
-        theRandomVariables.discreteRVs.push_back(theRV);
+        theRandomVariables.discreteUncertainIntegerSetRVs.push_back(theRV);
         theRandomVariables.numRandomVariables += 1;
         //theRandomVariables.ordering.push_back(-1);
         numberRVs++;

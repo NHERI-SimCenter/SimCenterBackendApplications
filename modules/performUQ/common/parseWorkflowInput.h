@@ -64,7 +64,7 @@ struct discreteDesignSetRV {
   std::list<std::string> elements;
 };
 
-struct discreteRV {
+struct discreteUncertainIntegerSetRV {
   std::string name;
   std::list<int> elements;
   std::list<double> weights;
@@ -83,7 +83,7 @@ struct randomVariables {
   std::list<struct gumbellRV> gumbellRVs;
   std::list<struct betaRV> betaRVs;
   std::list<struct discreteDesignSetRV> discreteDesignSetRVs;
-  std::list<struct discreteRV> discreteRVs;
+  std::list<struct discreteUncertainIntegerSetRV> discreteUncertainIntegerSetRVs;
   std::vector<int> ordering;
   std::vector<double> corrMat;
 };
