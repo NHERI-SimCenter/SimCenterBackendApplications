@@ -498,10 +498,7 @@ class CovarianceMatrixPreparer:
             logFile.write("\n\t{}".format(rowString))
         return self.covarianceMatrixList
 # ======================================================================================================================
-
-if __name__ == "__main__":
-
-    inputArgs = sys.argv
+def main(inputArgs):
 
     mainscriptPath = os.path.abspath(inputArgs[0])
     workdirMain = os.path.abspath(inputArgs[1])
@@ -850,3 +847,12 @@ if __name__ == "__main__":
         TMCMC.comm.Abort(0)
 
     # ======================================================================================================================
+
+
+# ======================================================================================================================
+
+if __name__ == "__main__":
+    inputArgs = sys.argv
+    main(inputArgs)
+
+# ====================================================================================================================== 
