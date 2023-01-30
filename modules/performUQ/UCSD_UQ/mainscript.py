@@ -115,7 +115,7 @@ class TransformData:
                 scaleFactors.append(absMax)
                 currentPosition += self.edpLengthsList[j]
         else:
-            logFile.write(
+            self.logFile.write(
             "\n\nComputing scale and shift factors. "
             "\n\tThe shift factors are set to the negative of the mean value for each response variable."
             "\n\tThe scale factors used are the standard deviation of the data for each response variable."
@@ -532,7 +532,8 @@ def main(inputArgs):
     logFile.write("\n\n==========================")
     logFile.write("\nParsing the json input file {}".format(inputJsonFilePath))
     (numberOfSamples, seedVal, calDataFileName, logLikeModule, writeOutputs, variablesList, edpNamesList, 
-    edpLengthsList) = parseDataFunction(inputJsonFilePath, logFile, workdirMain, os.path.dirname(mainscriptPath))
+    edpLengthsList, modelsDict, nModels) = parseDataFunction(inputJsonFilePath, logFile, workdirMain, 
+    os.path.dirname(mainscriptPath))
     syncLogFile(logFile)
 
     # # ================================================================================================================
@@ -727,12 +728,17 @@ def main(inputArgs):
                 AllPars.append(pdfs.ChiSquareDist(k=VariableK))
 
             if variables["distributions"][i] == "Discrete":
-                VariableValues = float(variables["Par1"][i])
-                VariableWeights = float(variables["Par2"][i])
-
-                AllPars.append(
-                    pdfs.DiscreteDist(values=VariableValues, weights=VariableWeights)
-                )
+                if variables["Par2"][i] is None:
+                    VariableIndex = variables["Par1"][i]
+                    AllPars.append(
+                        pdfs.ConstantInteger(value=VariableIndex)
+                    )
+                else:
+                    VariableValues = float(variables["Par1"][i])
+                    VariableWeights = float(variables["Par2"][i])
+                    AllPars.append(
+                        pdfs.DiscreteDist(values=VariableValues, weights=VariableWeights)
+                    )
 
         # Run the Algorithm
         logFile.write("\n\n\t==========================")
