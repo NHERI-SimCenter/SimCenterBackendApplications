@@ -342,8 +342,8 @@ class runPLoM:
         # compute IMs
         for cur_workdir in workdir_list:
             os.chdir(cur_workdir)
-            if os.path.exists('EVENT.json') and os.path.exists('BIM.json'):
-                os.system(f"{pythonEXE} {computeIM} --filenameBIM BIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
+            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
+                os.system(f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
             os.chdir(run_dir)
 
         # collect IMs from different workdirs
