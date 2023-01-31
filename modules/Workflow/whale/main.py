@@ -745,12 +745,13 @@ class Workflow(object):
 
         log_msg('  OK', prepend_timestamp=False)
 
-        log_msg('Available applications:', prepend_timestamp=False)
+        # fmk - commenting out available applications lists from log file
+        #log_msg('Available applications:', prepend_timestamp=False)
 
-        for app_type, app_list in self.app_registry.items():
-            for app_name, app_object in app_list.items():
-                log_msg('  {} : {}'.format(app_type, app_name),
-                        prepend_timestamp=False)
+        #for app_type, app_list in self.app_registry.items():
+        #    for app_name, app_object in app_list.items():
+        #        log_msg('  {} : {}'.format(app_type, app_name),
+        #                prepend_timestamp=False)
 
         #pp.pprint(self.app_registry)
 
