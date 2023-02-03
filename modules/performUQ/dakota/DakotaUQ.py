@@ -20,7 +20,6 @@ import subprocess
 import glob
 import argparse
 
-
 def main(args):
 
     parser = argparse.ArgumentParser()
@@ -119,12 +118,20 @@ def main(args):
         #        print(str(line))
         
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
+
+        if 'parType' in data:
+            print(data['parType'])
+            if data['parType'] == 'parRUN':
+                dakotaCommand = data['mpiExec'] + ' -n 1 ' + dakotaCommand
+
         print('running Dakota: ', dakotaCommand)
+
         try:
             result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
+            print('RUNNING DAKOTA ERROR: ', result)
             returncode = e.returncode
 
 if __name__ == '__main__':
