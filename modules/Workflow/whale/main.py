@@ -398,8 +398,9 @@ def resolve_path(target_path, ref_path):
         if target_path.exists():
             target_path = target_path.resolve()
         else:
-            raise ValueError(
-                f"{target_path} does not point to a valid location")
+            #raise ValueError(
+            #    f"{target_path} does not point to a valid location")
+            print(f"{target_path} does not point to a valid location")
 
     return target_path
 
@@ -1175,6 +1176,7 @@ class Workflow(object):
 
 
     def augment_asset_files(self):
+
         """
         Short description
 
@@ -1186,7 +1188,9 @@ class Workflow(object):
         """
 
         log_msg('Augmenting files for individual assets for Workflow')
-        
+
+        print('INPUT FILE:', self.input_file)
+
         # Open the input file - we'll need it later
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
@@ -1242,6 +1246,11 @@ class Workflow(object):
                 'Applications': {}
             }
 
+            if self.parType == "parRUN":
+                extra_input['parType'] = self.parType;
+                extra_input['mpiExec'] = self.mpiExec;
+                extra_input['numProc'] = self.numProc;
+
             apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
                 # Start with the app data under Applications
@@ -1291,6 +1300,7 @@ class Workflow(object):
 
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
+
             
             count = 0
             for asst in asset_data:
@@ -1393,7 +1403,7 @@ class Workflow(object):
             log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType):
+    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):
         
         """
         Performs the regional mapping between the asset and a hazard event.
@@ -1437,7 +1447,7 @@ class Workflow(object):
             if reg_mapping_app.runsParallel == False:
                 self.parCommandFile.write(command + "\n")
             else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --doParallel " + str(doParallel) + "\n")
 
             log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
                 
