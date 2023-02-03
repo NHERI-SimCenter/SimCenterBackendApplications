@@ -232,6 +232,6 @@ else()
 	endif() 
 
 
-	install(TARGETS nataf_gsa DESTINATION ${PROJECT_SOURCE_DIR}/applications/performUQ)
+	install(TARGETS nataf_gsa DESTINATION ${PROJECT_SOURCE_DIR}/applications/performUQ/SimCenterUQ)
 	
 endif()

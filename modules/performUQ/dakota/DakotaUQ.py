@@ -91,7 +91,7 @@ def main(args):
     os.chmod(workflow_driver1, st.st_mode | stat.S_IEXEC)
 
     # copy the dakota input file to the main working dir for the structure
-    shutil.move("dakota.in", "../")
+    shutil.copy("dakota.in", "../")
 
     # If calibration data files exist, copy to the main working directory
     if os.path.isfile("calibrationDataFilesToMove.cal"):
@@ -100,9 +100,9 @@ def main(args):
         for line in datFileList:
             datFile = line.strip()
             if datFile.split('.')[-1] == 'tmpFile':
-                shutil.move(datFile, "../{}".format(datFile[:-8]))
+                shutil.copy(datFile, "../{}".format(datFile[:-8]))
             else:
-                shutil.move(datFile, "../")
+                shutil.copy(datFile, "../")
 
         # os.remove("calibrationDataFilesToMove.cal")
 
