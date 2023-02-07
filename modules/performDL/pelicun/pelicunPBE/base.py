@@ -84,6 +84,8 @@ def _warning(message, category, filename, lineno, file=None, line=None):
         file_path = filename.split('\\')
     elif '/' in filename:
         file_path = filename.split('/')
+    else:
+        file_path = filename
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
 warnings.showwarning = _warning
