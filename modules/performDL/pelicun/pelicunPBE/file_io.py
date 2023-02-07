@@ -1279,7 +1279,7 @@ def read_component_DL_data(path_CMP, comp_info, assessment_type='P58', avail_edp
             DL_EDP['Unit'][1] = 'inch'
         demand_factor = globals()[DL_EDP['Unit'][1]] * DL_EDP['Unit'][0]
 
-        demand_type = EDP_to_demand_type.get(EDP_type, None)
+        demand_type = EDP_to_demand_type(EDP_type)
 
         if demand_type is None:
             if EDP_type in ['Link Rotation Angle',
