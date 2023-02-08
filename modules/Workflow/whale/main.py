@@ -403,6 +403,91 @@ def resolve_path(target_path, ref_path):
 
     return target_path
 
+def _parse_app_registry(registry_path, app_types, list_available_apps=False):
+    """
+    Load the information about available workflow applications.
+
+    Parameters
+    ----------
+    registry_path: string
+        Path to the JSON file with the app registry information. By default, 
+        this file is stored at applications/Workflow/WorkflowApplications.json
+    app_types: list of strings
+        List of application types (e.g., Assets, Modeling, DL) to parse from the 
+        registry
+    list_available_apps: bool, optional, default: False
+        If True, all available applications of the requested types are printed
+        in the log file.
+    
+    Returns
+    -------
+    app_registry: dict
+        A dictionary with WorkflowApplication objects. Primary keys are
+        the type of application (e.g., Assets, Modeling, DL); secondary keys
+        are the name of the specific application (e.g, MDOF-LU). See the 
+        documentation for more details.
+    default_values: dict
+        Default values of filenames used to pass data between applications. Keys
+        are the placeholder names (e.g., filenameAIM) and values are the actual
+        filenames (e.g,. AIM.json)
+    """
+
+    log_msg('Parsing application registry file')
+
+    # open the registry file
+    log_msg('Loading the json file...', prepend_timestamp=False)
+    with open(registry_path, 'r') as f:
+        app_registry_data = json.load(f)
+    log_msg('  OK', prepend_timestamp=False)
+
+    # initialize the app registry
+    app_registry = dict([(a, dict()) for a in app_types])
+
+    log_msg('Loading default values...', prepend_timestamp=False)
+
+    default_values = app_registry_data.get('DefaultValues', None)
+
+    log_msg('  OK', prepend_timestamp=False)
+
+    log_msg('Collecting application data...', prepend_timestamp=False)
+    # for each application type
+    for app_type in sorted(app_registry.keys()):
+
+        # if the registry contains information about it
+        app_type_long = app_type+'Applications'
+        if app_type_long in app_registry_data:
+
+            # get the list of available applications
+            available_apps = app_registry_data[app_type_long]['Applications']
+            api_info = app_registry_data[app_type_long]['API']
+
+            # add the default values to the API info
+            if default_values is not None:
+                api_info.update({'DefaultValues': default_values})
+
+            # and create a workflow application for each app of this type
+            for app in available_apps: 
+                app_registry[app_type][app['Name']] = WorkflowApplication(
+                     app_type=app_type, app_info=app, api_info=api_info)
+
+    log_msg('  OK', prepend_timestamp=False)
+
+    if list_available_apps:
+        log_msg('Available applications:', prepend_timestamp=False)
+
+        for app_type, app_list in app_registry.items():
+            for app_name, app_object in app_list.items():
+                log_msg('  {} : {}'.format(app_type, app_name),
+                        prepend_timestamp=False)
+
+    #pp.pprint(self.app_registry)
+
+    log_msg('Successfully parsed application registry',
+            prepend_timestamp=False)
+    log_div()
+
+    return app_registry, default_values
+
 class WorkFlowInputError(Exception):
     def __init__(self, value):
         self.value = value
@@ -667,7 +752,9 @@ class Workflow(object):
         self.app_type_list = app_type_list
 
         # parse the application registry
-        self._parse_app_registry()
+        self.app_registry, self.default_values = (
+            _parse_app_registry(registry_path = self.app_registry_file, 
+                                app_types=self.app_type_list))
 
         # parse the input file
         self.workflow_apps = {}
@@ -692,78 +779,13 @@ class Workflow(object):
             self.parCommandFile.write("\n# Writing Final command to run this application in parallel\n")            
             self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
             self.parCommandFile.close()
-        
-    def _init_app_registry(self):
-        """
-        Initialize the dictionary where we keep the data on available apps.
 
-        """
-        self.app_registry = dict([(a, dict()) for a in self.app_type_list])
-
-    def _parse_app_registry(self):
-        """
-        Load the information about available workflow applications.
-
-        """
-
-        log_msg('Parsing application registry file')
-
-        # open the registry file
-        log_msg('Loading the json file...', prepend_timestamp=False)
-        with open(self.app_registry_file, 'r') as f:
-            app_registry_data = json.load(f)
-        log_msg('  OK', prepend_timestamp=False)
-
-        # initialize the app registry
-        self._init_app_registry()
-
-        log_msg('Loading default values...', prepend_timestamp=False)
-
-        self.default_values = app_registry_data.get('DefaultValues', None)
-
-        log_msg('  OK', prepend_timestamp=False)
-
-        log_msg('Collecting application data...', prepend_timestamp=False)
-        # for each application type
-        for app_type in sorted(self.app_registry.keys()):
-
-            # if the registry contains information about it
-            app_type_long = app_type+'Applications'
-            if app_type_long in app_registry_data:
-
-                # get the list of available applications
-                available_apps = app_registry_data[app_type_long]['Applications']
-                api_info = app_registry_data[app_type_long]['API']
-
-                # add the default values to the API info
-                if self.default_values is not None:
-                    api_info.update({'DefaultValues': self.default_values})
-
-                # and store their name and executable location
-                for app in available_apps: self.app_registry[app_type][app['Name']] = WorkflowApplication(
-                         app_type=app_type, app_info=app, api_info=api_info)
-
-        log_msg('  OK', prepend_timestamp=False)
-
-        # fmk - commenting out available applications lists from log file
-        #log_msg('Available applications:', prepend_timestamp=False)
-
-        #for app_type, app_list in self.app_registry.items():
-        #    for app_name, app_object in app_list.items():
-        #        log_msg('  {} : {}'.format(app_type, app_name),
-        #                prepend_timestamp=False)
-
-        #pp.pprint(self.app_registry)
-
-        log_msg('Successfully parsed application registry',
-                prepend_timestamp=False)
-        log_div()
-        
 
     def _register_app_type(self, app_type, app_dict, sub_app = ''):
     
         """
-        Function to register the applications provided in the input file into memory, i.e., the 'App registry'
+        Function to register the applications provided in the input file into 
+        memory, i.e., the 'App registry'
 
         Parameters
         ----------
