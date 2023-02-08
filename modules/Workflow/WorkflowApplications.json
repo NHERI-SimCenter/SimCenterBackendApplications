@@ -804,6 +804,10 @@
       {
         "Name": "UCSD-UQ",
         "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
+      },
+      {
+        "Name": "UQpy",
+        "ExecutablePath": "applications/performUQ/UQpy/UQpyEngine.py"
       },		
       {
         "Name": "Dakota-FEM",
