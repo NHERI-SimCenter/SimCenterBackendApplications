@@ -48,6 +48,61 @@ import socket
 if 'stampede2' not in socket.gethostname():
 	from FetchOpenSHA import *
 
+def load_earthquake_scenarios(scenario_info, stations, dir_info):
+
+    # Number of scenarios
+    source_num = scenario_info.get('Number', 1)
+    # sampling method
+    samp_method = scenario_info['EqRupture'].get('Sampling','Random')
+    # source model
+    source_model = scenario_info['EqRupture']['Model']
+    eq_source = getERF(source_model, True)
+    # Getting earthquake rupture forecast data
+    source_type = scenario_info['EqRupture']['Type']
+    # Collecting all sites
+    lat = []
+    lon = []
+    for s in stations['Stations']:
+        lat.append(s['Latitude'])
+        lon.append(s['Longitude'])
+    # load scenario file
+    user_scenario_file = os.path.join(dir_info.get('Input'), scenario_info.get('EqRupture').get('UserScenarioFile'))
+    try:
+        with open(user_scenario_file, 'r') as f:
+            user_scenarios = json.load(f)
+    except:
+        print('CreateScenario: source file {} not found.'.format(user_scenario_file))
+        return {}
+    # number of features (i.e., ruptures)
+    num_scenarios = len(user_scenarios.get('features',[]))
+    if num_scenarios < 1:
+        print('CreateScenario: source file is empty.')
+        return {}
+    # get rupture and source ids
+    scenario_data = {}
+    for rup_tag in range(num_scenarios):
+        cur_rup = user_scenarios.get('features')[rup_tag]
+        cur_id_source = cur_rup.get('properties').get('Source', None)
+        cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
+        if cur_id_rupture is None or cur_id_source is None:
+            print('CreateScenario: rupture #{} does not have valid source/rupture ID - skipped.'.format(rup_tag))
+            continue
+        cur_source, cur_rupture = get_source_rupture(eq_source, cur_id_source, cur_id_rupture)
+        scenario_data.update({rup_tag: {
+            'Type': source_type,
+            'RuptureForecast': source_model,
+            'Name': str(cur_source.getName()),
+            'Magnitude': float(cur_rupture.getMag()),
+            'MeanAnnualRate': float(cur_rupture.getMeanAnnualRate(eq_source.getTimeSpan().getDuration())),
+            'SourceIndex': cur_id_source,
+            'RuptureIndex': cur_id_rupture,
+            'SiteSourceDistance': get_source_distance(eq_source, cur_id_source, lat, lon),
+            'SiteRuptureDistance': get_rupture_distance(eq_source, cur_id_source, cur_id_rupture, lat, lon)
+        }})
+    
+    # return
+    return scenario_data
+    
 
 def create_earthquake_scenarios(scenario_info, stations, dir_info):
 
