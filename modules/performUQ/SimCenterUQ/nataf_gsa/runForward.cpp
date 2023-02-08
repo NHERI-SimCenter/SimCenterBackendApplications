@@ -46,11 +46,12 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <iterator>
 
 runForward::runForward() {}
-runForward::runForward(vector<vector<double>> xval,	vector<vector<double>> gmat, int procno)
+runForward::runForward(vector<vector<double>> xval, vector<vector<string>> xstrval, vector<vector<double>> gmat, int procno)
 {
 	if (procno == 0) {
 
 		this->xval = xval;
+		this->xstrval = xstrval;
 		this->gval = gmat;
 		nmc = xval.size();
 		nrv = xval[0].size();
@@ -166,6 +167,9 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 		for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
 			Taboutfile << inp.rvNames[j] << "\t";
 		}
+		for (int j = inp.nrv + inp.nco + inp.nre; j < inp.nrv + inp.nco + inp.nre + inp.nst; j++) {
+			Taboutfile << inp.rvNames[j] << "\t";
+		}
 		for (int j = 0; j < inp.nqoi; j++) {
 			Taboutfile << inp.qoiNames[j] << "\t";
 		}
@@ -176,6 +180,9 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 			Taboutfile << std::to_string(ns + 1) << "\t";
 			for (int nr = 0; nr < inp.nrv + inp.nco + inp.nre; nr++) {
 				Taboutfile << std::to_string(xval[ns][nr]) << "\t";
+			}
+			for (int nr = 0; nr < inp.nst; nr++) {
+				Taboutfile << xstrval[ns][nr] << "\t";
 			}
 			for (int nq = 0; nq < inp.nqoi; nq++) {
 				Taboutfile << std::to_string(gval[ns][nq]) << "\t";
