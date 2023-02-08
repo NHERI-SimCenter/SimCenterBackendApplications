@@ -76,7 +76,9 @@ public:
 	vector<vector<double>> Rhoz;
 	vector<vector<double>> U;
 	vector<vector<int>> resampID;
+	vector<vector<string>> discreteStr;
 	vector<vector<double>> X;
+	vector<vector<string>> Xstr;
 	vector<vector<double>> G;
 	Eigen::MatrixXd RhozMat, RhozInv;
 
@@ -101,10 +103,12 @@ public:
 	vector<vector<double>> simulateAppOnce(int i,
 						string workingDirs,
 						string copyDir,
-						int nrvcore,
+						int nrv_num,
+						int nrv_str,
 						int qoi,
 						vector<string> rvNames,
 						vector<vector<double>> xs,
+						vector<vector<string>> xst,
 						string workflowDriver,
 						string osType,
 						string runType);
