@@ -547,7 +547,7 @@
           },
           {
             "id": "modelPath",
-            "type": "path",
+            "type": "string",
             "description": "Defines the location of the OpenSeesPy model files."
           },
           {
