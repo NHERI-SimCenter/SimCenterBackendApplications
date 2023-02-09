@@ -94,6 +94,16 @@ int main(int argc, char **argv)
     json_t *mappingArray = json_object_get(rootSAM,"NodeMapping"); 
     json_t *theNDM = json_object_get(rootSAM,"ndm");  
     int ndm = json_integer_value(theNDM);
+
+    if (ndm == 0) {
+      const char *ndmString = json_string_value(theNDM);
+      ndm = atoi(ndmString);
+    }
+
+    if (ndm == 0) {
+      std::cerr << "ERROR: STANDARD EARTHQUAKE_EDP ZERO NDM\n";
+    }
+
     
     // 
     // parse each event:
