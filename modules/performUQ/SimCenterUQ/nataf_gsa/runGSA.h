@@ -70,6 +70,7 @@ class runGSA
 public:
 	runGSA();
 	runGSA(vector<vector<double>> xval,
+			vector<vector<string>> xstrval,
 			vector<vector<double>> gval,
 			vector<vector<int>> combs_tmp,
 			double PCAvarRatio,
@@ -85,6 +86,7 @@ public:
 	//vector<double> Si;
 
 	vector<vector<double>> xval;
+	vector<vector<string>> xstrval;
 	vector<vector<double>> gmat;
 	vector<vector<int>> combs_tmp;
 	char Opt;

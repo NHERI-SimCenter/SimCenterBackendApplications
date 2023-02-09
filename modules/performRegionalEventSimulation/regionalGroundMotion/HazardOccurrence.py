@@ -288,14 +288,18 @@ def get_im_exceedance_probability_gm(im_raw,
 def sample_earthquake_occurrence(model_type,
                                  num_target_eqs,
                                  return_periods,
-                                 im_exceedance_prob):
+                                 im_exceedance_prob,
+                                 reweight_only,
+                                 occurence_rate_origin):
 
     # model type
     if model_type == 'Manzour & Davidson (2016)':
         # create occurrence model
         om = OccurrenceModel_ManzourDavidson2016(return_periods=return_periods,
                                                  im_exceedance_probs=im_exceedance_prob,
-                                                 num_scenarios=num_target_eqs)
+                                                 num_scenarios=num_target_eqs,
+                                                 reweight_only=reweight_only,
+                                                 occurence_rate_origin=occurence_rate_origin)
         # solve the optimiation
         om.solve_opt()
     else:
@@ -338,7 +342,9 @@ class OccurrenceModel_ManzourDavidson2016:
     def __init__(self, 
                  return_periods = [],
                  im_exceedance_probs = [],
-                 num_scenarios = -1):
+                 num_scenarios = -1,
+                 reweight_only = False,
+                 occurence_rate_origin = None):
         """
         __init__: initialization a hazard occurrence optimizer
         :param return_periods: 1-D array of return periods, RP(r)
@@ -351,6 +357,8 @@ class OccurrenceModel_ManzourDavidson2016:
         self.im_exceedance_probs = im_exceedance_probs
         self.num_eqs = self.im_exceedance_probs.shape[1]
         self.num_scenarios = num_scenarios
+        self.reweight_only = reweight_only
+        self.occurence_rate_origin = occurence_rate_origin
         # check input parameters
         self.input_valid = self._input_check()
         if not self.input_valid:
@@ -419,8 +427,11 @@ class OccurrenceModel_ManzourDavidson2016:
         for i in range(self.num_eqs):
             self.P_name[i] = 'p-{}'.format(i)
             self.Z_name[i] = 'z-{}'.format(i)
-            self.P[i] = pulp.LpVariable(self.P_name[i], 0, 1)
-            self.Z[i] = pulp.LpVariable(self.Z_name[i], 0, 1, pulp.LpBinary)
+            if self.reweight_only:
+                self.P[i] = pulp.LpVariable(self.P_name[i], self.occurence_rate_origin[i], 1)
+            else:
+                self.P[i] = pulp.LpVariable(self.P_name[i], 0, 1)
+                self.Z[i] = pulp.LpVariable(self.Z_name[i], 0, 1, pulp.LpBinary)
 
         # objective function
         comb_sites_rps = list(itertools.product(range(self.num_sites),range(self.num_return_periods)))
@@ -431,10 +442,11 @@ class OccurrenceModel_ManzourDavidson2016:
             for j in range(self.num_return_periods):
                 self.prob += pulp.lpSum(self.P[k]*self.im_exceedance_probs[i,k,j] for k in range(self.num_eqs))+self.e_minus[i,j]-self.e_plus[i,j] == 1.0/self.return_periods[j]
 
-        for i in range(self.num_eqs):
-            self.prob += self.P[i]-self.Z[i] <= 0
+        if not self.reweight_only:
+            for i in range(self.num_eqs):
+                self.prob += self.P[i]-self.Z[i] <= 0
 
-        self.prob += pulp.lpSum(self.Z[i] for i in range(self.num_eqs)) == self.num_scenarios
+            self.prob += pulp.lpSum(self.Z[i] for i in range(self.num_eqs)) <= self.num_scenarios
 
         return True
 
@@ -451,7 +463,10 @@ class OccurrenceModel_ManzourDavidson2016:
     def get_selected_earthquake(self):
 
         P_selected = [self.P[i].varValue for i in range(self.num_eqs)]
-        Z_selected = [self.Z[i].varValue for i in range(self.num_eqs)]
+        if self.reweight_only:
+            Z_selected = [1 for i in range(self.num_eqs)]
+        else:
+            Z_selected = [self.Z[i].varValue for i in range(self.num_eqs)]
 
         return P_selected, Z_selected
 
