@@ -552,6 +552,9 @@ class WorkflowApplication(object):
 
                 if input_type == 'path':
 
+                    if 'PelicunDefault' in self.pref[preference]:
+                        continue
+
                     self.pref[preference] = resolve_path(
                         self.pref[preference], ref_path)
 
