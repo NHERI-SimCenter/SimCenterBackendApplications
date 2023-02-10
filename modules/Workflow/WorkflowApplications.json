@@ -547,7 +547,7 @@
           },
           {
             "id": "modelPath",
-            "type": "path",
+            "type": "string",
             "description": "Defines the location of the OpenSeesPy model files."
           },
           {
@@ -603,6 +603,16 @@
         "ExecutablePath": "applications/createSAM/mdofBuildingModel/MDOF_BuildingModel",
         "ApplicationSpecificInputs": []
       },
+      {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+	      }
+	  ]
+      },	
       {
         "Name": "SteelBuildingModel",
         "ExecutablePath": "applications/createSAM/AutoSDA/main_program.py",

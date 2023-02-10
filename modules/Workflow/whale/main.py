@@ -780,6 +780,7 @@ class Workflow(object):
             self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
             self.parCommandFile.close()
 
+
     def _register_app_type(self, app_type, app_dict, sub_app = ''):
     
         """

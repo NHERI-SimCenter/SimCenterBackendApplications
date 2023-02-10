@@ -122,6 +122,12 @@ def getERF(erf_name, update_flag):
     # return
     return erf
 
+def get_source_rupture(erf, source_index, rupture_index):
+
+    rupSource = erf.getSource(source_index)
+    ruptures = rupSource.getRuptureList()
+    rupture = ruptures.get(rupture_index)
+    return rupSource, rupture
 
 def get_source_distance(erf, source_index, lat, lon):
 

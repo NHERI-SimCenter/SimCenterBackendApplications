@@ -49,6 +49,7 @@ using namespace arma::newarp;
 runGSA::runGSA() {}
 
 runGSA::runGSA(vector<vector<double>> xval,
+	vector<vector<string>> xstrval,
 	vector<vector<double>> gmat,
 	vector<vector<int>> combs_tmp,
 	double PCAvarRatioThres,
@@ -58,6 +59,7 @@ runGSA::runGSA(vector<vector<double>> xval,
 	int nprocs)
 {
 	this->xval = xval;
+	this->xstrval = xstrval;
 	this->gmat = gmat;
 	this->combs_tmp = combs_tmp;
 	this->PCAvarRatioThres = PCAvarRatioThres;
@@ -66,7 +68,7 @@ runGSA::runGSA(vector<vector<double>> xval,
 		this->performPCA = false;
 	} else {
 		this->performPCA = true;
-	}
+	}    
 	
 	nmc = xval.size();
 
@@ -77,6 +79,12 @@ runGSA::runGSA(vector<vector<double>> xval,
 	vector<vector<double>> gmat_eff = gmat;
     vector<vector<double>> gmat_red;
 
+	//if (nrv == 1) {
+	//	vector<double> vect(nqoi, 1.0);
+	//	Simat.push_back(vect);
+	//	Stmat.push_back(vect);
+	//	return;
+	//}
 
 	//
 	// Preprocess gmat find a constant column
@@ -499,6 +507,17 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		vector<int> comb_new;
 		std::set_difference(allSet.begin(), allSet.end(), comb.begin(), comb.end(), std::inserter(comb_new, comb_new.begin()));
 		comb = comb_new;
+
+		//
+		// if we have discrete string variable, we don't do total..
+		//
+
+		if (xstrval.size()>0) {
+			if (xstrval[0].size()>0) {
+				Si.assign(nqoi, { sqrt(-1) }); // enforcing NaN
+				return;
+			}
+		}		
 	}
 
 	int nqoi_red = gmat[0].size();
@@ -545,13 +564,14 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			{
 				Si.push_back(0.);   // main
 			}
-			if (performPCA){
+			if (!performPCA){
 			  printf("    GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			} else { 
 			  printf("    GSA PCA %i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			}
 			continue;
 		}
+		/*
 		else if (endm == nrv)
 		{
 			if (Opt == 'T')
@@ -562,7 +582,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			{
 				Si.push_back(1.);   // main
 			}
-			if (performPCA) {
+			if (!performPCA) {
 				printf("    GSA nq=%i, Si=%.2f, K=%i \n", nq + 1, Si[nq], Kos);
 			}
 			else {
@@ -570,7 +590,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			}
 			continue;
 		}
-
+		*/
 		mat data(endm + 1, nmc_new);
 
 		int count_valid = 0;

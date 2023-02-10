@@ -71,20 +71,14 @@ public:
 	string workDir;
 	string uqType;
 
-	int nmc;
-	int nrv;
-	int nco;
-	int nre;
-	int nreg;
-	int nqoi;
-	int rseed;
-	int ngr;
+	int nmc, nrv, nco, nre, nst, nreg, nqoi, rseed, ngr;
 	int nqoiVects;
 	string UQmethod;
 	vector<string> distNames;
 	vector<vector<double>> vals;
 	vector<vector<double>> resampleCandidates;
 	vector<double> constants;
+	vector<vector<string>> discreteStrValues;
 	vector<string> opts;
 	vector<string> rvNames;
 	vector<string> qoiNames;
@@ -92,6 +86,7 @@ public:
 	vector<vector<int>> qoiVectRange;
 	vector<vector<double>> corr;
 	vector<vector<double>> adds;
+	vector<vector<string>> addStrs;
 	vector<vector<int>> groups;
 	vector<vector<int>> resamplingGroups;
 	vector<int> resamplingSize;
