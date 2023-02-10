@@ -2244,7 +2244,7 @@ class Workflow(object):
     def aggregate_results(self, asst_data, asset_type = '',
 
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['AIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description
@@ -2271,7 +2271,7 @@ class Workflow(object):
         if headers is None :
             headers = dict(
                 IM = [0, 1, 2, 3],
-                BIM = [0, ],
+                AIM = [0, ],
                 EDP = [0, 1, 2, 3],
                 DM = [0, 1, 2],
                 DV = [0, 1, 2, 3])
