@@ -65,6 +65,11 @@ import shutil
 
 idx = pd.IndexSlice
 
+# suppress FutureWarnings by default - credit: ioannis_vm
+if not sys.warnoptions:
+    warnings.filterwarnings(
+        category=FutureWarning, action='ignore')
+
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from pelicunPBE.base import str2bool
