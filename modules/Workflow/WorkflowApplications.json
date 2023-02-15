@@ -940,6 +940,11 @@
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
           },
           {
+            "id": "custom_fragility_dir",
+            "type": "path",
+            "description": "Identifies the location of a folder with custom fragility function JSON files."
+          },
+          {
             "id": "outputEDP",
             "type": "string",
             "description": "name of file to store response estimates",
