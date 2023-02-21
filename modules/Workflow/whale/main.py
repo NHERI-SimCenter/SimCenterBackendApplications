@@ -553,6 +553,9 @@ class WorkflowApplication(object):
 
                 if input_type == 'path':
 
+                    if 'PelicunDefault' in self.pref[preference]:
+                        continue
+
                     self.pref[preference] = resolve_path(
                         self.pref[preference], ref_path)
 
@@ -2251,7 +2254,7 @@ class Workflow(object):
     def aggregate_results(self, asst_data, asset_type = '',
 
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['AIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description
@@ -2278,7 +2281,7 @@ class Workflow(object):
         if headers is None :
             headers = dict(
                 IM = [0, 1, 2, 3],
-                BIM = [0, ],
+                AIM = [0, ],
                 EDP = [0, 1, 2, 3],
                 DM = [0, 1, 2],
                 DV = [0, 1, 2, 3])
@@ -2339,14 +2342,20 @@ class Workflow(object):
                         for d_type in realizations_EDP.keys():
                             d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
 
-                            d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+                            with warnings.catch_warnings():
+                                warnings.simplefilter(action='ignore')
+
+                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
 
                         if 'DL' in self.workflow_apps.keys():
                             for d_type in realizations_DL.keys():
                                 d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
                                 #d_agg.sort_index(axis=0, inplace=True)
 
-                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
+                                with warnings.catch_warnings():
+                                    warnings.simplefilter(action='ignore')
+
+                                    d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
 
 
 

@@ -59,11 +59,17 @@ def log_msg(msg):
 log_msg('First line of DL_calculation')
 
 import sys, os, json, ntpath, posixpath, argparse
+import warnings
 import numpy as np
 import pandas as pd
 import shutil
 
 idx = pd.IndexSlice
+
+# suppress FutureWarnings by default - credit: ioannis_vm
+if not sys.warnoptions:
+    warnings.filterwarnings(
+        category=FutureWarning, action='ignore')
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
