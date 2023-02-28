@@ -265,6 +265,9 @@ def run_pelicun(DL_input_path, demand_input_path,
 
         stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
         
+        # FMK HACK for ADAM
+        resource_dir = output_path;
+
         if custom_fragility_dir is not None :
             DL_input['DamageAndLoss']['ComponentDataFolder'] = custom_fragility_dir
             
