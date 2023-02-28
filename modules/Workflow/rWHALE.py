@@ -242,8 +242,7 @@ def main(run_type, input_file, app_registry,
         # aggregate results
         if asset_type == 'Buildings' :
 
-            if procID == 0:
-                WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
+            WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
             
         elif asset_type == 'WaterNetworkPipelines' :
         
