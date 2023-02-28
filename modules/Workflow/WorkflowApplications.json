@@ -79,7 +79,7 @@
       {
         "Name": "CSV_to_AIM",
         "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
-        "RunsParallel": false,	  
+        "RunsParallel": true,	  
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
