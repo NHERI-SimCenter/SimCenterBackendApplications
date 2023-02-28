@@ -53,21 +53,24 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
     # check if running parallel
     numP = 1
     procID = 0
+    runParallel = False
 
-    if doParallel == True:
+    if doParallel == "True":
         mpi_spec = importlib.util.find_spec("mpi4py")
         found = mpi_spec is not None
         if found:
             import mpi4py
             from mpi4py import MPI
+            runParallel = True
             comm = MPI.COMM_WORLD
             numP = comm.Get_size()
             procID = comm.Get_rank();
             if numP < 2:
-                doParallel = False
+                doParallel = "False"
+                runParallel = False
                 numP = 1
                 procID = 0
-            
+
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
     event_dir = event_grid_path.parent
@@ -95,10 +98,11 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
     AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
                           index=np.arange(len(asset_dict)))
 
-
     count = 0
     for i, asset in enumerate(asset_dict):
-        if i % numP == procID:
+
+        if runParallel == False or (i % numP) == procID:
+
             with open(asset['file'], 'r') as f:
                 asset_data = json.load(f)
 
@@ -109,7 +113,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             count = count+1;
 
     # store building locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])])
+    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude']) if not np.isnan(lo) and not np.isnan(la)])
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
@@ -121,6 +125,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
     else:
         rng = np.random.default_rng()
 
+    count = 0
     # iterate through the buildings and store the selected events in the AIM
     for asset_i, (AIM_id, dist_list, ind_list) in enumerate(zip(AIM_df.index,
                                                           distances,
@@ -128,6 +133,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
 
         # open the AIM file
         asst_file = AIM_df.iloc[AIM_id]['file']
+
         with open(asst_file, 'r') as f:
             asset_data = json.load(f)
 
@@ -263,7 +269,9 @@ if __name__ == '__main__':
     parser.add_argument('--samples', type=int)
     parser.add_argument('--neighbors', type=int)
     parser.add_argument('--filter_label', default="")
-    parser.add_argument('--doParallel', default=False)    
+    parser.add_argument('--doParallel', default="False")    
+    parser.add_argument("-n", "--numP", default='8')
+    parser.add_argument("-m", "--mpiExec", default='mpiexec')
     parser.add_argument('--seed', type=int, default=None)
     args = parser.parse_args()
 
