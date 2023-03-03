@@ -45,7 +45,10 @@ def main(args):
     fem_data = data["Applications"]["FEM"]
     edp_data = data["EDP"]
     
-    f = open("UQpyAnalysis.py", "w")
+    cwd = os.getcwd()
+    templateDir = cwd
+    with open(os.path.join(templateDir, "UQpyAnalysis.py"), "w") as f:
+        pass
     
     # f.write("from UQpy import PythonModel\n")
     # f.write("from UQpy.distributions import *\n")

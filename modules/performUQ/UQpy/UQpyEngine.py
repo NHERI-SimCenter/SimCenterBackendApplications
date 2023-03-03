@@ -61,13 +61,15 @@ def main(args):
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     # 1. Create the python script
-    preprocessorCommand = "'{}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(thisScriptDir,
+    preprocessorCommand = "'{} {}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(python, thisScriptDir,
                                                                         inputFile,
                                                                         workflowDriver,
                                                                         runType,
                                                                         osType)
 
-    subprocess.Popen(preprocessorCommand, shell=True).wait()
+    res = subprocess.Popen(preprocessorCommand, shell=True).wait()
+    with open("preprocessResult.txt", "w") as f:
+        f.write(str(res))
         
     if runType in ['runningLocal']:
         os.chmod(workflowDriver,  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
