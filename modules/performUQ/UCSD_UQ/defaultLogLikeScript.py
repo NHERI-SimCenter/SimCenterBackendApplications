@@ -68,9 +68,9 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
     # Shift and normalize the prediction
     currentPosition = 0
     for j in range(len(edpLengthsList)):
-        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] += shiftFactors[j]
-        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] /= scaleFactors[j]
-        currentPosition += edpLengthsList[j]
+        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] = prediction[:, currentPosition:currentPosition + edpLengthsList[j]] + shiftFactors[j]
+        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] = prediction[:, currentPosition:currentPosition + edpLengthsList[j]] / scaleFactors[j]
+        currentPosition = currentPosition + edpLengthsList[j]
 
     # Compute the normalized residuals
     allResiduals = prediction - calibrationData
@@ -84,11 +84,11 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
             residuals = allResiduals[i, currentPosition:currentPosition + length]
-            currentPosition += length
+            currentPosition =  currentPosition + length
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
-            covListIndex += 1
+            covListIndex = covListIndex + 1
 
             # Multiply the covariance matrix by the value of the covariance multiplier
             cov = cov * covarianceMultiplierList[j]
@@ -98,8 +98,7 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
                 # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be
                 # computed more efficiently
                 var = cov[0][0]
-                sig = np.sqrt(var)
-                ll = -length * np.log(sig) - length / 2 * np.log(2 * np.pi) - 1 / (2 * var) * np.sum(residuals ** 2)
+                ll = - length / 2 * np.log(var) - length / 2 * np.log(2 * np.pi) - 1 / (2 * var) * np.sum(residuals ** 2)
             else:
                 if np.shape(cov)[0] != np.shape(cov)[1]:
                     cov = np.diag(cov.flatten())

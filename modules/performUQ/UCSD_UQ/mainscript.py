@@ -48,6 +48,15 @@ def transformData(calibrationData: np.ndarray, edpLengthsList: List[int], scaleF
         currentPosition += edpLengthsList[j]
     return calibrationData
 
+
+def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
+    denominator = np.dot(modelPriorProbabilities, modelEvidences)
+    return modelPriorProbabilities*modelEvidences/denominator
+
+def computeModelPosteriorProbabilitiesUsingLogEvidences(modelPriorProbabilities, modelLogEvidences):
+    deltas = modelLogEvidences - np.min(modelLogEvidences)
+    denominator = np.dot(modelPriorProbabilities, np.exp(deltas))
+    return modelPriorProbabilities*np.exp(deltas)/denominator
 # ======================================================================================================================
 
 class DataProcessingError(Exception):
@@ -106,7 +115,7 @@ class TransformData:
                 scaleFactors.append(absMax)
                 currentPosition += self.edpLengthsList[j]
         else:
-            logFile.write(
+            self.logFile.write(
             "\n\nComputing scale and shift factors. "
             "\n\tThe shift factors are set to the negative of the mean value for each response variable."
             "\n\tThe scale factors used are the standard deviation of the data for each response variable."
@@ -222,7 +231,7 @@ class CalDataPreparer:
 
 # ======================================================================================================================
 
-class TMCMCquoFEM:
+class TMCMCInfo:
     def __init__(self, mainscriptPath: str, workdirMain: str, runType: str, workflowDriver: str, logFile: TextIO) -> None:
         self.mainscriptPath = mainscriptPath
         self.workdirMain = workdirMain
@@ -285,13 +294,14 @@ class TMCMCquoFEM:
 # ======================================================================================================================
 
 class CovarianceMatrixPreparer:
-    def __init__(self, calibrationData: np.ndarray, edpLengthsList: List[int], edpNamesList: List[str], workdirMain: str, numExperiments: int, logFile: TextIO) -> None:
+    def __init__(self, calibrationData: np.ndarray, edpLengthsList: List[int], edpNamesList: List[str], workdirMain: str, numExperiments: int, logFile: TextIO, runType: str) -> None:
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
         self.edpNamesList = edpNamesList
         self.workdirMain = workdirMain
         self.numExperiments = numExperiments
         self.logFile = logFile
+        self.runType = runType
 
         self.logFile.write("\n\n==========================")
         self.logFile.write("\nProcessing options for variance/covariance:")
@@ -353,7 +363,7 @@ class CovarianceMatrixPreparer:
                 )
                 if os.path.isfile(covarianceFile):
                     logFile.write("\n\t\tFound a user supplied file.")
-                    if runType == "runningLocal":
+                    if self.runType == "runningLocal":
                         src = covarianceFile
                         dst = os.path.join(workdirMain, covarianceFileName)
                         logFile.write(
@@ -422,7 +432,7 @@ class CovarianceMatrixPreparer:
                                 "\n\t\tScalar variance value provided. The covariance matrix is an identity matrix "
                                 "multiplied by this value."
                             )
-                        elif numCols == edpLengthsList[i]:
+                        elif numCols == self.edpLengthsList[i]:
                             covarianceTypeList.append("diagonal")
                             logFile.write(
                                 "\n\t\tA row vector provided. This will be treated as the diagonal entries of the "
@@ -432,49 +442,49 @@ class CovarianceMatrixPreparer:
                             logFile.write(
                                 "\nERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, edpLengthsList[i], numCols
+                                    covarianceFile, self.edpLengthsList[i], numCols
                                 )
                             )
                             raise DataProcessingError(
                                 "ERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, edpLengthsList[i], numCols
+                                    covarianceFile, self.edpLengthsList[i], numCols
                                 )
                             )
-                    elif numRows == edpLengthsList[i]:
+                    elif numRows == self.edpLengthsList[i]:
                         if numCols == 1:
                             covarianceTypeList.append("diagonal")
                             logFile.write(
                                 "\t\tA column vector provided. This will be treated as the diagonal entries of the "
                                 "covariance matrix."
                             )
-                        elif numCols == edpLengthsList[i]:
+                        elif numCols == self.edpLengthsList[i]:
                             covarianceTypeList.append("matrix")
                             logFile.write("\n\t\tA full covariance matrix provided.")
                         else:
                             logFile.write(
                                 "\nERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, edpLengthsList[i], numCols
+                                    covarianceFile, self.edpLengthsList[i], numCols
                                 )
                             )
                             raise DataProcessingError(
                                 "ERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, edpLengthsList[i], numCols
+                                    covarianceFile, self.edpLengthsList[i], numCols
                                 )
                             )
                     else:
                         logFile.write(
                             "\nERROR: The number of rows of data in the covariance matrix file {}"
                             " must be either 1 or {}. Found {} rows".format(
-                                covarianceFile, edpLengthsList[i], numCols
+                                covarianceFile, self.edpLengthsList[i], numCols
                             )
                         )
                         raise DataProcessingError(
                             "ERROR: The number of rows of data in the covariance matrix file {}"
                             " must be either 1 or {}. Found {} rows".format(
-                                covarianceFile, edpLengthsList[i], numCols
+                                covarianceFile, self.edpLengthsList[i], numCols
                             )
                         )
                     logFile.write("\n\t\tCovariance matrix: {}".format(covMatrix))
@@ -498,11 +508,9 @@ class CovarianceMatrixPreparer:
             logFile.write("\n\t{}".format(rowString))
         return self.covarianceMatrixList
 # ======================================================================================================================
+def main(inputArgs):
 
-if __name__ == "__main__":
-
-    inputArgs = sys.argv
-
+    # Initialize analysis
     mainscriptPath = os.path.abspath(inputArgs[0])
     workdirMain = os.path.abspath(inputArgs[1])
     workdirTemplate = os.path.abspath(inputArgs[2])
@@ -512,23 +520,26 @@ if __name__ == "__main__":
     logFileName = "logFileTMCMC.txt"
 
     # # ================================================================================================================
-
+    
     t1 = time.time()
 
     logFile = createLogFile(workdirMain, logFileName)
 
     # # ================================================================================================================
 
+    # Process input json file
     inputJsonFilePath = os.path.join(os.path.abspath(workdirTemplate), inputFile)
     logFile.write("\n\n==========================")
     logFile.write("\nParsing the json input file {}".format(inputJsonFilePath))
     (numberOfSamples, seedVal, calDataFileName, logLikeModule, writeOutputs, variablesList, edpNamesList, 
-    edpLengthsList) = parseDataFunction(inputJsonFilePath, logFile, workdirMain, os.path.dirname(mainscriptPath))
+    edpLengthsList, modelsDict, nModels) = parseDataFunction(inputJsonFilePath, logFile, workdirMain, 
+    os.path.dirname(mainscriptPath))
     syncLogFile(logFile)
 
     # # ================================================================================================================
 
-    TMCMC = TMCMCquoFEM(mainscriptPath, workdirMain, runType, workflowDriver, logFile) 
+    # Initialize TMCMC object
+    TMCMC = TMCMCInfo(mainscriptPath, workdirMain, runType, workflowDriver, logFile) 
     TMCMC.updateUQInfo(numberOfSamples, seedVal)  
     TMCMC.findNumProcessorsAvailable() 
     TMCMC.getNumChains(numberOfSamples, runType, TMCMC.numProcessors)
@@ -536,6 +547,7 @@ if __name__ == "__main__":
 
     # # ================================================================================================================
 
+    # Read calibration data
     DataPreparer = CalDataPreparer(workdirMain, workdirTemplate, calDataFileName, edpNamesList, edpLengthsList, logFile)
     calibrationData, numExperiments = DataPreparer.getCalibrationData()
 
@@ -560,13 +572,13 @@ if __name__ == "__main__":
     logFile.write("\n\nThe transformed calibration data: \n{}".format(transformedCalibrationData))
 
     # ======================================================================================================================
-    # Processing covariance matrix options
-    CovMatrixOptions = CovarianceMatrixPreparer(transformedCalibrationData, edpLengthsList, edpNamesList, workdirMain, numExperiments, logFile)
+    # Process covariance matrix options
+    CovMatrixOptions = CovarianceMatrixPreparer(transformedCalibrationData, edpLengthsList, edpNamesList, workdirMain, numExperiments, logFile, runType)
     defaultErrorVariances = CovMatrixOptions.getDefaultErrorVariances()
     covarianceMatrixList = CovMatrixOptions.createCovarianceMatrix()
 
     # ======================================================================================================================
-    # Starting TMCMC workflow
+    # Start TMCMC workflow
     logFile.write("\n\n==========================")
     logFile.write("\nSetting up the TMCMC algorithm")
 
@@ -592,12 +604,16 @@ if __name__ == "__main__":
     syncLogFile(logFile)
 
     # ======================================================================================================================
+    # Initialize variables to store prior model probability and evidence
+    modelPriorProbabilities = np.ones((len(variablesList),))/len(variablesList)
+    modelEvidences = np.ones_like(modelPriorProbabilities)
+
     logFile.write("\n\n==========================")
     logFile.write("\nLooping over each model")
     # For each model:
     for modelNum, variables in enumerate(variablesList):
         logFile.write("\n\n\t==========================")
-        logFile.write("\n\tStarting analysis for model {}".format(modelNum))
+        logFile.write("\n\tStarting analysis for model {}".format(modelNum+1))
         logFile.write("\n\t==========================")
         # Assign probability distributions to the parameters
         logFile.write("\n\t\tAssigning probability distributions to the parameters")
@@ -712,12 +728,17 @@ if __name__ == "__main__":
                 AllPars.append(pdfs.ChiSquareDist(k=VariableK))
 
             if variables["distributions"][i] == "Discrete":
-                VariableValues = float(variables["Par1"][i])
-                VariableWeights = float(variables["Par2"][i])
-
-                AllPars.append(
-                    pdfs.DiscreteDist(values=VariableValues, weights=VariableWeights)
-                )
+                if variables["Par2"][i] is None:
+                    VariableIndex = variables["Par1"][i]
+                    AllPars.append(
+                        pdfs.ConstantInteger(value=VariableIndex)
+                    )
+                else:
+                    VariableValues = float(variables["Par1"][i])
+                    VariableWeights = float(variables["Par2"][i])
+                    AllPars.append(
+                        pdfs.DiscreteDist(values=VariableValues, weights=VariableWeights)
+                    )
 
         # Run the Algorithm
         logFile.write("\n\n\t==========================")
@@ -763,10 +784,9 @@ if __name__ == "__main__":
         evidence = 1
         for i in range(len(mytrace)):
             Wm = mytrace[i][2]
-            evidence = evidence * (sum(Wm) / len(Wm))
-        logFile.write("\n\t\t\tModel evidence: {:e}".format(evidence))
-        # evidence = np.exp(log_evidence)
-        # logFile.write("\n\t\t\tModel evidence from log_evidence: {:e}".format(evidence))
+            evidence *= np.mean(Wm)
+        logFile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
+        logFile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
 
         syncLogFile(logFile)
 
@@ -798,7 +818,7 @@ if __name__ == "__main__":
         with open(tabFilePath, "w") as f:
             f.write(headings)
             for i in range(Np):
-                string = "{}\t{}\t".format(i + 1, 1)
+                string = "{}\t{}\t".format(i + 1, modelNum+1)
                 for j in range(len(variables["names"])):
                     string += "{}\t".format(dataToWrite[i, j])
                 if writeOutputs:  # write the output data
@@ -828,15 +848,23 @@ if __name__ == "__main__":
         #     analysisPath = os.path.abspath(analysisLocation)
         #     shutil.rmtree(analysisPath)
 
+        modelEvidences[modelNum] = evidence
+
         logFile.write("\n\n\t==========================")
-        logFile.write("\n\tCompleted analysis for model {}".format(modelNum))
+        logFile.write("\n\tCompleted analysis for model {}".format(modelNum+1))
         logFile.write("\n\t==========================")
 
         syncLogFile(logFile)
 
+    modelPosteriorProbabilities = computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences)
+
     logFile.write("\n\n==========================")
     logFile.write("\nFinished looping over each model")
     logFile.write("\n==========================\n")
+
+    logFile.write("\nThe posterior model probabilities are:")
+    for modelNum in range(len(variablesList)):
+        logFile.write(f"\nModel number {modelNum+1}: {modelPosteriorProbabilities[modelNum]*100:15g}%")
 
     # ======================================================================================================================
     logFile.write("\nUCSD_UQ engine workflow complete!\n")
@@ -850,3 +878,12 @@ if __name__ == "__main__":
         TMCMC.comm.Abort(0)
 
     # ======================================================================================================================
+
+
+# ======================================================================================================================
+
+if __name__ == "__main__":
+    inputArgs = sys.argv
+    main(inputArgs)
+
+# ====================================================================================================================== 

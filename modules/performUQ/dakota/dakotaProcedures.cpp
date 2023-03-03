@@ -248,6 +248,36 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       dakotaFile << "\n";
     }
 
+    // discreteUncertainIntegerSetRV
+    int numDiscrete = theRandomVariables.discreteUncertainIntegerSetRVs.size();
+    if (numDiscrete > 0) {
+      std::list<struct discreteUncertainIntegerSetRV> theList = theRandomVariables.discreteUncertainIntegerSetRVs;
+      dakotaFile << "    discrete_uncertain_set";
+      dakotaFile << "\n    integer";
+      dakotaFile << "\n      num_set_values = ";
+      for (auto it = theList.begin(); it != theList.end(); it++)
+        dakotaFile << it->elements.size() << " ";
+      dakotaFile << "\n      set_values = ";
+      for (auto it = theList.begin(); it != theList.end(); it++) {
+        auto elementsList = it->elements;
+        for (auto eit = elementsList.begin(); eit != elementsList.end(); eit++)
+          dakotaFile << *eit << " ";
+        dakotaFile << "  ";
+      }
+      dakotaFile << "\n      set_probabilities = ";
+      for (auto it = theList.begin(); it != theList.end(); it++) {
+        auto probsList = it->weights;
+        for (auto pit = probsList.begin(); pit != probsList.end(); pit++)
+          dakotaFile << *pit << " ";
+        dakotaFile << "  ";
+      }
+      dakotaFile << "\n      descriptors = ";
+      for (auto it = theList.begin(); it != theList.end(); it++)
+        dakotaFile << "\'" << it->name << "\' ";
+      dakotaFile << "\n";
+    }
+
+
     // if no random variables .. create 1 call & call it dummy!
     int numRV = theRandomVariables.numRandomVariables;
     if (numRV == 0) {
