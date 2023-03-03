@@ -613,7 +613,7 @@ def main(inputArgs):
     # For each model:
     for modelNum, variables in enumerate(variablesList):
         logFile.write("\n\n\t==========================")
-        logFile.write("\n\tStarting analysis for model {}".format(modelNum))
+        logFile.write("\n\tStarting analysis for model {}".format(modelNum+1))
         logFile.write("\n\t==========================")
         # Assign probability distributions to the parameters
         logFile.write("\n\t\tAssigning probability distributions to the parameters")
@@ -784,10 +784,9 @@ def main(inputArgs):
         evidence = 1
         for i in range(len(mytrace)):
             Wm = mytrace[i][2]
-            evidence = evidence * (sum(Wm) / len(Wm))
-        logFile.write("\n\t\t\tModel evidence: {:e}".format(evidence))
-        # evidence = np.exp(log_evidence)
-        # logFile.write("\n\t\t\tModel evidence from log_evidence: {:e}".format(evidence))
+            evidence *= np.mean(Wm)
+        logFile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
+        logFile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
 
         syncLogFile(logFile)
 
@@ -852,7 +851,7 @@ def main(inputArgs):
         modelEvidences[modelNum] = evidence
 
         logFile.write("\n\n\t==========================")
-        logFile.write("\n\tCompleted analysis for model {}".format(modelNum))
+        logFile.write("\n\tCompleted analysis for model {}".format(modelNum+1))
         logFile.write("\n\t==========================")
 
         syncLogFile(logFile)
@@ -865,7 +864,7 @@ def main(inputArgs):
 
     logFile.write("\nThe posterior model probabilities are:")
     for modelNum in range(len(variablesList)):
-        logFile.write(f"\nModel number {modelNum}: {modelPosteriorProbabilities[modelNum]*100:15g}%")
+        logFile.write(f"\nModel number {modelNum+1}: {modelPosteriorProbabilities[modelNum]*100:15g}%")
 
     # ======================================================================================================================
     logFile.write("\nUCSD_UQ engine workflow complete!\n")
