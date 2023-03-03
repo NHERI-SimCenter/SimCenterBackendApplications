@@ -61,7 +61,7 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
     for floor, node in enumerate(nodes):
         node_entry = {}
         node_entry['node'] = node
-        node_entry['cline'] = '1'
+        node_entry['cline'] = 'response'
         node_entry['floor'] = f'{floor}'
         node_map.append(node_entry)
 

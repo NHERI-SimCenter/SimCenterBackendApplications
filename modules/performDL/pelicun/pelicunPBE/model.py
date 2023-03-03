@@ -210,7 +210,7 @@ class FragilityFunction(object):
         EXC = samples.sub(EDP, axis=0) < 0.
 
         DSG_ID = pd.Series(np.zeros(len(samples.index)), name='DSG_ID',
-                           index=samples.index, dtype=np.int)
+                           index=samples.index, dtype=int)
 
         for s in range(nstates):
             DSG_ID[EXC.iloc[:,s]] = s + 1

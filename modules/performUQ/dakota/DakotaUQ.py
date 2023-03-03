@@ -20,7 +20,6 @@ import subprocess
 import glob
 import argparse
 
-
 def main(args):
 
     parser = argparse.ArgumentParser()
@@ -92,7 +91,7 @@ def main(args):
     os.chmod(workflow_driver1, st.st_mode | stat.S_IEXEC)
 
     # copy the dakota input file to the main working dir for the structure
-    shutil.move("dakota.in", "../")
+    shutil.copy("dakota.in", "../")
 
     # If calibration data files exist, copy to the main working directory
     if os.path.isfile("calibrationDataFilesToMove.cal"):
@@ -101,9 +100,9 @@ def main(args):
         for line in datFileList:
             datFile = line.strip()
             if datFile.split('.')[-1] == 'tmpFile':
-                shutil.move(datFile, "../{}".format(datFile[:-8]))
+                shutil.copy(datFile, "../{}".format(datFile[:-8]))
             else:
-                shutil.move(datFile, "../")
+                shutil.copy(datFile, "../")
 
         # os.remove("calibrationDataFilesToMove.cal")
 
@@ -119,12 +118,20 @@ def main(args):
         #        print(str(line))
         
         dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
+
+        if 'parType' in data:
+            print(data['parType'])
+            if data['parType'] == 'parRUN':
+                dakotaCommand = data['mpiExec'] + ' -n 1 ' + dakotaCommand
+
         print('running Dakota: ', dakotaCommand)
+
         try:
             result = subprocess.check_output(dakotaCommand, stderr=subprocess.STDOUT, shell=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
+            print('RUNNING DAKOTA ERROR: ', result)
             returncode = e.returncode
 
 if __name__ == '__main__':

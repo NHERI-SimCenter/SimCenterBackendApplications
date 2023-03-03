@@ -50,7 +50,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 ERADist::ERADist() {}
 
-ERADist::ERADist(string getName, string getOpt, vector<double> getVal, vector<double> getAdd, int procno)
+ERADist::ERADist(string getName, string getOpt, vector<double> getVal, vector<double> getAdd, vector<string> getAddStr, int procno)
 {
 	// NAME
 	transform(getName.begin(), getName.end(), getName.begin(), ::tolower);
@@ -107,6 +107,10 @@ ERADist::ERADist(string getName, string getOpt, vector<double> getVal, vector<do
 	{
 		this->theDist = new discreteDist(getOpt, getVal);
 	}
+	//else if (getName.compare("discrete_design_set_string") == 0)
+	//{
+	//	this->theDist = new discreteStrDist(getOpt, getVal,getAddStr);
+	//}
 	else
 	{
 		std::string errMSG = "Error running UQ engine: " + name + " distribution is not supported";

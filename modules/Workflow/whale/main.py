@@ -398,10 +398,96 @@ def resolve_path(target_path, ref_path):
         if target_path.exists():
             target_path = target_path.resolve()
         else:
-            raise ValueError(
-                f"{target_path} does not point to a valid location")
+            #raise ValueError(
+            #    f"{target_path} does not point to a valid location")
+            print(f"{target_path} does not point to a valid location")
 
     return target_path
+
+def _parse_app_registry(registry_path, app_types, list_available_apps=False):
+    """
+    Load the information about available workflow applications.
+
+    Parameters
+    ----------
+    registry_path: string
+        Path to the JSON file with the app registry information. By default, 
+        this file is stored at applications/Workflow/WorkflowApplications.json
+    app_types: list of strings
+        List of application types (e.g., Assets, Modeling, DL) to parse from the 
+        registry
+    list_available_apps: bool, optional, default: False
+        If True, all available applications of the requested types are printed
+        in the log file.
+    
+    Returns
+    -------
+    app_registry: dict
+        A dictionary with WorkflowApplication objects. Primary keys are
+        the type of application (e.g., Assets, Modeling, DL); secondary keys
+        are the name of the specific application (e.g, MDOF-LU). See the 
+        documentation for more details.
+    default_values: dict
+        Default values of filenames used to pass data between applications. Keys
+        are the placeholder names (e.g., filenameAIM) and values are the actual
+        filenames (e.g,. AIM.json)
+    """
+
+    log_msg('Parsing application registry file')
+
+    # open the registry file
+    log_msg('Loading the json file...', prepend_timestamp=False)
+    with open(registry_path, 'r') as f:
+        app_registry_data = json.load(f)
+    log_msg('  OK', prepend_timestamp=False)
+
+    # initialize the app registry
+    app_registry = dict([(a, dict()) for a in app_types])
+
+    log_msg('Loading default values...', prepend_timestamp=False)
+
+    default_values = app_registry_data.get('DefaultValues', None)
+
+    log_msg('  OK', prepend_timestamp=False)
+
+    log_msg('Collecting application data...', prepend_timestamp=False)
+    # for each application type
+    for app_type in sorted(app_registry.keys()):
+
+        # if the registry contains information about it
+        app_type_long = app_type+'Applications'
+        if app_type_long in app_registry_data:
+
+            # get the list of available applications
+            available_apps = app_registry_data[app_type_long]['Applications']
+            api_info = app_registry_data[app_type_long]['API']
+
+            # add the default values to the API info
+            if default_values is not None:
+                api_info.update({'DefaultValues': default_values})
+
+            # and create a workflow application for each app of this type
+            for app in available_apps: 
+                app_registry[app_type][app['Name']] = WorkflowApplication(
+                     app_type=app_type, app_info=app, api_info=api_info)
+
+    log_msg('  OK', prepend_timestamp=False)
+
+    if list_available_apps:
+        log_msg('Available applications:', prepend_timestamp=False)
+
+        for app_type, app_list in app_registry.items():
+            for app_name, app_object in app_list.items():
+                log_msg('  {} : {}'.format(app_type, app_name),
+                        prepend_timestamp=False)
+
+    #pp.pprint(self.app_registry)
+
+    log_msg('Successfully parsed application registry',
+            prepend_timestamp=False)
+    log_div()
+
+    return app_registry, default_values
 
 class WorkFlowInputError(Exception):
     def __init__(self, value):
@@ -466,6 +552,9 @@ class WorkflowApplication(object):
                 input_type = self.app_spec_inputs[input_id]['type']
 
                 if input_type == 'path':
+
+                    if 'PelicunDefault' in self.pref[preference]:
+                        continue
 
                     self.pref[preference] = resolve_path(
                         self.pref[preference], ref_path)
@@ -631,8 +720,10 @@ class Workflow(object):
             self.parCommandFile = open(parCommandFileName, "w")
             self.parCommandFile.write("#!/bin/sh" + "\n")
 
+        print('WF: parType, mpiExec, numProc: ', self.parType, self.mpiExec, self.numProc)
         self.numP = 1
         self.procID = 0
+        self.doParallel = False
         if (parType == 'parRUN'):
             mpi_spec = importlib.util.find_spec("mpi4py")
             found = mpi_spec is not None
@@ -648,6 +739,8 @@ class Workflow(object):
                     self.procID = 0
                 else:
                     self.doParallel = True;
+
+        print('WF: parType, mpiExec, numProc, do? numP, procID: ', self.parType, self.mpiExec, self.numProc, self.doParallel, self.numP, self.procID)
             
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
@@ -666,8 +759,13 @@ class Workflow(object):
 
         self.app_type_list = app_type_list
 
+        if self.run_type == 'parSETUP':
+            self.app_dir_local = self.app_dir_remote            
+
         # parse the application registry
-        self._parse_app_registry()
+        self.app_registry, self.default_values = (
+            _parse_app_registry(registry_path = self.app_registry_file, 
+                                app_types=self.app_type_list))
 
         # parse the input file
         self.workflow_apps = {}
@@ -692,77 +790,13 @@ class Workflow(object):
             self.parCommandFile.write("\n# Writing Final command to run this application in parallel\n")            
             self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command)
             self.parCommandFile.close()
-        
-    def _init_app_registry(self):
-        """
-        Initialize the dictionary where we keep the data on available apps.
 
-        """
-        self.app_registry = dict([(a, dict()) for a in self.app_type_list])
-
-    def _parse_app_registry(self):
-        """
-        Load the information about available workflow applications.
-
-        """
-
-        log_msg('Parsing application registry file')
-
-        # open the registry file
-        log_msg('Loading the json file...', prepend_timestamp=False)
-        with open(self.app_registry_file, 'r') as f:
-            app_registry_data = json.load(f)
-        log_msg('  OK', prepend_timestamp=False)
-
-        # initialize the app registry
-        self._init_app_registry()
-
-        log_msg('Loading default values...', prepend_timestamp=False)
-
-        self.default_values = app_registry_data.get('DefaultValues', None)
-
-        log_msg('  OK', prepend_timestamp=False)
-
-        log_msg('Collecting application data...', prepend_timestamp=False)
-        # for each application type
-        for app_type in sorted(self.app_registry.keys()):
-
-            # if the registry contains information about it
-            app_type_long = app_type+'Applications'
-            if app_type_long in app_registry_data:
-
-                # get the list of available applications
-                available_apps = app_registry_data[app_type_long]['Applications']
-                api_info = app_registry_data[app_type_long]['API']
-
-                # add the default values to the API info
-                if self.default_values is not None:
-                    api_info.update({'DefaultValues': self.default_values})
-
-                # and store their name and executable location
-                for app in available_apps: self.app_registry[app_type][app['Name']] = WorkflowApplication(
-                         app_type=app_type, app_info=app, api_info=api_info)
-
-        log_msg('  OK', prepend_timestamp=False)
-
-        log_msg('Available applications:', prepend_timestamp=False)
-
-        for app_type, app_list in self.app_registry.items():
-            for app_name, app_object in app_list.items():
-                log_msg('  {} : {}'.format(app_type, app_name),
-                        prepend_timestamp=False)
-
-        #pp.pprint(self.app_registry)
-
-        log_msg('Successfully parsed application registry',
-                prepend_timestamp=False)
-        log_div()
-        
 
     def _register_app_type(self, app_type, app_dict, sub_app = ''):
     
         """
-        Function to register the applications provided in the input file into memory, i.e., the 'App registry'
+        Function to register the applications provided in the input file into 
+        memory, i.e., the 'App registry'
 
         Parameters
         ----------
@@ -979,7 +1013,6 @@ class Workflow(object):
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
 
-
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
              'Reference dir'],
@@ -1175,6 +1208,7 @@ class Workflow(object):
 
 
     def augment_asset_files(self):
+
         """
         Short description
 
@@ -1186,7 +1220,9 @@ class Workflow(object):
         """
 
         log_msg('Augmenting files for individual assets for Workflow')
-        
+
+        print('INPUT FILE:', self.input_file)
+
         # Open the input file - we'll need it later
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
@@ -1242,6 +1278,11 @@ class Workflow(object):
                 'Applications': {}
             }
 
+            if self.parType == "parRUN":
+                extra_input['parType'] = self.parType;
+                extra_input['mpiExec'] = self.mpiExec;
+                extra_input['numProc'] = self.numProc;
+
             apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
                 # Start with the app data under Applications
@@ -1291,6 +1332,7 @@ class Workflow(object):
 
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
+
             
             count = 0
             for asst in asset_data:
@@ -1300,8 +1342,19 @@ class Workflow(object):
                     AIM_file = asst['file']
                     
                     # Open the AIM file and add the unit information to it
-                    with open(AIM_file, 'r') as f:
-                        AIM_data = json.load(f)
+                    print(count, self.numP, self.procID, AIM_file)
+                    
+                    try:
+                        with open(AIM_file, 'r') as f:
+                            AIM_data = json.load(f)
+                    except FileNotFoundError:
+                        print('Exiting wwhale/aggregate_assetscannot open file: ',AIM_file)
+                    except IOError as e:
+                        print(f'I/O error {e.errno}  {e.strerror}')
+                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
+                    except:
+                        print(f'Unexpected error: sys.exc_info()[0]')
+                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
 
                     if 'DefaultValues' in input_data.keys():
                         AIM_data.update({'DefaultValues':input_data['DefaultValues']})
@@ -1393,7 +1446,7 @@ class Workflow(object):
             log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType):
+    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):
         
         """
         Performs the regional mapping between the asset and a hazard event.
@@ -1437,7 +1490,7 @@ class Workflow(object):
             if reg_mapping_app.runsParallel == False:
                 self.parCommandFile.write(command + "\n")
             else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --doParallel " + str(doParallel) + " -m " + self.mpiExec + " --numP " + str(self.numProc) + "\n")
 
             log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
                 
@@ -1831,7 +1884,8 @@ class Workflow(object):
             
                 workflow_app = self.workflow_apps[app_type]
 
-                if self.run_type in ['set_up', 'runningRemote']:
+                print('FMK runtype', self.run_type)
+                if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                 
                     if type(workflow_app) is dict :
                         for itemKey, item in workflow_app.items() :
@@ -2218,7 +2272,7 @@ class Workflow(object):
     def aggregate_results(self, asst_data, asset_type = '',
 
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
-        out_types = ['BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['AIM', 'EDP', 'DM', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description
@@ -2245,7 +2299,7 @@ class Workflow(object):
         if headers is None :
             headers = dict(
                 IM = [0, 1, 2, 3],
-                BIM = [0, ],
+                AIM = [0, ],
                 EDP = [0, 1, 2, 3],
                 DM = [0, 1, 2],
                 DV = [0, 1, 2, 3])
@@ -2260,6 +2314,8 @@ class Workflow(object):
                         realizations_DL = None
 
                         for asst in asst_data:
+
+                            print("ASSET", asst);
                         
                             asst_file = asst['file']
                         
@@ -2306,54 +2362,92 @@ class Workflow(object):
                         for d_type in realizations_EDP.keys():
                             d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
 
-                            d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+                            with warnings.catch_warnings():
+                                warnings.simplefilter(action='ignore')
+
+                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
 
                         if 'DL' in self.workflow_apps.keys():
                             for d_type in realizations_DL.keys():
                                 d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
                                 #d_agg.sort_index(axis=0, inplace=True)
 
-                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
+                                with warnings.catch_warnings():
+                                    warnings.simplefilter(action='ignore')
+
+                                    d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
 
 
 
                 else:
+
                     out_list = []
-
+                    count = 0;
                     for asst in asst_data:
-                                            
-                        asst_file = asst['file']
-                        
-                        # Get the folder containing the results
-                        aimDir = os.path.dirname(asst_file)
-                    
-                        asst_id = asst['id']
-                        min_id = min(int(asst_id), min_id)
-                        max_id = max(int(asst_id), max_id)
 
-                        try:
-                        #if True:
+                        if count % self.numP == self.procID:
+
+                            print("ASSET", self.procID, self.numP, asst['file']);
+                            
+                            asst_file = asst['file']
                         
-                            csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
+                            # Get the folder containing the results
+                            aimDir = os.path.dirname(asst_file)
+                    
+                            asst_id = asst['id']
+                            min_id = min(int(asst_id), min_id)
+                            max_id = max(int(asst_id), max_id)
+
+                            try:
+                                #if True:
+                        
+                                csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
                                                         
-                            # EDP data
-                            df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
+                                # EDP data
+                                df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
                         
-                            df_i.index = [asst_id,]
+                                df_i.index = [asst_id,]
                             
-                            out_list.append(df_i)
+                                out_list.append(df_i)
                             
-                        except:
-                            log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
+                            except:
+                                log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
 
-                    #out_agg = pd.concat(out_list, axis=0, sort=False)
-                    out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
-                    #out_agg.sort_index(axis=0, inplace=True)
-                    
-                    outPath = posixpath.join(run_path,f'{out_type}_{min_id}-{max_id}.csv')
-                    
+                        # increment counter
+                        count = count + 1
+
+
                     # save the collected DataFrames as csv files
-                    out_agg.to_csv(outPath)
+                    if self.procID == 0:
+                        outPath = posixpath.join(run_path,f'{out_type}.csv')
+                    else:
+                        outPath = posixpath.join(run_path,f'{out_type}_tmp_{self.procID}.csv')
+
+                    # if not P0 output file & barrier 
+                    if self.procID != 0:
+
+                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                        out_agg.to_csv(outPath)
+                        self.comm.Barrier()
+
+                    else: 
+
+                        # P0 if parallel & parallel, barrier then read other, and merge
+                        if self.numP > 1:
+
+                            self.comm.Barrier()
+                            
+                            # fileList = []
+                            for i in range (1, self.numP):
+                                fileToAppend = posixpath.join(run_path,f'{out_type}_tmp_{i}.csv')
+                                #fileList.append(fileToAppend)
+                                out_list.append(pd.read_csv(fileToAppend, header=headers[out_type], index_col=0))
+                            
+
+                        # write file
+                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                        out_agg.to_csv(outPath)
+
 
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()

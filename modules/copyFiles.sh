@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SOURCEDIR=$(pwd)
-DESTDIR=$SOURCEDIR/../v2.3.0/applications
+DESTDIR=$SOURCEDIR/../v2.5.0/applications
 
 copy() {
     local DIRECTORY=$1

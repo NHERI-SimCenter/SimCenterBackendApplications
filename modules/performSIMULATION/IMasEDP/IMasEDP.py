@@ -77,8 +77,9 @@ def write_RV(EVENT_input_path):
 
         # get the header
         header_data = np.genfromtxt(data_dir / filename, delimiter=',',
-                                    names=None, max_rows=1, dtype=str)
-        header = header_data #.dtype.names
+                                    names=None, max_rows=1, dtype=str,
+                                    ndmin=1)
+        header = header_data #.dtype.
 
         data = np.genfromtxt(data_dir / filename, delimiter=',',
                              skip_header=1)
