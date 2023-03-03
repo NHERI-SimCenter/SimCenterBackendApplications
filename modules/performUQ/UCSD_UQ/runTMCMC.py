@@ -40,7 +40,7 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
     logFile.write("\n\t\tSampling from prior")
     logFile.write("\n\t\tbeta = 0")
     logFile.write("\n\t\tESS = %d" % ESS)
-    logFile.write("\n\t\tscalem = %.2f" % scalem)
+    logFile.write("\n\t\tscalem = %.2g" % scalem)
     logFile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(N))
     logFile.flush()
     os.fsync(logFile.fileno())
@@ -127,12 +127,14 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
     logFile.flush()
     os.fsync(logFile.fileno())
 
+    total_log_evidence = 0
+
     while beta < 1:
         # adaptively compute beta s.t. ESS = N/2 or ESS = 0.95*prev_ESS
         # plausible weights of Sm corresponding to new beta
-        beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
+        # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)
-        # beta, log_evidence, Wm, ESS = tmcmcFunctions.compute_beta_evidence(beta, Lm, log_evidence, ESS, threshold=0.95)
+        beta, log_evidence, Wm, ESS = tmcmcFunctions.compute_beta_evidence(beta, Lm, logFile, threshold=1.0)
 
         stageNum += 1
 
@@ -177,11 +179,13 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
         logFile.write('\n\n\t\t==========================')
         logFile.write("\n\t\tStage number: {}".format(stageNum))
         if beta < 1e-7:
-            logFile.write("\n\t\tbeta = %9.6e" % beta)
+            logFile.write("\n\t\tbeta = %9.6g" % beta)
         else:
-            logFile.write("\n\t\tbeta = %9.8f" % beta)
+            logFile.write("\n\t\tbeta = %9.8g" % beta)
         logFile.write("\n\t\tESS = %d" % ESS)
-        logFile.write("\n\t\tscalem = %.2f" % scalem)
+        logFile.write("\n\t\tscalem = %.2g" % scalem)
+        logFile.write("\n\t\tlog-evidence = %9.8g" % log_evidence)
+        total_log_evidence = total_log_evidence + log_evidence
 
         # Perturb ###################################################
         # perform MCMC starting at each Smcap (total: N) for Nm_steps
@@ -241,9 +245,9 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
         # total observed acceptance rate
         R = numAccepts / numProposals
         if R < 1e-5:
-            logFile.write("\n\n\t\tacceptance rate = %9.5e" % R)
+            logFile.write("\n\n\t\tacceptance rate = %9.5g" % R)
         else:
-            logFile.write("\n\n\t\tacceptance rate = %.6f" % R)
+            logFile.write("\n\n\t\tacceptance rate = %.6g" % R)
 
         # Calculate Nm_steps based on observed acceptance rate
         if Adap_calc_Nsteps:
@@ -287,4 +291,4 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
             executor.shutdown()
             logFile.write("\n\tShutdown mpi4py executor pool for runType: {}".format(run_type))
 
-    return mytrace, log_evidence
+    return mytrace, total_log_evidence
