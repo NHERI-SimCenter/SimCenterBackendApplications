@@ -95,7 +95,9 @@ def main(inputFile,
     appsInMultiModel=[]
     appDataInMultiModel=[]
     appRunDataInMultiModel=[]    
-
+    beliefs=[]
+    sumBeliefs = 0;
+    
     numModels = 0
     
     for model in models:
@@ -103,11 +105,16 @@ def main(inputFile,
         appName = model['Application']
         appData = model['ApplicationData']
         appRunData = model['data']
+        beliefs.append(belief)
+        sumBeliefs = sumBeliefs + belief;
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
         numModels = numModels + 1
 
+    for i in range(0,numModels):
+        beliefs[i] = beliefs[i]/sumBeliefs
+        
     appTypes=[appKey]
     
     parsedRegistry = (_parse_app_registry(registryFile, appTypes))
@@ -117,7 +124,7 @@ def main(inputFile,
     if getRV:
         
         print("MultiModel - getRV")
-        
+
         #
         # launch each application with getRV and add any new RandomVariable
         # add randomvariable for MultiModel itself, to launch application
@@ -149,7 +156,37 @@ def main(inputFile,
         asset_command_list = application.get_command_list(appDir)
         asset_command_list[2] = tmpFile;
         command = create_command(asset_command_list)
-        run_command(command);            
+        run_command(command);
+
+        #
+        # update input file
+        #
+
+        #
+        # for NOW, add RV to input file
+        #
+
+        randomVariables = inputs['randomVariables'];
+        rvName = "MultiModel-"+appKey;
+        rvValue="Rv.MultiModel-"+appKey;
+        
+        thisRV = {
+            "distribution": "Discrete",
+            "inputType": "Parameters",
+            "name": rvName,
+            "refCount": 1,
+            "value": rvValue,
+            "createdRun": True,            
+            "variableClass": "Uncertain",
+            "Weights":beliefs,
+            "Values":[i+1 for i in range(0,numModels)]
+        }
+        randomVariables.append(thisRV);
+
+        with open(inputFile, "w") as outfile:
+            json.dump(inputs, outfile)        
+         
+        
             
     else:
         print("MultiModel - run")
