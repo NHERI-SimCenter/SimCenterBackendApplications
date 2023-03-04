@@ -84,11 +84,15 @@ def main(inputFile,
         reference_dir = input_data['referenceDir']
     else:
         reference_dir = inputDir;
-        
+
     appData=""
     if appKey in inputs:
         appData = inputs[appKey]
 
+    if 'models' not in appData:
+        print('NO models in: ', appData)
+        
+        
     models = appData['models']
     modelToRun = appData['modelToRun']
     
@@ -142,23 +146,6 @@ def main(inputFile,
             # thinking to store aplications commands in a file so don't have to repeat this!
 
         #
-        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
-        #
-
-        # create input file for application        
-        tmpFile = "MultiModel." + appKey + ".json";
-        inputs[appKey] =  appRunDataInMultiModel[numModels-1];
-        
-        with open(tmpFile, "w") as outfile:
-            json.dump(inputs, outfile)
-
-        # run the application
-        asset_command_list = application.get_command_list(appDir)
-        asset_command_list[2] = tmpFile;
-        command = create_command(asset_command_list)
-        run_command(command);
-
-        #
         # update input file
         #
 
@@ -185,8 +172,28 @@ def main(inputFile,
 
         with open(inputFile, "w") as outfile:
             json.dump(inputs, outfile)        
-         
+
+        print('UPDATING INPUT FILE:', inputFile)
         
+        #
+        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
+        #
+
+        # create input file for application        
+        tmpFile = "MultiModel." + appKey + ".json";
+        inputs[appKey] =  appRunDataInMultiModel[numModels-1];
+        
+        with open(tmpFile, "w") as outfile:
+            json.dump(inputs, outfile)
+
+        # run the application
+        asset_command_list = application.get_command_list(appDir)
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1;
+        asset_command_list[indexInputFile] = tmpFile;
+        asset_command_list.append(u'--getRV')        
+        command = create_command(asset_command_list)
+        run_command(command);
+        print('RUNNING --getRV:', command)
             
     else:
         print("MultiModel - run")
@@ -199,15 +206,19 @@ def main(inputFile,
         # create modified input file for app
         tmpFile = "MultiModel." + appKey + ".json";
         inputs[appKey] =  appRunDataInMultiModel[modelToRun];
-        
+
+        print('model to run:', modelToRun)
+
         with open(tmpFile, "w") as outfile:
             json.dump(inputs, outfile)
         
         # run application
         asset_command_list = application.get_command_list(appDir)
-        asset_command_list[2] = tmpFile;
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1;
+        asset_command_list[indexInputFile] = tmpFile;        
         command = create_command(asset_command_list)        
         run_command(command);
+        print('RUNNING:', command)        
 
     print("Finished MultiModelApplication")
 
