@@ -253,7 +253,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     if (numDiscrete > 0) {
       std::list<struct discreteUncertainIntegerSetRV> theList = theRandomVariables.discreteUncertainIntegerSetRVs;
       dakotaFile << "    discrete_uncertain_set";
-      dakotaFile << "\n    integer";
+      dakotaFile << "\n    integer = " << theList.size();
       dakotaFile << "\n      num_set_values = ";
       for (auto it = theList.begin(); it != theList.end(); it++)
         dakotaFile << it->elements.size() << " ";
