@@ -277,3 +277,13 @@ class DiscreteDist:
         for i, x_comp in enumerate(x):
             lp[i] = self.log_probabilities[np.where(self.values == x_comp)]
         return lp
+
+class ConstantInteger:
+    def __init__(self, value) -> None:
+        self.value = value
+    
+    def generate_rns(self, N):
+        return np.array([self.value for _ in range(N)], dtype=int)
+    
+    def log_pdf_eval(self, x):
+        return 0.0

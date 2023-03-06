@@ -398,8 +398,9 @@ def resolve_path(target_path, ref_path):
         if target_path.exists():
             target_path = target_path.resolve()
         else:
-            raise ValueError(
-                f"{target_path} does not point to a valid location")
+            #raise ValueError(
+            #    f"{target_path} does not point to a valid location")
+            print(f"{target_path} does not point to a valid location")
 
     return target_path
 
@@ -719,8 +720,10 @@ class Workflow(object):
             self.parCommandFile = open(parCommandFileName, "w")
             self.parCommandFile.write("#!/bin/sh" + "\n")
 
+        print('WF: parType, mpiExec, numProc: ', self.parType, self.mpiExec, self.numProc)
         self.numP = 1
         self.procID = 0
+        self.doParallel = False
         if (parType == 'parRUN'):
             mpi_spec = importlib.util.find_spec("mpi4py")
             found = mpi_spec is not None
@@ -736,6 +739,8 @@ class Workflow(object):
                     self.procID = 0
                 else:
                     self.doParallel = True;
+
+        print('WF: parType, mpiExec, numProc, do? numP, procID: ', self.parType, self.mpiExec, self.numProc, self.doParallel, self.numP, self.procID)
             
         if reference_dir is not None:
             self.reference_dir = Path(reference_dir)
@@ -753,6 +758,9 @@ class Workflow(object):
             self.app_dir_local = None
 
         self.app_type_list = app_type_list
+
+        if self.run_type == 'parSETUP':
+            self.app_dir_local = self.app_dir_remote            
 
         # parse the application registry
         self.app_registry, self.default_values = (
@@ -1005,7 +1013,6 @@ class Workflow(object):
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
 
-
         for loc_name, loc_val in zip(
             ['Run dir', 'Local applications dir','Remote applications dir',
              'Reference dir'],
@@ -1201,6 +1208,7 @@ class Workflow(object):
 
 
     def augment_asset_files(self):
+
         """
         Short description
 
@@ -1212,7 +1220,9 @@ class Workflow(object):
         """
 
         log_msg('Augmenting files for individual assets for Workflow')
-        
+
+        print('INPUT FILE:', self.input_file)
+
         # Open the input file - we'll need it later
         with open(self.input_file, 'r') as f:
             input_data = json.load(f)
@@ -1268,6 +1278,11 @@ class Workflow(object):
                 'Applications': {}
             }
 
+            if self.parType == "parRUN":
+                extra_input['parType'] = self.parType;
+                extra_input['mpiExec'] = self.mpiExec;
+                extra_input['numProc'] = self.numProc;
+
             apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
                 # Start with the app data under Applications
@@ -1317,6 +1332,7 @@ class Workflow(object):
 
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
+
             
             count = 0
             for asst in asset_data:
@@ -1326,8 +1342,19 @@ class Workflow(object):
                     AIM_file = asst['file']
                     
                     # Open the AIM file and add the unit information to it
-                    with open(AIM_file, 'r') as f:
-                        AIM_data = json.load(f)
+                    print(count, self.numP, self.procID, AIM_file)
+                    
+                    try:
+                        with open(AIM_file, 'r') as f:
+                            AIM_data = json.load(f)
+                    except FileNotFoundError:
+                        print('Exiting wwhale/aggregate_assetscannot open file: ',AIM_file)
+                    except IOError as e:
+                        print(f'I/O error {e.errno}  {e.strerror}')
+                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
+                    except:
+                        print(f'Unexpected error: sys.exc_info()[0]')
+                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
 
                     if 'DefaultValues' in input_data.keys():
                         AIM_data.update({'DefaultValues':input_data['DefaultValues']})
@@ -1419,7 +1446,7 @@ class Workflow(object):
             log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
 
-    def perform_regional_mapping(self, AIM_file_path, assetType):
+    def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):
         
         """
         Performs the regional mapping between the asset and a hazard event.
@@ -1463,7 +1490,7 @@ class Workflow(object):
             if reg_mapping_app.runsParallel == False:
                 self.parCommandFile.write(command + "\n")
             else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --doParallel " + str(doParallel) + " -m " + self.mpiExec + " --numP " + str(self.numProc) + "\n")
 
             log_msg('Regional mapping command added to parallel script.', prepend_timestamp=False)
                 
@@ -1857,7 +1884,8 @@ class Workflow(object):
             
                 workflow_app = self.workflow_apps[app_type]
 
-                if self.run_type in ['set_up', 'runningRemote']:
+                print('FMK runtype', self.run_type)
+                if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                 
                     if type(workflow_app) is dict :
                         for itemKey, item in workflow_app.items() :
@@ -2286,6 +2314,8 @@ class Workflow(object):
                         realizations_DL = None
 
                         for asst in asst_data:
+
+                            print("ASSET", asst);
                         
                             asst_file = asst['file']
                         
@@ -2350,42 +2380,74 @@ class Workflow(object):
 
 
                 else:
+
                     out_list = []
-
+                    count = 0;
                     for asst in asst_data:
-                                            
-                        asst_file = asst['file']
-                        
-                        # Get the folder containing the results
-                        aimDir = os.path.dirname(asst_file)
-                    
-                        asst_id = asst['id']
-                        min_id = min(int(asst_id), min_id)
-                        max_id = max(int(asst_id), max_id)
 
-                        try:
-                        #if True:
+                        if count % self.numP == self.procID:
+
+                            print("ASSET", self.procID, self.numP, asst['file']);
+                            
+                            asst_file = asst['file']
                         
-                            csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
+                            # Get the folder containing the results
+                            aimDir = os.path.dirname(asst_file)
+                    
+                            asst_id = asst['id']
+                            min_id = min(int(asst_id), min_id)
+                            max_id = max(int(asst_id), max_id)
+
+                            try:
+                                #if True:
+                        
+                                csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
                                                         
-                            # EDP data
-                            df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
+                                # EDP data
+                                df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
                         
-                            df_i.index = [asst_id,]
+                                df_i.index = [asst_id,]
                             
-                            out_list.append(df_i)
+                                out_list.append(df_i)
                             
-                        except:
-                            log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
+                            except:
+                                log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
 
-                    #out_agg = pd.concat(out_list, axis=0, sort=False)
-                    out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
-                    #out_agg.sort_index(axis=0, inplace=True)
-                    
-                    outPath = posixpath.join(run_path,f'{out_type}_{min_id}-{max_id}.csv')
-                    
+                        # increment counter
+                        count = count + 1
+
+
                     # save the collected DataFrames as csv files
-                    out_agg.to_csv(outPath)
+                    if self.procID == 0:
+                        outPath = posixpath.join(run_path,f'{out_type}.csv')
+                    else:
+                        outPath = posixpath.join(run_path,f'{out_type}_tmp_{self.procID}.csv')
+
+                    # if not P0 output file & barrier 
+                    if self.procID != 0:
+
+                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                        out_agg.to_csv(outPath)
+                        self.comm.Barrier()
+
+                    else: 
+
+                        # P0 if parallel & parallel, barrier then read other, and merge
+                        if self.numP > 1:
+
+                            self.comm.Barrier()
+                            
+                            # fileList = []
+                            for i in range (1, self.numP):
+                                fileToAppend = posixpath.join(run_path,f'{out_type}_tmp_{i}.csv')
+                                #fileList.append(fileToAppend)
+                                out_list.append(pd.read_csv(fileToAppend, header=headers[out_type], index_col=0))
+                            
+
+                        # write file
+                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                        out_agg.to_csv(outPath)
+
 
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()

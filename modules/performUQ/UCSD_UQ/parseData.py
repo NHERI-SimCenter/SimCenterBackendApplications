@@ -12,7 +12,7 @@ from importlib import import_module
 from shutil import copyfile
 
 import numpy as np
-
+import itertools
 
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
@@ -37,10 +37,10 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     applications = jsonInputs["Applications"]
     edpInputs = jsonInputs["EDP"]
     uqInputs = jsonInputs["UQ"]
-    # femInputs = jsonInputs['fem']
+    femInputs = jsonInputs["FEM"]
+    rvInputs = jsonInputs["randomVariables"]
     # localAppDirInputs = jsonInputs['localAppDir']
     # pythonInputs = jsonInputs['python']
-    rvInputs = jsonInputs["randomVariables"]
     # remoteAppDirInputs = jsonInputs['remoteAppDir']
     # uqResultsInputs = jsonInputs['uqResults']
     # if uqResultsInputs:
@@ -145,14 +145,46 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write(printString)
     # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
 
-    # Processing FEM inputs .. FMK
-    # logFile.write("\n\n\t\tNO LONGER Processing FEM inputs")
-    logFile.write("\n\n\t\tProcessing FEM inputs")
+    # Processing model inputs
+    logFile.write("\n\n\t\tProcessing application inputs")
     # Processing number of models
+    # Check if this is a multi-model analysis
+    runMultiModel = False
+    modelsDict = {}
+    modelIndicesList = []
+    modelRVNamesList = []
+    applications = jsonInputs["Applications"] 
+    for app, appInputs in applications.items():
+        logFile.write(f"\n\t\t\tApp: {app}")
+        if app.lower() not in ["events"]:
+            appl = appInputs["Application"].lower()
+        else:
+            appl = appInputs[0]["Application"].lower()
+        if appl in ["multimodel"]:
+            # runMultiModel = True
+            logFile.write(f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}')
+            modelRVName = jsonInputs[app]["modelToRun"][3:]
+            appModels = jsonInputs[app]["models"]
+            nM = len(appModels)
+            logFile.write(f'\n\t\t\t\t\tThere are {nM} {app} models')
+            modelData = {}
+            modelData["nModels"] = nM
+            modelData["values"] = [i+1 for i in range(nM)]
+            modelData["weights"] = [model["belief"] for model in appModels]
+            modelData["name"] = modelRVName
+            modelsDict[app] = modelData
+            modelIndicesList.append(modelData["values"])
+            modelRVNamesList.append(modelRVName)
+        else:
+            logFile.write('\n\t\t\t\tNot a multimodel application')
+    nModels = 1
+    for _, data in modelsDict.items():
+        nModels = nModels*data["nModels"]
+    cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))
     # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
     # inputFileList = []
     # nModels = femInputs['numInputs']
-    nModels = 1
+    # nModels = 1
     # if nModels > 1:
     #    fileInfo = femInputs['fileInfo']
     #    for m in range(nModels):
@@ -164,18 +196,17 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
 
     # Variables
     variablesList = []
-    variables = {
-        "names": [],
-        "distributions": [],
-        "Par1": [],
-        "Par2": [],
-        "Par3": [],
-        "Par4": [],
-    }
-    for m in range(nModels):
-        variablesList.append(variables)
+    for _ in range(nModels):
+        variablesList.append({
+            "names": [],
+            "distributions": [],
+            "Par1": [],
+            "Par2": [],
+            "Par3": [],
+            "Par4": [],
+        })
 
-    logFile.write("\n\t\t\tLooping over the models")
+    logFile.write("\n\n\t\t\tLooping over the models")
     for ind in range(nModels):
         logFile.write("\n\t\t\t\tModel number: {}".format(ind))
         # Processing RV inputs
@@ -278,19 +309,35 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                     rv["lambda"], rv["a"], rv["b"]
                 )
             elif rv["distribution"] == "Discrete":
-                variablesList[ind]["Par1"].append(rv["Values"])
-                variablesList[ind]["Par2"].append(rv["Weights"])
-                variablesList[ind]["Par3"].append(None)
-                variablesList[ind]["Par4"].append(None)
-                paramString = "Values: {}, Weights: {}".format(
-                    rv["Values"], rv["Weights"]
-                )
+                if "multimodel" in rv["name"].lower():
+                    try:
+                        index = modelRVNamesList.index(rv["name"])
+                        variablesList[ind]["Par1"].append(cartesianProductOfModelIndices[ind][index])
+                        variablesList[ind]["Par2"].append(None)
+                        variablesList[ind]["Par3"].append(None)
+                        variablesList[ind]["Par4"].append(None)
+                        paramString = "value: {}".format(
+                            cartesianProductOfModelIndices[ind][index]
+                        )
+                    except ValueError:
+                        logFile.write(f"{rv['name']} not found in list of model RV names")
+                    
+                else:
+                    variablesList[ind]["Par1"].append(rv["Values"])
+                    variablesList[ind]["Par2"].append(rv["Weights"])
+                    variablesList[ind]["Par3"].append(None)
+                    variablesList[ind]["Par4"].append(None)
+                    paramString = "values: {}, weights: {}".format(
+                        rv["Values"], rv["Weights"]
+                    )
 
             logFile.write(
                 "\n\t\t\t\t\t\t\tRV number: {}, name: {}, dist: {}, {}".format(
                     i, rv["name"], rv["distribution"], paramString
                 )
             )
+        # if runMultiModel:
+        #     variablesList[ind][]
 
         # Adding one prior distribution per EDP for the error covariance multiplier term
         logFile.write(
@@ -319,7 +366,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                     i, name, "InvGamma", paramString
                 )
             )
-
+        
     logFile.write("\n\n\tCompleted parsing the inputs")
     logFile.write("\n\n==========================")
     logFile.flush()
@@ -333,4 +380,6 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         variablesList,
         edpNamesList,
         edpLengthsList,
+        modelsDict,
+        nModels
     )

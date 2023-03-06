@@ -21,6 +21,13 @@ int main(int argc, char **argv)
   char *filenameAIM = argv[2];     
   char *filenameEVENT = argv[4]; 
 
+  bool getRV = false;
+  if (argc == 6) {
+    if (strcmp(argv[5], "--getRV") == 0)
+      getRV = true;
+  }
+
+
   // create output JSON object for EVENT file and create events array
   json_t *rootEvent = json_object();
   json_t *newEventArray = json_array(); 
@@ -30,7 +37,8 @@ int main(int argc, char **argv)
   json_t *rootINPUT = json_load_file(filenameAIM, 0, &error);
   json_t *eventsArray = json_object_get(rootINPUT,"Events");  
 
-  if (argc == 6) { 
+  
+  if (getRV) { 
 
     //
     // if --getRV:

@@ -79,7 +79,7 @@
       {
         "Name": "CSV_to_AIM",
         "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
-        "RunsParallel": false,	  
+        "RunsParallel": true,	  
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -230,6 +230,7 @@
       {
         "Name": "RegionalSiteResponse",
         "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
+        "RunsParallel": true,	  
         "ApplicationSpecificInputs": [
         ]
       }
@@ -612,7 +613,7 @@
                "description": "keyword of application data in input file"
 	      }
 	  ]
-      },	
+      },
       {
         "Name": "SteelBuildingModel",
         "ExecutablePath": "applications/createSAM/AutoSDA/main_program.py",
@@ -621,6 +622,11 @@
       {
         "Name": "ConcreteBuildingModel",
         "ExecutablePath": "applications/createSAM/RCFIAP/RC_FIAP_main.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "MultiModel-SIM",
+        "ExecutablePath": "applications/createSAM/multimodel/multipleSIMs.py",
         "ApplicationSpecificInputs": []
       }
     ]
@@ -762,12 +768,26 @@
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
       {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+	      }
+	  ]
+      },	
+      {
         "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
       },
       {
         "Name": "IMasEDP",
         "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
+      },
+      {
+        "Name": "MultiModel-FEA",
+        "ExecutablePath": "applications/performSIMULATION/multimodel/multipleSimulations.py"
       }
     ]
   },
@@ -805,6 +825,10 @@
       {
         "Name": "UCSD-UQ",
         "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
+      },
+      {
+        "Name": "UQpy",
+        "ExecutablePath": "applications/performUQ/UQpy/UQpyEngine.py"
       },		
       {
         "Name": "Dakota-FEM",
@@ -864,7 +888,7 @@
         "ApplicationSpecificInputs": []
       }	,
       {
-        "Name": "MultipleModels",
+        "Name": "MultiModel-FEM",
         "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
         "ApplicationSpecificInputs": []
       } 

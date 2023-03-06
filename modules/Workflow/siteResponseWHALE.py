@@ -70,14 +70,19 @@ def main(run_type, input_file, app_registry,
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         numP = comm.Get_size()
-        procID = comm.Get_rank();
+        procID = comm.Get_rank()
+        parallelType = 'parRUN'
         if numP < 2:
             doParallel = False
             numP = 1
+            parallelType = 'seqRUN'
             procID = 0
         else:
             doParallel = True;
-    
+
+
+    print('siteResponse (doParallel, procID, numP):', doParallel, procID, numP, mpiExec, numPROC)
+
     # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
@@ -221,7 +226,6 @@ def main(run_type, input_file, app_registry,
                         mpiExec = mpiExec,
                         numProc = numPROC)
 
-
     if bldg_id_filter is not None:
         print(bldg_id_filter)
         log_msg(
@@ -241,7 +245,7 @@ def main(run_type, input_file, app_registry,
 
     if doParallel == True:
         comm.Barrier()
-        
+
     asset_files = WF.augment_asset_files()        
 
     if procID == 0:        
@@ -252,7 +256,8 @@ def main(run_type, input_file, app_registry,
             # KZ: 10/19/2022, adding the required argument for the new whale
             print('0 STARTING MAPPING')
             # FMK _ PARALLEL WF.perform_regional_mapping(assetIt, asset_type, False)
-            WF.perform_regional_mapping(assetIt, asset_type)             
+            # WF.perform_regional_mapping(assetIt, asset_type)             
+            WF.perform_regional_mapping(assetIt, asset_type, False)
 
     # get all other processes to wait till we are here
     if doParallel == True:
