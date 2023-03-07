@@ -64,10 +64,10 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
-		std::string errMsg = "Error running UQ engine: Unable to open JSON";
+		std::string errMsg = "Error running UQ engine: Unable to open JSON " + jsonPath.u8string();
 		theErrorFile.write(errMsg);
 	}
-
+  
 	json UQjson = json::parse(myfile, nullptr, false);
 	if (UQjson.is_discarded())
 	{

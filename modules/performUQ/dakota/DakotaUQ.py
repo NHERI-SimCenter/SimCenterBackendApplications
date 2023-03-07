@@ -41,8 +41,8 @@ def main(args):
     #  - need to know in case need to modify driver file
     #
     
-    f = open(inputFile)
-    data = json.load(f)
+    with open(inputFile, 'r') as f:
+        data = json.load(f)
     
     workflow_driver1 = 'blank'
 

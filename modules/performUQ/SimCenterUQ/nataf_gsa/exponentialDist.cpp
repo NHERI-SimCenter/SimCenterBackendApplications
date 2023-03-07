@@ -132,7 +132,7 @@ exponentialDist::exponentialDist(string opt, vector<double> val, vector<double> 
 
 		if (nlopt_optimize(optim, &lambda, &minf) < 0) {
 			printf("nlopt failed!\n");
-			std::string errMSG = "Error running UQ engine: MLE optimization filed";
+			std::string errMSG = "Error running UQ engine: MLE optimization failed";
 			theErrorFile.write(errMSG);
 		}
 		else {
