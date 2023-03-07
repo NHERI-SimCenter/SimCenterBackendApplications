@@ -1015,7 +1015,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
                 adf.loc[rc, ('DS1', 'Theta_0')] = rCost_config["Median"]
 
-                if ~pd.isna(rCost_config.get('Distribution', np.nan)):
+                if pd.isna(rCost_config.get('Distribution', np.nan)) == False:
                     adf.loc[rc, ('DS1', 'Family')] = rCost_config[
                         "Distribution"]
                     adf.loc[rc, ('DS1', 'Theta_1')] = rCost_config[
@@ -1056,7 +1056,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
                 adf.loc[rt, ('DS1', 'Theta_0')] = rTime_config["Median"]
 
-                if ~pd.isna(rTime_config.get('Distribution', np.nan)):
+                if pd.isna(rTime_config.get('Distribution', np.nan))==False:
                     adf.loc[rt, ('DS1', 'Family')] = rTime_config[
                         "Distribution"]
                     adf.loc[rt, ('DS1', 'Theta_1')] = rTime_config[

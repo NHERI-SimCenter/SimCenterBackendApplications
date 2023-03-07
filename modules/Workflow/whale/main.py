@@ -2142,7 +2142,11 @@ class Workflow(object):
                             command_list.append(self.working_dir)
             
                         command_list.append('--dirnameOutput')
-                        command_list.append(f'{aimDir}/{asst_id}')
+                        # Only add asset id if we are running a regional assessment
+                        if asst_id != None:
+                            command_list.append(f'{aimDir}/{asst_id}')
+                        else:
+                            command_list.append(f'{aimDir}')
             
                         command = create_command(command_list)
             
@@ -2178,8 +2182,12 @@ class Workflow(object):
                 command_list = self.workflow_apps['DL'].get_command_list(
                     app_path=self.app_dir_local)
                     
-                command_list.append('--dirnameOutput')
-                command_list.append(f'{aimDir}/{asst_id}')
+                command_list.append('--dirnameOutput')                
+                # Only add asset id if we are running a regional assessment
+                if asst_id != None:
+                    command_list.append(f'{aimDir}/{asst_id}')
+                else:
+                    command_list.append(f'{aimDir}')
     
                 if copy_resources:
                     command_list.append('--resource_dir')
