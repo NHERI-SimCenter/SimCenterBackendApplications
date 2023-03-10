@@ -714,8 +714,8 @@ class Workflow(object):
         self.numProc = numProc 
 
         # if parallel setup, open script file to run
-        inputFilePath = os.path.dirname(input_file)
-        parCommandFileName = os.path.join(inputFilePath, 'sc_parScript.sh')
+        self.inputFilePath = os.path.dirname(input_file)
+        parCommandFileName = os.path.join(self.inputFilePath, 'sc_parScript.sh')
         if (parType == 'parSETUP'):
             self.parCommandFile = open(parCommandFileName, "w")
             self.parCommandFile.write("#!/bin/sh" + "\n")
@@ -1285,6 +1285,7 @@ class Workflow(object):
 
             apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
+
                 # Start with the app data under Applications
                 if app_type in input_data['Applications'].keys():
                     if app_type == 'Events':
@@ -1333,37 +1334,29 @@ class Workflow(object):
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
 
-            
             count = 0
             for asst in asset_data:
 
                 if count % self.numP == self.procID:
 
                     AIM_file = asst['file']
-                    
+
                     # Open the AIM file and add the unit information to it
-                    print(count, self.numP, self.procID, AIM_file)
+                    # print(count, self.numP, self.procID, AIM_file)
                     
-                    try:
-                        with open(AIM_file, 'r') as f:
-                            AIM_data = json.load(f)
-                    except FileNotFoundError:
-                        print('Exiting wwhale/aggregate_assetscannot open file: ',AIM_file)
-                    except IOError as e:
-                        print(f'I/O error {e.errno}  {e.strerror}')
-                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
-                    except:
-                        print(f'Unexpected error: sys.exc_info()[0]')
-                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
+                    with open(AIM_file, 'r') as f:
+                        AIM_data = json.load(f)
 
                     if 'DefaultValues' in input_data.keys():
                         AIM_data.update({'DefaultValues':input_data['DefaultValues']})
 
                     if 'commonFileDir' in input_data.keys():
-                        AIM_data.update({'commonFileDir':input_data['commonFileDir']})
+                        commonFileDir = os.path.join(self.inputFilePath,input_data['commonFileDir'])
+                        AIM_data.update({'commonFileDir':commonFileDir})
+                        
                     if 'remoteAppDir' in input_data.keys():
                         AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
-
+                        
                     if 'localAppDir' in input_data.keys():
                         AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
                                     
@@ -2142,7 +2135,11 @@ class Workflow(object):
                             command_list.append(self.working_dir)
             
                         command_list.append('--dirnameOutput')
-                        command_list.append(f'{aimDir}/{asst_id}')
+                        # Only add asset id if we are running a regional assessment
+                        if asst_id != None:
+                            command_list.append(f'{aimDir}/{asst_id}')
+                        else:
+                            command_list.append(f'{aimDir}')
             
                         command = create_command(command_list)
             
@@ -2178,8 +2175,12 @@ class Workflow(object):
                 command_list = self.workflow_apps['DL'].get_command_list(
                     app_path=self.app_dir_local)
                     
-                command_list.append('--dirnameOutput')
-                command_list.append(f'{aimDir}/{asst_id}')
+                command_list.append('--dirnameOutput')                
+                # Only add asset id if we are running a regional assessment
+                if asst_id != None:
+                    command_list.append(f'{aimDir}/{asst_id}')
+                else:
+                    command_list.append(f'{aimDir}')
     
                 if copy_resources:
                     command_list.append('--resource_dir')
