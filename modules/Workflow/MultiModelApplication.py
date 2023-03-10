@@ -85,7 +85,7 @@ def main(inputFile,
     else:
         reference_dir = inputDir;
 
-    appData=""
+    appData={}
     if appKey in inputs:
         appData = inputs[appKey]
 
