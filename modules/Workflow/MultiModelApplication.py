@@ -88,9 +88,12 @@ def main(inputFile,
     appData={}
     if appKey in inputs:
         appData = inputs[appKey]
+    else:
+        raise KeyError(f'No data for "{appKey}" application in the input file "{inputFile}"')
 
     if 'models' not in appData:
         print('NO models in: ', appData)
+        raise KeyError(f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}')
         
         
     models = appData['models']
