@@ -197,7 +197,7 @@ def main(inputFile,
             
     else:
         print("MultiModel - run")
-
+        modelToRun = modelToRun - 1
         # get app data given model
         appName = appsInMultiModel[modelToRun]
         application = appsRegistry[appName];
