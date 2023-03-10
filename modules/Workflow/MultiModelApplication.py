@@ -158,7 +158,7 @@ def main(inputFile,
 
         randomVariables = inputs['randomVariables']
         rvName = "MultiModel-"+appKey
-        rvValue="Rv.MultiModel-"+appKey
+        rvValue="RV.MultiModel-"+appKey
         
         thisRV = {
             "distribution": "Discrete",
