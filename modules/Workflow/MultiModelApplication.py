@@ -81,7 +81,7 @@ def main(inputFile,
         inputs = json.load(f)
 
     if 'referenceDir' in inputs:
-        reference_dir = input_data['referenceDir']
+        reference_dir = inputs['referenceDir']
     else:
         reference_dir = inputDir;
 
