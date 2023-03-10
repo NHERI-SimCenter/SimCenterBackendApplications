@@ -83,7 +83,7 @@ def main(inputFile,
     if 'referenceDir' in inputs:
         reference_dir = inputs['referenceDir']
     else:
-        reference_dir = inputDir;
+        reference_dir = inputDir
 
     appData={}
     if appKey in inputs:
@@ -100,7 +100,7 @@ def main(inputFile,
     appDataInMultiModel=[]
     appRunDataInMultiModel=[]    
     beliefs=[]
-    sumBeliefs = 0;
+    sumBeliefs = 0
     
     numModels = 0
     
@@ -110,7 +110,7 @@ def main(inputFile,
         appData = model['ApplicationData']
         appRunData = model['data']
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief;
+        sumBeliefs = sumBeliefs + belief
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
@@ -137,7 +137,7 @@ def main(inputFile,
 
         for i in range(0, numModels):
             appName = appsInMultiModel[i]
-            application = appsRegistry[appName];
+            application = appsRegistry[appName]
             application.set_pref(appDataInMultiModel[i], reference_dir)            
 
             asset_command_list = application.get_command_list(appDir)
@@ -153,9 +153,9 @@ def main(inputFile,
         # for NOW, add RV to input file
         #
 
-        randomVariables = inputs['randomVariables'];
-        rvName = "MultiModel-"+appKey;
-        rvValue="Rv.MultiModel-"+appKey;
+        randomVariables = inputs['randomVariables']
+        rvName = "MultiModel-"+appKey
+        rvValue="Rv.MultiModel-"+appKey
         
         thisRV = {
             "distribution": "Discrete",
@@ -168,7 +168,7 @@ def main(inputFile,
             "Weights":beliefs,
             "Values":[i+1 for i in range(0,numModels)]
         }
-        randomVariables.append(thisRV);
+        randomVariables.append(thisRV)
 
         with open(inputFile, "w") as outfile:
             json.dump(inputs, outfile)        
@@ -180,19 +180,19 @@ def main(inputFile,
         #
 
         # create input file for application        
-        tmpFile = "MultiModel." + appKey + ".json";
-        inputs[appKey] =  appRunDataInMultiModel[numModels-1];
+        tmpFile = "MultiModel." + appKey + ".json"
+        inputs[appKey] =  appRunDataInMultiModel[numModels-1]
         
         with open(tmpFile, "w") as outfile:
             json.dump(inputs, outfile)
 
         # run the application
         asset_command_list = application.get_command_list(appDir)
-        indexInputFile = asset_command_list.index('--filenameAIM') + 1;
-        asset_command_list[indexInputFile] = tmpFile;
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1
+        asset_command_list[indexInputFile] = tmpFile
         asset_command_list.append(u'--getRV')        
         command = create_command(asset_command_list)
-        run_command(command);
+        run_command(command)
         print('RUNNING --getRV:', command)
             
     else:
@@ -200,12 +200,12 @@ def main(inputFile,
         modelToRun = modelToRun - 1
         # get app data given model
         appName = appsInMultiModel[modelToRun]
-        application = appsRegistry[appName];
+        application = appsRegistry[appName]
         application.set_pref(appDataInMultiModel[modelToRun], reference_dir)            
 
         # create modified input file for app
-        tmpFile = "MultiModel." + appKey + ".json";
-        inputs[appKey] =  appRunDataInMultiModel[modelToRun];
+        tmpFile = "MultiModel." + appKey + ".json"
+        inputs[appKey] =  appRunDataInMultiModel[modelToRun]
 
         print('model to run:', modelToRun)
 
@@ -214,10 +214,10 @@ def main(inputFile,
         
         # run application
         asset_command_list = application.get_command_list(appDir)
-        indexInputFile = asset_command_list.index('--filenameAIM') + 1;
-        asset_command_list[indexInputFile] = tmpFile;        
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1
+        asset_command_list[indexInputFile] = tmpFile     
         command = create_command(asset_command_list)        
-        run_command(command);
+        run_command(command)
         print('RUNNING:', command)        
 
     print("Finished MultiModelApplication")
@@ -258,6 +258,6 @@ if __name__ == '__main__':
          edpFile = args.filenameEDP,
          simFile = args.filenameSIM,
          registryFile = args.registry,
-         appDir = args.appDir);      
+         appDir = args.appDir)
 
          
