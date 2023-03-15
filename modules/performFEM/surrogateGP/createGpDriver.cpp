@@ -38,6 +38,19 @@ int main(int argc, const char **argv) {
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
+
+  // if case not simple defaults
+  for (int i=1; i<argc; i+=2) {
+    if (strcmp(argv[i],"--driverFile") == 0) {
+      workflowDriver = argv[i+1];
+    } else if (strcmp(argv[i],"--workflowInput") == 0) {
+      inputFile = argv[i+1];
+    } else if (strcmp(argv[i],"--runType") == 0) {
+      runType = argv[i+1];
+    } else if (strcmp(argv[i],"--osType") == 0) {
+      osType = argv[i+1];
+    }
+  }
   
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");

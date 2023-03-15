@@ -27,16 +27,31 @@ void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
 
 int main(int argc, const char **argv) {
 
-  std::cerr << "createOpenSeesDriver:: starting\n";  
-  for (int i=0; i<argc; i++)
-    std::cerr << "\n\t" << i << " " << argv[i];
-  std::cerr << "\n";
+  std::cerr << "createOpenSeesDriver:: starting\n";
   
+  if (argc < 5) {
+    std::cerr << "createOpenSeesDriver:: expecting 4 inputs\n";
+    exit(-1);
+  }
+
   std::string thisProgram(argv[0]);
   std::string inputFile(argv[1]);
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
+
+  // if case not simple defaults
+  for (int i=1; i<argc; i+=2) {
+    if (strcmp(argv[i],"--driverFile") == 0) {
+      workflowDriver = argv[i+1];
+    } else if (strcmp(argv[i],"--workflowInput") == 0) {
+      inputFile = argv[i+1];
+    } else if (strcmp(argv[i],"--runType") == 0) {
+      runType = argv[i+1];
+    } else if (strcmp(argv[i],"--osType") == 0) {
+      osType = argv[i+1];
+    }
+  }
   
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");
