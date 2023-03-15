@@ -883,15 +883,15 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelDriver.py",
+        "ApplicationSpecificInputs": []
+      },	
+      {
         "Name": "Custom",
         "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
         "ApplicationSpecificInputs": []
-      }	,
-      {
-        "Name": "MultiModel-FEM",
-        "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
-        "ApplicationSpecificInputs": []
-      } 
+      }	
     ]
   },    
   "DLApplications": {

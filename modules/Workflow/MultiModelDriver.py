@@ -57,14 +57,6 @@ def main(inputFile,
          osType,
          runDriver):
 
-    print('inputFile:', inputFile)
-    print('driverFile:', driverFile)    
-    print('appKey: ', appKey)
-    print('registryFile: ', registryFile)                              
-    print('appDir: ', appDir)
-    print('runDriver: ', runDriver)    
-    print('')          
-
     #
     # get some dir paths, load input file and get data for app, appKey 
     #
@@ -113,7 +105,6 @@ def main(inputFile,
         appRunDataInMultiModel.append(appRunData)
         numModels = numModels + 1
 
-        
     for i in range(0,numModels):
         beliefs[i] = beliefs[i]/sumBeliefs
         
@@ -125,55 +116,8 @@ def main(inputFile,
     
     if runDriver == "False":
 
-        print("MultiModel - setting up drivers")
-
         #
-        # launch each application to create a driver file, each file seperate driver file & input
-        #
-
-        for i in range(0, numModels):
-            
-            appName = appsInMultiModel[i]
-            application = appsRegistry[appName];
-            application.set_pref(appDataInMultiModel[i], reference_dir)            
-
-            asset_command_list = application.get_command_list(appDir)
-            asset_command_list.append(u'--getRV')
-            command = create_command(asset_command_list)
-            # thinking to store aplications commands in a file so don't have to repeat this!
-
-            # create input file for application        
-            tmpInputFile = "MultiModel." + appKey + "." + str(i) + ".json";
-            tmpDriverFile = "MultiModel." + appKey + "." + str(i);
-
-            inputsTmp = deepcopy(inputs)
-            inputsTmp[appKey] =  appRunDataInMultiModel[i];
-            inputsTmp['Applications'][appKey] =  {
-                "Application":appsInMultiModel[i],
-                "ApplicationData":appDataInMultiModel[i]
-            }
-            print(inputsTmp['Applications'][appKey])
-                  
-            with open(tmpInputFile, "w") as outfile:
-                json.dump(inputsTmp, outfile)
-
-            # run the application
-            asset_command_list = application.get_command_list(appDir)
-            indexInputFile = asset_command_list.index('--workflowInput') + 1;
-            asset_command_list[indexInputFile] = tmpInputFile;
-            indexInputFile = asset_command_list.index('--driverFile') + 1;
-            asset_command_list[indexInputFile] = tmpDriverFile;            
-            asset_command_list.append(u'--osType')
-            asset_command_list.append(osType)
-            asset_command_list.append(u'--runType')
-            asset_command_list.append(runType)                                
-            command = create_command(asset_command_list)
-            run_command(command);
-            print('RUNNING:', command)
-
-            
-        #
-        # update general input file with new random variables
+        # add RV to input file
         #
 
         randomVariables = inputs['randomVariables'];
@@ -200,8 +144,6 @@ def main(inputFile,
         # create driver file to invoke this application that runs the right driver
         #
 
-
-
         args_str = ' '.join(sys.argv[0:])
         command = sys.executable + ' ' + args_str + ' --runDriver True'
         with open(driverFile, "w") as dFile:
@@ -209,26 +151,90 @@ def main(inputFile,
         
     else:
 
-        print('NOTHING DOING .. need to run correct driver')
-        # open params file to see which model to run
-
+        # open params.in file to see which model to run
+        
         modelToRun = 1
+        found = False
+        rvName="MultiModel-"+appKey;        
+        with open("params.in", "r") as paramsFile:
+            for line in paramsFile:
+                words = line.split(' ')
+                if words[0] == rvName:
+                    modelToRun = int(words[1])
+                    found = True
+                    break
+                
+        if found == False:
+            print("MultiModelDriver - model not found in params.in! - running first model")
         
-        # run the model
         modelToRun = modelToRun-1
-        driverToRun =  "MultiModel." + appKey + "." + str(modelToRun);
-        output = subprocess.check_output(driverToRun, shell=True)
+
+        #
+        # run the app to create the driver file
+        #
+            
+        appName = appsInMultiModel[modelToRun]
+        application = appsRegistry[appName];
+        application.set_pref(appDataInMultiModel[modelToRun], reference_dir)            
+
+        asset_command_list = application.get_command_list(appDir)
+        asset_command_list.append(u'--getRV')
+        command = create_command(asset_command_list)
+
+        #
+        # create input file for application
+        #
         
+        modelInputFile = "MultiModel_" + inputFile
+        modelDriverFile = "MultiModel_" + driverFile
 
-    print("Finished MultiModelDriver")
+        inputsTmp = deepcopy(inputs)
+        inputsTmp[appKey] =  appRunDataInMultiModel[i];
+        inputsTmp['Applications'][appKey] =  {
+            "Application":appsInMultiModel[i],
+            "ApplicationData":appDataInMultiModel[i]
+        }
+                  
+        with open(modelInputFile, "w") as outfile:
+            json.dump(inputsTmp, outfile)
 
+        #
+        # run the application to create driver file
+        #
+        
+        asset_command_list = application.get_command_list(appDir)
+        indexInputFile = asset_command_list.index('--workflowInput') + 1;
+        asset_command_list[indexInputFile] = modelInputFile;
+        indexInputFile = asset_command_list.index('--driverFile') + 1;
+        asset_command_list[indexInputFile] = modelDriverFile;            
+        asset_command_list.append(u'--osType')
+        asset_command_list.append(osType)
+        asset_command_list.append(u'--runType')
+        asset_command_list.append(runType)                                
+        command = create_command(asset_command_list)
+        run_command(command);
+
+        #
+        # run the driver file
+        #
+        
+        #output = subprocess.check_output(tmpDriverFile, shell=True)
+        modelDriverFile = os.path.join(os.getcwd(), modelDriverFile)
+        p=subprocess.Popen(modelDriverFile, shell=True, stdout=subprocess.PIPE)
+        #(output, err) = p.communicate()
+
+        # wait till finished!
+        p.returncode()
     
 if __name__ == '__main__':
 
-    print('STARTING MultiModelDriver')
-    print(sys.argv[1:])
+    #print('STARTING MultiModelDriver')
+    #print(sys.argv[1:])
+
+    #
+    # Defining the command line arguments
+    #
     
-    #Defining the command line arguments
     parser = argparse.ArgumentParser(
         "Run the MultiModel application.",
         allow_abbrev=False)
@@ -252,7 +258,11 @@ if __name__ == '__main__':
                         help="Path where the log file will be saved.")
 
     args = parser.parse_args()        
-        
+
+    #
+    # run the app
+    #
+    
     main(inputFile = args.workflowInput,
          driverFile = args.driverFile,         
          appKey = args.appKey,

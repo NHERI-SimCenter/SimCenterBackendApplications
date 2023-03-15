@@ -10,7 +10,10 @@ simcenter_add_python_script(SCRIPT "computeResponseSpectrum.py")
 simcenter_add_python_script(SCRIPT RegionalEarthquakeSimulation.py)
 simcenter_add_python_script(SCRIPT WorkflowUtils.py)
 simcenter_add_python_script(SCRIPT MultiModelApplication.py)
+simcenter_add_python_script(SCRIPT MultiModelDriver.py)
+
 simcenter_add_file(NAME WorkflowApplications.json)
+
 simcenter_add_python_script(SCRIPT SiteResponse_workflow.py)
 simcenter_add_python_script(SCRIPT R2DTool_workflow.py)
 simcenter_add_python_script(SCRIPT CreateWorkflowJobs.py)

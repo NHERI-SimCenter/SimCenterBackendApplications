@@ -1351,7 +1351,9 @@ class Workflow(object):
                         AIM_data.update({'DefaultValues':input_data['DefaultValues']})
 
                     if 'commonFileDir' in input_data.keys():
-                        commonFileDir = os.path.join(self.inputFilePath,input_data['commonFileDir'])
+                        commonFileDir=input_data['commonFileDir']
+                        if self.inputPath not in commonFileDir:
+                            commonFileDir = os.path.join(self.inputFilePath,input_data['commonFileDir'])
                         AIM_data.update({'commonFileDir':commonFileDir})
                         
                     if 'remoteAppDir' in input_data.keys():
@@ -1737,24 +1739,49 @@ class Workflow(object):
             else:
 
                 old_command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
+                old_command_list.append('--appKey')                        
+                old_command_list.append('FEM')                
+                if old_command_list[0] == 'python':
 
-                command_list = []
-                command_list.append(old_command_list[0])
-                command_list.append(self.input_file)
-                
-                if self.run_type in ['set_up', 'runningRemote']:
-                    command_list.append('runningRemote')
-                    command_list.append('MacOS')
-                else:
-                    command_list.append('runningLocal')
-                    if any(platform.win32_ver()):
-                        command_list.append('Windows')
+                    if self.run_type in ['set_up', 'runningRemote']:
+                        old_command_list.append('--runType')                        
+                        old_command_list.append('runningRemote')
+                        old_command_list.append('--osType')                                                            old_command_list.append('MacOS')
                     else:
-                        command_list.append('MacOS')
+                        old_command_list.append('--runType')
+                        old_command_list.append('runningLocal')
+                        if any(platform.win32_ver()):
+                            old_command_list.append('--osType')
+                            old_command_list.append('Windows')
+                        else:
+                            old_command_list.append('--osType')                            
+                            old_command_list.append('MacOS')
                         
-                command_list.append(old_command_list[4])
+                        command = create_command(old_command_list)                    
+
+                else:
+                    
+                    #
+                    # FMK to modify C++ applications to take above
+                    #
+                    
+                    command_list = []
+                    command_list.append(old_command_list[0])                
+                    command_list.append(self.input_file)
                 
-                command = create_command(command_list)
+                    if self.run_type in ['set_up', 'runningRemote']:
+                        command_list.append('runningRemote')
+                        command_list.append('MacOS')
+                    else:
+                        command_list.append('runningLocal')
+                        if any(platform.win32_ver()):
+                            command_list.append('Windows')
+                        else:
+                            command_list.append('MacOS')
+                        
+                    command_list.append(old_command_list[4])
+                
+                    command = create_command(command_list)
 
                 log_msg('\nRunning FEM app', prepend_timestamp=False)
                 log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
@@ -1946,7 +1973,7 @@ class Workflow(object):
             
         if asst_id is not None:
             os.chdir(asst_id)
-                
+
         if 'UQ' in self.workflow_apps.keys():
 
             log_msg('Running response simulation')
