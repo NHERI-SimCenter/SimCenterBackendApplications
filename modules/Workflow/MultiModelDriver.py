@@ -70,11 +70,11 @@ def main(inputFile,
         inputs = json.load(f)
 
     if 'referenceDir' in inputs:
-        reference_dir = input_data['referenceDir']
+        reference_dir = inputs['referenceDir']
     else:
-        reference_dir = inputDir;
+        reference_dir = inputDir
 
-    appData=""
+    appData={}
     if appKey in inputs:
         appData = inputs[appKey]
 
@@ -89,7 +89,7 @@ def main(inputFile,
     appDataInMultiModel=[]
     appRunDataInMultiModel=[]    
     beliefs=[]
-    sumBeliefs = 0;
+    sumBeliefs = 0
     
     numModels = 0
     
@@ -99,7 +99,7 @@ def main(inputFile,
         appData = model['ApplicationData']
         appRunData = model['data']
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief;
+        sumBeliefs = sumBeliefs + belief
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
@@ -120,9 +120,9 @@ def main(inputFile,
         # add RV to input file
         #
 
-        randomVariables = inputs['randomVariables'];
-        rvName = "MultiModel-"+appKey;
-        rvValue="Rv.MultiModel-"+appKey;
+        randomVariables = inputs['randomVariables']
+        rvName = "MultiModel-"+appKey
+        rvValue="RV.MultiModel-"+appKey
         
         thisRV = {
             "distribution": "Discrete",
@@ -135,7 +135,7 @@ def main(inputFile,
             "Weights":beliefs,
             "Values":[i+1 for i in range(0,numModels)]
         }
-        randomVariables.append(thisRV);
+        randomVariables.append(thisRV)
 
         with open(inputFile, "w") as outfile:
             json.dump(inputs, outfile)        
@@ -158,9 +158,9 @@ def main(inputFile,
         rvName="MultiModel-"+appKey;        
         with open("params.in", "r") as paramsFile:
             for line in paramsFile:
-                words = line.split(' ')
+                words = line.strip('\n').split(' ')
                 if words[0] == rvName:
-                    modelToRun = int(words[1])
+                    modelToRun = int(float(words[1]))
                     found = True
                     break
                 
@@ -174,7 +174,7 @@ def main(inputFile,
         #
             
         appName = appsInMultiModel[modelToRun]
-        application = appsRegistry[appName];
+        application = appsRegistry[appName]
         application.set_pref(appDataInMultiModel[modelToRun], reference_dir)            
 
         asset_command_list = application.get_command_list(appDir)
@@ -189,10 +189,10 @@ def main(inputFile,
         modelDriverFile = "MultiModel_" + driverFile
 
         inputsTmp = deepcopy(inputs)
-        inputsTmp[appKey] =  appRunDataInMultiModel[i];
+        inputsTmp[appKey] =  appRunDataInMultiModel[modelToRun]
         inputsTmp['Applications'][appKey] =  {
-            "Application":appsInMultiModel[i],
-            "ApplicationData":appDataInMultiModel[i]
+            "Application":appsInMultiModel[modelToRun],
+            "ApplicationData":appDataInMultiModel[modelToRun]
         }
                   
         with open(modelInputFile, "w") as outfile:
@@ -203,16 +203,16 @@ def main(inputFile,
         #
         
         asset_command_list = application.get_command_list(appDir)
-        indexInputFile = asset_command_list.index('--workflowInput') + 1;
-        asset_command_list[indexInputFile] = modelInputFile;
-        indexInputFile = asset_command_list.index('--driverFile') + 1;
-        asset_command_list[indexInputFile] = modelDriverFile;            
+        indexInputFile = asset_command_list.index('--workflowInput') + 1
+        asset_command_list[indexInputFile] = modelInputFile
+        indexInputFile = asset_command_list.index('--driverFile') + 1
+        asset_command_list[indexInputFile] = modelDriverFile       
         asset_command_list.append(u'--osType')
         asset_command_list.append(osType)
         asset_command_list.append(u'--runType')
         asset_command_list.append(runType)                                
         command = create_command(asset_command_list)
-        run_command(command);
+        run_command(command)
 
         #
         # run the driver file
@@ -224,7 +224,7 @@ def main(inputFile,
         #(output, err) = p.communicate()
 
         # wait till finished!
-        p.returncode()
+        p.returncode
     
 if __name__ == '__main__':
 
@@ -270,5 +270,5 @@ if __name__ == '__main__':
          appDir = args.appDir,
          runType = args.runType,
          osType = args.osType,
-         runDriver = args.runDriver);      
+         runDriver = args.runDriver)  
          
