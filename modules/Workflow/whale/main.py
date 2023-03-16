@@ -1746,7 +1746,7 @@ class Workflow(object):
                     if self.run_type in ['set_up', 'runningRemote']:
                         old_command_list.append('--runType')                        
                         old_command_list.append('runningRemote')
-                        old_command_list.append('--osType')                                                            old_command_list.append('MacOS')
+                        old_command_list.append('--osType')
                     else:
                         old_command_list.append('--runType')
                         old_command_list.append('runningLocal')
