@@ -218,13 +218,8 @@ def main(inputFile,
         # run the driver file
         #
         
-        #output = subprocess.check_output(tmpDriverFile, shell=True)
         modelDriverFile = os.path.join(os.getcwd(), modelDriverFile)
-        p=subprocess.Popen(modelDriverFile, shell=True, stdout=subprocess.PIPE)
-        #(output, err) = p.communicate()
-
-        # wait till finished!
-        p.returncode
+        subprocess.run(modelDriverFile, shell=True)
     
 if __name__ == '__main__':
 
