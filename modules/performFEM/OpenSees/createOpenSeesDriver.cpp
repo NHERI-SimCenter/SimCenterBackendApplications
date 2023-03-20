@@ -39,6 +39,7 @@ int main(int argc, const char **argv) {
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
+  std::string templateFileName = "SimCenterInput.RV";
 
   // if case not simple defaults
   for (int i=1; i<argc; i+=2) {
@@ -50,6 +51,11 @@ int main(int argc, const char **argv) {
       runType = argv[i+1];
     } else if (strcmp(argv[i],"--osType") == 0) {
       osType = argv[i+1];
+    } else if (strcmp(argv[i], "--modelIndex") == 0) {
+      std::filesystem::path templateFilePath(templateFileName);
+      std::string templateFileNameStem = templateFilePath.stem().string() + "_" + argv[i+1];
+      std::string templateFileNameExtenstion = templateFilePath.extension().string();
+      templateFileName = templateFileNameStem + templateFileNameExtenstion;
     }
   }
   
@@ -57,6 +63,7 @@ int main(int argc, const char **argv) {
   eraseAllSubstring(runType,"\"");
   eraseAllSubstring(osType,"\"");
   eraseAllSubstring(workflowDriver,"\"");
+  eraseAllSubstring(templateFileName,"\"");
   
   if (!std::filesystem::exists(inputFile)) {
     std::cerr << "createOpenSeesDriver:: input file: " << inputFile << " does not exist\n";
@@ -177,7 +184,7 @@ int main(int argc, const char **argv) {
   const char *mainInput =  json_string_value(femScript);
   //  std::cerr << "Main Script: " << mainInput << "\n";
   
-  std::ofstream templateFile("SimCenterInput.RV");
+  std::ofstream templateFile(templateFileName);
   for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
     templateFile << "pset " << *itRV << " \"RV." << *itRV << "\"\n";
   }
@@ -188,19 +195,20 @@ int main(int argc, const char **argv) {
   }
   
   templateFile << "\"\n\n\n source " << mainInput << "\n";
-    
-    workflowDriverFile << dpreproCommand << " params.in SimCenterInput.RV SimCenterInput.tcl\n";
+    std::filesystem::path templateFilePath(templateFileName);
+    std::string templateFileNameStem = templateFilePath.stem().string();
+    workflowDriverFile << dpreproCommand << " params.in " << templateFileNameStem << ".RV " << templateFileNameStem << ".tcl\n";
     bool suppressOutput = false;
     if (suppressOutput) {
         if (osType.compare("Windows") == 0) {
-            workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1>nul 2>nul\n";
+            workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1>nul 2>nul\n";
         }
         else {
-            workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1> /dev/null 2>&1\n";
+            workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1> /dev/null 2>&1\n";
         }
     }
     else {
-        workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1> ops.out 2>&1\n";
+        workflowDriverFile << openSeesCommand <<  " " << templateFileNameStem << ".tcl 1> ops.out 2>&1\n";
     }
 
   // depending on script type do something
