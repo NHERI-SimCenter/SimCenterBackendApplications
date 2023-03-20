@@ -197,7 +197,7 @@ int main(int argc, const char **argv) {
   templateFile << "\"\n\n\n source " << mainInput << "\n";
     std::filesystem::path templateFilePath(templateFileName);
     std::string templateFileNameStem = templateFilePath.stem().string();
-    workflowDriverFile << dpreproCommand << " params.in " << templateFileNameStem << ".RV " << templateFileNameStem << ".tcl\n";
+    workflowDriverFile << dpreproCommand << " params.in " << templateFileName << " " << templateFileNameStem << ".tcl\n";
     bool suppressOutput = false;
     if (suppressOutput) {
         if (osType.compare("Windows") == 0) {
