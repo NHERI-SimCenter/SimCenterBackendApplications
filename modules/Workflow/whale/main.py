@@ -1352,10 +1352,11 @@ class Workflow(object):
 
                     if 'commonFileDir' in input_data.keys():
                         commonFileDir=input_data['commonFileDir']
-                        if self.inputPath not in commonFileDir:
+                        if self.inputFilePath not in commonFileDir:
                             commonFileDir = os.path.join(self.inputFilePath,input_data['commonFileDir'])
                         AIM_data.update({'commonFileDir':commonFileDir})
                         
+
                     if 'remoteAppDir' in input_data.keys():
                         AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
                         
