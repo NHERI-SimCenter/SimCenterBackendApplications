@@ -78,7 +78,9 @@ def main(inputFile,
         print('NO models in: ', appData)
         raise KeyError(f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}')
         
-        
+    if len(appData['models']) < 2:
+        raise RuntimeError(f"At least two models must be provided if the multimodel {appKey} application is used")
+
     models = appData['models']
     modelToRun = appData['modelToRun']
     

@@ -17,12 +17,20 @@ int getRV(json_t *edp, std::vector<std::string> &rvList);
 void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
 {
     size_t pos = std::string::npos;
-    // Search for the substring in string in a loop untill nothing is found
+    // Search for the substring in string in a loop until nothing is found
     while ((pos  = mainStr.find(toErase) )!= std::string::npos)
     {
         // If found then erase it from string
         mainStr.erase(pos, toErase.length());
     }
+}
+
+std::string appendModelIndexToStem(int modelIndex, std::string filename) {
+    std::filesystem::path templateFilePath(filename);
+    std::string newStem = templateFilePath.stem().string() + "_" + std::to_string(modelIndex);
+    std::string extension = templateFilePath.extension().string();
+    filename = newStem + extension;
+    return filename;
 }
 
 int main(int argc, const char **argv) {
@@ -39,7 +47,7 @@ int main(int argc, const char **argv) {
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
-  std::string templateFileName = "SimCenterInput.RV";
+  int modelIndex = 0;
 
   // if case not simple defaults
   for (int i=1; i<argc; i+=2) {
@@ -52,10 +60,7 @@ int main(int argc, const char **argv) {
     } else if (strcmp(argv[i],"--osType") == 0) {
       osType = argv[i+1];
     } else if (strcmp(argv[i], "--modelIndex") == 0) {
-      std::filesystem::path templateFilePath(templateFileName);
-      std::string templateFileNameStem = templateFilePath.stem().string() + "_" + argv[i+1];
-      std::string templateFileNameExtenstion = templateFilePath.extension().string();
-      templateFileName = templateFileNameStem + templateFileNameExtenstion;
+      modelIndex = std::stoi(argv[i+1]);
     }
   }
   
@@ -63,24 +68,11 @@ int main(int argc, const char **argv) {
   eraseAllSubstring(runType,"\"");
   eraseAllSubstring(osType,"\"");
   eraseAllSubstring(workflowDriver,"\"");
-  eraseAllSubstring(templateFileName,"\"");
   
   if (!std::filesystem::exists(inputFile)) {
     std::cerr << "createOpenSeesDriver:: input file: " << inputFile << " does not exist\n";
     exit(801);
   }
-  
-  //current_path(currentPath);
-  auto path = std::filesystem::current_path(); //getting path
-  //  std::cerr << "path: " << path << '\n';  
-
-  //  std::string fileName = std::filesystem::path(inputFile).filename();
-  std::filesystem::path fileNameP = std::filesystem::path(inputFile).filename();
-  std::string fileName = fileNameP.generic_string();
-  //std::string fileName = inputFile;  
-  //  std::cerr << "fileName: " << fileName << '\n';  
-  
-  std::string fullPath = std::filesystem::path(inputFile).remove_filename().generic_string();
 
   //
   // open input file to get RV's and EDP names
@@ -99,19 +91,19 @@ int main(int argc, const char **argv) {
   json_t *rootAPPs =  json_object_get(rootInput, "Applications");
   if (rootAPPs == NULL) {
     std::cerr << "createOpenSeesDriver:: no Applications found\n";
-    return 0; // no random variables is allowed
+    return 0; // no random variables allowed
   }  
   
   json_t *rootEDP =  json_object_get(rootInput, "EDP");
   if (rootEDP == NULL) {
     std::cerr << "createOpenSeesDriver:: no EDP found\n";    
-    return 0; // no random variables is allowed
+    return 0; // no random variables allowed
   }
 
   json_t *rootRV =  json_object_get(rootInput, "randomVariables");
   if (rootRV == NULL) {
     std::cerr << "createOpenSeesDriver:: no randomVariables found\n";
-    return 0; // no random variables is allowed
+    return 0; // no random variables allowed
   }
 
   int numRV = getRV(rootRV, rvList);  
@@ -128,7 +120,7 @@ int main(int argc, const char **argv) {
   
   if (!workflowDriverFile.is_open()) {
     std::cerr << "createOpenSeesDriver:: could not create workflow driver file: " << workflowDriver << "\n";
-    exit(802); // no random variables is allowed
+    exit(802); // no random variables allowed
   }
 
   std::string dpreproCommand;
@@ -182,8 +174,11 @@ int main(int argc, const char **argv) {
     return -4; 
   }  
   const char *mainInput =  json_string_value(femScript);
-  //  std::cerr << "Main Script: " << mainInput << "\n";
-  
+
+  std::string templateFileName = "SimCenterInput.RV";
+  if (modelIndex > 0) {
+    templateFileName = appendModelIndexToStem(modelIndex, templateFileName);
+  }
   std::ofstream templateFile(templateFileName);
   for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
     templateFile << "pset " << *itRV << " \"RV." << *itRV << "\"\n";
@@ -195,21 +190,22 @@ int main(int argc, const char **argv) {
   }
   
   templateFile << "\"\n\n\n source " << mainInput << "\n";
-    std::filesystem::path templateFilePath(templateFileName);
-    std::string templateFileNameStem = templateFilePath.stem().string();
-    workflowDriverFile << dpreproCommand << " params.in " << templateFileName << " " << templateFileNameStem << ".tcl\n";
-    bool suppressOutput = false;
-    if (suppressOutput) {
-        if (osType.compare("Windows") == 0) {
-            workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1>nul 2>nul\n";
-        }
-        else {
-            workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1> /dev/null 2>&1\n";
-        }
-    }
-    else {
-        workflowDriverFile << openSeesCommand <<  " " << templateFileNameStem << ".tcl 1> ops.out 2>&1\n";
-    }
+
+  std::filesystem::path templateFilePath(templateFileName);
+  std::string templateFileNameStem = templateFilePath.stem().string();
+  workflowDriverFile << dpreproCommand << " params.in " << templateFileName << " " << templateFileNameStem << ".tcl\n";
+  bool suppressOutput = false;
+  if (suppressOutput) {
+      if (osType.compare("Windows") == 0) {
+          workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1>nul 2>nul\n";
+      }
+      else {
+          workflowDriverFile << openSeesCommand << " " << templateFileNameStem << ".tcl 1> /dev/null 2>&1\n";
+      }
+  }
+  else {
+      workflowDriverFile << openSeesCommand <<  " " << templateFileNameStem << ".tcl 1> ops.out 2>&1\n";
+  }
 
   // depending on script type do something
   json_t *postScript = json_object_get(fem, "postprocessScript");
