@@ -47,28 +47,29 @@ import pandas as pd
 from scipy.cluster.vq import vq
 import importlib
 
-def create_event(asset_file, event_grid_file):
+def create_event(asset_file, event_grid_file, doParallel):
 
 
     # check if running parallel
     numP = 1
     procID = 0
-    doParallel = False
+    runParallel = False
     
-    mpi_spec = importlib.util.find_spec("mpi4py")
-    found = mpi_spec is not None
-    if found:
-        import mpi4py
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        numP = comm.Get_size()
-        procID = comm.Get_rank();
-        if numP < 2:
-            doParallel = False
-            numP = 1
-            procID = 0
-        else:
-            doParallel = True;    
+    if doParallel == "True":
+        mpi_spec = importlib.util.find_spec("mpi4py")
+        found = mpi_spec is not None
+        if found:
+            import mpi4py
+            from mpi4py import MPI
+            runParallel = True
+            comm = MPI.COMM_WORLD
+            numP = comm.Get_size()
+            procID = comm.Get_rank();
+            if numP < 2:
+                doParallel = "False"
+                runParallel = False
+                numP = 1
+                procID = 0
     
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -86,13 +87,14 @@ def create_event(asset_file, event_grid_file):
     with open(asset_file, 'r') as f:
         asset_dict = json.load(f)
 
-
     # prepare a dataframe that holds asset filenames and locations
     AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict)))
 
     count = 0    
     for i, asset in enumerate(asset_dict):
-        if i % numP == procID:        
+
+        if runParallel == False or (i % numP) == procID:
+
             with open(asset['file'], 'r') as f:
                 asset_data = json.load(f)
 
@@ -103,9 +105,7 @@ def create_event(asset_file, event_grid_file):
             count = count + 1
         
     # store asset locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])])
-    
-#    print("****Y",Y)
+    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude']) if not np.isnan(lo) and not np.isnan(la)])
     
     #print(Y)
     #print(sub_grid)
@@ -230,6 +230,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
+    parser.add_argument('--doParallel', default="False")    
+    parser.add_argument("-n", "--numP", default='8')
+    parser.add_argument("-m", "--mpiExec", default='mpixece')
     args = parser.parse_args()
 
-    create_event(args.assetFile, args.filenameEVENTgrid)
+    create_event(args.assetFile, args.filenameEVENTgrid, args.doParallel)

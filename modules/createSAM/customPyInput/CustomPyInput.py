@@ -49,7 +49,7 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
     root_GI = root_AIM['GeneralInformation']
 
     try:
-        stories = root_GI['NumberOfStories']
+        stories = int(root_GI['NumberOfStories'])
     except:
         raise ValueError("number of stories information missing")
 
@@ -85,6 +85,14 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
         # TODO: improve this if we want random vars in the structure
         'randomVar': []
     }
+
+    # pass all other attributes in the AIM GI to SAM
+    for cur_key in root_GI.keys():
+        cur_item = root_GI.get(cur_key, None)
+        if cur_key in root_SAM.keys():
+            pass
+        else:
+            root_SAM[cur_key] = cur_item
 
     with open(SAM_file, 'w') as f:
         json.dump(root_SAM, f, indent=2)

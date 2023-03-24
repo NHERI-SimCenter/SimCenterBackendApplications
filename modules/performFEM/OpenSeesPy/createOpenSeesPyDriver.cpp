@@ -9,6 +9,7 @@
 #include <thread>
 #include <filesystem>
 #include <algorithm>
+#include <regex>
 
 int getEDP(json_t *edp, std::vector<std::string> &edpList);
 int getRV(json_t *edp, std::vector<std::string> &rvList);
@@ -24,7 +25,17 @@ void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
     }
 }
 
+std::string appendModelIndexToStem(int modelIndex, std::string filename) {
+    std::filesystem::path templateFilePath(filename);
+    std::string newStem = templateFilePath.stem().string() + "_" + std::to_string(modelIndex);
+    std::string extension = templateFilePath.extension().string();
+    filename = newStem + extension;
+    return filename;
+}
+
 int main(int argc, const char **argv) {
+
+  std::cerr << "createOpenSeesPyDriver:: starting\n";
   
   if (argc < 5) {
     std::cerr << "createOpenSeesPyDriver:: expecting 4 inputs\n";
@@ -36,6 +47,22 @@ int main(int argc, const char **argv) {
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
+  int modelIndex = 0;
+
+  // if case not simple defaults
+  for (int i=1; i<argc; i+=2) {
+    if (strcmp(argv[i],"--driverFile") == 0) {
+      workflowDriver = argv[i+1];
+    } else if (strcmp(argv[i],"--workflowInput") == 0) {
+      inputFile = argv[i+1];
+    } else if (strcmp(argv[i],"--runType") == 0) {
+      runType = argv[i+1];
+    } else if (strcmp(argv[i],"--osType") == 0) {
+      osType = argv[i+1];
+    } else if (strcmp(argv[i], "--modelIndex") == 0) {
+      modelIndex = std::stoi(argv[i+1]);
+    }
+  }
   
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");
@@ -47,19 +74,6 @@ int main(int argc, const char **argv) {
     exit(801);
   }
   
-  //current_path(currentPath);
-  auto path = std::filesystem::current_path(); //getting path
-  //  std::cerr << "PATH: " << path << '\n';
-
-  //std::string fileName = std::filesystem::path(inputFile).filename();
-  std::filesystem::path fileNameP = std::filesystem::path(inputFile).filename();
-  std::string fileName = fileNameP.generic_string();   
-  //  std::cerr << "fileName: " << fileName << '\n';
-
-  std::string fullPath = std::filesystem::path(inputFile).remove_filename().generic_string();
-  //  std::cerr << "fullPath: " << fullPath << '\n';  
-
-  
   //
   // open input file to get RV's and EDP names
   //
@@ -70,25 +84,25 @@ int main(int argc, const char **argv) {
   json_error_t error;
   json_t *rootInput = json_load_file(inputFile.c_str(), 0, &error);
   if (rootInput == NULL) {
-    std::cerr << "createOpenSeesDriver:: input file " << inputFile << " is not valid JSON\n";
+    std::cerr << "createOpenSeesPyDriver:: input file " << inputFile << " is not valid JSON\n";
     exit(801); 
   } 
 
   json_t *rootRV =  json_object_get(rootInput, "randomVariables");
   if (rootRV == NULL) {
-    std::cerr << "createOpenSeesDriver:: no randomVariables found\n";
+    std::cerr << "createOpenSeesPyDriver:: no randomVariables found\n";
     return 0; // no random variables is allowed
   }
   
   json_t *rootEDP =  json_object_get(rootInput, "EDP");
   if (rootEDP == NULL) {
-    std::cerr << "createOpenSeesDriver:: no EDP found\n";    
+    std::cerr << "createOpenSeesPyDriver:: no EDP found\n";    
     return 0; // no random variables is allowed
   }
 
   json_t *rootAPPs =  json_object_get(rootInput, "Applications");
   if (rootAPPs == NULL) {
-    std::cerr << "createOpenSeesDriver:: no Applications found\n";
+    std::cerr << "createOpenSeesPyDriver:: no Applications found\n";
     return 0; // no random variables is allowed
   }  
 
@@ -105,7 +119,7 @@ int main(int argc, const char **argv) {
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
   
   if (!workflowDriverFile.is_open()) {
-    std::cerr << "createOpenSeesDriver:: could not create workflow driver file: " << workflowDriver << "\n";
+    std::cerr << "createOpenSeesPyDriver:: could not create workflow driver file: " << workflowDriver << "\n";
     exit(802); // no random variables is allowed
   }
 
@@ -160,20 +174,42 @@ int main(int argc, const char **argv) {
   
   json_t *femApp =  json_object_get(rootAPPs, "FEM");
   if (femApp == NULL) {
-    std::cerr << "createOpenSeesDriver:: no FEM application in rootAPPs\n";    
+    std::cerr << "createOpenSeesPyDriver:: no FEM application in rootAPPs\n";    
     return -2; 
   }
 
   json_t *fem =  json_object_get(femApp, "ApplicationData");  
   if (fem == NULL) {
-    std::cerr << "createOpenSeesDriver:: no ApplicationData in femApp\n";        
+    std::cerr << "createOpenSeesPyDriver:: no ApplicationData in femApp\n";        
     return -3; 
   }
 
-  
-  //  const char *mainScript =  json_string_value(json_object_get(fem, "mainInput"));
+  std::string mainScriptTemplate = "tmpSimCenter.script";
+  if (modelIndex > 0) {
+    mainScriptTemplate = appendModelIndexToStem(modelIndex, mainScriptTemplate);
+  }
+  std::ofstream templateFile(mainScriptTemplate);
+
   const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
-  const char *parametersScript =  json_string_value(json_object_get(fem, "parametersScript"));
+  std::string parametersScript =  json_string_value(json_object_get(fem, "parametersScript"));
+
+  std::string parametersScriptTemplate = "tmpSimCenter.params";
+  if (strcmp(parametersScript.c_str(),"") != 0) { // if parametersScript name is provided
+    if (modelIndex > 0) {
+      parametersScriptTemplate = appendModelIndexToStem(modelIndex, parametersScriptTemplate);
+    }
+    std::filesystem::copy_file(parametersScript, parametersScriptTemplate);
+  } else {
+    for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
+      std::string nm = *itRV;
+      if (nm.find("MultiModel") != std::string::npos) { // to deal with the "-" in "MultiModel-FEM"
+        templateFile << std::regex_replace(nm, std::regex("-"), "_") << " = \"RV." << *itRV << "\"\n";
+      } else {
+        templateFile << *itRV << " = \"RV." << *itRV << "\"\n";
+      }
+    }
+    templateFile << std::endl;
+  }
 
   json_t *femScript = json_object_get(fem, "mainScript");
   if (femScript == NULL) {
@@ -181,22 +217,34 @@ int main(int argc, const char **argv) {
     std::cerr << "createOpenSeesPyDriver:: no mainScript in ApplicationData\n" << jsonD;
     return -4; 
   }  
-  const char *mainScript =  json_string_value(femScript);
+  std::string mainScript = json_string_value(femScript);
+  std::ifstream modelFile(mainScript);
+  while (!modelFile.eof()) {
+    std::string line;
+    std::getline(modelFile, line);
+    templateFile << line << std::endl;
+  }
+  templateFile.close();
 
-  if (strcmp(parametersScript,"") == 0) {	
+  if (strcmp(parametersScript.c_str(),"") == 0) {	
     // workflowDriverFile << moveCommand << mainScript << " tmpSimCenter.script \n";
-    workflowDriverFile << dpreproCommand << "  params.in tmpSimCenter.script " << mainScript << "\n";
+    workflowDriverFile << dpreproCommand << "  params.in " << mainScriptTemplate << " " << mainScript << "\n";
   } else {
     // workflowDriverFile << moveCommand << parametersScript << " tmpSimCenter.params \n";
-    workflowDriverFile << dpreproCommand << "  params.in  tmpSimCenter.params " << " " << parametersScript << "\n";
+    workflowDriverFile << dpreproCommand << "  params.in " << parametersScriptTemplate << " " << parametersScript << "\n";
   }
   
   workflowDriverFile << pythonCommand << " " << mainScript; 
   
   if (strcmp(postprocessScript,"") != 0) {
-    workflowDriverFile << "\n" << pythonCommand << " " << postprocessScript;
-    for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
-      workflowDriverFile << " " << *itEDP;
+    if (strstr(postprocessScript,".py") != NULL) {
+      workflowDriverFile << "\n" << pythonCommand << " " << postprocessScript;
+      for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
+        workflowDriverFile << " " << *itEDP;
+      }
+    }
+    else if (strstr(postprocessScript,".tcl") != NULL) {
+      workflowDriverFile << "\n" << openSeesCommand << " " << postprocessScript;
     }
   } else {
     for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {

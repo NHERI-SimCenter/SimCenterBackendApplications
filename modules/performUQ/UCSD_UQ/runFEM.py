@@ -39,7 +39,8 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     analysisPath = os.path.join(workdirMain, stringtoappend)
 
     if os.path.isdir(analysisPath):
-        pass
+        # pass
+        shutil.rmtree(analysisPath)
     else:
         os.mkdir(analysisPath)
 

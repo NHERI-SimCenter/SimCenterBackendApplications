@@ -79,7 +79,7 @@
       {
         "Name": "CSV_to_AIM",
         "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
-        "RunsParallel": false,	  
+        "RunsParallel": true,	  
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -230,6 +230,7 @@
       {
         "Name": "RegionalSiteResponse",
         "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
+        "RunsParallel": true,	  
         "ApplicationSpecificInputs": [
         ]
       }
@@ -608,6 +609,16 @@
         "ApplicationSpecificInputs": []
       },
       {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+	      }
+	  ]
+      },
+      {
         "Name": "SteelBuildingModel",
         "ExecutablePath": "applications/createSAM/AutoSDA/main_program.py",
         "ApplicationSpecificInputs": []
@@ -620,6 +631,10 @@
       {
         "Name": "SurrogateGPBuildingModel",
         "ExecutablePath": "applications/createSAM/surrogateGP/SurrogateGP.py",
+      },
+      {
+        "Name": "MultiModel-SIM",
+        "ExecutablePath": "applications/createSAM/multimodel/multipleSIMs.py",
         "ApplicationSpecificInputs": []
       }
     ]
@@ -766,6 +781,16 @@
         "ExecutablePath": "applications/performSIMULATION/extractPGA/ExtractPGA"
       },
       {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+	      }
+	  ]
+      },	
+      {
         "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
       },
@@ -776,6 +801,10 @@
       {
         "Name": "SurrogateSimulation",
         "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
+      },
+      {
+        "Name": "MultiModel-FEA",
+        "ExecutablePath": "applications/performSIMULATION/multimodel/multipleSimulations.py"
       }
     ]
   },
@@ -814,6 +843,10 @@
         "Name": "UCSD-UQ",
         "ExecutablePath": "applications/performUQ/UCSD_UQ/UCSD_UQ.py"
       },    
+      {
+        "Name": "UQpy",
+        "ExecutablePath": "applications/performUQ/UQpy/UQpyEngine.py"
+      },		
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
@@ -867,15 +900,15 @@
         "ApplicationSpecificInputs": []
       },
       {
-        "Name": "Custom",
-        "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelDriver.py",
         "ApplicationSpecificInputs": []
       } ,
       {
-        "Name": "MultipleModels",
-        "ExecutablePath": "applications/performFEM/MultipleModels/createMultipleModelsDriver",
+        "Name": "Custom",
+        "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
         "ApplicationSpecificInputs": []
-      } 
+      }	
     ]
   },    
   "DLApplications": {
@@ -894,24 +927,6 @@
       }
       ],
       "Outputs": [
-      {
-          "id": "outputEDP",
-          "type": "string",
-          "description": "name of file to store response estimates",
-          "default": "EDP.csv"
-      },
-      {
-          "id": "outputDM",
-          "type": "string",
-          "description": "name of file to store damage estimates",
-          "default": "DM.csv"
-      },
-      {
-          "id": "outputDV",
-          "type": "string",
-          "description": "name of DV file to store decision variable estimates",
-          "default": "DV.csv"
-      }
       ]
     },
     "Applications": [
@@ -919,6 +934,12 @@
         "Name": "pelicun",
         "ExecutablePath": "applications/performDL/pelicun/DL_calculation.py",
         "ApplicationSpecificInputs": [
+          {
+            "id": "demandFile",
+            "type": "string",
+            "description": "name of file containing the EDP data",
+            "default": "response.csv"
+          },
           {
             "id": "DL_Method",
             "type": "string",
@@ -958,6 +979,29 @@
             "id": "auto_script",
             "type": "path",
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
+          },
+          {
+            "id": "custom_fragility_dir",
+            "type": "path",
+            "description": "Identifies the location of a folder with custom fragility function JSON files."
+          },
+          {
+            "id": "outputEDP",
+            "type": "string",
+            "description": "name of file to store response estimates",
+            "default": "EDP.csv"
+          },
+          {
+            "id": "outputDM",
+            "type": "string",
+            "description": "name of file to store damage estimates",
+            "default": "DM.csv"
+          },
+          {
+            "id": "outputDV",
+            "type": "string",
+            "description": "name of DV file to store decision variable estimates",
+            "default": "DV.csv"
           }
         ]
       },
@@ -965,6 +1009,46 @@
         "Name": "Pelicun3",
         "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
         "ApplicationSpecificInputs": [
+          {
+            "id": "Realizations",
+            "type": "int",
+            "description": "Specifies the number of realizations to generate"
+          },
+          {
+            "id": "detailed_results",
+            "type": "bool",
+            "description": "If false, only the main results are saved to improve performance."
+          },
+          {
+            "id": "log_file",
+            "type": "bool",
+            "description": "If false, pelicun does not create a log file."
+          },
+          {
+            "id": "coupled_EDP",
+            "type": "bool",
+            "description": "If true, the raw EDPs are used as-is without re-sampling."
+          },
+          {
+            "id": "event_time",
+            "type": "string",
+            "description": "Defines the time of the event in YYYY-MM-DD:HH format. 'off' turns all time-effects off."
+          },
+          {
+            "id": "ground_failure",
+            "type": "bool",
+            "description": "If true, fragility groups associated with ground failure are added in the auto-population phase. Note that such analysis requires PGD values as inputs."
+          },
+          {
+            "id": "auto_script",
+            "type": "path",
+            "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
+          },
+          {
+            "id": "regional",
+            "type": "bool",
+            "description": "If yes, the analysis is part of a regional simulation and results will be aggregated."
+          }
         ]
       },
       {

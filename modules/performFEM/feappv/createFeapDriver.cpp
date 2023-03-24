@@ -28,7 +28,7 @@ void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
 int main(int argc, const char **argv) {
 
   if (argc < 5) {
-    std::cerr << "createOpenSeesDriver:: expecting 4 inputs\n";
+    std::cerr << "createFeapDriver:: expecting 4 inputs\n";
     exit(-1);
   }
 
@@ -36,15 +36,29 @@ int main(int argc, const char **argv) {
   std::string inputFile(argv[1]);
   std::string runType(argv[2]);
   std::string osType(argv[3]);
-  std::string workflowDriver(argv[4]);  
+  std::string workflowDriver(argv[4]);
+  
+  // if case not simple defaults
+  for (int i=1; i<argc; i+=2) {
+    if (strcmp(argv[i],"--driverFile") == 0) {
+      workflowDriver = argv[i+1];
+    } else if (strcmp(argv[i],"--workflowInput") == 0) {
+      inputFile = argv[i+1];
+    } else if (strcmp(argv[i],"--runType") == 0) {
+      runType = argv[i+1];
+    } else if (strcmp(argv[i],"--osType") == 0) {
+      osType = argv[i+1];
+    }
+  }
 
+  
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");
   eraseAllSubstring(osType,"\"");
   eraseAllSubstring(workflowDriver,"\"");  
 
   if (!std::filesystem::exists(inputFile)) {
-    std::cerr << "createOpenSeesDriver:: input file: " << inputFile << " does not exist\n";
+    std::cerr << "createFeapDriver:: input file: " << inputFile << " does not exist\n";
     exit(801);
   }
   
@@ -72,25 +86,25 @@ int main(int argc, const char **argv) {
   json_error_t error;
   json_t *rootInput = json_load_file(inputFile.c_str(), 0, &error);
   if (rootInput == NULL) {
-    std::cerr << "createOpenSeesDriver:: input file " << inputFile << " is not valid JSON\n";
+    std::cerr << "createFeapDriver:: input file " << inputFile << " is not valid JSON\n";
     exit(801); 
   } 
 
   json_t *rootAPPs =  json_object_get(rootInput, "Applications");
   if (rootAPPs == NULL) {
-    std::cerr << "createOpenSeesDriver:: no Applications found\n";
+    std::cerr << "createFeapDriver:: no Applications found\n";
     return 0; // no random variables is allowed
   }
   
   json_t *rootRV =  json_object_get(rootInput, "randomVariables");
   if (rootRV == NULL) {
-    std::cerr << "createOpenSeesDriver:: no randomVariables found\n";
+    std::cerr << "createFeapDriver:: no randomVariables found\n";
     return 0; // no random variables is allowed
   }
   
   json_t *rootEDP =  json_object_get(rootInput, "EDP");
   if (rootEDP == NULL) {
-    std::cerr << "createOpenSeesDriver:: no EDP found\n";    
+    std::cerr << "createFeapDriver:: no EDP found\n";    
     return 0; // no random variables is allowed
   }
 
@@ -107,7 +121,7 @@ int main(int argc, const char **argv) {
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
   
   if (!workflowDriverFile.is_open()) {
-    std::cerr << "createOpenSeesDriver:: could not create workflow driver file: " << workflowDriver << "\n";
+    std::cerr << "createFeapDriver:: could not create workflow driver file: " << workflowDriver << "\n";
     exit(802); // no random variables is allowed
   }
 
@@ -155,13 +169,13 @@ int main(int argc, const char **argv) {
 
   json_t *femApp =  json_object_get(rootAPPs, "FEM");
   if (femApp == NULL) {
-    std::cerr << "createOpenSeesDriver:: no FEM application in rootAPPs\n";    
+    std::cerr << "createFeapDriver:: no FEM application in rootAPPs\n";    
     return -2; 
   }
   
   json_t *fem =  json_object_get(femApp, "ApplicationData");  
   if (fem == NULL) {
-    std::cerr << "createOpenSeesDriver:: no ApplicationData in femApp\n";        
+    std::cerr << "createFeapDriver:: no ApplicationData in femApp\n";        
     return -3; 
   }
 
@@ -178,7 +192,7 @@ int main(int argc, const char **argv) {
   json_t *postScript = json_object_get(fem, "postprocessScript");
   if (postScript == NULL) {
     const char *jsonD =  json_dumps(fem, JSON_INDENT(4));    
-    std::cerr << "createOpenSeesDriver:: no postprocessScript in ApplicationData\n" << jsonD;
+    std::cerr << "createFeapDriver:: no postprocessScript in ApplicationData\n" << jsonD;
     return -4; 
   }      
   const char *postprocessScript =  json_string_value(postScript);

@@ -84,6 +84,8 @@ def _warning(message, category, filename, lineno, file=None, line=None):
         file_path = filename.split('\\')
     elif '/' in filename:
         file_path = filename.split('/')
+    else:
+        file_path = filename
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
 warnings.showwarning = _warning
@@ -318,7 +320,7 @@ EDP_units = dict(
     PIH = 'length'
 )
 
-EDP_to_demand_type = {
+demand_type_dict = {
     'Story Drift Ratio' :             'PID',
     'Roof Drift Ratio' :              'PRD',
     'Damageable Wall Drift' :         'DWD',
@@ -340,6 +342,26 @@ EDP_to_demand_type = {
     'Mega Drift Ratio' :              'PMD',
     'Residual Drift Ratio' :          'RID',
 }
+
+def EDP_to_demand_type(EDP_string):
+
+    res = EDP_string.split('|')
+    if len(res) == 1:
+        EDP_type = res[0]
+        EDP_subtype = None
+    else:
+        EDP_type, EDP_subtype = res
+
+    demand_type = demand_type_dict.get(EDP_type, None)
+
+    if demand_type == None:
+        return demand_type
+
+    elif EDP_subtype == None:
+        return demand_type
+
+
+    return f'{demand_type}_{EDP_subtype}'
 
 # PFA in FEMA P58 corresponds to the top of the given story. The ground floor
 # has an index of 0. When damage of acceleration-sensitive components

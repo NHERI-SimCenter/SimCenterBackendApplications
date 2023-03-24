@@ -40,7 +40,7 @@
 
 import os, sys
 import argparse, json
-import importlib
+import importlib, shutil
 
 from pathlib import Path
 
@@ -109,6 +109,17 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
     #print(os.getcwd())
 
     custom_script_path = SAM_in['mainScript']
+
+    # copy the custom scripts to the current directory if not yet
+    if os.path.exists(custom_script_path):
+        pass
+    else:
+        custom_script_dir = SAM_in.get('modelPath',None)
+        if custom_script_dir is None:
+            log_msg('No modelPath found in the SAM file.')
+        else:
+            shutil.copytree(custom_script_dir,os.getcwd(),dirs_exist_ok=True)
+            log_msg('Custom scripts copied from {} to {}'.format(custom_script_dir,os.getcwd()))
 
     custom_script = importlib.__import__(
         custom_script_path[:-3], globals(), locals(), ['custom_analysis',], 0)
