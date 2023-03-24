@@ -788,13 +788,14 @@ class gmCluster():
 if __name__ == "__main__":
 
     errf = open("gridIM_log.err","w")
-    try:
-        main(sys.argv,errf)
-        errf.close()
-
-    except Exception as e:
-        print("Exception occurred while code Execution: " + str(repr(e)))
-        errf.write("Exception occurred while code Execution: " + str(repr(e)))
-        errf.close()
-        exit(-1)
+    main(sys.argv, errf)
+    # try:
+    #     main(sys.argv,errf)
+    #     errf.close()
+    #
+    # except Exception as e:
+    #     print("Exception occurred while code Execution: " + str(repr(e)))
+    #     errf.write("Exception occurred while code Execution: " + str(repr(e)))
+    #     errf.close()
+    #     exit(-1)
 

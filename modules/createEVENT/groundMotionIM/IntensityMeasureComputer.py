@@ -508,7 +508,7 @@ def get_unit_factor(unit_in, unit_out):
     unit_factor = f_in/f_out
     return unit_factor
 
-def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
+def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
 
     # load AIM file
     try:
@@ -547,9 +547,17 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     im_names = ['Periods'] # IM name
     AIM_im = AIM_file.get('IntensityMeasure', None)
     output_periods = []
+    process_geomean = False
     if AIM_im is None:
         # search it again under UQ/surrogateMethodInfo
         AIM_im = AIM_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure',None)
+        if geoMean:
+            process_geomean = AIM_file['UQ']['surrogateMethodInfo'].get('useGeoMean',False)
+    
+    else:
+        if geoMean:
+            process_geomean = AIM_file['IntensityMeasure'].get('useGeoMean', None)
+
     if AIM_im is None or len(AIM_im)==0:
         # no intensity measure calculation requested
         return
@@ -644,6 +652,24 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
                     csv_dict[tmp_key].append(im_dict.get(cur_im).get(cur_hist_name))
                 else:
                     csv_dict.update({tmp_key: [im_dict.get(cur_im).get(cur_hist_name)]})
+
+    if process_geomean:
+        geo_csv_dict = {}
+        get_count_dict = {}
+        for key, val in csv_dict.items():
+            new_key_name = key.rpartition('-')[0] + "-1" #before the last dash
+            if new_key_name not in geo_csv_dict:
+                geo_csv_dict[new_key_name] = val
+                get_count_dict[new_key_name] = 1
+            else:
+                geo_csv_dict[new_key_name] = [a*b for a,b in zip(geo_csv_dict[new_key_name],val)]
+                get_count_dict[new_key_name] += 1
+
+        for key, val in geo_csv_dict.items():
+            geo_csv_dict[key] = [a**(1/get_count_dict[key]) for a in geo_csv_dict[key]]
+
+        csv_dict = geo_csv_dict
+
     # create df
     csv_df = pd.DataFrame.from_dict(csv_dict)
     tmp_idx = IM_file.index('.')
@@ -673,8 +699,10 @@ if __name__ == '__main__':
     # amplitude scaled tag
     parser.add_argument('--ampScaled', default=False, help="Records have been scaled in amplitudes")
     
+    parser.add_argument('--geoMeanVar',default=False, help="Consider using only geometric mean", nargs='?', const=True)
+
     # parse arguments
     args = parser.parse_args()
 
     # run and return
-    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled))
+    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled, args.geoMeanVar))
