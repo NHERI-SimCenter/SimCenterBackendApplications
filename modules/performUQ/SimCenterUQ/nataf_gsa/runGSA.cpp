@@ -513,8 +513,10 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		//
 
 		if (xstrval.size()>0) {
-			Si.assign(nqoi, { sqrt(-1) }); // enforcing NaN
-			return;
+			if (xstrval[0].size()>0) {
+				Si.assign(nqoi, { sqrt(-1) }); // enforcing NaN
+				return;
+			}
 		}		
 	}
 

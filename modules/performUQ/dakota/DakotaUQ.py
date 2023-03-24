@@ -127,6 +127,21 @@ def main(args):
             result = e.output
             returncode = e.returncode
 
+
+        dakotaErrFile = os.path.join(os.getcwd(), 'dakota.err');
+        dakotaOutFile = os.path.join(os.getcwd(), 'dakota.out');
+
+        checkErrFile = os.path.getsize(dakotaErrFile)
+        checkOutFile = os.path.exists(dakotaOutFile)
+
+        if(checkOutFile == False and checkErrFile == 0 ):
+            with open(dakotaErrFile, 'a') as file:
+                file.write(result.decode("utf-8"))
+        else:
+            pass
+
+
+
 if __name__ == '__main__':
 
     main(sys.argv[1:])
