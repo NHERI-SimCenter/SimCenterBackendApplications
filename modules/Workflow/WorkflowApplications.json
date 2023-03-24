@@ -616,6 +616,11 @@
         "Name": "ConcreteBuildingModel",
         "ExecutablePath": "applications/createSAM/RCFIAP/RC_FIAP_main.py",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SurrogateGPBuildingModel",
+        "ExecutablePath": "applications/createSAM/surrogateGP/SurrogateGP.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -703,6 +708,11 @@
         "Name": "SimpleEDP",
         "ExecutablePath": "applications/createEDP/simpleEDP/simpleEDP.py",
         "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "SurrogateEDP",
+        "ExecutablePath": "applications/createEDP/SurrogateEDP/SurrogateEDP.py",
+        "ApplicationSpecificInputs": []
       }
     ]
   },
@@ -762,6 +772,10 @@
       {
         "Name": "IMasEDP",
         "ExecutablePath": "applications/performSIMULATION/IMasEDP/IMasEDP.py"
+      },
+      {
+        "Name": "SurrogateSimulation",
+        "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
       }
     ]
   },
