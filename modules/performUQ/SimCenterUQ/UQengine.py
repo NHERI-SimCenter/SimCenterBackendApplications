@@ -170,13 +170,30 @@ class UQengine:
                     Y[id - id_sim, :] = val
 
         if len(alterInput)>0:
-            IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
-            self.IM_names = list(map(str, IM_vals))[1:]
             idx = alterInput[0]
-            X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
-            X_new = np.hstack([X_new, X[:,idx+1:]])
+            X = np.hstack([X[:, :idx], X[:,idx+1:]])
+            
+            # IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+            # IM_list = list(map(str, IM_vals))[1:]
+            # self.IM_names = IM_list
+            # idx = alterInput[0]
+            # X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
+            # X_new = np.hstack([X_new, X[:,idx+1:]])
+            # X = X_new.astype(np.double)
+            
+        #
+        # In case EEUQ
+        #
+        
+        IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+        if IM_vals is None:
+            X = X.astype(np.double)
+        else:
+            self.IM_names = list(map(str, IM_vals))[1:]
+            X_new = np.hstack([X,IM_vals.to_numpy()[:,1:]])
             X = X_new.astype(np.double)
 
+            
         return X, Y, id_sim + Nsim
 
     def compute_IM(self, i_begin, i_end):
@@ -192,7 +209,7 @@ class UQengine:
             os.chdir(cur_workdir)
             if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
                 os.system(
-                    f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json")
+                    f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar")
             os.chdir(self.work_dir)
 
         # collect IMs from different workdirs
@@ -314,7 +331,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     #
 
     os.chdir(current_dir_i)
-    workflow_run_command = "{}/{}".format(current_dir_i, workflowDriver)
+    workflow_run_command = "{}/{}  1> workflow.log 2>&1".format(current_dir_i, workflowDriver)
     #subprocess.check_call(
     #    workflow_run_command,
     #    shell=True,
