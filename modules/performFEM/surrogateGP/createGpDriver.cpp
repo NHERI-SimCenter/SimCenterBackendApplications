@@ -180,20 +180,17 @@ std::cerr<<workflowDriver<<std::endl;
   const char *mainInput =  json_string_value(json_object_get(fem, "mainScript"));
   const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
     
-  std::cerr<<"flag"<<std::endl;
 
   int scriptType = 0;
   if (strstr(postprocessScript,".py") != NULL) 
     scriptType = 1;
   else if (strstr(postprocessScript,".tcl") != NULL) 
     scriptType = 2;
-  std::cerr<<"flag2"<<std::endl;
   
   std::ofstream templateFile("SimCenterInput.RV");
   for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
     templateFile << "pset " << *itRV << " \"RV." << *itRV << "\"\n";
   }
-    std::cerr<<"flag3"<<std::endl;
 
   templateFile << "\n set listQoI \"";
   for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
@@ -201,14 +198,12 @@ std::cerr<<workflowDriver<<std::endl;
   }
   
   templateFile << "\"\n\n\n source " << mainInput << "\n";
-    std::cerr<<"flag4"<<std::endl;
 
   //workflowDriverFile << dpreproCommand << " params.in SimCenterInput.RV SimCenterInput.tcl\n";
   //workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1> ops.out 2>&1\n";
   workflowDriverFile << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n ";
     std::cout << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n" << std::endl;
 
-  std::cerr<<"flag5"<<std::endl;
 
   // depending on script type do something
   if (scriptType == 1) { // python script

@@ -13,6 +13,9 @@ try:
     from emukit.multi_fidelity.convert_lists_to_array import  convert_x_list_to_array, convert_xy_lists_to_arrays
     moduleName = "GPy"
     import GPy as GPy
+    moduleName = "Pandas"
+    import pandas as pd
+
     error_tag = False  # global variable
 except:
     error_tag = True
@@ -20,7 +23,7 @@ except:
 
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
-def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
+def main(params_dir,surrogate_dir,json_dir,result_file):
     global error_file
 
 
@@ -50,22 +53,42 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
         exit(-1)
 
     def error_warning(msg):
-        error_file.write(msg)
+        #error_file.write(msg)
         file_object.write(msg)
-        print(msg)
+        #print(msg)
+
+    with open(json_dir) as f:
+        try:
+            sur = json.load(f)
+        except ValueError:
+            msg = 'invalid json format: ' + json_dir
+            error_exit(msg)
+
+    isEEUQ = sur["isEEUQ"]
+    if isEEUQ:
+        dakota_path = 'sc_scInput.json'
+    else:
+        dakota_path = 'scInput.json'
+
 
     with open(dakota_path) as f: # current input file
         try:
             inp_tmp = json.load(f)
-            inp_fem = inp_tmp["Applications"]["FEM"]
+
         except ValueError:
             msg = 'invalid json format - dakota.json'
             error_exit(msg)
 
+
+
+    if isEEUQ:
+        inp_fem = inp_tmp["Applications"]["Modeling"]
+    else:
+        # quoFEM
+        inp_fem = inp_tmp["FEM"]
     norm_var_thr = inp_fem["varThres"]
     when_inaccurate = inp_fem["femOption"]
     do_mf = inp_tmp
-
     np.random.seed(int(inp_fem["gpSeed"])+int(sampNum))
 
     # sampNum=0
@@ -76,12 +99,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     #
     # read json -- original input for training surrogate
     #
-    f = open(json_dir)
-    try:
-        sur = json.load(f)
-    except ValueError:
-        msg = 'invalid json format'
-        error_exit(msg)
+
 
     f.close()
 
@@ -157,29 +175,32 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
             self.set_XY(X, Y)
 
         def get_stochastic_variance(X, Y, x, ny):
-            X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
-            n_unique = X_unique.shape[0]
-            Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))
-
-            for idx in range(n_unique):
-                Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]
-                Y_mean[idx, :] = np.mean(Y_subset, axis=0)
-                Y_var[idx, :] = np.var(Y_subset, axis=0)
+            #X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
+            X_unique, dummy, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True,
+                                                         return_inverse=True)
 
             idx_repl = [i for i in np.where(counts > 1)[0]]
 
-            if (np.max(Y_var) / np.var(Y_mean) < 1.e-10):
-                return np.ones((X.shape[0],1))
 
             if len(idx_repl)>0:
-                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True)
+                n_unique = X_unique.shape[0]
+                Y_mean, Y_var = np.zeros((n_unique, 1)), np.zeros((n_unique, 1))
+
+                for idx in range(n_unique):
+                    Y_subset = Y[[i for i in np.where(indices == idx)[0]], :]
+                    Y_mean[idx, :] = np.mean(Y_subset, axis=0)
+                    Y_var[idx, :] = np.var(Y_subset, axis=0)
+
+                if (np.max(Y_var) / np.var(Y_mean) < 1.e-10) and len(idx_repl) > 0:
+                    return np.ones((X.shape[0], 1))
+
+
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
                 log_vars = np.log(Y_var[idx_repl])
                 m_var = GPy.models.GPRegression(X_unique[idx_repl, :], log_vars, kernel_var, normalizer=True, Y_metadata=None)
-                print("Optimizing variance field of ny={}".format(ny))
+                print("Collecting variance field of ny={}".format(ny))
                 for key, val in sur["modelInfo"][g_name_sur[ny]+"_Var"].items():
                     exec('m_var.' + key + '= np.array(val)')
-                #m_var.optimize(messages=True, max_f_eval=1000)
-                #m_var.optimize_restarts(20)
 
                 log_var_pred, dum = m_var.predict(X_unique)
                 var_pred = np.exp(log_var_pred)
@@ -194,44 +215,91 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
 
                 log_var_pred_x, dum = m_var.predict(x)
                 nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
+                
+            else:
+                X_unique = X
+                Y_mean = Y
+                indices = range(0, Y.shape[0])
 
+                kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
+                log_vars = np.atleast_2d(sur["modelInfo"][g_name_sur[ny] + "_Var"]["TrainingSamplesY"]).T
+                m_var = GPy.models.GPRegression(X, log_vars, kernel_var, normalizer=True,
+                                                Y_metadata=None)
 
+                print("Variance field obtained for ny={}".format(ny))
+                for key, val in sur["modelInfo"][g_name_sur[ny] + "_Var"].items():
+                    exec('m_var.' + key + '= np.array(val)')
+
+                log_var_pred, dum = m_var.predict(X)
+                var_pred = np.exp(log_var_pred)
+
+                if did_normalization:
+                    Y_normFact = np.var(Y)
+                else:
+                    Y_normFact = 1
+
+                norm_var_str = (var_pred.T[0]) / Y_normFact  # if normalization was used..
+
+                log_var_pred_x, dum = m_var.predict(x)
+                nugget_var_pred_x = np.exp(log_var_pred_x.T[0]) / Y_normFact
+
+          
             return X_unique, Y_mean, norm_var_str, counts, nugget_var_pred_x,  np.var(Y_mean)
 
     # REQUIRED: rv_name, y_var
 
-    t_total = time.process_time()
+    # Collect also dummy rvs
+    id_vec=[]
+    rv_name_dummy = []
 
+
+    t_total = time.process_time()
+    first_rv_found = False
+    first_dummy_found = False
     with open(params_dir, "r") as x_file:
         data = x_file.readlines()
         nrv = int(data[0])
-        if nrv != nrv_sur:
-            msg = 'Error importing input data: Number of dimension inconsistent: surrogate model requires {} RV(s) but input has {} RV(s).\n'.format(
-                nrv_sur, nrv)
-            error_exit(msg)
 
         # rv_name = list()
-
         for i in range(nrv):
             name_values = data[i + 1].split()
             name = name_values[0]
-            samples = [float(vals) for vals in name_values[1:]]
-            ns = len(samples)
-            try:
-                id_map = rv_name_sur.index(name)
-            except ValueError:
-                msg = 'Error importing input data: variable "{}" not identified.'.format(name)
-                error_exit(msg)
+            if name == 'MultipleEvent' and isEEUQ:
+                continue
 
-            if i == 0:
+            samples = np.atleast_2d([float(vals) for vals in name_values[1:]]).T
+            ns = len(samples)
+            if not name in rv_name_sur:
+                rv_name_dummy += [name]
+                if not first_dummy_found:
+                    rv_val_dummy = samples
+                    first_dummy_found = True
+                else:
+                    rv_val_dummy = np.hstack([rv_val_dummy,samples])
+                continue;
+
+            id_map = rv_name_sur.index(name)
+            #try:
+            #    id_map = rv_name_sur.index(name)
+            #except ValueError:
+            #    msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+            #    error_exit(msg)
+
+            if not first_rv_found:
                 nsamp = ns
-                rv_val = np.zeros((ns, nrv))
+                rv_tmp =samples
+                id_vec = [id_map]
+                first_rv_found = True
+            else:
+                rv_tmp = np.hstack([rv_tmp, samples])
+                id_vec += [id_map]
+
 
             if ns != nsamp:
                 msg = 'Error importing input data: sample size in params.in is not consistent.'
                 error_exit(msg)
 
-            rv_val[:, id_map] = samples
+
 
         g_idx = []
         for edp in (inp_tmp["EDP"]):
@@ -249,7 +317,103 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                 msg = 'Error importing input data: qoi "{}" not identified.'.format(edp["name"])
                 error_exit(msg)
 
-    # todo: fix for different nys
+    # if eeuq
+    first_eeuq_found = False
+    if sur.get("intensityMeasureInfo") != None:
+
+        with open("IMinput.json","w") as f:
+            mySurrogateJson = sur["intensityMeasureInfo"]
+            json.dump(mySurrogateJson,f)
+        
+        computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                 'createEVENT', 'groundMotionIM', 'IntensityMeasureComputer.py')
+
+        pythonEXE = sys.executable
+        # compute IMs
+
+        if os.path.exists('EVENT.json') and os.path.exists('IMinput.json'):
+            os.system(f"{pythonEXE} {computeIM} --filenameAIM IMinput.json --filenameEVENT EVENT.json --filenameIM IM.json --geoMeanVar")
+        else:
+            msg = 'IMinput.json and EVENT.json not found in workdir.{}. Cannot calculate IMs.'.format(sampNum)
+            error_exit(msg)
+
+        first_eeuq_found = False
+        if os.path.exists( 'IM.csv'):
+            print("IM.csv found")
+            tmp1 = pd.read_csv(('IM.csv'), index_col=None)
+            if tmp1.empty:
+                print("IM.csv in wordir.{} is empty.".format(cur_id))
+                return
+
+            IMnames = list(map(str, tmp1))
+            IMvals = tmp1.to_numpy()
+            nrv2 = len(IMnames)
+            for i in range(nrv2):
+                name = IMnames[i]
+                samples = np.atleast_2d(IMvals[:,i])
+                ns = len(samples)
+                try:
+                    id_map = rv_name_sur.index(name)
+                except ValueError:
+                    msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+                    error_exit(msg)
+
+                if not first_eeuq_found:
+                    nsamp = ns
+                    rv_tmp2 = samples
+                    id_vec2 = [id_map]
+                    first_eeuq_found = True
+                else:
+                    rv_tmp2 = np.hstack([rv_tmp2, samples])
+                    id_vec2 += [id_map]
+
+                if ns != nsamp:
+                    msg = 'Error importing input data: sample size in params.in is not consistent.'
+                    error_exit(msg)
+    # todo: fix for different nys m
+
+        if len(id_vec+id_vec2) != nrv_sur:
+            missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec + id_vec2)
+            s = [str(rv_name_sur[id]) for id in missing_ids]
+            if first_eeuq_found and all([missingEDP.endswith("-2") for missingEDP in s]):
+                msg = "ground motion dimension does not match with that of the training"
+                # for i in range(len(s)):
+                #     name = s[i]
+                #     samples = np.zeros((1,nsamp))
+                #     try:
+                #         id_map = rv_name_sur.index(name)
+                #     except ValueError:
+                #         msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+                #         error_exit(msg)
+                #     rv_tmp2 = np.hstack([rv_tmp2, samples])
+                #     id_vec2 += [id_map]
+                error_exit(msg)
+
+    if first_eeuq_found:
+        if first_rv_found:
+            rv_tmp = np.hstack([rv_tmp, rv_tmp2])
+            id_vec = id_vec + id_vec2
+        else:
+            rv_tmp = np.hstack([rv_tmp2])
+            id_vec = id_vec2
+
+    nrv = len(id_vec)
+
+    if nrv != nrv_sur:
+        missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)
+        s = [str(rv_name_sur[id]) for id in missing_ids]
+        msg = 'Error in Surrogate prediction: Number of dimension inconsistent: Please define '
+        msg += ", ".join(s)
+        msg += " at RV tab"
+        error_exit(msg)
+
+    if os.path.getsize('../surrogateLog.log') == 0:
+        file_object.write("numRV "+ str(nrv+len(rv_name_dummy)) +"\n")
+
+    rv_val = np.zeros((nsamp,nrv))
+    for i in range(nrv):
+        rv_val[:,id_vec[i]] = rv_tmp[:,i]
+
 
     if kernel == 'Radial Basis':
         kr = GPy.kern.RBF(input_dim=nrv_sur, ARD=True)
@@ -471,7 +635,11 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                 #
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')
 
-                current_dir_i = os.path.join(os.getcwd(), 'subworkdir.{}'.format(1+ns))
+                if isEEUQ and nsamp==1: # because stochastic ground motion generation uses folder number when generating random seed.............
+                    current_dir_i = os.path.join(os.getcwd(), 'subworkdir.{}'.format(sampNum))
+                else:
+                    current_dir_i = os.path.join(os.getcwd(), 'subworkdir.{}'.format(1 + ns))
+
                 try:
                     shutil.copytree(templatedirFolder, current_dir_i)
                 except Exception as ex:
@@ -481,20 +649,81 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
                         msg = "Error running FEM: " + str(ex)
 
                 # change directory, create params.in
-                #shutil.copyfile(os.path.join(os.getcwd(), 'params.in'), os.path.join(current_dir_i, 'params.in'))
-                outF = open(current_dir_i + "/params.in", "w")
-                outF.write("{}\n".format(nrv))
-                for i in range(nrv):
-                    outF.write("{} {}\n".format(rv_name_sur[i], rv_val[ns, i]))
-                outF.close()
+                if isEEUQ:
+                    shutil.copyfile(os.path.join(os.getcwd(), 'params.in'), os.path.join(current_dir_i, 'params.in'))
+                    shutil.copyfile(os.path.join(os.getcwd(), 'EVENT.json.sc'), os.path.join(current_dir_i, 'EVENT.json.sc'))
+
+                    #
+                    # Replace parts of AIM
+                    #
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc'),'r') as f:
+                        try:
+                            AIMsc = json.load(f)
+                        except ValueError:
+                            msg = 'invalid AIM in template. Simulation of original model cannot be perfomred'
+                            error_exit(msg)
+                    AIMsc["Events"] = inp_tmp["Events"]
+                    AIMsc["Applications"]["Events"] = inp_tmp["Applications"]["Events"]
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'w') as f:
+                        json.dump(AIMsc,f, indent=2)
+
+                    #
+                    # Copy PEER RECORDS
+                    #
+                    for fname in os.listdir(current_dir_i):
+                        if fname.startswith("PEER-Record-"):
+                            os.remove(os.path.join(current_dir_i, fname))
+                        if fname.startswith("RSN") and fname.endswith("AT2"):
+                            os.remove(os.path.join(current_dir_i, fname))
+
+                    for fname in os.listdir(os.getcwd()):
+                       if fname.startswith("PEER-Record-"):
+                           shutil.copyfile(os.path.join(os.getcwd(), fname), os.path.join(current_dir_i, fname))
+
+                   #
+                   # Replace parts of drive
+                   #
+
+                    if os_type.startswith("win"):
+                        driver_name = 'driver.bat'
+                    else:
+                        driver_name = 'driver'
+
+                    with open(os.path.join(os.getcwd(), driver_name), 'r') as f:
+                        event_driver = f.readline()
+
+                    with open(os.path.join(current_dir_i, driver_name), 'r+') as f:
+                        # Read the original contents of the file
+                        contents = f.readlines()
+                        # Modify the first line
+                        contents[0] = event_driver
+                        # Truncate the file
+                        f.seek(0)
+                        f.truncate()
+                        # Write the modified contents to the file
+                        f.writelines(contents)
+
+                else:
+                    outF = open(current_dir_i + "/params.in", "w")
+                    outF.write("{}\n".format(nrv))
+                    for i in range(nrv):
+                        outF.write("{} {}\n".format(rv_name_sur[i], rv_val[ns, i]))
+                    outF.close()
 
                 os.chdir(current_dir_i)
 
                 # run workflowDriver
-                if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
-                    workflowDriver = "driver.bat"
+
+                if isEEUQ:
+                    if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
+                        workflowDriver = "sc_driver.bat"
+                    else:
+                        workflowDriver = "sc_driver"
                 else:
-                    workflowDriver = "driver"
+                    if os_type.lower().startswith('win') and run_type.lower() == 'runninglocal':
+                        workflowDriver = "driver.bat"
+                    else:
+                        workflowDriver = "driver"
 
                 workflow_run_command = '{}/{}'.format(current_dir_i, workflowDriver)
                 subprocess.Popen(workflow_run_command, shell=True).wait()
@@ -547,13 +776,34 @@ def main(params_dir,surrogate_dir,json_dir,result_file, dakota_path):
     #
     # tab file
     #
+
+    #
+    # Add dummy RVs
+    #
+    if first_dummy_found:
+        rv_name_sur = rv_name_sur + rv_name_dummy
+        rv_val = np.hstack([rv_val, rv_val_dummy ])
     
     g_name_subset = [g_name_sur[i] for i in g_idx]
 
+
+    if int(sampNum)==1:
+        with open('../surrogateTabHeader.out', 'w') as header_file:
+            # write header
+            # if os.path.getsize('../surrogateTab.out') == 0:
+            header_file.write("%eval_id interface " + " ".join(rv_name_sur) + " " + " ".join(
+                g_name_subset) + " " + ".median ".join(g_name_subset) + ".median " + ".q5 ".join(
+                g_name_subset) + ".q5 " + ".q95 ".join(g_name_subset) + ".q95 " + ".var ".join(
+                g_name_subset) + ".var " + ".q5_w_mnoise ".join(
+                g_name_subset) + ".q5_w_mnoise " + ".q95_w_mnoise ".join(
+                g_name_subset) + ".q95_w_mnoise " + ".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
+            # write values
+
+
     with open('../surrogateTab.out', 'a') as tab_file:
         # write header
-        if os.path.getsize('../surrogateTab.out') == 0:
-            tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
+        #if os.path.getsize('../surrogateTab.out') == 0:
+        #    tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
         # write values
 
         for ns in range(nsamp):
@@ -589,16 +839,16 @@ if __name__ == "__main__":
     inputArgs = sys.argv
 
     if not inputArgs[2].endswith('.json'):
-        msg = 'ERROR: surrogte information file (.json) not set'
-        print(msg); error_file.write(msg); exit(-1)
+        msg = 'ERROR: surrogate information file (.json) not set'
+        error_file.write(msg); exit(-1)
 
-    elif not inputArgs[3].endswith('.pkl'):
-        msg = 'ERROR: surrogte model file (.pkl) not set'
-        print(msg); error_file.write(msg); exit(-1)
+    # elif not inputArgs[3].endswith('.pkl'):
+    #     msg = 'ERROR: surrogate model file (.pkl) not set'
+    #     print(msg); error_file.write(msg); exit(-1)
 
-    elif len(inputArgs) < 4 or len(inputArgs) > 4:
-        msg = 'ERROR: put right number of argv'
-        print(msg); error_file.write(msg); exit(-1)
+    # elif len(inputArgs) < 4 or len(inputArgs) > 4:
+    #     msg = 'ERROR: put right number of argv'
+    #     print(msg); error_file.write(msg); exit(-1)
 
     '''
     params_dir = 'params.in'
@@ -626,9 +876,13 @@ if __name__ == "__main__":
 
 
     params_dir = inputArgs[1]
-    surrogate_dir = inputArgs[3]
-    surrogate_meta_dir = inputArgs[2]
-    result_file="results.out"
+    if len(inputArgs) > 3:
+        surrogate_dir = inputArgs[3]
+    else:
+        surrogate_dir = "dummy" # not used
 
-    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file,'scInput.json'))
+    surrogate_meta_dir = inputArgs[2]
+    result_file = "results.out"
+
+    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file))
 
