@@ -34,8 +34,6 @@ std::string appendModelIndexToStem(int modelIndex, std::string filename) {
 }
 
 int main(int argc, const char **argv) {
-
-  std::cerr << "createOpenSeesPyDriver:: starting\n";
   
   if (argc < 5) {
     std::cerr << "createOpenSeesPyDriver:: expecting 4 inputs\n";
