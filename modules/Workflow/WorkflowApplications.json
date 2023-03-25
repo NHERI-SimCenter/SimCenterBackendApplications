@@ -630,7 +630,7 @@
       },
       {
         "Name": "SurrogateGPBuildingModel",
-        "ExecutablePath": "applications/createSAM/surrogateGP/SurrogateGP.py",
+        "ExecutablePath": "applications/createSAM/surrogateGP/SurrogateGP.py"
       },
       {
         "Name": "MultiModel-SIM",
