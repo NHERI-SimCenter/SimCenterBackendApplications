@@ -35,8 +35,8 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
     workdirName = ("workdir." + str(particleNumber + 1))
     analysisPath = os.path.join(workdirMain, workdirName)
 
-    # if os.path.isdir(analysisPath):
-    #     shutil.rmtree(analysisPath)
+    if os.path.isdir(analysisPath):
+        shutil.rmtree(analysisPath)
     
     os.mkdir(analysisPath)
 
