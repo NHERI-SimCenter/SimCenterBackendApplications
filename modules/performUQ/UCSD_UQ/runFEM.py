@@ -35,8 +35,8 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
     workdirName = ("workdir." + str(particleNumber + 1))
     analysisPath = os.path.join(workdirMain, workdirName)
 
-    if os.path.isdir(analysisPath):
-        shutil.rmtree(analysisPath)
+    # if os.path.isdir(analysisPath):
+    #     shutil.rmtree(analysisPath)
     
     os.mkdir(analysisPath)
 
@@ -60,13 +60,25 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
             else:
                 covarianceMultiplierList.append(parameterSampleValues[i])
 
-    subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
+    #subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
+
+    returnCode = subprocess.call(
+       workflowDriver,
+       shell=True,
+       stdout=subprocess.DEVNULL,
+       stderr=subprocess.STDOUT,
+    )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+
+
 
     # Read in the model prediction
     if os.path.exists('results.out'):
         with open('results.out', 'r') as f:
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
+
+        os.chdir("../")
         return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
                             edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
     else:
+        os.chdir("../")
         return -np.inf
