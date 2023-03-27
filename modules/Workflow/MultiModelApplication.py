@@ -179,12 +179,12 @@ def main(inputFile,
         #
         
 
-        if 'correlationMatrix' in inputs:
-            corrVec = inputs['correlationMatrix']
-            corrMat = np.reshape(corrVec, (nrv, nrv))
-            newCorrMat = np.identity(nrv+1)
-            newCorrMat[0:nrv,0:nrv] = corrMat
-            inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
+        # if 'correlationMatrix' in inputs:
+        #     corrVec = inputs['correlationMatrix']
+        #     corrMat = np.reshape(corrVec, (nrv, nrv))
+        #     newCorrMat = np.identity(nrv+1)
+        #     newCorrMat[0:nrv,0:nrv] = corrMat
+        #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
 
 
         with open(inputFile, "w") as outfile:
