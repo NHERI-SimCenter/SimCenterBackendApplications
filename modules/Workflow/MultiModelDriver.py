@@ -39,7 +39,7 @@
 import sys, os, json
 import argparse
 from copy import deepcopy
-
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -119,6 +119,7 @@ def main(inputFile,
     randomVariables = inputs['randomVariables']
     rvName = "MultiModel-"+appKey
     rvValue="RV.MultiModel-"+appKey
+    nrv = len(randomVariables)
     
     thisRV = {
         "distribution": "Discrete",
@@ -132,6 +133,13 @@ def main(inputFile,
         "Values":[i+1 for i in range(0,numModels)]
     }
     randomVariables.append(thisRV)
+
+    if 'correlationMatrix' in inputs:
+        corrVec = inputs['correlationMatrix']
+        corrMat = np.reshape(corrVec, (nrv, nrv))
+        newCorrMat = np.identity(nrv+1)
+        newCorrMat[0:nrv,0:nrv] = corrMat
+        inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
 
     with open(inputFile, "w") as outfile:
         json.dump(inputs, outfile)        

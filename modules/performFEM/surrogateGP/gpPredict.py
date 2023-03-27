@@ -23,7 +23,7 @@ except:
 
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
-def main(params_dir,surrogate_dir,json_dir,result_file):
+def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
     global error_file
 
 
@@ -68,9 +68,15 @@ def main(params_dir,surrogate_dir,json_dir,result_file):
     if isEEUQ:
         dakota_path = 'sc_scInput.json'
     else:
-        dakota_path = 'scInput.json'
+        dakota_path = input_json
+        #dakota_path = 'scInput.json'
+
+    if not os.path.exists(dakota_path):
+        msg = "Input file does not exist: "+ dakota_path
+        error_exit(msg)
 
 
+    print(dakota_path)
     with open(dakota_path) as f: # current input file
         try:
             inp_tmp = json.load(f)
@@ -86,6 +92,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file):
     else:
         # quoFEM
         inp_fem = inp_tmp["FEM"]
+
     norm_var_thr = inp_fem["varThres"]
     when_inaccurate = inp_fem["femOption"]
     do_mf = inp_tmp
@@ -876,13 +883,16 @@ if __name__ == "__main__":
 
 
     params_dir = inputArgs[1]
-    if len(inputArgs) > 3:
-        surrogate_dir = inputArgs[3]
+    surrogate_meta_dir = inputArgs[2]
+    input_json = inputArgs[3] # scInput.json
+
+
+    if len(inputArgs) > 4:
+        surrogate_dir = inputArgs[4]
     else:
         surrogate_dir = "dummy" # not used
 
-    surrogate_meta_dir = inputArgs[2]
     result_file = "results.out"
 
-    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file))
+    sys.exit(main(params_dir,surrogate_dir,surrogate_meta_dir,result_file, input_json))
 
