@@ -24,7 +24,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
                 shutil.copy2(s, d)
 
 
-def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
+def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
            covarianceMatrixList, edpNamesList, edpLengthsList, scaleFactors, shiftFactors, workflowDriver):
     """ 
     this function runs FE model (model.tcl) for each parameter value (par)
@@ -32,8 +32,8 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
     """
 
-    stringtoappend = ("workdir." + str(ParticleNum + 1))
-    analysisPath = os.path.join(workdirMain, stringtoappend)
+    workdirName = ("workdir." + str(particleNumber + 1))
+    analysisPath = os.path.join(workdirMain, workdirName)
 
     if os.path.isdir(analysisPath):
         shutil.rmtree(analysisPath)
@@ -49,22 +49,23 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
 
     # write input file and covariance multiplier values list
     covarianceMultiplierList = []
-    ParameterName = variables["names"]
+    parameterNames = variables["names"]
     with open("params.in", "w") as f:
-        f.write('{}\n'.format(len(par) - len(edpNamesList)))
-        for i in range(0, len(par)):
-            name = str(ParameterName[i])
-            value = str(par[i])
+        f.write('{}\n'.format(len(parameterSampleValues) - len(edpNamesList)))
+        for i in range(len(parameterSampleValues)):
+            name = str(parameterNames[i])
+            value = str(parameterSampleValues[i])
             if name.split('.')[-1] != 'CovMultiplier':
                 f.write('{} {}\n'.format(name, value))
             else:
-                covarianceMultiplierList.append(par[i])
+                covarianceMultiplierList.append(parameterSampleValues[i])
 
     subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
 
     # Read in the model prediction
     if os.path.exists('results.out'):
-        prediction = np.atleast_2d(np.genfromtxt('results.out')).reshape((1, -1))
+        with open('results.out', 'r') as f:
+            prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
                             edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
     else:
