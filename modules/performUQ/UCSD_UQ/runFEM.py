@@ -6,7 +6,6 @@ affiliation: SimCenter*; University of California, San Diego
 """
 
 import os
-import platform
 import subprocess
 import shutil
 import numpy as np
@@ -33,16 +32,13 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
     """
 
-    # print("\nParticleNum: {}, parameter values: {} ".format(ParticleNum, par))
-
     stringtoappend = ("workdir." + str(ParticleNum + 1))
     analysisPath = os.path.join(workdirMain, stringtoappend)
 
     if os.path.isdir(analysisPath):
-        # pass
         shutil.rmtree(analysisPath)
-    else:
-        os.mkdir(analysisPath)
+    
+    os.mkdir(analysisPath)
 
     # copy templatefiles
     templateDir = os.path.join(workdirMain, "templatedir")
@@ -54,31 +50,21 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     # write input file and covariance multiplier values list
     covarianceMultiplierList = []
     ParameterName = variables["names"]
-    f = open("params.in", "w")
-    f.write('{}\n'.format(len(par) - len(edpNamesList)))
-    for i in range(0, len(par)):
-        name = str(ParameterName[i])
-        value = str(par[i])
-        if name.split('.')[-1] != 'CovMultiplier':
-            f.write('{} {}\n'.format(name, value))
-        else:
-            covarianceMultiplierList.append(par[i])
-    f.close()
+    with open("params.in", "w") as f:
+        f.write('{}\n'.format(len(par) - len(edpNamesList)))
+        for i in range(0, len(par)):
+            name = str(ParameterName[i])
+            value = str(par[i])
+            if name.split('.')[-1] != 'CovMultiplier':
+                f.write('{} {}\n'.format(name, value))
+            else:
+                covarianceMultiplierList.append(par[i])
 
-    script = workflowDriver
-
-    # print("RUN FEM: " + script)
-
-    p = subprocess.Popen(script, stderr=subprocess.PIPE, shell=True)
-    (output, err) = p.communicate()
-    p_status = p.wait()
+    subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
 
     # Read in the model prediction
     if os.path.exists('results.out'):
         prediction = np.atleast_2d(np.genfromtxt('results.out')).reshape((1, -1))
-
-        # os.chdir(workdirMain)
-
         return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
                             edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
     else:
