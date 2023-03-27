@@ -1930,7 +1930,6 @@ class Workflow(object):
 
                         driver_script += create_command(command_list) + u'\n'
 
-                        
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
             

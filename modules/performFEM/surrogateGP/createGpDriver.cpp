@@ -177,9 +177,13 @@ int main(int argc, const char **argv) {
   std::string ps = pklFile;
   if (modelIndex > 0) {
     jsonFile = appendModelIndexToStem(modelIndex, jsonFile);
-    pklFile = appendModelIndexToStem(modelIndex, pklFile);
     std::filesystem::copy_file(ms, jsonFile);
-    std::filesystem::copy_file(ps, pklFile);
+
+    if (!pklFile.empty()) 
+    {
+        pklFile = appendModelIndexToStem(modelIndex, pklFile);
+        std::filesystem::copy_file(ps, pklFile);
+    }
   }
 
   workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << inputFile << " 1> ops.out 2>&1\n ";
