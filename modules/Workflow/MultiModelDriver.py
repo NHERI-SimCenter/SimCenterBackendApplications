@@ -139,6 +139,8 @@ def main(inputFile,
     #
     # create driver file that runs the right driver
     #
+    if osType == "Windows" and runType == "runningLocal":
+        driverFile = driverFile + ".bat"
 
     with open(driverFile, "w") as f:
         if osType == "Windows" and runType == "runningLocal":
