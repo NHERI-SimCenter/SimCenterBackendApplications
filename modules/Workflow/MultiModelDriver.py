@@ -134,13 +134,6 @@ def main(inputFile,
     }
     randomVariables.append(thisRV)
 
-    # if 'correlationMatrix' in inputs:
-    #     corrVec = inputs['correlationMatrix']
-    #     corrMat = np.reshape(corrVec, (nrv, nrv))
-    #     newCorrMat = np.identity(nrv+1)
-    #     newCorrMat[0:nrv,0:nrv] = corrMat
-    #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
-
     with open(inputFile, "w") as outfile:
         json.dump(inputs, outfile)        
 
@@ -175,10 +168,6 @@ def main(inputFile,
         appName = appsInMultiModel[modelToRun]
         application = appsRegistry[appName]
         application.set_pref(appDataInMultiModel[modelToRun], reference_dir)            
-
-        asset_command_list = application.get_command_list(appDir)
-        asset_command_list.append(u'--getRV')
-        command = create_command(asset_command_list)
 
         #
         # create input file for application
