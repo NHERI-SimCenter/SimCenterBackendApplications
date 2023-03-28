@@ -140,6 +140,14 @@ def main(run_type, input_file, app_registry,
     siteFilter = appData["filter"]
 
     # KZ: 10/19/2022, adding new attributes for the refactored whale
+
+    remoteAppDir = inputs.get('remoteAppDir', "")
+    localAppDir = inputs.get('localAppDir', "")
+    if localAppDir == "":
+        localAppDir = remoteAppDir
+    if remoteAppDir == "":
+        remoteAppDir = localAppDir
+
     siteResponseInput = {
         "units": inputs["units"],
         "outputs": {
@@ -182,8 +190,8 @@ def main(run_type, input_file, app_registry,
             ]
         },
         "UQ": inputs.get('UQ', dict()),
-        "localAppDir": inputs.get('localAppDir', ""),
-        "remoteAppDir": inputs.get('remoteAppDir', ""),
+        "localAppDir": localAppDir,
+        "remoteAppDir": remoteAppDir,
         "runType": inputs.get('runType', ""),
         "DefaultValues": {
             "driverFile": "driver",
