@@ -374,6 +374,11 @@
         "ApplicationSpecificInputs":[]
       },
       {
+        "Name": "HighRiseTPU",
+        "ExecutablePath": "applications/createEVENT/HighRiseTPU/HighRiseTPU",
+        "ApplicationSpecificInputs":[]
+      },	
+      {
         "Name": "WindTunnelExperiment",
         "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
         "ApplicationSpecificInputs":[]
