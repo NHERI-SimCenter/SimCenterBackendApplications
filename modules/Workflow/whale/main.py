@@ -1748,6 +1748,7 @@ class Workflow(object):
                         old_command_list.append('--runType')                        
                         old_command_list.append('runningRemote')
                         old_command_list.append('--osType')
+                        old_command_list.append('MacOS')                        
                     else:
                         old_command_list.append('--runType')
                         old_command_list.append('runningLocal')
@@ -1758,7 +1759,7 @@ class Workflow(object):
                             old_command_list.append('--osType')                            
                             old_command_list.append('MacOS')
                         
-                        command = create_command(old_command_list)                    
+                    command = create_command(old_command_list)                    
 
                 else:
                     
