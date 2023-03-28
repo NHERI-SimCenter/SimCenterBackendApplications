@@ -15,5 +15,6 @@ add_subdirectory(ASCE7_WindSpeed)
 add_subdirectory(stochasticGroundMotion)
 add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
+add_subdirectory(uniformPEER)
 
 

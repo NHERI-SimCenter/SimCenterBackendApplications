@@ -6,7 +6,6 @@ affiliation: SimCenter*; University of California, San Diego
 """
 
 import os
-import platform
 import subprocess
 import shutil
 import numpy as np
@@ -25,7 +24,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
                 shutil.copy2(s, d)
 
 
-def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
+def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
            covarianceMatrixList, edpNamesList, edpLengthsList, scaleFactors, shiftFactors, workflowDriver):
     """ 
     this function runs FE model (model.tcl) for each parameter value (par)
@@ -33,15 +32,13 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
     """
 
-    # print("\nParticleNum: {}, parameter values: {} ".format(ParticleNum, par))
-
-    stringtoappend = ("workdir." + str(ParticleNum + 1))
-    analysisPath = os.path.join(workdirMain, stringtoappend)
+    workdirName = ("workdir." + str(particleNumber + 1))
+    analysisPath = os.path.join(workdirMain, workdirName)
 
     if os.path.isdir(analysisPath):
-        pass
-    else:
-        os.mkdir(analysisPath)
+        shutil.rmtree(analysisPath)
+    
+    os.mkdir(analysisPath)
 
     # copy templatefiles
     templateDir = os.path.join(workdirMain, "templatedir")
@@ -52,33 +49,36 @@ def runFEM(ParticleNum, par, variables, workdirMain, log_likelihood, calibration
 
     # write input file and covariance multiplier values list
     covarianceMultiplierList = []
-    ParameterName = variables["names"]
-    f = open("params.in", "w")
-    f.write('{}\n'.format(len(par) - len(edpNamesList)))
-    for i in range(0, len(par)):
-        name = str(ParameterName[i])
-        value = str(par[i])
-        if name.split('.')[-1] != 'CovMultiplier':
-            f.write('{} {}\n'.format(name, value))
-        else:
-            covarianceMultiplierList.append(par[i])
-    f.close()
+    parameterNames = variables["names"]
+    with open("params.in", "w") as f:
+        f.write('{}\n'.format(len(parameterSampleValues) - len(edpNamesList)))
+        for i in range(len(parameterSampleValues)):
+            name = str(parameterNames[i])
+            value = str(parameterSampleValues[i])
+            if name.split('.')[-1] != 'CovMultiplier':
+                f.write('{} {}\n'.format(name, value))
+            else:
+                covarianceMultiplierList.append(parameterSampleValues[i])
 
-    script = workflowDriver
+    #subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
 
-    # print("RUN FEM: " + script)
+    returnCode = subprocess.call(
+       workflowDriver,
+       shell=True,
+       stdout=subprocess.DEVNULL,
+       stderr=subprocess.STDOUT,
+    )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
-    p = subprocess.Popen(script, stderr=subprocess.PIPE, shell=True)
-    (output, err) = p.communicate()
-    p_status = p.wait()
+
 
     # Read in the model prediction
     if os.path.exists('results.out'):
-        prediction = np.atleast_2d(np.genfromtxt('results.out')).reshape((1, -1))
+        with open('results.out', 'r') as f:
+            prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
 
-        # os.chdir(workdirMain)
-
+        os.chdir("../")
         return log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
                             edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors)
     else:
+        os.chdir("../")
         return -np.inf
