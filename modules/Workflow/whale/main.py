@@ -1010,6 +1010,13 @@ class Workflow(object):
             log_msg('remoteAppDir not specified. Using the value provided for '
                 'localAppDir instead.', prepend_timestamp=False)
 
+        if self.app_dir_local == "" and self.app_dir_remote != "":
+            self.app_dir_local = self.app_dir_remote
+
+        if self.app_dir_remote == "" and self.app_dir_local != "":
+            self.app_dir_remote = self.app_dir_local
+        
+
         if 'referenceDir' in input_data:
             self.reference_dir = input_data['referenceDir']
 
@@ -1221,7 +1228,7 @@ class Workflow(object):
 
         log_msg('Augmenting files for individual assets for Workflow')
 
-        print('INPUT FILE:', self.input_file)
+        # print('INPUT FILE:', self.input_file)
 
         # Open the input file - we'll need it later
         with open(self.input_file, 'r') as f:
@@ -1800,7 +1807,8 @@ class Workflow(object):
 
     def gather_workflow_inputs(self, asst_id=None, AIM_file_path = 'AIM.json'):
 
-        #print("gather_workflow_inputs")
+        log_msg('Gathering Workflow Inputs.',prepend_timestamp=False)
+                
         
         if 'UQ' in self.workflow_apps.keys():        
             
@@ -1850,6 +1858,8 @@ class Workflow(object):
 
             self.modifiedRun = True # ADAM to fix 
             command = create_command(arg_list)
+            
+            # print('FMK- gather command:', command)
 
             result, returncode = run_command(command)
             
