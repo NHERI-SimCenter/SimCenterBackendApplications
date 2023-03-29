@@ -54,19 +54,6 @@ def main(inputFile,
          simFile,
          registryFile,
          appDir) :
-
-    #print('inputFile:', inputFile)
-    #print('appKey: ', appKey)
-    #print('getRV: ', getRV)
-    #print('samFile: ', samFile)
-    #print('evtFile: ', evtFile)
-    #print('edpFile: ', edpFile)
-    #print('simFile: ', simFile)
-    #print('registryFile: ', registryFile)                              
-    #print('appDir: ', appDir)
-    #print('')          
-
-    #print("Starting MultiModelApplication")
     
     #
     # get some dir paths, load input file and get data for app, appKey 
@@ -129,7 +116,6 @@ def main(inputFile,
     
     parsedRegistry = (_parse_app_registry(registryFile, appTypes))
     appsRegistry = parsedRegistry[0][appKey]
-    appDefaults=parsedRegistry[1]
     
     if getRV:
         
@@ -162,7 +148,7 @@ def main(inputFile,
         randomVariables = inputs['randomVariables']
         rvName = "MultiModel-"+appKey
         rvValue="RV.MultiModel-"+appKey
-        nrv = len(randomVariables)
+        # nrv = len(randomVariables)
         
         thisRV = {
             "distribution": "Discrete",
