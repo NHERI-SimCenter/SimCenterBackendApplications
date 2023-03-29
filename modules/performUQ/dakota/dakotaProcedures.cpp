@@ -229,7 +229,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
 
     int numDiscreteDesignSet = theRandomVariables.discreteDesignSetRVs.size();
     if (numDiscreteDesignSet > 0) {
-      dakotaFile << "    discrete_uncertain_set\n    string " << numDiscreteDesignSet << "\n    num_set_values = ";
+      dakotaFile << "  discrete_uncertain_set\n    string " << numDiscreteDesignSet << "\n    num_set_values = ";
       std::list<struct discreteDesignSetRV>::iterator it;
       for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
 	dakotaFile << it->elements.size() << " ";
@@ -252,7 +252,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     int numDiscrete = theRandomVariables.discreteUncertainIntegerSetRVs.size();
     if (numDiscrete > 0) {
       std::list<struct discreteUncertainIntegerSetRV> theList = theRandomVariables.discreteUncertainIntegerSetRVs;
-      dakotaFile << "    discrete_uncertain_set";
+      dakotaFile << "  discrete_uncertain_set";
       dakotaFile << "\n    integer = " << theList.size();
       dakotaFile << "\n      num_set_values = ";
       for (auto it = theList.begin(); it != theList.end(); it++)
