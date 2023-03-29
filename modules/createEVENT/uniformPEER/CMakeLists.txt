@@ -1,0 +1,2 @@
+simcenter_add_python_script(SCRIPT gridGroundMoion.py)
+simcenter_add_python_script(SCRIPT gmdata.json)
