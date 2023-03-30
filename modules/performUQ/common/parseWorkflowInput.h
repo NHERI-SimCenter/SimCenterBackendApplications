@@ -62,6 +62,7 @@ struct betaRV {
 struct discreteDesignSetRV {
   std::string name;
   std::list<std::string> elements;
+  // std::list<double> weights;
 };
 
 struct discreteUncertainIntegerSetRV {
