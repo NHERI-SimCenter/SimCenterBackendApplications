@@ -78,6 +78,10 @@ def main(inputFile,
     else:
         raise KeyError(f'No data for "{appKey}" application in the input file "{inputFile}"')
 
+    eventApp = False;
+    if appKey == "Events":
+        eventApp = True;
+    
     if 'models' not in appData:
         print('NO models in: ', appData)
         raise KeyError(f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}')

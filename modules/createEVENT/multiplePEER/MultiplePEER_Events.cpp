@@ -18,15 +18,32 @@ int main(int argc, char **argv)
 {
   // StandardEarthquakeEDP --filenameAIM file --filenameEVENT file? <--getRV>
 
-  char *filenameAIM = argv[2];     
-  char *filenameEVENT = argv[4]; 
-
-  bool getRV = false;
-  if (argc == 6) {
-    if (strcmp(argv[5], "--getRV") == 0)
-      getRV = true;
+  char *filenameAIM;     
+  char *filenameEVENT; 
+  bool getRV = false;  
+  int arg = 1;
+  while(arg < argc) {
+    if (strcmp(argv[arg], "--filenameAIM") == 0)
+      {
+        arg++;
+        filenameAIM = argv[arg];
+      }
+    else if (strcmp(argv[arg], "--filenameEVENT") == 0)
+      {
+        arg++;
+        filenameEVENT = argv[arg];
+      }
+    else if (strcmp(argv[arg], "--getRV") == 0)
+      {
+	getRV = true;
+      }
+    arg++;
   }
-
+  
+  if (filenameAIM == NULL || filenameEVENT == NULL) {
+    std::cerr << "FATAL ERROR - no bim or sam file provided to MultiplePEER_Event\n";
+    exit(-1);
+  }
 
   // create output JSON object for EVENT file and create events array
   json_t *rootEvent = json_object();
