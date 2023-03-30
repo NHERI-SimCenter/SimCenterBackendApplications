@@ -518,6 +518,11 @@ def main(inputArgs):
     workflowDriver = inputArgs[4]
     inputFile = inputArgs[5]
     logFileName = "logFileTMCMC.txt"
+    try:
+        os.remove('dakotaTab.out')
+        os.remove('dakotTabPrior.out')
+    except OSError:
+        pass
 
     # # ================================================================================================================
     
@@ -584,10 +589,6 @@ def main(inputArgs):
 
     # sys.path.append(workdirMain)
     logFile.write("\n\tResults path: {}".format(workdirMain))
-
-    # set the seed
-    np.random.seed(TMCMC.seedVal)
-    logFile.write("\n\tSeed: {}".format(TMCMC.seedVal))
 
     # number of particles: Np
     Np = TMCMC.numberOfSamples
@@ -745,6 +746,10 @@ def main(inputArgs):
         logFile.write("\n\tRunning the TMCMC algorithm")
         logFile.write("\n\t==========================")
 
+        # set the seed
+        np.random.seed(TMCMC.seedVal)
+        logFile.write("\n\tSeed: {}".format(TMCMC.seedVal))
+
         syncLogFile(logFile)
 
         mytrace, log_evidence = RunTMCMC(
@@ -769,6 +774,8 @@ def main(inputArgs):
             TMCMC.MPI_size,
             workflowDriver,
             TMCMC.parallelizeMCMC,
+            modelNum,
+            nModels
         )
         logFile.write("\n\n\t==========================")
         logFile.write("\n\tTMCMC algorithm finished running")
@@ -797,28 +804,30 @@ def main(inputArgs):
         tabFilePath = os.path.join(workdirMain, "dakotaTab.out")
 
         # Create the headings, which will be the first line of the file
-        logFile.write("\n\t\t\tCreating headings")
         headings = "eval_id\tinterface\t"
-        for v in variables["names"]:
-            headings += "{}\t".format(v)
-        if writeOutputs:  # create headings for outputs
-            for i, edp in enumerate(edpNamesList):
-                if edpLengthsList[i] == 1:
-                    headings += "{}\t".format(edp)
-                else:
-                    for comp in range(edpLengthsList[i]):
-                        headings += "{}_{}\t".format(edp, comp + 1)
-        headings += "\n"
+        if modelNum == 0:
+            logFile.write("\n\t\t\tCreating headings")
+            for v in variables["names"]:
+                headings += "{}\t".format(v)
+            if writeOutputs:  # create headings for outputs
+                for i, edp in enumerate(edpNamesList):
+                    if edpLengthsList[i] == 1:
+                        headings += "{}\t".format(edp)
+                    else:
+                        for comp in range(edpLengthsList[i]):
+                            headings += "{}_{}\t".format(edp, comp + 1)
+            headings += "\n"
 
         # Get the data from the last stage
         logFile.write("\n\t\t\tGetting data from last stage")
         dataToWrite = mytrace[-1][0]
 
         logFile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
-        with open(tabFilePath, "w") as f:
-            f.write(headings)
+        with open(tabFilePath, "a+") as f:
+            if modelNum == 0:
+                f.write(headings)
             for i in range(Np):
-                string = "{}\t{}\t".format(i + 1, modelNum+1)
+                string = "{}\t{}\t".format(i + 1 + Np*modelNum, modelNum+1)
                 for j in range(len(variables["names"])):
                     string += "{}\t".format(dataToWrite[i, j])
                 if writeOutputs:  # write the output data

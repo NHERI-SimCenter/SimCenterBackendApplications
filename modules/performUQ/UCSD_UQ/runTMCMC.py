@@ -16,7 +16,7 @@ import csv
 
 def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihood, variables, workdirMain, seed,
              calibrationData, numExperiments, covarianceMatrixList, edpNamesList, edpLengthsList, scaleFactors,
-             shiftFactors, run_type, logFile, MPI_size, workflowDriver, parallelizeMCMC=True):
+             shiftFactors, run_type, logFile, MPI_size, workflowDriver, parallelizeMCMC=True, modelNum=0, nModels=1):
     """ Runs TMCMC Algorithm """
 
     # Initialize (beta, effective sample size)
@@ -90,28 +90,30 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
 
     writeOutputs = True
     # Create the headings, which will be the first line of the file
-    logFile.write("\n\t\t\tCreating headings")
     headings = 'eval_id\tinterface\t'
-    for v in variables['names']:
-        headings += '{}\t'.format(v)
-    if writeOutputs:  # create headings for outputs
-        for i, edp in enumerate(edpNamesList):
-            if edpLengthsList[i] == 1:
-                headings += '{}\t'.format(edp)
-            else:
-                for comp in range(edpLengthsList[i]):
-                    headings += '{}_{}\t'.format(edp, comp + 1)
-    headings += '\n'
+    if modelNum == 0:
+        logFile.write("\n\t\t\tCreating headings")
+        for v in variables['names']:
+            headings += '{}\t'.format(v)
+        if writeOutputs:  # create headings for outputs
+            for i, edp in enumerate(edpNamesList):
+                if edpLengthsList[i] == 1:
+                    headings += '{}\t'.format(edp)
+                else:
+                    for comp in range(edpLengthsList[i]):
+                        headings += '{}_{}\t'.format(edp, comp + 1)
+        headings += '\n'
 
     # Get the data from the first stage
     logFile.write("\n\t\t\tGetting data from first stage")
     dataToWrite = Sm
 
     logFile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
-    with open(tabFilePath, "w") as f:
-        f.write(headings)
+    with open(tabFilePath, "a+") as f:
+        if modelNum == 0:
+            f.write(headings)
         for i in range(N):
-            string = "{}\t{}\t".format(i + 1, 1)
+            string = "{}\t{}\t".format(i + 1 + N*modelNum, modelNum+1)
             for j in range(len(variables['names'])):
                 string += "{}\t".format(dataToWrite[i, j])
             if writeOutputs:  # write the output data
@@ -167,7 +169,10 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
         dataToWrite = mytrace[stageNum - 1][0]
         logFile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stageNum - 1))
 
-        stringToAppend = 'resultsStage{}.csv'.format(stageNum - 1)
+        if nModels > 1:
+            stringToAppend = f'resultsStage{stageNum - 1}_Model_{modelNum+1}.csv'
+        else:
+            stringToAppend = f'resultsStage{stageNum - 1}.csv'
         resultsFilePath = os.path.join(os.path.abspath(workdirMain), stringToAppend)
 
         with open(resultsFilePath, 'w', newline='') as csvfile:
@@ -275,7 +280,10 @@ def RunTMCMC(N, numChains, AllPars, Nm_steps_max, Nm_steps_maxmax, log_likelihoo
     dataToWrite = mytrace[stageNum][0]
     logFile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stageNum))
 
-    stringToAppend = 'resultsStage{}.csv'.format(stageNum)
+    if nModels > 1:
+        stringToAppend = f'resultsStage{stageNum}_Model_{modelNum+1}.csv'
+    else:
+        stringToAppend = f'resultsStage{stageNum}.csv'
     resultsFilePath = os.path.join(os.path.abspath(workdirMain), stringToAppend)
 
     with open(resultsFilePath, 'w', newline='') as csvfile:

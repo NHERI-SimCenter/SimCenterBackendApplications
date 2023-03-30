@@ -637,6 +637,15 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	//corr.reserve(nrv*nrv);
 
+	//find the number of multimodels
+	int multiModelCount = 0;
+	for (int i = 0; i < nrv; i++) {
+		if (rvNames[i].rfind("MultiModel-", 0) == 0) {
+			multiModelCount++;
+		}
+	}
+
+
 	if (procno == 0)  std::cout << " - Checking correlation matrix";
 	std::cout << nrv;
 
@@ -645,7 +654,19 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		// if key "correlationMatrix" exists
 		for (int i = 0; i < nrv; i++) {
 			for (int j = 0; j < nrv; j++) {
-				corr[i][j] = UQjson["correlationMatrix"][randIdx[i] + randIdx[j] * (nrv + nco + nre)];
+
+				if ((rvNames[i].rfind("MultiModel-", 0) == 0) | (rvNames[j].rfind("MultiModel-", 0) == 0)) 
+				{
+					if (i == j) {
+						corr[i][j] = 1.0;
+					}
+					else {
+						corr[i][j] = 0.0;
+					}
+				}
+				else {
+					corr[i][j] = UQjson["correlationMatrix"][randIdx[i] + randIdx[j] * (nrv + nco + nre - multiModelCount)];
+				}
 			}
 		}
 	}
@@ -660,10 +681,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 //}
 	}
-	std::cout << "THIS2\n";
 
 	getGroupIdx(UQjson);
-	std::cout << "THIS3\n";
 
 	//
 	// get resampling group index matrix

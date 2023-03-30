@@ -714,8 +714,8 @@ class Workflow(object):
         self.numProc = numProc 
 
         # if parallel setup, open script file to run
-        inputFilePath = os.path.dirname(input_file)
-        parCommandFileName = os.path.join(inputFilePath, 'sc_parScript.sh')
+        self.inputFilePath = os.path.dirname(input_file)
+        parCommandFileName = os.path.join(self.inputFilePath, 'sc_parScript.sh')
         if (parType == 'parSETUP'):
             self.parCommandFile = open(parCommandFileName, "w")
             self.parCommandFile.write("#!/bin/sh" + "\n")
@@ -1285,6 +1285,7 @@ class Workflow(object):
 
             apps_of_interest = ['Events', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL']
             for app_type in apps_of_interest:
+
                 # Start with the app data under Applications
                 if app_type in input_data['Applications'].keys():
                     if app_type == 'Events':
@@ -1333,37 +1334,32 @@ class Workflow(object):
                         if asset_type in app_data:
                             extra_input[app_type] = app_data[asset_type]
 
-            
             count = 0
             for asst in asset_data:
 
                 if count % self.numP == self.procID:
 
                     AIM_file = asst['file']
-                    
+
                     # Open the AIM file and add the unit information to it
-                    print(count, self.numP, self.procID, AIM_file)
+                    # print(count, self.numP, self.procID, AIM_file)
                     
-                    try:
-                        with open(AIM_file, 'r') as f:
-                            AIM_data = json.load(f)
-                    except FileNotFoundError:
-                        print('Exiting wwhale/aggregate_assetscannot open file: ',AIM_file)
-                    except IOError as e:
-                        print(f'I/O error {e.errno}  {e.strerror}')
-                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
-                    except:
-                        print(f'Unexpected error: sys.exc_info()[0]')
-                        print('Exiting wwhale/aggregate_assets ERROR cannot open file: ',AIM_file)
+                    with open(AIM_file, 'r') as f:
+                        AIM_data = json.load(f)
 
                     if 'DefaultValues' in input_data.keys():
                         AIM_data.update({'DefaultValues':input_data['DefaultValues']})
 
                     if 'commonFileDir' in input_data.keys():
-                        AIM_data.update({'commonFileDir':input_data['commonFileDir']})
+                        commonFileDir=input_data['commonFileDir']
+                        if self.inputFilePath not in commonFileDir:
+                            commonFileDir = os.path.join(self.inputFilePath,input_data['commonFileDir'])
+                        AIM_data.update({'commonFileDir':commonFileDir})
+                        
+
                     if 'remoteAppDir' in input_data.keys():
                         AIM_data.update({'remoteAppDir':input_data['remoteAppDir']})
-
+                        
                     if 'localAppDir' in input_data.keys():
                         AIM_data.update({'localAppDir':input_data['localAppDir']})                                        
                                     
@@ -1744,24 +1740,50 @@ class Workflow(object):
             else:
 
                 old_command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
+                old_command_list.append('--appKey')                        
+                old_command_list.append('FEM')                
+                if old_command_list[0] == 'python':
 
-                command_list = []
-                command_list.append(old_command_list[0])
-                command_list.append(self.input_file)
-                
-                if self.run_type in ['set_up', 'runningRemote']:
-                    command_list.append('runningRemote')
-                    command_list.append('MacOS')
-                else:
-                    command_list.append('runningLocal')
-                    if any(platform.win32_ver()):
-                        command_list.append('Windows')
+                    if self.run_type in ['set_up', 'runningRemote']:
+                        old_command_list.append('--runType')                        
+                        old_command_list.append('runningRemote')
+                        old_command_list.append('--osType')
+                        old_command_list.append('MacOS')                        
                     else:
-                        command_list.append('MacOS')
+                        old_command_list.append('--runType')
+                        old_command_list.append('runningLocal')
+                        if any(platform.win32_ver()):
+                            old_command_list.append('--osType')
+                            old_command_list.append('Windows')
+                        else:
+                            old_command_list.append('--osType')                            
+                            old_command_list.append('MacOS')
                         
-                command_list.append(old_command_list[4])
+                    command = create_command(old_command_list)                    
+
+                else:
+                    
+                    #
+                    # FMK to modify C++ applications to take above
+                    #
+                    
+                    command_list = []
+                    command_list.append(old_command_list[0])                
+                    command_list.append(self.input_file)
                 
-                command = create_command(command_list)
+                    if self.run_type in ['set_up', 'runningRemote']:
+                        command_list.append('runningRemote')
+                        command_list.append('MacOS')
+                    else:
+                        command_list.append('runningLocal')
+                        if any(platform.win32_ver()):
+                            command_list.append('Windows')
+                        else:
+                            command_list.append('MacOS')
+                        
+                    command_list.append(old_command_list[4])
+                
+                    command = create_command(command_list)
 
                 log_msg('\nRunning FEM app', prepend_timestamp=False)
                 log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
@@ -1910,7 +1932,6 @@ class Workflow(object):
 
                         driver_script += create_command(command_list) + u'\n'
 
-                        
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
             
@@ -1953,7 +1974,7 @@ class Workflow(object):
             
         if asst_id is not None:
             os.chdir(asst_id)
-                
+
         if 'UQ' in self.workflow_apps.keys():
 
             log_msg('Running response simulation')

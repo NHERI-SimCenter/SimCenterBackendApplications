@@ -508,14 +508,14 @@ def get_unit_factor(unit_in, unit_out):
     unit_factor = f_in/f_out
     return unit_factor
 
-def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
+def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
 
-    # load BIM file
+    # load AIM file
     try:
-        with open(BIM_file, 'r') as f:
-            bim_file = json.load(f)
+        with open(AIM_file, 'r') as f:
+            AIM_file = json.load(f)
     except:
-        raise ValueError(f"IntensityMeasureComputer: cannot load BIM file {BIM_file}")
+        raise ValueError(f"IntensityMeasureComputer: cannot load AIM file {AIM_file}")
     
     # load EVENT file
     try:
@@ -525,18 +525,18 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
         raise ValueError(f"IntensityMeasureComputer: cannot load EVENT file {EVENT_file}")
 
     # get periods
-    bim_event = bim_file['Events']
-    if type(bim_event)==list:
-        bim_event = bim_event[0]
-    periods = bim_event.get('SpectrumPeriod',[0.01,0.02,0.03,0.04,0.05,0.75,
+    AIM_event = AIM_file['Events']
+    if type(AIM_event)==list:
+        AIM_event = AIM_event[0]
+    periods = AIM_event.get('SpectrumPeriod',[0.01,0.02,0.03,0.04,0.05,0.75,
                                               0.1,0.2,0.3,0.4,0.5,0.75,1.0,
                                               2.0,3.0,4.0,5.0,7.5,10.0])
     # get units
     if unitScaled:
         # corresponding to records after SimCenterEvent.py
-        units = bim_file['GeneralInformation'].get('units', None)
+        units = AIM_file['GeneralInformation'].get('units', None)
         if units is None:
-            raise ValueError(f"IntensityMeasureComputer: units is not found in {BIM_file}")
+            raise ValueError(f"IntensityMeasureComputer: units is not found in {AIM_file}")
     else:
         # corresponding to raw records (e.g., EE-UQ)
         units = {"acceleration": "g"}
@@ -545,28 +545,36 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
     im_types = [] # IM type
     im_units = dict()
     im_names = ['Periods'] # IM name
-    bim_im = bim_file.get('IntensityMeasure', None)
+    AIM_im = AIM_file.get('IntensityMeasure', None)
     output_periods = []
-    if bim_im is None:
+    process_geomean = False
+    if AIM_im is None:
         # search it again under UQ/surrogateMethodInfo
-        bim_im = bim_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure',None)
-    if bim_im is None or len(bim_im)==0:
+        AIM_im = AIM_file['UQ']['surrogateMethodInfo'].get('IntensityMeasure',None)
+        if geoMean:
+            process_geomean = AIM_file['UQ']['surrogateMethodInfo'].get('useGeoMean',False)
+    
+    else:
+        if geoMean:
+            process_geomean = AIM_file['IntensityMeasure'].get('useGeoMean', None)
+
+    if AIM_im is None or len(AIM_im)==0:
         # no intensity measure calculation requested
         return
     else:
-        for cur_im in list(bim_im.keys()):
+        for cur_im in list(AIM_im.keys()):
             for ref_type in IM_TYPES:
                 if cur_im in IM_MAP.get(ref_type):
                     im_names.append(cur_im)
-                    im_units.update({cur_im: bim_im.get(cur_im).get('Unit')})
+                    im_units.update({cur_im: AIM_im.get(cur_im).get('Unit')})
                     if ref_type not in im_types:
                         im_types.append(ref_type)
                     if cur_im.startswith('PS'):
-                        periods = bim_im[cur_im].get('Periods',[0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 
+                        periods = AIM_im[cur_im].get('Periods',[0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 
                                                                 0.4, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0])
                         output_periods = periods
                     if cur_im=='SaRatio':
-                        tmp = bim_im[cur_im].get('Periods',[0.02, 1.0, 3.0])
+                        tmp = AIM_im[cur_im].get('Periods',[0.02, 1.0, 3.0])
                         Ta, Tb = [np.min(tmp), np.max(tmp)]
                         tmp.pop(tmp.index(Ta))
                         tmp.pop(tmp.index(Tb))
@@ -644,6 +652,24 @@ def main(BIM_file, EVENT_file, IM_file, unitScaled, ampScaled):
                     csv_dict[tmp_key].append(im_dict.get(cur_im).get(cur_hist_name))
                 else:
                     csv_dict.update({tmp_key: [im_dict.get(cur_im).get(cur_hist_name)]})
+
+    if process_geomean:
+        geo_csv_dict = {}
+        get_count_dict = {}
+        for key, val in csv_dict.items():
+            new_key_name = key.rpartition('-')[0] + "-1" #before the last dash
+            if new_key_name not in geo_csv_dict:
+                geo_csv_dict[new_key_name] = val
+                get_count_dict[new_key_name] = 1
+            else:
+                geo_csv_dict[new_key_name] = [a*b for a,b in zip(geo_csv_dict[new_key_name],val)]
+                get_count_dict[new_key_name] += 1
+
+        for key, val in geo_csv_dict.items():
+            geo_csv_dict[key] = [a**(1/get_count_dict[key]) for a in geo_csv_dict[key]]
+
+        csv_dict = geo_csv_dict
+
     # create df
     csv_df = pd.DataFrame.from_dict(csv_dict)
     tmp_idx = IM_file.index('.')
@@ -662,8 +688,8 @@ if __name__ == '__main__':
         allow_abbrev = False
     )
 
-    # BIM file - getting units
-    parser.add_argument('--filenameAIM', help = "Name of the BIM file")
+    # AIM file - getting units
+    parser.add_argument('--filenameAIM', help = "Name of the AIM file")
     # Event file - getting time histories
     parser.add_argument('--filenameEVENT', help = "Name of the EVENT file")
     # IM file - getting time histories
@@ -673,8 +699,10 @@ if __name__ == '__main__':
     # amplitude scaled tag
     parser.add_argument('--ampScaled', default=False, help="Records have been scaled in amplitudes")
     
+    parser.add_argument('--geoMeanVar',default=False, help="Consider using only geometric mean", nargs='?', const=True)
+
     # parse arguments
     args = parser.parse_args()
 
     # run and return
-    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled))
+    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameIM, args.unitScaled, args.ampScaled, args.geoMeanVar))
