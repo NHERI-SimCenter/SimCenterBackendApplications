@@ -88,6 +88,9 @@ def main(inputFile,
 
     models = appData['models']
     modelToRun = appData['modelToRun']
+
+    if not getRV:
+        modelToRun = int(float(modelToRun))
     
     appsInMultiModel=[]
     appDataInMultiModel=[]

@@ -295,9 +295,9 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
       theDiscreteStringList = theRandomVariables.discreteDesignSetRVs;
     }
 
-    if (discreteRVsExist) dakotaFile << "  discrete_uncertain_set\n";
+    if (discreteRVsExist) dakotaFile << "  discrete_uncertain_set";
     if (discreteIntRVsExist) {
-      dakotaFile << "    integer = " << theDiscreteIntList.size();
+      dakotaFile << "\n    integer = " << theDiscreteIntList.size();
       dakotaFile << "\n      num_set_values = ";
       for (auto it = theDiscreteIntList.begin(); it != theDiscreteIntList.end(); it++)
         dakotaFile << it->elements.size() << " ";
@@ -320,7 +320,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
         dakotaFile << "\'" << it->name << "\' ";
     }
     if (discreteStringRVsExist) {
-        dakotaFile << "   string = " << theDiscreteStringList.size();
+        dakotaFile << "\n    string = " << theDiscreteStringList.size();
         dakotaFile << "\n      num_set_values = ";
         for (auto it = theDiscreteStringList.begin(); it != theDiscreteStringList.end(); it++)
           dakotaFile << it->elements.size() << " ";
@@ -333,7 +333,7 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
         dakotaFile << "\n      descriptors = ";
         for (auto it = theDiscreteStringList.begin(); it != theDiscreteStringList.end(); it++) {
 	        dakotaFile << "\'" << it->name << "\' ";
-    }
+        }
     }
     dakotaFile << "\n";
 
