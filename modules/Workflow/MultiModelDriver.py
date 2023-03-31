@@ -119,7 +119,6 @@ def main(inputFile,
     randomVariables = inputs['randomVariables']
     rvName = "MultiModel-"+appKey
     rvValue="RV.MultiModel-"+appKey
-    nrv = len(randomVariables)
     
     thisRV = {
         "distribution": "Discrete",
@@ -130,7 +129,7 @@ def main(inputFile,
         "createdRun": True,            
         "variableClass": "Uncertain",
         "Weights":beliefs,
-        "Values":[i+1 for i in range(0,numModels)]
+        "Values":[i+1 for i in range(numModels)]
     }
     randomVariables.append(thisRV)
 
