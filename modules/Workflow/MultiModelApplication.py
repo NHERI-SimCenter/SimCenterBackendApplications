@@ -54,19 +54,6 @@ def main(inputFile,
          simFile,
          registryFile,
          appDir) :
-
-    #print('inputFile:', inputFile)
-    #print('appKey: ', appKey)
-    #print('getRV: ', getRV)
-    #print('samFile: ', samFile)
-    #print('evtFile: ', evtFile)
-    #print('edpFile: ', edpFile)
-    #print('simFile: ', simFile)
-    #print('registryFile: ', registryFile)                              
-    #print('appDir: ', appDir)
-    #print('')          
-
-    #print("Starting MultiModelApplication")
     
     #
     # get some dir paths, load input file and get data for app, appKey 
@@ -91,11 +78,18 @@ def main(inputFile,
     else:
         raise KeyError(f'No data for "{appKey}" application in the input file "{inputFile}"')
 
+    eventApp = False;
+    if appKey == "Events":
+        eventApp = True;
+    
     if 'models' not in appData:
         print('NO models in: ', appData)
         raise KeyError(f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}')
         
-        
+    if len(appData['models']) < 2:
+        raise RuntimeError(f"At least two models must be provided if the multimodel {appKey} application is used")
+
+
     models = appData['models']
     modelToRun = appData['modelToRun']
     
@@ -126,7 +120,6 @@ def main(inputFile,
     
     parsedRegistry = (_parse_app_registry(registryFile, appTypes))
     appsRegistry = parsedRegistry[0][appKey]
-    appDefaults=parsedRegistry[1]
     
     if getRV:
         
@@ -159,7 +152,7 @@ def main(inputFile,
         randomVariables = inputs['randomVariables']
         rvName = "MultiModel-"+appKey
         rvValue="RV.MultiModel-"+appKey
-        nrv = len(randomVariables)
+        # nrv = len(randomVariables)
         
         thisRV = {
             "distribution": "Discrete",
