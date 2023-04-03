@@ -227,55 +227,115 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     //  }
     //}    
 
-    int numDiscreteDesignSet = theRandomVariables.discreteDesignSetRVs.size();
-    if (numDiscreteDesignSet > 0) {
-      dakotaFile << "    discrete_uncertain_set\n    string " << numDiscreteDesignSet << "\n    num_set_values = ";
-      std::list<struct discreteDesignSetRV>::iterator it;
-      for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
-	dakotaFile << it->elements.size() << " ";
-      dakotaFile << "\n    set_values ";
-      for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
-	it->elements.sort(); // sort the elements NEEDED THOUGH NOT IN DAKOTA DOC!
-	std::list<std::string>::iterator element;
-	for (element = it->elements.begin(); element != it->elements.end(); element++)
-	  dakotaFile << " \'" << *element << "\'";
-      }
-      dakotaFile << "\n    descriptors = ";
-      for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
-	dakotaFile << "\'" << it->name << "\' ";
-	rvList.push_back(it->name);
-      }
-      dakotaFile << "\n";
+  //   int numDiscreteDesignSet = theRandomVariables.discreteDesignSetRVs.size();
+  //   if (numDiscreteDesignSet > 0) {
+  //     dakotaFile << "  discrete_uncertain_set\n    string " << numDiscreteDesignSet << "\n    num_set_values = ";
+  //     std::list<struct discreteDesignSetRV>::iterator it;
+  //     for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++)
+	// dakotaFile << it->elements.size() << " ";
+  //     dakotaFile << "\n    set_values ";
+  //     for (it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+	// it->elements.sort(); // sort the elements NEEDED THOUGH NOT IN DAKOTA DOC!
+	// std::list<std::string>::iterator element;
+	// for (element = it->elements.begin(); element != it->elements.end(); element++)
+	//   dakotaFile << " \'" << *element << "\'";
+  //     }
+  //     dakotaFile << "\n    descriptors = ";
+  //     for (auto it = theRandomVariables.discreteDesignSetRVs.begin(); it != theRandomVariables.discreteDesignSetRVs.end(); it++) {
+	// dakotaFile << "\'" << it->name << "\' ";
+	// rvList.push_back(it->name);
+  //     }
+  //     dakotaFile << "\n";
+  //   }
+
+  //   // discreteUncertainIntegerSetRV
+  //   int numDiscrete = theRandomVariables.discreteUncertainIntegerSetRVs.size();
+  //   if (numDiscrete > 0) {
+  //     std::list<struct discreteUncertainIntegerSetRV> theList = theRandomVariables.discreteUncertainIntegerSetRVs;
+  //     dakotaFile << "  discrete_uncertain_set";
+  //     dakotaFile << "\n    integer = " << theList.size();
+  //     dakotaFile << "\n      num_set_values = ";
+  //     for (auto it = theList.begin(); it != theList.end(); it++)
+  //       dakotaFile << it->elements.size() << " ";
+  //     dakotaFile << "\n      set_values = ";
+  //     for (auto it = theList.begin(); it != theList.end(); it++) {
+  //       auto elementsList = it->elements;
+  //       for (auto eit = elementsList.begin(); eit != elementsList.end(); eit++)
+  //         dakotaFile << *eit << " ";
+  //       dakotaFile << "  ";
+  //     }
+  //     dakotaFile << "\n      set_probabilities = ";
+  //     for (auto it = theList.begin(); it != theList.end(); it++) {
+  //       auto probsList = it->weights;
+  //       for (auto pit = probsList.begin(); pit != probsList.end(); pit++)
+  //         dakotaFile << *pit << " ";
+  //       dakotaFile << "  ";
+  //     }
+  //     dakotaFile << "\n      descriptors = ";
+  //     for (auto it = theList.begin(); it != theList.end(); it++)
+  //       dakotaFile << "\'" << it->name << "\' ";
+  //     dakotaFile << "\n";
+  //   }
+
+    // discreteUncertainSetRVs - int, string
+    std::list<struct discreteUncertainIntegerSetRV> theDiscreteIntList;
+    std::list<struct discreteDesignSetRV> theDiscreteStringList;
+
+    int numDiscreteInt = theRandomVariables.discreteUncertainIntegerSetRVs.size();
+    int numDiscreteString = theRandomVariables.discreteDesignSetRVs.size();
+
+    bool discreteIntRVsExist = numDiscreteInt > 0;
+    bool discreteStringRVsExist = numDiscreteString > 0;
+    bool discreteRVsExist = discreteIntRVsExist | discreteStringRVsExist;
+
+    if (discreteIntRVsExist) {
+      theDiscreteIntList = theRandomVariables.discreteUncertainIntegerSetRVs;
+    }
+    if (discreteStringRVsExist) {
+      theDiscreteStringList = theRandomVariables.discreteDesignSetRVs;
     }
 
-    // discreteUncertainIntegerSetRV
-    int numDiscrete = theRandomVariables.discreteUncertainIntegerSetRVs.size();
-    if (numDiscrete > 0) {
-      std::list<struct discreteUncertainIntegerSetRV> theList = theRandomVariables.discreteUncertainIntegerSetRVs;
-      dakotaFile << "    discrete_uncertain_set";
-      dakotaFile << "\n    integer = " << theList.size();
+    if (discreteRVsExist) dakotaFile << "  discrete_uncertain_set";
+    if (discreteIntRVsExist) {
+      dakotaFile << "\n    integer = " << theDiscreteIntList.size();
       dakotaFile << "\n      num_set_values = ";
-      for (auto it = theList.begin(); it != theList.end(); it++)
+      for (auto it = theDiscreteIntList.begin(); it != theDiscreteIntList.end(); it++)
         dakotaFile << it->elements.size() << " ";
       dakotaFile << "\n      set_values = ";
-      for (auto it = theList.begin(); it != theList.end(); it++) {
+      for (auto it = theDiscreteIntList.begin(); it != theDiscreteIntList.end(); it++) {
         auto elementsList = it->elements;
         for (auto eit = elementsList.begin(); eit != elementsList.end(); eit++)
           dakotaFile << *eit << " ";
         dakotaFile << "  ";
       }
       dakotaFile << "\n      set_probabilities = ";
-      for (auto it = theList.begin(); it != theList.end(); it++) {
+      for (auto it = theDiscreteIntList.begin(); it != theDiscreteIntList.end(); it++) {
         auto probsList = it->weights;
         for (auto pit = probsList.begin(); pit != probsList.end(); pit++)
           dakotaFile << *pit << " ";
         dakotaFile << "  ";
       }
       dakotaFile << "\n      descriptors = ";
-      for (auto it = theList.begin(); it != theList.end(); it++)
+      for (auto it = theDiscreteIntList.begin(); it != theDiscreteIntList.end(); it++)
         dakotaFile << "\'" << it->name << "\' ";
-      dakotaFile << "\n";
     }
+    if (discreteStringRVsExist) {
+        dakotaFile << "\n    string = " << theDiscreteStringList.size();
+        dakotaFile << "\n      num_set_values = ";
+        for (auto it = theDiscreteStringList.begin(); it != theDiscreteStringList.end(); it++)
+          dakotaFile << it->elements.size() << " ";
+        dakotaFile << "\n      set_values = ";
+        for (auto it = theDiscreteStringList.begin(); it != theDiscreteStringList.end(); it++) {
+	        it->elements.sort(); // sort the elements NEEDED THOUGH NOT IN DAKOTA DOC!
+	        for (auto element = it->elements.begin(); element != it->elements.end(); element++)
+	          dakotaFile << " \'" << *element << "\'";
+        }
+        dakotaFile << "\n      descriptors = ";
+        for (auto it = theDiscreteStringList.begin(); it != theDiscreteStringList.end(); it++) {
+	        dakotaFile << "\'" << it->name << "\' ";
+        }
+    }
+    dakotaFile << "\n";
 
 
     // if no random variables .. create 1 call & call it dummy!

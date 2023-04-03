@@ -140,16 +140,19 @@ int main(int argc, const char **argv) {
 
     if (json_object_get(rootInput, "python") != NULL)
       pythonCommand = std::string("\"") + json_string_value(json_object_get(rootInput,"python")) + std::string("\"");
+
+    gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
+
     
   } else {
 
     dpreproCommand = remoteDir + std::string("/applications/performUQ/templateSub/simCenterSub");
     openSeesCommand = std::string("/home1/00477/tg457427/bin/OpenSees");
     pythonCommand = std::string("python3");
+    gpCommand = pythonCommand + std::string(" \"") + remoteDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
 
   }
 
-  gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
 
 
   json_t *rootAPPs =  json_object_get(rootInput, "Applications");
@@ -186,7 +189,10 @@ int main(int argc, const char **argv) {
     }
   }
 
-  workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << inputFile << " 1> ops.out 2>&1\n ";
+  std::filesystem::path scInputPath(inputFile);
+  std::string scInputName = scInputPath.filename().string();
+
+  workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << scInputName << " 1> ops.out 2>&1\n ";
   
   workflowDriverFile.close();
 
