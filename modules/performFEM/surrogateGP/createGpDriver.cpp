@@ -189,7 +189,10 @@ int main(int argc, const char **argv) {
     }
   }
 
-  workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << inputFile << " 1> ops.out 2>&1\n ";
+  std::filesystem::path scInputPath(inputFile);
+  std::string scInputName = scInputPath.filename().string();
+
+  workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << scInputName << " 1> ops.out 2>&1\n ";
   
   workflowDriverFile.close();
 

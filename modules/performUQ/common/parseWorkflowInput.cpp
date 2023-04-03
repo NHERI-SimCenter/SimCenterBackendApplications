@@ -282,10 +282,20 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
     	for (int j=0; j<numValues; j++) {
     	  json_t *element = json_array_get(elementsSet,j);
     	  std::string value = json_string_value(element);
-    	    theValues.push_back(value);
+    	  theValues.push_back(value);
     	}
 
     	theRV.elements = theValues;
+
+      // std::list<double> theWeights;
+      // double weight = 1.0/theValues.size();
+      // double sumWeights = 0;
+      // for (int j=0; j<numValues-1; j++) {
+      //   sumWeights += weight;
+      //   theWeights.push_back(weight);
+      // }
+      // theWeights.push_back(1-sumWeights);
+      // theRV.weights = theWeights;
 
     	theRandomVariables.discreteDesignSetRVs.push_back(theRV);
     	theRandomVariables.numRandomVariables += 1;
