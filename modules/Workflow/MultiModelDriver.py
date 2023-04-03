@@ -119,7 +119,6 @@ def main(inputFile,
     randomVariables = inputs['randomVariables']
     rvName = "MultiModel-"+appKey
     rvValue="RV.MultiModel-"+appKey
-    nrv = len(randomVariables)
     
     thisRV = {
         "distribution": "Discrete",
@@ -130,7 +129,7 @@ def main(inputFile,
         "createdRun": True,            
         "variableClass": "Uncertain",
         "Weights":beliefs,
-        "Values":[i+1 for i in range(0,numModels)]
+        "Values":[i+1 for i in range(numModels)]
     }
     randomVariables.append(thisRV)
 
@@ -143,21 +142,21 @@ def main(inputFile,
     if osType == "Windows" and runType == "runningLocal":
         driverFile = driverFile + ".bat"
 
-    with open(driverFile, "w") as f:
+    with open(driverFile, "wb") as f:
         if osType == "Windows" and runType == "runningLocal":
-            f.write("@echo off\n\n")
-            f.write("setlocal EnableDelayedExpansion\n")
-            f.write('for /f "tokens=2" %%a in ' + "('findstr MultiModel params.in') do (set $Value=%%a)\n")
-            f.write('for /f "tokens=1,2 delims=." %%a in ' + "('echo %$Value%') do (\n")
-            f.write('\tset $ind=%%a\n')
-            f.write('\tset $Vtest=%%b\n')
-            f.write('\tif "!$Vtest:~0,1!" geq "5" set /a $ind+=1\n')
-            f.write(')\n\n')
-            f.write('MultiModel_%$ind%_driver.bat\n')
+            f.write(bytes("@echo off\n\n","UTF-8"))
+            f.write(bytes("setlocal EnableDelayedExpansion\n","UTF-8"))
+            f.write(bytes('for /f "tokens=2" %%a in ' + "('findstr MultiModel params.in') do (set $Value=%%a)\n","UTF-8"))
+            f.write(bytes('for /f "tokens=1,2 delims=." %%a in ' + "('echo %$Value%') do (\n","UTF-8"))
+            f.write(bytes('\tset $ind=%%a\n',"UTF-8"))
+            f.write(bytes('\tset $Vtest=%%b\n',"UTF-8"))
+            f.write(bytes('\tif "!$Vtest:~0,1!" geq "5" set /a $ind+=1\n',"UTF-8"))
+            f.write(bytes(')\n\n',"UTF-8"))
+            f.write(bytes('MultiModel_%$ind%_driver.bat\n',"UTF-8"))
         else:
-            f.write("ind=`grep MultiModel params.in | awk '{print $NF}'`\n")
-            f.write("ind=`printf %.0f $ind`\n")
-            f.write("source MultiModel_${ind}_"+f"{driverFile}\n")
+            f.write(bytes("ind=`grep MultiModel params.in | awk '{print $NF}'`\n","UTF-8"))
+            f.write(bytes("ind=`printf %.0f $ind`\n","UTF-8"))
+            f.write(bytes("source MultiModel_${ind}_"+f"{driverFile}\n","UTF-8"))
 
     for modelToRun in range(numModels):
 
