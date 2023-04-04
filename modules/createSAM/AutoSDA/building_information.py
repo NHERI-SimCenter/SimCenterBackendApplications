@@ -386,7 +386,7 @@ class Building(object):
         # Save the first mode period in elf_parameters
         # period = np.loadtxt('Periods.out')
         period = pd.read_csv('Periods.out', header=None)
-        self.elf_parameters['modal period'] = np.asscalar((period.iloc[0, 0]))
+        self.elf_parameters['modal period'] = np.float64((period.iloc[0, 0]))
 
     def read_story_drift(self):
         """
