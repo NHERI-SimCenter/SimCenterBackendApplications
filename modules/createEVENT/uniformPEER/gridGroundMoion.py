@@ -89,6 +89,16 @@ class gmCluster():
             im_lb[i] = float(value["lowerBound"])
             im_nbins[i] = int(value["numBins"])
             im_periods += [value["Periods"]]
+
+            if not (im_ub[i]>im_lb[i]):
+                msg = "error parsing IMs: lowerbound of " + imName + " should be smaller than upperbound"
+                print(msg)
+                print(im_ub[i])
+                print(im_lb[i])
+                errf.write(msg)
+                errf.close()
+                exit(-1)
+            
             i +=1
 
         npergrid = int(inputJson["numSampPerBin"])

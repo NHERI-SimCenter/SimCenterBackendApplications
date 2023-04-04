@@ -6,6 +6,8 @@ import subprocess
 import sys
 import time
 import pandas as pd
+import os
+import json
 
 import numpy as np
 
@@ -20,6 +22,24 @@ class UQengine:
         self.run_type = inputArgs[5]
 
         self.IM_names = [] # used in EEUQ
+
+
+
+        jsonPath = self.inputFile
+        if not os.path.isabs(jsonPath):
+            jsonPath = self.work_dir + "/templatedir/" + self.inputFile # for quoFEM
+
+      # temporary for EEUQ....  
+        jsonDir, jsonName = os.path.split(jsonPath)
+        eeJsonPath = os.path.join(jsonDir,"sc_"+jsonName)
+
+        if os.path.exists(eeJsonPath):
+            self.inputFile = eeJsonPath
+            jsonPath = eeJsonPath
+
+        with open(jsonPath) as f:
+            dakotaJson = json.load(f)
+
         # self.workflowDriver = "workflow_driver"
         # if self.os_type.lower().startswith('win'):
         #    self.workflowDriver = "workflow_driver.bat"
