@@ -227,9 +227,9 @@ class surrogate(UQengine):
 
         self.g_name = list()
         y_dim = 0
+        
         for g in dakotaJson["EDP"]:
             # scalar
-
             if (not g["name"]):
                 msg = "QoI name cannot be an empty string"
                 self.exit(msg)
@@ -1025,7 +1025,7 @@ class surrogate(UQengine):
         X_lf_tmp = model_lf.sampling(max([model_lf.n_init - model_lf.n_existing, 0]))
 
         # Design of experiments - Nearest neighbor sampling
-        # Giselle Fernández-Godino, M., Park, C., Kim, N. H., & Haftka, R. T. (2019). Issues in deciding whether to use multifidelity surrogates. AIAA Journal, 57(5), 2039-2054.
+        # Giselle FernÃ¡ndez-Godino, M., Park, C., Kim, N. H., & Haftka, R. T. (2019). Issues in deciding whether to use multifidelity surrogates. AIAA Journal, 57(5), 2039-2054.
         self.n_LFHFoverlap = 0
         new_x_lf_tmp = np.zeros((0, self.x_dim))
         X_tmp = X_lf_tmp
