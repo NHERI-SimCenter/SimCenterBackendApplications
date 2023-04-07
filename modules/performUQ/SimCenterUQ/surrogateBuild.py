@@ -65,25 +65,14 @@ from UQengine import UQengine
 # import pip installed modules
 
 try:
-    moduleName = "emukit"
-    import emukit.multi_fidelity as emf
-    from emukit.model_wrappers.gpy_model_wrappers import GPyMultiOutputWrapper
-    from emukit.multi_fidelity.convert_lists_to_array import (
-        convert_x_list_to_array,
-        convert_xy_lists_to_arrays,
-    )
-
-    moduleName = "pyDOE"
-    from pyDOE import lhs
+    moduleName = "numpy"
+    import numpy as np
 
     moduleName = "GPy"
     import GPy as GPy
 
     moduleName = "scipy"
-    from scipy.stats import lognorm, norm, cramervonmises
-
-    moduleName = "numpy"
-    import numpy as np
+    from scipy.stats import lognorm, norm, cramervonmises, qmc
 
     moduleName = "UQengine"
     # from utilities import run_FEM_batch, errorLog
@@ -92,6 +81,35 @@ except:
     error_tag = True
     print("Failed to import module:" + moduleName)
 
+
+#
+# Modify GPy package
+#
+def monkeypatch_method(cls):
+    def decorator(func):
+        setattr(cls, func.__name__, func)
+        return func
+
+    return decorator
+
+
+@monkeypatch_method(GPy.models.gp_regression.GPRegression)
+def randomize(self, rand_gen=None, *args, **kwargs):
+    if rand_gen is None:
+        rand_gen = np.random.normal
+    # first take care of all parameters (from N(0,1))
+    x = rand_gen(size=self._size_transformed(), *args, **kwargs)
+    updates = self.update_model()
+    self.update_model(False)  # Switch off the updates
+    self.optimizer_array = x  # makes sure all of the tied parameters get the same init (since there's only one prior object...)
+    # now draw from prior where possible
+    x = self.param_array.copy()
+    [np.put(x, ind, p.rvs(ind.size)) for p, ind in self.priors.items() if not p is None]
+    unfixlist = np.ones((self.size,), dtype=bool)
+    from paramz.transformations import __fixed__
+    unfixlist[self.constraints[__fixed__]] = False
+    self.param_array.flat[unfixlist] = x.view(np.ndarray).ravel()[unfixlist]
+    self.update_model(updates)
 
 ## Main function
 
@@ -150,7 +168,8 @@ class surrogate(UQengine):
                         + moduleName
                         + "]. Did you forget <pip3 install nheri_simcenter --upgrade>?"
                 )
-            self.exit(msg)
+            print(msg)
+            exit(-1)
 
     def readJson(self):
 
@@ -343,15 +362,6 @@ class surrogate(UQengine):
 
         if self.stochastic[0]:
 
-            #
-            # Modify GPy package
-            #
-            def monkeypatch_method(cls):
-                def decorator(func):
-                    setattr(cls, func.__name__, func)
-                    return func
-
-                return decorator
 
             @monkeypatch_method(GPy.likelihoods.Gaussian)
             def gaussian_variance(self, Y_metadata=None):
@@ -422,6 +432,21 @@ class surrogate(UQengine):
         else:
             msg = 'Error reading json: select among "Import Data File", "Sampling and Simulation" or "Import Multi-fidelity Data File"'
             self.exit(msg)
+
+
+        if self.do_mf:
+            try:
+                moduleName = "emukit"
+                import emukit.multi_fidelity as emf
+                from emukit.model_wrappers.gpy_model_wrappers import GPyMultiOutputWrapper
+                from emukit.multi_fidelity.convert_lists_to_array import (
+                    convert_x_list_to_array,
+                    convert_xy_lists_to_arrays,
+                )
+                error_tag = False  # global variable
+            except:
+                error_tag = True
+                print("Failed to import module:" + moduleName)
 
         if self.modelInfoHF.is_model:
             self.ll = self.modelInfoHF.ll
@@ -799,7 +824,7 @@ class surrogate(UQengine):
                     m_var.sum.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X_repl.shape[0]*10, myrange[nx] * 100)
                     # TODO change the kernel
 
-        m_var.optimize(messages=True, max_f_eval=1000)
+        m_var.optimize(max_f_eval=1000)
         m_var.optimize_restarts(20, parallel=False, num_processes=self.n_processor,verbose=False)
         print(m_var)
 
@@ -956,7 +981,7 @@ class surrogate(UQengine):
 
         def FEM_batch_hf(X, id_sim):
 
-            Xstr = X.astype(np.str)     # DiscStr: Xstr will be replaced with the string
+            Xstr = X.astype(str)     # DiscStr: Xstr will be replaced with the string
 
             for nx in self.rvDiscIdx:
                 for ns in range(X.shape[0]):
@@ -976,7 +1001,7 @@ class surrogate(UQengine):
 
         def FEM_batch_lf(X, id_sim):
 
-            Xstr = X.astype(np.str)  # DiscStr: Xstr will be replaced with the string
+            Xstr = X.astype(str)  # DiscStr: Xstr will be replaced with the string
 
             for nx in self.rvDiscIdx:
                 for ns in range(X.shape[0]):
@@ -988,9 +1013,12 @@ class surrogate(UQengine):
             else:
                 res = np.zeros((0, self.x_dim)), np.zeros((0, self.y_dim)), id_sim
             self.time_lf_tot += time.time() - tmp
-            self.time_lf_avg = (
-                    np.float64(self.time_lf_tot) / res[2]
-            )  # so that it gives inf when divided by zero
+            if res[2]>0:
+                self.time_lf_avg = (
+                        float(self.time_lf_tot) / res[2]
+                )  # so that it gives inf when divided by zero
+            else:
+                self.time_lf_avg = (float('Inf'))
             self.time_ratio = self.time_lf_avg / self.time_lf_avg
             return res
 
@@ -2775,7 +2803,9 @@ class model_info:
 
         if n > 0:
             X_samples = np.zeros((n, self.x_dim))
-            U = lhs(self.x_dim, samples=n)
+            ## LHS
+            sampler = qmc.LatinHypercube(d=self.x_dim)
+            U = sampler.random(n=n)
             for nx in range(self.x_dim):
 
                 if (self.xDistTypeArr[nx]=="U"):
@@ -2804,7 +2834,10 @@ class model_info:
         maxvals = np.max(X,axis=0)
         print(dim)
         X_samples = np.zeros((n, dim))
-        U = lhs(dim, samples=n)
+
+        sampler = qmc.LatinHypercube(d=dim)
+        U = sampler.random(n=n)
+
         for nx in range(dim):
             X_samples[:, nx] = (
                     U[:, nx] * (maxvals[nx] - minvals[nx]) + minvals[nx]
