@@ -71,9 +71,9 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
         dakota_path = input_json
         #dakota_path = 'scInput.json'
 
-    if not os.path.exists(dakota_path):
-        msg = "Input file does not exist: "+ dakota_path
-        error_exit(msg)
+    # if not (os.path.exists(dakota_path) or  os.path.exists(os.path.join(os.getcwd(),dakota_path))) :
+    #     msg = "Input file does not exist: "+ dakota_path
+    #     error_exit(msg)
 
 
     print(dakota_path)
