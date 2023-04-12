@@ -232,7 +232,7 @@ def create_FEMA_P58_fragility_db(source_file,
 
     # conversion dictionary for demand unit names
     convert_demand_unit = {
-        'Unit less': 'ea',
+        'Unit less': 'unitless',
         'Radians': 'rad',
         'g': 'g',
         'meter/sec': 'mps'
@@ -1559,7 +1559,7 @@ def create_Hazus_EQ_fragility_db(source_file,
     Create a database file based on the HAZUS EQ Technical Manual
 
     This method was developed to process a json file with tabulated data from
-    v4.2.3 of the Hazus Earthquake Technical Manual. The json file is included
+    v5.1 of the Hazus Earthquake Technical Manual. The json file is included
     in the resources folder of pelicun
 
     Parameters
