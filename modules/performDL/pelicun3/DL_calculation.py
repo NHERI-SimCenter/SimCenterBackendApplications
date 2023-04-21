@@ -771,6 +771,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
             extra_comps = asset_config['ComponentDatabasePath']
 
             component_db += [extra_comps,]
+        component_db = component_db[::-1]
 
         # prepare additional fragility data
 
