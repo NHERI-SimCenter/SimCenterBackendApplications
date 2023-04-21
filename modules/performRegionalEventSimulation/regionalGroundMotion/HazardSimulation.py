@@ -177,7 +177,7 @@ def hazard_job(hazard_info):
         if opensha_flag:
             im_raw, im_info = compute_im(scenarios, stations['Stations'],
                                 event_info['GMPE'], event_info['IntensityMeasure'],
-                                scenario_info.get('EqRupture').get('HazardOccurrence',None), output_dir)
+                                scenario_info.get('EqRupture').get('HazardOccurrence',None), output_dir, mth_flag=False)
             # update the im_info
             event_info['IntensityMeasure'] = im_info
         elif oq_flag:
