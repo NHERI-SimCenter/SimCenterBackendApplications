@@ -131,9 +131,12 @@ class UQengine:
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
-                    msg = "model output <results.out> contains {} value(s) while the number of QoIs specified in quoFEM is {}".format(
-                        Y_tmp.shape[0], y_dim
+
+                    msg = "model output <results.out> in sample {} contains {} value(s) while the number of QoIs specified is {}".format(
+                        ns, Y_tmp.shape[0], y_dim
                     )
+
+
                     self.exit(msg)
                 Y[ns, :] = Y_tmp
                 if time.time() - self.t_init > self.t_thr:
@@ -177,8 +180,8 @@ class UQengine:
                     self.exit(val)
                 elif val.shape[0]:
                     if val.shape[0] != self.y_dim:
-                        msg = "model output <results.out> contains {} value(s) while the number of QoIs specified in quoFEM is {}".format(
-                            val.shape[0], self.y_dim
+                        msg = "model output <results.out> in sample {} contains {} value(s) while the number of QoIs specified is {}".format(
+                        id, Y_tmp.shape[0],  self.y_dim
                         )
                         self.exit(msg)
 

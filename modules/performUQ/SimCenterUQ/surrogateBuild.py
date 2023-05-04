@@ -1257,7 +1257,7 @@ class surrogate(UQengine):
         """
         
         self.inbound50
-        self.Gaisspvalue
+        self.Gausspvalue
         ## The plot in quoFEM
         import matplotlib.pyplot as plt
         ny = 2 ;
@@ -1525,7 +1525,7 @@ class surrogate(UQengine):
         model_hf = self.modelInfoHF
 
         self.inbound50 = np.zeros((self.y_dim,))
-        self.Gaisspvalue = np.zeros((self.y_dim,))
+        self.Gausspvalue = np.zeros((self.y_dim,))
 
         if not self.do_mf:
 
@@ -1557,7 +1557,7 @@ class surrogate(UQengine):
                     stats = cramervonmises(norm_residual, 'norm')
 
                 self.inbound50[ny] = num_in_bound/Y.shape[0]
-                self.Gaisspvalue[ny] = stats.pvalue
+                self.Gausspvalue[ny] = stats.pvalue
 
         else:
             pass
@@ -1808,7 +1808,7 @@ class surrogate(UQengine):
             results["valR2"][self.g_name[ny]] = self.R2_val[ny]
             results["valCorrCoeff"][self.g_name[ny]] = self.corr_val[ny]
             results["valIQratio"][self.g_name[ny]] = self.inbound50[ny]
-            results["valPval"][self.g_name[ny]] = self.Gaisspvalue[ny]
+            results["valPval"][self.g_name[ny]] = self.Gausspvalue[ny]
 
             if np.isnan(self.NRMSE_val[ny]) or np.isinf(self.NRMSE_val[ny]):
                  results["valNRMSE"][self.g_name[ny]] = 'null'
@@ -1857,8 +1857,13 @@ class surrogate(UQengine):
         if self.isEEUQ:
             # read SAM.json
             SAMpath = self.work_dir + "/templatedir/SAM.json"
-            with open(SAMpath) as f:
-                SAMjson = json.load(f)
+            try:
+                with open(SAMpath) as f:
+                    SAMjson = json.load(f)
+            except Exception as e:
+                with open(SAMpath+".sc") as f:
+                    SAMjson = json.load(f)
+
             EDPpath = self.work_dir + "/templatedir/EDP.json"
             with open(EDPpath) as f:
                 EDPjson = json.load(f)
