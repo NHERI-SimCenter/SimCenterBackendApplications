@@ -20,11 +20,11 @@ def parseWindMatFile(matFileIn, windFileOutName):
 
     mat_contents = sio.loadmat(matFileIn)  
 
-    depth = mat_contents['D'][0]  
-    breadth = mat_contents['B'][0]  
-    height = mat_contents['H'][0]  
-    fs = mat_contents['fs'][0]  
-    vRef=mat_contents['Vref'][0]  
+    depth = float(mat_contents['D'][0])
+    breadth = float(mat_contents['B'][0])  
+    height = float(mat_contents['H'][0])  
+    fs = float(mat_contents['fs'][0])  
+    vRef=float(mat_contents['Vref'][0]) 
     
     if "s_target" in mat_contents:
         case = "spectra"
@@ -44,11 +44,11 @@ def parseWindMatFile(matFileIn, windFileOutName):
         t = mat_contents['t']
 
         myJson = {}
-        myJson["D"] = float(depth)
-        myJson["H"] = float(height)
-        myJson["B"] = float(breadth)
-        myJson["fs"] = float(fs)
-        myJson["Vref"] = float(vRef)
+        myJson["D"] = depth
+        myJson["H"] = height
+        myJson["B"] = breadth
+        myJson["fs"] = fs
+        myJson["Vref"] = vRef
 
         myJson["Fx"] = np.array(Fx).tolist()
         myJson["Fy"] = np.array(Fy).tolist()
