@@ -423,9 +423,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    run_surrogateGP(
-        args.filenameEVENT, args.filenameSAM, args.filenameAIM,
-        args.filenameEDP)
-    write_EDP(
-        args.filenameEVENT, args.filenameSAM, args.filenameAIM,
-        args.filenameEDP)
+    if not args.getRV:
+        run_surrogateGP(
+            args.filenameEVENT, args.filenameSAM, args.filenameAIM,
+            args.filenameEDP)
+        write_EDP(
+            args.filenameEVENT, args.filenameSAM, args.filenameAIM,
+            args.filenameEDP)
