@@ -139,7 +139,7 @@ class PelicunModel:
 
                 # load the theta values
                 theta = marginal_params.loc[
-                    row_id, ['Theta_0', 'Theta_1', 'Theta_2']]
+                    row_id, ['Theta_0', 'Theta_1', 'Theta_2']].values
 
                 # if theta_0 is N/A then we have no entry for this row
                 if pd.isna(theta[0]):
@@ -2596,7 +2596,7 @@ class LossModel(PelicunModel):
 
         self.log_msg('Loss sample successfully loaded.', prepend_timestamp=False)
 
-    def load_model(self, data_paths, mapping_path):
+    def load_model(self, data_paths, mapping_path, decision_variables=None):
         """
         Load the list of prescribed consequence models and their parameters
 
@@ -2608,6 +2608,10 @@ class LossModel(PelicunModel):
         mapping_path: string
             Path to a csv file that maps drivers (i.e., damage or edp data) to
             loss models.
+        decision_variables: list of string, optional
+            List of decision variables to include in the analysis. If None, 
+            all variables provided in the consequence models are included. When
+            a list is provided, only variables in the list will be included.
         """
 
         self.log_div()
@@ -2708,6 +2712,21 @@ class LossModel(PelicunModel):
                          f"following component(s) {cmp_incomplete_list}. They were "
                          "removed from the analysis.\n",
                          prepend_timestamp=False)
+
+        # filter decision variables, if needed
+        if decision_variables != None:
+
+            loss_params = loss_params.reorder_levels([1,0])
+
+            available_DVs = loss_params.index.unique(level=0)
+            filtered_DVs = []
+            
+            for DV_i in decision_variables:
+
+                if DV_i in available_DVs:
+                    filtered_DVs.append(DV_i)
+
+            loss_params = loss_params.loc[filtered_DVs, :].reorder_levels([1,0])
 
         self.loss_params = loss_params.sort_index(axis=1)
 
@@ -2862,7 +2881,8 @@ class BldgRepairModel(LossModel):
                     # If the first parameter is controlled by a function, we use
                     # 1.0 in its place and will scale the results in a later
                     # step
-                    if isinstance(cost_theta[0], str):
+                    if '|' in str(cost_theta[0]):
+                        #if isinstance(cost_theta[0], str):
                         cost_theta[0] = 1.0
 
                 else:
@@ -2879,7 +2899,8 @@ class BldgRepairModel(LossModel):
                     # If the first parameter is controlled by a function, we use
                     # 1.0 in its place and will scale the results in a later
                     # step
-                    if isinstance(time_theta[0], str):
+                    if '|' in str(time_theta[0]):
+                        # if isinstance(time_theta[0], str):
                         time_theta[0] = 1.0
 
                 else:
@@ -2896,7 +2917,8 @@ class BldgRepairModel(LossModel):
                     # If the first parameter is controlled by a function, we use
                     # 1.0 in its place and will scale the results in a later
                     # step
-                    if isinstance(carbon_theta[0], str):
+                    if '|' in str(carbon_theta[0]):
+                        # if isinstance(carbon_theta[0], str):
                         carbon_theta[0] = 1.0
 
                 else:
@@ -2913,7 +2935,8 @@ class BldgRepairModel(LossModel):
                     # If the first parameter is controlled by a function, we use
                     # 1.0 in its place and will scale the results in a later
                     # step
-                    if isinstance(energy_theta[0], str):
+                    if '|' in str(energy_theta[0]):
+                        # if isinstance(energy_theta[0], str):
                         energy_theta[0] = 1.0
 
                 else:
@@ -3058,7 +3081,7 @@ class BldgRepairModel(LossModel):
                     # check if theta_0 is defined
                     theta_0 = loss_params_DS.get('Theta_0', np.nan)
 
-                    if pd.isna(theta_0):
+                    if pd.isna(theta_0) == True:
                         continue
 
                     # check if the distribution type is supported
@@ -3074,7 +3097,7 @@ class BldgRepairModel(LossModel):
                     try:
                         theta_0 = float(theta_0)
 
-                        if pd.isna(loss_params_DS.get('Family', np.nan)):
+                        if pd.isna(loss_params_DS.get('Family', np.nan)) == True:
 
                             # if theta_0 is constant, then use it directly
                             f_median = prep_constant_median_DV(theta_0)
@@ -3220,7 +3243,7 @@ class BldgRepairModel(LossModel):
             dv_units['repair_carbon'] = cmp_units['Carbon']
 
         if 'Energy' in DVG.columns:
-            dv_units['repair_energy'] = cmp_units['Energy']
+            dv_units['repair_energy'] = cmp_units['Energy']        
 
         df_agg = save_to_csv(
             df_agg, None, units=dv_units,
@@ -3257,9 +3280,9 @@ class BldgRepairModel(LossModel):
         self.log_msg("\nAggregating damage quantities...",
                      prepend_timestamp=False)
 
-        if self._asmnt.options.eco_scale["AcrossFloors"] is True:
+        if self._asmnt.options.eco_scale["AcrossFloors"] == True:
 
-            if self._asmnt.options.eco_scale["AcrossDamageStates"] is True:
+            if self._asmnt.options.eco_scale["AcrossDamageStates"] == True:
 
                 eco_qnt = dmg_quantities.groupby(level=[0, ], axis=1).sum()
                 eco_qnt.columns.names = ['cmp', ]
@@ -3269,7 +3292,7 @@ class BldgRepairModel(LossModel):
                 eco_qnt = dmg_quantities.groupby(level=[0, 3], axis=1).sum()
                 eco_qnt.columns.names = ['cmp', 'ds']
 
-        elif self._asmnt.options.eco_scale["AcrossDamageStates"] is True:
+        elif self._asmnt.options.eco_scale["AcrossDamageStates"] == True:
 
             eco_qnt = dmg_quantities.groupby(level=[0, 1], axis=1).sum()
             eco_qnt.columns.names = ['cmp', 'loc']
@@ -3336,10 +3359,15 @@ class BldgRepairModel(LossModel):
 
         DV_types = self.loss_params.index.unique(level=1)
 
+        if isinstance(std_sample, pd.DataFrame):
+            std_DV_types = std_sample.columns.unique(level=0)
+        else:
+            std_DV_types = []
+
         #for DV_type, _ in zip(['COST', 'TIME'], ['Cost', 'Time']):
         for DV_type in DV_types:
 
-            if std_sample is not None:
+            if DV_type in std_DV_types:
                 prob_cmp_list = std_sample[DV_type].columns.unique(level=0)
             else:
                 prob_cmp_list = []
@@ -3393,7 +3421,7 @@ class BldgRepairModel(LossModel):
                             if cmp_i in prob_cmp_list:
                                 std_i = std_sample.loc[:, (DV_type, cmp_i, ds, loc)]
                             else:
-                                std_i = None
+                                std_i = None                        
 
                         if std_i is not None:
                             res_list.append(dmg_i.mul(median_i, axis=0) * std_i)

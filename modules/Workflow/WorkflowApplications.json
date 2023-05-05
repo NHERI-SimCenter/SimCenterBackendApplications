@@ -483,6 +483,14 @@
       {
         "Name": "gridGroundMoionSelection",
         "ExecutablePath": "applications/createEVENT/uniformPEER/gridGroundMoion.py"
+      },
+      {
+        "Name": "ExperimentalWindForces",
+        "ExecutablePath": "applications/createEVENT/experimentalWindForces/experimentalWindForces.py"
+      },
+      {
+        "Name": "WindForceSpectrum",
+        "ExecutablePath": "applications/createEVENT/experimentalWindForces/experimentalWindForces.py"
       }
     ]
   },

@@ -64,6 +64,8 @@ from pelicun.assessment import Assessment
 # pylint: disable=too-many-nested-blocks
 # pylint: disable=too-many-branches
 
+pd.set_option('display.max_rows', None)
+
 # suppress FutureWarnings by default - credit: ioannis_vm
 if not sys.warnoptions:
     warnings.filterwarnings(
@@ -1065,23 +1067,42 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
             bldg_repair_config = loss_config['BldgRepair']
 
-            # load the consequence information
-            if bldg_repair_config['ConsequenceDatabase'] != "User Defined":
-                consequence_db = (
-                        'PelicunDefault/' +
-                        default_DBs['repair'][
-                            bldg_repair_config['ConsequenceDatabase']])
+            # load the fragility information
+            if bldg_repair_config['ConsequenceDatabase'] in default_DBs['repair'].keys():
+                consequence_db = [
+                    'PelicunDefault/' +
+                    default_DBs['repair'][bldg_repair_config['ConsequenceDatabase']],]
 
                 conseq_df = PAL.get_default_data(
                     default_DBs['repair'][
                         bldg_repair_config['ConsequenceDatabase']][:-4])
-
             else:
-                consequence_db = bldg_repair_config['ConsequenceDatabasePath']
-                conseq_df = load_data(
+                consequence_db = []
+
+                conseq_df = None
+
+            if bldg_repair_config.get('ConsequenceDatabasePath', False) != False:
+
+                extra_comps = bldg_repair_config['ConsequenceDatabasePath']
+
+                consequence_db += [extra_comps,]
+
+                extra_conseq_df = load_data(
                     bldg_repair_config['ConsequenceDatabasePath'],
                     unit_conversion_factors={},
                     orientation=1, reindex=False, convert=[])
+
+                if isinstance(conseq_df, pd.DataFrame):
+
+                    conseq_df = pd.concat([conseq_df, extra_conseq_df])
+                else:
+
+                    conseq_df = extra_conseq_df
+
+            consequence_db = consequence_db[::-1]
+
+            # remove duplicates from conseq_df
+            conseq_df = conseq_df.loc[conseq_df.index.unique(),:]
 
             # add the replacement consequence to the data
             adf = pd.DataFrame(
@@ -1298,7 +1319,20 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 loss_map.loc['DMG-collapse',    'BldgRepair'] = 'replacement'
                 loss_map.loc['DMG-irreparable', 'BldgRepair'] = 'replacement'
 
-            PAL.bldg_repair.load_model([conseq_df, adf], loss_map)
+            # assemble the list of requested decision variables
+            DV_list = []
+            if bldg_repair_config.get('DecisionVariables',False) != False:
+
+                for DV_i, DV_status in bldg_repair_config['DecisionVariables'].items():
+
+                    if DV_status == True:
+                        DV_list.append(DV_i)
+
+            else:
+                DV_list = None
+
+            PAL.bldg_repair.load_model(consequence_db + [adf,], loss_map,
+                                       decision_variables=DV_list)
 
             PAL.bldg_repair.calculate()
 
