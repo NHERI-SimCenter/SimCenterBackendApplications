@@ -28,7 +28,7 @@ def main(args):
         subprocess.Popen(preprocessorCommand, shell=True).wait()        
 
         #Run OpenSees
-        subprocess.Popen("OpenSees example.tcl", shell=True).wait()
+        subprocess.Popen("OpenSees example.tcl >> ops.out 2>&1", shell=True).wait()
 
         #Run postprocessor
         postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, edpName)
