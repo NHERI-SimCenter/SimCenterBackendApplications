@@ -64,6 +64,8 @@ def main(inputFile,
 
     with open(inputFileName, 'r') as f:
         inputs = json.load(f)
+    
+    localAppDir = inputs["localAppDir"]
 
     if 'referenceDir' in inputs:
         reference_dir = inputs['referenceDir']
@@ -139,24 +141,30 @@ def main(inputFile,
     #
     # create driver file that runs the right driver
     #
+    paramsFileName = "params.in"
+    multiModelString = "MultiModel"
+    exeFileName = "runMultiModelDriver"
     if osType == "Windows" and runType == "runningLocal":
         driverFile = driverFile + ".bat"
+        exeFileName = exeFileName + ".exe"
 
     with open(driverFile, "wb") as f:
-        if osType == "Windows" and runType == "runningLocal":
-            f.write(bytes("@echo off\n\n","UTF-8"))
-            f.write(bytes("setlocal EnableDelayedExpansion\n","UTF-8"))
-            f.write(bytes('for /f "tokens=2" %%a in ' + "('findstr MultiModel params.in') do (set $Value=%%a)\n","UTF-8"))
-            f.write(bytes('for /f "tokens=1,2 delims=." %%a in ' + "('echo %$Value%') do (\n","UTF-8"))
-            f.write(bytes('\tset $ind=%%a\n',"UTF-8"))
-            f.write(bytes('\tset $Vtest=%%b\n',"UTF-8"))
-            f.write(bytes('\tif "!$Vtest:~0,1!" geq "5" set /a $ind+=1\n',"UTF-8"))
-            f.write(bytes(')\n\n',"UTF-8"))
-            f.write(bytes('MultiModel_%$ind%_driver.bat\n',"UTF-8"))
-        else:
-            f.write(bytes("ind=`grep MultiModel params.in | awk '{print $NF}'`\n","UTF-8"))
-            f.write(bytes("ind=`printf %.0f $ind`\n","UTF-8"))
-            f.write(bytes("source MultiModel_${ind}_"+f"{driverFile}\n","UTF-8"))
+        f.write(bytes(os.path.join(localAppDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFile} {multiModelString}", "UTF-8"))
+
+        # if osType == "Windows" and runType == "runningLocal":
+        #     f.write(bytes("@echo off\n\n","UTF-8"))
+        #     f.write(bytes("setlocal EnableDelayedExpansion\n","UTF-8"))
+        #     f.write(bytes('for /f "tokens=2" %%a in ' + "('findstr MultiModel params.in') do (set $Value=%%a)\n","UTF-8"))
+        #     f.write(bytes('for /f "tokens=1,2 delims=." %%a in ' + "('echo %$Value%') do (\n","UTF-8"))
+        #     f.write(bytes('\tset $ind=%%a\n',"UTF-8"))
+        #     f.write(bytes('\tset $Vtest=%%b\n',"UTF-8"))
+        #     f.write(bytes('\tif "!$Vtest:~0,1!" geq "5" set /a $ind+=1\n',"UTF-8"))
+        #     f.write(bytes(')\n\n',"UTF-8"))
+        #     f.write(bytes('MultiModel_%$ind%_driver.bat\n',"UTF-8"))
+        # else:
+        #     f.write(bytes("ind=`grep MultiModel params.in | awk '{print $NF}'`\n","UTF-8"))
+        #     f.write(bytes("ind=`printf %.0f $ind`\n","UTF-8"))
+        #     f.write(bytes("source MultiModel_${ind}_"+f"{driverFile}\n","UTF-8"))
 
     for modelToRun in range(numModels):
 
