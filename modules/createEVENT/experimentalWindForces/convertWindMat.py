@@ -28,20 +28,20 @@ def parseWindMatFile(matFileIn, windFileOutName):
     
     if "s_target" in mat_contents:
         case = "spectra"
-        comp_CFmean = mat_contents['comp_CFmean']
-        norm_all = mat_contents['norm_all']
-        f_target = mat_contents['f_target']
-        s_target = mat_contents['s_target']
+        comp_CFmean = np.squeeze(np.array(mat_contents['comp_CFmean']))
+        norm_all = np.squeeze(np.array(mat_contents['norm_all']))
+        f_target = np.squeeze(np.array(mat_contents['f_target']))
+        s_target = np.squeeze(np.array(mat_contents['s_target']))
 
         createSpectraJson(windFileOutName, breadth, depth, height, fs, vRef, f_target, s_target, comp_CFmean, norm_all)
 
     elif "Fx" in mat_contents:
 
 
-        Fx = mat_contents['Fx']
-        Fy = mat_contents['Fy']
-        Tz = mat_contents['Tz']
-        t = mat_contents['t']
+        Fx = np.squeeze(np.array(mat_contents['Fx']))
+        Fy = np.squeeze(np.array(mat_contents['Fy']))
+        Tz = np.squeeze(np.array(mat_contents['Tz']))
+        t = np.squeeze(np.array(mat_contents['t']))
 
         myJson = {}
         myJson["D"] = depth

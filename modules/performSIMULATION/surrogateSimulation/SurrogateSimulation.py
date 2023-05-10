@@ -273,7 +273,7 @@ def write_EDP(EVENT_input_path, SAM_input_path, AIM_input_path,
           known = True;
         elif   (eventType == "max_roof_drift"):
           edpAcronym = "PRD";
-          floor = eventEDP["floor2"];
+          floor = "1";
           known = True;
         elif   (eventType == "residual_disp"):
           edpAcronym = "RD";
