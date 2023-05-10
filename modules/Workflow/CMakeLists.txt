@@ -17,3 +17,6 @@ simcenter_add_file(NAME WorkflowApplications.json)
 simcenter_add_python_script(SCRIPT SiteResponse_workflow.py)
 simcenter_add_python_script(SCRIPT R2DTool_workflow.py)
 simcenter_add_python_script(SCRIPT CreateWorkflowJobs.py)
+
+simcenter_add_executable(NAME runMultiModelDriver
+                         FILES runMultiModelDriver.cpp)
