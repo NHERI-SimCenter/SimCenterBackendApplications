@@ -68,6 +68,8 @@ def main(inputArgs,err):
 
 class gmCluster():
     def __init__(self, inputArgs,err):
+
+        np.random.seed(seed=42)
         curDir = os.path.dirname(__file__)
         gmDataBaseDir = os.path.join(curDir,"gmdata.json")
         inputJsonPath = inputArgs[1]
