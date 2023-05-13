@@ -404,20 +404,28 @@
           }
         ]
       },
+	{
+            "Name": "CFDEvent",
+            "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
+            "ApplicationSpecificInputs":[
+	      {
+		  "id":"OpenFOAMCase",
+		  "type":"string",
+		  "description": "Remote directory containing OpenFOAM case input"
+	      },
+		{
+		    "id":"OpenFOAMSolver",
+		    "type":"string",
+		    "description": "OpenFOAM solver used"
+		}]
+        },
       {
-        "Name": "CFDEvent",
-        "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
+        "Name": "IsolatedBuildingCFD",
+        "ExecutablePath": "applications/createEVENT/isolatedBuildingCFD/IsolatedBuildingCFD.py",
         "ApplicationSpecificInputs":[
-    {
-      "id":"OpenFOAMCase",
-      "type":"string",
-            "description": "Remote directory containing OpenFOAM case input"
-    },{
-      "id":"OpenFOAMSolver",
-      "type":"string",
-            "description": "OpenFOAM solver used"
-    }]
+        ]
       },
+	
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
