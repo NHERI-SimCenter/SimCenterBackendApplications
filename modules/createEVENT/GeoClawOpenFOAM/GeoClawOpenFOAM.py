@@ -40,8 +40,7 @@ import argparse
 
 def main(inputFile,
          evtFile,
-         getRV,
-         appDir) :
+         getRV) :
 
     print("Finished GeoClawOpenFOAM application")
 
@@ -61,7 +60,6 @@ if __name__ == '__main__':
 
 	main(inputFile = args.filenameAIM,
 			evtFile = args.filenameEVENT,
-			getRV = args.getRV,
-			appDir = args.appDir)
+			getRV = args.getRV)
 
          
