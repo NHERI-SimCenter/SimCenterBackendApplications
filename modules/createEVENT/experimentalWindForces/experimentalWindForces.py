@@ -567,7 +567,7 @@ if __name__ == '__main__':
                 print("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
             exit(-1)
         else:
-            with open("../workflow.err","w") as f:
+            with open("../dakota.err","w") as f:
                 f.write("Failed to generate wind load: " + str(err) + "..." + str(traceback.format_exc()))
                 print("Failed to generate wind load:" + str(err) + "..." + str(traceback.format_exc()))
             exit(-1)
