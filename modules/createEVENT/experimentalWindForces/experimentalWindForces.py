@@ -215,7 +215,7 @@ def main(aimName,evtName,getRV):
     V_vH = V # scaled eigenmodes
     D_vH = (V_H / vRef) ** 3 * D1 # scaled eigenvalues
     theta_vH = np.arctan2(np.imag(V_vH), np.real(V_vH)) # scaled theta
-    #fcut_sc = (V_H / vRef) * fcut
+    fcut_sc = (V_H / vRef) * fcut
     f_inc = 1 / T_full # freq.increment(Hz)
     N_f = round(T_full * fcut_sc) + 1 # number of freq.points considered
     dt = 1 / (2 * fcut_sc) # max.time incremen to avoid aliasing(s)
