@@ -4,6 +4,7 @@ all:
 	(cd windTunnelExperiment; make all)
 	(cd multiplePEER; make all)
 	(cd stochasticGroundMotion; make all)
+	(cd IsolatedBuildingCFD; make all)
 	(cd stochasticWind; make all)
 	(cd siteResponse; make all)
 
@@ -14,6 +15,7 @@ clean:
 	(cd multipleSimCenter; make clean)
 	(cd LowRiseTPU; make clean)
 	(cd windTunnelExperiment; make clean)
+	(cd IsolatedBuildingCFD; make clean)
 	(cd multiplePEER; make clean)
 	(cd stochasticGroundMotion; make clean)
 	(cd stochasticWind; make clean)
@@ -25,6 +27,7 @@ distclean:
 	(cd multipleSimCenter; make distclean)
 	(cd LowRiseTPU; make distclean)
 	(cd WindTunnelExperiment; make distclean)
+	(cd IsolatedBuildingCFD; make distclean)
 	(cd multiplePEER; make distclean)
 	(cd stochasticGroundMotion; make distclean)
 	(cd stochasticWind; make distclean)
