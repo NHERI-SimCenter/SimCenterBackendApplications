@@ -1,12 +1,21 @@
 
-from convertWindMat import *
-import numpy as np
+
 import json
-from scipy.signal import csd, windows
-from scipy.interpolate import interp1d
 import math
 import time
 import os
+try:
+    moduleName = "numpy"
+    import numpy as np
+
+    moduleName = "scipy"
+    from scipy.signal import csd, windows
+    from scipy.interpolate import interp1d
+    error_tag = False  # global variable
+except:
+    error_tag = True
+
+from convertWindMat import *
 
 def main(aimName,evtName,getRV):
 
@@ -108,6 +117,10 @@ def main(aimName,evtName,getRV):
         t = data["t"]
         N = Fx.shape[1]
         nfloors = Fx.shape[0]
+        nfloors_GI = aim_data["GeneralInformation"]["NumberOfStories"]
+
+        if not nfloors==nfloors_GI:
+            err_exit("Number of floors does not match - input file has {} floors, GI tab defines {} floors".format(nfloors,nfloors_GI))
 
     elif case == "spectra":
 
@@ -128,7 +141,6 @@ def main(aimName,evtName,getRV):
         f_target = np.array(data["f_target"])
         norm_all  = np.array(data["norm_all"])
         comp_CFmean  = np.array(data["comp_CFmean"])
-
     #
     # Below here is fully parameterized
     #
@@ -159,7 +171,7 @@ def main(aimName,evtName,getRV):
     # Number of modes to be included
     #
 
-    l_mo = int(np.round(ncomp * ((perc_mod) / 100)))
+    l_mo = int(np.round(ncomp * ((perc_mod) / 100)+1.e-10)) # small value added to make .5 round up
     if l_mo>100 or l_mo<0:
         msg = 'Error: Number of modes should be equal or less than the number of components'
 
@@ -179,7 +191,7 @@ def main(aimName,evtName,getRV):
     #
 
     if case == "timeHistory":
-        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp)
+        [s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full] = learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp,V_H, fcut, T_full)
 
 
 
@@ -208,12 +220,12 @@ def main(aimName,evtName,getRV):
     N_f = round(T_full * fcut_sc) + 1 # number of freq.points considered
     dt = 1 / (2 * fcut_sc) # max.time incremen to avoid aliasing(s)
     N_t = round(T_full / dt) # number of time points
-    #fvec = np.arange(0, f_inc * (N_f),f_inc) # frequency line
+    fvec = np.arange(0, f_inc * (N_f),f_inc) # frequency line
     tvec = np.arange(0, dt * (N_t),dt) # time line
     f = f_vH[0:SpeN] # frequencies from the decomposition upto SpeN points(Hz)
     nf_dir = np.arange(ncomp)# vector number of components
 
-
+    
     #
     #
     #
@@ -252,7 +264,9 @@ def main(aimName,evtName,getRV):
     #
 
     if getRV:
-        F_sim=F_sim*0
+        F_sim=np.zeros(F_sim.shape)
+
+
 
 
     evtInfo = {}
@@ -390,7 +404,7 @@ def perform_POD(s_target,f_target, ncomp, l_mo):
 
 
 
-def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp):
+def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp, V_H, fcut, T_full):
     Fx_full = ms ** 2 * Fx # full scale Fx(N)
     Fy_full = ms ** 2 * Fy # full scale  Fy(N)
     Tz_full = ms ** 2 * Tz # full scale Tz(N)
@@ -426,8 +440,13 @@ def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full
 
     # Smoothed target CPSD
     wind_size = fs*Tw;
-    nover = round(overlap*wind_size);
-    nfft = int(wind_size)
+    nover = round(overlap*wind_size)
+
+    #nfft = int(wind_size)
+    fcut_sc = (V_H / vRef) * fcut
+    dt = 1 / (2 * fcut_sc) # max.time incremen to avoid aliasing(s)
+    N_t = round(T_full / dt) # number of time points
+    nfft = N_t
 
     window = windows.hann(int(wind_size))
 
@@ -468,7 +487,9 @@ def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_m
     for m in range(l_mo):
         mo = m # current        mode  #
         Vmo = V_vH[nf_dir, mo,:] # eigenvector for mode mo
-        Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo
+        #Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo
+        Dmo = D_vH[mo, 0,:] + 1j * 0 # To avoid nan when calculating VDmo
+
         thetmo = theta_vH[nf_dir, mo,:] # theta for mode mo
         VDmo = np.sqrt((V_H / vRef) ** 3) * np.abs(Vmo) * (np.ones((ncomp, 1)) * np.sqrt(Dmo)) # product of eigenvector X
 
@@ -504,6 +525,13 @@ def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_m
 
     return F_jzm
 
+
+def err_exit(msg):
+    print(msg)
+    with open("../workflow.err","w") as f:
+        f.write(msg)
+    exit(-1)
+
 if __name__ == '__main__':
    #parseWindMatFile("Forces_ANG000_phase1.mat", "Forces_ANG000_phase1.json")
    #parseWindMatFile("TargetSpectra_ANG000_phase1.mat", "TargetSpectra_ANG000_phase1.json")
@@ -519,8 +547,16 @@ if __name__ == '__main__':
         if (myarg == "--getRV"):
             getRV = True;
 
+
+    if error_tag and getRV:
+        with open("../workflow.err","w") as f:
+            print("Failed to import module " + moduleName)
+            f.write("Failed to import module " + moduleName + ". Please check the python path in the preference")
+        exit(-1)
+
     # if getRV:
     #     aimName = aimName + ".sc"
+
     try:
         main(aimName, evtName, getRV)
     except Exception as err:
@@ -528,8 +564,10 @@ if __name__ == '__main__':
         if getRV:
             with open("../workflow.err","w") as f:
                 f.write("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
+                print("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
             exit(-1)
         else:
             with open("../dakota.err","w") as f:
                 f.write("Failed to generate wind load: " + str(err) + "..." + str(traceback.format_exc()))
+                print("Failed to generate wind load:" + str(err) + "..." + str(traceback.format_exc()))
             exit(-1)
