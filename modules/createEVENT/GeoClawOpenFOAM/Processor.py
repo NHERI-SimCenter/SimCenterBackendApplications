@@ -33,6 +33,7 @@ import argparse
 import json
 import sys
 import datetime
+from pathlib import Path
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -65,7 +66,7 @@ def main():
 		'-b',
 		metavar='path to input file',
 		type=str,
-		help='the path to Dakota.json file',
+		help='the path to input json file',
 		required=True)
 	# Input directory - templateDir
 	h2oparser.add_argument(
@@ -107,7 +108,11 @@ def main():
 	args = h2oparser.parse_args()
 
 	# Get the path
-	fipath = args.b.replace('/dakota.json','')
+	# fipath = args.b.replace('/dakota.json','')
+	fipath = Path(args.b)
+	if fipath.is_file():
+		fipath = fipath.parent
+	fipath = str(fipath)
 	
 	# Open the JSON file and load all objects
 	with open(args.b) as f:
