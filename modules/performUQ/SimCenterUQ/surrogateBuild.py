@@ -849,8 +849,8 @@ class surrogate(UQengine):
         my_x_dim = X.shape[1]
         kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True)
         #kernel_mean = GPy.kern.Matern52(input_dim=my_x_dim, ARD=True) + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
-       #if self.do_linear:
-       #     kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
+        if self.do_linear and not self.isEEUQ:
+             kernel_mean = kernel_mean + GPy.kern.Linear(input_dim=my_x_dim, ARD=True)
 
         m_mean = GPy.models.GPRegression(X, Y, kernel_mean, normalizer=True, Y_metadata=None)
 
@@ -861,10 +861,12 @@ class surrogate(UQengine):
                     myrange = np.max(X,axis=0)-np.min(X,axis=0)
                     #m_mean.kern.Mat52.lengthscale[[nx]]=  myrange[nx]*100
                     #m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
-                    m_mean.kern.lengthscale[[nx]]=  myrange[nx]*100
-                    m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
-
-                    #TODO change the kernel
+                    if self.isEEUQ:
+                        m_mean.kern.lengthscale[[nx]]=  myrange[nx]*100
+                        m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
+                    else:
+                        m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
+                        m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
 
         #m_mean.optimize(messages=True, max_f_eval=1000)
         #m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
@@ -881,9 +883,16 @@ class surrogate(UQengine):
         #m_mean.optimize_restarts(10,parallel=True)
         
         mean_pred, mean_var = m_mean.predict(X)
+
             
+        import matplotlib.pyplot as plt
         print(m_mean)
-        
+        #print(m_mean.Mat52.lengthscale)
+        plt.scatter(X[:, 4], Y);
+        plt.plot(X[:, 4], mean_pred, 'rx');
+        plt.errorbar(X[:, 4],mean_pred.T[0],yerr=np.sqrt(mean_var.T)[0],fmt='x');
+        plt.show()
+
         return mean_pred, mean_var
 
 
@@ -1260,25 +1269,25 @@ class surrogate(UQengine):
         self.Gausspvalue
         ## The plot in quoFEM
         import matplotlib.pyplot as plt
-        ny = 2 ;
-        nx = 2;
+        ny = 0 ;
+        nx = 4;
         sorted_y_std = np.sqrt(self.Y_cv_var_w_measure[:,ny])
         sorted_y_std0 = np.sqrt(self.Y_cv_var[:,ny])
         
         sorted_y_stds = np.sqrt(self.Y_cv_var_w_measures[:,ny])
         sorted_y_std0s = np.sqrt(self.Y_cv_vars[:,ny])
-
-        plt.errorbar(self.X_hf[:, nx],(self.Y_cvs[:, ny]),yerr=sorted_y_stds,fmt='x');
-        plt.errorbar(self.X_hf[:, nx],(self.Y_cvs[:, ny]),yerr=sorted_y_std0s,fmt='x');
-        plt.scatter(self.X_hf[:, nx],np.log(self.Y_hf[:, ny]),c='r'); plt.show()        
-        
-        
-        # plt.scatter(self.X_hf[:, nx],np.log(self.Y_hf[:, ny]),color='r'); 
-        # plt.scatter(self.X_hf[:, nx],np.log(self.Y_cv[:, ny])); plt.show()
         
         plt.errorbar(self.X_hf[:, nx],(self.Y_cv[:, ny]),yerr=sorted_y_std,fmt='x');
         plt.errorbar(self.X_hf[:, nx],(self.Y_cv[:, ny]),yerr=sorted_y_std0,fmt='x');
         plt.scatter(self.X_hf[:, nx],(self.Y_hf[:, ny]),c='r'); plt.show()
+
+        # plt.errorbar(self.X_hf[:, nx],(self.Y_cvs[:, ny]),yerr=sorted_y_stds,fmt='x');
+        # plt.errorbar(self.X_hf[:, nx],(self.Y_cvs[:, ny]),yerr=sorted_y_std0s,fmt='x');
+        # plt.scatter(self.X_hf[:, nx],np.log(self.Y_hf[:, ny]),c='r'); plt.show()        
+        # 
+        # 
+        # plt.scatter(self.X_hf[:, nx],np.log(self.Y_hf[:, ny]),color='r'); 
+        # plt.scatter(self.X_hf[:, nx],np.log(self.Y_cv[:, ny])); plt.show()
 
         
         plt.errorbar(self.X_hf[:, nx],self.Y_cv[:, ny],yerr = sorted_y_std,fmt='x');plt.ylim([-200,1500]);plt.show()

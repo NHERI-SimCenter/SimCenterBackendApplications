@@ -764,37 +764,39 @@ class gmCluster():
             fig.colorbar(sc,label= "coverage (error level)")
             '''
         if nim==1:
-            flat_grid_error = err_sum.flatten() / npergrid
+            pass
+        #     flat_grid_error = err_sum.flatten() / npergrid
 
 
-            import matplotlib.pyplot as plt
+        #     import matplotlib.pyplot as plt
 
-            ngrid_1axis = int(im_nbins[0])
-            mypoints = np.zeros((0,nim))
+        #     ngrid_1axis = int(im_nbins[0])
+        #     mypoints = np.zeros((0,nim))
 
-            for nsa in range(ngrid_1axis):
+        #     for nsa in range(ngrid_1axis):
 
-                idx1 = 0
-                theLogSF1 = np.log(np.array(selected_gm_scale_list[nsa]) ** scaling_exponent[idx1])
+        #         idx1 = 0
+        #         theLogSF1 = np.log(np.array(selected_gm_scale_list[nsa]) ** scaling_exponent[idx1])
 
-                theLogIM1 = np.array(IM_log_data_pool[selected_gm_ID_list[nsa], idx1])
+        #         theLogIM1 = np.array(IM_log_data_pool[selected_gm_ID_list[nsa], idx1])
 
-                mypoints_tmp = np.vstack([theLogIM1 + theLogSF1]).T
-                mypoints = np.vstack([mypoints,mypoints_tmp])
+        #         mypoints_tmp = np.vstack([theLogIM1 + theLogSF1]).T
+        #         mypoints = np.vstack([mypoints,mypoints_tmp])
 
-            X = np.linspace(log_im_lb[idx1], log_im_ub[idx1], int(im_nbins[idx1]))
-            IM_log_ref = np.vstack([X.reshape(-1)]).T
+        #     X = np.linspace(log_im_lb[idx1], log_im_ub[idx1], int(im_nbins[idx1]))
+        #     IM_log_ref = np.vstack([X.reshape(-1)]).T
 
-            fig = plt.figure()
-            ax = fig.add_subplot()
-            ax.scatter(mypoints[:, 0], 0*mypoints[:, 0],s=18)
-            ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)
-            plt.xlabel(im_names[idx1]);
+        #     fig = plt.figure()
+        #     ax = fig.add_subplot()
+        #     ax.scatter(mypoints[:, 0], 0*mypoints[:, 0],s=18)
+        #     ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)
+        #     plt.xlabel(im_names[idx1]);
 
         #plt.savefig('gridIM_coverage.png',bbox_inches='tight')
-        with open(r"gridIM_coverage.html", 'w') as f:
-            f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
-        f.close()
+        if nim==2 or nim==3:
+            with open(r"gridIM_coverage.html", 'w') as f:
+                f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+            f.close()
 
 
 if __name__ == "__main__":
