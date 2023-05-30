@@ -303,11 +303,16 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	for (auto& elem : UQjson["randomVariables"])
 	{
 		std::string distName = elem["distribution"];
+		// name of distribution
+		std::transform(distName.begin(), distName.end(), distName.begin(), ::tolower); // make it lower case
+		distName.erase(remove_if(distName.begin(), distName.end(), isspace), distName.end()); // remove space
 
 		std::string inpType;
 		if ((elem.find("inputType") == elem.end()))
 		{
 			if (distName=="discrete_design_set_string") {
+				inpType = "Parameters";
+			} else if (distName=="normal") {
 				inpType = "Parameters";
 			} else {
 				std::string errMsg = "Error reading json: input file does not have the key 'inputType'";
@@ -319,9 +324,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		}
 		// if key "correlationMatrix" exists
 		
-		// name of distribution
-		std::transform(distName.begin(), distName.end(), distName.begin(), ::tolower); // make it lower case
-		distName.erase(remove_if(distName.begin(), distName.end(), isspace), distName.end()); // remove space
 
 		// type of input (PAR, MOM, or DAT)
 		std::string inpTypeSub = inpType.substr(0, 3);
@@ -539,7 +541,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 		if (vals_tmp.size() < 1) { //*ERROR*
 			//*ERROR*
-			std::string errMsg = "Error reading json: data file of " + rvNames[nrv] + " has less then one sample.";
+			std::string errMsg = "Error reading json: data file of " + rvNames[i] + " has less then one sample.";
 			theErrorFile.write(errMsg);
 
 		}
