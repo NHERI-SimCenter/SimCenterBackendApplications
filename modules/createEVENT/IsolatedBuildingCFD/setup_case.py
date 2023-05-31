@@ -23,34 +23,34 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
-    domain_data = json_data["blockMeshParameters"]
+    mesh_data = json_data["blockMeshParameters"]
           
-    scale =  domain_data['geometricScale']
-    H = domain_data['buildingHeight']/scale #convert to model-scale
+    scale =  json_data['geometricScale']
+    H = json_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = domain_data['domainLength']
-    Ly = domain_data['domainWidth']
-    Lz = domain_data['domainHeight']
-    Lf = domain_data['fetchLength']
+    Lx = json_data['domainLength']
+    Ly = json_data['domainWidth']
+    Lz = json_data['domainHeight']
+    Lf = json_data['fetchLength']
     
-    x_cells = domain_data['xNumCells']
-    y_cells = domain_data['yNumCells']
-    z_cells = domain_data['zNumCells']
+    x_cells = mesh_data['xNumCells']
+    y_cells = mesh_data['yNumCells']
+    z_cells = mesh_data['zNumCells']
     
-    x_grading = domain_data['xGrading']
-    y_grading = domain_data['yGrading']
-    z_grading = domain_data['zGrading']
+    x_grading = mesh_data['xGrading']
+    y_grading = mesh_data['yGrading']
+    z_grading = mesh_data['zGrading']
 
-    inlet_type = domain_data['inletBoundaryType']
-    outlet_type = domain_data['outletBoundaryType']
-    ground_type = domain_data['groundBoundaryType']
-    top_type = domain_data['topBoundaryType']
-    front_type = domain_data['frontBoundaryType']
-    back_type = domain_data['backBoundaryType']
+    inlet_type = mesh_data['inletBoundaryType']
+    outlet_type = mesh_data['outletBoundaryType']
+    ground_type = mesh_data['groundBoundaryType']
+    top_type = mesh_data['topBoundaryType']
+    front_type = mesh_data['frontBoundaryType']
+    back_type = mesh_data['backBoundaryType']
     
-    normalization_type = domain_data['normalizationType']
-    origin = np.array(domain_data['origin'])
-    length_unit = domain_data['lengthUnit']
+    normalization_type = json_data['normalizationType']
+    origin = np.array(json_data['origin'])
+    length_unit = json_data['lengthUnit']
 
     if normalization_type == "Relative":
         Lx = Lx*H
@@ -132,13 +132,9 @@ def write_building_stl_file(input_json_path, case_path):
     with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
-    # returns JSON object as 
-    # a dictionary
-    bldg_data = json_data["buildingParameters"]
       
-    
-    scale =  bldg_data['geometricScale']
-    length_unit =  bldg_data['lengthUnit']
+    scale =  json_data['geometricScale']
+    length_unit =  json_data['lengthUnit']
 
     convert_to_meters = 1.0
 
@@ -154,14 +150,14 @@ def write_building_stl_file(input_json_path, case_path):
         convert_to_meters = 0.0254
     
     #Convert from full-scale to model-scale
-    B = convert_to_meters*bldg_data['buildingWidth']/scale
-    D = convert_to_meters*bldg_data['buildingDepth']/scale
-    H = convert_to_meters*bldg_data['buildingHeight']/scale
+    B = convert_to_meters*json_data['buildingWidth']/scale
+    D = convert_to_meters*json_data['buildingDepth']/scale
+    H = convert_to_meters*json_data['buildingHeight']/scale
     
-    normalization_type = bldg_data['normalizationType']
+    normalization_type = json_data['normalizationType']
 
-    origin = np.array(bldg_data['origin'])
-    wind_dxn = bldg_data['windDirection']
+    origin = np.array(json_data['origin'])
+    wind_dxn = json_data['windDirection']
 
     if normalization_type == "Relative":
         origin = origin*H
@@ -272,41 +268,41 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
-    domain_data = json_data["snappyHexMeshParameters"]
+    mesh_data = json_data["snappyHexMeshParameters"]
       
-    scale =  domain_data['geometricScale']
-    H = domain_data['buildingHeight']/scale #convert to model-scale
+    scale =  json_data['geometricScale']
+    H = json_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = domain_data['domainLength']
-    Ly = domain_data['domainWidth']
-    Lz = domain_data['domainHeight']
-    Lf = domain_data['fetchLength']
+    Lx = json_data['domainLength']
+    Ly = json_data['domainWidth']
+    Lz = json_data['domainHeight']
+    Lf = json_data['fetchLength']
     
-    normalization_type = domain_data['normalizationType']
-    origin = np.array(domain_data['origin'])
-    length_unit = domain_data['lengthUnit']
+    normalization_type = json_data['normalizationType']
+    origin = np.array(json_data['origin'])
+    length_unit = json_data['lengthUnit']
     
-    building_stl_name = domain_data['buildingSTLName']
-    num_cells_between_levels = domain_data['numCellsBetweenLevels']
-    resolve_feature_angle = domain_data['resolveFeatureAngle']
-    num_processors = domain_data['numProcessors']
+    building_stl_name = mesh_data['buildingSTLName']
+    num_cells_between_levels = mesh_data['numCellsBetweenLevels']
+    resolve_feature_angle = mesh_data['resolveFeatureAngle']
+    num_processors = mesh_data['numProcessors']
     
-    refinement_boxes = domain_data['refinementBoxes']
+    refinement_boxes = mesh_data['refinementBoxes']
     
-    add_surface_refinement = domain_data['addSurfaceRefinement']
-    surface_refinement_level = domain_data['surfaceRefinementLevel']
-    surface_refinement_distance = domain_data['surfaceRefinementDistance']
-    refinement_surface_name = domain_data['refinementSurfaceName']
+    add_surface_refinement = mesh_data['addSurfaceRefinement']
+    surface_refinement_level = mesh_data['surfaceRefinementLevel']
+    surface_refinement_distance = mesh_data['surfaceRefinementDistance']
+    refinement_surface_name = mesh_data['refinementSurfaceName']
     
-    add_edge_refinement = domain_data['addEdgeRefinement']
-    edge_refinement_level = domain_data['edgeRefinementLevel']
-    refinement_edge_name = domain_data['refinementEdgeName']
+    add_edge_refinement = mesh_data['addEdgeRefinement']
+    edge_refinement_level = mesh_data['edgeRefinementLevel']
+    refinement_edge_name = mesh_data['refinementEdgeName']
     
-    add_prism_layers = domain_data['addPrismLayers']
-    number_of_prism_layers = domain_data['numberOfPrismLayers']
-    prism_layer_expantion_ratio = domain_data['prismLayerExpantionRatio']
-    final_prism_layer_thickness = domain_data['finalPrismLayerThickness']
-    prism_layer_surface_name = domain_data['prismLayerSurfaceName']
+    add_prism_layers = mesh_data['addPrismLayers']
+    number_of_prism_layers = mesh_data['numberOfPrismLayers']
+    prism_layer_expantion_ratio = mesh_data['prismLayerExpantionRatio']
+    final_prism_layer_thickness = mesh_data['finalPrismLayerThickness']
+    prism_layer_surface_name = mesh_data['prismLayerSurfaceName']
     prism_layer_relative_size = "on"  
 
     if normalization_type == "Relative":
@@ -494,8 +490,8 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     sides_BC_type = boundary_data['sidesBoundaryCondition']
     building_BC_type = boundary_data['buildingBoundaryCondition']
  
-    wind_speed = wind_data['roofHeightWindSpeed']
-    building_height = wind_data['buildingHeight']
+    wind_speed = wind_data['referenceWindSpeed']
+    building_height = wind_data['referenceHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
 
@@ -836,8 +832,8 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     ground_BC_type = boundary_data['groundBoundaryCondition']
     building_BC_type = boundary_data['buildingBoundaryCondition']
 
-    wind_speed = wind_data['roofHeightWindSpeed']
-    building_height = wind_data['buildingHeight']
+    wind_speed = wind_data['referenceWindSpeed']
+    building_height = wind_data['referenceHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
     
     #Open the template file (OpenFOAM file) for manipulation
@@ -968,8 +964,8 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     ground_BC_type = boundary_data['groundBoundaryCondition']
     building_BC_type = boundary_data['buildingBoundaryCondition']
 
-    wind_speed = wind_data['roofHeightWindSpeed']
-    building_height = wind_data['buildingHeight']
+    wind_speed = wind_data['referenceWindSpeed']
+    building_height = wind_data['referenceHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
     
     #Open the template file (OpenFOAM file) for manipulation
@@ -1582,7 +1578,7 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
     wc_data = json_data["windCharacteristics"]
     ns_data = json_data["numericalSetup"]
       
-    wind_speed = wc_data['roofHeightWindSpeed']
+    wind_speed = wc_data['referenceWindSpeed']
     duration = ns_data['duration']
     
     #Generate a little longer duration to be safe
