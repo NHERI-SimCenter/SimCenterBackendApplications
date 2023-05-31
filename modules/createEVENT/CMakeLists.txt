@@ -17,7 +17,7 @@ add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
-add_subdirectory(isolatedBuildingCFD)
+add_subdirectory(IsolatedBuildingCFD)
 
 
 
