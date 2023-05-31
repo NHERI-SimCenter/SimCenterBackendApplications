@@ -20,13 +20,8 @@ class simCenterBackendApps(ConanFile):
                "clara/1.1.5",
                "jsonformoderncpp/3.7.0",
                #"smelt/1.2.0@simcenter/stable",
-<<<<<<< HEAD
-               "mkl-static/2019.4@simcenter/stable",
-               "ipp-static/2019.4@simcenter/stable",
-=======
                #"mkl-static/2019.4@simcenter/stable",
                #"ipp-static/2019.4@simcenter/stable",
->>>>>>> 2c445194265de8c9b39ffff464fc7e8032c23619
                "nanoflann/1.3.2",
                "nlopt/2.7.1"]
                    
