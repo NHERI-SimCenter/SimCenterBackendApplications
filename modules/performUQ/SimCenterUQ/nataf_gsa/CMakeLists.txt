@@ -205,7 +205,7 @@ else()
   
 	elseif(OpenMP_FOUND)
 
-	  find_package(LAPACK REQUIRED)
+	  #find_package(LAPACK REQUIRED)
 	  message(STATUS "nataf_gsa: OpenMP")	
 	  add_executable(nataf_gsa ${SOURCES})
 	  target_link_libraries(nataf_gsa
