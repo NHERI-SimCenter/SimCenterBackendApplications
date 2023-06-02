@@ -17,6 +17,10 @@ FoamFile
 numberOfSubdomains  	8;
 
 decomposer      	hierarchical;
+
+//Needed for compatability
+method       		hierarchical;
+
 distributor     	ptscotch;
 
 hierarchicalCoeffs
