@@ -111,7 +111,8 @@ castellatedMeshControls
     // section reachable from the insidePoint is kept.
     // NOTE: This point should never be on a face, always inside a cell, even
     // after refinement.
-    insidePoint $!snappyParams/insidePoint;
+    insidePoint (0 0 0);
+    locationInMesh (0 0 0);
     
     // Whether any faceZones (as specified in the refinementSurfaces)
     // are only on the boundary of corresponding cellZones or also allow
@@ -233,6 +234,9 @@ addLayersControls
 // where to undo.
 meshQualityControls
 {
+    #includeEtc "caseDicts/mesh/generation/meshQualityDict"
+
+
     //- Maximum non-orthogonality allowed. Set to 180 to disable.
     maxNonOrtho 65;
 

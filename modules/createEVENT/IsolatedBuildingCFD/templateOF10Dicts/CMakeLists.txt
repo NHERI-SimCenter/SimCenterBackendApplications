@@ -7,6 +7,7 @@ simcenter_add_file(NAME epsilonFileTemplate)
 
 #Files in "costant" directory
 simcenter_add_file(NAME physicalPropertiesTemplate)
+simcenter_add_file(NAME transportPropertiesTemplate)
 simcenter_add_file(NAME momentumTransportTemplate)
 simcenter_add_file(NAME DFSRTurbDictTemplate)
 

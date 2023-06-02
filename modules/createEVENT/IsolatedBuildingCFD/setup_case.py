@@ -384,6 +384,12 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "insidePoint")
     dict_lines[start_index] = "    insidePoint ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
 
+
+    #For compatability with OpenFOAM-9 and older
+    start_index = foam.find_keyword_line(dict_lines, "locationInMesh")
+    dict_lines[start_index] = "    locationInMesh ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
+
+
     #Add refinment edge 
     if add_edge_refinement: 
         start_index = foam.find_keyword_line(dict_lines, "features") + 2 
@@ -1496,6 +1502,42 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     output_file.close()
     
 
+def write_transportProperties_file(input_json_path, template_dict_path, case_path):
+
+    #Read JSON data
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    # Returns JSON object as a dictionary
+    wc_data = json_data["windCharacteristics"]
+      
+    
+    kinematic_viscosity = wc_data['kinematicViscosity']
+
+    
+    #Open the template file (OpenFOAM file) for manipulation
+    dict_file = open(template_dict_path + "/transportPropertiesTemplate", "r")
+
+    dict_lines = dict_file.readlines()
+    dict_file.close()
+    
+
+    #Write type of the simulation 
+    start_index = foam.find_keyword_line(dict_lines, "nu") 
+    dict_lines[start_index] = "nu\t\t[0 2 -1 0 0 0 0] {:.3e};\n".format(kinematic_viscosity)
+
+
+    #Write edited dict to file
+    write_file_name = case_path + "/constant/transportProperties"
+    
+    if os.path.exists(write_file_name):
+        os.remove(write_file_name)
+    
+    output_file = open(write_file_name, "w+")
+    for line in dict_lines:
+        output_file.write(line)
+    output_file.close()
+
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
@@ -1553,6 +1595,9 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "decomposer") 
     dict_lines[start_index] = "decomposer\t\t{};\n".format("scotch")
 
+    #Write method of decomposition for OF-V9 and lower compatability
+    start_index = foam.find_keyword_line(dict_lines, "method") 
+    dict_lines[start_index] = "method\t\t{};\n".format("scotch")
     
 
     #Write edited dict to file
@@ -1696,6 +1741,9 @@ if __name__ == '__main__':
     
     #Write physicalProperties dict
     write_physicalProperties_file(input_json_path, template_dict_path, case_path)
+    
+    #Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
+    write_transportProperties_file(input_json_path, template_dict_path, case_path)
     
     #Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)
