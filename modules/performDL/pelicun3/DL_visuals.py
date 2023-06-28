@@ -43,6 +43,7 @@ import shutil
 from pathlib import Path
 from textwrap import wrap
 from copy import deepcopy
+from zipfile import ZipFile
 
 import numpy as np
 from scipy.stats import norm
@@ -59,7 +60,10 @@ import time
 
 #start_time = time.time()
 
-def plot_fragility(comp_db_path, output_path):
+def plot_fragility(comp_db_path, output_path, create_zip="0"):
+
+    if create_zip == "1":
+        output_path = output_path[:-4]
 
     if os.path.exists(output_path):
         shutil.rmtree(output_path)
@@ -265,7 +269,10 @@ def plot_fragility(comp_db_path, output_path):
                         else:
                             ds_repair = ''
 
-                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                        if ds_repair != '':
+                            ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                        else:
+                            ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
                         y_loc_ds = y_loc - 0.018 - i_ds*ds_offset
 
@@ -298,7 +305,10 @@ def plot_fragility(comp_db_path, output_path):
                     else:
                         ds_repair = ''
 
-                    ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                    if ds_repair != '':
+                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                    else:
+                        ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
                     fig.add_annotation(
                         text=f'<b>*</b>',
@@ -340,17 +350,29 @@ def plot_fragility(comp_db_path, output_path):
             showlegend=False
         )
 
-        with open(f'{output_path}{comp_id}.html', "w") as f:
+        with open(f'{output_path}/{comp_id}.html', "w") as f:
             f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+
+    if create_zip == "1":
+
+        files = [f"{output_path}/{file}" for file in os.listdir(output_path)]
+
+        with ZipFile(output_path+".zip", 'w') as zip:
+            for file in files:
+                zip.write(file, arcname=Path(file).name)   
+
+        shutil.rmtree(output_path)     
 
     print("Successfully generated component vulnerability figures.")
 
 
-def plot_repair(comp_db_path, output_path):
+def plot_repair(comp_db_path, output_path, create_zip="0"):
 
     #TODO:
-    # change frag_df and frag_meta names
     # change limit_states names
+
+    if create_zip == "1":
+        output_path = output_path[:-4]
 
     # initialize the output dir
 
@@ -362,7 +384,7 @@ def plot_repair(comp_db_path, output_path):
     Path(output_path).mkdir(parents=True, exist_ok=True);
 
     # open the input component database
-    frag_df = convert_to_MultiIndex(
+    repair_df = convert_to_MultiIndex(
         convert_to_MultiIndex(pd.read_csv(comp_db_path, index_col=0), axis=1),
         axis=0)
 
@@ -373,25 +395,25 @@ def plot_repair(comp_db_path, output_path):
     # check if the metadata is there and open it
     if Path(comp_db_meta).is_file():
         with open(comp_db_meta, 'r') as f:
-            frag_meta = json.load(f)
+            repair_meta = json.load(f)
     else:
 
         # otherwise, assign None to facilitate checks later
-        frag_meta = None
+        repair_meta = None
 
     # perform the plotting for each component independently
-    for comp_id in frag_df.index.unique(level=0): #[410:418]:
+    for comp_id in repair_df.index.unique(level=0): #[410:418]:
 
         # perform plotting for each repair consequence type indepdendently
-        for c_type in frag_df.loc[comp_id].index:
+        for c_type in repair_df.loc[comp_id].index:
 
             # load the component-specific part of the database
-            comp_data = frag_df.loc[(comp_id, c_type)]
+            comp_data = repair_df.loc[(comp_id, c_type)]
 
             # and the component-specific metadata - if it exists
-            if frag_meta != None:
-                if comp_id in frag_meta.keys():
-                    comp_meta = frag_meta[comp_id]
+            if repair_meta != None:
+                if comp_id in repair_meta.keys():
+                    comp_meta = repair_meta[comp_id]
                 else:
                     comp_meta = None
             else:
@@ -732,9 +754,12 @@ def plot_repair(comp_db_path, output_path):
                         if ds_meta.get('RepairAction', False) != False:
                             ds_repair = '<br>'.join(wrap(ds_meta["RepairAction"], width=55))
                         else:
-                            ds_repair = ''
+                            ds_repair = ''                        
 
-                        ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                        if ds_repair != '':
+                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                        else:
+                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}'
 
                         fig.add_annotation(
                             text=f'<b>*</b>',
@@ -835,10 +860,20 @@ def plot_repair(comp_db_path, output_path):
             )
 
             # save figure to html
-            with open(f'{output_path}{comp_id}-{c_type}.html', "w") as f:
+            with open(f'{output_path}/{comp_id}-{c_type}.html', "w") as f:
                 # Minimize size by not saving javascript libraries which means
                 # internet connection is required to view the figure.
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+
+    if create_zip == "1":
+
+        files = [f"{output_path}/{file}" for file in os.listdir(output_path)]
+
+        with ZipFile(output_path+".zip", 'w') as zip:
+            for file in files:
+                zip.write(file, arcname=Path(file).name)   
+
+        shutil.rmtree(output_path) 
 
     print("Successfully generated component repair consequence figures.")
 
@@ -849,14 +884,15 @@ def main(args):
     parser.add_argument('comp_db_path')
     parser.add_argument('-o', '--output_path', 
         default="./comp_viz/") #replace with None
+    parser.add_argument('-z', '--zip', default="0")
 
     args = parser.parse_args(args)
 
     if args.viz_type == 'fragility':
-        plot_fragility(args.comp_db_path, args.output_path)
+        plot_fragility(args.comp_db_path, args.output_path, args.zip)
 
     elif args.viz_type == 'repair':
-        plot_repair(args.comp_db_path, args.output_path)        
+        plot_repair(args.comp_db_path, args.output_path, args.zip)        
 
     #print("--- %s seconds ---" % (time.time() - start_time))
 
