@@ -1,89 +1,45 @@
-# written: UQ team @ SimCenter
-
-# import functions for Python 2.X support
-from __future__ import division, print_function
-import sys
-if sys.version.startswith('2'): 
-    range=xrange
-    string_types = basestring
-else:
-    string_types = str
-
-import shutil
-import json
+import click
 import os
-import stat
-import sys
-import platform
-from subprocess import Popen, PIPE
-from pathlib import Path
-import subprocess
-import argparse
 
-def main(args):
+from src.quofemDTOs import Model
+from src.runmodel.RunModelDTOs import RunModelDTO
 
-    parser = argparse.ArgumentParser()
 
-    parser.add_argument('--inputFile')
-    parser.add_argument('--workflow_driver')    
-    parser.add_argument('--runType')
-    parser.add_argument('--osType')
-    
-    args,unknowns = parser.parse_known_args()
+@click.command()
+@click.option('--workflowInput', type=click.Path(exists=True, readable=True), required=True,
+              help="Path to JSON file containing the details of FEM and UQ tools.")
+@click.option('--driverFile', type=click.Path(exists=True, readable=True),
+              help="ASCII file containing the details on how to run the FEM application.")
+@click.option('--runType', type=click.Choice(['runningLocal', 'runningRemote']),
+              default='runningLocal', help="Choose between local or cluster execution of workflow.")
+@click.option('--osType', type=click.Choice(['Linux', 'Windows']),
+              help="Type of operating system the workflow will run on.")
+def preprocess(workflowinput, driverfile, runtype, ostype):
+    code = []
 
-    inputFile = args.inputFile   # JSON FILE information from GUI
-    workflow_driver = args.workflow_driver
-    runType = args.runType
-    osType = args.osType
-    
-    # Step 1: Read the JSON file
-    with open(inputFile, "r") as f:
-        data = json.load(f)
-    
-    uq_data = data["UQ"]
-    rv_data = data["randomVariables"]
-    fem_data = data["Applications"]["FEM"]
-    edp_data = data["EDP"]
-    
-    f = open("UQpyAnalysis.py", "w")
-    
-    # f.write("from UQpy import PythonModel\n")
-    # f.write("from UQpy.distributions import *\n")
-    # f.write("from UQpy.reliability import SubsetSimulation\n")
-    # f.write("from UQpy.run_model.RunModel import RunModel\n")
-    # f.write("from UQpy.sampling import ModifiedMetropolisHastings, Stretch, MetropolisHastings\n")
-    # f.write("distributionRV = []\n")
-    # f.write("num_of_rves = len(RVdata)\n")
-    # f.write("for i in range(num_rves):\n")
-    #     f.write("nameRV.append(RVdata[i]["name"])\n")
-    #     f.write("if RVdata[i]["distribution"] == 'Normal':\n")
-    #         f.write("distributionRV.append(Normal(loc={0}, scale={1}))".format(rv_data[i]["scaleparam"], rv_data[i]["shapeparam"]))
-    #         #distributionRV.append(Normal(loc=RVdata[i]["scaleparam"], scale=RVdata[i]["shapeparam"])) # check variance 
+    with open(os.path.join(os.getcwd(), workflowinput)) as my_file:
+        json = my_file.read()
+        model = Model.parse_raw(json)
 
-         
 
-    # # Create RunModel object
-    # # m = PythonModel(model_script='local_Rosenbrock_pfn.py', model_object_name="RunPythonModel")
-    # # model = RunModel(model=m)
-    
-    # # Create Distribution object
-    # dist = Rosenbrock(p=100.)
-    # dist_prop1 = Normal(loc=0, scale=1)
-    # dist_prop2 = Normal(loc=0, scale=10)
+    marginals_code = 'marginals = JointIndependent(['
+    for distribution in model.randomVariables:
+        (distribution_code, input) = distribution.init_to_text()
+        marginals_code += input + ','
+        code.append(distribution_code)
+    marginals_code += '])\n'
+    code.append(marginals_code)
 
-    # x = stats.norm.rvs(loc=0, scale=1, size=(100, 2), random_state=83276)
+    runmodel_code = RunModelDTO.create_runmodel_with_variables_driver(variables=model.randomVariables,
+                                                                      driver_filename=driverfile)
+    (uqmethod_code, _) = model.UQ.methodData.generate_code()
 
-    # # Create MCMC object
+    code.append(runmodel_code)
+    code.append(uqmethod_code)
 
-    # mcmc_init1 = ModifiedMetropolisHastings(dimension=2, log_pdf_target=dist.log_pdf, seed=x.tolist(),
-    #                                                            burn_length=1000, proposal=[dist_prop1, dist_prop2],
-    #                                                            random_state=8765)
-    # mcmc_init1.run(10000)
+    with open("UQpyAnalysis.py", 'w') as outfile:
+        outfile.write("\n".join(code))
 
-    # sampling=Stretch(log_pdf_target=dist.log_pdf, dimension=2, n_chains=1000, random_state=38546)
-    
-    # # Run Subset simulation
-    # x_ss_MMH = SubsetSimulation(sampling=sampling, runmodel_object=model, conditional_probability=0.1,
-    #                             nsamples_per_subset=10000, samples_init=mcmc_init1.samples)
-                                
-                                
+
+if __name__ == "__main__":
+    preprocess()
