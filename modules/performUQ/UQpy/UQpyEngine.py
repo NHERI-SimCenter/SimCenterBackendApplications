@@ -19,46 +19,36 @@ from subprocess import Popen, PIPE
 from pathlib import Path
 import subprocess
 import argparse
+import click
 
-def main(args):
+@click.command()
+@click.option("--workflowInput", required=True, help="Path to JSON file containing the details of FEM and UQ tools.")
+@click.option("--workflowOutput", required=True, help="Path to JSON file containing the details for post-processing.")
+@click.option("--driverFile", required=True, help="ASCII file containing the details on how to run the FEM application.")
+@click.option("--runType", required=True, type=click.Choice(['runningLocal','runningRemote']))
+def main(workflowinput, workflowoutput, driverfile, runtype):
+    # with open(inputFile, "r") as f:
+    #     data = json.load(f)
+    python = sys.executable
 
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--workflowInput')
-    parser.add_argument('--workflowOutput')    
-    parser.add_argument('--driverFile')
-    parser.add_argument('--runType')
-
-    args,unknowns = parser.parse_known_args()
-
-    inputFile = args.workflowInput
-    runType = args.runType
-    workflowDriver = args.driverFile
-    outputFile = args.workflowOutput
-    
-    with open(inputFile, "r") as f:
-        data = json.load(f)
-    
     # run on local computer
     osType = platform.system()
-    if runType in ['runningLocal',]:
+    if runtype in ['runningLocal',]:
         if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
             osType = 'Linux'
-
         else:
             workflowDriver = workflowDriver + ".bat"            
-            osType = 'Windows'  
-    
-    elif runType in ['runningRemote',]:
-        osType = 'Linux'     
-
-    python = sys.executable   
+            osType = 'Windows'
+    elif runtype in ['runningRemote',]:
+        osType = 'Linux'        
         
     cwd = os.getcwd()
     templateDir = cwd
     tmpSimCenterDir = str(Path(cwd).parents[0])
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
 
+
+    os.chmod("{}/preprocessUQpy.py".format(thisScriptDir),  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
     # 1. Create the python script
     preprocessorCommand = "'{} {}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(python, thisScriptDir,
                                                                         inputFile,
@@ -70,15 +60,17 @@ def main(args):
     with open("preprocessResult.txt", "w") as f:
         f.write(str(res))
         
-    if runType in ['runningLocal']:
-        os.chmod(workflowDriver,  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+    if runtype in ['runningLocal']:
+        os.chmod(driverfile,  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+    
+    
     
     # 2. Run the python script
     UQpycommand = python + " UQpyAnalysis.py"
         
     #Change permission of workflow driver
-    st = os.stat(workflowDriver)
-    os.chmod(workflowDriver, st.st_mode | stat.S_IEXEC)
+    st = os.stat(driverfile)
+    os.chmod(driverfile, st.st_mode | stat.S_IEXEC)
 
     # copy the analysis Python script created by UQpy to the main working dir for the structure
     shutil.move("UQpyAnalysis.py", "../")
@@ -86,7 +78,7 @@ def main(args):
     # change dir to the main working dir for the structure
     os.chdir("../")
         
-    if runType in ['runningLocal']:
+    if runtype in ['runningLocal']:
     
         print('running UQpy: ', UQpycommand)
         try:
@@ -97,5 +89,4 @@ def main(args):
             returncode = e.returncode
 
 if __name__ == '__main__':
-
-    main(sys.argv[1:])            
+    main()            
