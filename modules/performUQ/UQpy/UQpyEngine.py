@@ -44,16 +44,15 @@ def main(args):
     if runType in ['runningLocal',]:
         if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
             osType = 'Linux'
-            python = 'python3'
 
         else:
             workflowDriver = workflowDriver + ".bat"            
-            osType = 'Windows'
-            python = 'python'    
+            osType = 'Windows'  
     
     elif runType in ['runningRemote',]:
-        python = 'python3'
-        osType = 'Linux'        
+        osType = 'Linux'     
+
+    python = sys.executable   
         
     cwd = os.getcwd()
     templateDir = cwd
