@@ -37,7 +37,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
         if (sys.platform == 'darwin' or sys.platform == "linux" or sys.platform == "linux2"):
             osType = 'Linux'
         else:
-            workflowDriver = workflowDriver + ".bat"            
+            driverfile = driverfile + ".bat"            
             osType = 'Windows'
     elif runtype in ['runningRemote',]:
         osType = 'Linux'        
@@ -50,14 +50,16 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
 
     os.chmod("{}/preprocessUQpy.py".format(thisScriptDir),  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
     # 1. Create the python script
-    preprocessorCommand = "'{} {}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(python, thisScriptDir,
-                                                                        inputFile,
-                                                                        workflowDriver,
-                                                                        runType,
+    preprocessorCommand = "'{}' '{}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(python, thisScriptDir,
+                                                                        workflowinput,
+                                                                        driverfile,
+                                                                        runtype,
                                                                         osType)
+    with open("preprocessResult.txt", "w") as f:
+        f.write(preprocessorCommand)
 
     res = subprocess.Popen(preprocessorCommand, shell=True).wait()
-    with open("preprocessResult.txt", "w") as f:
+    with open("preprocessResult.txt", "a") as f:
         f.write(str(res))
 
         
@@ -67,17 +69,17 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
     
     
     # 2. Run the python script
-    UQpycommand = python + " UQpyAnalysis.py"
+    UQpycommand = python + " UQpyAnalysis.py" + " 1> upqy.log 2>&1 "
         
     #Change permission of workflow driver
     st = os.stat(driverfile)
     os.chmod(driverfile, st.st_mode | stat.S_IEXEC)
 
-    # copy the analysis Python script created by UQpy to the main working dir for the structure
-    shutil.move("UQpyAnalysis.py", "../")
+    # # copy the analysis Python script created by UQpy to the main working dir for the structure
+    # shutil.move("UQpyAnalysis.py", "../")
         
-    # change dir to the main working dir for the structure
-    os.chdir("../")
+    # # change dir to the main working dir for the structure
+    # os.chdir("../")
         
     if runtype in ['runningLocal']:
     
