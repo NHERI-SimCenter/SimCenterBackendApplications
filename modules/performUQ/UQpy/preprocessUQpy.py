@@ -21,37 +21,6 @@ def preprocess(workflowinput, driverfile, runtype, ostype):
         json = my_file.read()
         model = Model.parse_raw(json)
 
-    # inputFile = args.inputFile   # JSON FILE information from GUI
-    # workflow_driver = args.workflow_driver
-    # runType = args.runType
-    # osType = args.osType
-    
-    # # Step 1: Read the JSON file
-    # with open(inputFile, "r") as f:
-    #     data = json.load(f)
-    
-    # uq_data = data["UQ"]
-    # rv_data = data["randomVariables"]
-    # fem_data = data["Applications"]["FEM"]
-    # edp_data = data["EDP"]
-    
-    # cwd = os.getcwd()
-    # templateDir = cwd
-    # with open(os.path.join(templateDir, "UQpyAnalysis.py"), "w") as f:
-    #     pass
-    
-    # # f.write("from UQpy import PythonModel\n")
-    # # f.write("from UQpy.distributions import *\n")
-    # # f.write("from UQpy.reliability import SubsetSimulation\n")
-    # # f.write("from UQpy.run_model.RunModel import RunModel\n")
-    # # f.write("from UQpy.sampling import ModifiedMetropolisHastings, Stretch, MetropolisHastings\n")
-    # # f.write("distributionRV = []\n")
-    # # f.write("num_of_rves = len(RVdata)\n")
-    # # f.write("for i in range(num_rves):\n")
-    # #     f.write("nameRV.append(RVdata[i]["name"])\n")
-    # #     f.write("if RVdata[i]["distribution"] == 'Normal':\n")
-    # #         f.write("distributionRV.append(Normal(loc={0}, scale={1}))".format(rv_data[i]["scaleparam"], rv_data[i]["shapeparam"]))
-    # #         #distributionRV.append(Normal(loc=RVdata[i]["scaleparam"], scale=RVdata[i]["shapeparam"])) # check variance 
 
     marginals_code = 'marginals = JointIndependent(['
     for distribution in model.randomVariables:

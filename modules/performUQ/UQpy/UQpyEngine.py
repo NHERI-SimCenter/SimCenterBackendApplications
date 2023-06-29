@@ -59,6 +59,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
     res = subprocess.Popen(preprocessorCommand, shell=True).wait()
     with open("preprocessResult.txt", "w") as f:
         f.write(str(res))
+
         
     if runtype in ['runningLocal']:
         os.chmod(driverfile,  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
