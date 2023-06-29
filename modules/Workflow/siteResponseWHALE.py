@@ -45,6 +45,7 @@ import sys, os, json
 import argparse
 from pathlib import Path
 from createGM4BIM import createFilesForEventGrid
+import importlib
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -55,20 +56,51 @@ from sWHALE import runSWhale
 
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
-         working_dir, app_dir, log_file, output_dir):
+         working_dir, app_dir, log_file, output_dir,
+         parallelType, mpiExec, numPROC):
+
+    numP = 1
+    procID = 0
+    doParallel = False
+    
+    mpi_spec = importlib.util.find_spec("mpi4py")
+    found = mpi_spec is not None
+    if found:
+        import mpi4py
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        numP = comm.Get_size()
+        procID = comm.Get_rank()
+        parallelType = 'parRUN'
+        if numP < 2:
+            doParallel = False
+            numP = 1
+            parallelType = 'seqRUN'
+            procID = 0
+        else:
+            doParallel = True;
+
+
+    print('siteResponse (doParallel, procID, numP):', doParallel, procID, numP, mpiExec, numPROC)
 
     # save the reference dir in the input file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
-        
-    if not os.path.exists(working_dir):
-        os.mkdir(working_dir)
 
+    print('WORKING_DIR', working_dir)
+    
+    if procID == 0:
+        if not os.path.exists(working_dir):
+            os.mkdir(working_dir)
+
+    if doParallel == True:
+        comm.Barrier()
+        
     # initialize log file
     if log_file == 'log.txt':
-        log_file_path = working_dir + '/log.txt'
+        log_file_path = working_dir + '/log.txt' + '.' + str(procID)
     else:
-        log_file_path = log_file
+        log_file_path = log_file + '.' + str(procID)
 
     whale.set_options({
         "LogFile": log_file_path,
@@ -108,6 +140,14 @@ def main(run_type, input_file, app_registry,
     siteFilter = appData["filter"]
 
     # KZ: 10/19/2022, adding new attributes for the refactored whale
+
+    remoteAppDir = inputs.get('remoteAppDir', "")
+    localAppDir = inputs.get('localAppDir', "")
+    if localAppDir == "":
+        localAppDir = remoteAppDir
+    if remoteAppDir == "":
+        remoteAppDir = localAppDir
+
     siteResponseInput = {
         "units": inputs["units"],
         "outputs": {
@@ -150,8 +190,8 @@ def main(run_type, input_file, app_registry,
             ]
         },
         "UQ": inputs.get('UQ', dict()),
-        "localAppDir": inputs.get('localAppDir', ""),
-        "remoteAppDir": inputs.get('remoteAppDir', ""),
+        "localAppDir": localAppDir,
+        "remoteAppDir": remoteAppDir,
         "runType": inputs.get('runType', ""),
         "DefaultValues": {
             "driverFile": "driver",
@@ -178,14 +218,21 @@ def main(run_type, input_file, app_registry,
     # KZ: 10/19/2022, fixing the json file path
     siteResponseInputFile = os.path.join(os.path.dirname(reference_dir),'tmpSiteResponseInput.json')
 
-    with open(siteResponseInputFile, 'w') as json_file:
-        json_file.write(json.dumps(siteResponseInput, indent=2))    
-    
-    WF = whale.Workflow(run_type, siteResponseInputFile, app_registry,
-        app_type_list = ['Assets', 'RegionalMapping', 'Event', 'EDP', 'UQ'],
-        reference_dir = reference_dir,
-        working_dir = working_dir,
-        app_dir = app_dir)
+    if procID == 0:
+        with open(siteResponseInputFile, 'w') as json_file:
+            json_file.write(json.dumps(siteResponseInput, indent=2))    
+
+            
+    WF = whale.Workflow(run_type,
+                        siteResponseInputFile,
+                        app_registry,
+                        app_type_list = ['Assets', 'RegionalMapping', 'Event', 'EDP', 'UQ'],
+                        reference_dir = reference_dir,
+                        working_dir = working_dir,
+                        app_dir = app_dir,
+                        parType = parallelType,
+                        mpiExec = mpiExec,
+                        numProc = numPROC)
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
@@ -196,22 +243,38 @@ def main(run_type, input_file, app_registry,
         # update the min and max values in the input file.
         WF.workflow_apps['Building'].pref["filter"] = bldg_id_filter
 
-    # initialize the working directory
-    WF.init_workdir()
+    if procID == 0:
+        
+        # initialize the working directory        
+        WF.init_workdir()
 
-    # perform the event simulation (if needed)
-    if 'RegionalEvent' in WF.workflow_apps.keys():
-        WF.perform_regional_event()
+        # prepare the basic inputs for individual buildings
+        asset_files = WF.create_asset_files()
 
-    # prepare the basic inputs for individual buildings
-    asset_files = WF.create_asset_files()
-    
+    if doParallel == True:
+        comm.Barrier()
+
+    asset_files = WF.augment_asset_files()        
+
+    if procID == 0:        
+        for asset_type, assetIt in asset_files.items() :
+
+            # perform the regional mapping
+            #WF.perform_regional_mapping(assetIt)
+            # KZ: 10/19/2022, adding the required argument for the new whale
+            print('0 STARTING MAPPING')
+            # FMK _ PARALLEL WF.perform_regional_mapping(assetIt, asset_type, False)
+            # WF.perform_regional_mapping(assetIt, asset_type)             
+            WF.perform_regional_mapping(assetIt, asset_type, False)
+
+    # get all other processes to wait till we are here
+    if doParallel == True:
+        comm.Barrier()        
+
+    print("BARRIER AFTER PERFORM REGIONAL MAPPING")
+
+    count = 0
     for asset_type, assetIt in asset_files.items() :
-
-        # perform the regional mapping
-        #WF.perform_regional_mapping(assetIt)
-        # KZ: 10/19/2022, adding the required argument for the new whale
-        WF.perform_regional_mapping(assetIt, asset_type)
         
         # TODO: not elegant code, fix later
         with open(assetIt, 'r') as f:
@@ -225,63 +288,49 @@ def main(run_type, input_file, app_registry,
 
         # For each asset
         for asst in asst_data:
-        
-            log_msg('', prepend_timestamp=False)
-            log_div(prepend_blank_space=False)
-            log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
-            log_div()
-        
-            # Run sWhale
-            runSWhale(inputs = None, WF = WF, assetID = asst['id'], assetAIM = asst['file'], prep_app_sequence = preprocess_app_sequence,  WF_app_sequence = WF_app_sequence, asset_type = asset_type, copy_resources = True, force_cleanup = force_cleanup)
-            
-#    for bldg in bldg_data: #[:1]:
-#        log_msg('', prepend_timestamp=False)
-#        log_div(prepend_blank_space=False)
-#        log_div(prepend_blank_space=False)
-#        log_msg(f"Building id {bldg['id']} in file {bldg['file']}")
-#        log_div()
-#
-#        # initialize the simulation directory
-#        WF.init_simdir(bldg['id'], bldg['file'])
-#
-#        # prepare the input files for the simulation
-#        WF.create_RV_files(
-#            app_sequence = ['Event', 'EDP'],
-#            BIM_file = bldg['file'], bldg_id=bldg['id'])
-#
-#        # create the workflow driver file
-#        WF.create_driver_file(
-#            app_sequence = ['Building', 'Event', 'EDP'],
-#            bldg_id=bldg['id'])
-#
-#        # run uq engine to simulate response
-#        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
-#
-#        # run dl engine to estimate losses
-#        #WF.estimate_losses(
-#        #    BIM_file = bldg['file'], bldg_id = bldg['id'],
-#        #    copy_resources=True)
-#
-#        if force_cleanup:
-#            #clean up intermediate files from the simulation
-#            WF.cleanup_simdir(bldg['id'])
-#
-    #createFilesForEventGrid(working_dir,
-    #                        output_dir,
-    #                        force_cleanup)
-    # KZ: 10/19/2022, *AIM.json files are now inside a "Buildings" folder
-    createFilesForEventGrid(os.path.join(working_dir,'Buildings'),
-                            output_dir,
-                            force_cleanup)
 
-    # aggregate results
-    #WF.aggregate_results(bldg_data = bldg_data)
-    # KZ: 10/19/2022, chaning bldg_data to asst_data
-    WF.aggregate_results(asst_data= asst_data)
+            if count % numP == procID:            
+                log_msg('', prepend_timestamp=False)
+                log_div(prepend_blank_space=False)
+                log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
+                log_div()
+        
+                # Run sWhale
+                print('COUNT: ', count, ' ID: ', procID)
 
+                runSWhale(inputs = None,
+                          WF = WF,
+                          assetID = asst['id'],
+                          assetAIM = asst['file'],
+                          prep_app_sequence = preprocess_app_sequence,
+                          WF_app_sequence = WF_app_sequence,
+                          asset_type = asset_type,
+                          copy_resources = True,
+                          force_cleanup = force_cleanup)
+                
+            count = count+1
+
+    if doParallel == True:
+        comm.Barrier()
+        
+    if procID == 0:                        
+        createFilesForEventGrid(os.path.join(working_dir,'Buildings'),
+                                output_dir,
+                                force_cleanup)
+
+        # aggregate results
+        #WF.aggregate_results(bldg_data = bldg_data)
+        # KZ: 10/19/2022, chaning bldg_data to asst_data
+        WF.aggregate_results(asst_data= asst_data)
+
+
+    if doParallel == True:
+        comm.Barrier()
+
+    # clean up intermediate files from the working directory
     if force_cleanup:
-        # clean up intermediate files from the working directory
-        WF.cleanup_workdir()
+        if procID == 0:
+            WF.cleanup_workdir()
 
     log_msg('Workflow completed.')
     log_div(prepend_blank_space=False)
@@ -289,14 +338,10 @@ def main(run_type, input_file, app_registry,
 
 if __name__ == '__main__':
 
-    #
-    # ADAM ADAM ADAM .. this app starts in Results dir
-    #
-    
     pwd1 = os.getcwd()
-    print(pwd1)
-    os.chdir('..')
-
+    if os.path.basename(pwd1) == 'Results':
+        os.chdir('..')
+        
     #
     # little bit of preprocessing
     #
@@ -310,7 +355,12 @@ if __name__ == '__main__':
     siteResponseOutputDir = referenceDir / "siteResponseWorkingDir"
     siteResponseAggregatedResultsDir = referenceDir / "siteResponseOutputMotions"
 
-
+    print('PWD: ', pwd);
+    print('currentDir: ', currentDir);
+    print('referenceDir: ', referenceDir);
+    print('siteResponseOutputDir: ', siteResponseOutputDir);    
+    
+    
     #
     # parse command line
     #
@@ -350,6 +400,17 @@ if __name__ == '__main__':
         default='log.txt',
         help="Path where the log file will be saved.")
 
+    # adding some parallel stuff
+    workflowArgParser.add_argument("-p", "--parallelType",
+        default='seqRUN',
+        help="How parallel runs: options seqRUN, parSETUP, parRUN")
+    workflowArgParser.add_argument("-m", "--mpiexec",
+        default='mpiexec',
+        help="How mpi runs, e.g. ibrun, mpirun, mpiexec")
+    workflowArgParser.add_argument("-n", "--numP",
+        default='8',
+        help="If parallel, how many jobs to start with mpiexec option") 
+
     #Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
     
@@ -368,6 +429,8 @@ if __name__ == '__main__':
     #
     # Calling the main workflow method and passing the parsed arguments
     #
+    print('FMK siteResponse main: WORKDIR: ', wfArgs.workDir)
+    numPROC = int(wfArgs.numP)
     
     main(run_type = run_type,
          input_file = wfArgs.input,
@@ -378,7 +441,10 @@ if __name__ == '__main__':
          working_dir = wfArgs.workDir,
          app_dir = wfArgs.appDir,
          log_file = wfArgs.logFile,
-         output_dir = wfArgs.outputDir)
+         output_dir = wfArgs.outputDir,
+         parallelType = wfArgs.parallelType,
+         mpiExec = wfArgs.mpiexec,
+         numPROC = numPROC)
 
     #
     # now create new event file, sites and record files

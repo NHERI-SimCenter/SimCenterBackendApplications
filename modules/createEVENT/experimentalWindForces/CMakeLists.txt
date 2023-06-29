@@ -1,0 +1,2 @@
+simcenter_add_python_script(SCRIPT experimentalWindForces.py)
+simcenter_add_python_script(SCRIPT convertWindMat.py)

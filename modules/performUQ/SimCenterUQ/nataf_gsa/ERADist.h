@@ -55,6 +55,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "weibullDist.h"
 #include "truncExponentialDist.h"
 #include "discreteDist.h"
+//#include "discreteStrDist.h"
 
 #include <string>
 #include <vector>
@@ -70,7 +71,7 @@ class ERADist
 
 public:
 	ERADist(void);
-	ERADist(string name, string opt, vector<double> val, vector<double> add = {}, int procno=0);
+	ERADist(string name, string opt, vector<double> val, vector<double> add = {}, vector<string> addStr = {}, int procno=0);
 	~ERADist();
 	RVDist* theDist;
 	string name;

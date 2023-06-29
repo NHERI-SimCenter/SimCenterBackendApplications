@@ -7,6 +7,7 @@ add_subdirectory(multipleSimCenter)
 add_subdirectory(siteResponse)
 add_subdirectory(windTunnelExperiment)
 add_subdirectory(LowRiseTPU)
+add_subdirectory(HighRiseTPU)
 add_subdirectory(pointWindSpeed)
 add_subdirectory(LLNL_SW4)
 add_subdirectory(SimCenterEvent)
@@ -14,5 +15,9 @@ add_subdirectory(ASCE7_WindSpeed)
 add_subdirectory(stochasticGroundMotion)
 add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
+add_subdirectory(uniformPEER)
+add_subdirectory(experimentalWindForces)
+add_subdirectory(IsolatedBuildingCFD)
+
 
 

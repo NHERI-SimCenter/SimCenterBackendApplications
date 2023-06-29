@@ -155,7 +155,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 column_type = 'exterior column'
             else:
                 column_type = 'interior column'
-            length = np.asscalar(
+            length = np.ndarray.item(
                 building_1.geometry['floor height'][story + 1] - building_1.geometry['floor height'][story])
             # Build instance for each column member
             column_set[story][column_no] = Column(building_1.member_size[column_type][story],
@@ -197,7 +197,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     column_type = 'exterior column'
                 else:
                     column_type = 'interior column'
-                length = np.asscalar(
+                length = np.ndarray.item(
                     building_1.geometry['floor height'][target_story_index + 1]
                     - building_1.geometry['floor height'][target_story_index])
                 # Build instance for each column member
@@ -479,7 +479,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     column_type = 'exterior column'
                 else:
                     column_type = 'interior column'
-                length = np.asscalar(
+                length = np.ndarray.item(
                     building_1.geometry['floor height'][target_story + 1]
                     - building_1.geometry['floor height'][target_story])
                 # Build instance for each column member
@@ -606,7 +606,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 column_type = 'exterior column'
             else:
                 column_type = 'interior column'
-            length = np.asscalar(
+            length = np.ndarray.item(
                 building_2.geometry['floor height'][story + 1] - building_2.geometry['floor height'][story])
             # Build instance for each column member
             construction_column_set[story][column_no] = Column(building_2.member_size[column_type][story],
@@ -836,7 +836,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     column_type = 'exterior column'
                 else:
                     column_type = 'interior column'
-                length = np.asscalar(
+                length = np.ndarray.item(
                     building_1.geometry['floor height'][target_story + 1]
                     - building_1.geometry['floor height'][target_story])
                 # Build instance for each column member
@@ -942,7 +942,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 column_type = 'exterior column'
             else:
                 column_type = 'interior column'
-            length = np.asscalar(
+            length = np.ndarray.item(
                 building_3.geometry['floor height'][story + 1] - building_3.geometry['floor height'][story])
             # Build instance for each column member
             construction_column_set[story][column_no] = Column(building_3.member_size[column_type][story],
@@ -963,7 +963,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 column_type = 'exterior column'
             else:
                 column_type = 'interior column'
-            length = np.asscalar(
+            length = np.ndarray.item(
                 building_3.geometry['floor height'][story + 1] - building_3.geometry['floor height'][story])
             # Build instance for each column member
             construction_column_set[story][column_no] = Column(building_3.member_size[column_type][story],

@@ -17,7 +17,7 @@ int getRV(json_t *edp, std::vector<std::string> &rvList);
 void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
 {
     size_t pos = std::string::npos;
-    // Search for the substring in string in a loop untill nothing is found
+    // Search for the substring in string in a loop until nothing is found
     while ((pos  = mainStr.find(toErase) )!= std::string::npos)
     {
         // If found then erase it from string
@@ -25,19 +25,42 @@ void eraseAllSubstring(std::string & mainStr, const std::string & toErase)
     }
 }
 
-int main(int argc, const char **argv) {
+std::string appendModelIndexToStem(int modelIndex, std::string filename) {
+    std::filesystem::path templateFilePath(filename);
+    std::string newStem = templateFilePath.stem().string() + "_" + std::to_string(modelIndex);
+    std::string extension = templateFilePath.extension().string();
+    filename = newStem + extension;
+    return filename;
+}
 
-  std::cerr << "createGpDriver:: starting\n";  
-  for (int i=0; i<argc; i++)
-    std::cerr << "\n\t" << i << " " << argv[i];
-  std::cerr << "\n";
-  std::cerr << "Testing" << std::endl;
+int main(int argc, const char **argv) {
+  
+  if (argc < 5) {
+    std::cerr << "createGpDriver:: expecting 4 inputs\n";
+    exit(-1);
+  }
 
   std::string thisProgram(argv[0]);
   std::string inputFile(argv[1]);
   std::string runType(argv[2]);
   std::string osType(argv[3]);
   std::string workflowDriver(argv[4]);
+  int modelIndex = 0;
+
+  // if case not simple defaults
+  for (int i=1; i<argc; i+=2) {
+    if (strcmp(argv[i],"--driverFile") == 0) {
+      workflowDriver = argv[i+1];
+    } else if (strcmp(argv[i],"--workflowInput") == 0) {
+      inputFile = argv[i+1];
+    } else if (strcmp(argv[i],"--runType") == 0) {
+      runType = argv[i+1];
+    } else if (strcmp(argv[i],"--osType") == 0) {
+      osType = argv[i+1];
+    } else if (strcmp(argv[i], "--modelIndex") == 0) {
+      modelIndex = std::stoi(argv[i+1]);
+    }
+  }
   
   eraseAllSubstring(thisProgram,"\"");
   eraseAllSubstring(runType,"\"");
@@ -45,30 +68,9 @@ int main(int argc, const char **argv) {
   eraseAllSubstring(workflowDriver,"\"");
 
   if (!std::filesystem::exists(inputFile)) {
-    std::cerr << "createOpenSeesDriver:: input file: " << inputFile << " does not exist\n";
+    std::cerr << "createGpDriver:: input file: " << inputFile << " does not exist\n";
     exit(801);
   }
-  
-  //current_path(currentPath);
-  auto path = std::filesystem::current_path(); //getting path
-
-
-  //  std::string fileName = std::filesystem::path(inputFile).filename()
-  std::filesystem::path fileNameP = std::filesystem::path(inputFile).filename();
-  std::string fileName = fileNameP.generic_string(); 
-  //std::cerr << "fileName: " << fileName << '\n';  
-
-  
-  std::string fullPath = std::filesystem::path(inputFile).remove_filename().generic_string();
-
-  //
-  // open input file to get RV's and EDP names
-  //
-
-  std::filesystem::current_path(fullPath); //getting path
-  std::filesystem::current_path(fullPath); //getting path
-  path = std::filesystem::current_path(); //getting path
-  std::cerr << "PATH: " << path << '\n';
   
   //
   // open input file to get RV's and EDP names
@@ -103,11 +105,8 @@ int main(int argc, const char **argv) {
   // open workflow_driver 
   //
   
-  //std::string workflowDriver = "workflow_driver"; 
   if ((osType.compare("Windows") == 0) && (runType.compare("runningLocal") == 0))
     workflowDriver.append(std::string(".bat"));
-  
-std::cerr<<workflowDriver<<std::endl;
 
   std::ofstream workflowDriverFile(workflowDriver, std::ios::binary);
   
@@ -141,20 +140,19 @@ std::cerr<<workflowDriver<<std::endl;
 
     if (json_object_get(rootInput, "python") != NULL)
       pythonCommand = std::string("\"") + json_string_value(json_object_get(rootInput,"python")) + std::string("\"");
+
+    gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
+
     
   } else {
 
     dpreproCommand = remoteDir + std::string("/applications/performUQ/templateSub/simCenterSub");
     openSeesCommand = std::string("/home1/00477/tg457427/bin/OpenSees");
     pythonCommand = std::string("python3");
+    gpCommand = pythonCommand + std::string(" \"") + remoteDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
 
   }
 
-  gpCommand = pythonCommand + std::string(" \"") + localDir + std::string("/applications/performFEM/surrogateGP/gpPredict.py\"");
-  std::cerr << "Running Local"<<std::endl;
-  std::cerr<<pythonCommand<<std::endl;
-  std::cerr<<localDir<<std::endl;
-  std::cerr<<gpCommand<<std::endl;
 
 
   json_t *rootAPPs =  json_object_get(rootInput, "Applications");
@@ -176,53 +174,26 @@ std::cerr<<workflowDriver<<std::endl;
     return -3; 
   }
   
-  
-  const char *mainInput =  json_string_value(json_object_get(fem, "mainScript"));
-  const char *postprocessScript =  json_string_value(json_object_get(fem, "postprocessScript"));
-    
-  std::cerr<<"flag"<<std::endl;
+  std::string jsonFile =  json_string_value(json_object_get(fem, "mainScript"));
+  std::string pklFile =  json_string_value(json_object_get(fem, "postprocessScript"));
+  std::string ms = jsonFile;
+  std::string ps = pklFile;
+  if (modelIndex > 0) {
+    jsonFile = appendModelIndexToStem(modelIndex, jsonFile);
+    std::filesystem::copy_file(ms, jsonFile);
 
-  int scriptType = 0;
-  if (strstr(postprocessScript,".py") != NULL) 
-    scriptType = 1;
-  else if (strstr(postprocessScript,".tcl") != NULL) 
-    scriptType = 2;
-  std::cerr<<"flag2"<<std::endl;
-  
-  std::ofstream templateFile("SimCenterInput.RV");
-  for(std::vector<std::string>::iterator itRV = rvList.begin(); itRV != rvList.end(); ++itRV) {
-    templateFile << "pset " << *itRV << " \"RV." << *itRV << "\"\n";
-  }
-    std::cerr<<"flag3"<<std::endl;
-
-  templateFile << "\n set listQoI \"";
-  for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
-    templateFile << *itEDP << " ";
-  }
-  
-  templateFile << "\"\n\n\n source " << mainInput << "\n";
-    std::cerr<<"flag4"<<std::endl;
-
-  //workflowDriverFile << dpreproCommand << " params.in SimCenterInput.RV SimCenterInput.tcl\n";
-  //workflowDriverFile << openSeesCommand << " SimCenterInput.tcl 1> ops.out 2>&1\n";
-  workflowDriverFile << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n ";
-    std::cout << gpCommand <<  " params.in " << mainInput << " " << postprocessScript << " 1> ops.out 2>&1\n" << std::endl;
-
-  std::cerr<<"flag5"<<std::endl;
-
-  // depending on script type do something
-  if (scriptType == 1) { // python script
-    workflowDriverFile << "\n" << pythonCommand << " " << postprocessScript;
-    for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
-      workflowDriverFile << " " << *itEDP;
+    if (!pklFile.empty()) 
+    {
+        pklFile = appendModelIndexToStem(modelIndex, pklFile);
+        std::filesystem::copy_file(ps, pklFile);
     }
-  } 
-  else if (scriptType == 2) { // tcl script
-    templateFile << " source " << postprocessScript << "\n";      
   }
-  
-  templateFile.close();
 
+  std::filesystem::path scInputPath(inputFile);
+  std::string scInputName = scInputPath.filename().string();
+
+  workflowDriverFile << gpCommand <<  " params.in " << jsonFile << " " << pklFile << " " << scInputName << " 1> ops.out 2>&1\n ";
+  
   workflowDriverFile.close();
 
 

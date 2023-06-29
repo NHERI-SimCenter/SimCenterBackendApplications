@@ -61,7 +61,8 @@ main(int argc, char **argv) {
   }
 
   if (filenameAIM == NULL || filenameEVENT == NULL) {
-    std::cerr << "FATAL ERROR - no bim or sam file provided\n";
+    std::cerr << "FATAL ERROR - no bim or sam file provided to WindTunnelExperiment\n";
+    exit(-1);
   }
 
   //

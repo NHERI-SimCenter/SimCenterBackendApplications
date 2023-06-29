@@ -32,6 +32,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	set(CMAKE_CXX_STANDARD 17)
 	set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+
 	# sy - optimization flags
 	#if(MSVC)
 	#	add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
@@ -112,7 +113,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	endif() 
 
 	install(TARGETS nataf_gsa DESTINATION ../..)
-	add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
+	#add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
 
 else()
 
@@ -232,6 +233,6 @@ else()
 	endif() 
 
 
-	install(TARGETS nataf_gsa DESTINATION ${PROJECT_SOURCE_DIR}/applications/performUQ)
+	install(TARGETS nataf_gsa DESTINATION ${PROJECT_SOURCE_DIR}/applications/performUQ/SimCenterUQ)
 	
 endif()

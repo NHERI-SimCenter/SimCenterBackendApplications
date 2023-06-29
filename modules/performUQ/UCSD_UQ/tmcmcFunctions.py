@@ -59,7 +59,7 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
 
     return new_beta, Wm, ESS
 
-def compute_beta_evidence(beta, log_likelihoods, log_evidence, prev_ESS, threshold):
+def compute_beta_evidence_old(beta, log_likelihoods, log_evidence, prev_ESS, threshold):
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
@@ -196,3 +196,99 @@ def MCMC_MH(ParticleNum, Em, Nm_steps, current, likelihood_current, posterior_cu
 
     # gather all last samples
     return current, likelihood_current, posterior_current, numAccepts, all_proposals, all_PLP
+
+
+# def compute_beta_evidence(beta, log_likelihoods, prev_ESS, threshold=0.95):
+#     old_beta = beta
+#     min_beta = beta
+#     max_beta = 2.0
+#     N = len(log_likelihoods)
+#     rN = max(threshold*prev_ESS, 50)
+#     while max_beta - min_beta > 1e-3: #min step size
+#         new_beta = 0.5*(max_beta+min_beta)
+#         #plausible weights of Sm corresponding to new beta
+#         inc_beta = new_beta-old_beta
+        
+#         log_Wm = inc_beta * log_likelihoods
+#         log_Wm_n = log_Wm - logsumexp(log_Wm)
+#         ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
+        
+#         if ESS == rN:
+#             break
+#         elif ESS < rN:
+#             max_beta = new_beta
+#         else:
+#             min_beta = new_beta
+            
+#     if new_beta >= 1:
+#         new_beta = 1
+#         #plausible weights of Sm corresponding to new beta
+#         inc_beta = new_beta-old_beta
+        
+#         log_Wm = inc_beta * log_likelihoods
+#         log_Wm_n = log_Wm - logsumexp(log_Wm)
+    
+#     Wm = np.exp(log_Wm)
+#     Wm_n = np.exp(log_Wm_n)
+    
+#     # update model evidence 
+#     # evidence = evidence * (sum(Wm)/N)
+#     log_evidence = logsumexp(log_Wm) - np.log(N)
+#     # log_evidence = log_evidence + np.log((sum(Wm)/N))
+    
+#     return new_beta, log_evidence, Wm_n, ESS
+
+def get_weights(dBeta, log_likelihoods):
+    weights = np.exp(dBeta*log_likelihoods)
+    mean_weights = np.mean(weights)
+    std_weights = np.std(weights)
+    cov_weights = std_weights/mean_weights
+    return weights, mean_weights, std_weights, cov_weights
+
+def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
+    max_beta = 1.0
+    dBeta = min(max_beta, 1.0-beta)
+    max_loglike = max(log_likelihoods)
+
+    weights, mean_weights, std_weights, cov_weights = get_weights(dBeta, log_likelihoods)
+
+    while (cov_weights > (threshold) or (std_weights == 0)):
+        dBeta = dBeta*0.99
+
+    # while (cov_weights > (threshold+0.00000005) or (std_weights == 0)):
+    #     if ((cov_weights > (threshold+1.0)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.9
+    #     if ((cov_weights > (threshold+0.5)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.95
+    #     if ((cov_weights > (threshold+0.05)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.99
+    #     if ((cov_weights > (threshold+0.005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.999
+    #     if ((cov_weights > (threshold+0.0005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.9999
+    #     if ((cov_weights > (threshold+0.00005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.99999
+    #     if ((cov_weights > (threshold+0.000005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.999999
+    #     if ((cov_weights > (threshold+0.0000005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.9999999
+    #     if ((cov_weights > (threshold+0.00000005)) or  (std_weights == 0)):
+    #         dBeta = dBeta*0.99999999
+
+        if dBeta < 1e-3:
+            dBeta = 1e-3
+            weights, mean_weights, std_weights, cov_weights = get_weights(dBeta, log_likelihoods)
+            break
+        weights, mean_weights, std_weights, cov_weights = get_weights(dBeta, log_likelihoods)
+
+    beta = beta + dBeta
+    if beta > 0.95:
+        beta = 1
+    log_evidence = np.log(mean_weights)
+    try:
+        ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))
+    except OverflowError as err:
+        ESS = 0
+        logFile.write(str(err))
+
+    return beta, log_evidence, weights, ESS

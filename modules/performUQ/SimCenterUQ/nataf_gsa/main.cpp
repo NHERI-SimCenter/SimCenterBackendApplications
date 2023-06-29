@@ -59,7 +59,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/lockfree/queue.hpp>
+//#include <boost/lockfree/queue.hpp>
 
 #ifdef MPI_RUN
 	#include <mpi.h>
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 
 	//std::cout<<"Just testing this location 1\n";
 	else {
-		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " NOT unknown.";
+		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " unknown.";
 		theErrorFile.write(errMsg);
 	}
 
@@ -209,11 +209,11 @@ int main(int argc, char** argv)
 
 		if (inp.UQmethod.compare("Import Data Files") != 0) {
 			std::cout << "Writing Tab.out" << std::endl;
-			runForward ForwardResults(T.X, T.G, procno);
+			runForward ForwardResults(T.X, T.Xstr, T.G, procno);
 			ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
 		}
 		std::cout << "Preparing sensitivity analysis" << std::endl;
-		runGSA GsaResults(T.X, T.G, inp.groups, inp.PCAvarRatioThres, inp.qoiVectRange, 10, procno, nprocs); // int Kos = 25;
+		runGSA GsaResults(T.X, T.Xstr, T.G, inp.groups, inp.PCAvarRatioThres, inp.qoiVectRange, 10, procno, nprocs); // int Kos = 25;
 		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count()/1.e3;
 		GsaResults.writeOutputs(inp, elapsedTime, procno); //	Write dakota.out
 	}
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 		//
 		//	(5-2) Forward analysis
 		//
-		runForward ForwardResults(T.X, T.G, procno);
+		runForward ForwardResults(T.X, T.Xstr, T.G, procno);
 		ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
 		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() /1.e3;
 		ForwardResults.writeOutputs(inp, procno);		//	Write dakota.out <- curretly not being used anywhere

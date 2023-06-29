@@ -108,6 +108,7 @@ class Options:
 
         self.defaults = None
         self.sampling_method = None
+        self.list_all_ds = None
 
         self._seed = None
         self._rng = np.random.default_rng()
@@ -257,6 +258,8 @@ class Options:
                     self.rho_cost_time = value
                 elif key == "EconomiesOfScale":
                     self.eco_scale = value
+                elif key == "ListAllDamageStates":
+                    self.list_all_ds = value
 
 # get the absolute path of the pelicun directory
 pelicun_path = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -298,22 +301,30 @@ def convert_to_SimpleIndex(data, axis=0, inplace=False):
             data_mod = data.copy()
 
         if axis == 0:
-            simple_name = '-'.join(
-                [n if n is not None else "" for n in data.index.names])
-            simple_index = ['-'.join([str(id_i) for id_i in id])
-                            for id in data.index]
 
-            data_mod.index = simple_index
-            data_mod.index.name = simple_name
+            # only perform this if there are multiple levels
+            if data.index.nlevels > 1:
+
+                simple_name = '-'.join(
+                    [n if n is not None else "" for n in data.index.names])
+                simple_index = ['-'.join([str(id_i) for id_i in id])
+                                for id in data.index]
+
+                data_mod.index = simple_index
+                data_mod.index.name = simple_name
 
         elif axis == 1:
-            simple_name = '-'.join(
-                [n if n is not None else "" for n in data.columns.names])
-            simple_index = ['-'.join([str(id_i) for id_i in id])
-                            for id in data.columns]
 
-            data_mod.columns = simple_index
-            data_mod.columns.name = simple_name
+            # only perform this if there are multiple levels
+            if data.columns.nlevels > 1:
+
+                simple_name = '-'.join(
+                    [n if n is not None else "" for n in data.columns.names])
+                simple_index = ['-'.join([str(id_i) for id_i in id])
+                                for id in data.columns]
+
+                data_mod.columns = simple_index
+                data_mod.columns.name = simple_name
 
     else:
         raise ValueError(f"Invalid axis parameter: {axis}")

@@ -59,11 +59,17 @@ def log_msg(msg):
 log_msg('First line of DL_calculation')
 
 import sys, os, json, ntpath, posixpath, argparse
+import warnings
 import numpy as np
 import pandas as pd
 import shutil
 
 idx = pd.IndexSlice
+
+# suppress FutureWarnings by default - credit: ioannis_vm
+if not sys.warnoptions:
+    warnings.filterwarnings(
+        category=FutureWarning, action='ignore')
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -259,6 +265,9 @@ def run_pelicun(DL_input_path, demand_input_path,
 
         stripe_str = '' if len(stripes) == 1 else str(stripe)+'_'
         
+        # FMK HACK for ADAM
+        resource_dir = output_path;
+
         if custom_fragility_dir is not None :
             DL_input['DamageAndLoss']['ComponentDataFolder'] = custom_fragility_dir
             

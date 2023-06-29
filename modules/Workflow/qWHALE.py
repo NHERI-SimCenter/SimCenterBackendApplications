@@ -90,9 +90,8 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     WF.init_simdir()
     
     # prepare the input files for the simulation
-    WF.preprocess_inputs(
-    app_sequence = ['FEM'])
-    
+    WF.preprocess_inputs(app_sequence = ['FEM'])
+
     # run uq engine to simulate response
     WF.simulate_response()     
 

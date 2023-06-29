@@ -51,13 +51,17 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	if (procno == 0)  std::cout << "Reading input json scripts.." << " \n";
 
 	this->workDir = workDir;
-
+	
 	//
 	// finding json file
 	//
 
-	// std::filesystem::path jsonPath  = workDir + "/templatedir/" + inpFile;
-	std::filesystem::path jsonPath  = inpFile;
+	std::filesystem::path jsonPath(inpFile);
+
+	if (jsonPath.is_relative()){
+		jsonPath  = workDir + "/templatedir/" + inpFile;
+	}
+
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
 		std::string errMsg = "Error running UQ engine: Unable to open JSON " + jsonPath.u8string();
@@ -115,23 +119,40 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	int count_qoi = 0;
 	for (auto& elem : UQjson["EDP"]) {
 		// *name of distribution
-		if (elem["length"] == 1) {
-			qoiNames.push_back(elem["name"]);
+		int lenVal;
+		string varName;
+		if (elem.find("length") != elem.end()) {
+			lenVal = int(elem["length"]);
+		} else {
+			lenVal = 1;
+		}
+
+		if (elem.find("name") != elem.end()) {
+			varName = elem["name"];
+		}
+		else {
+			varName = "standard"; 
+			lenVal = -1;
+		}
+
+		if (lenVal == 1) {
+			qoiNames.push_back(varName);
 			count_qoi++;
 		}
-		else if (elem["length"] > 1) {
-			qoiVectNames.push_back(elem["name"]); // to combine Sobol indices later
-			qoiVectRange.push_back({ count_qoi, count_qoi + int(elem["length"]) });
-			std::string name = elem["name"];
-			for (int j = 0; j < elem["length"]; j++) {
-				qoiNames.push_back(name + "_" + std::to_string(j + 1));
+		else if (lenVal > 1) {
+			qoiVectNames.push_back(varName); // to combine Sobol indices later
+			qoiVectRange.push_back({ count_qoi, count_qoi + lenVal });
+			for (int j = 0; j < lenVal; j++) {
+				qoiNames.push_back(varName + "_" + std::to_string(j + 1));
 				count_qoi++;
 			}
 		}
 	}
+
+
 	nqoi = count_qoi;
 	nqoiVects = qoiVectNames.size();
-
+	
 
 	//
 	// Perform PCA?
@@ -236,11 +257,12 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	if (procno == 0)  std::cout << " - Reading RV Data groups";
 
 	//std::vector<int> corrIdx;
-	std::vector<int> randIdx, constIdx, resampIdx; // random variables, constant variables, resampling variables
+	std::vector<int> randIdx, constIdx, resampIdx, discreteStrIdx; // random variables, constant variables, resampling variables
 	int count = 0;
 	nrv = 0;
 	nco = 0;
 	nre = 0;
+	nst = 0;
 
 	std::string resampGroupTxt;
 	if (UQjson["UQ"]["samplingMethodData"].find("RVdataGroup") != UQjson["UQ"]["samplingMethodData"].end()) {
@@ -276,25 +298,34 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// Specify parameters in each distributions.
 	//
-	if (procno == 0)  std::cout << " - Reading RV parameters";
+	if (procno == 0)  std::cout << " - Reading RV parameters\n";
 
 	for (auto& elem : UQjson["randomVariables"])
 	{
-		if (elem.find("inputType") == elem.end())
-		{
-			//*ERROR*
-			std::string errMsg = "Error reading json: input file does not have the key 'inputType'";
-			theErrorFile.write(errMsg);
-		}
-		// if key "correlationMatrix" exists
-		
-		// name of distribution
 		std::string distName = elem["distribution"];
+		// name of distribution
 		std::transform(distName.begin(), distName.end(), distName.begin(), ::tolower); // make it lower case
 		distName.erase(remove_if(distName.begin(), distName.end(), isspace), distName.end()); // remove space
 
+		std::string inpType;
+		if ((elem.find("inputType") == elem.end()))
+		{
+			if (distName=="discrete_design_set_string") {
+				inpType = "Parameters";
+			} else if (distName=="normal") {
+				inpType = "Parameters";
+			} else {
+				std::string errMsg = "Error reading json: input file does not have the key 'inputType'";
+				theErrorFile.write(errMsg);
+			}
+		}
+		else {
+			inpType = elem["inputType"];
+		}
+		// if key "correlationMatrix" exists
+		
+
 		// type of input (PAR, MOM, or DAT)
-		std::string inpType = elem["inputType"];
 		std::string inpTypeSub = inpType.substr(0, 3);
 		for (int i = 0; i < 3; i++) {
 			inpTypeSub[i] = toupper(inpTypeSub[i]);
@@ -303,6 +334,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		// get parameter names for each dist
 		std::vector<std::string> pnames;
 		getPnames(distName, inpTypeSub, pnames);
+
+		// If resampling
 
 		if (std::find(flattenResamplingGroups.begin(), flattenResamplingGroups.end(), elem["name"]) != flattenResamplingGroups.end()) {
 			//is_resamplingGroup
@@ -327,6 +360,8 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			continue;
 		}
 
+
+		// If constant
 		if (distName.compare("constant") == 0) {
 			constIdx.push_back(count);
 			nco++;
@@ -342,6 +377,15 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 				continue;
 			}
 		}
+		// If discrete_string
+		if (distName.compare("discrete_design_set_string") == 0) {
+			discreteStrIdx.push_back(count);
+			nst++;
+			count++;
+			continue;
+		}
+
+
 		// save name of random variable etc
 		rvNames.push_back(elem["name"]);
 		distNames.push_back(distName);
@@ -388,18 +432,23 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			}
 
 			// Save boundary informaions
+
 			if (distNames[nrv].compare("binomial") == 0) {
 				adds.push_back({ elem["n"],0.0 }); // not used
+				addStrs.push_back({}); // not used
 			}
 			else if (distNames[nrv].compare("beta") == 0) {
 				adds.push_back({ elem["lowerbound"],elem["upperbound"] });
+				addStrs.push_back({});
 			}
 			else if (distNames[nrv].compare("truncatedexponential") == 0) {
 				adds.push_back({ elem["a"],elem["b"] });
+				addStrs.push_back({});
 			}
 			else
 			{
 				adds.push_back({}); // default
+				addStrs.push_back({});
 			}
 		}
 		else // if "PAR" or "MOM" 
@@ -413,6 +462,11 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 					vals_tmp.push_back(elem[pnames[0]][i]);
 					vals_tmp.push_back(elem[pnames[1]][i]);
 				}
+				vals.push_back(vals_tmp);
+			}else if (distNames[nrv].compare("discrete_design_set_string") == 0) {
+				int nelem = elem["elements"].size();
+				std::vector<double> vals_tmp(nelem);
+				std::iota(vals_tmp.begin(), vals_tmp.end(), 1);
 				vals.push_back(vals_tmp);
 			}
 			else
@@ -433,11 +487,21 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 				}
 				vals.push_back(vals_temp);
 			}
-			adds.push_back({});
+
+
+			if (distNames[nrv].compare("discrete_design_set_string") == 0) {
+				adds.push_back({}); // default
+				addStrs.push_back(elem["elements"]);
+			}
+			else {
+				adds.push_back({});
+				addStrs.push_back({});
+			}
 		}
 		randIdx.push_back(count);
 		nrv++;
 		count++;
+		std::cout << nrv <<"\n";
 	}
 
 	//
@@ -477,7 +541,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 		if (vals_tmp.size() < 1) { //*ERROR*
 			//*ERROR*
-			std::string errMsg = "Error reading json: data file of " + rvNames[nrv] + " has less then one sample.";
+			std::string errMsg = "Error reading json: data file of " + rvNames[i] + " has less then one sample.";
 			theErrorFile.write(errMsg);
 
 		}
@@ -528,6 +592,37 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	}
 
 
+	//
+	// get discreteStr
+	//
+
+	if (procno == 0)  std::cout << " - Getting discreteStr variable names.. if any";
+	//for (auto& elem : UQjson["randomVariables"])
+	for (int i : discreteStrIdx)
+	{
+		// name of distribution
+		auto elem = UQjson["randomVariables"][i];
+		string distname = elem["distribution"];
+		std::transform(distname.begin(), distname.end(), distname.begin(), ::tolower); // make lower case
+
+		// input type
+		std::string inpType = "Parameters";
+		std::string inpTypeSub = inpType.substr(0, 3);
+		std::transform(inpTypeSub.begin(), inpTypeSub.end(), inpTypeSub.begin(), ::toupper); // make upper case
+
+		// parameter name
+		std::vector<std::string> pnames;
+		getPnames(distname, inpTypeSub, pnames);
+
+		// If discrete_design_set_string
+		if (distname.compare("discrete_design_set_string") == 0)
+		{
+			// *name of random variable
+			rvNames.push_back(elem["name"]);
+			discreteStrValues.push_back(elem["elements"]);
+		}
+	}
+
 
 
 	//
@@ -544,13 +639,36 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	//corr.reserve(nrv*nrv);
 
-	if (procno == 0)  std::cout << " - Checkking correlation matrix";
+	//find the number of multimodels
+	int multiModelCount = 0;
+	for (int i = 0; i < nrv; i++) {
+		if (rvNames[i].rfind("MultiModel-", 0) == 0) {
+			multiModelCount++;
+		}
+	}
+
+
+	if (procno == 0)  std::cout << " - Checking correlation matrix";
+	std::cout << nrv;
+
 	if (UQjson.find("correlationMatrix") != UQjson.end()) {
 		corr = *new vector<vector<double>>(nrv, vector<double>(nrv, 0.0));
 		// if key "correlationMatrix" exists
 		for (int i = 0; i < nrv; i++) {
 			for (int j = 0; j < nrv; j++) {
-				corr[i][j] = UQjson["correlationMatrix"][randIdx[i] + randIdx[j] * (nrv + nco + nre)];
+
+				if ((rvNames[i].rfind("MultiModel-", 0) == 0) | (rvNames[j].rfind("MultiModel-", 0) == 0)) 
+				{
+					if (i == j) {
+						corr[i][j] = 1.0;
+					}
+					else {
+						corr[i][j] = 0.0;
+					}
+				}
+				else {
+					corr[i][j] = UQjson["correlationMatrix"][randIdx[i] + randIdx[j] * (nrv + nco + nre - multiModelCount)];
+				}
 			}
 		}
 	}
@@ -749,6 +867,9 @@ jsonInput::getPnames(string distname, string optname, vector<std::string>& par_c
 		else if (distname.compare("constant") == 0) {
 			par_char.push_back("value");
 		}
+		else if (distname.compare("discrete_design_set_string") == 0) {
+			// keep params empty
+		}
 		else {
 			std::string errMsg = "Error reading json: cannot interpret distribution name: " + distname;
 			theErrorFile.write(errMsg);
@@ -838,6 +959,7 @@ jsonInput::getGroupIdx(json UQjson) {
 	//
 	// get group index matrix
 	//
+	std::cout << "THIS1-1\n";
 
 	bool generate_default_RVsensitivityGroup = true;
 	if (UQjson["UQ"].find("RVsensitivityGroup") != UQjson["UQ"].end()) {
@@ -852,6 +974,7 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
+	std::cout << "THIS1-2\n";
 	if (generate_default_RVsensitivityGroup) {
 
 		for (int i = 0; i < nrv; i++) {
@@ -864,6 +987,7 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
+	std::cout << "THIS1-3\n";
 
 	ngr = groups.size();
 }
