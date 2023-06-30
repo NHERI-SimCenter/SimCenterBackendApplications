@@ -18,6 +18,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
     failure_threshold: float = Field(..., alias="failureThreshold")
     maxLevels: int
     initial_samples: int
+    samples_per_subset: int
     samplingMethod: StretchDto
 
     def init_to_text(self):
@@ -39,9 +40,18 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
         initializer = f'{input_str} = {class_name}(sampling={self.samplingMethod}, ' \
                       f'conditional_probability={self.conditionalProbability}, ' \
                       f'max_level={self.maxLevels}, runmodel_object=run_model,' \
+                      f'nsamples_per_subset={self.samples_per_subset},'\
                       f'samples_init=monte_carlo.samples)\n'
+        
+        import_statement+="import json \n"
+        save_script = "output_data = {'failure_probability' : subset.failure_probability,"\
+                                      "'performance_threshold_per_level':subset.performance_threshold_per_level,"\
+                                      "'independent_chains_CoV':subset.independent_chains_CoV,"\
+                                      "'dependent_chains_CoV': subset.dependent_chains_CoV}\n"
+        save_script+="with open('uqpy_results.out', 'w') as file:"\
+                     "\tfile.write(json.dumps(output_data))\n"
 
-        prerequisite_str = import_statement + initializer
+        prerequisite_str = import_statement + initializer + save_script
         return prerequisite_str, input_str
 
     def __create_postprocess_script(self, results_filename: str = 'results.out'):

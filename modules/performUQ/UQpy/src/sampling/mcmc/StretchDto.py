@@ -10,13 +10,12 @@ from src.UQpyDTO import UQpyDTO
 
 class StretchDto(UQpyDTO):
     method: Literal['Stretch'] = 'Stretch'
-    burn_length: int = Field(..., alias='burn-in')
-    jump: int
-    method: str
-    dimension: int
-    n_chains: int = Field(..., alias='numChains')
+    burn_length: int = Field(..., alias='burn-in', ge=0)
+    jump: int = Field(..., ge=0)
+    dimension: int = Field(..., gt=0)
+    n_chains: int = Field(..., alias='numChains', ge=2)
     random_state: int = Field(..., alias='randomState')
-    scale: float
+    scale: float = Field(..., gt=0)
 
     def init_to_text(self):
         from UQpy.sampling.mcmc.Stretch import Stretch
@@ -28,7 +27,7 @@ class StretchDto(UQpyDTO):
         stretch_parameters = self.dict()
         stretch_parameters.pop("method")
         stretch_parameters["log_pdf_target"] = f"marginals.log_pdf"
-        stretch_parameters["seed"] = "[[0.5, 0.6], [0.5, 0.6]]"
+        stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"
         str_parameters = str()
         for key in stretch_parameters:
             if stretch_parameters[key] is None: continue
