@@ -4,12 +4,7 @@ import pkg_resources
 
 from time import gmtime, strftime
 
-def log_msg(msg):
-
-    formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-
-    print(formatted_msg)
-
+# If not installed yet, install BRAILS and argparse:
 required = {'BRAILS', 'argparse'}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
@@ -17,32 +12,26 @@ missing = required - installed
 if missing:
     python = sys.executable
     subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
-    
-#modulename = 'BRAILS'
-#if modulename not in sys.modules:
-#    print(sys.modules)
-#    python = sys.executable
-#    print(python)
-#    log_msg("needing to pip install  BRAILS")
-#    subprocess.check_call([python, "-m", "pip", "install", "-q", modulename], stdout=subprocess.DEVNULL)
 
 import argparse
 from brails.InventoryGenerator import InventoryGenerator
 
+# Define a standard way of printing program outputs:
+def log_msg(msg):
+    formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
+    print(formatted_msg)
 
-def runBrails(latMin, latMax, longMin, longMax, seed, numBuildings, gKey):
-    
+# Define a way to call BRAILS InventoryGenerator:
+def runBrails(latMin, latMax, longMin, longMax, seed, numBuildings, gKey):    
     # Initialize InventoryGenerator:
     invGenerator = InventoryGenerator(location=(longMin,latMin,longMax,latMax),
                                       nbldgs=numBuildings, randomSelection=True,
                                       GoogleAPIKey=gKey)
 
     # Run InventoryGenerator to generate an inventory for the entered location:
-    # To run InventoryGenerator for all enabled attributes set attributes='all':
-    invGenerator.generate(attributes=['numstories','roofshape','buildingheight'])
+    invGenerator.generate(attributes='all')
 
 def main(args):
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -55,23 +44,16 @@ def main(args):
 
     args = parser.parse_args(args)
 
-    #print(args)
+    # Run BRAILS BRAILS InventoryGenerator with the user-defined arguments:
     runBrails(
         args.latMin, args.latMax,
         args.longMin, args.longMax,
         args.numBuildings,
         args.seed, args.googKey)
 
-    log_msg('brails finished.')
-
+    log_msg('BRAILS successfully generated the requested building inventory')
+    
+# Run main:
 if __name__ == '__main__':
 
-    main(sys.argv[1:])    
-    
-
-
-
-
-
-
-    
+    main(sys.argv[1:])
