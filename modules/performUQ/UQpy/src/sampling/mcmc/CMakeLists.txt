@@ -1,1 +1,2 @@
 simcenter_add_python_script(SCRIPT StretchDto.py)
+simcenter_add_python_script(SCRIPT ModifiedMetropolisHastingsDto.py)

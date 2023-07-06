@@ -17,9 +17,11 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
     conditionalProbability: float
     failure_threshold: float = Field(..., alias="failureThreshold")
     maxLevels: int
-    initial_samples: int
     samples_per_subset: int
-    samplingMethod: StretchDto
+    samplingMethod: SamplingMethod
+
+    def __post_init__(self):
+        self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)
 
     def init_to_text(self):
         from UQpy.reliability.SubsetSimulation import SubsetSimulation
@@ -35,7 +37,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
         import_statement += "from " + MonteCarloSampling.__module__ + " import " + \
                             MonteCarloSampling.__module__.split(".")[-1] + "\n"
 
-        import_statement += f"monte_carlo = {MonteCarloSampling.__module__.split('.')[-1]}(distributions=marginals, nsamples={self.initial_samples})\n"
+        import_statement += f"monte_carlo = {MonteCarloSampling.__module__.split('.')[-1]}(distributions=marginals, nsamples={self.samples_per_subset})\n"
         input_str = "subset"
         initializer = f'{input_str} = {class_name}(sampling={self.samplingMethod}, ' \
                       f'conditional_probability={self.conditionalProbability}, ' \
@@ -48,7 +50,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
                                       "'performance_threshold_per_level':subset.performance_threshold_per_level,"\
                                       "'independent_chains_CoV':subset.independent_chains_CoV,"\
                                       "'dependent_chains_CoV': subset.dependent_chains_CoV}\n"
-        save_script+="with open('uqpy_results.out', 'w') as file:"\
+        save_script+="with open('uqpy_results.out', 'w') as file:\n"\
                      "\tfile.write(json.dumps(output_data))\n"
 
         prerequisite_str = import_statement + initializer + save_script
