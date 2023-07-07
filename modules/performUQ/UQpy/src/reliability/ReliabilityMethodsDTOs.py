@@ -50,7 +50,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
                                       "'performance_threshold_per_level':subset.performance_threshold_per_level,"\
                                       "'independent_chains_CoV':subset.independent_chains_CoV,"\
                                       "'dependent_chains_CoV': subset.dependent_chains_CoV}\n"
-        save_script+="with open('uqpy_results.out', 'w') as file:\n"\
+        save_script+="with open('uqpy_results.json', 'w') as file:\n"\
                      "\tfile.write(json.dumps(output_data))\n"
 
         prerequisite_str = import_statement + initializer + save_script
