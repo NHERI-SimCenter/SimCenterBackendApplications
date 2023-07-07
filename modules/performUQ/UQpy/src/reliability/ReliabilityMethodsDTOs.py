@@ -13,7 +13,7 @@ class ReliabilityMethodBaseDTO(UQpyDTO):
 
 
 class SubsetSimulationDTO(ReliabilityMethodBaseDTO):
-    method: Literal['SubsetSimulation'] = 'SubsetSimulation'
+    method: Literal['Subset Simulation'] = 'Subset Simulation'
     conditionalProbability: float
     failure_threshold: float = Field(..., alias="failureThreshold")
     maxLevels: int

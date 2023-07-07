@@ -18,7 +18,7 @@ class SurrogatesDTO(ModuleBaseDTO):
     uqType: Literal['Surrogates'] = 'Surrogates'
 
 class ReliabilityDTO(ModuleBaseDTO):
-    uqType: Literal['ReliabilityAnalysis'] = 'ReliabilityAnalysis'
+    uqType: Literal['Reliability Analysis'] = 'Reliability Analysis'
     methodData: ReliabilityMethod
 
 
