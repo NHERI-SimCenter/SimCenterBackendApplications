@@ -42,6 +42,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     os.chmod("{}/preprocessUQpy.py".format(thisScriptDir),  stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+    
     # 1. Create the UQy analysis python script
     preprocessorCommand = "'{}' '{}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(python, thisScriptDir,
                                                                         workflowinput,

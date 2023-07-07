@@ -17,13 +17,16 @@ from src.runmodel.RunModelDTOs import RunModelDTO
 
 def preprocess(workflowinput, driverfile, runtype, ostype):
 
+    # 1. Parse the input JSON file
     model = Model.parse_file(workflowinput)
 
+    # 2. Generate code
     code = []
     code.append("import time\n")
     code.append("t1 = time.time()\n")
-    code.append("#\n# Creating the random variable distributions\n#")
+
     # Create commands for defining distributions
+    code.append("#\n# Creating the random variable distributions\n#")
     marginals_code = 'marginals = JointIndependent(['
     for distribution in model.randomVariables:
         (distribution_code, input) = distribution.init_to_text()
@@ -44,6 +47,7 @@ def preprocess(workflowinput, driverfile, runtype, ostype):
     code.append("#\n# Defining and running the UQ analysis\n#")
     code.append(uqmethod_code)
 
+    # 3. Write code to analysis script
     with open("UQpyAnalysis.py", 'w') as outfile:
         outfile.write("\n".join(code))
 
