@@ -35,7 +35,7 @@ class UniformParameters(RVCommonData):
         scipy_inputs = self._to_scipy()
         input_str = self.name
         initializer = f"{self.name} = {class_name}(loc={scipy_inputs['loc']}, scale={scipy_inputs['scale']})"
-        prerequisite_str = import_statement + import_statement_2+ initializer
+        prerequisite_str = import_statement + import_statement_2 + initializer
         return prerequisite_str, input_str
 
     def _to_scipy(self):
