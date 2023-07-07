@@ -14,27 +14,34 @@ from src.runmodel.RunModelDTOs import RunModelDTO
               default='runningLocal', help="Choose between local or cluster execution of workflow.")
 @click.option('--osType', type=click.Choice(['Linux', 'Windows']),
               help="Type of operating system the workflow will run on.")
+
 def preprocess(workflowinput, driverfile, runtype, ostype):
+
+    model = Model.parse_file(workflowinput)
+
     code = []
-
-    with open(os.path.join(os.getcwd(), workflowinput)) as my_file:
-        json = my_file.read()
-        model = Model.parse_raw(json)
-
-
+    code.append("import time\n")
+    code.append("t1 = time.time()\n")
+    code.append("#\n# Creating the random variable distributions\n#")
+    # Create commands for defining distributions
     marginals_code = 'marginals = JointIndependent(['
     for distribution in model.randomVariables:
         (distribution_code, input) = distribution.init_to_text()
-        marginals_code += input + ','
         code.append(distribution_code)
-    marginals_code += '])\n'
+        marginals_code += input + ', '
+    marginals_code += '])'
     code.append(marginals_code)
+    code.append(f"numRV = {len(model.randomVariables)}\n")
 
+    # Create files and commands for runmodel
     runmodel_code = RunModelDTO.create_runmodel_with_variables_driver(variables=model.randomVariables,
                                                                       driver_filename=driverfile)
-    (uqmethod_code, _) = model.UQ.methodData.generate_code()
-
+    code.append("#\n# Creating the model\n#")
     code.append(runmodel_code)
+
+    # Create commands for the UQ method
+    (uqmethod_code, _) = model.UQ.methodData.generate_code()
+    code.append("#\n# Defining and running the UQ analysis\n#")
     code.append(uqmethod_code)
 
     with open("UQpyAnalysis.py", 'w') as outfile:
