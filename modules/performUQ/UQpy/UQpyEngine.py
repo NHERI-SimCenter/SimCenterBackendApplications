@@ -69,7 +69,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
     
     
     # 2. Run the python script
-    UQpycommand = python + " UQpyAnalysis.py" + " 1> upqy.log 2>&1 "
+    UQpycommand = python + " UQpyAnalysis.py" + " 1> uqpy.log 2>&1 "
         
     #Change permission of workflow driver
     st = os.stat(driverfile)
