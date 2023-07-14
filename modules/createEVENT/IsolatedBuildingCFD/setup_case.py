@@ -24,14 +24,18 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["blockMeshParameters"]
-          
-    scale =  json_data['geometricScale']
-    H = json_data['buildingHeight']/scale #convert to model-scale
+    geom_data = json_data['GeometricData']
+
+
+    normalization_type = geom_data['normalizationType']
+    origin = np.array(geom_data['origin'])
+    scale =  geom_data['geometricScale']
+    H = geom_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = json_data['domainLength']
-    Ly = json_data['domainWidth']
-    Lz = json_data['domainHeight']
-    Lf = json_data['fetchLength']
+    Lx = geom_data['domainLength']
+    Ly = geom_data['domainWidth']
+    Lz = geom_data['domainHeight']
+    Lf = geom_data['fetchLength']
     
     x_cells = mesh_data['xNumCells']
     y_cells = mesh_data['yNumCells']
@@ -48,8 +52,6 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     front_type = mesh_data['frontBoundaryType']
     back_type = mesh_data['backBoundaryType']
     
-    normalization_type = json_data['normalizationType']
-    origin = np.array(json_data['origin'])
     length_unit = json_data['lengthUnit']
 
     if normalization_type == "Relative":
@@ -132,8 +134,12 @@ def write_building_stl_file(input_json_path, case_path):
     with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
-      
-    scale =  json_data['geometricScale']
+    geom_data = json_data['GeometricData']
+
+    if geom_data["buildingShape"] == "Simple":
+        return  
+
+    scale =  geom_data['geometricScale']
     length_unit =  json_data['lengthUnit']
 
     convert_to_meters = 1.0
@@ -150,14 +156,14 @@ def write_building_stl_file(input_json_path, case_path):
         convert_to_meters = 0.0254
     
     #Convert from full-scale to model-scale
-    B = convert_to_meters*json_data['buildingWidth']/scale
-    D = convert_to_meters*json_data['buildingDepth']/scale
-    H = convert_to_meters*json_data['buildingHeight']/scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    H = convert_to_meters*geom_data['buildingHeight']/scale
     
-    normalization_type = json_data['normalizationType']
+    normalization_type = geom_data['normalizationType']
 
-    origin = np.array(json_data['origin'])
-    wind_dxn = json_data['windDirection']
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']
 
     if normalization_type == "Relative":
         origin = origin*H
@@ -219,6 +225,46 @@ def write_building_stl_file(input_json_path, case_path):
     fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
     bldg.save(case_path + '/constant/geometry/building.stl', mode=fmt)
 
+def import_building_stl_file(input_json_path, case_path):
+    #Read JSON data    
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    if json_data["GeometricData"]["buildingShape"] == "Simple":
+        return  
+
+    # Returns JSON object as a dictionary
+    stl_path = json_data["GeometricData"]["importedSTLPath"]
+    recenter = json_data["GeometricData"]["recenterToOrigin"]
+    account_wind_direction = json_data["GeometricData"]["accountWindDirection"]
+    origin = np.array(json_data["GeometricData"]['origin'])
+    wind_dxn = json_data["GeometricData"]['windDirection']
+    wind_dxn_rad = np.deg2rad(wind_dxn)
+
+    # Using an existing closed stl file:
+    bldg_mesh = mesh.Mesh.from_file(stl_path)
+
+    min_x = bldg_mesh.x.min()
+    max_x = bldg_mesh.x.max()
+    min_y = bldg_mesh.y.min()
+    max_y = bldg_mesh.y.max()
+    min_z = bldg_mesh.z.min()
+    max_z = bldg_mesh.z.max()
+
+    #Translate the bottom center to origin
+    if recenter:
+        t = np.array([(max_x-min_x)/2.0, (max_y-min_y)/2.0, -min_z]) - origin
+        bldg_mesh.translate(t)
+    
+    #Account wind direction by rotation
+    if account_wind_direction:
+        #Rotate about z-axis
+        bldg_mesh.rotate(np.array([0, 0, 1]), wind_dxn_rad)
+
+    # Write the mesh to file "building.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    bldg_mesh.save(case_path + '/constant/geometry/building.stl', mode=fmt)
+
 def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
     
   #Read JSON data    
@@ -227,10 +273,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     
   # Returns JSON object as a dictionary
   domain_data = json_data["snappyHexMeshParameters"]
-    
   building_stl_name = domain_data['buildingSTLName']
-
-
 
   #Open the template blockMeshDict (OpenFOAM file) for manipulation
   dict_file = open(template_dict_path + "/surfaceFeaturesDictTemplate", "r")
@@ -243,8 +286,6 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
   #Write 'addLayers' switch    
   start_index = foam.find_keyword_line(dict_lines, "surfaces")
   dict_lines[start_index] = "surfaces  (\"{}.stl\");\n".format(building_stl_name)
-  
-
   
   
   #Write edited dict to file
@@ -269,18 +310,19 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["snappyHexMeshParameters"]
-      
-    scale =  json_data['geometricScale']
-    H = json_data['buildingHeight']/scale #convert to model-scale
+
+    geom_data = json_data['GeometricData']
+
+    scale =  geom_data['geometricScale']
+    H = geom_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = json_data['domainLength']
-    Ly = json_data['domainWidth']
-    Lz = json_data['domainHeight']
-    Lf = json_data['fetchLength']
+    Lx = geom_data['domainLength']
+    Ly = geom_data['domainWidth']
+    Lz = geom_data['domainHeight']
+    Lf = geom_data['fetchLength']
     
-    normalization_type = json_data['normalizationType']
-    origin = np.array(json_data['origin'])
-    length_unit = json_data['lengthUnit']
+    normalization_type = geom_data['normalizationType']
+    origin = np.array(geom_data['origin'])
     
     building_stl_name = mesh_data['buildingSTLName']
     num_cells_between_levels = mesh_data['numCellsBetweenLevels']
@@ -1707,6 +1749,9 @@ if __name__ == '__main__':
     #Create and write the building .stl file
     write_building_stl_file(input_json_path, case_path)
     
+    #Import STL file if the shape is complex, the check is done inside the function
+    import_building_stl_file(input_json_path, case_path)
+
     #Create and write the SnappyHexMeshDict file
     write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
     
@@ -1722,7 +1767,7 @@ if __name__ == '__main__':
     if simulation_type == "RANS" and RANS_type=="kEpsilon":
         write_epsilon_file(input_json_path, template_dict_path, case_path)
 
-    #Write controle dict
+    #Write control dict
     write_controlDict_file(input_json_path, template_dict_path, case_path)
     
     #Write results to be monitored
