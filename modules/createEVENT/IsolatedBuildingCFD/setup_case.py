@@ -136,7 +136,7 @@ def write_building_stl_file(input_json_path, case_path):
       
     geom_data = json_data['GeometricData']
 
-    if geom_data["buildingShape"] == "Simple":
+    if geom_data["buildingShape"] == "Complex":
         return  
 
     scale =  geom_data['geometricScale']
@@ -168,7 +168,6 @@ def write_building_stl_file(input_json_path, case_path):
     if normalization_type == "Relative":
         origin = origin*H
     
-
 
     wind_dxn_rad = np.deg2rad(wind_dxn)
     epsilon = 1.0e-5 
@@ -235,7 +234,9 @@ def import_building_stl_file(input_json_path, case_path):
 
     # Returns JSON object as a dictionary
     stl_path = json_data["GeometricData"]["importedSTLPath"]
+    scale_factor = json_data["GeometricData"]["stlScaleFactor"]
     recenter = json_data["GeometricData"]["recenterToOrigin"]
+    use_stl_dimension = json_data["GeometricData"]["useSTLDimensions"]
     account_wind_direction = json_data["GeometricData"]["accountWindDirection"]
     origin = np.array(json_data["GeometricData"]['origin'])
     wind_dxn = json_data["GeometricData"]['windDirection']
@@ -251,15 +252,36 @@ def import_building_stl_file(input_json_path, case_path):
     min_z = bldg_mesh.z.min()
     max_z = bldg_mesh.z.max()
 
+    # if use_stl_dimension:
+    # Data to be written
+    stl_summary = {
+        "xMin": float(min_x),
+        "xMax": float(max_x),
+        "yMin": float(min_y),
+        "yMax": float(max_y),
+        "zMin": float(min_z),
+        "zMax": float(max_z)
+    }
+
+    # Serializing json
+    json_object = json.dumps(stl_summary, indent=4)
+    
+    # Writing to sample.json
+    with open(input_json_path + "/stlGeometrySummary.json", "w") as outfile:
+        outfile.write(json_object)
+    
     #Translate the bottom center to origin
     if recenter:
-        t = np.array([(max_x-min_x)/2.0, (max_y-min_y)/2.0, -min_z]) - origin
+        t = np.array([-((max_x - min_x)/2.0 + min_x), -((max_y - min_y)/2.0 + min_y), -min_z]) - origin/scale_factor
         bldg_mesh.translate(t)
     
     #Account wind direction by rotation
     if account_wind_direction:
         #Rotate about z-axis
-        bldg_mesh.rotate(np.array([0, 0, 1]), wind_dxn_rad)
+        bldg_mesh.rotate(np.array([0, 0, 1.0]), wind_dxn_rad)
+
+    # Scale the mesh 
+    bldg_mesh.vectors *= scale_factor
 
     # Write the mesh to file "building.stl"
     fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
