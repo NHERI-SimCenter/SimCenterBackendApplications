@@ -137,8 +137,10 @@ def write_building_stl_file(input_json_path, case_path):
     geom_data = json_data['GeometricData']
 
     if geom_data["buildingShape"] == "Complex":
+        import_building_stl_file(input_json_path, case_path)
         return  
 
+    #Else create the STL file
     scale =  geom_data['geometricScale']
     length_unit =  json_data['lengthUnit']
 
@@ -364,7 +366,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     
     add_prism_layers = mesh_data['addPrismLayers']
     number_of_prism_layers = mesh_data['numberOfPrismLayers']
-    prism_layer_expantion_ratio = mesh_data['prismLayerExpantionRatio']
+    prism_layer_expansion_ratio = mesh_data['prismLayerExpansionRatio']
     final_prism_layer_thickness = mesh_data['finalPrismLayerThickness']
     prism_layer_surface_name = mesh_data['prismLayerSurfaceName']
     prism_layer_relative_size = "on"  
@@ -523,7 +525,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Write 'expansionRatio'     
     start_index = foam.find_keyword_line(dict_lines, "expansionRatio")
-    dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expantion_ratio)
+    dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expansion_ratio)
     
     #Write 'finalLayerThickness'     
     start_index = foam.find_keyword_line(dict_lines, "finalLayerThickness")
@@ -592,6 +594,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         added_part += "\t Uref \t {:.4f};\n".format(wind_speed)
         added_part += "\t Zref \t {:.4f};\n".format(building_height)
         added_part += "\t zDir \t (0.0 0.0 1.0);\n"
+        added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
         added_part += "\t z0 uniform \t {:.4f};\n".format(roughness_length)
         added_part += "\t zGround \t uniform 0.0;\n"
         
@@ -1237,7 +1240,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     #Write base loads functionObjects
     if monitor_base_load:
         added_part = "    #includeFunc  baseForces \n"
-        dict_lines.insert(start_index + 1, added_part)
+        dict_lines.insert(start_index + 2, added_part)
     
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
@@ -1769,11 +1772,9 @@ if __name__ == '__main__':
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
 
     #Create and write the building .stl file
+    #Also, import STL file if the shape is complex, the check is done inside the function
     write_building_stl_file(input_json_path, case_path)
     
-    #Import STL file if the shape is complex, the check is done inside the function
-    import_building_stl_file(input_json_path, case_path)
-
     #Create and write the SnappyHexMeshDict file
     write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
     
