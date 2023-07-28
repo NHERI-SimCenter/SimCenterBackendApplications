@@ -37,17 +37,17 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 /**
  *  @author  Sang-ri Yi
- *  @date    8/2021
+ *  @date    7/2023
  *  @section DESCRIPTION
- *  Calcualtes the moments of QoIs and writes the results at dakotaTab.out
+ *  Run Multi-fidelity MC Simulation
  */
 
-#include "runForward.h"
+#include "runMFMC.h"
 #include "ERANataf.h"
 #include <iterator>
 
-runForward::runForward() {}
-runForward::runForward(string workflowDriver,
+runMFMC::runMFMC() {}
+runMFMC::runMFMC(string workflowDriver,
 	string osType,
 	string runType,
 	jsonInput inp,
@@ -70,10 +70,10 @@ runForward::runForward(string workflowDriver,
 	this->gval = gvals;
 }
 
-runForward::~runForward() {};
+runMFMC::~runMFMC() {};
 
 void 
-runForward::computeStatistics(int procno) {
+runMFMC::computeStatistics(int procno) {
 
 	if (procno == 0) {
 
@@ -111,12 +111,12 @@ runForward::computeStatistics(int procno) {
 
 }
 
-double runForward::calMean(vector<double> x) {
+double runMFMC::calMean(vector<double> x) {
 	double sum = std::accumulate(std::begin(x), std::end(x), 0.0);
 	return sum / x.size();
 }
 
-double runForward::calStd(vector<double> x, double m) {
+double runMFMC::calStd(vector<double> x, double m) {
 	double accum = 0.0;
 	std::for_each(std::begin(x), std::end(x), [&](const double d) {
 		accum += (d - m) * (d - m);
@@ -124,7 +124,7 @@ double runForward::calStd(vector<double> x, double m) {
 	return std::sqrt(accum / (x.size()));
 }
 
-double runForward::calSkewness(vector<double> x, double m, double s) {
+double runMFMC::calSkewness(vector<double> x, double m, double s) {
 	double accum = 0.0;
 	std::for_each(std::begin(x), std::end(x), [&](const double d) {
 		accum += (d - m) * (d - m) * (d - m);
@@ -132,7 +132,7 @@ double runForward::calSkewness(vector<double> x, double m, double s) {
 	return (accum / (x.size()) / (s*s*s));
 }
 
-double runForward::calKurtosis(vector<double> x, double m, double s) {
+double runMFMC::calKurtosis(vector<double> x, double m, double s) {
 	double accum = 0.0;
 	std::for_each(std::begin(x), std::end(x), [&](const double d) {
 		accum += (d - m) * (d - m) * (d - m) * (d - m);
@@ -140,7 +140,7 @@ double runForward::calKurtosis(vector<double> x, double m, double s) {
 	return (accum / (x.size()) / (s * s * s * s));
 	 
 }
-void runForward::writeOutputs(jsonInput inp, int procno)
+void runMFMC::writeOutputs(jsonInput inp, int procno)
 {
 	if (procno == 0) {
 
@@ -168,7 +168,7 @@ void runForward::writeOutputs(jsonInput inp, int procno)
 }
 
 
-void runForward::writeTabOutputs(jsonInput inp, int procno)
+void runMFMC::writeTabOutputs(jsonInput inp, int procno)
 {
 	if (procno==0) {
 		auto dispInterv = 1.e7; 
@@ -256,7 +256,7 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 	}
 }
 
-bool runForward::isInteger(double a) {
+bool runMFMC::isInteger(double a) {
 	double b = round(a), epsilon = 1e-9; //some small range of error
 	return (a <= b + epsilon && a >= b - epsilon);
 }

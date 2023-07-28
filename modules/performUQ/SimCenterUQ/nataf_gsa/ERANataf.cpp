@@ -483,17 +483,37 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 								string osType,
 								string runType,
 								jsonInput inp,
+								vector<vector<double>> u,
+								vector<vector<int>> resampIDs,
+								vector<vector<string>> xstr,
+								vector<vector<double>> &x,
+								vector<vector<double>> &gvals,
 								int procno,
 								int nproc)
 {
+	/*
+	INPUTS
+	u : samples in the standard gaussian space [nsamp x ndim]
+	resampIDs : resampling indices
+	xstr : x is string random variables..
+
+	OUTPUTS
+	x : samples in x space
+	g : function outcome
+	*/
+
+
+	if (inp.femAppName.compare("SurrogateGP") == 0) {
+		this->simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, u, resampIDs, xstr, x, gvals, procno, nproc);
+		return;
+	}
+
 	//
-	// Change from u to x;
+	// u -> x;
 	//
 
-	vector<vector<double>> u = U;
-	vector<vector<int>> resampIDs = resampID;
-
-	vector<vector<double>> x = U2X(inp.nmc, u);
+	//vector<vector<int>> resampIDs = resampID;
+	x = U2X(inp.nmc, u);
 	std::vector<double> zero_vector(inp.nre, 0);
 	for (int ns = 0; ns < inp.nmc; ns++)
 	{
@@ -513,7 +533,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	}
 
 	// for discreteStr
-	vector<vector<string>> xstr = discreteStr;
+	//vector<vector<string>> xstr = discreteStr;
 
 	std::string copyDir = inp.workDir + "/templatedir";
 
@@ -554,7 +574,6 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		}
 	}
 
-    //std::cout<<"here it is";
 	//
 	// Run Apps
 	//
@@ -615,7 +634,6 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	//
 	// OpenMP
 	//
-		vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
 		int i;
 		#pragma omp parallel for shared(gvals) private(i)
 		for (i = 0; i < inp.nmc; i++)
@@ -626,14 +644,14 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 
 	#endif
 
-	X = x;
-	Xstr = xstr;
-	G = gvals;
+	//X = x;
+	//Xstr = xstr;
+	//G = gvals;
 }
 
 vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, string copyDir, int nrv_num, int nrv_str, int nqoi, vector<string> rvNames, vector<vector<double>> xss,vector<vector<string>> xst, string workflowDriver, string osType, string runType)
 {
-	int nsamp = xss.size();
+	auto nsamp = xss.size();
 
 	//
 	// (1) create "workdir.i " folder :need C++17 to use the files system namespace
@@ -667,7 +685,9 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 			// try removing files
 			for (const auto& entry : std::filesystem::directory_iterator(workingDirs))
 			{
+
 				if (entry.path().u8string().find("workdir") != std::string::npos) {
+					//std::filesystem::permissions(entry.path().u8string() + "/driver.bat", std::filesystem::perms::others_all);
 					std::filesystem::remove_all(entry.path());
 				}
 			}
@@ -686,7 +706,7 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 	//
 	// (3) write params.in file
 	//
-
+	std::string multiModel = "MultiModel";
 	string params = workDir + "/params.in";
 	std::ofstream writeFile(params.data());
 	if (writeFile.is_open()) {
@@ -696,7 +716,16 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 
 			for (int k = 0; k < nsamp ; k++)
 			{
-				writeFile << std::to_string(xss[k][j]) + " ";
+				if ((rvNames[j].compare(0, multiModel.length(), multiModel) == 0) && isInteger(xss[k][j])) {
+					// if rv name starts with "MultiModel", write as integer
+					writeFile << std::to_string(int(xss[k][j]));
+				} else {
+					writeFile << std::scientific << std::setprecision(15) << (xss[k][j]);
+				}
+
+				if (k < nsamp-1) {
+					writeFile << " "; // do not add space at the end of each line
+				}
 			}
 			writeFile << "\n";
 		}
@@ -719,10 +748,14 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 
 	string workflowDriver_string = "cd \"" + workDir + "\" && \"" + workDir + "/" + workflowDriver + "\"" ;
 
+	
 	const char* workflowDriver_char = workflowDriver_string.c_str();
 	system(workflowDriver_char);
+
+	
 	if (i == 0) {
-		std::cout << workflowDriver_char << "\n\n";
+		//std::cout << workflowDriver_char << "\n\n";
+		//std::cout << "Simulating Workdir." << i +1 << "\n\n";
 	}
 
 	//
@@ -851,21 +884,26 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 
 
 void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
-									string osType,
-									string runType,
-									jsonInput inp,
-									int procno,
-									int nproc)
+										string osType,
+										string runType,
+										jsonInput inp,
+										vector<vector<double>> u,
+										vector<vector<int>> resampIDs,
+										vector<vector<string>> xstr,
+										vector<vector<double>> &x,
+										vector<vector<double>> &gvals,
+										int procno,
+										int nproc)
 {
 	//
 	// Change from u to x;
 	//
 	
-	vector<vector<double>> u = U;
-	vector<vector<int>> resampIDs = resampID;
+	//vector<vector<double>> u = U;
+	//vector<vector<int>> resampIDs = resampID;
 
-	vector<vector<double>> x = U2X(inp.nmc, u);
-	vector<vector<double>> x_strs;
+	x = U2X(inp.nmc, u);
+	//vector<vector<double>> x_strs;
 	std::vector<double> zero_vector(inp.nre, 0);
 	for (int ns = 0; ns < inp.nmc; ns++)
 	{
@@ -885,7 +923,7 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 	}
 
 	// for discreteStr
-	vector<vector<string>> xstr = discreteStr;
+	//vector<vector<string>> xstr = discreteStr;
 
 	std::string copyDir = inp.workDir + "/templatedir";
 
@@ -934,13 +972,18 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 	//
 	// Evaluate surrogate
 	//
-	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
+	//vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
 
 	gvals = simulateAppOnce(0, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, x, xstr, workflowDriver, osType, runType);
 	   	  
-	X = x;
-	Xstr = xstr;
-	G = gvals;
+	//X = x;
+	//Xstr = xstr;
+	//G = gvals;
+}
+
+bool ERANataf::isInteger(double a) {
+	double b = round(a), epsilon = 1e-9; //some small range of error
+	return (a <= b + epsilon && a >= b - epsilon);
 }
 
 void ERANataf::readBin(string filename,int ndim, vector<vector<double>> &mat, int& nsamp)
@@ -1110,7 +1153,7 @@ void ERANataf::readCSV(string filename, int ndim, vector<vector<double>>& mat, i
 }
 
 
-void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int& nmc)
+void ERANataf::readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int& nmc, vector<vector<double>>&X, vector<vector<double>>& G )
 {
 	int nsampx = -1; // some arbitrary value
 	int nsampy = -2;
@@ -1301,7 +1344,8 @@ void ERANataf::simulateAppSequential(string osType, string runType, jsonInput in
 }
 */
 
-void ERANataf::sample(jsonInput inp, int procno) {
+
+void ERANataf::sample(jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps) {
 
 
 	int nmc = inp.nmc;
@@ -1312,7 +1356,7 @@ void ERANataf::sample(jsonInput inp, int procno) {
 	std::normal_distribution<double> distribution(0.0, 1.0);
 
 	// For random samples
-	vector<vector<double>> uvals(nmc, vector<double>(inp.nrv, 0.0));
+	//vector<vector<double>> uvals(nmc, vector<double>(inp.nrv, 0.0));
 	for (int ns = 0; ns < nmc; ns++)
 	{
 		for (int nr = 0; nr < inp.nrv; nr++)
@@ -1320,7 +1364,7 @@ void ERANataf::sample(jsonInput inp, int procno) {
 	}
 
 	// To resample  coupled datafiles.. if exists..
-	vector<vector<int>> resampIDvals(nmc, vector<int>(nreg, 0.0));
+	//vector<vector<int>> resampIDvals(nmc, vector<int>(inp.nreg, 0.0));
 	for (int nr = 0; nr < nreg; nr++) // if {0,1},{2,3}, nrg is 2
 	{
 		if (nmc > inp.resamplingSize[nr]) {
@@ -1344,7 +1388,7 @@ void ERANataf::sample(jsonInput inp, int procno) {
 		}
 	}
 
-	vector<vector<string>> discreteStrSamps(nmc, vector<string>(nst,""));
+	//vector<vector<string>> discreteStrSamps(nmc, vector<string>(inp.nst,""));
 	for (int nstr = 0; nstr < nst; nstr++) // if {0,1},{2,3}, nrg is 2
 	{
 		std::uniform_int_distribution<int> discrete_dist(0, inp.discreteStrValues[nstr].size() - 1);
@@ -1360,9 +1404,9 @@ void ERANataf::sample(jsonInput inp, int procno) {
 	// To resample discrete string variables.. if exists..
 
 	// save as
-	U = uvals;
-	resampID = resampIDvals;
-	discreteStr = discreteStrSamps;
+	//U = uvals; // vector<vector<double>> 
+	//resampID = resampIDvals; // vector<vector<int>>
+	//discreteStr = discreteStrSamps; //vector<vector<string>> 
 }
 
 

@@ -1,5 +1,5 @@
-#ifndef RUN_FORWARD_H
-#define RUN_FORWARD_H
+#ifndef RUN_MFMC_H
+#define RUN_MFMC_H
 
 /* *****************************************************************************
 Copyright (c) 2016-2017, The Regents of the University of California (Regents).
@@ -39,9 +39,9 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 /**
  *  @author  Sang-ri Yi
- *  @date    8/2021
+ *  @date    7/2023
  *  @section DESCRIPTION
- *  Calcualtes the moments of QoIs and writes the results at dakotaTab.out
+ *  Run Multi-fidelity MC Simulation
  */
 
 #include <vector>
@@ -64,18 +64,18 @@ extern writeErrors theErrorFile; // Error log
 using std::vector;
 using std::string;
 
-class runForward
+class runMFMC
 {
 public:
-	runForward(); 
-	runForward(string workflowDriver,
+	runMFMC(); 
+	runMFMC(string workflowDriver,
 		string osType,
 		string runType,
 		jsonInput inp,
 		ERANataf T,
 		int procno,
 		int nproc);
-	~runForward();
+	~runMFMC();
 	void computeStatistics(int procno);
 	void writeOutputs(jsonInput inp, int procno);
 	void writeTabOutputs(jsonInput inp, int procno);
@@ -103,4 +103,4 @@ private:
 	int nmc;
 };
 
-#endif// RUN_FORWARD_H
+#endif// RUN_MFMC_H

@@ -43,26 +43,66 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
 #include "runGSA.h"
+#include "ERANataf.h"
 #include <iterator>
 using namespace arma::newarp;
 
 runGSA::runGSA() {}
 
-runGSA::runGSA(vector<vector<double>> xval,
-	vector<vector<string>> xstrval,
-	vector<vector<double>> gmat,
-	vector<vector<int>> combs_tmp,
-	double PCAvarRatioThres,
-	vector<vector<int>> qoiVectRange,
-	int Kos,
+runGSA::runGSA(string workflowDriver,
+	string osType,
+	string runType,
+	jsonInput inp,
+	ERANataf T,
 	int procno,
-	int nprocs)
+	int nproc)
 {
-	this->xval = xval;
-	this->xstrval = xstrval;
-	this->gmat = gmat;
-	this->combs_tmp = combs_tmp;
-	this->PCAvarRatioThres = PCAvarRatioThres;
+
+	//
+	// Sample MCS
+	//
+
+	vector<vector<double>> xvals(inp.nmc, vector<double>(inp.nrv, 0.0));
+	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));	
+	vector<vector<string>> discreteStrSamps(inp.nmc, vector<string>(inp.nst, ""));
+	if (inp.UQmethod.compare("Monte Carlo") == 0) {
+
+	vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
+	vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
+
+	T.sample(inp, procno, uvals, resampIDvals, discreteStrSamps);
+
+	//
+	// Simulate model
+	//
+	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, xvals, gvals, procno, nproc);
+
+	}
+	else if (inp.UQmethod.compare("Import Data Files") == 0) {
+
+		if (runType.compare("runningLocal") != 0) {
+			std::string errMsg = "Error running SimCenterUQ: No need to run remotely when the data set is provided. Please try running it locally.";
+			theErrorFile.write(errMsg);
+		}
+		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc, xvals, gvals);
+
+	} else {
+		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " unknown.";
+		theErrorFile.write(errMsg);
+	}
+
+	this->xval = xvals;
+	this->xstrval = discreteStrSamps;
+	this->gmat = gvals;
+
+	//
+	// Read GSA Parameters
+	//
+
+	this->combs_tmp = inp.groups;
+	this->PCAvarRatioThres = inp.PCAvarRatioThres;
+	vector<vector<int>> qoiVectRange = inp.qoiVectRange;
+	int Kos = 10;
 
 	if (PCAvarRatioThres ==0.0) {
 		this->performPCA = false;
@@ -71,7 +111,6 @@ runGSA::runGSA(vector<vector<double>> xval,
 	}    
 	
 	nmc = xval.size();
-
 	nrv = xval[0].size();
 	nqoi = gmat[0].size();
 	ncombs = combs_tmp.size();
@@ -90,11 +129,12 @@ runGSA::runGSA(vector<vector<double>> xval,
 	// Preprocess gmat find a constant column
 	//
 
-	preprocess_gmat(gmat, gmat_eff); // Zero mean, get constants idx
+	preprocess_gmat(gmat, gmat_eff); // Make it zero mean, get constants idx
 
 	//
 	// PCA process
 	//
+
 	//mat princ_dir_red;
     if (performPCA) {
 		std::cout << "Running PCA ..." << std::endl;
@@ -153,8 +193,6 @@ runGSA::runGSA(vector<vector<double>> xval,
 void runGSA::preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>& gmat_eff)
 {
 	// Make the matrix centered and have unit variance...
-
-
 
 	std::cout << "Preprocessing.." << std::endl;
 
@@ -1355,7 +1393,7 @@ double runGSA::calCov(vector<double> x1, vector<double> x2) {
 	return (accum / count);
 }
 
-
+/*
 void runGSA::writeTabOutputs(jsonInput inp, int procno)
 {
 	if (procno==0) {
@@ -1394,6 +1432,7 @@ void runGSA::writeTabOutputs(jsonInput inp, int procno)
 		} 
 	}
 }
+*/
 
 void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 {
@@ -1543,4 +1582,99 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 
 	}
 
+}
+
+
+void runGSA::writeTabOutputs(jsonInput inp, int procno)
+{
+	if (procno == 0) {
+		auto dispInterv = 1.e7;
+		int dispCount = 1;
+		auto readStart = std::chrono::high_resolution_clock::now();
+		auto readEnd = 0;
+		// dakotaTab.out
+		std::string writingloc1 = inp.workDir + "/dakotaTab.out";
+		std::stringstream Taboutfile;
+		//std::ofstream Taboutfile(writingloc1);
+
+		//if (!Taboutfile.is_open()) {
+
+		//	std::string errMsg = "Error running UQ engine: Unable to write dakota.out";
+		//	theErrorFile.write(errMsg);
+		//}
+
+		Taboutfile.setf(std::ios::fixed, std::ios::floatfield); // set fixed floating format
+		Taboutfile.precision(7); // for fixed format
+
+		Taboutfile << "idx\t";
+		for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
+			Taboutfile << inp.rvNames[j] << "\t";
+		}
+		for (int j = inp.nrv + inp.nco + inp.nre; j < inp.nrv + inp.nco + inp.nre + inp.nst; j++) {
+			Taboutfile << inp.rvNames[j] << "\t";
+		}
+		for (int j = 0; j < inp.nqoi; j++) {
+			Taboutfile << inp.qoiNames[j] << "\t";
+		}
+		Taboutfile << '\n';
+
+		std::string multiModel = "MultiModel";
+
+		for (int ns = 0; ns < inp.nmc; ns++) {
+			Taboutfile << std::to_string(ns + 1) << "\t";
+			for (int nr = 0; nr < inp.nrv + inp.nco + inp.nre; nr++) {
+
+				if ((inp.rvNames[nr].compare(0, multiModel.length(), multiModel) == 0) && isInteger(xval[ns][nr])) {
+					// if rv name starts with "MultiModel", write as integer
+					Taboutfile << std::to_string(int(xval[ns][nr])) << "\t";
+				}
+				else {
+					Taboutfile << std::scientific << std::setprecision(7) << (xval[ns][nr]) << "\t";
+				}
+				//Taboutfile << std::to_string(xval[ns][nr]) << "\t";
+
+			}
+			for (int nr = 0; nr < inp.nst; nr++) {
+				Taboutfile << xstrval[ns][nr] << "\t";
+			}
+			for (int nq = 0; nq < inp.nqoi; nq++) {
+				Taboutfile << std::scientific << std::setprecision(7) << (gmat[ns][nq]) << "\t";
+				//Taboutfile << std::to_string(gval[ns][nq]) << "\t";
+			}
+			Taboutfile << '\n';
+
+			if (ns * inp.nqoi > dispInterv* dispCount) {
+				std::cout << "  - Writing Tab file in progress: " << (double)ns / (double)inp.nmc * 100 << "% \n";
+				dispCount += 1;
+
+				if (dispCount == 1) {
+					readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+					double expWriteTime = readEnd * (double)inp.nmc / (double)10;
+					if (expWriteTime > 5.0) {
+						// Only if the file is large, print the expected reading time
+						std::cout << "  - Expected writing time: " << expWriteTime << " s\n";
+					}
+				}
+			}
+		}
+		//Taboutfile.close();
+		std::ofstream Taboutfile1(writingloc1);
+
+		if (!Taboutfile1.is_open()) {
+
+			std::string errMsg = "Error running UQ engine: Unable to write dakota.out";
+			theErrorFile.write(errMsg);
+		}
+		Taboutfile1 << Taboutfile.str();
+		Taboutfile1.close();
+
+		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
+		std::cout << "Elapsed time to write Tab.json: " << readEnd << " s\n";
+	}
+}
+
+
+bool runGSA::isInteger(double a) {
+	double b = round(a), epsilon = 1e-9; //some small range of error
+	return (a <= b + epsilon && a >= b - epsilon);
 }

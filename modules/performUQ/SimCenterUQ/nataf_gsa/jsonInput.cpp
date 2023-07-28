@@ -48,6 +48,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 jsonInput::jsonInput(string workDir, string inpFile, int procno)
 {
 
+	// presetting - change this only for testing
+
 	if (procno == 0)  std::cout << "Reading input json scripts.." << " \n";
 
 	this->workDir = workDir;
@@ -254,7 +256,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// Specify parameters in each distributions.
 	//
-	if (procno == 0)  std::cout << " - Reading RV Data groups";
+	if (procno == 0)  std::cout << " - Reading RV Data groups\n";
 
 	//std::vector<int> corrIdx;
 	std::vector<int> randIdx, constIdx, resampIdx, discreteStrIdx; // random variables, constant variables, resampling variables
@@ -425,7 +427,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			vals.push_back(vals_tmp);
 
 			if (vals_tmp.size() < 1) { //*ERROR*
-				int a = vals_tmp.size();
+				auto a = vals_tmp.size();
 
 				std::string errMsg = "Error reading json: data file of " + rvNames[nrv] + " has less then one sample.";
 				theErrorFile.write(errMsg);
@@ -456,7 +458,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			// Parameter (moment) values inside vals
 			if (distNames[nrv].compare("discrete") == 0) {
 				std::vector<double> vals_tmp;
-				int numdisc = elem[pnames[0]].size();
+				auto numdisc = elem[pnames[0]].size();
 				for (int i = 0; i < numdisc; i++)
 				{
 					vals_tmp.push_back(elem[pnames[0]][i]);
@@ -464,7 +466,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 				}
 				vals.push_back(vals_tmp);
 			}else if (distNames[nrv].compare("discrete_design_set_string") == 0) {
-				int nelem = elem["elements"].size();
+				auto nelem = elem["elements"].size();
 				std::vector<double> vals_tmp(nelem);
 				std::iota(vals_tmp.begin(), vals_tmp.end(), 1);
 				vals.push_back(vals_tmp);
@@ -501,14 +503,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		randIdx.push_back(count);
 		nrv++;
 		count++;
-		std::cout << nrv <<"\n";
 	}
 
 	//
 	// get resamples
 	//
 
-	if (procno == 0)  std::cout << " - Getting resampling indices.. if any";
+	if (procno == 0)  std::cout << " - Getting resampling indices.. if any\n";
 
 	for (int i : resampIdx)
 	{
@@ -555,7 +556,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// get constants
 	//
 
-	if (procno == 0)  std::cout << " - Getting constant variable names.. if any";
+	if (procno == 0)  std::cout << " - Getting constant variable names.. if any\n";
 	//for (auto& elem : UQjson["randomVariables"])
 	for (int i : constIdx)
 	{
@@ -596,7 +597,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// get discreteStr
 	//
 
-	if (procno == 0)  std::cout << " - Getting discreteStr variable names.. if any";
+	if (procno == 0)  std::cout << " - Getting discreteStr variable names.. if any\n";
 	//for (auto& elem : UQjson["randomVariables"])
 	for (int i : discreteStrIdx)
 	{
@@ -648,7 +649,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	}
 
 
-	if (procno == 0)  std::cout << " - Checking correlation matrix";
+	if (procno == 0)  std::cout << " - Checking correlation matrix\n";
 	std::cout << nrv;
 
 	if (UQjson.find("correlationMatrix") != UQjson.end()) {
@@ -695,7 +696,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	for (int i = 0; i < nreg; i++) {
-		int length_old = vals[resamplingGroups[i][0]].size();
+		auto length_old = vals[resamplingGroups[i][0]].size();
 		int length_data;
 		for (int j = 1; j < resamplingGroups[i].size(); j++) {
 			length_data =vals[resamplingGroups[i][j]].size();
@@ -714,7 +715,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 void
 jsonInput::fromTextToId(string groupTxt, vector<string>& groupPool, vector<vector<int>>& groupIdVect)
 {
-	int nrv = groupPool.size();
+	auto nrv = groupPool.size();
     std::regex re(R"(\{([^}]+)\})"); // will get string inside {}
     //std::regex re(""); // will get string inside {}
     //auto re = std::regex("Hello");
@@ -959,7 +960,6 @@ jsonInput::getGroupIdx(json UQjson) {
 	//
 	// get group index matrix
 	//
-	std::cout << "THIS1-1\n";
 
 	bool generate_default_RVsensitivityGroup = true;
 	if (UQjson["UQ"].find("RVsensitivityGroup") != UQjson["UQ"].end()) {
@@ -974,7 +974,6 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
-	std::cout << "THIS1-2\n";
 	if (generate_default_RVsensitivityGroup) {
 
 		for (int i = 0; i < nrv; i++) {
@@ -987,7 +986,6 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
-	std::cout << "THIS1-3\n";
 
 	ngr = groups.size();
 }
