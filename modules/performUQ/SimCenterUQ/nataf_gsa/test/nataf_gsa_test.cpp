@@ -8,20 +8,21 @@ writeErrors theErrorFile; // Error log
 
 bool isIdenticalFiles(std::string fname1, std::string fname2, double diffPerc);
 void removeFiles(std::string examplePath, int nsamp, std::vector<std::string> fnames);
-void runTestForward(std::string examplePath, std::string workflowDriver, std::string osType, std::string runType, int nprocs);
-void runTestGSA(std::string examplePath, std::string workflowDriver, std::string osType, std::string runType, int nprocs);
+void runTestForward(std::string examplePath, std::string workflowDriver, std::string inputJson, std::string osType, std::string runType, int nprocs);
+void runTestGSA(std::string examplePath, std::string workflowDriver, std::string inputJson, std::string osType, std::string runType, int nprocs);
 
 struct Test_quoFEM
 	: public ::testing::Test
 {
 
-	std::string workflowDriver, osType, runType;
+	std::string workflowDriver, osType, runType, inputJson;
 	int procno, nprocs;
 
 	virtual void SetUp() override {
 		procno = 0;
 		nprocs = 1;
 		workflowDriver = "driver.bat";
+		inputJson = "scInput.json";
 		osType = "Windows";
 		runType = "runningLocal";
 
@@ -31,6 +32,25 @@ struct Test_quoFEM
 	}
 };
 
+struct Test_EEUQ
+	: public ::testing::Test
+{
+
+	std::string workflowDriver, osType, runType, inputJson;
+	int procno, nprocs;
+
+	virtual void SetUp() override {
+		procno = 0;
+		nprocs = 1;
+		workflowDriver = "sc_driver.bat";
+		inputJson = "sc_scInput.json";
+		osType = "Windows";
+		runType = "runningLocal";
+	}
+	virtual void TearDown() override {
+		theErrorFile.close();
+	}
+};
 
 TEST_F(Test_quoFEM, RV) {
 
@@ -118,7 +138,7 @@ TEST_F(Test_quoFEM, RV) {
 TEST_F(Test_quoFEM, FORWARD) {
 
 	std::string examplePath = "C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/test/Examples/Test2";
-	runTestForward(examplePath, workflowDriver, osType, runType, nprocs);
+	runTestForward(examplePath, workflowDriver, inputJson, osType, runType, nprocs);
 
 	// TESTS
 	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakotaTab_Test.out", examplePath + "/dakotaTab.out", 0)) << "TEST2 - FORWARD (1) RESULTS MISMATCH\n";
@@ -130,7 +150,7 @@ TEST_F(Test_quoFEM, FORWARD) {
 TEST_F(Test_quoFEM, FORWARD_CORR) {
 
 	std::string examplePath = "C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/test/Examples/Test3";
-	runTestForward(examplePath, workflowDriver, osType, runType, nprocs);
+	runTestForward(examplePath, workflowDriver, inputJson, osType, runType, nprocs);
 
 	// TESTS
 	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakotaTab_Test.out", examplePath + "/dakotaTab.out", 0)) << "TEST3 - FORWARD (2) RESULTS MISMATCH\n";
@@ -142,32 +162,46 @@ TEST_F(Test_quoFEM, FORWARD_CORR) {
 TEST_F(Test_quoFEM, GSA) {
 
 	std::string examplePath = "C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/test/Examples/Test4";
-	runTestGSA(examplePath, workflowDriver, osType, runType, nprocs);
+	runTestGSA(examplePath, workflowDriver, inputJson, osType, runType, nprocs);
 
 	// TESTS
 	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakota_Test.out", examplePath + "/dakota.out", 0.05)) << "TEST4 - GSA RESULTS MISMATCH\n";
 
-	removeFiles(examplePath, 5, { "dakotaTab.out", "dakota.out", "dakota.err" });
+	removeFiles(examplePath, 500, { "dakotaTab.out", "dakota.out", "dakota.err" });
 
 }
 
 TEST_F(Test_quoFEM, GSA_PCA) {
 
 	std::string examplePath = "C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/test/Examples/Test5";
-	runTestGSA(examplePath, workflowDriver, osType, runType, nprocs);
+	runTestGSA(examplePath, workflowDriver, inputJson, osType, runType, nprocs);
 
 	// TESTS
 	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakota_Test.out", examplePath + "/dakota.out", 0.05)) << "TEST5 - GSA PCA RESULTS MISMATCH\n";
 
-	removeFiles(examplePath, 5, { "dakotaTab.out", "dakota.out", "dakota.err" });
+	removeFiles(examplePath, 300, { "dakotaTab.out", "dakota.out", "dakota.err" });
 
 }
 
-void runTestForward(std::string examplePath, std::string workflowDriver, std::string osType, std::string runType, int nprocs) {
+
+
+TEST_F(Test_EEUQ, FORWARD) {
+
+	std::string examplePath = "C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/test/Examples/EE_Test1";
+	runTestForward(examplePath, workflowDriver, inputJson, osType, runType, nprocs);
+
+	// TESTS
+	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakotaTab_Test.out", examplePath + "/dakotaTab.out", 0)) << "EE TEST1 - FORWARD RESULTS MISMATCH\n";
+
+	removeFiles(examplePath, 5, { "dakotaTab.out", "dakota.err" });
+
+}
+
+void runTestForward(std::string examplePath, std::string workflowDriver, std::string inputJson, std::string osType, std::string runType, int nprocs) {
 	int procno = 0;
 
 	std::string workDir = examplePath;
-	std::string inpFile = examplePath + "/templatedir/scInput.json";
+	std::string inpFile = examplePath + "/templatedir/" + inputJson;
 	theErrorFile.getFileName(workDir + "/dakota.err", procno);
 
 	// (1) read JSON file
@@ -179,11 +213,11 @@ void runTestForward(std::string examplePath, std::string workflowDriver, std::st
 	myForward.writeTabOutputs(inp, procno); 
 }
 
-void runTestGSA(std::string examplePath, std::string workflowDriver, std::string osType, std::string runType, int nprocs) {
+void runTestGSA(std::string examplePath, std::string workflowDriver, std::string inputJson, std::string osType, std::string runType, int nprocs) {
 	int procno = 0;
 
 	std::string workDir = examplePath;
-	std::string inpFile = examplePath + "/templatedir/scInput.json";
+	std::string inpFile = examplePath + "/templatedir/" + inputJson;
 	theErrorFile.getFileName(workDir + "/dakota.err", procno);
 
 	// (1) read JSON file
