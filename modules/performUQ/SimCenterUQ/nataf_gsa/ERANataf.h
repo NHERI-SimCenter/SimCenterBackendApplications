@@ -93,6 +93,7 @@ public:
 						 vector<vector<double>> u,
 						 vector<vector<int>> resampIDs,
 						 vector<vector<string>> xstr,
+						int numExistingDirs,
 						vector<vector<double>> &x,
 						vector<vector<double>> &g,
 						 int procno,
@@ -124,12 +125,13 @@ public:
 						vector<vector<double>> u,
 						vector<vector<int>> resampIDs,
 						vector<vector<string>> xstr,
+						int numExistingDirs,
 						vector<vector<double>> &x,
 						vector<vector<double>> &g,
 						int procno,
 						int nproc);
 
-	void sample(jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps);
+	void sample(int nmc, jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps);
 	void readCSV(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
 	void readBin(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
 	void readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int &nmcs,

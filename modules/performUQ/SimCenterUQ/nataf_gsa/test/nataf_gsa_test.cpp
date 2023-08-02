@@ -4,6 +4,8 @@
 #include "../jsonInput.h"
 #include "../runForward.h"
 #include "../runGSA.h"
+#include "../discreteDist.h"
+#include "../runMFMC.h"
 writeErrors theErrorFile; // Error log
 
 bool isIdenticalFiles(std::string fname1, std::string fname2, double diffPerc);
@@ -194,6 +196,18 @@ TEST_F(Test_EEUQ, FORWARD) {
 	ASSERT_TRUE(isIdenticalFiles(examplePath + "/dakotaTab_Test.out", examplePath + "/dakotaTab.out", 0)) << "EE TEST1 - FORWARD RESULTS MISMATCH\n";
 
 	removeFiles(examplePath, 5, { "dakotaTab.out", "dakota.err" });
+
+}
+
+
+TEST(Test_RV, DISCRETE) {
+
+	//discreteDist myDiscrete("PAR", { 1, 0.5, 2, 0.5 }, {});
+	RVDist* myDiscrete = new discreteDist("PAR", { 1, 0.5, 2, 0.5 }, {});
+	ASSERT_EQ(myDiscrete->getCdf(1), 0.0) << "RV TEST 1: DISCRETE CDFs";
+	ASSERT_EQ(myDiscrete->getCdf(2), 0.5) << "RV TEST 1: DISCRETE CDFs";
+	ASSERT_EQ(myDiscrete->getQuantile(0.0), 1.0) << "RV TEST 1: DISCRETE CDFs";
+	ASSERT_EQ(myDiscrete->getQuantile(0.5), 2.0) << "RV TEST 1: DISCRETE CDFs";
 
 }
 

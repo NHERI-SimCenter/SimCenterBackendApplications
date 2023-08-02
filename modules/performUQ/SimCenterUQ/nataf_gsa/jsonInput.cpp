@@ -85,13 +85,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	uqType = UQjson["UQ"]["uqType"];
 
-	if ((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) {
+	if (((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) || (uqType.compare("Multi-fidelity Monte Carlo")==0)) {
 		// pass
 	} else
 	{
 		//*ERROR*
 		std::string methodType = UQjson["UQ"]["uqType"];
-		std::string errMsg = "Error reading json: 'Forward Analysis' or 'Sensitivity Analysis' backend is called, but the user requested " + methodType;
+		std::string errMsg = "Error reading json: 'Forward Analysis', 'Sensitivity Analysis' or 'Multi-fidelity Monte Carlo' backend is called, but the user requested " + methodType;
 		theErrorFile.write(errMsg);
 	}
 
@@ -271,16 +271,18 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		// if the key "sensitivityGroups" exists
 		resampGroupTxt = UQjson["UQ"]["samplingMethodData"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
+		std::cout << resampGroupTxt << std::endl;
 	}
 	else if (UQjson["UQ"].find("RVdataGroup") != UQjson["UQ"].end()) {
 		// FOR VERSION COMPETIBILITY - TO BE REMOVED SOON.... sy 08/12/2022
 		resampGroupTxt = UQjson["UQ"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
+		std::cout << resampGroupTxt << std::endl;
 	}
 	else {
 		resampGroupTxt = "";
 	}
-	std::cout << resampGroupTxt << std::endl;
+	
 	vector<vector<string>> resamplingGroupsString;
 	vector<string> flattenResamplingGroups;
 
@@ -648,9 +650,15 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		}
 	}
 
+	if ((multiModelCount > 1)&& (uqType.compare("Multi-fidelity Monte Carlo") == 0)) {
+		//*ERROR*
+		std::string errMsg = "Error reading json: SimCenterUQ engine supports only one model group";
+		theErrorFile.write(errMsg);
+
+	}
+
 
 	if (procno == 0)  std::cout << " - Checking correlation matrix\n";
-	std::cout << nrv;
 
 	if (UQjson.find("correlationMatrix") != UQjson.end()) {
 		corr = *new vector<vector<double>>(nrv, vector<double>(nrv, 0.0));

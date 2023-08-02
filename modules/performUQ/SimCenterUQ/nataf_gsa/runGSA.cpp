@@ -70,12 +70,12 @@ runGSA::runGSA(string workflowDriver,
 	vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
 	vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
 
-	T.sample(inp, procno, uvals, resampIDvals, discreteStrSamps);
+	T.sample(inp.nmc, inp, procno, uvals, resampIDvals, discreteStrSamps);
 
 	//
 	// Simulate model
 	//
-	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, xvals, gvals, procno, nproc);
+	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
 
 	}
 	else if (inp.UQmethod.compare("Import Data Files") == 0) {

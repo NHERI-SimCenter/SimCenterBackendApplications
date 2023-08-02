@@ -87,16 +87,19 @@ public:
 	vector<vector<double>> gval;
 
 private:
+	void updateModelIndex(int nm, ERANataf T, vector< vector<double>>& uvals);
 	double calMean(vector<double> x);
 	double calStd(vector<double> x, double m);
+	double calVar(vector<double> x, double m);
 	double calSkewness(vector<double> x, double m, double s);
 	double calKurtosis(vector<double> x, double m, double s);
+	double correlationCoef(vector<double> X, vector<double> Y);
 	bool isInteger(double a);
 	vector<double> mean;
 	vector<double> stdDev;
 	vector<double> skewness;
 	vector<double> kurtosis;
-
+	int modelID;
 
 	const double PI = atan(1) * 4;
 	int nrv;

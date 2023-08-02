@@ -247,6 +247,26 @@ ERANataf::ERANataf(jsonInput inp, int procno)
 		}
 		printf("\n");
 	}
+
+
+
+	//
+	// Check if the workingdir is clean. If not, clean up before OpenMP goes in
+	//
+
+	for (const auto& entry : std::filesystem::directory_iterator(inp.workDir))
+	{
+		if (entry.path().u8string().find("workdir") != std::string::npos) {
+			for (auto fname : { "driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
+				try {
+					std::filesystem::permissions(entry.path().u8string() + "/" + fname, std::filesystem::perms::others_all);
+				}
+				catch (std::exception & e) {}
+				std::filesystem::remove_all(entry.path());
+			}
+		}
+	}
+
 }
 ERANataf::~ERANataf() {}
 
@@ -486,6 +506,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 								vector<vector<double>> u,
 								vector<vector<int>> resampIDs,
 								vector<vector<string>> xstr,
+								int numExistingDirs,
 								vector<vector<double>> &x,
 								vector<vector<double>> &gvals,
 								int procno,
@@ -502,9 +523,11 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	g : function outcome
 	*/
 
+	int nmc = u.size();
 
 	if (inp.femAppName.compare("SurrogateGP") == 0) {
-		this->simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, u, resampIDs, xstr, x, gvals, procno, nproc);
+		this->simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, u, resampIDs, xstr, 0, x, gvals, procno, nproc);
+		// TODO: need to use numExistingDirectories for MFMC
 		return;
 	}
 
@@ -513,9 +536,9 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	//
 
 	//vector<vector<int>> resampIDs = resampID;
-	x = U2X(inp.nmc, u);
+	x = U2X(nmc, u);
 	std::vector<double> zero_vector(inp.nre, 0);
-	for (int ns = 0; ns < inp.nmc; ns++)
+	for (int ns = 0; ns < nmc; ns++)
 	{
 		// for resampling
 		x[ns].insert(x[ns].end(), zero_vector.begin(), zero_vector.end());
@@ -541,8 +564,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		//
 		// Display
 		//
-		std::cout << "[First " << std::min(inp.nmc, 10) << " samples]" << std::endl;
-		for (int ns = 0; ns < std::min(inp.nmc, 10); ns++)
+		std::cout << "[First " << std::min(nmc, 10) << " samples]" << std::endl;
+		for (int ns = 0; ns < std::min(nmc, 10); ns++)
 		{
 			for (int nr = 0; nr < inp.nrv; nr++)
 			{
@@ -587,8 +610,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 		//
 
 		//std::cout <<"Testing here 1 \n";
-		int chunkSize = std::ceil(double(inp.nmc) / double(nproc));
-		//int lastChunk = inp.nmc - chunkSize * (nproc-1);
+		int chunkSize = std::ceil(double(nmc) / double(nproc));
+		//int lastChunk = nmc - chunkSize * (nproc-1);
 		double* rbuf;
 		rbuf = (double*)malloc(inp.nqoi * chunkSize * nproc * sizeof(double));
 		double* tmpres = (double*)malloc(inp.nqoi * chunkSize * sizeof(double));
@@ -600,8 +623,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 			int id = chunkSize * procno + i;
 
 			//std::cerr << "FEM simulation running in parallel: procno =" + std::to_string(procno) + " for id=" +std::to_string(id) + "\n";;
-			if (id < inp.nmc) {
-				vector<double> res = simulateAppOnce(id, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, { x[id] }, { xstr[id] }, workflowDriver, osType, runType)[0];
+			if (id < nmc) {
+				vector<double> res = simulateAppOnce(numExistingDirs+id, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, { x[id] }, { xstr[id] }, workflowDriver, osType, runType)[0];
 
 				for (int j = 0; j < inp.nqoi; j++) {
 					tmpres[i * inp.nqoi + j] = res[j];
@@ -619,8 +642,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 
 		// save the final results
 
-		vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
-		for (int i = 0; i < inp.nmc; i++) {
+		vector<vector<double>> gvals(nmc, std::vector<double>(inp.nqoi, 0));
+		for (int i = 0; i < nmc; i++) {
 			for (int j = 0; j < inp.nqoi; j++) {
 				gvals[i][j] = rbuf[i * inp.nqoi + j];
 			}
@@ -628,6 +651,8 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 
 
 	#else
+
+
     std::cout << "==================== running FEM simulations (OpenMP) ================" <<std::endl;
 	std::cout << std::endl;
 
@@ -636,10 +661,10 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 	//
 		int i;
 		#pragma omp parallel for shared(gvals) private(i)
-		for (i = 0; i < inp.nmc; i++)
+		for (i = 0; i < nmc; i++)
 		{
 			//gvals[i] = simulateAppOnce(i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nqoi, inp.rvNames, x[i], workflowDriver, osType, runType);
-			gvals[i] = simulateAppOnce(i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, { x[i] }, { xstr[i] }, workflowDriver, osType, runType)[0];
+			gvals[i] = simulateAppOnce(numExistingDirs+i, inp.workDir, copyDir, inp.nrv + inp.nco + inp.nre, inp.nst, inp.nqoi, inp.rvNames, { x[i] }, { xstr[i] }, workflowDriver, osType, runType)[0];
 		}
 
 	#endif
@@ -672,35 +697,14 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 
 	//const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
 
-
-	try
-	{
+	try {
 		std::filesystem::copy(copyDir, workDir, copyOptions);
-	}
-	catch (std::exception & e)
+	} catch (std::exception & e)
 	{
 		std::cout << e.what() << "\n";
-		try
-		{
-			// try removing files
-			for (const auto& entry : std::filesystem::directory_iterator(workingDirs))
-			{
-
-				if (entry.path().u8string().find("workdir") != std::string::npos) {
-					//std::filesystem::permissions(entry.path().u8string() + "/driver.bat", std::filesystem::perms::others_all);
-					std::filesystem::remove_all(entry.path());
-				}
-			}
-		}
-		catch (std::exception & e)
-		{
-			std::cout << e.what() << "\n";
-			std::string errMSG = "* Please clean up your working directory.*\n";
-			theErrorFile.write(errMSG);
-		}
+		std::string errMSG = "* Please clean up your working directory.*\n";
+		theErrorFile.write(errMSG);
 	}
-
-
 	//std::filesystem::current_path(workDir); //======= Not good for parallel operation
 
 	//
@@ -890,6 +894,7 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 										vector<vector<double>> u,
 										vector<vector<int>> resampIDs,
 										vector<vector<string>> xstr,
+										int numExistingDirs,
 										vector<vector<double>> &x,
 										vector<vector<double>> &gvals,
 										int procno,
@@ -902,10 +907,11 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 	//vector<vector<double>> u = U;
 	//vector<vector<int>> resampIDs = resampID;
 
-	x = U2X(inp.nmc, u);
+	int nmc = u.size();
+	x = U2X(nmc, u);
 	//vector<vector<double>> x_strs;
 	std::vector<double> zero_vector(inp.nre, 0);
-	for (int ns = 0; ns < inp.nmc; ns++)
+	for (int ns = 0; ns < nmc; ns++)
 	{
 		// for resampling
 		x[ns].insert(x[ns].end(), zero_vector.begin(), zero_vector.end());
@@ -932,8 +938,8 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 	//
 	if (procno == 0) {
 
-		std::cout << "[First " << std::min(inp.nmc, 10) << " samples]" << std::endl;
-		for (int ns = 0; ns < std::min(inp.nmc, 10); ns++)
+		std::cout << "[First " << std::min(nmc, 10) << " samples]" << std::endl;
+		for (int ns = 0; ns < std::min(nmc, 10); ns++)
 		{
 			for (int nr = 0; nr < inp.nrv; nr++)
 			{
@@ -1345,10 +1351,9 @@ void ERANataf::simulateAppSequential(string osType, string runType, jsonInput in
 */
 
 
-void ERANataf::sample(jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps) {
+void ERANataf::sample(int nmc, jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps) {
 
 
-	int nmc = inp.nmc;
 	int nreg = inp.nreg;
 	int nst = inp.nst;
 

@@ -60,10 +60,10 @@ runForward::runForward(string workflowDriver,
 	vector<vector<string>> discreteStrSamps(inp.nmc, vector<string>(inp.nst, ""));
 	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
 
-	T.sample(inp, procno, uvals, resampIDvals, discreteStrSamps);
+	T.sample(inp.nmc, inp, procno, uvals, resampIDvals, discreteStrSamps);
 	vector<vector<double>> xvals(inp.nmc, vector<double>(inp.nrv, 0.0));
 
-	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, xvals, gvals, procno, nproc);
+	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
 
 	this->xval = xvals;
 	this->xstrval = discreteStrSamps;
