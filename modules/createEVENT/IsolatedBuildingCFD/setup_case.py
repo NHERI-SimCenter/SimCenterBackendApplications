@@ -595,7 +595,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         added_part += "\t Zref \t {:.4f};\n".format(building_height)
         added_part += "\t zDir \t (0.0 0.0 1.0);\n"
         added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-        added_part += "\t z0 uniform \t {:.6f};\n".format(roughness_length)
+        added_part += "\t z0 uniform \t {:.7f};\n".format(roughness_length)
         added_part += "\t zGround \t uniform 0.0;\n"
         
     if inlet_BC_type == "Place holder for TInf":    
