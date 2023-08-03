@@ -44,23 +44,39 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 #include "runMFMC.h"
 #include "ERANataf.h"
+#include "jsonInput.h"
 #include <iterator>
 #include <chrono>
 
 using boost::math::normal;
 
-runMFMC::runMFMC() {}
+
 runMFMC::runMFMC(string workflowDriver,
 	string osType,
 	string runType,
 	jsonInput inp,
 	ERANataf T,
 	int procno,
-	int nproc)
+	int nproc) : workflowDriver(workflowDriver), osType(osType), runType(runType), inp(inp), T(T), nproc(nproc), procno(procno)
 {
 
-	int nPilot = 50;
-	int CB = 5 * 60; //sec
+	//
+	// User defined variables
+	//
+
+	int nPilot = 10;
+	this->CB = 5 * 60; //sec
+
+	//
+	// Save variables
+	//
+
+	//this->inp = inp;
+	//this->workflowDriver = workflowDriver;
+	//this->osType = osType;
+	//this->runType = runType;
+	this->globalElapseStart = std::chrono::high_resolution_clock::now();
+
 	//
 	// Get number of models
 	//
@@ -76,118 +92,188 @@ runMFMC::runMFMC(string workflowDriver,
 		theErrorFile.write(errMsg);
 	}
 
-	auto numModels = T.M[modelID].theDist->getParam().size()/2;
+	numModels = T.M[modelID].theDist->getParam().size()/2;
 
+	//
+	// setup Pilot simulations
+	//
+
+	vector<int> numSim_list;
+	for (int nm = 0; nm < numModels; nm++) {
+		numSim_list.push_back(nPilot);
+	}
+
+
+	//
+	// simulate Pilot simulations
+	//
+
+	vector<vector<vector<double>>> xvals_list;
+	vector<vector<vector<double>>> gvals_list;
+	vector<double> cost_list;
+	int numExistingDirs = 0;
+
+	this->simulateMFMC(numSim_list, numExistingDirs, xvals_list, gvals_list, cost_list);
+	for (int nm = 1; nm < numModels; nm++) {
+		if (cost_list[nm] - cost_list[nm - 1] < 0) {
+			string errMsg;
+			if (nm == 1) {
+				errMsg += "Error running MFMC: The high fidelity model (Model 1) is evaluated faster than the low fidelity model (Model 2). To get the best estimates, the user should run MCS with only the high fidelity model.";
+			} else {
+				errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the mean evaluation time of model " + std::to_string(nm+1) + "(" + std::to_string(cost_list[nm]) + " sec) is greater than that of model " + std::to_string(nm + 2) + "(" + std::to_string(cost_list[nm+1]) + ").";
+			}
+			theErrorFile.write(errMsg);
+		}
+	}
+
+	//
+	// Get Optimal simulation numbers
+	//
+
+	vector<double> Var_list;
+	vector<double> HF_est_list;
+	vector<int> numSim_list_new;
+	this->getOptimalSimNums(xvals_list, gvals_list, cost_list, HF_est_list, numSim_list_new, Var_list);
+
+
+	   
 	//
 	// Pilot samples
 	//
 
-	vector<vector<double>> uvals(nPilot, vector<double>(inp.nrv, 0.0));
-	vector<vector<int>> resampIDvals(nPilot, vector<int>(inp.nreg, 0.0));
-	vector<vector<string>> discreteStrSamps(nPilot, vector<string>(inp.nst, ""));
+	//this->xval = xvals;
+	//this->xstrval = discreteStrSamps;
+	//this->gval = gvals;
+}
 
-	T.sample(nPilot, inp, procno, uvals, resampIDvals, discreteStrSamps);
+runMFMC::~runMFMC() {};
 
+
+void
+runMFMC::simulateMFMC(vector<int>Nsims, 
+						int &numExistingDirs, 
+						vector<vector<vector<double>>> &xvals_list, 
+						vector<vector<vector<double>>> &gvals_list, 
+						vector<double> &cost_list) {
+
+	//
+	//
+	//
+
+	int Nmax = *std::max_element(Nsims.begin(), Nsims.end());
+
+	vector<vector<double>> uvals(Nmax, vector<double>(inp.nrv, 0.0));
+	vector<vector<int>> resampIDvals(Nmax, vector<int>(inp.nreg, 0.0));
+	vector<vector<string>> discreteStrSamps(Nmax, vector<string>(inp.nst, ""));
+
+	T.sample(Nmax, inp, procno, uvals, resampIDvals, discreteStrSamps);
 
 	//
 	// Simulate pilot samples
 	//
 
-	vector<vector<vector<double>>> xvals_list;
-	vector<vector<vector<double>>> gvals_list;
-	vector<double> cost_list; 
-
-	int numExistingDirs = 0;
 
 	for (int nm = 0; nm < numModels; nm++) { // numModels is not large
+
+		int N = Nsims[nm];
+		vector<vector<double>> uvals_nm = uvals;
+		uvals_nm.resize(N);
+
 		auto elapseStart = std::chrono::high_resolution_clock::now();
 
-		vector<vector<double>> xvals(nPilot, vector<double>(inp.nrv, 0.0));
-		vector<vector<double>> gvals(nPilot, std::vector<double>(inp.nqoi, 0));
+		vector<vector<double>> xvals(N, vector<double>(inp.nrv, 0.0));
+		vector<vector<double>> gvals(N, std::vector<double>(inp.nqoi, 0));
 
 		// Update Model ID in uvals
-		this->updateModelIndex(nm + 1, T, uvals);
+		this->updateModelIndex(nm + 1, T, uvals_nm);
 
 		// Simulate
-		T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, numExistingDirs, xvals, gvals, procno, nproc);
+		T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals_nm, resampIDvals, discreteStrSamps, numExistingDirs, xvals, gvals, procno, nproc);
 		xvals_list.push_back(xvals);
 		gvals_list.push_back(gvals);
-		numExistingDirs += nPilot;
+		numExistingDirs += N;
 
-		cost_list.push_back( (double) std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3 / nPilot); // unit:seconds
-
+		cost_list.push_back((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3 / N); // unit:seconds
 	}
+}
 
+void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
+								vector<vector<vector<double>>>gvals_list, 
+								vector<double>cost_list, 
+								vector<double>&HF_est_list, 
+								vector<int>& numSim_list, 
+								vector<double>& Var_HF_list) {
 
-	vector<vector<double>> var_list;		
-	vector<vector<double>> corr_mat_list; 
+	vector<vector<double>> var_list;
+	vector<vector<double>> rho_list;
 	vector<vector<double>> alpha_list;
-	vector<vector<double>> ratio_list;
-	vector<vector<double>> N_list;
+	//vector<vector<double>> ratio_list;
+	vector<vector<int>> Nsim_list;
+	vector<double> Var_HF_opt_list;
 
+	int optimal_N = -1;
+	int optimal_ng = -1;
 
-	for (int ng = 0; ng < inp.nqoi; ng++) {
+	int nqoi = gvals_list[0].size();
+
+	//
+	// Loop QoIs
+	//
+	for (int ng = 0; ng < nqoi; ng++) {
 
 		vector<double> var_tmp;
 		vector<double> corr_tmp;
 		vector<double> alpha_tmp;
-		// value of model 1
-		vector<double> gvec0;
-		double var0;
+
+		vector<double> gvec0; // HF results
+		double var0;		  // HF variance
+
+		//
+		// Loop models
+		//
+
 		for (int nm = 0; nm < numModels; nm++) { // numModels is not large
+
+			//
+			// collect QoI samples of nm-th model, ng-th dimension 
+			//
+
+			vector<double> gvec;
+
+			for (int ns = 0; ns < gvals_list[nm].size(); ns++) {
+				gvec.push_back(gvals_list[nm][ns][ng]);
+			}
 
 			//
 			// Compute variance
 			//
-			
-			vector<double> gvec;
-
-			for (int ns = 0; ns < nPilot; ns++) {
-				gvec.push_back(gvals_list[nm][ns][ng]);
-			}
 
 			double mean_val = calMean(gvec);
 			double var_val = calVar(gvec, mean_val);
 
-
 			//
-			// Compute correlation
+			// Compute correlation [nm,0]
 			//
-
-			/***
-			 for (int nm2 = 0; nm2 < numModels; nm2++) {
-				if (nm2 > nm) {
-					//top triangle
-					corr_tmp2.push_back(0.0);
-				}
-				else if (nm2 == nm) {
-					corr_tmp2.push_back(1.0);
-				}
-				else {
-					vector<double> gvec2;
-					for (int ns = 0; ns < nPilot; ns++) {
-						gvec2.push_back(gvals_list[nm2][ns][ng]);
-					}
-					corr_tmp2.push_back(correlationCoef(gvec, gvec2));
-				}
-			}
-			***/
 
 			if (nm == 0) {
 				corr_tmp.push_back(1.0);
 				gvec0 = gvec;
 				var0 = var_val;
-			} else {
+			}
+			else {
 				corr_tmp.push_back(correlationCoef(gvec, gvec0));
 			}
 
-			// save values
+			//
+			// save values at nm
+			//
+
 			var_tmp.push_back(var_val);
-			alpha_tmp.push_back(corr_tmp[nm]*std::sqrt(var0/var_val));
+			alpha_tmp.push_back(corr_tmp[nm] * std::sqrt(var0 / var_val));
 		}
 
 		//
-		// Optimal ratio
+		// Optimal simulation ratio 
 		//
 
 		vector<double> ratio_tmp;
@@ -210,31 +296,67 @@ runMFMC::runMFMC(string workflowDriver,
 			varFactor += (1 / ratio_tmp[nm - 1] - 1 / ratio) * rho2;
 		}
 
-		double N = ((double)CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
-		double VarEst = var_tmp[0]/N*(1-varFactor); // Estimation Variance
+		//
+		// Optimal Nsim
+		//
+
+		CB = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - globalElapseStart).count() / 1.e3; // seconds
+
+		double N = (CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
+		double VarEst = var_tmp[0] / N * (1 - varFactor); // Estimation Variance
+
+		vector<int> Nsim_tmp;
+		for (int nm = 0; nm < numModels; nm++) { // numModels is not large
+			Nsim_tmp.push_back(std::floor(N * ratio_tmp[nm]));
+		}
 
 		//
 		// save quantities
 		//
 
 		var_list.push_back(var_tmp);
-		corr_mat_list.push_back(corr_tmp);
+		rho_list.push_back(corr_tmp);
 		alpha_list.push_back(alpha_tmp);
-		ratio_list.push_back(ratio_tmp);
+		//ratio_list.push_back(ratio_tmp);
+		Nsim_list.push_back(Nsim_tmp);
+		Var_HF_opt_list.push_back(VarEst);
+		//
+		// Find the id of the most conservative QoI - that simulates HF largest amout
+		//
+		if (optimal_N < N) {
+			optimal_N = N;
+			optimal_ng = ng;
+		}
+
+	}
+
+	assert(optimal_N>0);
+	assert(optimal_ng>0);
+
+
+
+	numSim_list = Nsim_list[optimal_ng];
+	for (int ng = 0; ng < nqoi; ng++) {
+
+		double Vterm1 = (double) var_list[ng][0] / numSim_list[0];
+		double Vterm2 = 0;
+
+		for (int nm = 1; nm < numModels; nm++) {
+			Vterm2 += (1.0 / numSim_list[nm - 1] - 1.0 / numSim_list[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
+		}
+
+		Var_HF_list.push_back(Vterm1 + Vterm2);
+
+		//double Eterm1 = (double)var_list[ng][0] / numSim_list[0];
+		//double Eterm2 = 0;
+
+		//for (int nm = 1; nm < numModels; nm++) {
+		//	Eterm2 += (1.0 / numSim_list[nm - 1] - 1.0 / numSim_list[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
+		//}
 	}
 
 
-
-	//
-	// Pilot samples
-	//
-
-	//this->xval = xvals;
-	//this->xstrval = discreteStrSamps;
-	//this->gval = gvals;
 }
-
-runMFMC::~runMFMC() {};
 
 void 
 runMFMC::computeStatistics(int procno) {

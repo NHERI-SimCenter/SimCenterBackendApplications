@@ -87,6 +87,17 @@ public:
 	vector<vector<double>> gval;
 
 private:
+	void simulateMFMC(vector<int>Nsims, 
+						int& numExistingDirs, 
+						vector<vector<vector<double>>>& xvals_list, 
+						vector<vector<vector<double>>>& gvals_list, 
+						vector<double>& cost_list);
+	void getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
+						vector<vector<vector<double>>>gvals_list, 
+						vector<double>cost_list, 
+						vector<double>& HF_est, 
+						vector<int>& numSim_list, 
+						vector<double>& Var_list);
 	void updateModelIndex(int nm, ERANataf T, vector< vector<double>>& uvals);
 	double calMean(vector<double> x);
 	double calStd(vector<double> x, double m);
@@ -100,10 +111,24 @@ private:
 	vector<double> skewness;
 	vector<double> kurtosis;
 	int modelID;
-
+	int nproc;
+	int procno;
 	const double PI = atan(1) * 4;
 	int nrv;
 	int nmc;
+	int numModels;
+	jsonInput inp;
+	ERANataf T;
+	string workflowDriver;
+	string osType;
+	string runType;
+
+	//
+	// Computational budget
+	//
+
+	double CB; // computational budget
+	std::chrono::time_point<std::chrono::steady_clock> globalElapseStart;
 };
 
 #endif// RUN_MFMC_H
