@@ -590,7 +590,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         
     if inlet_BC_type == "MeanABL":    
         added_part = ""
-        added_part += "\t ype \t atmBoundaryLayerInletVelocity;\n"
+        added_part += "\t type \t atmBoundaryLayerInletVelocity;\n"
         added_part += "\t Uref \t {:.4f};\n".format(wind_speed)
         added_part += "\t Zref \t {:.4f};\n".format(building_height)
         added_part += "\t zDir \t (0.0 0.0 1.0);\n"
