@@ -962,7 +962,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t epsilonWallFunction;\n"
         added_part += "\t Cmu \t {:.4f};\n".format(0.09)
-        added_part += "\t kappa \t {:.4f};\n".format(0.4)
+        added_part += "\t kappa \t {:.4f};\n".format(0.41)
         added_part += "\t E \t {:.4f};\n".format(9.8)
         added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
     
