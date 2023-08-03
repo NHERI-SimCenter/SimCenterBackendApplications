@@ -37,14 +37,14 @@ castellatedMeshControls
     // If local number of cells is >= maxLocalCells on any processor
     // switches from from refinement followed by balancing
     // (current method) to (weighted) balancing before refinement.
-    maxLocalCells 1000000;
+    maxLocalCells 100000000;
 
     // Overall cell limit (approximately). Refinement will stop immediately
     // upon reaching this number so a refinement level might not complete.
     // Note that this is the number of cells before removing the part which
     // is not 'visible' from the keepPoint. The final number of cells might
     // actually be a lot less.
-    maxGlobalCells 20000000;
+    maxGlobalCells 2000000000;
 
     // The surface refinement loop might spend lots of iterations refining just a
     // few cells. This setting will cause refinement to stop if <= minimumRefine
@@ -288,9 +288,9 @@ meshQualityControls
 // Write flags
 writeFlags
 (
-    scalarLevels
-    layerSets
-    layerFields     // write volScalarField for layer coverage
+    //scalarLevels
+    //layerSets
+    //layerFields     // write volScalarField for layer coverage
 );
 
 
