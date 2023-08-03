@@ -1050,7 +1050,10 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     
     
     #BC and initial condition (you may need to scale to model scale)
-    k0 = 1.3 #not in model scale
+    # k0 = 1.3 #not in model scale
+    
+    I = 0.1 
+    k0 = 1.5*(I*wind_speed)**2  
 
     ##################### Internal Field #########################
     
@@ -1132,11 +1135,8 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     
     if building_BC_type == "wallFunction": 
         added_part = ""
-        added_part += "\t type \t atmBoundaryLayerInletK;\n"
-        added_part += "\t Cmu  \t {:.4f};\n".format(0.09)
-        added_part += "\t kappa \t {:.4f};\n".format(0.4)
-        added_part += "\t E \t {:.4f};\n".format(9.8)
-        added_part += "\t value \t uniform {:.4f};\n".format(k0)
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.6f};\n".format(k0)
     
     dict_lines.insert(start_index, added_part)
     
@@ -1196,7 +1196,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     #Write end time 
     start_index = foam.find_keyword_line(dict_lines, "endTime") 
-    dict_lines[start_index] = "endTime \t{:.4f};\n".format(duration)
+    dict_lines[start_index] = "endTime \t{:.6f};\n".format(duration)
     
     #Write time step time 
     start_index = foam.find_keyword_line(dict_lines, "deltaT") 
