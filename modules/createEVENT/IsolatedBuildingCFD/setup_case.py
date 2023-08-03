@@ -574,10 +574,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     dict_file.close()
     
     ##################### Internal Field #########################
-    #Initialize the internal fields frow a lower velocity to avoid Corant number 
-    #instability when the solver starts. Now %50 of roof-height wind speed is set      
+    #Initialize the internal fields frow a lower velocity to avoid Courant number 
+    #instability when the solver starts. Now %10 of roof-height wind speed is set      
     start_index = foam.find_keyword_line(dict_lines, "internalField") 
-    dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(0.5*wind_speed)
+    dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(0.1*wind_speed)
 
 
     ###################### Inlet BC ##############################  
