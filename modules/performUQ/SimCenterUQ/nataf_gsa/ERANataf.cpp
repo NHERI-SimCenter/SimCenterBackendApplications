@@ -253,19 +253,24 @@ ERANataf::ERANataf(jsonInput inp, int procno)
 	//
 	// Check if the workingdir is clean. If not, clean up before OpenMP goes in
 	//
-
-	for (const auto& entry : std::filesystem::directory_iterator(inp.workDir))
-	{
-		if (entry.path().u8string().find("workdir") != std::string::npos) {
-			for (auto fname : { "driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
-				try {
-					std::filesystem::permissions(entry.path().u8string() + "/" + fname, std::filesystem::perms::others_all);
+	if (procno == 0) {
+		try {
+			for (const auto& entry : std::filesystem::directory_iterator(inp.workDir))
+			{
+				if (entry.path().u8string().find("workdir") != std::string::npos) {
+					for (auto fname : { "driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
+						try {
+							std::filesystem::permissions(entry.path().u8string() + "/" + fname, std::filesystem::perms::others_all);
+						}
+						catch (std::exception & e) {}
+						std::filesystem::remove_all(entry.path());
+					}
 				}
-				catch (std::exception & e) {}
-				std::filesystem::remove_all(entry.path());
 			}
 		}
+		catch (std::exception & e) {}
 	}
+
 
 }
 ERANataf::~ERANataf() {}
