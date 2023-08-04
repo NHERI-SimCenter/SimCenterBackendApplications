@@ -65,7 +65,8 @@ runMFMC::runMFMC(string workflowDriver,
 	//
 
 	int nPilot = 10;
-	this->CB = 5 * 60; //sec
+	this->optMultipleQoI = "average"; // conservative/average/targetVar
+	this->CB_init = 5 * 60; //sec
 
 	//
 	// Save variables
@@ -114,17 +115,7 @@ runMFMC::runMFMC(string workflowDriver,
 	int numExistingDirs = 0;
 
 	this->simulateMFMC(numSim_list, numExistingDirs, xvals_list, gvals_list, cost_list);
-	for (int nm = 1; nm < numModels; nm++) {
-		if (cost_list[nm] - cost_list[nm - 1] < 0) {
-			string errMsg;
-			if (nm == 1) {
-				errMsg += "Error running MFMC: The high fidelity model (Model 1) is evaluated faster than the low fidelity model (Model 2). To get the best estimates, the user should run MCS with only the high fidelity model.";
-			} else {
-				errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the mean evaluation time of model " + std::to_string(nm+1) + "(" + std::to_string(cost_list[nm]) + " sec) is greater than that of model " + std::to_string(nm + 2) + "(" + std::to_string(cost_list[nm+1]) + ").";
-			}
-			theErrorFile.write(errMsg);
-		}
-	}
+
 
 	//
 	// Get Optimal simulation numbers
@@ -201,21 +192,23 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 								vector<vector<vector<double>>>gvals_list, 
 								vector<double>cost_list, 
 								vector<double>&HF_est_list, 
-								vector<int>& numSim_list, 
+								vector<int>& numSim_list_int, 
 								vector<double>& Var_HF_list) {
 
 	vector<vector<double>> var_list;
 	vector<vector<double>> rho_list;
 	vector<vector<double>> alpha_list;
 	//vector<vector<double>> ratio_list;
-	vector<vector<int>> Nsim_list;
+	vector<vector<double>> Nsim_list;
 	vector<double> Var_HF_opt_list;
 
 	int optimal_N = -1;
 	int optimal_ng = -1;
 
-	int nqoi = gvals_list[0].size();
+	int nqoi = gvals_list.size();
 
+	double time_passed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - globalElapseStart).count() / 1.e3; // seconds
+	double CB = CB_init - time_passed; //seconds
 	//
 	// Loop QoIs
 	//
@@ -299,15 +292,14 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 		//
 		// Optimal Nsim
 		//
-
-		CB = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - globalElapseStart).count() / 1.e3; // seconds
+		//remaining time
 
 		double N = (CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
 		double VarEst = var_tmp[0] / N * (1 - varFactor); // Estimation Variance
 
-		vector<int> Nsim_tmp;
+		vector<double> Nsim_tmp;
 		for (int nm = 0; nm < numModels; nm++) { // numModels is not large
-			Nsim_tmp.push_back(std::floor(N * ratio_tmp[nm]));
+			Nsim_tmp.push_back(N * ratio_tmp[nm]);
 		}
 
 		//
@@ -328,21 +320,47 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 			optimal_ng = ng;
 		}
 
+		string msg;
+		bool good = checkValidity(cost_list, corr_tmp, msg);
+
 	}
 
-	assert(optimal_N>0);
-	assert(optimal_ng>0);
+	assert(optimal_N>=0);
+	assert(optimal_ng>=0);
 
+	vector<double> numSim_list;
+	if (optMultipleQoI == "conservative") {
+	//choose the one has highest HF simulations
+		numSim_list = Nsim_list[optimal_ng];
+	}
+	else if (optMultipleQoI == "average") {
 
+		numSim_list = Nsim_list[0];
+		for (int ng = 1; ng < nqoi; ng++) {
+			std::transform(numSim_list.begin(), numSim_list.end(), Nsim_list[ng].begin(),
+				numSim_list.begin(), std::plus<double>());
+			//numSim_list += Nsim_list[ng]
+		}
+		const double scale(1 / (double)nqoi);
+		std::transform(numSim_list.begin(), numSim_list.end(), numSim_list.begin(), [scale](double element) { return element *= scale; }); // avg of value
+	}
+	else {
 
-	numSim_list = Nsim_list[optimal_ng];
+	}
+
+	// Save it into a integer vector
+	numSim_list_int.resize(nqoi);
+	std::fill(numSim_list_int.begin(), numSim_list_int.end(), 0); // initializing
+
+	std::transform(numSim_list.begin(), numSim_list.end(), numSim_list_int.begin(), [](double element) { return element = (int) std::floor(element); }); // floor values
+
 	for (int ng = 0; ng < nqoi; ng++) {
 
-		double Vterm1 = (double) var_list[ng][0] / numSim_list[0];
+		double Vterm1 = (double) var_list[ng][0] / numSim_list_int[0];
 		double Vterm2 = 0;
 
 		for (int nm = 1; nm < numModels; nm++) {
-			Vterm2 += (1.0 / numSim_list[nm - 1] - 1.0 / numSim_list[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
+			Vterm2 += (1.0 / numSim_list_int[nm - 1] - 1.0 / numSim_list_int[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
 		}
 
 		Var_HF_list.push_back(Vterm1 + Vterm2);
@@ -356,6 +374,64 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 	}
 
 
+}
+
+bool
+runMFMC::checkValidity(vector<double> cost_list, vector<double> corr_tmp, string & errMsg) {
+
+
+	for (int nm = 1; nm < numModels; nm++) {
+
+		//
+		// Check cost
+		//
+
+		if (cost_list[nm - 1] < cost_list[nm]) {
+			// if lower-fidelity model takes longer time
+			if (nm == 1) {
+				errMsg += "Error running MFMC: The high fidelity model (Model 1) is evaluated faster than the low fidelity model (Model 2). To get the best estimates, the user should run MCS with only the high fidelity model.";
+			}
+			else {
+				errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the mean evaluation time of model " + std::to_string(nm + 1) + "(" + std::to_string(cost_list[nm]) + " sec) is greater than that of model " + std::to_string(nm + 2) + "(" + std::to_string(cost_list[nm + 1]) + ").";
+			}
+			//theErrorFile.write(errMsg);
+			return false;
+		}
+
+		//
+		// Check corr
+		//
+
+		if (corr_tmp[nm-1] < corr_tmp[nm]) {
+			// if lower-fidelity model has higher correlation to HF model
+			errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the correlation of model " + std::to_string(nm + 1) + "(" + std::to_string(corr_tmp[nm]) + ") is smaller than that of model " + std::to_string(nm + 2) + "(" + std::to_string(corr_tmp[nm + 1]) + ").";
+			//theErrorFile.write(errMsg);
+			return false;
+		}
+
+
+		//
+		// Check condition
+		//
+
+		double c_ratio = cost_list[nm - 1] / cost_list[nm];
+		double rho_ratio;
+		if (nm + 1 == numModels) {
+			rho_ratio = (corr_tmp[nm - 1] * corr_tmp[nm - 1] - corr_tmp[nm] * corr_tmp[nm]) / (corr_tmp[nm] * corr_tmp[nm]);
+		}
+		else {
+			rho_ratio = (corr_tmp[nm - 1] * corr_tmp[nm - 1] - corr_tmp[nm] * corr_tmp[nm]) / (corr_tmp[nm] * corr_tmp[nm] - corr_tmp[nm + 1] * corr_tmp[nm + 1]);
+		}
+		
+		if (c_ratio < rho_ratio) {
+			// if lower-fidelity model has higher correlation to HF model
+			errMsg += "Error running MFMC: Based on cost-benefit analysis, LF model, Model " + std::to_string(nm + 1) +", is not worth running. (Corr=" + std::to_string(corr_tmp[nm]) + ", Cost=" + std::to_string(cost_list[nm]) + "sec.) See technical manual for more information.";
+			//theErrorFile.write(errMsg);
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void 

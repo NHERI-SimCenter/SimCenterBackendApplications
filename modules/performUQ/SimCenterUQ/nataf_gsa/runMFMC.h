@@ -106,6 +106,7 @@ private:
 	double calKurtosis(vector<double> x, double m, double s);
 	double correlationCoef(vector<double> X, vector<double> Y);
 	bool isInteger(double a);
+	bool checkValidity(vector<double> cost_list, vector<double> corr_tmp, string &msg);
 	vector<double> mean;
 	vector<double> stdDev;
 	vector<double> skewness;
@@ -122,12 +123,12 @@ private:
 	string workflowDriver;
 	string osType;
 	string runType;
-
+	string optMultipleQoI;
 	//
 	// Computational budget
 	//
 
-	double CB; // computational budget
+	double CB_init; // computational budget
 	std::chrono::time_point<std::chrono::steady_clock> globalElapseStart;
 };
 
