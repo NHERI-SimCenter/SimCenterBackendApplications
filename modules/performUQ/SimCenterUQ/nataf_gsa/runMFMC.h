@@ -95,6 +95,7 @@ private:
 	void getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
 						vector<vector<vector<double>>>gvals_list, 
 						vector<double>cost_list, 
+						bool updateNumSim,
 						vector<double>& HF_est, 
 						vector<int>& numSim_list, 
 						vector<double>& Var_list);

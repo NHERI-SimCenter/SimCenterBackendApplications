@@ -66,7 +66,7 @@ runMFMC::runMFMC(string workflowDriver,
 
 	int nPilot = 10;
 	this->optMultipleQoI = "average"; // conservative/average/targetVar
-	this->CB_init = 5 * 60; //sec
+	this->CB_init = 10; //sec
 
 	//
 	// Save variables
@@ -99,9 +99,9 @@ runMFMC::runMFMC(string workflowDriver,
 	// setup Pilot simulations
 	//
 
-	vector<int> numSim_list;
+	vector<int> numSim_pilot;
 	for (int nm = 0; nm < numModels; nm++) {
-		numSim_list.push_back(nPilot);
+		numSim_pilot.push_back(nPilot);
 	}
 
 
@@ -109,12 +109,12 @@ runMFMC::runMFMC(string workflowDriver,
 	// simulate Pilot simulations
 	//
 
-	vector<vector<vector<double>>> xvals_list;
-	vector<vector<vector<double>>> gvals_list;
+	vector<vector<vector<double>>> xvals_pilot;
+	vector<vector<vector<double>>> gvals_pilot;
 	vector<double> cost_list;
 	int numExistingDirs = 0;
 
-	this->simulateMFMC(numSim_list, numExistingDirs, xvals_list, gvals_list, cost_list);
+	this->simulateMFMC(numSim_pilot, numExistingDirs, xvals_pilot, gvals_pilot, cost_list);
 
 
 	//
@@ -123,14 +123,63 @@ runMFMC::runMFMC(string workflowDriver,
 
 	vector<double> Var_list;
 	vector<double> HF_est_list;
-	vector<int> numSim_list_new;
-	this->getOptimalSimNums(xvals_list, gvals_list, cost_list, HF_est_list, numSim_list_new, Var_list);
+	vector<int> numSim_list_all;
+	bool updateNumSim = true;
+	this->getOptimalSimNums(xvals_pilot, gvals_pilot, cost_list, updateNumSim, HF_est_list, numSim_list_all, Var_list);
 
+	//
+	// Simulate Additional simulations
+	//
 
-	   
+	vector<int> numSim_list_add(numSim_list_all);
+	std::transform(numSim_list_add.begin(), numSim_list_add.end(), numSim_pilot.begin(), numSim_list_add.begin(), std::minus<double>());
+	if (*std::min_element(numSim_list_add.begin(), numSim_list_add.end())<0) {
+		//
+		// TODO: what to do when n is not as small?????
+		//
+		assert(false);
+	}
+
+	vector<vector<vector<double>>> xvals_add;
+	vector<vector<vector<double>>> gvals_add;
+	vector<double> cost_list2; // not used
+	this->simulateMFMC(numSim_list_add, numExistingDirs, xvals_add, gvals_add, cost_list2);
+
 	//
-	// Pilot samples
+	// Add two samples - do I need to add also 
 	//
+
+	vector<vector<vector<double>>> xvals_all, gvals_all;
+	
+	for (int nm = 0; nm < numModels; nm++) {
+		int N = xvals_pilot[nm].size() + xvals_add[nm].size();
+		assert(numSim_list_all[nm] == N);
+
+		//
+		// append x
+		//
+
+		vector<vector<double>> xvals_tmp = xvals_pilot[nm];
+		xvals_tmp.insert(xvals_tmp.end(), xvals_add[nm].begin(), xvals_add[nm].end());
+		xvals_all.push_back(xvals_tmp);
+
+		//
+		// append g
+		//
+
+		vector<vector<double>> gvals_tmp = gvals_pilot[nm];
+
+		gvals_tmp.insert(gvals_tmp.end(), gvals_add[nm].begin(), gvals_add[nm].end());
+		gvals_all.push_back(gvals_tmp);
+
+	}
+
+	//
+	// Add two samples - do I need to add also 
+	//
+
+	updateNumSim = false;
+	this->getOptimalSimNums(xvals_all, gvals_all, cost_list2, updateNumSim, HF_est_list, numSim_list_all, Var_list);
 
 	//this->xval = xvals;
 	//this->xstrval = discreteStrSamps;
@@ -191,11 +240,13 @@ runMFMC::simulateMFMC(vector<int>Nsims,
 void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
 								vector<vector<vector<double>>>gvals_list, 
 								vector<double>cost_list, 
+								bool updateNumSim, 
 								vector<double>&HF_est_list, 
 								vector<int>& numSim_list_int, 
 								vector<double>& Var_HF_list) {
 
 	vector<vector<double>> var_list;
+	vector<vector<double>> mean_diff_list;
 	vector<vector<double>> rho_list;
 	vector<vector<double>> alpha_list;
 	//vector<vector<double>> ratio_list;
@@ -208,18 +259,26 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 	int nqoi = gvals_list.size();
 
 	double time_passed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - globalElapseStart).count() / 1.e3; // seconds
-	double CB = CB_init - time_passed; //seconds
+	double nProcessors;
+#ifdef MPI_RUN
+		nProcessors = nproc;
+#else
+		nProcessors = omp_get_num_procs();
+#endif
+	double CB = (CB_init - time_passed)* nProcessors; //seconds								   
 	//
 	// Loop QoIs
 	//
 	for (int ng = 0; ng < nqoi; ng++) {
 
 		vector<double> var_tmp;
+		vector<double> mean_diff_tmp;
 		vector<double> corr_tmp;
 		vector<double> alpha_tmp;
 
 		vector<double> gvec0; // HF results
 		double var0;		  // HF variance
+		int N0;		  // HF variance
 
 		//
 		// Loop models
@@ -238,11 +297,18 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 			}
 
 			//
-			// Compute variance
+			// Compute mean and variance
 			//
-
 			double mean_val = calMean(gvec);
 			double var_val = calVar(gvec, mean_val);
+			double mean_val_red;
+			if (nm == 0) {
+				mean_val_red = 0;
+			} else {
+				vector<double> gvec_trun = gvec;
+				gvec_trun.resize(gvals_list[nm - 1].size());
+				mean_val_red = calMean(gvec_trun);
+			}
 
 			//
 			// Compute correlation [nm,0]
@@ -252,9 +318,12 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 				corr_tmp.push_back(1.0);
 				gvec0 = gvec;
 				var0 = var_val;
+				N0 = gvec.size();
 			}
 			else {
-				corr_tmp.push_back(correlationCoef(gvec, gvec0));
+				vector<double> gvec_trun = gvec;
+				gvec_trun.resize(N0);
+				corr_tmp.push_back(correlationCoef(gvec_trun, gvec0));
 			}
 
 			//
@@ -262,7 +331,8 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 			//
 
 			var_tmp.push_back(var_val);
-			alpha_tmp.push_back(corr_tmp[nm] * std::sqrt(var0 / var_val));
+			mean_diff_tmp.push_back(mean_val - mean_val_red);
+			alpha_tmp.push_back(corr_tmp[nm] * std::sqrt(var0 / var_val)); 
 		}
 
 		//
@@ -290,89 +360,105 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 		}
 
 		//
-		// Optimal Nsim
-		//
-		//remaining time
-
-		double N = (CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
-		double VarEst = var_tmp[0] / N * (1 - varFactor); // Estimation Variance
-
-		vector<double> Nsim_tmp;
-		for (int nm = 0; nm < numModels; nm++) { // numModels is not large
-			Nsim_tmp.push_back(N * ratio_tmp[nm]);
-		}
-
-		//
 		// save quantities
 		//
 
 		var_list.push_back(var_tmp);
+		mean_diff_list.push_back(mean_diff_tmp);
 		rho_list.push_back(corr_tmp);
 		alpha_list.push_back(alpha_tmp);
 		//ratio_list.push_back(ratio_tmp);
-		Nsim_list.push_back(Nsim_tmp);
-		Var_HF_opt_list.push_back(VarEst);
 		//
 		// Find the id of the most conservative QoI - that simulates HF largest amout
 		//
-		if (optimal_N < N) {
-			optimal_N = N;
-			optimal_ng = ng;
+
+
+		if (updateNumSim) {
+			//
+			// Optimal Nsim
+			//
+
+			//remaining time
+			double VarEst, N;
+			if (CB > 0) {
+				N = (CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
+			}
+			else {
+				N = gvals_list[0].size(); // No more simulations
+			}
+			VarEst = var_tmp[0] / N * (1 - varFactor); // Estimation Variance
+
+			vector<double> Nsim_tmp;
+			for (int nm = 0; nm < numModels; nm++) { // numModels is not large
+				Nsim_tmp.push_back(N * ratio_tmp[nm]);
+			}
+
+			if (optimal_N < N) {
+				optimal_N = N;
+				optimal_ng = ng;
+			}
+
+			Nsim_list.push_back(Nsim_tmp);
+			Var_HF_opt_list.push_back(VarEst);
+
+			string msg;
+			bool good = checkValidity(cost_list, corr_tmp, msg);
+		}
+	}
+
+	if (updateNumSim) {
+		assert(optimal_N >= 0);
+		assert(optimal_ng >= 0);
+
+		vector<double> numSim_list;
+		if (optMultipleQoI == "conservative") {
+			//choose the one has highest HF simulations
+			numSim_list = Nsim_list[optimal_ng];
+		}
+		else if (optMultipleQoI == "average") {
+
+			numSim_list = Nsim_list[0];
+			for (int ng = 1; ng < nqoi; ng++) {
+				std::transform(numSim_list.begin(), numSim_list.end(), Nsim_list[ng].begin(),
+					numSim_list.begin(), std::plus<double>());
+				//numSim_list += Nsim_list[ng]
+			}
+			const double scale(1 / (double)nqoi);
+			std::transform(numSim_list.begin(), numSim_list.end(), numSim_list.begin(), [scale](double element) { return element *= scale; }); // avg of value
+		}
+		else {
+			//
+			// TODO: additional options???
+			//
 		}
 
-		string msg;
-		bool good = checkValidity(cost_list, corr_tmp, msg);
-
+		// Save it into a integer vector
+		numSim_list_int.resize(nqoi);
+		std::fill(numSim_list_int.begin(), numSim_list_int.end(), 0); // initializing
+		std::transform(numSim_list.begin(), numSim_list.end(), numSim_list_int.begin(), [](double element) { return element = (int)std::floor(element); }); // floor values
 	}
 
-	assert(optimal_N>=0);
-	assert(optimal_ng>=0);
-
-	vector<double> numSim_list;
-	if (optMultipleQoI == "conservative") {
-	//choose the one has highest HF simulations
-		numSim_list = Nsim_list[optimal_ng];
-	}
-	else if (optMultipleQoI == "average") {
-
-		numSim_list = Nsim_list[0];
-		for (int ng = 1; ng < nqoi; ng++) {
-			std::transform(numSim_list.begin(), numSim_list.end(), Nsim_list[ng].begin(),
-				numSim_list.begin(), std::plus<double>());
-			//numSim_list += Nsim_list[ng]
-		}
-		const double scale(1 / (double)nqoi);
-		std::transform(numSim_list.begin(), numSim_list.end(), numSim_list.begin(), [scale](double element) { return element *= scale; }); // avg of value
-	}
-	else {
-
-	}
-
-	// Save it into a integer vector
-	numSim_list_int.resize(nqoi);
-	std::fill(numSim_list_int.begin(), numSim_list_int.end(), 0); // initializing
-
-	std::transform(numSim_list.begin(), numSim_list.end(), numSim_list_int.begin(), [](double element) { return element = (int) std::floor(element); }); // floor values
+	//
+	// Get final estimate of variance
+	//
 
 	for (int ng = 0; ng < nqoi; ng++) {
 
-		double Vterm1 = (double) var_list[ng][0] / numSim_list_int[0];
-		double Vterm2 = 0;
+		double V_tmp = (double) var_list[ng][0] / numSim_list_int[0];
 
 		for (int nm = 1; nm < numModels; nm++) {
-			Vterm2 += (1.0 / numSim_list_int[nm - 1] - 1.0 / numSim_list_int[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
+			V_tmp += (1.0 / numSim_list_int[nm - 1] - 1.0 / numSim_list_int[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
 		}
+		Var_HF_list.push_back(V_tmp);
 
-		Var_HF_list.push_back(Vterm1 + Vterm2);
 
-		//double Eterm1 = (double)var_list[ng][0] / numSim_list[0];
-		//double Eterm2 = 0;
+		double E_tmp = (double) mean_diff_list[ng][0] / numSim_list_int[0];
 
-		//for (int nm = 1; nm < numModels; nm++) {
-		//	Eterm2 += (1.0 / numSim_list[nm - 1] - 1.0 / numSim_list[nm]) * (alpha_list[ng][nm] * alpha_list[ng][nm] * var_list[ng][nm] - 2 * alpha_list[ng][nm] * rho_list[ng][nm] * std::sqrt(var_list[ng][0] * var_list[ng][nm]));
-		//}
+		for (int nm = 1; nm < numModels; nm++) {
+			E_tmp += alpha_list[ng][nm] * mean_diff_list[ng][nm];
+		}
+		HF_est_list.push_back(E_tmp);
 	}
-
 
 }
 
