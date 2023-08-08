@@ -78,7 +78,7 @@ public:
 	~runMFMC();
 	void computeRvStatistics(vector<vector<double>> xval);
 	void writeOutputs();
-	void writeTabOutputs(jsonInput inp);
+	void writeTabOutputs();
 
 	//vector<double> Si;
 
@@ -108,6 +108,8 @@ private:
 	double correlationCoef(vector<double> X, vector<double> Y);
 	bool isInteger(double a);
 	bool checkValidity(vector<double> cost_list, vector<double> corr_tmp, string &msg);
+	vector<vector<vector<double>>> xvals, gvals;
+
 	vector<vector<vector<double>>> g2h(vector<vector<vector<double>>> hvals_pilot, bool do_mean_var, vector<double> perc_list);
 
 	vector<double> rvMean, rvStdDev, rvSkewness, rvKurtosis;

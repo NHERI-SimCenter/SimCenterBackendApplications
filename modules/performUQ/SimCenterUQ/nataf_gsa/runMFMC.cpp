@@ -212,6 +212,9 @@ runMFMC::runMFMC(string workflowDriver,
 
 	computeRvStatistics(xvals_all[numModels - 1]); // computes rvMean, rvStdDev etc.
 
+	xvals = xvals_all;
+	gvals = gvals_all;
+
 }
 
 runMFMC::~runMFMC() {};
@@ -733,7 +736,7 @@ void runMFMC::writeOutputs()
 }
 
 
-void runMFMC::writeTabOutputs(jsonInput inp)
+void runMFMC::writeTabOutputs()
 {
 	if (procno==0) {
 		auto dispInterv = 1.e7; 
@@ -750,6 +753,7 @@ void runMFMC::writeTabOutputs(jsonInput inp)
 		//	std::string errMsg = "Error running UQ engine: Unable to write dakota.out";
 		//	theErrorFile.write(errMsg);
 		//}
+		std::string multiModel = "MultiModel"; 
 
 		Taboutfile.setf(std::ios::fixed, std::ios::floatfield); // set fixed floating format
 		Taboutfile.precision(7); // for fixed format
@@ -759,36 +763,42 @@ void runMFMC::writeTabOutputs(jsonInput inp)
 			Taboutfile << inp.rvNames[j] << "\t";
 		}
 		for (int j = inp.nrv + inp.nco + inp.nre; j < inp.nrv + inp.nco + inp.nre + inp.nst; j++) {
-			Taboutfile << inp.rvNames[j] << "\t";
+			if (inp.rvNames[j].compare(0, multiModel.length(), multiModel) == 0) {
+				//pass
+			} else {
+				Taboutfile << inp.rvNames[j] << "\t";
+			}
 		}
-		for (int j = 0; j < inp.nqoi; j++) {
-			Taboutfile << inp.qoiNames[j] << "\t";
+		for (int nm = 0; nm < numModels; nm++) {
+			for (int j = 0; j < inp.nqoi; j++) {
+				Taboutfile << inp.qoiNames[j] << "_model" << nm << "\t";
+			}
 		}
 		Taboutfile << '\n';
 
-		std::string multiModel = "MultiModel";
 
-		for (int ns = 0; ns < inp.nmc; ns++) {
+		int nsamp = xvals[numModels - 1].size();
+		for (int ns = 0; ns < nsamp; ns++) {
 			Taboutfile << std::to_string(ns + 1) << "\t";
 			for (int nr = 0; nr < inp.nrv + inp.nco + inp.nre; nr++) {
-
-				if ((inp.rvNames[nr].compare(0, multiModel.length(), multiModel) == 0) && isInteger(xval[ns][nr])) {
-					// if rv name starts with "MultiModel", write as integer
-					Taboutfile << std::to_string(int(xval[ns][nr])) << "\t";
+				if (inp.rvNames[nr].compare(0, multiModel.length(), multiModel) == 0) {
+					//pass
 				}
 				else {
-					Taboutfile << std::scientific << std::setprecision(7) << (xval[ns][nr]) << "\t";
+					Taboutfile << std::scientific << std::setprecision(7) << (xvals[numModels - 1][ns][nr]) << "\t";
 				}
-				//Taboutfile << std::to_string(xval[ns][nr]) << "\t";
-				
 			}
-			for (int nr = 0; nr < inp.nst; nr++) {
-				Taboutfile << xstrval[ns][nr] << "\t";
+
+			for (int nm = 0; nm < numModels; nm++) {
+					for (int nq = 0; nq < inp.nqoi; nq++) {
+						if (ns < gvals[nm].size()) {
+							Taboutfile << std::scientific << std::setprecision(7) << (gvals[nm][ns][nq]) << "\t";
+						} else {
+							Taboutfile << std::scientific << std::setprecision(7) << std::sqrt(-1) << "\t"; // assigning not a number
+						}
+					}
 			}
-			for (int nq = 0; nq < inp.nqoi; nq++) {
-				Taboutfile << std::scientific << std::setprecision(7) << (gval[ns][nq]) << "\t";
-				//Taboutfile << std::to_string(gval[ns][nq]) << "\t";
-			}
+
 			Taboutfile << '\n';
 
 			if (ns*inp.nqoi > dispInterv*dispCount) {
