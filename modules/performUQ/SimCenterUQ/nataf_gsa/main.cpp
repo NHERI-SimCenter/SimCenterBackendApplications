@@ -164,7 +164,8 @@ int main(int argc, char** argv)
 
 		runMFMC myMFMC(workflowDriver, osType, runType, inp, T, procno, nprocs);
 
-		myMFMC.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
+		myMFMC.writeOutputs();
+		//myMFMC.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
 		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3;
 	}
 

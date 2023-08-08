@@ -76,9 +76,9 @@ public:
 		int procno,
 		int nproc);
 	~runMFMC();
-	void computeStatistics(int procno);
-	void writeOutputs(jsonInput inp, int procno);
-	void writeTabOutputs(jsonInput inp, int procno);
+	void computeRvStatistics(vector<vector<double>> xval);
+	void writeOutputs();
+	void writeTabOutputs(jsonInput inp);
 
 	//vector<double> Si;
 
@@ -108,10 +108,12 @@ private:
 	double correlationCoef(vector<double> X, vector<double> Y);
 	bool isInteger(double a);
 	bool checkValidity(vector<double> cost_list, vector<double> corr_tmp, string &msg);
-	vector<double> mean;
-	vector<double> stdDev;
-	vector<double> skewness;
-	vector<double> kurtosis;
+	vector<vector<vector<double>>> g2h(vector<vector<vector<double>>> hvals_pilot, bool do_mean_var, vector<double> perc_list);
+
+	vector<double> rvMean, rvStdDev, rvSkewness, rvKurtosis;
+	vector<double> gMean, gStdDev;
+	vector<double> gMean_var, gStdDev_var;
+
 	int modelID;
 	int nproc;
 	int procno;
@@ -125,6 +127,8 @@ private:
 	string osType;
 	string runType;
 	string optMultipleQoI;
+
+	bool do_mean_var;
 	//
 	// Computational budget
 	//
