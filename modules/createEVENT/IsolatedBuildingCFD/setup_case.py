@@ -1228,21 +1228,22 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     #Find function object location  
     start_index = foam.find_keyword_line(dict_lines, "functions") + 2
     
-    #Write pressure sampling points 
-    if monitor_surface_pressure:
-        added_part = "    #includeFunc  pressureSamplingPoints \n"
-        dict_lines.insert(start_index, added_part)
-    
-    
+
     #Write story loads functionObjects  
-    added_part = "    #includeFunc  storyForces \n"
-    dict_lines.insert(start_index + 1, added_part)
+    added_part = "    #includeFunc  storyForces\n"
+    dict_lines.insert(start_index, added_part)
 
     #Write base loads functionObjects
     if monitor_base_load:
-        added_part = "    #includeFunc  baseForces \n"
-        dict_lines.insert(start_index + 2, added_part)
+        added_part = "    #includeFunc  baseForces\n"
+        dict_lines.insert(start_index, added_part)
     
+    #Write pressure sampling points 
+    if monitor_surface_pressure:
+        added_part = "    #includeFunc  pressureSamplingPoints\n"
+        dict_lines.insert(start_index, added_part)
+    
+
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
     
