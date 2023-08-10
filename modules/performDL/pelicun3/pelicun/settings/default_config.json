@@ -11,7 +11,7 @@
 	    "PFV": -1
 	},
 	"SamplingMethod": "LHS",
-	"ListAllDamageStates": false,
+	"ListAllDamageStates": true,
 	"NonDirectionalMultipliers": {
 	    "ALL": 1.2
 	},
