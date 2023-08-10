@@ -66,7 +66,7 @@ runMFMC::runMFMC(string workflowDriver,
 
 	int nPilot = 10;
 	this->optMultipleQoI = "average"; // conservative/average/targetVar
-	this->CB_init = 10; //sec
+	this->CB_init = 60; //sec
 	this->do_mean_var = true;
 
 	//
@@ -139,13 +139,28 @@ runMFMC::runMFMC(string workflowDriver,
 	// Simulate Additional simulations
 	//
 
-	vector<int> numSim_list_add(numSim_list_all);
-	std::transform(numSim_list_add.begin(), numSim_list_add.end(), numSim_pilot.begin(), numSim_list_add.begin(), std::minus<double>());
-	if (*std::min_element(numSim_list_add.begin(), numSim_list_add.end())<0) {
-		//
-		// TODO: what to do when n is not as small?????
-		//
-		assert(false);
+	vector<int> numSim_list_add;
+
+	int sum_numSim = std::accumulate(std::begin(numSim_list_all), std::end(numSim_list_all), 0.0);
+	if (sum_numSim == 0) {
+		std::fill(numSim_list_add.begin(), numSim_list_add.end(), 0); // initializing
+	}
+	else {
+		numSim_list_add = numSim_list_all;
+		std::transform(numSim_list_add.begin(), numSim_list_add.end(), numSim_pilot.begin(), numSim_list_add.begin(), std::minus<double>());
+		if (*std::min_element(numSim_list_add.begin(), numSim_list_add.end()) < 0) {
+			//
+			// TODO: what to do when n is not as small?????
+			//
+			assert(false);
+		}
+	}
+
+	if (procno == 0) {
+		std::cout << " - Adding more simulations:" << " \n";
+		for (int nm = 0; nm < numModels; nm++) {
+			std::cout << " - model " << nm << " : " << numSim_list_add[nm] << " \n";
+		}
 	}
 
 	vector<vector<vector<double>>> xvals_add;
@@ -298,6 +313,7 @@ runMFMC::simulateMFMC(vector<int>Nsims,
 
 		cost_list.push_back((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3 / N); // unit:seconds
 	}
+
 }
 
 void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
@@ -312,9 +328,11 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 	vector<vector<double>> mean_diff_list;
 	vector<vector<double>> rho_list;
 	vector<vector<double>> alpha_list;
-	//vector<vector<double>> ratio_list;
+	vector<vector<double>> ratio_list;
 	vector<vector<double>> Nsim_list;
 	vector<double> Var_HF_opt_list;
+	vector<bool> check_validity_list;
+	vector<string> validity_msg_list;
 
 	int optimal_N = -1;
 	int optimal_ng = -1;
@@ -403,23 +421,38 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 		//
 
 		vector<double> ratio_tmp;
-		double rho2, rho2_;
+		double rho2_t1, rho2_t2; // term1 term2 
+		double rho2_t3 = corr_tmp[1] * corr_tmp[1];; // term3
 		ratio_tmp.push_back(1.0);
-		double sumLowCosts = 0; // used to compute N
+		double sumCosts = cost_list[0]; // used to compute N
 		double varFactor = 0; // used to compute Var[H0]
 		for (int nm = 1; nm < numModels; nm++) { // numModels is not large
-			rho2 = corr_tmp[nm] * corr_tmp[nm];
+			rho2_t1 = corr_tmp[nm] * corr_tmp[nm];
 			if (nm + 1 == numModels) {
-				rho2_ = 0;
+				rho2_t2 = 0;
 			}
 			else {
-				rho2_ = corr_tmp[nm + 1] * corr_tmp[nm + 1];
+				rho2_t2 = corr_tmp[nm + 1] * corr_tmp[nm + 1];
 			}
-			double ratio = std::sqrt((cost_list[0] * (rho2 - rho2_)) / (cost_list[nm] * (1 - rho2)));
+
+			double ratio = std::sqrt((cost_list[0] * (rho2_t1 - rho2_t2)) / (cost_list[nm] * (1 - rho2_t3)));
+
+			if (std::isnan(ratio)) {
+				ratio = 0.0;
+			}
+
 			ratio_tmp.push_back(ratio);
 
-			sumLowCosts += ratio * cost_list[nm];
-			varFactor += (1 / ratio_tmp[nm - 1] - 1 / ratio) * rho2;
+			sumCosts += ratio * cost_list[nm];
+			varFactor += (1 / ratio_tmp[nm - 1] - 1 / ratio) * rho2_t1;
+			
+			// I guess the second fidelity model is the pivot model
+			for (int nm2 = 1; nm2 < nm+1; nm2++) {
+				if (ratio_tmp[nm2] != 0) {
+					rho2_t3 = corr_tmp[nm] * corr_tmp[nm];
+					break;
+				}
+			}		
 		}
 
 		//
@@ -430,8 +463,8 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 		mean_diff_list.push_back(mean_diff_tmp);
 		rho_list.push_back(corr_tmp);
 		alpha_list.push_back(alpha_tmp);
-		//ratio_list.push_back(ratio_tmp);
-		//
+		ratio_list.push_back(ratio_tmp);
+		//  
 		// Find the id of the most conservative QoI - that simulates HF largest amout
 		//
 
@@ -444,10 +477,10 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 			//remaining time
 			double VarEst, N;
 			if (CB > 0) {
-				N = (CB) / (cost_list[0] + sumLowCosts); // Optimal number for the first model
+				N = (CB_init) / (sumCosts); // Optimal number for the first model
 			}
 			else {
-				N = gvals_list[0].size(); // No more simulations
+				N = 0; // No more simulations
 			}
 			VarEst = var_tmp[0] / N * (1 - varFactor); // Estimation Variance
 
@@ -466,10 +499,18 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 
 			string msg;
 			bool good = checkValidity(cost_list, corr_tmp, msg);
+			check_validity_list.push_back(good);
+			validity_msg_list.push_back(msg);
 		}
 	}
 
 	if (updateNumSim) {
+		if (std::all_of(check_validity_list.begin(), check_validity_list.end(), [](bool v) { return !v; })) {
+			string errMsg = "Error running MFMC: MFMC is not valid\n";
+			errMsg += validity_msg_list[0] + "\n";
+			theErrorFile.write(errMsg);
+		}
+
 		assert(optimal_N >= 0);
 		assert(optimal_ng >= 0);
 
@@ -538,10 +579,10 @@ runMFMC::checkValidity(vector<double> cost_list, vector<double> corr_tmp, string
 		if (cost_list[nm - 1] < cost_list[nm]) {
 			// if lower-fidelity model takes longer time
 			if (nm == 1) {
-				errMsg += "Error running MFMC: The high fidelity model (Model 1) is evaluated faster than the low fidelity model (Model 2). To get the best estimates, the user should run MCS with only the high fidelity model.";
+				errMsg = "The high fidelity model (Model 1) is evaluated faster than the low fidelity model (Model 2). To get the best estimates, the user should run MCS with only the high fidelity model.";
 			}
 			else {
-				errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the mean evaluation time of model " + std::to_string(nm + 1) + "(" + std::to_string(cost_list[nm]) + " sec) is greater than that of model " + std::to_string(nm + 2) + "(" + std::to_string(cost_list[nm + 1]) + ").";
+				errMsg = "We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the mean evaluation time of model " + std::to_string(nm) + "(" + std::to_string(cost_list[nm-1]) + " sec) is smaller than that of model " + std::to_string(nm + 1) + "(" + std::to_string(cost_list[nm]) + ").";
 			}
 			//theErrorFile.write(errMsg);
 			return false;
@@ -551,9 +592,9 @@ runMFMC::checkValidity(vector<double> cost_list, vector<double> corr_tmp, string
 		// Check corr
 		//
 
-		if (corr_tmp[nm-1] < corr_tmp[nm]) {
+		if (abs(corr_tmp[nm-1]) < abs(corr_tmp[nm])) {
 			// if lower-fidelity model has higher correlation to HF model
-			errMsg = "Error running MFMC: We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the correlation of model " + std::to_string(nm + 1) + "(" + std::to_string(corr_tmp[nm]) + ") is smaller than that of model " + std::to_string(nm + 2) + "(" + std::to_string(corr_tmp[nm + 1]) + ").";
+			errMsg = "We assume the model with lower index value has the higher fidelity, meaning its evaluation is computationally costly but accurate. However, the correlation of model " + std::to_string(nm) + "(" + std::to_string(corr_tmp[nm-1]) + ") is smaller than that of model " + std::to_string(nm + 1) + "(" + std::to_string(corr_tmp[nm]) + ").";
 			//theErrorFile.write(errMsg);
 			return false;
 		}
@@ -574,7 +615,7 @@ runMFMC::checkValidity(vector<double> cost_list, vector<double> corr_tmp, string
 		
 		if (c_ratio < rho_ratio) {
 			// if lower-fidelity model has higher correlation to HF model
-			errMsg += "Error running MFMC: Based on cost-benefit analysis, LF model, Model " + std::to_string(nm + 1) +", is not worth running. (Corr=" + std::to_string(corr_tmp[nm]) + ", Cost=" + std::to_string(cost_list[nm]) + "sec.) See technical manual for more information.";
+			errMsg += "Based on cost-benefit analysis, LF model, Model " + std::to_string(nm + 1) +", is not worth running. (Corr=" + std::to_string(corr_tmp[nm]) + ", Cost=" + std::to_string(cost_list[nm]) + "sec.) See technical manual for more information.";
 			//theErrorFile.write(errMsg);
 			return false;
 		}
@@ -760,18 +801,19 @@ void runMFMC::writeTabOutputs()
 
 		Taboutfile << "idx\t";
 		for (int j = 0; j < inp.nrv + inp.nco + inp.nre; j++) {
-			Taboutfile << inp.rvNames[j] << "\t";
-		}
-		for (int j = inp.nrv + inp.nco + inp.nre; j < inp.nrv + inp.nco + inp.nre + inp.nst; j++) {
 			if (inp.rvNames[j].compare(0, multiModel.length(), multiModel) == 0) {
 				//pass
-			} else {
+			}
+			else {
 				Taboutfile << inp.rvNames[j] << "\t";
 			}
 		}
+		for (int j = inp.nrv + inp.nco + inp.nre; j < inp.nrv + inp.nco + inp.nre + inp.nst; j++) {
+				Taboutfile << inp.rvNames[j] << "\t";
+		}
 		for (int nm = 0; nm < numModels; nm++) {
 			for (int j = 0; j < inp.nqoi; j++) {
-				Taboutfile << inp.qoiNames[j] << "_model" << nm << "\t";
+				Taboutfile << inp.qoiNames[j] << "-" << nm + 1 << "\t";
 			}
 		}
 		Taboutfile << '\n';
