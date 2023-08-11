@@ -832,7 +832,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     if ground_BC_type == "wallFunction": 
         added_part = ""
         added_part += "\t type \t nutkAtmRoughWallFunction;\n"
-        added_part += "\t z0 \t {:.4e};\n".format(roughness_length)
+        added_part += "\t z0  \t  uniform {:.4e};\n".format(roughness_length)
         added_part += "\t value \t uniform 0.0;\n"
     
     dict_lines.insert(start_index, added_part)
