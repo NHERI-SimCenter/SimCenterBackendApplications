@@ -64,9 +64,9 @@ runMFMC::runMFMC(string workflowDriver,
 	// User defined variables
 	//
 
-	int nPilot = 10;
+	int nPilot = 16;
 	this->optMultipleQoI = "average"; // conservative/average/targetVar
-	this->CB_init = 60; //sec
+	this->CB_init = 60*10; //sec
 	this->do_mean_var = true;
 
 	//
@@ -140,9 +140,9 @@ runMFMC::runMFMC(string workflowDriver,
 	//
 
 	vector<int> numSim_list_add;
-
 	int sum_numSim = std::accumulate(std::begin(numSim_list_all), std::end(numSim_list_all), 0.0);
 	if (sum_numSim == 0) {
+		numSim_list_add.resize(numModels);
 		std::fill(numSim_list_add.begin(), numSim_list_add.end(), 0); // initializing
 	}
 	else {
@@ -150,16 +150,37 @@ runMFMC::runMFMC(string workflowDriver,
 		std::transform(numSim_list_add.begin(), numSim_list_add.end(), numSim_pilot.begin(), numSim_list_add.begin(), std::minus<double>());
 		if (*std::min_element(numSim_list_add.begin(), numSim_list_add.end()) < 0) {
 			//
-			// TODO: what to do when n is not as small?????
+			// TODO: what to do when n is not as small????? = > let us uniformly assign the numbers to the remaining
 			//
-			assert(false);
+
+			double numer = 0;
+			double denom = 0;
+
+			for (int nm = 0; nm < numModels; nm++) {
+				numer += cost_list[nm] * numSim_list_add[nm];
+				if (numSim_list_add[nm] > 0) {
+					denom += cost_list[nm] * numSim_list_add[nm];
+				}
+			}
+			double k = numer / denom;
+
+			for (int nm = 0; nm < numModels; nm++) {
+				if (numSim_list_add[nm] > 0) {
+					numSim_list_add[nm]  = std::floor(numSim_list_add[nm]*k);
+				}
+				else {
+					numSim_list_add[nm] = 0;
+				}
+			}
+			numSim_list_all = numSim_list_add;
+			std::transform(numSim_list_all.begin(), numSim_list_all.end(), numSim_pilot.begin(), numSim_list_all.begin(), std::plus<double>());
 		}
 	}
 
 	if (procno == 0) {
 		std::cout << " - Adding more simulations:" << " \n";
 		for (int nm = 0; nm < numModels; nm++) {
-			std::cout << " - model " << nm << " : " << numSim_list_add[nm] << " \n";
+			std::cout << " - model " << nm +1 << " : " << numSim_list_add[nm] << " \n";
 		}
 	}
 
@@ -346,7 +367,7 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 #else
 		nProcessors = omp_get_num_procs();
 #endif
-	double CB = (CB_init - time_passed)* nProcessors; //seconds								   
+	double CB = (CB_init - time_passed); //seconds								   
 	//
 	// Loop QoIs
 	//

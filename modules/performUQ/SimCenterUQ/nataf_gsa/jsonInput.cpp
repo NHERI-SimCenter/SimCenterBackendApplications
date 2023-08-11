@@ -650,12 +650,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		}
 	}
 
-	if ((multiModelCount > 1)&& (uqType.compare("Multi-fidelity Monte Carlo") == 0)) {
-		//*ERROR*
-		std::string errMsg = "Error reading json: SimCenterUQ engine supports only one model group";
-		theErrorFile.write(errMsg);
 
-	}
+	//if ((multiModelCount > 1)&& (uqType.compare("Multi-fidelity Monte Carlo") == 0)) {
+		//*ERROR*
+	//	std::string errMsg = "Error reading json: SimCenterUQ engine supports only one model group";
+	//	theErrorFile.write(errMsg);
+
+	//}
 
 
 	if (procno == 0)  std::cout << " - Checking correlation matrix\n";
