@@ -827,7 +827,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     
     if ground_BC_type == "noSlip": 
         added_part = ""
-        added_part += "\t type    zeroGradient;\n"
+        added_part += "\t type \t zeroGradient;\n"
     
     if ground_BC_type == "roughWallFunction": 
         added_part = ""
@@ -1390,7 +1390,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
     num_stories = rm_data['numStories']
     floor_height = rm_data['floorHeight']
     center_of_rotation = rm_data['centerOfRotation']
-    story_load_write_interval = rm_data['storyLoadWriteInterval']
+    base_load_write_interval = rm_data['baseLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']
 
     
@@ -1403,7 +1403,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
     #Write writeInterval 
     start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-    dict_lines[start_index] = "writeInterval \t{};\n".format(story_load_write_interval)    
+    dict_lines[start_index] = "writeInterval \t{};\n".format(base_load_write_interval)    
     
     #Write patch name to intergrate forces on 
     start_index = foam.find_keyword_line(dict_lines, "patches") 
