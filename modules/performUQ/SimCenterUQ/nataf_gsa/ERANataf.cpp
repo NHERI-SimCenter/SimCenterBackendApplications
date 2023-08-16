@@ -59,7 +59,7 @@ ERANataf::ERANataf() {}
 
 ERANataf::ERANataf(jsonInput inp, int procno)
 {
-	if (inp.UQmethod.compare("Import Data Files") == 0) {
+	if (inp.uqMethod.compare("Import Data Files") == 0) {
 		return;
 	}
 
@@ -255,10 +255,11 @@ ERANataf::ERANataf(jsonInput inp, int procno)
 	//
 	if (procno == 0) {
 		try {
-			for (const auto& entry : std::filesystem::directory_iterator(inp.workDir))
+            auto workdir = inp.workDir;
+			for (const auto& entry : std::filesystem::directory_iterator(workdir))
 			{
 				if (entry.path().u8string().find("workdir") != std::string::npos) {
-					for (auto fname : { "driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
+					for (auto fname : { "driver.bat", "sc_driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
 						try {
 							std::filesystem::permissions(entry.path().u8string() + "/" + fname, std::filesystem::perms::others_all);
 						}
@@ -708,7 +709,9 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 	{
 		std::cout << e.what() << "\n";
 		std::string errMSG = "* Please clean up your working directory.*\n";
-		theErrorFile.write(errMSG);
+
+        std::cerr << errMSG << std::endl;
+		//theErrorFile.write(errMSG);
 	}
 	//std::filesystem::current_path(workDir); //======= Not good for parallel operation
 
@@ -954,9 +957,9 @@ void ERANataf::simulateAppBatchSurrogate(string workflowDriver,
 		}
 		std::cout << std::endl;
 
-		std::cerr << "workdir:" << inp.workDir << "\n";
-		std::cerr << "copyDir:" << copyDir << "\n";
-		std::cerr << "runningFEM analysis.." << "\n\n";
+		std::cout << "workdir:" << inp.workDir << "\n";
+		std::cout << "copyDir:" << copyDir << "\n";
+		std::cout << "runningFEM analysis.." << "\n\n";
 
 		//
 		// If we find result.out in the templete dir. emit error;

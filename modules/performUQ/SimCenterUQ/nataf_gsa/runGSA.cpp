@@ -65,7 +65,7 @@ runGSA::runGSA(string workflowDriver,
 	vector<vector<double>> xvals(inp.nmc, vector<double>(inp.nrv, 0.0));
 	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));	
 	vector<vector<string>> discreteStrSamps(inp.nmc, vector<string>(inp.nst, ""));
-	if (inp.UQmethod.compare("Monte Carlo") == 0) {
+	if (inp.uqMethod.compare("Monte Carlo") == 0) {
 
 	vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
 	vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
@@ -78,7 +78,7 @@ runGSA::runGSA(string workflowDriver,
 	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
 
 	}
-	else if (inp.UQmethod.compare("Import Data Files") == 0) {
+	else if (inp.uqMethod.compare("Import Data Files") == 0) {
 
 		if (runType.compare("runningLocal") != 0) {
 			std::string errMsg = "Error running SimCenterUQ: No need to run remotely when the data set is provided. Please try running it locally.";
@@ -87,7 +87,7 @@ runGSA::runGSA(string workflowDriver,
 		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc, xvals, gvals);
 
 	} else {
-		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " unknown.";
+		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.uqMethod + " unknown.";
 		theErrorFile.write(errMsg);
 	}
 
@@ -1456,8 +1456,8 @@ void runGSA::writeOutputs(jsonInput inp, double dur, int procno)
 		outfile.precision(8); // for fixed format
 
 		outfile << "* data generation" << std::endl;
-		outfile << inp.UQmethod << std::endl;
-		if (inp.UQmethod.compare("Import Data Files")==0) {
+		outfile << inp.uqMethod << std::endl;
+		if (inp.uqMethod.compare("Import Data Files")==0) {
 			outfile << inp.inpPath << std::endl;
 			outfile << inp.outPath << std::endl;
 		}

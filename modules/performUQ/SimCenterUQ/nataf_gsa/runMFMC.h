@@ -77,8 +77,9 @@ public:
 		int nproc);
 	~runMFMC();
 	void computeRvStatistics(vector<vector<double>> xval);
-	void writeOutputs();
+	void writeOutputs(double elapsedTime);
 	void writeTabOutputs();
+	void writeInfo();
 
 	//vector<double> Si;
 
@@ -99,6 +100,13 @@ private:
 						vector<double>& HF_est, 
 						vector<int>& numSim_list, 
 						vector<double>& Var_list);
+	void setUpResJson(vector<double> cost_list,
+						vector<vector<double>> var_list,
+						vector<vector<double>> mean_diff_list,
+						vector<vector<double>> rho_list,
+						vector<vector<double>> alpha_list,
+						vector<vector<double>> ratio_list);
+	void setUpResJson_statistics(vector<int> numSim_pilot, vector<int> numSim_list_add, vector<vector<vector<double>>> gvec);
 	void updateModelIndex(int nm, ERANataf T, vector< vector<double>>& uvals);
 	double calMean(vector<double> x);
 	double calStd(vector<double> x, double m);
@@ -116,7 +124,7 @@ private:
 	vector<double> gMean, gStdDev;
 	vector<double> gMean_var, gStdDev_var;
 
-	int modelID;
+	vector<int>  modelIDs;
 	int nproc;
 	int procno;
 	const double PI = atan(1) * 4;
@@ -129,7 +137,7 @@ private:
 	string osType;
 	string runType;
 	string optMultipleQoI;
-
+	json infoJson;
 	bool do_mean_var;
 	//
 	// Computational budget

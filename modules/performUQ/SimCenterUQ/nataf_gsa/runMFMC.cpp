@@ -50,7 +50,6 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 using boost::math::normal;
 
-
 runMFMC::runMFMC(string workflowDriver,
 	string osType,
 	string runType,
@@ -64,9 +63,9 @@ runMFMC::runMFMC(string workflowDriver,
 	// User defined variables
 	//
 
-	int nPilot = 16;
+	int nPilot = inp.nPilot;
 	this->optMultipleQoI = "average"; // conservative/average/targetVar
-	this->CB_init = 60*10; //sec
+	this->CB_init = inp.compBudget; //sec
 	this->do_mean_var = true;
 
 	//
@@ -83,18 +82,33 @@ runMFMC::runMFMC(string workflowDriver,
 	// Get number of models
 	//
 
-	modelID=-1;
 	for (int i = 0; i < inp.nrv; i++) {
 		if (inp.rvNames[i].rfind("MultiModel-", 0) == 0) {
-			modelID = i;
+			modelIDs.push_back(i);
 		}
 	}
-	if (modelID < 0) {
+	if (modelIDs.size()< 0) {
 		std::string errMsg = "Error running UQ engine: MultiModel index variable not found from the RV json";
 		theErrorFile.write(errMsg);
 	}
 
-	numModels = T.M[modelID].theDist->getParam().size()/2;
+
+	vector<int> numModels_list;
+	for (int modelID : modelIDs) {
+		numModels_list.push_back(T.M[modelID].theDist->getParam().size() / 2);
+	}
+
+	if (std::adjacent_find(numModels_list.begin(), numModels_list.end(), std::not_equal_to<>()) == numModels_list.end())
+	{
+		// all elements are equal to each other
+		numModels = numModels_list[0];
+	}
+	else {
+		std::string errMsg = "Error running UQ engine: MFMC requires to have the same number of 'multimodel' for each tap.";
+		theErrorFile.write(errMsg);
+	}
+
+	
 
 	//
 	// setup Pilot simulations
@@ -144,6 +158,7 @@ runMFMC::runMFMC(string workflowDriver,
 	if (sum_numSim == 0) {
 		numSim_list_add.resize(numModels);
 		std::fill(numSim_list_add.begin(), numSim_list_add.end(), 0); // initializing
+		numSim_list_all = numSim_pilot;
 	}
 	else {
 		numSim_list_add = numSim_list_all;
@@ -247,13 +262,109 @@ runMFMC::runMFMC(string workflowDriver,
 	}
 
 	computeRvStatistics(xvals_all[numModels - 1]); // computes rvMean, rvStdDev etc.
+	setUpResJson_statistics(numSim_pilot, numSim_list_add, gvals_all);
+
 
 	xvals = xvals_all;
 	gvals = gvals_all;
 
+
+
+
 }
 
 runMFMC::~runMFMC() {};
+
+
+void
+runMFMC::setUpResJson_statistics(vector<int> numSim_pilot,vector<int> numSim_list_add, vector<vector<vector<double>>> g_vec_all){
+
+	json modelListJson = infoJson["model"];
+	for (int nm = 0; nm < numModels; nm++) {
+		
+		//
+		// compute each statistics
+		//
+		vector<double> mean_vec;
+		vector<double> var_vec;
+
+		for (int ng = 0; ng < inp.nqoi; ng++) {
+			vector<double> gvec;
+			for (int ns = 0; ns < numSim_pilot[nm]+numSim_list_add[nm]; ns++) {
+				gvec.push_back(g_vec_all[nm][ns][ng]);
+			}
+
+			double mean_val = calMean(gvec);
+			double var_val = calVar(gvec, mean_val);
+
+			mean_vec.push_back(mean_val);
+			var_vec.push_back(var_val);
+		}
+
+		json modelJson = modelListJson["model " + std::to_string(nm + 1)];
+
+		modelJson["nPilot"] = numSim_pilot[nm];
+		modelJson["nAdd"] = numSim_list_add[nm];
+		modelJson["modelMean"] = mean_vec;
+		modelJson["modelVar"] = var_vec;
+
+		modelListJson["model " + std::to_string(nm + 1)] = modelJson;
+	}
+	infoJson["model"] = modelListJson;
+}
+
+
+void
+runMFMC::setUpResJson(vector<double> cost_list,
+	vector<vector<double>> var_list,
+	vector<vector<double>> mean_diff_list,
+	vector<vector<double>> rho_list,
+	vector<vector<double>> alpha_list,
+	vector<vector<double>> ratio_list) {
+
+	json modelListJson;
+	for (int nm = 0; nm < numModels; nm++) {
+		json modelJson;
+		modelJson["cost_sec_per_sim"] = cost_list[nm];
+		
+		vector<double> rho_nm, alpha_nm, ratio_nm, mean_diff_nm, var_nm;
+
+		for (int ng = 0; ng < inp.nqoi; ng++) {
+			var_nm.push_back(var_list[ng][nm]);
+			rho_nm.push_back(rho_list[ng][nm]);
+			alpha_nm.push_back(alpha_list[ng][nm]);
+			ratio_nm.push_back(ratio_list[ng][nm]);
+			mean_diff_nm.push_back(mean_diff_list[ng][nm]);
+		}
+
+		modelJson["corrCoef"] = rho_nm;
+		modelJson["ratio"] = ratio_nm;
+		modelJson["mean_diff"] = mean_diff_nm;
+		modelJson["a"] = alpha_nm;
+
+		modelListJson["model " + std::to_string(nm + 1)] = modelJson;
+	}
+	infoJson["model"] = modelListJson;
+}
+
+
+void
+runMFMC::writeInfo() {
+	if (procno == 0) {		// dakota.out
+		string writingloc = inp.workDir + "/InfoMFMC.out";
+		std::ofstream outfile(writingloc);
+		//json infoJson;
+
+		if (!outfile.is_open()) {
+
+			std::string errMsg = "Error running UQ engine: Unable to write info.out";
+			theErrorFile.write(errMsg);
+		}
+
+
+		outfile << infoJson.dump(4) << std::endl;
+	}
+}
 
 vector<vector<vector<double>>>
 runMFMC::g2h(vector<vector<vector<double>>> gvals, bool do_mean_var, vector<double> perc_list) {
@@ -340,16 +451,20 @@ runMFMC::simulateMFMC(vector<int>Nsims,
 void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list, 
 								vector<vector<vector<double>>>gvals_list, 
 								vector<double>cost_list, 
-								bool updateNumSim, 
+								bool updateNumSim,
 								vector<double>&HF_est_list, 
-								vector<int>& numSim_list_int, 
-								vector<double>& Var_HF_list) {
+								vector<int>& numSim_list_int,
+								vector<double>& Var_HF_list) 
+{
+
+
 
 	vector<vector<double>> var_list;
 	vector<vector<double>> mean_diff_list;
 	vector<vector<double>> rho_list;
 	vector<vector<double>> alpha_list;
 	vector<vector<double>> ratio_list;
+
 	vector<vector<double>> Nsim_list;
 	vector<double> Var_HF_opt_list;
 	vector<bool> check_validity_list;
@@ -361,13 +476,15 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 	int nqoi = gvals_list[0][0].size();
 
 	double time_passed = (double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - globalElapseStart).count() / 1.e3; // seconds
-	double nProcessors;
+/*
+double nProcessors;
 #ifdef MPI_RUN
 		nProcessors = nproc;
 #else
 		nProcessors = omp_get_num_procs();
 #endif
-	double CB = (CB_init - time_passed); //seconds								   
+*/
+double CB = (CB_init - time_passed); //seconds								   
 	//
 	// Loop QoIs
 	//
@@ -577,13 +694,19 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 		Var_HF_list.push_back(V_tmp);
 
 
-		double E_tmp = (double) mean_diff_list[ng][0] / numSim_list_int[0];
+		double E_tmp = (double) mean_diff_list[ng][0];
 
 		for (int nm = 1; nm < numModels; nm++) {
 			E_tmp += alpha_list[ng][nm] * mean_diff_list[ng][nm];
 		}
 		HF_est_list.push_back(E_tmp);
 	}
+
+
+	if (!updateNumSim) {
+		setUpResJson(cost_list, var_list, mean_diff_list, rho_list, alpha_list, ratio_list);
+	}
+
 
 }
 
@@ -723,12 +846,14 @@ void runMFMC::updateModelIndex(int modelNo, ERANataf T, vector< vector<double>> 
 
 	normal stdNorm(0., 1.);
 
-	double id_u = quantile(stdNorm, T.M[modelID].theDist->getCdf(modelNo));
-	for (int ns = 0; ns < nsamp; ns++) {
-		//xvals[ns][modelID] = nm + 1;
-		uvals[ns][modelID] = id_u;
+	for (int modelID : modelIDs) {
+		double id_u = quantile(stdNorm, T.M[modelID].theDist->getCdf(modelNo));
+		for (int ns = 0; ns < nsamp; ns++) {
+			//xvals[ns][modelID] = nm + 1;
+			uvals[ns][modelID] = id_u;
+		}
+		//uvals = T.X2U(nsamp, xvals);
 	}
-	//uvals = T.X2U(nsamp, xvals);
 }
 
 double runMFMC::calMean(vector<double> x) {
@@ -764,7 +889,7 @@ double runMFMC::calKurtosis(vector<double> x, double m, double s) {
 	return (accum / (x.size()) / (s * s * s * s));
 	 
 }
-void runMFMC::writeOutputs()
+void runMFMC::writeOutputs(double elapsedTime)
 {
 	if (procno == 0) {
 
@@ -793,6 +918,9 @@ void runMFMC::writeOutputs()
 		json outJson;
 		outJson["RV"] = rvJson;
 		outJson["QoI"] = qoiJson;
+
+		outJson["AnalysisTime_sec"] = elapsedTime;
+
 		outfile << outJson.dump(4) << std::endl;
 	}
 }

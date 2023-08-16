@@ -85,7 +85,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	uqType = UQjson["UQ"]["uqType"];
 
-	if (((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) || (uqType.compare("Multi-fidelity Monte Carlo")==0)) {
+	if (((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) ) {
 		// pass
 	} else
 	{
@@ -211,7 +211,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// Basic Info
 	//
 
-	UQmethod = UQjson["UQ"]["samplingMethodData"]["method"];
+	uqMethod = UQjson["UQ"]["samplingMethodData"]["method"];
 
 
 	//
@@ -219,7 +219,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	if (procno == 0)  std::cout << " - Import files?";
 
-	if (UQmethod.compare("Import Data Files") == 0) {
+	if (uqMethod.compare("Import Data Files") == 0) {
 
 		nrv = 0;
 		for (auto& elem : UQjson["randomVariables"])
@@ -241,7 +241,17 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		if (procno == 0)  std::cout << " Yes, no sampling\n";
 
 		return;
-	}
+	} else if (uqMethod.compare("Multi-fidelity Monte Carlo") == 0) {
+        inpPath = "";
+        outPath = "";
+        //nmc = UQjson["UQ"]["samplingMethodData"]["samples"];
+        nmc = 0;
+        nPilot = UQjson["UQ"]["samplingMethodData"]["numPilot"];
+        compBudget = UQjson["UQ"]["samplingMethodData"]["maxTime"];
+        compBudget *= 60.0; // sec
+        rseed = UQjson["UQ"]["samplingMethodData"]["seed"];
+
+    }
 	else {
 		inpPath = "";
 		outPath = "";

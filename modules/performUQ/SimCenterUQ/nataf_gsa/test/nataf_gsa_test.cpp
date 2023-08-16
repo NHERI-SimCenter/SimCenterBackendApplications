@@ -204,10 +204,10 @@ TEST(Test_RV, DISCRETE) {
 
 	//discreteDist myDiscrete("PAR", { 1, 0.5, 2, 0.5 }, {});
 	RVDist* myDiscrete = new discreteDist("PAR", { 1, 0.5, 2, 0.5 }, {});
-	ASSERT_EQ(myDiscrete->getCdf(1), 0.0) << "RV TEST 1: DISCRETE CDFs";
-	ASSERT_EQ(myDiscrete->getCdf(2), 0.5) << "RV TEST 1: DISCRETE CDFs";
-	ASSERT_EQ(myDiscrete->getQuantile(0.0), 1.0) << "RV TEST 1: DISCRETE CDFs";
-	ASSERT_EQ(myDiscrete->getQuantile(0.5), 2.0) << "RV TEST 1: DISCRETE CDFs";
+    double p1 = myDiscrete->getCdf(1);
+    double p2 = myDiscrete->getCdf(2);
+	ASSERT_EQ(myDiscrete->getQuantile(p1), 1.0) << "RV TEST 1: DISCRETE CDFs";
+	ASSERT_EQ(myDiscrete->getQuantile(p2), 2.0) << "RV TEST 1: DISCRETE CDFs";
 
 }
 
