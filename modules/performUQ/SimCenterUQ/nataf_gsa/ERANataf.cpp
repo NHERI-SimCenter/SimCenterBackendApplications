@@ -63,6 +63,14 @@ ERANataf::ERANataf(jsonInput inp, int procno)
 		return;
 	}
 
+
+    //
+    // Sample generator
+    //
+
+    std::mt19937 generator_tmp(inp.rseed);
+    generator = generator_tmp;
+
 #ifdef MPI_RUN
     std::cout << "Nataf is running MPI" <<std::endl;
 #else
@@ -1365,7 +1373,6 @@ void ERANataf::sample(int nmc, jsonInput inp, int procno, vector<vector<double>>
 	int nreg = inp.nreg;
 	int nst = inp.nst;
 
-	std::mt19937 generator(inp.rseed);
 	std::normal_distribution<double> distribution(0.0, 1.0);
 
 	// For random samples

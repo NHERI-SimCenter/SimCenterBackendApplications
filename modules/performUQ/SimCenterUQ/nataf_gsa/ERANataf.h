@@ -49,6 +49,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "jsonInput.h"
 #include "Eigen/Dense"
 #include "writeErrors.h"
+#include <algorithm>
+#include <random>
 //#define MPI
 
 #ifdef MPI
@@ -150,6 +152,7 @@ private:
 	double getJointCdf(vector<double> x);
 	double normCdf(double x);
 	bool isInteger(double x);
+    std::mt19937 generator;
 };
 
 // For MLE optimization

@@ -542,7 +542,11 @@ double CB = (CB_init - time_passed); //seconds
 			else {
 				vector<double> gvec_trun = gvec;
 				gvec_trun.resize(N0);
-				corr_tmp.push_back(correlationCoef(gvec_trun, gvec0));
+                double corr_val = correlationCoef(gvec_trun, gvec0);
+                if (corr_val>0.999) {
+                    corr_val= 0.999;
+                }
+				corr_tmp.push_back(corr_val);
 			}
 
 			//
