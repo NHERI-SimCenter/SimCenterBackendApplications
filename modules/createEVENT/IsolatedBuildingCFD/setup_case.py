@@ -467,7 +467,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add refinment surface
+    #Add refinement surface
     if add_surface_refinement:         
         start_index = foam.find_keyword_line(dict_lines, "refinementSurfaces") + 2 
         added_part = ""
@@ -482,7 +482,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add surface refinment around the building as a refinment region
+    #Add surface refinement around the building as a refinement region
     # if surface_refinement_level > refinement_boxes[-1][1]:
     added_part = ""
     added_part += "         {}\n".format(refinement_surface_name)
@@ -494,7 +494,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
     dict_lines.insert(start_index, added_part)
     
-    #Add box refinments 
+    #Add box refinements 
     added_part = ""
     for i in range(n_boxes):
         added_part += "         {}\n".format(refinement_boxes[i][0])
