@@ -1,4 +1,5 @@
 import sys
+import os
 import subprocess
 import pkg_resources
 
@@ -39,6 +40,10 @@ def main(args):
 
     args = parser.parse_args(args)
     
+    # Change to output folder
+    if not os.path.exists(args.outputFile):
+        os.makedirs(args.outputFile)
+    os.chdir(args.outputFile)
     # Run BRAILS TranspInventoryGenerator with the user-defined arguments:
     runBrails(args.latMin, args.latMax,args.longMin, args.longMax)
 
