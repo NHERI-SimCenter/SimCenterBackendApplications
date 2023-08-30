@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#
+# 
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -41,13 +41,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
 
-# Absolute path to REDi until package goes live on pypi
-package_directory = os.path.abspath('/Users/stevan.gavrilovic/Desktop/REDi')
-# Add the directory to the system path
-sys.path.append(package_directory)
-
-from go_redi import go_redi
-
+from REDi.go_redi import go_redi
 
 class NumpyEncoder(json.JSONEncoder) :
     # Encode the numpy datatypes to json
@@ -162,23 +156,24 @@ def main(args):
 
 
     # Get some general information
-    gen_info = AIM['GeneralInformation']
+    gen_info = AIM['DL']['Asset']
 
-    nStories = gen_info['NumberOfStories']
+    nStories = int(gen_info['NumberOfStories'])
     rediInputDict['nFloor'] = nStories
 
-    plan_area = gen_info['PlanArea']
+    plan_area = float(gen_info['PlanArea'])
 
     floor_areas = [plan_area for i in range(nStories + 1)]
     rediInputDict['floor_areas'] = floor_areas
     
     # Get the replacement cost and time
-    DL_info =  gen_info['DL']['Losses']
+    DL_info =  AIM['DL']['Losses']['BldgRepair']
+    
     replacementCost = DL_info['ReplacementCost']['Median']
-    rediInputDict['replacement_cost'] = replacementCost
+    rediInputDict['replacement_cost'] = float(replacementCost)/1e6 #Needs to be in the millions of dollars
 
     replacementTime = DL_info['ReplacementTime']['Median']
-    rediInputDict['replacement_time'] = replacementTime
+    rediInputDict['replacement_time'] = float(replacementTime)
 
 
     num_samples = len(get_first_value(val=CMP,num_levels=2))
