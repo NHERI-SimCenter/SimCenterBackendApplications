@@ -702,7 +702,7 @@ class Workflow(object):
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
         
         # Create the asset registry
-        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
+        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork', 'TransportationNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
 
         self.run_type = run_type

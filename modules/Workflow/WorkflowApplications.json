@@ -164,6 +164,17 @@
             "description": "water network node information"
           }
         ]
+      },
+      {
+        "Name": "JSON_to_TRANSPORTNETWORK",
+        "ExecutablePath": "modules/createAIM/JSON_to_AIM/JSON_to_AIM_transport.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          }
+        ]
       }
   ]
   },
