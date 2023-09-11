@@ -56,6 +56,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <armadillo>
 #include "jsonInput.h"
 #include "ERANataf.h"
+#include <cmath>
+
 //extern std::ofstream theErrorFile;
 
 #include "writeErrors.h"
@@ -76,10 +78,9 @@ public:
 		int procno,
 		int nproc);
 	~runMFMC();
-	void computeRvStatistics(vector<vector<double>> xval);
 	void writeOutputs(double elapsedTime);
 	void writeTabOutputs();
-	void writeInfo();
+//	void writeInfo();
 
 	//vector<double> Si;
 
@@ -97,16 +98,20 @@ private:
 						vector<vector<vector<double>>>gvals_list, 
 						vector<double>cost_list, 
 						bool updateNumSim,
-						vector<double>& HF_est, 
-						vector<int>& numSim_list, 
-						vector<double>& Var_list);
+						vector<double>& HF_est,
+						vector<double>& Var_list,
+                        vector<int>& numSim_list,
+                        vector<double>& speedUp_list
+                           );
 	void setUpResJson(vector<double> cost_list,
 						vector<vector<double>> var_list,
 						vector<vector<double>> mean_diff_list,
 						vector<vector<double>> rho_list,
 						vector<vector<double>> alpha_list,
 						vector<vector<double>> ratio_list);
-	void setUpResJson_statistics(vector<int> numSim_pilot, vector<int> numSim_list_add, vector<vector<vector<double>>> gvec);
+	void setUpRes_modelInfo(vector<int> numSim_pilot, vector<int> numSim_list_add, vector<vector<vector<double>>> gvec);
+    void setUpRes_rvStatistics(vector<vector<double>> xval);
+    void setUpRes_qoiStatistics(vector<double> gMean, vector<double> gVar, vector<double> gStdDev, vector<double> speedUp_list);
 	void updateModelIndex(int nm, ERANataf T, vector< vector<double>>& uvals);
 	double calMean(vector<double> x);
 	double calStd(vector<double> x, double m);
@@ -120,9 +125,6 @@ private:
 
 	vector<vector<vector<double>>> g2h(vector<vector<vector<double>>> hvals_pilot, bool do_mean_var, vector<double> perc_list);
 
-	vector<double> rvMean, rvStdDev, rvSkewness, rvKurtosis;
-	vector<double> gMean, gStdDev;
-	vector<double> gMean_var, gStdDev_var;
 
 	vector<int>  modelIDs;
 	int nproc;
@@ -137,8 +139,9 @@ private:
 	string osType;
 	string runType;
 	string optMultipleQoI;
-	json infoJson;
+	json infoJson, rvJson, qoiJson;
 	bool do_mean_var;
+    bool do_log_transform;
 	//
 	// Computational budget
 	//

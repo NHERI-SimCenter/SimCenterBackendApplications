@@ -47,6 +47,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "jsonInput.h"
 #include <iterator>
 #include <chrono>
+#include <cmath>    // std::log(double)
 
 using boost::math::normal;
 
@@ -67,6 +68,7 @@ runMFMC::runMFMC(string workflowDriver,
 	this->optMultipleQoI = "average"; // conservative/average/targetVar
 	this->CB_init = inp.compBudget; //sec
 	this->do_mean_var = true;
+    this->do_log_transform = inp.doLogTransform;
 
 	//
 	// Save variables
@@ -126,10 +128,10 @@ runMFMC::runMFMC(string workflowDriver,
 
 	vector<vector<vector<double>>> xvals_pilot;
 	vector<vector<vector<double>>> gvals_pilot;
-	vector<double> cost_list;
+	vector<double> cost_sum_list;
 	int numExistingDirs = 0;
 	
-	this->simulateMFMC(numSim_pilot, numExistingDirs, xvals_pilot, gvals_pilot, cost_list);
+	this->simulateMFMC(numSim_pilot, numExistingDirs, xvals_pilot, gvals_pilot, cost_sum_list);
 
 	//
 	// what are QoI?
@@ -145,9 +147,12 @@ runMFMC::runMFMC(string workflowDriver,
 
 	vector<double> Var_pilot;
 	vector<double> HF_est_pilot;
+    vector<double> cost_list = cost_sum_list;
+    std::transform(cost_list.begin(), cost_list.end(), numSim_pilot.begin(), cost_list.begin(), std::divides<>());
 	vector<int> numSim_list_all;
+    vector<double> speedUp_list;
 	bool updateNumSim = true;
-	this->getOptimalSimNums(xvals_pilot, hvals_pilot, cost_list, updateNumSim, HF_est_pilot, numSim_list_all, Var_pilot);
+	this->getOptimalSimNums(xvals_pilot, hvals_pilot, cost_list, updateNumSim, HF_est_pilot, Var_pilot, numSim_list_all, speedUp_list);
 
 	//
 	// Simulate Additional simulations
@@ -201,8 +206,8 @@ runMFMC::runMFMC(string workflowDriver,
 
 	vector<vector<vector<double>>> xvals_add;
 	vector<vector<vector<double>>> gvals_add;
-	vector<double> cost_list2; // not used
-	this->simulateMFMC(numSim_list_add, numExistingDirs, xvals_add, gvals_add, cost_list2);
+	vector<double> cost_sum_list2; // not used
+	this->simulateMFMC(numSim_list_add, numExistingDirs, xvals_add, gvals_add, cost_sum_list2);
 
 	//
 	// Add two samples - do I need to add also 
@@ -242,27 +247,38 @@ runMFMC::runMFMC(string workflowDriver,
 
 	vector<double> Var_est;
 	vector<double> HF_est;
+    vector<double> speedUp_list2;
+
+    vector<double>  cost_list2  = cost_sum_list2;
+    std::transform(cost_list2.begin(), cost_list2.end(), cost_sum_list.begin(), cost_list2.begin(), std::plus<double>());
+    std::transform(cost_list2.begin(), cost_list2.end(), numSim_list_all.begin(), cost_list2.begin(), std::divides<>());
+
 	updateNumSim = false;
-	this->getOptimalSimNums(xvals_all, hvals_all, cost_list2, updateNumSim, HF_est, numSim_list_all, Var_est);
+	this->getOptimalSimNums(xvals_all, hvals_all, cost_list2, updateNumSim, HF_est, Var_est, numSim_list_all, speedUp_list2);
 
 
 	//
 	// Post process the data
 	//
+    vector<double> gMean, gStdDev, gVar;
+    vector<double> gMean_var, gVar_var;
 	if (do_mean_var) {
 		
 		for (int ng = 0; ng < inp.nqoi; ng++) {
 			double myMean = HF_est[ng];
-			gMean.push_back(myMean);
-			gStdDev.push_back(std::sqrt(HF_est[ng + inp.nqoi]- myMean* myMean));
+			double myVar = HF_est[ng + inp.nqoi] - myMean* myMean;
+            gMean.push_back(myMean);
+			gVar.push_back(myVar);
+            gStdDev.push_back(std::sqrt(myVar));
 
 			gMean_var.push_back(Var_est[ng]);
-			gStdDev_var.push_back(Var_est[ng + inp.nqoi]); // TODO: this is not correct
+            gVar_var.push_back(Var_est[ng + inp.nqoi]); // TODO: this is not correct
 		}
 	}
 
-	computeRvStatistics(xvals_all[numModels - 1]); // computes rvMean, rvStdDev etc.
-	setUpResJson_statistics(numSim_pilot, numSim_list_add, gvals_all);
+	setUpRes_rvStatistics(xvals_all[numModels - 1]); // computes rvMean, rvStdDev etc.
+    setUpRes_qoiStatistics(gMean,gVar,gStdDev,speedUp_list2);
+	setUpRes_modelInfo(numSim_pilot, numSim_list_add, gvals_all);
 
 
 	xvals = xvals_all;
@@ -277,9 +293,11 @@ runMFMC::~runMFMC() {};
 
 
 void
-runMFMC::setUpResJson_statistics(vector<int> numSim_pilot,vector<int> numSim_list_add, vector<vector<vector<double>>> g_vec_all){
+runMFMC::setUpRes_modelInfo(vector<int> numSim_pilot,
+                                 vector<int> numSim_list_add,
+                                 vector<vector<vector<double>>> g_vec_all){
 
-	json modelListJson = infoJson["model"];
+	json modelListJson = infoJson["models"];
 	for (int nm = 0; nm < numModels; nm++) {
 		
 		//
@@ -287,6 +305,7 @@ runMFMC::setUpResJson_statistics(vector<int> numSim_pilot,vector<int> numSim_lis
 		//
 		vector<double> mean_vec;
 		vector<double> var_vec;
+        vector<double> coefVar_vec;
 
 		for (int ng = 0; ng < inp.nqoi; ng++) {
 			vector<double> gvec;
@@ -294,23 +313,42 @@ runMFMC::setUpResJson_statistics(vector<int> numSim_pilot,vector<int> numSim_lis
 				gvec.push_back(g_vec_all[nm][ns][ng]);
 			}
 
+            if (do_log_transform) {
+                std::transform(gvec.begin(), gvec.end(), gvec.begin(), [](double element) { return  std::log(element); }); // avg of value
+            }
+
 			double mean_val = calMean(gvec);
 			double var_val = calVar(gvec, mean_val);
 
 			mean_vec.push_back(mean_val);
 			var_vec.push_back(var_val);
+            coefVar_vec.push_back(std::sqrt(var_val)/mean_val);
 		}
 
-		json modelJson = modelListJson["model " + std::to_string(nm + 1)];
+		json modelJson = modelListJson["model" + std::to_string(nm + 1)];
 
 		modelJson["nPilot"] = numSim_pilot[nm];
 		modelJson["nAdd"] = numSim_list_add[nm];
 		modelJson["modelMean"] = mean_vec;
 		modelJson["modelVar"] = var_vec;
-
-		modelListJson["model " + std::to_string(nm + 1)] = modelJson;
+        modelJson["modelCoefVar"] = coefVar_vec;
+		modelListJson["model" + std::to_string(nm + 1)] = modelJson;
 	}
-	infoJson["model"] = modelListJson;
+	infoJson["models"] = modelListJson;
+
+}
+
+void
+runMFMC::setUpRes_qoiStatistics(vector<double> gMean,
+                                 vector<double> gVar,
+                                 vector<double> gStdDev,
+                                vector<double> speedUp_list){
+
+    qoiJson["qoiNames"] = inp.qoiNames;
+    qoiJson["mean"] = gMean;
+    qoiJson["var"] = gVar;
+    qoiJson["standardDeviation"] = gStdDev;
+    qoiJson["speedUp"] = speedUp_list;
 }
 
 
@@ -329,7 +367,7 @@ runMFMC::setUpResJson(vector<double> cost_list,
 		
 		vector<double> rho_nm, alpha_nm, ratio_nm, mean_diff_nm, var_nm;
 
-		for (int ng = 0; ng < inp.nqoi; ng++) {
+		for (int ng = 0; ng < var_list.size(); ng++) {
 			var_nm.push_back(var_list[ng][nm]);
 			rho_nm.push_back(rho_list[ng][nm]);
 			alpha_nm.push_back(alpha_list[ng][nm]);
@@ -342,29 +380,29 @@ runMFMC::setUpResJson(vector<double> cost_list,
 		modelJson["mean_diff"] = mean_diff_nm;
 		modelJson["a"] = alpha_nm;
 
-		modelListJson["model " + std::to_string(nm + 1)] = modelJson;
+		modelListJson["model" + std::to_string(nm + 1)] = modelJson;
 	}
-	infoJson["model"] = modelListJson;
+	infoJson["models"] = modelListJson;
 }
 
 
-void
-runMFMC::writeInfo() {
-	if (procno == 0) {		// dakota.out
-		string writingloc = inp.workDir + "/InfoMFMC.out";
-		std::ofstream outfile(writingloc);
-		//json infoJson;
-
-		if (!outfile.is_open()) {
-
-			std::string errMsg = "Error running UQ engine: Unable to write info.out";
-			theErrorFile.write(errMsg);
-		}
-
-
-		outfile << infoJson.dump(4) << std::endl;
-	}
-}
+//void
+//runMFMC::writeInfo() {
+//	if (procno == 0) {		// dakota.out
+//		string writingloc = inp.workDir + "/InfoMFMC.out";
+//		std::ofstream outfile(writingloc);
+//		//json infoJson;
+//
+//		if (!outfile.is_open()) {
+//
+//			std::string errMsg = "Error running UQ engine: Unable to write info.out";
+//			theErrorFile.write(errMsg);
+//		}
+//
+//
+//		outfile << infoJson.dump(4) << std::endl;
+//	}
+//}
 
 vector<vector<vector<double>>>
 runMFMC::g2h(vector<vector<vector<double>>> gvals, bool do_mean_var, vector<double> perc_list) {
@@ -379,9 +417,13 @@ runMFMC::g2h(vector<vector<vector<double>>> gvals, bool do_mean_var, vector<doub
 
 			if (do_mean_var) {
 				//vector<double> hval_tmp_mean = gvals[nm][ns];
-				hval_tmp_ns = gvals[nm][ns];
-			
-				vector<double> hval_tmp_meansq = gvals[nm][ns];
+                hval_tmp_ns = gvals[nm][ns];
+
+                if (do_log_transform) {
+                    std::transform(hval_tmp_ns.begin(), hval_tmp_ns.end(), hval_tmp_ns.begin(), [](double element) { return  std::log(element); }); // avg of value
+                }
+
+				vector<double> hval_tmp_meansq = hval_tmp_ns;
 				std::transform(hval_tmp_meansq.begin(), hval_tmp_meansq.end(), hval_tmp_meansq.begin(), [](double element) { return element * element; }); // avg of value
 
 				hval_tmp_ns.insert(hval_tmp_ns.end(), hval_tmp_meansq.begin(), hval_tmp_meansq.end());
@@ -404,7 +446,7 @@ runMFMC::simulateMFMC(vector<int>Nsims,
 						int &numExistingDirs, 
 						vector<vector<vector<double>>> &xvals_list, 
 						vector<vector<vector<double>>> &gvals_list, 
-						vector<double> &cost_list) {
+						vector<double> &cost_sum_list) {
 
 	//
 	//
@@ -443,7 +485,7 @@ runMFMC::simulateMFMC(vector<int>Nsims,
 		gvals_list.push_back(gvals);
 		numExistingDirs += N;
 
-		cost_list.push_back((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3 / N); // unit:seconds
+        cost_sum_list.push_back((double)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3); // unit:seconds
 	}
 
 }
@@ -452,9 +494,10 @@ void runMFMC::getOptimalSimNums(vector<vector<vector<double>>>xvals_list,
 								vector<vector<vector<double>>>gvals_list, 
 								vector<double>cost_list, 
 								bool updateNumSim,
-								vector<double>&HF_est_list, 
+								vector<double>&HF_est_list,
+                                vector<double>& Var_HF_list,
 								vector<int>& numSim_list_int,
-								vector<double>& Var_HF_list) 
+                                vector<double>& speedUp_list)
 {
 
 
@@ -606,7 +649,21 @@ double CB = (CB_init - time_passed); //seconds
 		rho_list.push_back(corr_tmp);
 		alpha_list.push_back(alpha_tmp);
 		ratio_list.push_back(ratio_tmp);
-		//  
+
+        //
+        // Compute speed up
+        //
+
+
+        double speedUpNum = cost_list[0];
+        double speedUpDenom = 0;
+        for (int nm = 0; nm < numModels; nm++) { // numModels is not large
+            speedUpDenom += cost_list[nm] * ratio_tmp[nm];
+        }
+        speedUpDenom *= (1 - varFactor);
+        speedUp_list.push_back(speedUpNum/speedUpDenom);
+
+        //
 		// Find the id of the most conservative QoI - that simulates HF largest amout
 		//
 
@@ -773,7 +830,7 @@ runMFMC::checkValidity(vector<double> cost_list, vector<double> corr_tmp, string
 }
 
 void 
-runMFMC::computeRvStatistics(vector<vector<double>> xval) {
+runMFMC::setUpRes_rvStatistics(vector<vector<double>> xval) {
 
 	if (procno == 0) {
 
@@ -782,6 +839,7 @@ runMFMC::computeRvStatistics(vector<vector<double>> xval) {
 		//this->gval = gmat;
 		nmc = xval.size();
 		nrv = xval[0].size();
+        vector<double> rvMean, rvStdDev, rvSkewness, rvKurtosis;
 
 		std::cout << "RV     Mean    StdDev  Skewness  Kurtosis\n";
 		for (int nr = 0; nr < nrv; nr++) {
@@ -807,6 +865,13 @@ runMFMC::computeRvStatistics(vector<vector<double>> xval) {
 				break;
 			}
 		}
+
+
+        rvJson["rvNames"] = inp.rvNames;
+        rvJson["mean"] = rvMean;
+        rvJson["standardDeviation"] = rvStdDev;
+        rvJson["skewness"] = rvSkewness;
+        rvJson["kurtosis"] = rvKurtosis;
 	}
 
 }
@@ -908,22 +973,13 @@ void runMFMC::writeOutputs(double elapsedTime)
 			theErrorFile.write(errMsg);
 		}
 
-		json rvJson, qoiJson;
-		rvJson["rvNames"] = inp.rvNames;
-		rvJson["mean"] = rvMean;
-		rvJson["standardDeviation"] = rvStdDev;
-		rvJson["skewness"] = rvSkewness;
-		rvJson["kurtosis"] = rvKurtosis;
-
-		qoiJson["qoiNames"] = inp.qoiNames;
-		qoiJson["mean"] = gMean;
-		qoiJson["standardDeviation"] = gStdDev;
 
 		json outJson;
 		outJson["RV"] = rvJson;
 		outJson["QoI"] = qoiJson;
-
+        outJson["Info"] = infoJson;
 		outJson["AnalysisTime_sec"] = elapsedTime;
+        outJson["Log_transform"] = do_log_transform;
 
 		outfile << outJson.dump(4) << std::endl;
 	}
@@ -966,7 +1022,7 @@ void runMFMC::writeTabOutputs()
 		}
 		for (int nm = 0; nm < numModels; nm++) {
 			for (int j = 0; j < inp.nqoi; j++) {
-				Taboutfile << inp.qoiNames[j] << "-" << nm + 1 << "\t";
+				Taboutfile << inp.qoiNames[j] << "-M" << nm + 1 << "\t";
 			}
 		}
 		Taboutfile << '\n';
@@ -989,7 +1045,7 @@ void runMFMC::writeTabOutputs()
 						if (ns < gvals[nm].size()) {
 							Taboutfile << std::scientific << std::setprecision(7) << (gvals[nm][ns][nq]) << "\t";
 						} else {
-							Taboutfile << std::scientific << std::setprecision(7) << std::sqrt(-1) << "\t"; // assigning not a number
+							Taboutfile << std::scientific << std::setprecision(7) << "-" << "\t"; // assigning not a number
 						}
 					}
 			}

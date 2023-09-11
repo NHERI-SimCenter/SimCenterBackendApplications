@@ -213,7 +213,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	uqMethod = UQjson["UQ"]["samplingMethodData"]["method"];
 
-
 	//
 	// Else if we read samples...
 	//
@@ -250,6 +249,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
         compBudget = UQjson["UQ"]["samplingMethodData"]["maxTime"];
         compBudget *= 60.0; // sec
         rseed = UQjson["UQ"]["samplingMethodData"]["seed"];
+        doLogTransform = UQjson["UQ"]["samplingMethodData"]["logTransform"];
 
     }
 	else {
