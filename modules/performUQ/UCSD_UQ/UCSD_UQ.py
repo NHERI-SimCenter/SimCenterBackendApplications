@@ -18,17 +18,16 @@ if __name__ == "__main__":
     args, unknowns = parser.parse_known_args()
 
     inputFile = args.workflowInput
-    runType = args.runType
-    workflowDriver = args.driverFile
     outputFile = args.workflowOutput
+    workflowDriver = args.driverFile
+    runType = args.runType
 
     cwd = os.getcwd()
-    workdir_main = str(Path(cwd).parents[0])
-
-    mainScriptPath = os.path.dirname(os.path.realpath(__file__))
     templateDir = cwd
     tmpSimCenterDir = str(Path(cwd).parents[0])
-
+    
+    mainScriptPath = os.path.dirname(os.path.realpath(__file__))
+    
     # Change permission of workflow driver
     if platform.system() != "Windows":
         workflowDriverFile = os.path.join(templateDir, workflowDriver)
