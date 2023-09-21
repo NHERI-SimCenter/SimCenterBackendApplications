@@ -4,7 +4,6 @@ import os
 import platform
 import stat
 import subprocess
-import sys
 from pathlib import Path
 
 if __name__ == "__main__":
@@ -26,11 +25,6 @@ if __name__ == "__main__":
     cwd = os.getcwd()
     workdir_main = str(Path(cwd).parents[0])
 
-    # mainScriptPath = inputArgs[0]
-    # tmpSimCenterDir = inputArgs[1]
-    # templateDir = inputArgs[2]
-    # runType = inputArgs[3]  # either "runningLocal" or "runningRemote"
-
     mainScriptPath = os.path.dirname(os.path.realpath(__file__))
     templateDir = cwd
     tmpSimCenterDir = str(Path(cwd).parents[0])
@@ -50,15 +44,11 @@ if __name__ == "__main__":
     print("WORKFLOW: " + workflowDriver)
 
     if runType in ["runningLocal"]:
-
-        # Get path to python from dakota.json file
         dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)
         with open(dakotaJsonFile, "r") as f:
             jsonInputs = json.load(f)
-        # pythonCommand = jsonInputs["python"]
 
         # Get the path to the mainscript.py of TMCMC
-        #        mainScriptDir = os.path.split(mainScriptPath)[0]
         mainScript = os.path.join(mainScriptPath, "mainscript.py")
         command = f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}" "{templateDir}" {runType} {workflowDriver} {inputFile}'
         print(command)
