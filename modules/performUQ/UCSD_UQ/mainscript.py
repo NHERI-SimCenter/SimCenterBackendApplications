@@ -3,7 +3,6 @@ authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aak
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
 """
-
 # ======================================================================================================================
 import os
 import sys
@@ -44,17 +43,11 @@ class TMCMCInfo:
         self.numBurnInSteps = 10
         self.numSkipSteps = 1
 
-
     def getMPI_size(self):
         if self.runType == "runningRemote":
             from mpi4py import MPI
             self.comm = MPI.COMM_WORLD
             self.MPI_size = self.comm.Get_size()
-
-    # def syncLogFile(self):
-    #     self.logFile.flush()
-    #     os.fsync(self.logFile.fileno())
-
 
     def updateUQInfo(self, numberOfSamples, seedVal):
         self.numberOfSamples = numberOfSamples
@@ -86,22 +79,19 @@ class TMCMCInfo:
         self.numStepsAfterBurnIn = int(np.ceil(numParticles/numChains)) * self.numSkipSteps
         # self.numStepsPerChain = numBurnInSteps + numStepsAfterBurnIn
 
-    
-
-
 # ======================================================================================================================
 
 # ======================================================================================================================
-def main(inputArgs):
+def main(input_args):
 
     # Initialize analysis
-    mainscriptPath = os.path.abspath(inputArgs[0])
-    workdirMain = os.path.abspath(inputArgs[1])
-    workdirTemplate = os.path.abspath(inputArgs[2])
-    runType = inputArgs[3]  # either "runningLocal" or "runningRemote"
-    workflowDriver = inputArgs[4]
-    inputFile = inputArgs[5]
-    logFileName = "logFileTMCMC.txt"
+    mainscript_path = os.path.abspath(input_args[0])
+    working_directory = os.path.abspath(input_args[1])
+    template_directory = os.path.abspath(input_args[2])
+    run_type = input_args[3]  # either "runningLocal" or "runningRemote"
+    driver_file = input_args[4]
+    input_json_filename = input_args[5]
+    logfile_name = "logFileTMCMC.txt"
     try:
         os.remove('dakotaTab.out')
         os.remove('dakotTabPrior.out')
@@ -112,32 +102,32 @@ def main(inputArgs):
     
     t1 = time.time()
 
-    logFile = createLogFile(workdirMain, logFileName)
+    logFile = createLogFile(where=working_directory, logfile_name=logfile_name)
 
     # # ================================================================================================================
 
     # Process input json file
-    inputJsonFilePath = os.path.join(os.path.abspath(workdirTemplate), inputFile)
+    input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
     logFile.write("\n\n==========================")
-    logFile.write("\nParsing the json input file {}".format(inputJsonFilePath))
+    logFile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
     (numberOfSamples, seedVal, calDataFileName, logLikeModule, writeOutputs, variablesList, edpNamesList, 
-    edpLengthsList, modelsDict, nModels) = parseDataFunction(inputJsonFilePath, logFile, workdirMain, 
-    os.path.dirname(mainscriptPath))
+    edpLengthsList, modelsDict, nModels) = parseDataFunction(input_json_filename_full_path, logFile, working_directory, 
+    os.path.dirname(mainscript_path))
     syncLogFile(logFile)
 
     # # ================================================================================================================
 
     # Initialize TMCMC object
-    TMCMC = TMCMCInfo(mainscriptPath, workdirMain, runType, workflowDriver, logFile) 
+    TMCMC = TMCMCInfo(mainscript_path, working_directory, run_type, driver_file, logFile) 
     TMCMC.updateUQInfo(numberOfSamples, seedVal)  
     TMCMC.findNumProcessorsAvailable() 
-    TMCMC.getNumChains(numberOfSamples, runType, TMCMC.numProcessors)
+    TMCMC.getNumChains(numberOfSamples, run_type, TMCMC.numProcessors)
     TMCMC.getNumStepsPerChainAfterBurnIn(numberOfSamples, TMCMC.numChains)
 
     # # ================================================================================================================
 
     # Read calibration data
-    DataPreparer = CalDataPreparer(workdirMain, workdirTemplate, calDataFileName, edpNamesList, edpLengthsList, logFile)
+    DataPreparer = CalDataPreparer(working_directory, template_directory, calDataFileName, edpNamesList, edpLengthsList, logFile)
     calibrationData, numExperiments = DataPreparer.getCalibrationData()
 
     # # ================================================================================================================
@@ -162,7 +152,7 @@ def main(inputArgs):
 
     # ======================================================================================================================
     # Process covariance matrix options
-    CovMatrixOptions = CovarianceMatrixPreparer(transformedCalibrationData, edpLengthsList, edpNamesList, workdirMain, numExperiments, logFile, runType)
+    CovMatrixOptions = CovarianceMatrixPreparer(transformedCalibrationData, edpLengthsList, edpNamesList, working_directory, numExperiments, logFile, run_type)
     defaultErrorVariances = CovMatrixOptions.getDefaultErrorVariances()
     covarianceMatrixList = CovMatrixOptions.createCovarianceMatrix()
 
@@ -172,7 +162,7 @@ def main(inputArgs):
     logFile.write("\nSetting up the TMCMC algorithm")
 
     # sys.path.append(workdirMain)
-    logFile.write("\n\tResults path: {}".format(workdirMain))
+    logFile.write("\n\tResults path: {}".format(working_directory))
 
     # number of particles: Np
     Np = TMCMC.numberOfSamples
@@ -344,7 +334,7 @@ def main(inputArgs):
             Nm_steps_maxmax,
             logLikeModule.log_likelihood,
             variables,
-            workdirMain,
+            working_directory,
             TMCMC.seedVal,
             transformedCalibrationData,
             numExperiments,
@@ -353,10 +343,10 @@ def main(inputArgs):
             edpLengthsList,
             scaleFactors,
             shiftFactors,
-            runType,
+            run_type,
             logFile,
             TMCMC.MPI_size,
-            workflowDriver,
+            driver_file,
             TMCMC.parallelizeMCMC,
             modelNum,
             nModels
@@ -385,7 +375,7 @@ def main(inputArgs):
         logFile.write(
             "\n\n\t\tWriting posterior samples to 'dakotaTab.out' for quoFEM to read the results"
         )
-        tabFilePath = os.path.join(workdirMain, "dakotaTab.out")
+        tabFilePath = os.path.join(working_directory, "dakotaTab.out")
 
         # Create the headings, which will be the first line of the file
         headings = "eval_id\tinterface\t"
@@ -418,7 +408,7 @@ def main(inputArgs):
                     analysisNumString = "workdir." + str(i + 1)
                     prediction = np.atleast_2d(
                         np.genfromtxt(
-                            os.path.join(workdirMain, analysisNumString, "results.out")
+                            os.path.join(working_directory, analysisNumString, "results.out")
                         )
                     ).reshape((1, -1))
                     for predNum in range(np.shape(prediction)[1]):
@@ -467,7 +457,7 @@ def main(inputArgs):
 
     logFile.close()
 
-    if runType == "runningRemote":
+    if run_type == "runningRemote":
         TMCMC.comm.Abort(0)
 
     # ======================================================================================================================

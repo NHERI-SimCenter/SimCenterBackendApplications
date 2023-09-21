@@ -403,16 +403,16 @@ class TransformData:
 
 
 
-def createLogFile(workdirMain: str, logFileName: str):
-    logFile = open(os.path.join(workdirMain, logFileName), "w")
-    logFile.write(
+def createLogFile(where: str, logfile_name: str):
+    logfile = open(os.path.join(where, logfile_name), "w")
+    logfile.write(
         "Starting analysis at: {}".format(
             time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
         )
     )
-    logFile.write("\nRunning quoFEM's UCSD_UQ engine workflow")
-    logFile.write("\nCWD: {}".format(os.path.abspath(".")))
-    return logFile   
+    logfile.write("\nRunning quoFEM's UCSD_UQ engine workflow")
+    logfile.write("\nCWD: {}".format(os.path.abspath(".")))
+    return logfile   
 
 
 def syncLogFile(logFile: TextIO):
