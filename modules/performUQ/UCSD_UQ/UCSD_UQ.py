@@ -26,7 +26,7 @@ def main(args):
     templateDir = os.getcwd()
     tmpSimCenterDir = str(Path(templateDir).parents[0])
     
-    mainScriptPath = os.path.dirname(os.path.realpath(__file__))
+    mainScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     if platform.system() == "Windows":
         pythonCommand = "python"
@@ -43,12 +43,8 @@ def main(args):
     print("WORKFLOW: " + driverFile)
 
     if runType in ["runningLocal"]:
-        dakotaJsonFile = os.path.join(os.path.abspath(templateDir), workflowInput)
-        with open(dakotaJsonFile, "r") as f:
-            jsonInputs = json.load(f)
-
         # Get the path to the mainscript.py of TMCMC
-        mainScript = os.path.join(mainScriptPath, "mainscript.py")
+        mainScript = os.path.join(mainScriptDir, "mainscript.py")
         command = f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}" "{templateDir}" {runType} {driverFile} {workflowInput}'
         print(command)
         try:
