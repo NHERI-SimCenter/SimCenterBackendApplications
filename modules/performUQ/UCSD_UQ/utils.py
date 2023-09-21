@@ -2,6 +2,7 @@ import numpy as np
 from scipy.linalg import block_diag
 import os
 import shutil
+import time
 
 from typing import List, TextIO
 
@@ -321,3 +322,99 @@ class CalDataPreparer:
         self.createTempCalDataFile(calDataFile)
         self.readCleanedCalData()
         return self.calibrationData, self.numExperiments
+
+
+def transformData(calibrationData: np.ndarray, edpLengthsList: List[int], scaleFactors: List[float], shiftFactors: List[float]):
+    currentPosition = 0
+    for j in range(len(edpLengthsList)):
+        calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + edpLengthsList[j]]
+        calibrationDataSlice = calibrationDataSlice + shiftFactors[j]
+        calibrationData[:, currentPosition : currentPosition + edpLengthsList[j]] = (calibrationDataSlice / scaleFactors[j])
+        currentPosition += edpLengthsList[j]
+    return calibrationData
+
+
+class TransformData:
+    def __init__(self, transformStrategy: str, logFile: TextIO) -> None:
+        self.logFile = logFile
+        self.transformStrategyList = ["absMaxScaling", "standardize"]
+        if transformStrategy not in self.transformStrategyList:
+            string = " or ".join(self.transformStrategyList)
+            raise ValueError(f"transform strategy must be one of {string}")
+        else:
+            self.transformStrategy = transformStrategy
+        
+        logFile.write(
+            "\n\nFor numerical convenience, a transformation is applied to the calibration data \nand model "
+            "prediction corresponding to each response quantity. \nThe calibration data and model prediction for "
+            "each response variable will \nfirst be shifted (a scalar value will be added to the data and "
+            "prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value)."
+        )
+
+    def computeScaleAndShiftFactors(self, calibrationData: np.ndarray, edpLengthsList: List[int]):
+        self.calibrationData = calibrationData
+        self.edpLengthsList = edpLengthsList
+
+        shiftFactors = []
+        scaleFactors = []
+        currentPosition = 0
+        locShift = 0.0
+        if self.transformStrategy in ["absMaxScaling"]:
+            # Compute the scale factors - absolute maximum of the data for each response variable
+            self.logFile.write(
+                "\n\nComputing scale and shift factors. "
+                "\n\tThe shift factors are set to 0.0 by default."
+                "\n\tThe scale factors used are the absolute maximum of the data for each response variable."
+                "\n\tIf the absolute maximum of the data for any response variable is 0.0, "
+                "\n\tthen the scale factor is set to 1.0, and the shift factor is set to 1.0."
+            )
+            for j in range(len(self.edpLengthsList)):
+                calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + self.edpLengthsList[j]]
+                absMax = np.absolute(np.max(calibrationDataSlice))
+                if absMax == 0:  # This is to handle the case if abs max of data = 0.
+                    locShift = 1.0
+                    absMax = 1.0
+                shiftFactors.append(locShift)
+                scaleFactors.append(absMax)
+                currentPosition += self.edpLengthsList[j]
+        else:
+            self.logFile.write(
+            "\n\nComputing scale and shift factors. "
+            "\n\tThe shift factors are set to the negative of the mean value for each response variable."
+            "\n\tThe scale factors used are the standard deviation of the data for each response variable."
+            "\n\tIf the standard deviation of the data for any response variable is 0.0, "
+            "\n\tthen the scale factor is set to 1.0."
+            )
+            for j in range(len(self.edpLengthsList)):
+                calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + self.edpLengthsList[j]]
+                meanValue = np.nanmean(calibrationDataSlice)
+                stdValue = np.nanstd(calibrationDataSlice)
+                if stdValue == 0:  # This is to handle the case if stdev of data = 0.
+                    stdValue = 1.0
+                shiftFactors.append(stdValue)
+                scaleFactors.append(-meanValue)
+                currentPosition += self.edpLengthsList[j]
+
+        self.scaleFactors = scaleFactors
+        self.shiftFactors = shiftFactors
+
+    def transformDataMethod(self):
+        return transformData(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
+
+
+
+def createLogFile(workdirMain: str, logFileName: str):
+    logFile = open(os.path.join(workdirMain, logFileName), "w")
+    logFile.write(
+        "Starting analysis at: {}".format(
+            time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime())
+        )
+    )
+    logFile.write("\nRunning quoFEM's UCSD_UQ engine workflow")
+    logFile.write("\nCWD: {}".format(os.path.abspath(".")))
+    return logFile   
+
+
+def syncLogFile(logFile: TextIO):
+    logFile.flush()
+    os.fsync(logFile.fileno())
