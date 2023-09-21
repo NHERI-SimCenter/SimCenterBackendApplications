@@ -60,15 +60,7 @@ if __name__ == "__main__":
         # Get the path to the mainscript.py of TMCMC
         #        mainScriptDir = os.path.split(mainScriptPath)[0]
         mainScript = os.path.join(mainScriptPath, "mainscript.py")
-        command = '"{}" "{}" "{}" "{}" {} {} {}'.format(
-            pythonCommand,
-            mainScript,
-            tmpSimCenterDir,
-            templateDir,
-            runType,
-            workflowDriver,
-            inputFile,
-        )
+        command = f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}" "{templateDir}" {runType} {workflowDriver} {inputFile}'
         print(command)
         try:
             result = subprocess.check_output(
