@@ -5,9 +5,10 @@ import platform
 import stat
 import subprocess
 from pathlib import Path
+import sys
 
-if __name__ == "__main__":
 
+def main(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--workflowInput")
@@ -26,19 +27,19 @@ if __name__ == "__main__":
     tmpSimCenterDir = str(Path(templateDir).parents[0])
     
     mainScriptPath = os.path.dirname(os.path.realpath(__file__))
+
+    if platform.system() == "Windows":
+        pythonCommand = "python"
+    else:
+        pythonCommand = "python3"
     
     # Change permission of workflow driver
-    if platform.system() != "Windows":
-        workflowDriverFile = os.path.join(templateDir, driverFile)
-        if runType in ["runningLocal"]:
-            os.chmod(workflowDriverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
-        st = os.stat(workflowDriverFile)
-        os.chmod(workflowDriverFile, st.st_mode | stat.S_IEXEC)
-        pythonCommand = "python3"
-        driverFile = "./" + driverFile
-    else:
-        pythonCommand = "python"
-
+    workflowDriverFile = os.path.join(templateDir, driverFile)
+    if runType in ["runningLocal"]:
+        os.chmod(workflowDriverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+    st = os.stat(workflowDriverFile)
+    os.chmod(workflowDriverFile, st.st_mode | stat.S_IEXEC)
+    driverFile = "./" + driverFile
     print("WORKFLOW: " + driverFile)
 
     if runType in ["runningLocal"]:
@@ -55,4 +56,9 @@ if __name__ == "__main__":
             returnCode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
+            print('RUNNING UCSD_UQ ERROR: ', result)
             returnCode = e.returncode
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])     
