@@ -36,8 +36,7 @@ def main(args):
         tmpSimCenterDir = str(Path(templateDir).parents[0])
 
         # Change permission of driver file
-        if runType in ["runningLocal"]:
-            os.chmod(driverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+        os.chmod(driverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
         st = os.stat(driverFile)
         os.chmod(driverFile, st.st_mode | stat.S_IEXEC)
         driverFile = "./" + driverFile
