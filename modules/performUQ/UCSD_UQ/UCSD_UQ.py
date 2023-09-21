@@ -23,28 +23,26 @@ def main(args):
     driverFile = args.driverFile
     runType = args.runType
 
-    templateDir = os.getcwd()
-    tmpSimCenterDir = str(Path(templateDir).parents[0])
-    
-    mainScriptDir = os.path.dirname(os.path.realpath(__file__))
-
-    if platform.system() == "Windows":
-        pythonCommand = "python"
-    else:
-        pythonCommand = "python3"
-    
-    # Change permission of workflow driver
-    workflowDriverFile = os.path.join(templateDir, driverFile)
     if runType in ["runningLocal"]:
-        os.chmod(workflowDriverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
-    st = os.stat(workflowDriverFile)
-    os.chmod(workflowDriverFile, st.st_mode | stat.S_IEXEC)
-    driverFile = "./" + driverFile
-    print("WORKFLOW: " + driverFile)
 
-    if runType in ["runningLocal"]:
-        # Get the path to the mainscript.py of TMCMC
+        if platform.system() == "Windows":
+            pythonCommand = "python"
+        else:
+            pythonCommand = "python3"
+
+        mainScriptDir = os.path.dirname(os.path.realpath(__file__))
         mainScript = os.path.join(mainScriptDir, "mainscript.py")
+        templateDir = os.getcwd()
+        tmpSimCenterDir = str(Path(templateDir).parents[0])
+
+        # Change permission of driver file
+        if runType in ["runningLocal"]:
+            os.chmod(driverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+        st = os.stat(driverFile)
+        os.chmod(driverFile, st.st_mode | stat.S_IEXEC)
+        driverFile = "./" + driverFile
+        print("WORKFLOW: " + driverFile)
+
         command = f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}" "{templateDir}" {runType} {driverFile} {workflowInput}'
         print(command)
         try:
