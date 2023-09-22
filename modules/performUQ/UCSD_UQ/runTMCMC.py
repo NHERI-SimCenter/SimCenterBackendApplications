@@ -14,18 +14,21 @@ import os
 import csv
 
 
-def write_stage_start_info_to_logfile(logfile, stage_number, effective_sample_size, 
-                                      scale_factor_for_proposal_covariance, number_of_samples):
+def write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sample_size, 
+                                      scale_factor_for_proposal_covariance, log_evidence, number_of_samples):
     logfile.write('\n\n\t\t==========================')
     logfile.write("\n\t\tStage number: {}".format(stage_number))
-    logfile.write("\n\t\tSampling from prior")
-    logfile.write("\n\t\tbeta = 0")
+    if stage_number == 0:
+        logfile.write("\n\t\tSampling from prior")
+        logfile.write("\n\t\tbeta = 0")
+    else:
+        logfile.write("\n\t\tbeta = %9.8g" % beta)
     logfile.write("\n\t\tESS = %d" % effective_sample_size)
     logfile.write("\n\t\tscalem = %.2g" % scale_factor_for_proposal_covariance)
+    logfile.write(f"\n\t\tlog-evidence = {log_evidence:<9.8g}")
     logfile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(number_of_samples))
     logfile.flush()
     os.fsync(logfile.fileno())
-
 
 def write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=1, MPI_size=1):
     logfile.write("\n\n\t\tRun type: {}".format(run_type))
@@ -95,6 +98,21 @@ def write_prior_data_to_files(logfile, working_directory, model_number, model_pa
     os.fsync(logfile.fileno())
 
 
+def write_data_to_csvfile(logfile, total_number_of_models_in_ensemble, stage_number, model_number, 
+                          working_directory, data_to_write):
+    logfile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stage_number - 1))
+    if total_number_of_models_in_ensemble > 1:
+        string_to_append = f'resultsStage{stage_number - 1}_Model_{model_number+1}.csv'
+    else:
+        string_to_append = f'resultsStage{stage_number - 1}.csv'
+    resultsFilePath = os.path.join(os.path.abspath(working_directory), string_to_append)
+
+    with open(resultsFilePath, 'w', newline='') as csvfile:
+        csvWriter = csv.writer(csvfile)
+        csvWriter.writerows(data_to_write)
+    logfile.write("\n\t\t\tWrote to file {}".format(resultsFilePath))
+    # Finished writing data
+
 
 def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number_of_MCMC_steps, max_number_of_MCMC_steps, 
              log_likelihood_function, model_parameters, working_directory, seed,
@@ -117,9 +135,8 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     stage_number = 0  # stage number of TMCMC
     log_evidence = 0
 
-    write_stage_start_info_to_logfile(logfile, stage_number, effective_sample_size, 
-                                        scale_factor_for_proposal_covariance, number_of_samples)
-
+    write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sample_size, 
+                                      scale_factor_for_proposal_covariance, log_evidence, number_of_samples)
     # initial samples
     Sm = tmcmcFunctions.initial_population(number_of_samples, all_distributions_list)
 
@@ -174,6 +191,8 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)
         beta, log_evidence, Wm, effective_sample_size = tmcmcFunctions.compute_beta_evidence(beta, Lm, logfile, threshold=1.0)
 
+        total_log_evidence = total_log_evidence + log_evidence
+
         stage_number += 1
 
         # seed to reproduce results
@@ -202,31 +221,9 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         mytrace.append([Sm, Lm, Wm, effective_sample_size, beta, Smcap])
 
         # Write Data to '.csv' files
-        dataToWrite = mytrace[stage_number - 1][0]
-        logfile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stage_number - 1))
-
-        if total_number_of_models_in_ensemble > 1:
-            stringToAppend = f'resultsStage{stage_number - 1}_Model_{model_number+1}.csv'
-        else:
-            stringToAppend = f'resultsStage{stage_number - 1}.csv'
-        resultsFilePath = os.path.join(os.path.abspath(working_directory), stringToAppend)
-
-        with open(resultsFilePath, 'w', newline='') as csvfile:
-            csvWriter = csv.writer(csvfile)
-            csvWriter.writerows(dataToWrite)
-        logfile.write("\n\t\t\tWrote to file {}".format(resultsFilePath))
-        # Finished writing data
-
-        logfile.write('\n\n\t\t==========================')
-        logfile.write("\n\t\tStage number: {}".format(stage_number))
-        if beta < 1e-7:
-            logfile.write("\n\t\tbeta = %9.6g" % beta)
-        else:
-            logfile.write("\n\t\tbeta = %9.8g" % beta)
-        logfile.write("\n\t\tESS = %d" % effective_sample_size)
-        logfile.write("\n\t\tscalem = %.2g" % scale_factor_for_proposal_covariance)
-        logfile.write("\n\t\tlog-evidence = %9.8g" % log_evidence)
-        total_log_evidence = total_log_evidence + log_evidence
+        data_to_write = mytrace[stage_number - 1][0]
+        write_data_to_csvfile(logfile, total_number_of_models_in_ensemble, stage_number, model_number, 
+                                working_directory, data_to_write)
 
         # Perturb ###################################################
         # perform MCMC starting at each Smcap (total: N) for Nm_steps
@@ -234,9 +231,9 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
 
         numProposals = number_of_chains * number_of_MCMC_steps
         total_number_of_model_evaluations += numProposals
-        logfile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(numProposals))
-        logfile.flush()
-        os.fsync(logfile.fileno())
+
+        write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sample_size, 
+                                      scale_factor_for_proposal_covariance, log_evidence, numProposals)
 
         numAccepts = 0
         if parallelize_MCMC:
@@ -313,7 +310,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     mytrace.append([Sm, Lm, np.ones(len(Wm)), 'notValid', 1, 'notValid'])
 
     # Write last stage data to '.csv' file
-    dataToWrite = mytrace[stage_number][0]
+    data_to_write = mytrace[stage_number][0]
     logfile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stage_number))
 
     if total_number_of_models_in_ensemble > 1:
@@ -324,7 +321,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
 
     with open(resultsFilePath, 'w', newline='') as csvfile:
         csvWriter = csv.writer(csvfile)
-        csvWriter.writerows(dataToWrite)
+        csvWriter.writerows(data_to_write)
     logfile.write("\n\t\t\tWrote to file {}".format(resultsFilePath))
 
     if parallelize_MCMC == 'yes':
