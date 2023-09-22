@@ -29,7 +29,7 @@ def computeModelPosteriorProbabilitiesUsingLogEvidences(modelPriorProbabilities,
 # ======================================================================================================================
 
 class TMCMC_Data:
-    def __init__(self, mainscriptPath: str, workdirMain: str, runType: str, workflowDriver: str, logFile: TextIO) -> None:
+    def __init__(self, mainscriptPath: str, workdirMain: str, runType: str, workflowDriver: str, logFile: TextIO, numBurnInSteps: int = 10) -> None:
         self.mainscriptPath = mainscriptPath
         self.workdirMain = workdirMain
         self.runType = runType
@@ -40,7 +40,7 @@ class TMCMC_Data:
         self.parallelizeMCMC = True
 
         self.recommendedNumChains = 50
-        self.numBurnInSteps = 10
+        self.numBurnInSteps = numBurnInSteps
         self.numSkipSteps = 1
 
     def getMPI_size(self):
@@ -110,7 +110,7 @@ def main(input_args):
     logfile.write("\n\n==========================")
     logfile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
     (number_of_samples, seed_value, calibration_data_filename, loglikelihood_module, write_outputs, variables_list, 
-     edp_names_list, edp_lengths_list, models_dict, number_of_models) = parseDataFunction(input_json_filename_full_path, 
+     edp_names_list, edp_lengths_list, models_dict, total_number_of_models_in_ensemble) = parseDataFunction(input_json_filename_full_path, 
                                                                                           logfile, working_directory, 
                                                                                           os.path.dirname(mainscript_path))
     syncLogFile(logfile)
@@ -118,7 +118,7 @@ def main(input_args):
     # # ================================================================================================================
 
     # Initialize TMCMC object
-    tmcmc_data_instance = TMCMC_Data(mainscript_path, working_directory, run_type, driver_file, logfile) 
+    tmcmc_data_instance = TMCMC_Data(mainscript_path, working_directory, run_type, driver_file, logfile, numBurnInSteps=4) 
     tmcmc_data_instance.updateUQInfo(number_of_samples, seed_value)  
     tmcmc_data_instance.findNumProcessorsAvailable() 
     tmcmc_data_instance.getNumChains(number_of_samples, run_type, tmcmc_data_instance.numProcessors)
@@ -168,7 +168,7 @@ def main(input_args):
 
     # number of max MCMC steps
     number_of_MCMC_steps = tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
-    max_number_of_MCMC_steps = number_of_MCMC_steps
+    max_number_of_MCMC_steps = 10
     logfile.write("\n\tNumber of MCMC steps in first stage: {}".format(number_of_MCMC_steps))
     logfile.write(
         "\n\tMax. number of MCMC steps in any stage: {}".format(max_number_of_MCMC_steps)
@@ -227,7 +227,7 @@ def main(input_args):
             driver_file,
             tmcmc_data_instance.parallelizeMCMC,
             model_number,
-            number_of_models
+            total_number_of_models_in_ensemble
         )
         logfile.write("\n\n\t==========================")
         logfile.write("\n\tTMCMC algorithm finished running")
