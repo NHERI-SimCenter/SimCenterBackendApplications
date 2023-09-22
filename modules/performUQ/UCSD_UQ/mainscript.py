@@ -11,7 +11,7 @@ from typing import TextIO
 import numpy as np
 
 from parseData import parseDataFunction
-from runTMCMC import RunTMCMC
+from runTMCMC import run_TMCMC
 from utils import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions
 
 # ======================================================================================================================
@@ -204,7 +204,7 @@ def main(input_args):
 
         syncLogFile(logfile)
 
-        mytrace, log_evidence = RunTMCMC(
+        mytrace, log_evidence = run_TMCMC(
             number_of_samples,
             number_of_samples,
             all_distributions_list,
