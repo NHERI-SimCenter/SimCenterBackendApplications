@@ -14,6 +14,88 @@ import os
 import csv
 
 
+def write_stage_start_info_to_logfile(logfile, stage_number, effective_sample_size, 
+                                      scale_factor_for_proposal_covariance, number_of_samples):
+    logfile.write('\n\n\t\t==========================')
+    logfile.write("\n\t\tStage number: {}".format(stage_number))
+    logfile.write("\n\t\tSampling from prior")
+    logfile.write("\n\t\tbeta = 0")
+    logfile.write("\n\t\tESS = %d" % effective_sample_size)
+    logfile.write("\n\t\tscalem = %.2g" % scale_factor_for_proposal_covariance)
+    logfile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(number_of_samples))
+    logfile.flush()
+    os.fsync(logfile.fileno())
+
+
+def write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=1, MPI_size=1):
+    logfile.write("\n\n\t\tRun type: {}".format(run_type))
+    if parallelize_MCMC:
+        if run_type == "runningLocal":
+            logfile.write("\n\n\t\tCreated multiprocessing pool for runType: {}".format(run_type))
+            logfile.write("\n\t\t\tNumber of processors being used: {}".format(procCount))
+        else:
+            logfile.write("\n\n\t\tCreated mpi4py executor pool for runType: {}".format(run_type))
+            logfile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
+    else:
+        logfile.write("\n\n\t\tNot parallelized")
+        logfile.write("\n\t\t\tNumber of processors being used: {}".format(1))
+
+
+def create_headings(logfile, model_number, model_parameters, edp_names_list, edp_lengths_list, writeOutputs):
+    # Create the headings, which will be the first line of the file
+    headings = 'eval_id\tinterface\t'
+    if model_number == 0:
+        logfile.write("\n\t\t\tCreating headings")
+        for v in model_parameters['names']:
+            headings += '{}\t'.format(v)
+        if writeOutputs:  # create headings for outputs
+            for i, edp in enumerate(edp_names_list):
+                if edp_lengths_list[i] == 1:
+                    headings += '{}\t'.format(edp)
+                else:
+                    for comp in range(edp_lengths_list[i]):
+                        headings += '{}_{}\t'.format(edp, comp + 1)
+        headings += '\n'
+    
+    return headings
+
+
+def get_prediction_from_workdirs(i, working_directory):
+    workdir_string = ("workdir." + str(i + 1))
+    prediction = np.atleast_2d(np.genfromtxt(os.path.join(working_directory, workdir_string,
+                                                            'results.out'))).reshape((1, -1))
+    return prediction
+
+
+def write_prior_data_to_files(logfile, working_directory, model_number, model_parameters, 
+                              edp_names_list, edp_lengths_list, number_of_samples, dataToWrite, 
+                              tab_file_name, predictions):
+    
+    tab_file_full_path = os.path.join(working_directory, tab_file_name)
+    write_outputs = True
+    headings = create_headings(logfile, model_number, model_parameters, edp_names_list, edp_lengths_list, write_outputs)
+
+    logfile.write("\n\t\t\tWriting to file {}".format(tab_file_full_path))
+    with open(tab_file_full_path, "a+") as f:
+        if model_number == 0:
+            f.write(headings)
+        for i in range(number_of_samples):
+            row_string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
+            for j in range(len(model_parameters['names'])):
+                row_string += "{}\t".format(dataToWrite[i, j])
+            if write_outputs:  # write the output data
+                prediction = predictions[i, :]
+                for pred in range(np.shape(prediction)[1]):
+                    row_string += "{}\t".format(prediction[0, pred])
+            row_string += "\n"
+            f.write(row_string)
+
+    logfile.write('\n\t\t==========================')
+    logfile.flush()
+    os.fsync(logfile.fileno())
+
+
+
 def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number_of_MCMC_steps, max_number_of_MCMC_steps, 
              log_likelihood_function, model_parameters, working_directory, seed,
              calibration_data, number_of_experiments, covariance_matrix_list, edp_names_list, edp_lengths_list, scale_factors,
@@ -35,15 +117,8 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     stage_number = 0  # stage number of TMCMC
     log_evidence = 0
 
-    logfile.write('\n\n\t\t==========================')
-    logfile.write("\n\t\tStage number: {}".format(stage_number))
-    logfile.write("\n\t\tSampling from prior")
-    logfile.write("\n\t\tbeta = 0")
-    logfile.write("\n\t\tESS = %d" % effective_sample_size)
-    logfile.write("\n\t\tscalem = %.2g" % scale_factor_for_proposal_covariance)
-    logfile.write("\n\n\t\tNumber of model evaluations in this stage: {}".format(number_of_samples))
-    logfile.flush()
-    os.fsync(logfile.fileno())
+    write_stage_start_info_to_logfile(logfile, stage_number, effective_sample_size, 
+                                        scale_factor_for_proposal_covariance, number_of_samples)
 
     # initial samples
     Sm = tmcmcFunctions.initial_population(number_of_samples, all_distributions_list)
@@ -52,30 +127,25 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     Priorm = np.array([tmcmcFunctions.log_prior(s, all_distributions_list) for s in Sm]).squeeze()
     Postm = Priorm  # prior = post for beta = 0
 
+    iterables = [(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function, calibration_data,
+                  number_of_experiments, covariance_matrix_list, edp_names_list, edp_lengths_list,
+                  scale_factors, shift_factors, driver_file) for ind in range(number_of_samples)]
+
     # Evaluate log-likelihood at current samples Sm
-    logfile.write("\n\n\t\tRun type: {}".format(run_type))
     if parallelize_MCMC:
         if run_type == "runningLocal":
             procCount = mp.cpu_count()
             pool = Pool(processes=procCount)
-            logfile.write("\n\n\t\tCreated multiprocessing pool for runType: {}".format(run_type))
-            logfile.write("\n\t\t\tNumber of processors being used: {}".format(procCount))
-            Lmt = pool.starmap(runFEM, [(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function, calibration_data,
-                                         number_of_experiments, covariance_matrix_list, edp_names_list, edp_lengths_list,
-                                         scale_factors, shift_factors, driver_file) for ind in range(number_of_samples)], )
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount)
+            Lmt = pool.starmap(runFEM, iterables)
         else:
             from mpi4py.futures import MPIPoolExecutor
             executor = MPIPoolExecutor(max_workers=MPI_size)
-            logfile.write("\n\n\t\tCreated mpi4py executor pool for runType: {}".format(run_type))
-            logfile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
-            iterables = [(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function, calibration_data,
-                          number_of_experiments, covariance_matrix_list, edp_names_list, edp_lengths_list,
-                          scale_factors, shift_factors, driver_file) for ind in range(number_of_samples)]
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size)
             Lmt = list(executor.starmap(runFEM, iterables))
         Lm = np.array(Lmt).squeeze()
     else:
-        logfile.write("\n\n\t\tNot parallelized")
-        logfile.write("\n\t\t\tNumber of processors being used: {}".format(1))
+        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type)
         Lm = np.array([runFEM(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function,
                               calibration_data, number_of_experiments, covariance_matrix_list,
                               edp_names_list, edp_lengths_list, scale_factors,
@@ -87,48 +157,13 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
 
     # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results
     logfile.write("\n\n\t\tWriting prior samples to 'dakotaTabPrior.out' for quoFEM to read the results")
-    tabFilePath = os.path.join(working_directory, "dakotaTabPrior.out")
-
-    writeOutputs = True
-    # Create the headings, which will be the first line of the file
-    headings = 'eval_id\tinterface\t'
-    if model_number == 0:
-        logfile.write("\n\t\t\tCreating headings")
-        for v in model_parameters['names']:
-            headings += '{}\t'.format(v)
-        if writeOutputs:  # create headings for outputs
-            for i, edp in enumerate(edp_names_list):
-                if edp_lengths_list[i] == 1:
-                    headings += '{}\t'.format(edp)
-                else:
-                    for comp in range(edp_lengths_list[i]):
-                        headings += '{}_{}\t'.format(edp, comp + 1)
-        headings += '\n'
-
-    # Get the data from the first stage
-    logfile.write("\n\t\t\tGetting data from first stage")
-    dataToWrite = Sm
-
-    logfile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
-    with open(tabFilePath, "a+") as f:
-        if model_number == 0:
-            f.write(headings)
-        for i in range(number_of_samples):
-            string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
-            for j in range(len(model_parameters['names'])):
-                string += "{}\t".format(dataToWrite[i, j])
-            if writeOutputs:  # write the output data
-                workdirString = ("workdir." + str(i + 1))
-                prediction = np.atleast_2d(np.genfromtxt(os.path.join(working_directory, workdirString,
-                                                                      'results.out'))).reshape((1, -1))
-                for predNum in range(np.shape(prediction)[1]):
-                    string += "{}\t".format(prediction[0, predNum])
-            string += "\n"
-            f.write(string)
-
-    logfile.write('\n\t\t==========================')
-    logfile.flush()
-    os.fsync(logfile.fileno())
+    predictions = []
+    for i in range(number_of_samples):
+        predictions.append(get_prediction_from_workdirs(i, working_directory))
+    predictions = np.atleast_2d(np.array(predictions))
+    write_prior_data_to_files(logfile, working_directory, model_number, model_parameters, 
+                              edp_names_list, edp_lengths_list, number_of_samples, dataToWrite=Sm, 
+                              tab_file_name="dakotaTabPrior.out", predictions=predictions)
 
     total_log_evidence = 0
 
