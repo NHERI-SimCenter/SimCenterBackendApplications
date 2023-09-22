@@ -83,6 +83,7 @@ class TMCMC_Data:
 
 # ======================================================================================================================
 def main(input_args):
+    t1 = time.time()
 
     # Initialize analysis
     mainscript_path = os.path.abspath(input_args[0])
@@ -93,17 +94,14 @@ def main(input_args):
     input_json_filename = input_args[5]
 
     logfile_name = "logFileTMCMC.txt"
+    logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
+
+    # Remove dakotaTab and dakotaTabPrior files if they already exist in the working directory
     try:
         os.remove('dakotaTab.out')
         os.remove('dakotTabPrior.out')
     except OSError:
         pass
-
-    # # ================================================================================================================
-    
-    t1 = time.time()
-
-    logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
 
     # # ================================================================================================================
 
@@ -129,7 +127,8 @@ def main(input_args):
     # # ================================================================================================================
 
     # Read calibration data
-    data_preparer_instance = CalDataPreparer(working_directory, template_directory, calibration_data_filename, edp_names_list, edp_lengths_list, logfile)
+    data_preparer_instance = CalDataPreparer(working_directory, template_directory, calibration_data_filename, 
+                                             edp_names_list, edp_lengths_list, logfile)
     calibration_data, number_of_experiments = data_preparer_instance.getCalibrationData()
 
     # # ================================================================================================================
@@ -137,19 +136,15 @@ def main(input_args):
     # Transform the data depending on the option chosen by the user
     transformation = "absMaxScaling"
     data_transformer_instance = DataTransformer(transformStrategy=transformation, logFile=logfile)
-    data_transformer_instance.computeScaleAndShiftFactors(calibration_data, edp_lengths_list)
-    transformed_calibration_data = data_transformer_instance.transformDataMethod()
-    scale_factors = data_transformer_instance.scaleFactors
-    shift_factors = data_transformer_instance.shiftFactors
 
+    scale_factors, shift_factors = data_transformer_instance.computeScaleAndShiftFactors(calibration_data, edp_lengths_list)
     logfile.write("\n\n\tThe scale and shift factors computed are: ")
     for j in range(len(edp_names_list)):
         logfile.write(
-            "\n\t\tEDP: {}, scale factor: {}, shift factor: {}".format(
-                edp_names_list[j], scale_factors[j], shift_factors[j]
-            )
+            "\n\t\tEDP: {}, scale factor: {}, shift factor: {}".format(edp_names_list[j], scale_factors[j], shift_factors[j])
         )
 
+    transformed_calibration_data = data_transformer_instance.transformData()
     logfile.write("\n\nThe transformed calibration data: \n{}".format(transformed_calibration_data))
 
     # ======================================================================================================================
@@ -278,7 +273,7 @@ def main(input_args):
         # Get the data from the last stage
         logfile.write("\n\t\t\tGetting data from last stage")
         dataToWrite = mytrace[-1][0]
-
+        
         logfile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
         with open(tabFilePath, "a+") as f:
             if model_number == 0:
@@ -288,6 +283,7 @@ def main(input_args):
                 for j in range(len(parameters_of_model["names"])):
                     string += "{}\t".format(dataToWrite[i, j])
                 if write_outputs:  # write the output data
+                    #TODO: Fix this by storing the results corresponding to the proposed states that are accepted in the chain
                     analysisNumString = "workdir." + str(i + 1)
                     prediction = np.atleast_2d(
                         np.genfromtxt(

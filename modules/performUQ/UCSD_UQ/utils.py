@@ -325,7 +325,7 @@ class CalDataPreparer:
         return self.calibrationData, self.numExperiments
 
 
-def transformData(calibrationData: np.ndarray, edpLengthsList: List[int], scaleFactors: List[float], shiftFactors: List[float]):
+def transformDataFunction(calibrationData: np.ndarray, edpLengthsList: List[int], scaleFactors: List[float], shiftFactors: List[float]):
     currentPosition = 0
     for j in range(len(edpLengthsList)):
         calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + edpLengthsList[j]]
@@ -398,9 +398,10 @@ class DataTransformer:
 
         self.scaleFactors = scaleFactors
         self.shiftFactors = shiftFactors
+        return scaleFactors, shiftFactors
 
-    def transformDataMethod(self):
-        return transformData(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
+    def transformData(self):
+        return transformDataFunction(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
 
 
 
