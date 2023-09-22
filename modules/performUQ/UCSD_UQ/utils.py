@@ -6,6 +6,7 @@ import time
 
 from typing import List, TextIO
 
+import pdfs
 
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
@@ -418,3 +419,131 @@ def createLogFile(where: str, logfile_name: str):
 def syncLogFile(logFile: TextIO):
     logFile.flush()
     os.fsync(logFile.fileno())
+
+
+def make_distributions(variables):
+
+    all_distributions_list = []
+
+    for i in range(len(variables["names"])):
+
+        if variables["distributions"][i] == "Uniform":
+            lower_limit = float(variables["Par1"][i])
+            upper_limit = float(variables["Par2"][i])
+
+            all_distributions_list.append(
+                pdfs.Uniform(lower=lower_limit, upper=upper_limit)
+            )
+
+        if variables["distributions"][i] == "Normal":
+            mean = float(variables["Par1"][i])
+            standard_deviation = float(variables["Par2"][i])
+
+            all_distributions_list.append(pdfs.Normal(mu=mean, sig=standard_deviation))
+
+        if variables["distributions"][i] == "Half-Normal":
+            standard_deviation = float(variables["Par1"][i])
+
+            all_distributions_list.append(pdfs.Halfnormal(sig=standard_deviation))
+
+        if variables["distributions"][i] == "Truncated-Normal":
+            mean = float(variables["Par1"][i])
+            standard_deviation = float(variables["Par2"][i])
+            lower_limit = float(variables["Par3"][i])
+            upper_limit = float(variables["Par4"][i])
+
+            all_distributions_list.append(
+                pdfs.TrunNormal(
+                    mu=mean,
+                    sig=standard_deviation,
+                    a=lower_limit,
+                    b=upper_limit,
+                )
+            )
+
+        if variables["distributions"][i] == "InvGamma":
+            a = float(variables["Par1"][i])
+            b = float(variables["Par2"][i])
+
+            all_distributions_list.append(pdfs.InvGamma(a=a, b=b))
+
+        if variables["distributions"][i] == "Beta":
+            alpha = float(variables["Par1"][i])
+            beta = float(variables["Par2"][i])
+            lower_limit = float(variables["Par3"][i])
+            upper_limit = float(variables["Par4"][i])
+
+            all_distributions_list.append(
+                pdfs.BetaDist(
+                    alpha=alpha,
+                    beta=beta,
+                    lowerbound=lower_limit,
+                    upperbound=upper_limit,
+                )
+            )
+
+        if variables["distributions"][i] == "Lognormal":
+            mu = float(variables["Par1"][i])
+            sigma = float(variables["Par2"][i])
+
+            all_distributions_list.append(pdfs.LogNormDist(mu=mu, sigma=sigma))
+
+        if variables["distributions"][i] == "Gumbel":
+            alpha = float(variables["Par1"][i])
+            beta = float(variables["Par2"][i])
+
+            all_distributions_list.append(
+                pdfs.GumbelDist(alpha=alpha, beta=beta)
+            )
+
+        if variables["distributions"][i] == "Weibull":
+            shape = float(variables["Par1"][i])
+            scale = float(variables["Par2"][i])
+
+            all_distributions_list.append(
+                pdfs.WeibullDist(shape=shape, scale=scale)
+            )
+
+        if variables["distributions"][i] == "Exponential":
+            lamda = float(variables["Par1"][i])
+
+            all_distributions_list.append(pdfs.ExponentialDist(lamda=lamda))
+
+        if variables["distributions"][i] == "Truncated exponential":
+            lamda = float(variables["Par1"][i])
+            lower_limit = float(variables["Par2"][i])
+            upper_limit = float(variables["Par3"][i])
+
+            all_distributions_list.append(
+                pdfs.TruncatedExponentialDist(
+                    lamda=lamda,
+                    lower=lower_limit,
+                    upper=upper_limit,
+                )
+            )
+
+        if variables["distributions"][i] == "Gamma":
+            k = float(variables["Par1"][i])
+            lamda = float(variables["Par2"][i])
+
+            all_distributions_list.append(pdfs.GammaDist(k=k, lamda=lamda))
+
+        if variables["distributions"][i] == "Chisquare":
+            k = float(variables["Par1"][i])
+
+            all_distributions_list.append(pdfs.ChiSquareDist(k=k))
+
+        if variables["distributions"][i] == "Discrete":
+            if variables["Par2"][i] is None:
+                value = variables["Par1"][i]
+                all_distributions_list.append(
+                    pdfs.ConstantInteger(value=value)
+                )
+            else:
+                values = float(variables["Par1"][i])
+                weights = float(variables["Par2"][i])
+                all_distributions_list.append(
+                    pdfs.DiscreteDist(values=values, weights=weights)
+                )
+    
+    return all_distributions_list

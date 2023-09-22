@@ -10,16 +10,16 @@ import time
 from typing import TextIO
 import numpy as np
 
-import pdfs
 from parseData import parseDataFunction
 from runTMCMC import RunTMCMC
-from utils import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile
+from utils import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions
 
 # ======================================================================================================================
 
 def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
     denominator = np.dot(modelPriorProbabilities, modelEvidences)
     return modelPriorProbabilities*modelEvidences/denominator
+
 
 def computeModelPosteriorProbabilitiesUsingLogEvidences(modelPriorProbabilities, modelLogEvidences):
     deltas = modelLogEvidences - np.min(modelLogEvidences)
@@ -189,134 +189,14 @@ def main(input_args):
     logfile.write("\n\n==========================")
     logfile.write("\nLooping over each model")
     # For each model:
-    for model_number, variables in enumerate(variables_list):
+    for model_number, parameters_of_model in enumerate(variables_list):
         logfile.write("\n\n\t==========================")
         logfile.write("\n\tStarting analysis for model {}".format(model_number+1))
         logfile.write("\n\t==========================")
-        # Assign probability distributions to the parameters
+
+        # Assign probability distributions to the parameters of the model
         logfile.write("\n\t\tAssigning probability distributions to the parameters")
-        all_parameters_list = []
-
-        for i in range(len(variables["names"])):
-
-            if variables["distributions"][i] == "Uniform":
-                lower_limit = float(variables["Par1"][i])
-                upper_limit = float(variables["Par2"][i])
-
-                all_parameters_list.append(
-                    pdfs.Uniform(lower=lower_limit, upper=upper_limit)
-                )
-
-            if variables["distributions"][i] == "Normal":
-                mean = float(variables["Par1"][i])
-                standard_deviation = float(variables["Par2"][i])
-
-                all_parameters_list.append(pdfs.Normal(mu=mean, sig=standard_deviation))
-
-            if variables["distributions"][i] == "Half-Normal":
-                standard_deviation = float(variables["Par1"][i])
-
-                all_parameters_list.append(pdfs.Halfnormal(sig=standard_deviation))
-
-            if variables["distributions"][i] == "Truncated-Normal":
-                mean = float(variables["Par1"][i])
-                standard_deviation = float(variables["Par2"][i])
-                lower_limit = float(variables["Par3"][i])
-                upper_limit = float(variables["Par4"][i])
-
-                all_parameters_list.append(
-                    pdfs.TrunNormal(
-                        mu=mean,
-                        sig=standard_deviation,
-                        a=lower_limit,
-                        b=upper_limit,
-                    )
-                )
-
-            if variables["distributions"][i] == "InvGamma":
-                a = float(variables["Par1"][i])
-                b = float(variables["Par2"][i])
-
-                all_parameters_list.append(pdfs.InvGamma(a=a, b=b))
-
-            if variables["distributions"][i] == "Beta":
-                alpha = float(variables["Par1"][i])
-                beta = float(variables["Par2"][i])
-                lower_limit = float(variables["Par3"][i])
-                upper_limit = float(variables["Par4"][i])
-
-                all_parameters_list.append(
-                    pdfs.BetaDist(
-                        alpha=alpha,
-                        beta=beta,
-                        lowerbound=lower_limit,
-                        upperbound=upper_limit,
-                    )
-                )
-
-            if variables["distributions"][i] == "Lognormal":
-                mu = float(variables["Par1"][i])
-                sigma = float(variables["Par2"][i])
-
-                all_parameters_list.append(pdfs.LogNormDist(mu=mu, sigma=sigma))
-
-            if variables["distributions"][i] == "Gumbel":
-                alpha = float(variables["Par1"][i])
-                beta = float(variables["Par2"][i])
-
-                all_parameters_list.append(
-                    pdfs.GumbelDist(alpha=alpha, beta=beta)
-                )
-
-            if variables["distributions"][i] == "Weibull":
-                shape = float(variables["Par1"][i])
-                scale = float(variables["Par2"][i])
-
-                all_parameters_list.append(
-                    pdfs.WeibullDist(shape=shape, scale=scale)
-                )
-
-            if variables["distributions"][i] == "Exponential":
-                lamda = float(variables["Par1"][i])
-
-                all_parameters_list.append(pdfs.ExponentialDist(lamda=lamda))
-
-            if variables["distributions"][i] == "Truncated exponential":
-                lamda = float(variables["Par1"][i])
-                lower_limit = float(variables["Par2"][i])
-                upper_limit = float(variables["Par3"][i])
-
-                all_parameters_list.append(
-                    pdfs.TruncatedExponentialDist(
-                        lamda=lamda,
-                        lower=lower_limit,
-                        upper=upper_limit,
-                    )
-                )
-
-            if variables["distributions"][i] == "Gamma":
-                k = float(variables["Par1"][i])
-                lamda = float(variables["Par2"][i])
-
-                all_parameters_list.append(pdfs.GammaDist(k=k, lamda=lamda))
-
-            if variables["distributions"][i] == "Chisquare":
-                k = float(variables["Par1"][i])
-
-                all_parameters_list.append(pdfs.ChiSquareDist(k=k))
-
-            if variables["distributions"][i] == "Discrete":
-                if variables["Par2"][i] is None:
-                    value = variables["Par1"][i]
-                    all_parameters_list.append(
-                        pdfs.ConstantInteger(value=value)
-                    )
-                else:
-                    values = float(variables["Par1"][i])
-                    weights = float(variables["Par2"][i])
-                    all_parameters_list.append(
-                        pdfs.DiscreteDist(values=values, weights=weights)
-                    )
+        all_distributions_list = make_distributions(variables=parameters_of_model)
 
         # Run the Algorithm
         logfile.write("\n\n\t==========================")
@@ -332,11 +212,11 @@ def main(input_args):
         mytrace, log_evidence = RunTMCMC(
             number_of_samples,
             number_of_samples,
-            all_parameters_list,
+            all_distributions_list,
             number_of_MCMC_steps,
             max_number_of_MCMC_steps,
             loglikelihood_module.log_likelihood,
-            variables,
+            parameters_of_model,
             working_directory,
             tmcmc_data_instance.seedVal,
             transformed_calibration_data,
@@ -384,7 +264,7 @@ def main(input_args):
         headings = "eval_id\tinterface\t"
         if model_number == 0:
             logfile.write("\n\t\t\tCreating headings")
-            for v in variables["names"]:
+            for v in parameters_of_model["names"]:
                 headings += "{}\t".format(v)
             if write_outputs:  # create headings for outputs
                 for i, edp in enumerate(edp_names_list):
@@ -405,7 +285,7 @@ def main(input_args):
                 f.write(headings)
             for i in range(number_of_samples):
                 string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
-                for j in range(len(variables["names"])):
+                for j in range(len(parameters_of_model["names"])):
                     string += "{}\t".format(dataToWrite[i, j])
                 if write_outputs:  # write the output data
                     analysisNumString = "workdir." + str(i + 1)
