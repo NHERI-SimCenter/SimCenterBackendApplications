@@ -13,7 +13,7 @@ import numpy as np
 import pdfs
 from parseData import parseDataFunction
 from runTMCMC import RunTMCMC
-from utils import CovarianceMatrixPreparer, CalDataPreparer, TransformData, createLogFile, syncLogFile
+from utils import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile
 
 # ======================================================================================================================
 
@@ -28,7 +28,7 @@ def computeModelPosteriorProbabilitiesUsingLogEvidences(modelPriorProbabilities,
 
 # ======================================================================================================================
 
-class TMCMCInfo:
+class TMCMC_Data:
     def __init__(self, mainscriptPath: str, workdirMain: str, runType: str, workflowDriver: str, logFile: TextIO) -> None:
         self.mainscriptPath = mainscriptPath
         self.workdirMain = workdirMain
@@ -91,6 +91,7 @@ def main(input_args):
     run_type = input_args[3]  # either "runningLocal" or "runningRemote"
     driver_file = input_args[4]
     input_json_filename = input_args[5]
+
     logfile_name = "logFileTMCMC.txt"
     try:
         os.remove('dakotaTab.out')
@@ -102,309 +103,311 @@ def main(input_args):
     
     t1 = time.time()
 
-    logFile = createLogFile(where=working_directory, logfile_name=logfile_name)
+    logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
 
     # # ================================================================================================================
 
     # Process input json file
     input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
-    logFile.write("\n\n==========================")
-    logFile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
-    (numberOfSamples, seedVal, calDataFileName, logLikeModule, writeOutputs, variablesList, edpNamesList, 
-    edpLengthsList, modelsDict, nModels) = parseDataFunction(input_json_filename_full_path, logFile, working_directory, 
-    os.path.dirname(mainscript_path))
-    syncLogFile(logFile)
+    logfile.write("\n\n==========================")
+    logfile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
+    (number_of_samples, seed_value, calibration_data_filename, loglikelihood_module, write_outputs, variables_list, 
+     edp_names_list, edp_lengths_list, models_dict, number_of_models) = parseDataFunction(input_json_filename_full_path, 
+                                                                                          logfile, working_directory, 
+                                                                                          os.path.dirname(mainscript_path))
+    syncLogFile(logfile)
 
     # # ================================================================================================================
 
     # Initialize TMCMC object
-    TMCMC = TMCMCInfo(mainscript_path, working_directory, run_type, driver_file, logFile) 
-    TMCMC.updateUQInfo(numberOfSamples, seedVal)  
-    TMCMC.findNumProcessorsAvailable() 
-    TMCMC.getNumChains(numberOfSamples, run_type, TMCMC.numProcessors)
-    TMCMC.getNumStepsPerChainAfterBurnIn(numberOfSamples, TMCMC.numChains)
+    tmcmc_data_instance = TMCMC_Data(mainscript_path, working_directory, run_type, driver_file, logfile) 
+    tmcmc_data_instance.updateUQInfo(number_of_samples, seed_value)  
+    tmcmc_data_instance.findNumProcessorsAvailable() 
+    tmcmc_data_instance.getNumChains(number_of_samples, run_type, tmcmc_data_instance.numProcessors)
+    tmcmc_data_instance.getNumStepsPerChainAfterBurnIn(number_of_samples, tmcmc_data_instance.numChains)
 
     # # ================================================================================================================
 
     # Read calibration data
-    DataPreparer = CalDataPreparer(working_directory, template_directory, calDataFileName, edpNamesList, edpLengthsList, logFile)
-    calibrationData, numExperiments = DataPreparer.getCalibrationData()
+    data_preparer_instance = CalDataPreparer(working_directory, template_directory, calibration_data_filename, edp_names_list, edp_lengths_list, logfile)
+    calibration_data, number_of_experiments = data_preparer_instance.getCalibrationData()
 
     # # ================================================================================================================
 
     # Transform the data depending on the option chosen by the user
     transformation = "absMaxScaling"
-    dataTransformer = TransformData(transformStrategy=transformation, logFile=logFile)
-    dataTransformer.computeScaleAndShiftFactors(calibrationData, edpLengthsList)
-    transformedCalibrationData = dataTransformer.transformDataMethod()
-    scaleFactors = dataTransformer.scaleFactors
-    shiftFactors = dataTransformer.shiftFactors
+    data_transformer_instance = DataTransformer(transformStrategy=transformation, logFile=logfile)
+    data_transformer_instance.computeScaleAndShiftFactors(calibration_data, edp_lengths_list)
+    transformed_calibration_data = data_transformer_instance.transformDataMethod()
+    scale_factors = data_transformer_instance.scaleFactors
+    shift_factors = data_transformer_instance.shiftFactors
 
-    logFile.write("\n\n\tThe scale and shift factors computed are: ")
-    for j in range(len(edpNamesList)):
-        logFile.write(
+    logfile.write("\n\n\tThe scale and shift factors computed are: ")
+    for j in range(len(edp_names_list)):
+        logfile.write(
             "\n\t\tEDP: {}, scale factor: {}, shift factor: {}".format(
-                edpNamesList[j], scaleFactors[j], shiftFactors[j]
+                edp_names_list[j], scale_factors[j], shift_factors[j]
             )
         )
 
-    logFile.write("\n\nThe transformed calibration data: \n{}".format(transformedCalibrationData))
+    logfile.write("\n\nThe transformed calibration data: \n{}".format(transformed_calibration_data))
 
     # ======================================================================================================================
     # Process covariance matrix options
-    CovMatrixOptions = CovarianceMatrixPreparer(transformedCalibrationData, edpLengthsList, edpNamesList, working_directory, numExperiments, logFile, run_type)
-    defaultErrorVariances = CovMatrixOptions.getDefaultErrorVariances()
-    covarianceMatrixList = CovMatrixOptions.createCovarianceMatrix()
+    cov_matrix_options_instance = CovarianceMatrixPreparer(transformed_calibration_data, edp_lengths_list, edp_names_list, 
+                                                           working_directory, number_of_experiments, logfile, run_type)
+    defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()
+    covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
     # ======================================================================================================================
     # Start TMCMC workflow
-    logFile.write("\n\n==========================")
-    logFile.write("\nSetting up the TMCMC algorithm")
+    logfile.write("\n\n==========================")
+    logfile.write("\nSetting up the TMCMC algorithm")
 
     # sys.path.append(workdirMain)
-    logFile.write("\n\tResults path: {}".format(working_directory))
+    logfile.write("\n\tResults path: {}".format(working_directory))
 
     # number of particles: Np
-    Np = TMCMC.numberOfSamples
-    logFile.write("\n\tNumber of particles: {}".format(Np))
+    number_of_samples = tmcmc_data_instance.numberOfSamples
+    logfile.write("\n\tNumber of particles: {}".format(number_of_samples))
 
     # number of max MCMC steps
-    Nm_steps_max = TMCMC.numBurnInSteps + TMCMC.numStepsAfterBurnIn
-    Nm_steps_maxmax = Nm_steps_max
-    logFile.write("\n\tNumber of MCMC steps in first stage: {}".format(Nm_steps_max))
-    logFile.write(
-        "\n\tMax. number of MCMC steps in any stage: {}".format(Nm_steps_maxmax)
+    number_of_MCMC_steps = tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
+    max_number_of_MCMC_steps = number_of_MCMC_steps
+    logfile.write("\n\tNumber of MCMC steps in first stage: {}".format(number_of_MCMC_steps))
+    logfile.write(
+        "\n\tMax. number of MCMC steps in any stage: {}".format(max_number_of_MCMC_steps)
     )
 
-    syncLogFile(logFile)
+    syncLogFile(logfile)
 
     # ======================================================================================================================
     # Initialize variables to store prior model probability and evidence
-    modelPriorProbabilities = np.ones((len(variablesList),))/len(variablesList)
-    modelEvidences = np.ones_like(modelPriorProbabilities)
+    model_prior_probabilities = np.ones((len(variables_list),))/len(variables_list)
+    model_evidences = np.ones_like(model_prior_probabilities)
 
-    logFile.write("\n\n==========================")
-    logFile.write("\nLooping over each model")
+    logfile.write("\n\n==========================")
+    logfile.write("\nLooping over each model")
     # For each model:
-    for modelNum, variables in enumerate(variablesList):
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tStarting analysis for model {}".format(modelNum+1))
-        logFile.write("\n\t==========================")
+    for model_number, variables in enumerate(variables_list):
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tStarting analysis for model {}".format(model_number+1))
+        logfile.write("\n\t==========================")
         # Assign probability distributions to the parameters
-        logFile.write("\n\t\tAssigning probability distributions to the parameters")
-        AllPars = []
+        logfile.write("\n\t\tAssigning probability distributions to the parameters")
+        all_parameters_list = []
 
         for i in range(len(variables["names"])):
 
             if variables["distributions"][i] == "Uniform":
-                VariableLowerLimit = float(variables["Par1"][i])
-                VariableUpperLimit = float(variables["Par2"][i])
+                lower_limit = float(variables["Par1"][i])
+                upper_limit = float(variables["Par2"][i])
 
-                AllPars.append(
-                    pdfs.Uniform(lower=VariableLowerLimit, upper=VariableUpperLimit)
+                all_parameters_list.append(
+                    pdfs.Uniform(lower=lower_limit, upper=upper_limit)
                 )
 
             if variables["distributions"][i] == "Normal":
-                VariableMean = float(variables["Par1"][i])
-                VariableSD = float(variables["Par2"][i])
+                mean = float(variables["Par1"][i])
+                standard_deviation = float(variables["Par2"][i])
 
-                AllPars.append(pdfs.Normal(mu=VariableMean, sig=VariableSD))
+                all_parameters_list.append(pdfs.Normal(mu=mean, sig=standard_deviation))
 
             if variables["distributions"][i] == "Half-Normal":
-                VariableSD = float(variables["Par1"][i])
+                standard_deviation = float(variables["Par1"][i])
 
-                AllPars.append(pdfs.Halfnormal(sig=VariableSD))
+                all_parameters_list.append(pdfs.Halfnormal(sig=standard_deviation))
 
             if variables["distributions"][i] == "Truncated-Normal":
-                VariableMean = float(variables["Par1"][i])
-                VariableSD = float(variables["Par2"][i])
-                VariableLowerLimit = float(variables["Par3"][i])
-                VariableUpperLimit = float(variables["Par4"][i])
+                mean = float(variables["Par1"][i])
+                standard_deviation = float(variables["Par2"][i])
+                lower_limit = float(variables["Par3"][i])
+                upper_limit = float(variables["Par4"][i])
 
-                AllPars.append(
+                all_parameters_list.append(
                     pdfs.TrunNormal(
-                        mu=VariableMean,
-                        sig=VariableSD,
-                        a=VariableLowerLimit,
-                        b=VariableUpperLimit,
+                        mu=mean,
+                        sig=standard_deviation,
+                        a=lower_limit,
+                        b=upper_limit,
                     )
                 )
 
             if variables["distributions"][i] == "InvGamma":
-                VariableA = float(variables["Par1"][i])
-                VariableB = float(variables["Par2"][i])
+                a = float(variables["Par1"][i])
+                b = float(variables["Par2"][i])
 
-                AllPars.append(pdfs.InvGamma(a=VariableA, b=VariableB))
+                all_parameters_list.append(pdfs.InvGamma(a=a, b=b))
 
             if variables["distributions"][i] == "Beta":
-                VariableAlpha = float(variables["Par1"][i])
-                VariableBeta = float(variables["Par2"][i])
-                VariableLowerLimit = float(variables["Par3"][i])
-                VariableUpperLimit = float(variables["Par4"][i])
+                alpha = float(variables["Par1"][i])
+                beta = float(variables["Par2"][i])
+                lower_limit = float(variables["Par3"][i])
+                upper_limit = float(variables["Par4"][i])
 
-                AllPars.append(
+                all_parameters_list.append(
                     pdfs.BetaDist(
-                        alpha=VariableAlpha,
-                        beta=VariableBeta,
-                        lowerbound=VariableLowerLimit,
-                        upperbound=VariableUpperLimit,
+                        alpha=alpha,
+                        beta=beta,
+                        lowerbound=lower_limit,
+                        upperbound=upper_limit,
                     )
                 )
 
             if variables["distributions"][i] == "Lognormal":
-                VariableMu = float(variables["Par1"][i])
-                VariableSigma = float(variables["Par2"][i])
+                mu = float(variables["Par1"][i])
+                sigma = float(variables["Par2"][i])
 
-                AllPars.append(pdfs.LogNormDist(mu=VariableMu, sigma=VariableSigma))
+                all_parameters_list.append(pdfs.LogNormDist(mu=mu, sigma=sigma))
 
             if variables["distributions"][i] == "Gumbel":
-                VariableAlphaParam = float(variables["Par1"][i])
-                VariableBetaParam = float(variables["Par2"][i])
+                alpha = float(variables["Par1"][i])
+                beta = float(variables["Par2"][i])
 
-                AllPars.append(
-                    pdfs.GumbelDist(alpha=VariableAlphaParam, beta=VariableBetaParam)
+                all_parameters_list.append(
+                    pdfs.GumbelDist(alpha=alpha, beta=beta)
                 )
 
             if variables["distributions"][i] == "Weibull":
-                VariableShapeParam = float(variables["Par1"][i])
-                VariableScaleParam = float(variables["Par2"][i])
+                shape = float(variables["Par1"][i])
+                scale = float(variables["Par2"][i])
 
-                AllPars.append(
-                    pdfs.WeibullDist(shape=VariableShapeParam, scale=VariableScaleParam)
+                all_parameters_list.append(
+                    pdfs.WeibullDist(shape=shape, scale=scale)
                 )
 
             if variables["distributions"][i] == "Exponential":
-                VariableLamda = float(variables["Par1"][i])
+                lamda = float(variables["Par1"][i])
 
-                AllPars.append(pdfs.ExponentialDist(lamda=VariableLamda))
+                all_parameters_list.append(pdfs.ExponentialDist(lamda=lamda))
 
             if variables["distributions"][i] == "Truncated exponential":
-                VariableLamda = float(variables["Par1"][i])
-                VariableLowerLimit = float(variables["Par2"][i])
-                VariableUpperLimit = float(variables["Par3"][i])
+                lamda = float(variables["Par1"][i])
+                lower_limit = float(variables["Par2"][i])
+                upper_limit = float(variables["Par3"][i])
 
-                AllPars.append(
+                all_parameters_list.append(
                     pdfs.TruncatedExponentialDist(
-                        lamda=VariableLamda,
-                        lower=VariableLowerLimit,
-                        upper=VariableUpperLimit,
+                        lamda=lamda,
+                        lower=lower_limit,
+                        upper=upper_limit,
                     )
                 )
 
             if variables["distributions"][i] == "Gamma":
-                VariableK = float(variables["Par1"][i])
-                VariableLamda = float(variables["Par2"][i])
+                k = float(variables["Par1"][i])
+                lamda = float(variables["Par2"][i])
 
-                AllPars.append(pdfs.GammaDist(k=VariableK, lamda=VariableLamda))
+                all_parameters_list.append(pdfs.GammaDist(k=k, lamda=lamda))
 
             if variables["distributions"][i] == "Chisquare":
-                VariableK = float(variables["Par1"][i])
+                k = float(variables["Par1"][i])
 
-                AllPars.append(pdfs.ChiSquareDist(k=VariableK))
+                all_parameters_list.append(pdfs.ChiSquareDist(k=k))
 
             if variables["distributions"][i] == "Discrete":
                 if variables["Par2"][i] is None:
-                    VariableIndex = variables["Par1"][i]
-                    AllPars.append(
-                        pdfs.ConstantInteger(value=VariableIndex)
+                    value = variables["Par1"][i]
+                    all_parameters_list.append(
+                        pdfs.ConstantInteger(value=value)
                     )
                 else:
-                    VariableValues = float(variables["Par1"][i])
-                    VariableWeights = float(variables["Par2"][i])
-                    AllPars.append(
-                        pdfs.DiscreteDist(values=VariableValues, weights=VariableWeights)
+                    values = float(variables["Par1"][i])
+                    weights = float(variables["Par2"][i])
+                    all_parameters_list.append(
+                        pdfs.DiscreteDist(values=values, weights=weights)
                     )
 
         # Run the Algorithm
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tRunning the TMCMC algorithm")
-        logFile.write("\n\t==========================")
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tRunning the TMCMC algorithm")
+        logfile.write("\n\t==========================")
 
         # set the seed
-        np.random.seed(TMCMC.seedVal)
-        logFile.write("\n\tSeed: {}".format(TMCMC.seedVal))
+        np.random.seed(tmcmc_data_instance.seedVal)
+        logfile.write("\n\tSeed: {}".format(tmcmc_data_instance.seedVal))
 
-        syncLogFile(logFile)
+        syncLogFile(logfile)
 
         mytrace, log_evidence = RunTMCMC(
-            Np,
-            Np,
-            AllPars,
-            Nm_steps_max,
-            Nm_steps_maxmax,
-            logLikeModule.log_likelihood,
+            number_of_samples,
+            number_of_samples,
+            all_parameters_list,
+            number_of_MCMC_steps,
+            max_number_of_MCMC_steps,
+            loglikelihood_module.log_likelihood,
             variables,
             working_directory,
-            TMCMC.seedVal,
-            transformedCalibrationData,
-            numExperiments,
-            covarianceMatrixList,
-            edpNamesList,
-            edpLengthsList,
-            scaleFactors,
-            shiftFactors,
+            tmcmc_data_instance.seedVal,
+            transformed_calibration_data,
+            number_of_experiments,
+            covariance_matrix_list,
+            edp_names_list,
+            edp_lengths_list,
+            scale_factors,
+            shift_factors,
             run_type,
-            logFile,
-            TMCMC.MPI_size,
+            logfile,
+            tmcmc_data_instance.MPI_size,
             driver_file,
-            TMCMC.parallelizeMCMC,
-            modelNum,
-            nModels
+            tmcmc_data_instance.parallelizeMCMC,
+            model_number,
+            number_of_models
         )
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tTMCMC algorithm finished running")
-        logFile.write("\n\t==========================")
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tTMCMC algorithm finished running")
+        logfile.write("\n\t==========================")
 
-        syncLogFile(logFile)
+        syncLogFile(logfile)
 
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tStarting post-processing")
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tStarting post-processing")
 
         # Compute model evidence
-        logFile.write("\n\n\t\tComputing the model evidence")
+        logfile.write("\n\n\t\tComputing the model evidence")
         evidence = 1
         for i in range(len(mytrace)):
             Wm = mytrace[i][2]
             evidence *= np.mean(Wm)
-        logFile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
-        logFile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
+        logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
+        logfile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
 
-        syncLogFile(logFile)
+        syncLogFile(logfile)
 
         # Write the results of the last stage to a file named dakotaTab.out for quoFEM to be able to read the results
-        logFile.write(
+        logfile.write(
             "\n\n\t\tWriting posterior samples to 'dakotaTab.out' for quoFEM to read the results"
         )
         tabFilePath = os.path.join(working_directory, "dakotaTab.out")
 
         # Create the headings, which will be the first line of the file
         headings = "eval_id\tinterface\t"
-        if modelNum == 0:
-            logFile.write("\n\t\t\tCreating headings")
+        if model_number == 0:
+            logfile.write("\n\t\t\tCreating headings")
             for v in variables["names"]:
                 headings += "{}\t".format(v)
-            if writeOutputs:  # create headings for outputs
-                for i, edp in enumerate(edpNamesList):
-                    if edpLengthsList[i] == 1:
+            if write_outputs:  # create headings for outputs
+                for i, edp in enumerate(edp_names_list):
+                    if edp_lengths_list[i] == 1:
                         headings += "{}\t".format(edp)
                     else:
-                        for comp in range(edpLengthsList[i]):
+                        for comp in range(edp_lengths_list[i]):
                             headings += "{}_{}\t".format(edp, comp + 1)
             headings += "\n"
 
         # Get the data from the last stage
-        logFile.write("\n\t\t\tGetting data from last stage")
+        logfile.write("\n\t\t\tGetting data from last stage")
         dataToWrite = mytrace[-1][0]
 
-        logFile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
+        logfile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
         with open(tabFilePath, "a+") as f:
-            if modelNum == 0:
+            if model_number == 0:
                 f.write(headings)
-            for i in range(Np):
-                string = "{}\t{}\t".format(i + 1 + Np*modelNum, modelNum+1)
+            for i in range(number_of_samples):
+                string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
                 for j in range(len(variables["names"])):
                     string += "{}\t".format(dataToWrite[i, j])
-                if writeOutputs:  # write the output data
+                if write_outputs:  # write the output data
                     analysisNumString = "workdir." + str(i + 1)
                     prediction = np.atleast_2d(
                         np.genfromtxt(
@@ -416,11 +419,11 @@ def main(input_args):
                 string += "\n"
                 f.write(string)
 
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tPost processing finished")
-        logFile.write("\n\t==========================")
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tPost processing finished")
+        logfile.write("\n\t==========================")
 
-        syncLogFile(logFile)
+        syncLogFile(logfile)
 
         # Delete Analysis Folders
 
@@ -431,34 +434,34 @@ def main(input_args):
         #     analysisPath = os.path.abspath(analysisLocation)
         #     shutil.rmtree(analysisPath)
 
-        modelEvidences[modelNum] = evidence
+        model_evidences[model_number] = evidence
 
-        logFile.write("\n\n\t==========================")
-        logFile.write("\n\tCompleted analysis for model {}".format(modelNum+1))
-        logFile.write("\n\t==========================")
+        logfile.write("\n\n\t==========================")
+        logfile.write("\n\tCompleted analysis for model {}".format(model_number+1))
+        logfile.write("\n\t==========================")
 
-        syncLogFile(logFile)
+        syncLogFile(logfile)
 
-    modelPosteriorProbabilities = computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences)
+    modelPosteriorProbabilities = computeModelPosteriorProbabilities(model_prior_probabilities, model_evidences)
 
-    logFile.write("\n\n==========================")
-    logFile.write("\nFinished looping over each model")
-    logFile.write("\n==========================\n")
+    logfile.write("\n\n==========================")
+    logfile.write("\nFinished looping over each model")
+    logfile.write("\n==========================\n")
 
-    logFile.write("\nThe posterior model probabilities are:")
-    for modelNum in range(len(variablesList)):
-        logFile.write(f"\nModel number {modelNum+1}: {modelPosteriorProbabilities[modelNum]*100:15g}%")
+    logfile.write("\nThe posterior model probabilities are:")
+    for model_number in range(len(variables_list)):
+        logfile.write(f"\nModel number {model_number+1}: {modelPosteriorProbabilities[model_number]*100:15g}%")
 
     # ======================================================================================================================
-    logFile.write("\nUCSD_UQ engine workflow complete!\n")
-    logFile.write("\nTime taken: {:0.2f} minutes\n\n".format((time.time() - t1) / 60))
+    logfile.write("\nUCSD_UQ engine workflow complete!\n")
+    logfile.write("\nTime taken: {:0.2f} minutes\n\n".format((time.time() - t1) / 60))
 
-    syncLogFile(logFile)
+    syncLogFile(logfile)
 
-    logFile.close()
+    logfile.close()
 
     if run_type == "runningRemote":
-        TMCMC.comm.Abort(0)
+        tmcmc_data_instance.comm.Abort(0)
 
     # ======================================================================================================================
 

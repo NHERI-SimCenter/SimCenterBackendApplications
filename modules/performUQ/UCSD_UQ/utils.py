@@ -334,7 +334,7 @@ def transformData(calibrationData: np.ndarray, edpLengthsList: List[int], scaleF
     return calibrationData
 
 
-class TransformData:
+class DataTransformer:
     def __init__(self, transformStrategy: str, logFile: TextIO) -> None:
         self.logFile = logFile
         self.transformStrategyList = ["absMaxScaling", "standardize"]
