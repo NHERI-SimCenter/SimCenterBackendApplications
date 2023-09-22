@@ -30,17 +30,27 @@ def write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sam
     logfile.flush()
     os.fsync(logfile.fileno())
 
-def write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=1, MPI_size=1):
-    logfile.write("\n\n\t\tRun type: {}".format(run_type))
+def write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=1, MPI_size=1, stage_num=0):
+    if stage_num == 0:
+        logfile.write("\n\n\t\tRun type: {}".format(run_type))
     if parallelize_MCMC:
         if run_type == "runningLocal":
-            logfile.write("\n\n\t\tCreated multiprocessing pool for runType: {}".format(run_type))
+            if stage_num == 0:
+                logfile.write("\n\n\t\tCreated multiprocessing pool for runType: {}".format(run_type))
+            else:
+                logfile.write("\n\n\t\tLocal run - MCMC steps")
             logfile.write("\n\t\t\tNumber of processors being used: {}".format(procCount))
         else:
-            logfile.write("\n\n\t\tCreated mpi4py executor pool for runType: {}".format(run_type))
+            if stage_num == 0:
+                logfile.write("\n\n\t\tCreated mpi4py executor pool for runType: {}".format(run_type))
+            else:
+                logfile.write("\n\n\t\tRemote run - MCMC steps")
             logfile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
     else:
-        logfile.write("\n\n\t\tNot parallelized")
+        if stage_num == 0:
+            logfile.write("\n\n\t\tNot parallelized")
+        else:
+            logfile.write("\n\n\t\tLocal run - MCMC steps, not parallelized")
         logfile.write("\n\t\t\tNumber of processors being used: {}".format(1))
 
 
@@ -153,16 +163,16 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         if run_type == "runningLocal":
             procCount = mp.cpu_count()
             pool = Pool(processes=procCount)
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount)
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount, stage_num=stage_number)
             Lmt = pool.starmap(runFEM, iterables)
         else:
             from mpi4py.futures import MPIPoolExecutor
             executor = MPIPoolExecutor(max_workers=MPI_size)
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size)
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
             Lmt = list(executor.starmap(runFEM, iterables))
         Lm = np.array(Lmt).squeeze()
     else:
-        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type)
+        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
         Lm = np.array([runFEM(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function,
                               calibration_data, number_of_experiments, covariance_matrix_list,
                               edp_names_list, edp_lengths_list, scale_factors,
@@ -185,6 +195,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     total_log_evidence = 0
 
     while beta < 1:
+        stage_number += 1
         # adaptively compute beta s.t. ESS = N/2 or ESS = 0.95*prev_ESS
         # plausible weights of Sm corresponding to new beta
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
@@ -192,8 +203,6 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         beta, log_evidence, Wm, effective_sample_size = tmcmcFunctions.compute_beta_evidence(beta, Lm, logfile, threshold=1.0)
 
         total_log_evidence = total_log_evidence + log_evidence
-
-        stage_number += 1
 
         # seed to reproduce results
         ss = SeedSequence(seed)
@@ -236,38 +245,30 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
                                       scale_factor_for_proposal_covariance, log_evidence, numProposals)
 
         numAccepts = 0
+        iterables = [(j1, Em, number_of_MCMC_steps, Smcap[j1], Lmcap[j1], Postmcap[j1], beta, 
+                      numAccepts, all_distributions_list, log_likelihood_function, model_parameters,
+                      working_directory, default_rng(child_seeds[j1]),
+                      calibration_data, number_of_experiments, covariance_matrix_list,
+                      edp_names_list, edp_lengths_list, scale_factors,
+                      shift_factors, driver_file)
+                      for j1 in range(number_of_samples)]
+        
         if parallelize_MCMC:
             if run_type == "runningLocal":
-                logfile.write("\n\n\t\tLocal run - MCMC steps")
-                logfile.write("\n\t\t\tNumber of processors being used: {}".format(procCount))
-                results = pool.starmap(tmcmcFunctions.MCMC_MH,
-                                       [(j1, Em, number_of_MCMC_steps, Smcap[j1], Lmcap[j1], Postmcap[j1], beta,
-                                         numAccepts, all_distributions_list, log_likelihood_function, model_parameters,
-                                         working_directory, default_rng(child_seeds[j1]),
-                                         calibration_data, number_of_experiments, covariance_matrix_list,
-                                         edp_names_list, edp_lengths_list, scale_factors,
-                                         shift_factors, driver_file)
-                                        for j1 in range(number_of_samples)])
+                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount, stage_num=stage_number)
+                results = pool.starmap(tmcmcFunctions.MCMC_MH, iterables)
             else:
-                logfile.write("\n\n\t\tRemote run - MCMC steps")
-                logfile.write("\n\t\t\tmax_workers: {}".format(MPI_size))
-                iterables = [(j1, Em, number_of_MCMC_steps, Smcap[j1], Lmcap[j1], Postmcap[j1], beta,
-                              numAccepts, all_distributions_list, log_likelihood_function, model_parameters,
-                              working_directory, default_rng(child_seeds[j1]),
-                              calibration_data, number_of_experiments, covariance_matrix_list,
-                              edp_names_list, edp_lengths_list, scale_factors,
-                              shift_factors, driver_file)
-                             for j1 in range(number_of_samples)]
+                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
                 results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
         else:
-            logfile.write("\n\n\t\tLocal run - MCMC steps, not parallelized")
-            logfile.write("\n\t\t\tNumber of processors being used: {}".format(1))
-            results = [
-                tmcmcFunctions.MCMC_MH(j1, Em, number_of_MCMC_steps, Smcap[j1], Lmcap[j1], Postmcap[j1], beta, numAccepts, all_distributions_list,
-                                       log_likelihood_function, model_parameters, working_directory, default_rng(child_seeds[j1]),
-                                       calibration_data, number_of_experiments, covariance_matrix_list,
-                                       edp_names_list, edp_lengths_list, scale_factors, shift_factors, driver_file)
-                for j1 in range(number_of_samples)]
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
+            results = [tmcmcFunctions.MCMC_MH(j1, Em, number_of_MCMC_steps, Smcap[j1], Lmcap[j1], 
+                                              Postmcap[j1], beta, numAccepts, all_distributions_list,
+                                              log_likelihood_function, model_parameters, working_directory, 
+                                              default_rng(child_seeds[j1]),
+                                              calibration_data, number_of_experiments, covariance_matrix_list,
+                                              edp_names_list, edp_lengths_list, scale_factors, shift_factors, driver_file)
+                        for j1 in range(number_of_samples)]
 
         Sm1, Lm1, Postm1, numAcceptsS, all_proposals, all_PLP = zip(*results)
         Sm1 = np.asarray(Sm1)
