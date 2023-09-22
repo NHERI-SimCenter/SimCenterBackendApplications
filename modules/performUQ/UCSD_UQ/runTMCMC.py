@@ -148,22 +148,22 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
     write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sample_size, 
                                       scale_factor_for_proposal_covariance, log_evidence, number_of_samples)
     # initial samples
-    Sm = tmcmcFunctions.initial_population(number_of_samples, all_distributions_list)
+    sample_values = tmcmcFunctions.initial_population(number_of_samples, all_distributions_list)
 
     # Evaluate posterior at Sm
-    Priorm = np.array([tmcmcFunctions.log_prior(s, all_distributions_list) for s in Sm]).squeeze()
+    Priorm = np.array([tmcmcFunctions.log_prior(s, all_distributions_list) for s in sample_values]).squeeze()
     Postm = Priorm  # prior = post for beta = 0
 
-    iterables = [(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function, calibration_data,
+    iterables = [(ind, sample_values[ind], model_parameters, working_directory, log_likelihood_function, calibration_data,
                   number_of_experiments, covariance_matrix_list, edp_names_list, edp_lengths_list,
                   scale_factors, shift_factors, driver_file) for ind in range(number_of_samples)]
 
     # Evaluate log-likelihood at current samples Sm
     if parallelize_MCMC:
         if run_type == "runningLocal":
-            procCount = mp.cpu_count()
-            pool = Pool(processes=procCount)
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount, stage_num=stage_number)
+            processor_count = mp.cpu_count()
+            pool = Pool(processes=processor_count)
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=processor_count, stage_num=stage_number)
             Lmt = pool.starmap(runFEM, iterables)
         else:
             from mpi4py.futures import MPIPoolExecutor
@@ -173,7 +173,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         Lm = np.array(Lmt).squeeze()
     else:
         write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
-        Lm = np.array([runFEM(ind, Sm[ind], model_parameters, working_directory, log_likelihood_function,
+        Lm = np.array([runFEM(ind, sample_values[ind], model_parameters, working_directory, log_likelihood_function,
                               calibration_data, number_of_experiments, covariance_matrix_list,
                               edp_names_list, edp_lengths_list, scale_factors,
                               shift_factors, driver_file)
@@ -189,7 +189,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         predictions.append(get_prediction_from_workdirs(i, working_directory))
     predictions = np.atleast_2d(np.array(predictions))
     write_prior_data_to_files(logfile, working_directory, model_number, model_parameters, 
-                              edp_names_list, edp_lengths_list, number_of_samples, dataToWrite=Sm, 
+                              edp_names_list, edp_lengths_list, number_of_samples, dataToWrite=sample_values, 
                               tab_file_name="dakotaTabPrior.out", predictions=predictions)
 
     total_log_evidence = 0
@@ -212,22 +212,22 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         model_evidence = model_evidence * (sum(Wm) / number_of_samples)
 
         # Calculate covariance matrix using Wm_n
-        Cm = np.cov(Sm, aweights=Wm / sum(Wm), rowvar=False)
+        Cm = np.cov(sample_values, aweights=Wm / sum(Wm), rowvar=False)
         # logFile.write("\nCovariance matrix: {}".format(Cm))
 
         # Resample ###################################################
         # Resampling using plausible weights
         # SmcapIDs = np.random.choice(range(N), N, p=Wm / sum(Wm))
         rng = default_rng(child_seeds[-1])
-        SmcapIDs = rng.choice(range(number_of_samples), number_of_samples, p=Wm / sum(Wm))
-        # SmcapIDs = resampling.stratified_resample(Wm_n)
-        Smcap = Sm[SmcapIDs]
+        SmcapIDs = rng.choice(range(number_of_samples), number_of_samples, p=Wm/sum(Wm))
+
+        Smcap = sample_values[SmcapIDs]
         Lmcap = Lm[SmcapIDs]
         Postmcap = Postm[SmcapIDs]
 
         # save to trace
         # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
-        mytrace.append([Sm, Lm, Wm, effective_sample_size, beta, Smcap])
+        mytrace.append([sample_values, Lm, Wm, effective_sample_size, beta, Smcap])
 
         # Write Data to '.csv' files
         data_to_write = mytrace[stage_number - 1][0]
@@ -255,7 +255,7 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
         
         if parallelize_MCMC:
             if run_type == "runningLocal":
-                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=procCount, stage_num=stage_number)
+                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, procCount=processor_count, stage_num=stage_number)
                 results = pool.starmap(tmcmcFunctions.MCMC_MH, iterables)
             else:
                 write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
@@ -305,10 +305,10 @@ def RunTMCMC(number_of_samples, number_of_chains, all_distributions_list, number
             scale_factor_for_proposal_covariance = (1 / 9) + ((8 / 9) * R)
 
         # for next beta
-        Sm, Postm, Lm = Sm1, Postm1, Lm1
+        sample_values, Postm, Lm = Sm1, Postm1, Lm1
 
     # save to trace
-    mytrace.append([Sm, Lm, np.ones(len(Wm)), 'notValid', 1, 'notValid'])
+    mytrace.append([sample_values, Lm, np.ones(len(Wm)), 'notValid', 1, 'notValid'])
 
     # Write last stage data to '.csv' file
     data_to_write = mytrace[stage_number][0]
