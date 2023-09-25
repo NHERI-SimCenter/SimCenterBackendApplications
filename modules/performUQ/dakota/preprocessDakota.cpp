@@ -82,8 +82,12 @@ int main(int argc, const char **argv) {
   }
   
   int evalConcurrency = 0;
+  int numP = 1;
+  if (json_object_get(rootINPUT,"oversubscribeMultiplier") != NULL)
+    numP = json_integer_value(json_object_get(rootINPUT,"oversubscribeMultiplier"));
+
   if (strcmp(runType,"runningLocal") == 0) {
-    evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency();
+    evalConcurrency = (int)OVERSUBSCRIBE_CORE_MULTIPLIER * std::thread::hardware_concurrency() * numP;
     std::cerr << "EVAL CONCURRENCY: " << evalConcurrency << "\n";
   }
 
