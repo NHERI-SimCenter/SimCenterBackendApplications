@@ -219,11 +219,11 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         # Resampling using plausible weights
         # SmcapIDs = np.random.choice(range(N), N, p=Wm / sum(Wm))
         rng = default_rng(child_seeds[-1])
-        sample_ids = rng.choice(range(number_of_samples), number_of_samples, p=weights/sum(weights))
+        resample_ids = rng.choice(range(number_of_samples), number_of_samples, p=weights/sum(weights))
 
-        resampled_values = sample_values[sample_ids]
-        resampled_log_likelihood_values = log_likelihood_values[sample_ids]
-        resampled_unnormalized_posterior_pdf_values = unnormalized_posterior_pdf_values[sample_ids]
+        resampled_values = sample_values[resample_ids]
+        resampled_log_likelihood_values = log_likelihood_values[resample_ids]
+        resampled_unnormalized_posterior_pdf_values = unnormalized_posterior_pdf_values[resample_ids]
 
         # save to trace
         # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
@@ -239,19 +239,18 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         scaled_proposal_covariance_matrix = (scale_factor_for_proposal_covariance ** 2) * weighted_sample_covariance_matrix  # Proposal dist covariance matrix
 
         number_of_model_evaluations_in_this_stage = number_of_chains * number_of_MCMC_steps
-        total_number_of_model_evaluations += number_of_model_evaluations_in_this_stage
-
         write_stage_start_info_to_logfile(logfile, stage_number, beta, effective_sample_size, 
                                       scale_factor_for_proposal_covariance, log_evidence, number_of_model_evaluations_in_this_stage)
 
-        numAccepts = 0
-        iterables = [(j1, scaled_proposal_covariance_matrix, number_of_MCMC_steps, resampled_values[j1], resampled_log_likelihood_values[j1], resampled_unnormalized_posterior_pdf_values[j1], beta, 
-                      numAccepts, all_distributions_list, log_likelihood_function, model_parameters,
-                      working_directory, default_rng(child_seeds[j1]),
+        number_of_accepted_states_in_this_stage = 0
+        iterables = [(sample_num, scaled_proposal_covariance_matrix, number_of_MCMC_steps, resampled_values[sample_num], 
+                      resampled_log_likelihood_values[sample_num], resampled_unnormalized_posterior_pdf_values[sample_num], beta, 
+                      number_of_accepted_states_in_this_stage, all_distributions_list, log_likelihood_function, model_parameters,
+                      working_directory, default_rng(child_seeds[sample_num]),
                       calibration_data, number_of_experiments, covariance_matrix_list,
                       edp_names_list, edp_lengths_list, scale_factors,
                       shift_factors, driver_file)
-                      for j1 in range(number_of_samples)]
+                      for sample_num in range(number_of_samples)]
         
         if parallelize_MCMC:
             if run_type == "runningLocal":
@@ -263,33 +262,34 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         else:
             write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
             results = [tmcmcFunctions.MCMC_MH(j1, scaled_proposal_covariance_matrix, number_of_MCMC_steps, resampled_values[j1], resampled_log_likelihood_values[j1], 
-                                              resampled_unnormalized_posterior_pdf_values[j1], beta, numAccepts, all_distributions_list,
+                                              resampled_unnormalized_posterior_pdf_values[j1], beta, number_of_accepted_states_in_this_stage, all_distributions_list,
                                               log_likelihood_function, model_parameters, working_directory, 
                                               default_rng(child_seeds[j1]),
                                               calibration_data, number_of_experiments, covariance_matrix_list,
                                               edp_names_list, edp_lengths_list, scale_factors, shift_factors, driver_file)
                         for j1 in range(number_of_samples)]
 
-        Sm1, Lm1, Postm1, numAcceptsS, all_proposals, all_PLP = zip(*results)
-        Sm1 = np.asarray(Sm1)
-        Lm1 = np.asarray(Lm1)
-        Postm1 = np.asarray(Postm1)
-        numAcceptsS = np.asarray(numAcceptsS)
-        numAccepts = sum(numAcceptsS)
+        samples_list, loglikes_list, posterior_pdf_vals_list, num_accepts, all_proposals, all_PLP = zip(*results)
+        # for next beta
+        sample_values = np.asarray(samples_list)
+        log_likelihood_values = np.asarray(loglikes_list)
+        unnormalized_posterior_pdf_values = np.asarray(posterior_pdf_vals_list)
+
+        num_accepts = np.asarray(num_accepts)
+        number_of_accepted_states_in_this_stage = sum(num_accepts)
         all_proposals = np.asarray(all_proposals)
         all_PLP = np.asarray(all_PLP)
 
+        total_number_of_model_evaluations += number_of_model_evaluations_in_this_stage
         logfile.write("\n\n\t\tTotal number of model evaluations so far: {}".format(total_number_of_model_evaluations))
 
         # total observed acceptance rate
-        R = numAccepts / number_of_model_evaluations_in_this_stage
-        if R < 1e-5:
-            logfile.write("\n\n\t\tacceptance rate = %9.5g" % R)
-        else:
-            logfile.write("\n\n\t\tacceptance rate = %.6g" % R)
+        R = number_of_accepted_states_in_this_stage / number_of_model_evaluations_in_this_stage
+        logfile.write(f"\n\n\t\tacceptance rate = {R:<9.6g}")
+        if adaptively_scale_proposal_covariance: # scale factor based on observed acceptance ratio
+            scale_factor_for_proposal_covariance = (1 / 9) + ((8 / 9) * R)
 
-        # Calculate Nm_steps based on observed acceptance rate
-        if adaptively_calculate_num_MCMC_steps:
+        if adaptively_calculate_num_MCMC_steps: # Calculate Nm_steps based on observed acceptance rate
             # increase max Nmcmc with stage number
             number_of_MCMC_steps = min(number_of_MCMC_steps + 1, max_number_of_MCMC_steps)
             logfile.write("\n\t\tadapted max MCMC steps = %d" % number_of_MCMC_steps)
@@ -299,13 +299,6 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
             logfile.write("\n\t\tnext MCMC Nsteps = %d" % number_of_MCMC_steps)
 
         logfile.write('\n\t\t==========================')
-
-        # scale factor based on observed acceptance ratio
-        if adaptively_scale_proposal_covariance:
-            scale_factor_for_proposal_covariance = (1 / 9) + ((8 / 9) * R)
-
-        # for next beta
-        sample_values, unnormalized_posterior_pdf_values, log_likelihood_values = Sm1, Postm1, Lm1
 
     # save to trace
     mytrace.append([sample_values, log_likelihood_values, np.ones(len(weights)), 'notValid', 1, 'notValid'])
