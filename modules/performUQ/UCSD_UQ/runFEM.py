@@ -124,6 +124,7 @@ class ModelEval:
     def __init__(self, num_rv: int, full_path_of_tmpSimCenter_dir: str, 
                  list_of_dir_names_to_copy_files_from: list[str], 
                  list_of_rv_names: list[str], driver_filename: str, 
+                 length_of_results: int,
                  ignore_nans: bool = True) -> None:
         
         self.num_rv = num_rv
@@ -131,6 +132,7 @@ class ModelEval:
         self.list_of_dir_names_to_copy_files_from = list_of_dir_names_to_copy_files_from
         self.list_of_rv_names = list_of_rv_names
         self.driver_filename = driver_filename
+        self.length_of_results = length_of_results
         self.ignore_nans = ignore_nans
 
         if self.num_rv != len(self.list_of_rv_names):
@@ -200,12 +202,17 @@ class ModelEval:
         if glob.glob("results.out"):
             outputs = np.loadtxt("results.out").flatten()
         else:
-            msg = f"Error running FEM: 'results.out' missing at {workdir}"
+            msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
             msg = append_msg_in_out_file(msg, out_file="ops.out")
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] == 0:
-            msg = "Error running FEM: 'results.out' is empty"
+            msg = "Error running FEM: 'results.out' is empty\n"
+            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            raise ModelEvaluationError(msg)
+        
+        if outputs.shape[0] != self.length_of_results:
+            msg = f"Error running FEM: 'results.out' contains {outputs.shape[0]} values, expected to get {self.length_of_results} values\n"
             msg = append_msg_in_out_file(msg, out_file="ops.out")
             raise ModelEvaluationError(msg)
 
@@ -228,11 +235,8 @@ class ModelEval:
             outputs = self._check_results(workdir)
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            outputs = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-            with open("error.log", "a+") as f:
-                f.write(f"\nSimulation number: {simulation_number}\n")
-                f.write(f"Samples values: {sample_values}\n")
-                f.write(outputs)
+            outputs = f"\nSimulation number: {simulation_number}\n" + f"Samples values: {sample_values}\n" 
+            outputs += "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
         finally:
             pass
         return outputs
