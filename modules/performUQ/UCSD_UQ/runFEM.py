@@ -12,6 +12,8 @@ import numpy as np
 import glob
 from typing import Union
 from numpy.typing import NDArray
+import sys
+import traceback
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -130,6 +132,9 @@ class ModelEval:
         self.list_of_rv_names = list_of_rv_names
         self.driver_filename = driver_filename
         self.ignore_nans = ignore_nans
+
+        if self.num_rv != len(self.list_of_rv_names):
+            raise ModelEvaluationError(f"Error during model specification: Inconsistency between number of rvs ({num_rv = }) and length of list of rv names ({len(list_of_rv_names) = })")
     
     def _check_size_of_sample(self, sample_values: NDArray) -> None:
         num_samples = len(sample_values)
@@ -212,7 +217,8 @@ class ModelEval:
         return outputs
 
     def evaluate_model_once(self, simulation_number: int, sample_values: NDArray) \
-        -> Union[Exception, NDArray]:
+        -> Union[str, NDArray]:
+        outputs = ""
         try:
             sample_values = np.atleast_2d(sample_values)
             self._check_size_of_sample(sample_values)
@@ -220,6 +226,13 @@ class ModelEval:
             self._create_params_file(sample_values, workdir)
             self._execute_driver_file(workdir)
             outputs = self._check_results(workdir)
-        except Exception as ex:
-            return ex
+        except Exception:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            outputs = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            with open("error.log", "a+") as f:
+                f.write(f"\nSimulation number: {simulation_number}\n")
+                f.write(f"Samples values: {sample_values}\n")
+                f.write(outputs)
+        finally:
+            pass
         return outputs
