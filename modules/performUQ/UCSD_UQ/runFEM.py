@@ -204,7 +204,7 @@ class ModelEval:
         return outputs
 
     def evaluate_model_once(self, simulation_number: int, sample_values: NDArray) \
-        -> tuple[Union[Exception, NDArray], int]:
+        -> Union[Exception, NDArray]:
         try:
             sample_values = np.atleast_2d(sample_values)
             self._check_size_of_sample(sample_values)
@@ -213,5 +213,5 @@ class ModelEval:
             self._execute_driver_file(workdir)
             outputs = self._check_results(workdir)
         except Exception as ex:
-            return ex, simulation_number
-        return outputs, simulation_number
+            return ex
+        return outputs
