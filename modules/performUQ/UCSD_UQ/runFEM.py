@@ -121,7 +121,8 @@ class ModelEvaluationError(Exception):
 class ModelEval:
     def __init__(self, num_rv: int, full_path_of_tmpSimCenter_dir: str, 
                  list_of_dir_names_to_copy_files_from: list[str], 
-                 list_of_rv_names: list[str], driver_filename: str, ignore_nans: bool = True) -> None:
+                 list_of_rv_names: list[str], driver_filename: str, 
+                 ignore_nans: bool = True) -> None:
         
         self.num_rv = num_rv
         self.full_path_of_tmpSimCenter_dir = full_path_of_tmpSimCenter_dir
