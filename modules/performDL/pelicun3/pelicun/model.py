@@ -151,7 +151,8 @@ class PelicunModel:
 
                     try:
                         # if theta is a scalar, just store it
-                        theta[t_i] = float(theta_i)
+                        if theta_i is not None:
+                            theta[t_i] = float(theta_i)
                         args.append([])
 
                     except ValueError:
