@@ -120,6 +120,14 @@ def runSWhale(inputs,
                            input_file = inputs,
                            copy_resources=copy_resources)
     
+
+        # run performance engine to assess asset performance, e.g., recovery
+        WF.estimate_performance(AIM_file_path = assetAIM,
+                                asst_id = assetID,
+                                asset_type = asset_type,
+                                input_file = inputs,
+                                copy_resources=copy_resources)
+
     if force_cleanup:
         #clean up intermediate files from the simulation
         WF.cleanup_simdir(assetID)
@@ -170,7 +178,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         pass
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
+        app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL', 'Performance'],
         working_dir = working_dir,
         app_dir = app_dir)
         

@@ -1090,6 +1090,32 @@
         ]
       }
     ]
+  },
+  "PerformanceApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "REDi",
+        "ExecutablePath": "applications/performanceAssessment/REDiWrapper.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "dirnameOutput",
+            "type": "string",
+            "description": "Path to the working directory containing the Pelicun results."
+          },
+          {
+            "id": "riskParametersPath",
+            "type": "string",
+            "description": "Path to the risk parameters json file ."
+          }
+        ]
+      }
+    ]
   }
 }
 
