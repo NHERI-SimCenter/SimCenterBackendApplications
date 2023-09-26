@@ -125,6 +125,7 @@ class ModelEval:
                  list_of_dir_names_to_copy_files_from: list[str], 
                  list_of_rv_names: list[str], driver_filename: str, 
                  length_of_results: int,
+                 workdir_prefix: str = "workdir",
                  ignore_nans: bool = True) -> None:
         
         self.num_rv = num_rv
@@ -133,6 +134,7 @@ class ModelEval:
         self.list_of_rv_names = list_of_rv_names
         self.driver_filename = driver_filename
         self.length_of_results = length_of_results
+        self.workdir_prefix = workdir_prefix
         self.ignore_nans = ignore_nans
 
         if self.num_rv != len(self.list_of_rv_names):
@@ -151,7 +153,7 @@ class ModelEval:
                 raise ModelEvaluationError(msg)        
     
     def _create_workdir(self, simulation_number: int) -> str:
-        workdir = os.path.join(self.full_path_of_tmpSimCenter_dir, f"workdir.{simulation_number + 1}")
+        workdir = os.path.join(self.full_path_of_tmpSimCenter_dir, f"{self.workdir_prefix}.{simulation_number + 1}")
         if os.path.exists(workdir):
             for root, dirs, files in os.walk(workdir):
                 for file in files:
