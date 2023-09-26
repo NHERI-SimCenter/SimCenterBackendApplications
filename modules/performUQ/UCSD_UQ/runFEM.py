@@ -9,6 +9,9 @@ import os
 import subprocess
 import shutil
 import numpy as np
+import glob
+from typing import Union
+from numpy.typing import NDArray
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -20,8 +23,34 @@ def copytree(src, dst, symlinks=False, ignore=None):
         if os.path.isdir(s):
             copytree(s, d, symlinks, ignore)
         else:
-            if not os.path.exists(d) or os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
-                shutil.copy2(s, d)
+            try:
+                if not os.path.exists(d) or os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
+                    shutil.copy2(s, d)
+            except Exception as ex:
+                msg = f"Could not copy {s}. The following error occurred: \n{ex}"
+                return msg
+    return "0"
+
+
+def append_msg_in_out_file(msg, out_file="ops.out"):
+    if glob.glob(out_file):
+        with open(out_file, "r") as text_file:
+            error_FEM = text_file.read()
+
+        startingCharId = error_FEM.lower().find("error")
+
+        if startingCharId >0:
+            startingCharId = max(0,startingCharId-20)
+            endingID = max(len(error_FEM),startingCharId+200)
+            errmsg = error_FEM[startingCharId:endingID]
+            errmsg=errmsg.split(" ", 1)[1]
+            errmsg=errmsg[0:errmsg.rfind(" ")]
+            msg += "\n"
+            msg += "your model says...\n"
+            msg += "........\n" + errmsg + "\n........ \n"
+            msg += "to read more, see " + os.path.join(os.getcwd(), out_file)
+    
+    return msg
 
 
 def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
@@ -82,3 +111,107 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
     else:
         os.chdir("../")
         return -np.inf
+    
+
+class ModelEvaluationError(Exception):
+    def __init__(self, msg: str) -> None:
+        super().__init__(msg)
+
+
+class ModelEval:
+    def __init__(self, num_rv: int, full_path_of_tmpSimCenter_dir: str, 
+                 list_of_dir_names_to_copy_files_from: list[str], 
+                 list_of_rv_names: list[str], driver_filename: str) -> None:
+        
+        self.num_rv = num_rv
+        self.full_path_of_tmpSimCenter_dir = full_path_of_tmpSimCenter_dir
+        self.list_of_dir_names_to_copy_files_from = list_of_dir_names_to_copy_files_from
+        self.list_of_rv_names = list_of_rv_names
+        self.driver_filename = driver_filename
+    
+    def _check_size_of_sample(self, sample_values: NDArray) -> None:
+        num_samples = len(sample_values)
+        if num_samples > 1:
+            msg = f"Do one simulation at a time. There were {num_samples} samples provided in the sample value {sample_values}."
+            raise ModelEvaluationError(msg)
+        
+        for i in range(num_samples):
+            num_values_in_each_sample = len(sample_values[i])
+            if num_values_in_each_sample != self.num_rv:
+                msg = f"Expected {self.num_rv} values in each sample, found {num_values_in_each_sample} in {sample_values}."
+                raise ModelEvaluationError(msg)        
+    
+    def _create_workdir(self, simulation_number: int) -> str:
+        workdir = os.path.join(self.full_path_of_tmpSimCenter_dir, f"workdir.{simulation_number + 1}")
+        if os.path.exists(workdir):
+            for root, dirs, files in os.walk(workdir):
+                for file in files:
+                    try:
+                        os.unlink(os.path.join(root, file))
+                    except:
+                        msg = f"Could not remove file {file} from {workdir}."
+                        raise ModelEvaluationError(msg)
+                for dir in dirs:
+                    try:
+                        shutil.rmtree(os.path.join(root, dir))
+                    except:
+                        msg = f"Could not remove directory {dir} from {workdir}."
+                        raise ModelEvaluationError(msg)
+
+        for src_dir in self.list_of_dir_names_to_copy_files_from:
+            src = os.path.join(self.full_path_of_tmpSimCenter_dir, src_dir)
+            msg = copytree(src, workdir)
+            if msg != "0":
+                raise ModelEvaluationError(msg)
+        return workdir
+    
+    def _create_params_file(self, sample_values: NDArray, workdir: str) -> None:
+        list_of_strings_to_write = []
+        list_of_strings_to_write.append(f"{self.num_rv}")
+        for i, rv in enumerate(self.list_of_rv_names):
+            list_of_strings_to_write.append(f"{rv} {sample_values[0][i]}")
+        try: 
+            with open(os.path.join(workdir, "params.in"), "w") as f:
+                f.write("\n".join(list_of_strings_to_write))
+        except Exception as ex:
+            raise ModelEvaluationError(f"Failed to create params.in file in {workdir}. The following error occurred: \n{ex}")
+
+    def _execute_driver_file(self, workdir) -> None:
+        command = f"{os.path.join(workdir, self.driver_filename)} 1> model_eval.log 2>&1"
+        os.chdir(workdir)
+        completed_process = subprocess.run(command, shell=True)
+        try:
+            completed_process.check_returncode()
+        except subprocess.CalledProcessError as ex:
+            returnStringList = ["Failed to run the model."]
+            returnStringList.append(f"The command to run the model was {ex.cmd}")
+            returnStringList.append(f"The return code was {ex.returncode}")
+            returnStringList.append(f"The following error occurred: \n{ex}")
+            raise ModelEvaluationError(f"\n\n".join(returnStringList))
+    
+    def _check_results(self, workdir) -> NDArray:
+        if glob.glob("results.out"):
+            outputs = np.loadtxt("results.out").flatten()
+        else:
+            msg = f"Error running FEM: results.out missing at {workdir}"
+            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            raise ModelEvaluationError(msg)
+
+        if outputs.shape[0] == 0:
+            msg = "Error running FEM: results.out is empty"
+            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            raise ModelEvaluationError(msg)
+        return outputs
+
+    def evaluate_model_once(self, simulation_number: int, sample_values: NDArray) \
+        -> tuple[Union[Exception, NDArray], int]:
+        try:
+            sample_values = np.atleast_2d(sample_values)
+            self._check_size_of_sample(sample_values)
+            workdir = self._create_workdir(simulation_number)
+            self._create_params_file(sample_values, workdir)
+            self._execute_driver_file(workdir)
+            outputs = self._check_results(workdir)
+        except Exception as ex:
+            return ex, simulation_number
+        return outputs, simulation_number
