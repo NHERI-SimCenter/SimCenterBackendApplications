@@ -200,7 +200,7 @@ class ModelEval:
             returnStringList.append(f"The following error occurred: \n{ex}")
             raise ModelEvaluationError(f"\n\n".join(returnStringList))
     
-    def _check_results(self, workdir) -> NDArray:
+    def _read_outputs_from_results_file(self, workdir) -> NDArray:
         if glob.glob("results.out"):
             outputs = np.loadtxt("results.out").flatten()
         else:
@@ -234,7 +234,7 @@ class ModelEval:
             workdir = self._create_workdir(simulation_number)
             self._create_params_file(sample_values, workdir)
             self._execute_driver_file(workdir)
-            outputs = self._check_results(workdir)
+            outputs = self._read_outputs_from_results_file(workdir)
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             outputs = f"\nSimulation number: {simulation_number}\n" + f"Samples values: {sample_values}\n" 
