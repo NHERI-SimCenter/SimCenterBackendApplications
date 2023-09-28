@@ -125,7 +125,7 @@ class ModelEval:
         except Exception as ex:
             raise ModelEvaluationError(f"Failed to create params.in file in {workdir}. The following error occurred: \n{ex}")
 
-    def _execute_driver_file(self, workdir) -> None:
+    def _execute_driver_file(self, workdir: str) -> None:
         command = f"{os.path.join(workdir, self.driver_filename)} 1> model_eval.log 2>&1"
         os.chdir(workdir)
         completed_process = subprocess.run(command, shell=True)
@@ -138,7 +138,7 @@ class ModelEval:
             returnStringList.append(f"The following error occurred: \n{ex}")
             raise ModelEvaluationError(f"\n\n".join(returnStringList))
     
-    def _read_outputs_from_results_file(self, workdir) -> NDArray:
+    def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob("results.out"):
             outputs = np.loadtxt("results.out").flatten()
         else:
