@@ -180,7 +180,7 @@ class ModelEval:
             outputs = f"\nSimulation number: {simulation_number}\n" + f"Samples values: {sample_values}\n" 
             outputs += "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
         finally:
-            pass
+            os.chdir(self.full_path_of_tmpSimCenter_dir)
         return outputs
 
 
@@ -240,11 +240,15 @@ class ParallelRunnerMPI4PY:
         return list(self.pool.starmap(fn=func, iterable=iterable, chunksize=chunksize, unordered=unordered))
 
 
-def get_parallel_runner_function(run_type):
+def get_parallel_runner_instance(run_type: str):
     if run_type == "runningRemote":
-        return ParallelRunnerMPI4PY(run_type).run
+        return ParallelRunnerMPI4PY(run_type)
     else:
-        return ParallelRunnerMultiprocessing(run_type).run
+        return ParallelRunnerMultiprocessing(run_type)
+
+
+def get_parallel_runner_function(parallel_runner: Union[ParallelRunnerMultiprocessing, ParallelRunnerMPI4PY]):
+    return parallel_runner.run
 
 
 class RandomVariablesHandler:
@@ -252,4 +256,21 @@ class RandomVariablesHandler:
         self.list_of_random_variables_data = list_of_random_variables_data
         self.correlation_matrix_data = correlation_matrix_data
     
+#     def create_one_marginal_distribution(self) -> ERADist:
+#         self.list_of_marginal_era_dists = 
+    
+#     def setup_marginal_distributions(self) -> list[ERADist]:
+#         self.marginal_distribution_objects_list = []
+#         for rv_data in self.list_of_random_variables_data:
+#              self.marginal_distribution_objects_list.append()
+    
+#     def setup_correlation_matrix(self) -> NDArray:
+#         self.correlation_matrix = self.correlation_matrix_data
 
+#     def setup_ERANataf_object(self) -> ERANataf:
+#         self.setup_marginal_distributions()
+#         self.setup_correlation_matrix()
+#         self.nataf_object = ERANataf(self.list_of_marginal_dists, self.correlation_matrix)
+
+#     def u_to_x(self, u: NDArray) -> NDArray:
+#         return 
