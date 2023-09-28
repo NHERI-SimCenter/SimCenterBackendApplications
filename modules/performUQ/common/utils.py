@@ -11,6 +11,8 @@ import traceback
 from multiprocessing.pool import Pool
 from mpi4py import MPI
 from mpi4py.futures import MPIPoolExecutor
+from ERAClasses.ERADist import ERADist
+from ERAClasses.ERANataf import ERANataf
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -243,3 +245,11 @@ def get_parallel_runner_function(run_type):
         return ParallelRunnerMPI4PY(run_type).run
     else:
         return ParallelRunnerMultiprocessing(run_type).run
+
+
+class RandomVariablesHandler:
+    def __init__(self, list_of_random_variables_data: list, correlation_matrix_data: NDArray) -> None:
+        self.list_of_random_variables_data = list_of_random_variables_data
+        self.correlation_matrix_data = correlation_matrix_data
+    
+
