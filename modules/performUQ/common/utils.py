@@ -236,3 +236,10 @@ class ParallelRunnerMPI4PY:
         except AttributeError:
             self.pool = self.get_pool()   
         return list(self.pool.starmap(fn=func, iterable=iterable, chunksize=chunksize, unordered=unordered))
+
+
+def get_parallel_runner_function(run_type):
+    if run_type == "runningRemote":
+        return ParallelRunnerMPI4PY(run_type).run
+    else:
+        return ParallelRunnerMultiprocessing(run_type).run
