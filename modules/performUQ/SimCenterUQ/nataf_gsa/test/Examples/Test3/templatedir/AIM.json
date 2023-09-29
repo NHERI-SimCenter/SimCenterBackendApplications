@@ -1,0 +1,110 @@
+{
+    "Applications": {
+        "FEM": {
+            "Application": "OpenSees",
+            "ApplicationData": {
+                "MS_Path": "C:/Users/SimCenter/Sangri/build-quoFEM-Desktop_Qt_5_15_0_MSVC2015_64bit-Debug/Examples/qfem-0001/src",
+                "PS_Path": "C:/Users/SimCenter/Sangri/build-quoFEM-Desktop_Qt_5_15_0_MSVC2015_64bit-Debug/Examples/qfem-0001/src",
+                "mainScript": "TrussModel.tcl",
+                "postprocessScript": "TrussPost.tcl"
+            }
+        },
+        "UQ": {
+            "Application": "SimCenter-UQ",
+            "ApplicationData": {
+            }
+        }
+    },
+    "EDP": [
+        {
+            "length": 1,
+            "name": "Node_3_Disp_2",
+            "type": "scalar"
+        },
+        {
+            "length": 1,
+            "name": "Node_2_Disp_2",
+            "type": "scalar"
+        }
+    ],
+    "FEM": {
+    },
+    "UQ": {
+        "samplingMethodData": {
+            "RVdataGroup": "",
+            "method": "Monte Carlo",
+            "samples": 5,
+            "seed": 964
+        },
+        "uqType": "Forward Propagation"
+    },
+    "WorkflowType": "Building Simulation",
+    "correlationMatrix": [
+        1,
+        0.5,
+        0.4,
+        0,
+        0.5,
+        1,
+        0.3,
+        0,
+        0.4,
+        0.3,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+    ],
+    "localAppDir": "C:/Users/SimCenter/Sangri/SimCenterBackendApplications",
+    "randomVariables": [
+        {
+            "distribution": "Weibull",
+            "inputType": "Moments",
+            "mean": 205,
+            "name": "E",
+            "refCount": 1,
+            "standardDev": 15,
+            "value": "RV.E",
+            "variableClass": "Uncertain"
+        },
+        {
+            "distribution": "Beta",
+            "inputType": "Moments",
+            "lowerbound": 10,
+            "mean": 25,
+            "name": "P",
+            "refCount": 1,
+            "standardDev": 3,
+            "upperbound": 30,
+            "value": "RV.P",
+            "variableClass": "Uncertain"
+        },
+        {
+            "distribution": "Gumbel",
+            "inputType": "Moments",
+            "mean": 250,
+            "name": "Ao",
+            "refCount": 1,
+            "standardDev": 10,
+            "value": "RV.Ao",
+            "variableClass": "Uncertain"
+        },
+        {
+            "distribution": "Constant",
+            "inputType": "Moments",
+            "name": "Au",
+            "refCount": 1,
+            "value": 500,
+            "variableClass": "Uncertain"
+        }
+    ],
+    "remoteAppDir": "C:/Users/SimCenter/Sangri/SimCenterBackendApplications",
+    "resultType": "SimCenterUQResultsSampling",
+    "runDir": "C:/Users/SimCenter/Documents/quoFEM/LocalWorkDir/tmp.SimCenter",
+    "runType": "runningLocal",
+    "summary": [
+    ],
+    "workingDir": "C:/Users/SimCenter/Documents/quoFEM/LocalWorkDir"
+}

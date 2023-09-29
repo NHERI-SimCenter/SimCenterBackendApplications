@@ -56,6 +56,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <numeric> // std::iota
 #include <armadillo>
 #include "jsonInput.h"
+#include "ERANataf.h"
 //#include "Eigen/Dense"
 
 #include "writeErrors.h"
@@ -69,15 +70,13 @@ class runGSA
 {
 public:
 	runGSA();
-	runGSA(vector<vector<double>> xval,
-			vector<vector<string>> xstrval,
-			vector<vector<double>> gval,
-			vector<vector<int>> combs_tmp,
-			double PCAvarRatio,
-			vector<vector<int>> qoiVectRange,
-			int Kos,
-			int procno,
-			int nprocs);
+	runGSA::runGSA(string workflowDriver,
+		string osType,
+		string runType,
+		jsonInput inp,
+		ERANataf T,
+		int procno,
+		int nproc);
 	~runGSA();
 	void writeOutputs(jsonInput inp, double dur, int procno);
 	void writeTabOutputs(jsonInput inp, int procno);
@@ -107,6 +106,8 @@ private:
 	void runSingleGSA(vector<double> gvec, int Kos, char Opt, vector<double>& Si, vector<vector<double>>& Ei);
     void runMultipleGSA(vector<vector<double> > gmat, int Kos);
 	void preprocess_gmat(vector<vector<double>> gmat, vector<vector<double>>& gmat_eff);
+	//void writeTabOutputs(jsonInput inp, int procno);
+	bool isInteger(double a);
 
     int nrv;
 	int nqoi;
