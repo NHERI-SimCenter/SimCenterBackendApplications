@@ -1659,7 +1659,7 @@ class Workflow(object):
         log_div()
 
 
-    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None) :
+    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None, asset_type = None) :
         """
         Short description
 
@@ -1704,6 +1704,8 @@ class Workflow(object):
                     if type(workflow_app) is dict :
                     
                         for itemKey, item in workflow_app.items() :
+                            if asset_type is not None and asset_type != itemKey :
+                                continue
                         
                             item.defaults['filenameAIM'] = AIM_file_path
                             
@@ -2331,8 +2333,8 @@ class Workflow(object):
         
         os.chdir(run_path)
         
-        min_id = int(asst_data[0]['id'])
-        max_id = int(asst_data[0]['id'])
+        min_id = min([x['id'] for x in asst_data]) #min_id = int(asst_data[0]['id'])
+        max_id = max([x['id'] for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
 
         if headers is None :
@@ -2362,8 +2364,8 @@ class Workflow(object):
                             aimDir = os.path.dirname(asst_file)
                         
                             asst_id = asst['id']
-                            min_id = min(int(asst_id), min_id)
-                            max_id = max(int(asst_id), max_id)
+                            min_id = min((asst_id), min_id)
+                            max_id = max((asst_id), max_id)
 
                             # save all EDP realizations
 
@@ -2426,7 +2428,7 @@ class Workflow(object):
 
                         if count % self.numP == self.procID:
 
-                            print("ASSET", self.procID, self.numP, asst['file']);
+                            print("ASSET", out_type, self.procID, self.numP, asst['file']);
                             
                             asst_file = asst['file']
                         
@@ -2434,8 +2436,8 @@ class Workflow(object):
                             aimDir = os.path.dirname(asst_file)
                     
                             asst_id = asst['id']
-                            min_id = min(int(asst_id), min_id)
-                            max_id = max(int(asst_id), max_id)
+                            min_id = min((asst_id), min_id)
+                            max_id = max((asst_id), max_id)
 
                             try:
                                 #if True:

@@ -173,6 +173,27 @@
             "id": "assetSourceFile",
             "type": "path",
             "description": "path to asset database file"
+          },
+          {
+            "id": "bridgesFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of bridges from the inventory"
+          },
+          {
+            "id": "tunnelsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of tunnels from the inventory"
+          },
+          {
+            "id": "roadsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of roads from the inventory"
+          },
+          {
+            "id": "roadSegLength",
+            "type": "float",
+            "description": "Maximum length (m) of road segments in the created AIM files",
+            "default": 100
           }
         ]
       }
@@ -1038,7 +1059,7 @@
         ]
       },
       {
-        "Name": "Pelicun3",
+        "Name": "pelicun3",
         "ExecutablePath": "applications/performDL/pelicun3/DL_calculation.py",
         "ApplicationSpecificInputs": [
           {
