@@ -94,3 +94,4 @@ simCenterDprepro
 simCenterSub
 .DS_Store
 fmkTest.sh
+.vscode/*
