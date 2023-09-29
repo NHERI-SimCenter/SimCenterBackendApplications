@@ -1090,7 +1090,7 @@
     "Applications": [
       {
         "Name": "REDi",
-        "ExecutablePath": "applications/performanceAssessment/REDiWrapper.py",
+        "ExecutablePath": "applications/performanceAssessment/REDi/REDiWrapper.py",
         "ApplicationSpecificInputs": [
           {
             "id": "dirnameOutput",
