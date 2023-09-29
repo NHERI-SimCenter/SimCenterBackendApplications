@@ -232,6 +232,8 @@ int main(int argc, const char **argv) {
   } 
 
   else if (scriptType == 2) { // tcl script
+    
+    templateFile << " remove recorders" << "\n";  
     templateFile << " source " << postprocessScript << "\n";      
   }
   

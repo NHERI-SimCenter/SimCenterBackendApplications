@@ -69,11 +69,10 @@ public:
 	virtual ~jsonInput(void);
 
 	string workDir;
-	string uqType;
+	string uqType, uqMethod;
 
-	int nmc, nrv, nco, nre, nst, nreg, nqoi, rseed, ngr;
+	int nmc, nrv, nco, nre, nst, nreg, nqoi, rseed, ngr, nPilot;
 	int nqoiVects;
-	string UQmethod;
 	vector<string> distNames;
 	vector<vector<double>> vals;
 	vector<vector<double>> resampleCandidates;
@@ -90,8 +89,8 @@ public:
 	vector<vector<int>> groups;
 	vector<vector<int>> resamplingGroups;
 	vector<int> resamplingSize;
-	bool performPCA;
-	double PCAvarRatioThres;
+	bool performPCA, doLogTransform;
+	double PCAvarRatioThres, compBudget;
 	string femAppName;
 
 	string inpPath, outPath, inpFileType, outFileType;

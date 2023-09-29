@@ -162,6 +162,14 @@ double discreteDist::getCdf(double x)
 			cdfval += weight[i];
 		}
 	}
+
+	if (cdfval == 1.0) {
+		cdfval -= 1.e-10;
+	}
+	else if (cdfval == 0.0) {
+		cdfval += 1.e-10;
+	}
+
 	return cdfval;
 }
 
@@ -188,12 +196,18 @@ double discreteDist::getStd(void)
 
 double discreteDist::getQuantile(double p)
 {
+	auto mean_weight = *std::min_element(weight.begin(), weight.end());
+
+	if (p >= 1) {
+		std::string errMSG = "Error running UQ engine: the quantile cannot be one";
+		theErrorFile.write(errMSG);
+	}
 	double icdfval= HUGE_VAL;
 	double cumwei=0;
 	for (int i : this->sortIdx)
 	{
 		cumwei += weight[i];
-		if (cumwei>p)
+		if (cumwei>p + mean_weight/100.0)
 		{ 
 			icdfval = value[i];
 			break;

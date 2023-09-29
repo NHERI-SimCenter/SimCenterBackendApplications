@@ -55,22 +55,28 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include <numeric> // std::iota
 #include <armadillo>
 #include "jsonInput.h"
+#include "ERANataf.h"
 //extern std::ofstream theErrorFile;
 
 #include "writeErrors.h"
 extern writeErrors theErrorFile; // Error log
 
 using std::vector;
+using std::string;
 
 class runForward
 {
 public:
-	runForward();
-	runForward(vector<vector<double>> xval,
-			vector<vector<string>> xstrval,
-			vector<vector<double>> gval,
-			int procno);
+	runForward(); 
+	runForward(string workflowDriver,
+		string osType,
+		string runType,
+		jsonInput inp,
+		ERANataf T,
+		int procno,
+		int nproc);
 	~runForward();
+	void computeStatistics(int procno);
 	void writeOutputs(jsonInput inp, int procno);
 	void writeTabOutputs(jsonInput inp, int procno);
 
@@ -85,10 +91,11 @@ private:
 	double calStd(vector<double> x, double m);
 	double calSkewness(vector<double> x, double m, double s);
 	double calKurtosis(vector<double> x, double m, double s);
-	std::vector<double> mean;
-	std::vector<double> stdDev;
-	std::vector<double> skewness;
-	std::vector<double> kurtosis;
+	bool isInteger(double a);
+	vector<double> mean;
+	vector<double> stdDev;
+	vector<double> skewness;
+	vector<double> kurtosis;
 
 
 	const double PI = atan(1) * 4;

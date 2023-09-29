@@ -18,6 +18,8 @@ add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
 add_subdirectory(IsolatedBuildingCFD)
+add_subdirectory(coupledDigitalTwin)
+
 
 
 
