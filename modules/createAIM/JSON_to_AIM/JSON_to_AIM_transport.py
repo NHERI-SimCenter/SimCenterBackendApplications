@@ -49,6 +49,7 @@ import importlib
 import shapely
 import geopandas as gpd
 import momepy
+import warnings
 # Remove the nodes with 2 neibours 
 # https://stackoverflow.com/questions/56380053/combine-edges-when-node-degree-is-n-in-networkx
 # Needs parallel
@@ -104,8 +105,15 @@ def remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph):
 def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance = 10e-3):
     dropedEdges = []
     newEdges = []
-    for row_ind in edges.index:
-        LS = edges.loc[row_ind,"geometry"]
+    crs = edges.crs
+    edges_dict = edges.reset_index()
+    nodes_dict = nodesDF.reset_index()
+    edges_dict = edges.to_dict(orient='records')
+    nodes_dict = nodesDF.to_dict(orient='records')
+    roadDF["IDbase"] = roadDF["ID"].apply(lambda x: x.split('_')[0])
+    num_segExistingMap = roadDF.groupby("IDbase").count()["ID"].to_dict()
+    for row_ind in range(len(edges_dict)):
+        LS = edges_dict[row_ind]["geometry"]
         num_seg = int(np.ceil(LS.length/delta))
         if num_seg == 1:
             continue
@@ -113,46 +121,48 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance = 10e-3):
         points = shapely.MultiPoint([LS.interpolate(distance) for distance in distances[:-1]] + [LS.boundary.geoms[1]])
         LS = shapely.ops.snap(LS, points, tolerance)
         splittedLS = shapely.ops.split(LS,points).geoms
-        currentEdge = edges.loc[row_ind,:].to_frame().T.copy()
-        num_segExisting = roadDF["ID"].apply(lambda x: x.split('_')[0] == edges.loc[row_ind,"ID"].split('_')[0]).sum()
+        currentEdge = edges_dict[row_ind].copy()
+        num_segExisting = num_segExistingMap[currentEdge["ID"].split('_')[0]]
         newNodes = []
-        currentNodesNum = nodesDF["nodeID"].max()
+        currentNodesNum = len(nodes_dict)-1 # nodeID starts with 0
         for pt in points.geoms:
-            newNode = gpd.GeoDataFrame({"nodeID":[currentNodesNum],"geometry":[pt]}, crs=edges.crs)
+            newNode_dict = {"nodeID":currentNodesNum,"oldNodeID":np.nan, "geometry":pt}
             currentNodesNum += 1
-            newNodes.append(newNode)
+            newNodes.append(newNode_dict)
         newNodes = newNodes[1:-1] #The first and last points already exists in the nodes DF. delete them
-        nodesDF = pd.concat([nodesDF]+newNodes,ignore_index=True)
+        nodes_dict = nodes_dict + newNodes
         for sLS_ind, sLS in enumerate(splittedLS):
             # create new edge
             if sLS_ind ==0:
-                newID = currentEdge["ID"].values[0]
+                newID = currentEdge["ID"]
             else:
-                newID = currentEdge["ID"].values[0].split("_")[0]+"_"+str(num_segExisting+1)
+                newID = currentEdge["ID"].split("_")[0]+"_"+str(num_segExisting+1)
                 num_segExisting +=1
-            # newGeom = str({'type':'Feature','properties':{},
-            #   'geometry':{'type':'LineString','coordinates':
-            #               [[pt[0], pt[1]] for pt in sLS.coords]}})
+                num_segExistingMap[currentEdge["ID"].split('_')[0]] = num_segExistingMap[currentEdge["ID"].split('_')[0]]+1
             newGeom = sLS
             if sLS_ind ==0:
-                newEdge_ns = currentEdge["node_start"].values[0]
-                newEdge_ne = newNodes[sLS_ind]["nodeID"].values[0]
+                newEdge_ns = currentEdge["node_start"]
+                newEdge_ne = newNodes[sLS_ind]["nodeID"]
             elif sLS_ind < len(splittedLS)-1:
-                newEdge_ns = newNodes[sLS_ind-1]["nodeID"].values[0]
-                newEdge_ne = newNodes[sLS_ind]["nodeID"].values[0]
+                newEdge_ns = newNodes[sLS_ind-1]["nodeID"]
+                newEdge_ne = newNodes[sLS_ind]["nodeID"]
             else:
-                newEdge_ns = newNodes[sLS_ind-1]["nodeID"].values[0]
-                newEdge_ne = currentEdge["node_end"].values[0]
-            newEdge = gpd.GeoDataFrame({"ID":[newID],
-                                    "road_type":[currentEdge["road_type"].values[0]],
+                newEdge_ns = newNodes[sLS_ind-1]["nodeID"]
+                newEdge_ne = currentEdge["node_end"]
+            newEdge = {"ID":newID,
+                                    "road_type":currentEdge["road_type"],
                                     "geometry":newGeom,
                                     "node_start":newEdge_ns,
-                                    "node_end":newEdge_ne}, crs=edges.crs)
+                                    "node_end":newEdge_ne,
+                                    "capacity":currentEdge["capacity"],
+                                    "lanes":currentEdge["lanes"]}
             newEdges.append(newEdge)
-        dropedEdges.append(currentEdge.index[0])
+        dropedEdges.append(row_ind)
     edges = edges.drop(dropedEdges)
-    edges = pd.concat([edges]+newEdges, ignore_index=True)
+    newEdges = gpd.GeoDataFrame(newEdges, crs=crs)
+    edges = pd.concat([edges, newEdges], ignore_index=True)
     edges = edges.reset_index(drop=True)
+    nodesDF = gpd.GeoDataFrame(nodes_dict, crs = crs)
     return edges, nodesDF
 
 def create_asset_files(output_file, asset_source_file, bridge_filter,
@@ -186,7 +196,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     # Get the out dir, may not always be in the results folder if multiple assets are used
     outDir = os.path.dirname(output_file)
     
-    # check if a filter is provided
+    # check if a filter is provided for bridges
     if bridge_filter is not None:
         bridges_requested = []
         for assets in bridge_filter.split(','):
@@ -196,7 +206,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
             else:
                 bridges_requested.append(int(assets))
         bridges_requested = np.array(bridges_requested)
-    # check if a filter is provided
+    # check if a filter is provided for tunnels
     if tunnel_filter is not None:
         tunnels_requested = []
         for assets in tunnel_filter.split(','):
@@ -206,7 +216,16 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
             else:
                 tunnels_requested.append(int(assets))
         tunnels_requested = np.array(tunnels_requested)
-    # Roads are filtered after a network is created
+    # check if a filter is provided for roads
+    if road_filter is not None:
+        roads_requested = []
+        for assets in road_filter.split(','):
+            if "-" in assets:
+                asset_low, asset_high = assets.split("-")
+                roads_requested += list(range(int(asset_low), int(asset_high)+1))
+            else:
+                roads_requested.append(int(assets))
+        roads_requested = np.array(roads_requested)
         
     # load the JSON file with the asset information
     with open(asset_source_file, "r") as sourceFile:
@@ -218,7 +237,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     nodes_dict= assets_dict["nodes"]
     assets_array = []
 
-    # if there is a filter, then pull out only the required assets
+    # if there is a filter, then pull out only the required bridges
     selected_bridges = []
     if bridge_filter is not None:
         assets_available = np.arange(len(bridges_array))
@@ -229,7 +248,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     else:
         selected_bridges = bridges_array
         bridges_to_run = list(range(0, len(bridges_array)))
-    # if there is a filter, then pull out only the required assets
+    # if there is a filter, then pull out only the required tunnels
     selected_tunnels = []
     if tunnel_filter is not None:
         assets_available = np.arange(len(tunnels_array))
@@ -240,21 +259,21 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     else:
         selected_tunnels = tunnels_array
         tunnels_to_run = list(range(0, len(tunnels_array)))
-    # if there is a filter, then pull out only the required assets
-    # selected_roads = []
-    # if road_filter is not None:
-    #     assets_available = len(roads_array)
-    #     roads_to_run = roads_requested[
-    #         np.where(np.in1d(roads_requested, assets_available))[0]]
-    #     for i in roads_to_run:
-    #         selected_roads.append(roads_array[i])
-    # else:
-    #     selected_roads = roads_array
-    #     roads_to_run = list(range(0, len(roads_array)))
+    # if there is a filter, then pull out only the required roads
+    selected_roads = []
+    if road_filter is not None:
+        assets_available = np.arange(len(roads_array))
+        roads_to_run = roads_requested[
+            np.where(np.in1d(roads_requested, assets_available))[0]]
+        for i in roads_to_run:
+            selected_roads.append(roads_array[i])
+    else:
+        selected_roads = roads_array
+        roads_to_run = list(range(0, len(roads_array)))
 
     # Reconstruct road network
     datacrs = assets_dict["crs"]
-    roadDF = pd.DataFrame.from_dict(roads_array)
+    roadDF = pd.DataFrame.from_dict(selected_roads)
     LineStringList = []
     for ind in roadDF.index:
         start_node = nodes_dict[str(roadDF.loc[ind, "start_node"])]
@@ -264,8 +283,10 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     roadDF = roadDF[["ID","road_type","lanes","capacity","geometry"]]
     roadGDF = gpd.GeoDataFrame(roadDF, geometry="geometry", crs=datacrs)
     graph = momepy.gdf_to_nx(roadGDF.to_crs("epsg:32610"), approach='primal')
-    nodes, edges, sw = momepy.nx_to_gdf(graph, points=True, lines=True,
-                                        spatial_weights=True)
+    with warnings.catch_warnings(): #Suppress the warning of disconnected components in the graph
+        warnings.simplefilter("ignore")
+        nodes, edges, sw = momepy.nx_to_gdf(graph, points=True, lines=True,
+                                            spatial_weights=True)
     # Oneway or twoway is not considered in D&L, remove duplicated edges
     edges = edges[edges.duplicated(['node_start', 'node_end'], keep="first")==False]
     edges = edges.reset_index(drop=True).drop("mm_len",axis=1)
@@ -303,33 +324,38 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     edges["location_lon"] = locationGS.apply(lambda x:x.x)
     edges["location_lat"] = locationGS.apply(lambda x:x.y)
 
-    # check if a road filter is provided
-    if road_filter is not None:
-        roads_requested = []
-        for assets in road_filter.split(','):
-            if "-" in assets:
-                asset_low, asset_high = assets.split("-")
-                roads_requested += list(range(int(asset_low), int(asset_high)+1))
-            else:
-                roads_requested.append(int(assets))
-        roads_requested = np.array(roads_requested)
-    # if there is a filter, then pull out only the required assets
-    if road_filter is not None:
-        assets_available = edges.index.values
-        roads_to_run = roads_requested[
-            np.where(np.in1d(roads_requested, assets_available))[0]]
-    else:
-        roads_to_run = list(range(0, edges.shape[0]))
+    # # check if a road filter is provided
+    # if road_filter is not None:
+    #     roads_requested = []
+    #     for assets in road_filter.split(','):
+    #         if "-" in assets:
+    #             asset_low, asset_high = assets.split("-")
+    #             roads_requested += list(range(int(asset_low), int(asset_high)+1))
+    #         else:
+    #             roads_requested.append(int(assets))
+    #     roads_requested = np.array(roads_requested)
+    # # if there is a filter, then pull out only the required assets
+    # if road_filter is not None:
+    #     assets_available = edges.index.values
+    #     roads_to_run = roads_requested[
+    #         np.where(np.in1d(roads_requested, assets_available))[0]]
+    # else:
+    #     roads_to_run = list(range(0, edges.shape[0]))
     edges = edges.reset_index().rename(columns={"index":"AIM_id"})
     edges["AIM_id"] = edges["AIM_id"].apply(lambda x:"r"+str(x))
+    # if saveFullNetwork:
+    #     edges.to_file(os.path.join(outDir,"roadNetworkEdges.geojson"), driver = "GeoJSON")
+    #     nodesNeeded = list(set(edges["start_node"].values.tolist() + edges["end_node"].values.tolist()))
+    #     allNodes = nodes.loc[nodesNeeded,:].to_crs(datacrs)[["nodeID","geometry"]]
+    #     allNodes.to_file(os.path.join(outDir,"roadNetworkNodes.geojson"), driver = "GeoJSON") 
     #Edges below are selected edges
-    edges = edges.iloc[roads_to_run,:]
-    edges.to_file(os.path.join(outDir,"roadNetworkEdges.geojson"), driver = "GeoJSON")
+    # edges = edges.iloc[roads_to_run,:]
+    edges.to_file(os.path.join(outDir,"roadNetworkEdgesSelected.geojson"), driver = "GeoJSON")
 
     nodesNeeded = list(set(edges["start_node"].values.tolist() + edges["end_node"].values.tolist()))
     nodes = nodes.loc[nodesNeeded,:]
     nodes = nodes.to_crs(datacrs)[["nodeID","geometry"]]
-    nodes.to_file(os.path.join(outDir,"roadNetworkNodes.geojson"), driver = "GeoJSON")
+    nodes.to_file(os.path.join(outDir,"roadNetworkNodesSelected.geojson"), driver = "GeoJSON")
 
 
     count = 0
@@ -419,7 +445,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
                 )
             }
             AIM_i["GeneralInformation"].update(edges.loc[row_ind,:].drop(["geometry","location_lat","location_lon"]).to_dict())
-            geom = {"type":"LineString","coordinates":[[pt[0], pt[1]] for pt in list(edges.loc[0,"geometry"].coords)]}
+            geom = {"type":"LineString","coordinates":[[pt[0], pt[1]] for pt in list(edges.loc[row_ind,"geometry"].coords)]}
             AIM_i["GeneralInformation"].update({"geometry":str(geom)})
             AIM_i["GeneralInformation"].update({"assetSubtype":"roadway"})
             AIM_file_name = "{}-AIM.json".format(asset_id)
@@ -498,6 +524,10 @@ if __name__ == '__main__':
                "called without this flag.",
         default=False,
         nargs='?', const=True)
+    # parser.add_argument('--saveFullNetwork',
+    #     help = "Save the full network into edges and nodes.",
+    #     default=False,
+    #     type=bool)
 
     args = parser.parse_args()
 
