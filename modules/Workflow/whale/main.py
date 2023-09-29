@@ -2310,6 +2310,59 @@ class Workflow(object):
             log_div()
 
 
+    def estimate_performance(self,
+                             AIM_file_path = 'AIM.json',
+                             asst_id = None,
+                             asset_type = None,
+                             input_file = None,
+                             copy_resources=False) :
+
+        if 'Performance' not in self.workflow_apps.keys():
+            log_msg('No performance assessment requested, performance assessment step is skipped.')
+            log_div()
+            return 
+        
+        log_msg('Running performance assessment')
+        
+        # Get the directory to the asset class dir, e.g., buildings
+        aimDir = os.path.dirname(AIM_file_path)
+        aimFileName = os.path.basename(AIM_file_path)
+    
+        # If the path is not provided, assume the AIM file is in the run dir
+        if os.path.exists(aimDir) == False :
+            aimDir = self.run_dir
+            aimFileName = AIM_file_path
+
+        os.chdir(aimDir)
+
+        workflow_app = self.workflow_apps['Performance']
+
+        command_list = workflow_app.get_command_list(app_path=self.app_dir_local)
+            
+        command_list.append('--dirnameOutput')        
+                
+        # Only add asset id if we are running a regional assessment
+        if asst_id != None:
+            command_list.append(f'{aimDir}/{asst_id}')
+        else:
+            command_list.append(f'{aimDir}')
+
+        command = create_command(command_list)
+
+        log_msg('Performance assessment command:',
+                prepend_timestamp=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                prepend_blank_space=False)
+
+        result, returncode = run_command(command)
+
+        log_msg(result, prepend_timestamp=False)
+
+        log_msg('Performance assessment finished.',
+                prepend_timestamp=False)
+        log_div()
+
+
     def aggregate_results(self, asst_data, asset_type = '',
 
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 

@@ -78,6 +78,7 @@ public:
 	string opt;
 	vector<double> par;
 
+
 private:
 
 };

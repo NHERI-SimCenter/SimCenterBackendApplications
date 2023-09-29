@@ -94,7 +94,7 @@ def get_prefix(file_path):
 def add_pgv2pipe(pipe):
 
     reg_event = pipe['RegionalEvent']
-    events = pipe['Events']
+    events = pipe['Events'][0]
     
     event_folder_path = events['EventFolderPath']
     

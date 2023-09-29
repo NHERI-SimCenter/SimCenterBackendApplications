@@ -4,13 +4,9 @@ directory.
 
 """
 import numpy as np
-import pandas as pd
 import sys
 import os
-import subprocess
 import json
-import stat
-import shutil
 import numpy as np
 import foam_dict_reader as foam
 from stl import mesh
@@ -467,7 +463,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add refinment surface
+    #Add refinement surface
     if add_surface_refinement:         
         start_index = foam.find_keyword_line(dict_lines, "refinementSurfaces") + 2 
         added_part = ""
@@ -482,7 +478,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add surface refinment around the building as a refinment region
+    #Add surface refinement around the building as a refinement region
     # if surface_refinement_level > refinement_boxes[-1][1]:
     added_part = ""
     added_part += "         {}\n".format(refinement_surface_name)
@@ -494,7 +490,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
     dict_lines.insert(start_index, added_part)
     
-    #Add box refinments 
+    #Add box refinements 
     added_part = ""
     for i in range(n_boxes):
         added_part += "         {}\n".format(refinement_boxes[i][0])
@@ -596,7 +592,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         added_part += "\t Zref \t {:.4f};\n".format(building_height)
         added_part += "\t zDir \t (0.0 0.0 1.0);\n"
         added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-        added_part += "\t z0 uniform \t {:.7f};\n".format(roughness_length)
+        added_part += "\t z0 uniform \t {:.4e};\n".format(roughness_length)
         added_part += "\t zGround \t uniform 0.0;\n"
         
     if inlet_BC_type == "Place holder for TInf":    
@@ -827,14 +823,20 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     
     if ground_BC_type == "noSlip": 
         added_part = ""
-        added_part += "\t type    zeroGradient;\n"
+        added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t nutkAtmRoughWallFunction;\n"
-        added_part += "\t z0 \t {:.4f};\n".format(roughness_length)
+        added_part += "\t z0  \t  uniform {:.4e};\n".format(roughness_length)
         added_part += "\t value \t uniform 0.0;\n"
-    
+
+    if ground_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutUSpaldingWallFunction;\n"
+        added_part += "\t value \t uniform 0;\n"
+
+
     dict_lines.insert(start_index, added_part)
     
     
@@ -871,11 +873,17 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
         added_part += "\t type \t fixedValue;\n"
         added_part += "\t value \t uniform 0;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "smoothWallFunction": 
         added_part = ""
         added_part += "\t type \t nutUSpaldingWallFunction;\n"
         added_part += "\t value \t uniform 0;\n"
     
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutkRoughWallFunction;\n"
+        added_part += "\t Ks \t uniform 1e-5;\n"
+        added_part += "\t Cs \t uniform 0.5;\n"
+        added_part += "\t value \t uniform 0;\n"
     
     dict_lines.insert(start_index, added_part)
     
@@ -935,7 +943,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     added_part += "\t Zref \t {:.4f};\n".format(building_height)
     added_part += "\t zDir \t (0.0 0.0 1.0);\n"
     added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-    added_part += "\t z0 \t  uniform {:.4f};\n".format(roughness_length)
+    added_part += "\t z0 \t  uniform {:.4e};\n".format(roughness_length)
     added_part += "\t zGround \t uniform 0.0;\n"
     
     dict_lines.insert(start_index, added_part)
@@ -1070,7 +1078,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     added_part += "\t Zref \t {:.4f};\n".format(building_height)
     added_part += "\t zDir \t (0.0 0.0 1.0);\n"
     added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-    added_part += "\t z0 \t uniform {:.4f};\n".format(roughness_length)
+    added_part += "\t z0 \t uniform {:.4e};\n".format(roughness_length)
     added_part += "\t zGround \t uniform 0.0;\n"
     
     dict_lines.insert(start_index, added_part)
@@ -1227,7 +1235,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
      
     #Find function object location  
     start_index = foam.find_keyword_line(dict_lines, "functions") + 2
-    
 
     #Write story loads functionObjects  
     added_part = "    #includeFunc  storyForces\n"
@@ -1379,7 +1386,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
     num_stories = rm_data['numStories']
     floor_height = rm_data['floorHeight']
     center_of_rotation = rm_data['centerOfRotation']
-    story_load_write_interval = rm_data['storyLoadWriteInterval']
+    base_load_write_interval = rm_data['baseLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']
 
     
@@ -1392,7 +1399,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
     #Write writeInterval 
     start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-    dict_lines[start_index] = "writeInterval \t{};\n".format(story_load_write_interval)    
+    dict_lines[start_index] = "writeInterval \t{};\n".format(base_load_write_interval)    
     
     #Write patch name to intergrate forces on 
     start_index = foam.find_keyword_line(dict_lines, "patches") 
@@ -1556,7 +1563,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 
     #Write type of the simulation 
     start_index = foam.find_keyword_line(dict_lines, "nu") 
-    dict_lines[start_index] = "nu\t\t[0 2 -1 0 0 0 0] {:.3e};\n".format(kinematic_viscosity)
+    dict_lines[start_index] = "nu\t\t[0 2 -1 0 0 0 0] {:.4e};\n".format(kinematic_viscosity)
 
 
     #Write edited dict to file

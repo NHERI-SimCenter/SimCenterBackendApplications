@@ -457,7 +457,12 @@
         "ApplicationSpecificInputs":[
         ]
       },
-	
+      {
+        "Name": "CoupledDigitalTwin",
+        "ExecutablePath": "applications/createEVENT/coupledDigitalTwin/CoupledDigitalTwin.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },	
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
@@ -1108,6 +1113,32 @@
         "Name": "CBCitiesDL",
         "ExecutablePath": "applications/performDL/CBCities/CBCitiesWDNDL.py",
         "ApplicationSpecificInputs": [
+        ]
+      }
+    ]
+  },
+  "PerformanceApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "REDi",
+        "ExecutablePath": "applications/performanceAssessment/REDi/REDiWrapper.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "dirnameOutput",
+            "type": "string",
+            "description": "Path to the working directory containing the Pelicun results."
+          },
+          {
+            "id": "riskParametersPath",
+            "type": "string",
+            "description": "Path to the risk parameters json file ."
+          }
         ]
       }
     ]
