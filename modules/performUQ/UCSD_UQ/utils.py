@@ -3,8 +3,11 @@ from scipy.linalg import block_diag
 import os
 import shutil
 import time
-
-from typing import List, TextIO
+from numpy.typing import NDArray
+from typing import Callable
+from typing import TextIO
+from importlib import import_module
+import sys
 
 import pdfs
 
@@ -20,7 +23,7 @@ class DataProcessingError(Exception):
 
 
 class CovarianceMatrixPreparer:
-    def __init__(self, calibrationData: np.ndarray, edpLengthsList: List[int], edpNamesList: List[str], workdirMain: str, numExperiments: int, logFile: TextIO, runType: str) -> None:
+    def __init__(self, calibrationData: np.ndarray, edpLengthsList: list[int], edpNamesList: list[str], workdirMain: str, numExperiments: int, logFile: TextIO, runType: str) -> None:
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
         self.edpNamesList = edpNamesList
@@ -237,7 +240,7 @@ class CovarianceMatrixPreparer:
 
 
 class CalDataPreparer:
-    def __init__(self, workdirMain: str, workdirTemplate: str, calDataFileName: str, edpNamesList: List[str], edpLengthsList: List[int], logFile: TextIO) -> None:
+    def __init__(self, workdirMain: str, workdirTemplate: str, calDataFileName: str, edpNamesList: list[str], edpLengthsList: list[int], logFile: TextIO) -> None:
         self.workdirMain = workdirMain
         self.workdirTemplate = workdirTemplate
         self.calDataFileName = calDataFileName
@@ -311,7 +314,7 @@ class CalDataPreparer:
     def readCleanedCalData(self):
         self.calibrationData = np.atleast_2d(
             np.genfromtxt(
-                self.tempCalDataFile, skip_header=1, usecols=np.arange(2, 2 + self.lineLength)
+                self.tempCalDataFile, skip_header=1, usecols=np.arange(2, 2 + self.lineLength).tolist()
             )
         )
     
@@ -325,14 +328,15 @@ class CalDataPreparer:
         return self.calibrationData, self.numExperiments
 
 
-def transformDataFunction(calibrationData: np.ndarray, edpLengthsList: List[int], scaleFactors: List[float], shiftFactors: List[float]):
+def transform_data_function(data_to_transform: np.ndarray, list_of_data_segment_lengths: list[int], 
+                            list_of_scale_factors: list[float], list_of_shift_factors: list[float]):
     currentPosition = 0
-    for j in range(len(edpLengthsList)):
-        calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + edpLengthsList[j]]
-        calibrationDataSlice = calibrationDataSlice + shiftFactors[j]
-        calibrationData[:, currentPosition : currentPosition + edpLengthsList[j]] = (calibrationDataSlice / scaleFactors[j])
-        currentPosition += edpLengthsList[j]
-    return calibrationData
+    for j in range(len(list_of_data_segment_lengths)):
+        slice_of_data = data_to_transform[:, currentPosition : currentPosition + list_of_data_segment_lengths[j]]
+        slice_of_data = slice_of_data + list_of_shift_factors[j]
+        data_to_transform[:, currentPosition : currentPosition + list_of_data_segment_lengths[j]] = (slice_of_data / list_of_scale_factors[j])
+        currentPosition += list_of_data_segment_lengths[j]
+    return data_to_transform
 
 
 class DataTransformer:
@@ -352,7 +356,7 @@ class DataTransformer:
             "prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value)."
         )
 
-    def computeScaleAndShiftFactors(self, calibrationData: np.ndarray, edpLengthsList: List[int]):
+    def computeScaleAndShiftFactors(self, calibrationData: np.ndarray, edpLengthsList: list[int]):
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
 
@@ -401,7 +405,7 @@ class DataTransformer:
         return scaleFactors, shiftFactors
 
     def transformData(self):
-        return transformDataFunction(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
+        return transform_data_function(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
 
 
 
@@ -549,4 +553,91 @@ def make_distributions(variables):
     
     return all_distributions_list
 
+
+class LogLikelihoodHandler:
+    def __init__(self, data: NDArray, covariance_matrix_blocks_list: list[NDArray], 
+                 list_of_data_segment_lengths: list[int], list_of_scale_factors: list[float], 
+                 list_of_shift_factors: list[float], workdir_main,
+                 full_path_to_tmcmc_code_directory: str,
+                 log_likelihood_file_name: str="") -> None:
+        self.data = data
+        self.covariance_matrix_list = covariance_matrix_blocks_list
+        self.list_of_data_segment_lengths = list_of_data_segment_lengths
+        self.list_of_scale_factors = list_of_scale_factors
+        self.list_of_shift_factors = list_of_shift_factors
+        self.workdir_main = workdir_main
+        self.full_path_to_tmcmc_code_directory = full_path_to_tmcmc_code_directory
+        self.log_likelihood_file_name = log_likelihood_file_name
+        sys.path.append(self.workdir_main)
+        self._copy_log_likelihood_module()
+        self.num_experiments = self._get_num_experiments()
+        self.num_response_quantities = self. _get_num_response_quantities()
+        self.log_likelihood_function = self.get_log_likelihood_function()
+    
+    def _copy_log_likelihood_module(self):
+        if len(self.log_likelihood_file_name) == 0:  # if the log-likelihood file is an empty string
+            self.log_likelihood_file_name = "defaultLogLikeScript.py"
+            src = os.path.join(self.full_path_to_tmcmc_code_directory, self.log_likelihood_file_name)
+            dst = os.path.join(self.workdir_main, self.log_likelihood_file_name)
+            try:
+                shutil.copyfile(src, dst)
+            except Exception:
+                msg = f"ERROR: The log-likelihood script '{src}' cannot be copied to '{dst}'."
+                raise Exception(msg)
+
+    def _get_num_experiments(self) -> int:
+        return np.shape(self.data)[0]
+    
+    def _get_num_response_quantities(self) -> int:
+        return len(self.list_of_data_segment_lengths)
+
+    def _import_log_likelihood_module(self, log_likelihood_module_name: str) -> Callable:
+        try:
+            module = import_module(log_likelihood_module_name)
+        except:
+            msg = ("\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
+                    os.path.join(self.workdir_main, self.log_likelihood_file_name)))
+            raise ImportError(msg)
+        return module.log_likelihood
+    
+    def get_log_likelihood_function(self) -> Callable:
+        log_likelihood_module_name = os.path.splitext(self.log_likelihood_file_name)[0]
+        return self._import_log_likelihood_module(log_likelihood_module_name)
+
+    def _transform_prediction(self, prediction: NDArray) -> NDArray:
+        return transform_data_function(prediction, self.list_of_data_segment_lengths, self.list_of_scale_factors, self.list_of_shift_factors)
+
+    def _compute_residuals(self, transformed_prediction: NDArray) -> NDArray:
+        return transformed_prediction - self.data
+    
+    def _make_mean(self, response_num: int) -> NDArray:
+        return np.zeros((self.list_of_data_segment_lengths[response_num]))
+    
+    def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
+        return cov_multiplier * self.covariance_matrix_list[response_num]
+
+    def _make_input_for_log_likelihood_function(self, prediction) -> list:
+        return [self._transform_prediction(prediction), ]
+    
+    def _loop_for_log_likelihood(self, log_likelihood_function, prediction, list_of_covariance_multipliers):
+        transformed_prediction = self._transform_prediction(prediction)
+        allResiduals = self._compute_residuals(transformed_prediction)
+        loglike = 0
+        for i in range(self.num_experiments):
+            currentPosition = 0
+            for j in range(self.num_response_quantities):
+                length = self.list_of_data_segment_lengths[j]
+                residuals = allResiduals[i, currentPosition:currentPosition + length]
+                currentPosition =  currentPosition + length
+                cov = self._make_covariance(j, list_of_covariance_multipliers[j])
+                mean = self._make_mean(j)
+                ll = log_likelihood_function(residuals, mean, cov)
+                if not np.isnan(ll):
+                    loglike += ll
+                else:
+                    loglike += -np.inf
+        return loglike
+
+    def evaluate_log_likelihood(self, log_likelihood_function: Callable, iterable: tuple) -> float:
+        return self._loop_for_log_likelihood(log_likelihood_function, prediction=iterable[0], list_of_covariance_multipliers=iterable[1])
 
