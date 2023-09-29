@@ -70,7 +70,7 @@ class runGSA
 {
 public:
 	runGSA();
-	runGSA::runGSA(string workflowDriver,
+	runGSA(string workflowDriver,
 		string osType,
 		string runType,
 		jsonInput inp,
