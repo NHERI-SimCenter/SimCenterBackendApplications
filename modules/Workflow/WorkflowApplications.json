@@ -425,7 +425,12 @@
         "ApplicationSpecificInputs":[
         ]
       },
-	
+      {
+        "Name": "CoupledDigitalTwin",
+        "ExecutablePath": "applications/createEVENT/coupledDigitalTwin/CoupledDigitalTwin.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },	
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
