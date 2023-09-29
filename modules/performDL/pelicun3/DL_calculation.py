@@ -64,8 +64,6 @@ from pelicun.assessment import Assessment
 # pylint: disable=too-many-nested-blocks
 # pylint: disable=too-many-branches
 
-pd.set_option('display.max_rows', None)
-
 # suppress FutureWarnings by default - credit: ioannis_vm
 if not sys.warnoptions:
     warnings.filterwarnings(
@@ -763,19 +761,13 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
     if damage_config is not None:
 
         # load the fragility information
-        if asset_config['ComponentDatabase'] in default_DBs['fragility'].keys():
-            component_db = [
+        if asset_config['ComponentDatabase'] != "User Defined":
+            fragility_db = (
                 'PelicunDefault/' +
-                default_DBs['fragility'][asset_config['ComponentDatabase']],]
+                default_DBs['fragility'][asset_config['ComponentDatabase']])
+
         else:
-            component_db = []
-
-        if asset_config.get('ComponentDatabasePath', False) != False:
-
-            extra_comps = asset_config['ComponentDatabasePath']
-
-            component_db += [extra_comps,]
-        component_db = component_db[::-1]
+            fragility_db = asset_config['ComponentDatabasePath']
 
         # prepare additional fragility data
 
@@ -894,11 +886,11 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
             adf.loc['irreparable', ('LS1', 'Theta_0')] = 1e10
             adf.loc['irreparable', 'Incomplete'] = 0
 
-        PAL.damage.load_damage_model(component_db + [adf,])
+        PAL.damage.load_damage_model([fragility_db, adf])
 
         # load the damage process if needed
         dmg_process = None
-        if damage_config.get('DamageProcess', False) != False:
+        if damage_config.get('DamageProcess', False):
 
             dp_approach = damage_config['DamageProcess']
 
@@ -978,11 +970,6 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                           encoding='utf-8') as f:
                     dmg_process = json.load(f)
 
-            elif dp_approach == "None":
-
-                # no damage process applied for the calculation
-                dmg_process = None
-
             else:
                 log_msg(f"Prescribed Damage Process not recognized: "
                         f"{dp_approach}")
@@ -1044,16 +1031,14 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 df_res_c = pd.DataFrame([0,],
                     columns=pd.MultiIndex.from_tuples([('probability',' '),]),
                     index=[0, ])
-                
-                if 'collapse-0-1-1' in damage_sample.columns:
+
+                if ("collapse", 0, 1, 1) in damage_sample.columns:
                     df_res_c['probability'] = (
-                        damage_sample['collapse-0-1-1'].mean())
+                        damage_sample[("collapse", 0, 1, 1)].mean())
 
                 else:
                     df_res_c['probability'] = 0.0
 
-                DMG_agg = damage_sample.groupby(level=['FG', 'DSG_DS'], axis=1).sum()
-                
                 df_res = pd.concat([df_res_c,], axis=1, keys=['collapse',])
 
                 df_res.to_csv(output_path/'DM.csv')
@@ -1071,51 +1056,29 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
             bldg_repair_config = loss_config['BldgRepair']
 
-            # load the fragility information
-            if bldg_repair_config['ConsequenceDatabase'] in default_DBs['repair'].keys():
-                consequence_db = [
-                    'PelicunDefault/' +
-                    default_DBs['repair'][bldg_repair_config['ConsequenceDatabase']],]
+            # load the consequence information
+            if bldg_repair_config['ConsequenceDatabase'] != "User Defined":
+                consequence_db = (
+                        'PelicunDefault/' +
+                        default_DBs['repair'][
+                            bldg_repair_config['ConsequenceDatabase']])
 
                 conseq_df = PAL.get_default_data(
                     default_DBs['repair'][
                         bldg_repair_config['ConsequenceDatabase']][:-4])
+
             else:
-                consequence_db = []
-
-                conseq_df = None
-
-            if bldg_repair_config.get('ConsequenceDatabasePath', False) != False:
-
-                extra_comps = bldg_repair_config['ConsequenceDatabasePath']
-
-                consequence_db += [extra_comps,]
-
-                extra_conseq_df = load_data(
+                consequence_db = bldg_repair_config['ConsequenceDatabasePath']
+                conseq_df = load_data(
                     bldg_repair_config['ConsequenceDatabasePath'],
                     unit_conversion_factors={},
                     orientation=1, reindex=False, convert=[])
-
-                if isinstance(conseq_df, pd.DataFrame):
-
-                    conseq_df = pd.concat([conseq_df, extra_conseq_df])
-                else:
-
-                    conseq_df = extra_conseq_df
-
-            consequence_db = consequence_db[::-1]
-
-            # remove duplicates from conseq_df
-            conseq_df = conseq_df.loc[conseq_df.index.unique(),:]
 
             # add the replacement consequence to the data
             adf = pd.DataFrame(
                 columns=conseq_df.columns,
                 index=pd.MultiIndex.from_tuples(
-                    [('replacement', 'Cost'), 
-                     ('replacement', 'Time'),
-                     ('replacement', 'Carbon'),
-                     ('replacement', 'Energy')]))
+                    [('replacement', 'Cost'), ('replacement', 'Time')]))
 
             #DL_method = bldg_repair_config['ConsequenceDatabase']
             DL_method = damage_config.get('DamageProcess', 'User Defined')
@@ -1202,66 +1165,6 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     adf.loc[rt, ('DV', 'Unit')] = 'loss_ratio'
                     adf.loc[rt, ('DS1', 'Theta_0')] = 1
 
-            rcarb = ('replacement', 'Carbon')
-            if 'ReplacementCarbon' in bldg_repair_config.keys():
-                rCarbon_config = bldg_repair_config['ReplacementCarbon']
-                rcarb = ('replacement', 'Carbon')
-
-                adf.loc[rcarb, ('Quantity', 'Unit')] = "1 EA"
-
-                adf.loc[rcarb, ('DV', 'Unit')] = rCarbon_config["Unit"]
-
-                adf.loc[rcarb, ('DS1', 'Theta_0')] = rCarbon_config["Median"]
-
-                if pd.isna(rCarbon_config.get('Distribution', np.nan))==False:
-                    adf.loc[rcarb, ('DS1', 'Family')] = rCarbon_config[
-                        "Distribution"]
-                    adf.loc[rcarb, ('DS1', 'Theta_1')] = rCarbon_config[
-                        "Theta_1"]
-            else:
-                # add a default replacement carbon value as a placeholder
-                # the default value depends on the consequence database
-
-                # for FEMA P-58, use 0 kg
-                if DL_method == 'FEMA P-58':
-                    adf.loc[rcarb, ('Quantity', 'Unit')] = '1 EA'
-                    adf.loc[rcarb, ('DV', 'Unit')] = 'kg'
-                    adf.loc[rcarb, ('DS1', 'Theta_0')] = 0
-
-                else:
-                    # for everything else, remove this consequence
-                    adf.drop(rcarb, inplace=True)
-
-            ren = ('replacement', 'Energy')
-            if 'ReplacementEnergy' in bldg_repair_config.keys():
-                rEnergy_config = bldg_repair_config['ReplacementEnergy']
-                ren = ('replacement', 'Energy')
-
-                adf.loc[ren, ('Quantity', 'Unit')] = "1 EA"
-
-                adf.loc[ren, ('DV', 'Unit')] = rEnergy_config["Unit"]
-
-                adf.loc[ren, ('DS1', 'Theta_0')] = rEnergy_config["Median"]
-
-                if pd.isna(rEnergy_config.get('Distribution', np.nan))==False:
-                    adf.loc[ren, ('DS1', 'Family')] = rEnergy_config[
-                        "Distribution"]
-                    adf.loc[ren, ('DS1', 'Theta_1')] = rEnergy_config[
-                        "Theta_1"]
-            else:
-                # add a default replacement energy value as a placeholder
-                # the default value depends on the consequence database
-
-                # for FEMA P-58, use 0 kg
-                if DL_method == 'FEMA P-58':
-                    adf.loc[ren, ('Quantity', 'Unit')] = '1 EA'
-                    adf.loc[ren, ('DV', 'Unit')] = 'MJ'
-                    adf.loc[ren, ('DS1', 'Theta_0')] = 0
-
-                else:
-                    # for everything else, remove this consequence
-                    adf.drop(ren, inplace=True)
-
             # prepare the loss map
             loss_map = None
             if bldg_repair_config['MapApproach'] == "Automatic":
@@ -1291,11 +1194,11 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                             drivers.append(f'DMG-{dmg_cmp}')
                             loss_models.append(dmg_cmp)
 
-                elif DL_method == 'Hazus Earthquake':
+                elif DL_method == 'Hazus Earthquake' or DL_method == 'Hazus Earthquake Transportation':
 
                     # with Hazus Earthquake we assume that consequence
                     # archetypes are only differentiated by occupancy type
-                    occ_type = asset_config['OccupancyType']
+                    occ_type = asset_config.get('OccupancyType',None)
 
                     for dmg_cmp in dmg_cmps:
 
@@ -1303,24 +1206,10 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                             continue
 
                         cmp_class = dmg_cmp.split('.')[0]
-                        loss_cmp = f'{cmp_class}.{occ_type}'
-
-                        if loss_cmp in loss_cmps:
-                            drivers.append(f'DMG-{dmg_cmp}')
-                            loss_models.append(loss_cmp)
-                elif DL_method == 'Hazus Earthquake Transportation':
-
-                    # with Hazus Earthquake we assume that consequence
-                    # archetypes are only differentiated by occupancy type
-                    # occ_type = GI_config['assetSubtype']
-
-                    for dmg_cmp in dmg_cmps:
-
-                        if dmg_cmp == 'collapse':
-                            continue
-
-                        cmp_class = dmg_cmp.split('.')[0]
-                        loss_cmp = cmp_class
+                        if occ_type is not None:
+                            loss_cmp = f'{cmp_class}.{occ_type}'
+                        else:
+                            loss_cmp = cmp_class
 
                         if loss_cmp in loss_cmps:
                             drivers.append(f'DMG-{dmg_cmp}')
@@ -1329,6 +1218,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 loss_map = pd.DataFrame(loss_models,
                                         columns=['BldgRepair'],
                                         index=drivers)
+
             elif bldg_repair_config['MapApproach'] == "User Defined":
 
                 loss_map = pd.read_csv(bldg_repair_config['MapFilePath'],
@@ -1339,20 +1229,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 loss_map.loc['DMG-collapse',    'BldgRepair'] = 'replacement'
                 loss_map.loc['DMG-irreparable', 'BldgRepair'] = 'replacement'
 
-            # assemble the list of requested decision variables
-            DV_list = []
-            if bldg_repair_config.get('DecisionVariables',False) != False:
-
-                for DV_i, DV_status in bldg_repair_config['DecisionVariables'].items():
-
-                    if DV_status == True:
-                        DV_list.append(DV_i)
-
-            else:
-                DV_list = None
-
-            PAL.bldg_repair.load_model(consequence_db + [adf,], loss_map,
-                                       decision_variables=DV_list)
+            PAL.bldg_repair.load_model([conseq_df, adf], loss_map)
 
             PAL.bldg_repair.calculate()
 

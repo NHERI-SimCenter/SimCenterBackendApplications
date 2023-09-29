@@ -78,7 +78,7 @@ def auto_populate(AIM):
         Component assignment - Defines the components (in rows) and their 
         location, direction, and quantity (in columns).
     """
-    print("JZ Debug: the Hazus_Earthquake_PGA.py auto_popu is used")
+    print("JZ Debug: the Hazus_Earthquake_PGA_and_PGD.py auto_popu is used")
     AIM_ap = AIM.copy()
 
     # get the building parameters
@@ -134,8 +134,11 @@ def auto_populate(AIM):
     # get the occupancy class
     ot = AIM['OccupancyClass']
 
+    foundation_type = 'S'
     CMP = pd.DataFrame(
-        {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A']},
+        {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A'],
+        f'GF.H.{foundation_type}':['ea', 1, 1, 1, 'N/A'],
+        f'GF.V.{foundation_type}':['ea', 1, 3, 1, 'N/A']},
         index = [         'Units','Location','Direction','Theta_0','Family']
     ).T
 
