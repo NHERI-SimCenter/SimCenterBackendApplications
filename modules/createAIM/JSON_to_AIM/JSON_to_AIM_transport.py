@@ -149,18 +149,20 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance = 10e-3):
             else:
                 newEdge_ns = newNodes[sLS_ind-1]["nodeID"]
                 newEdge_ne = currentEdge["node_end"]
-            newEdge = {"ID":newID,
+            newEdge = currentEdge.copy()
+            newEdge.update({"ID":newID,
                                     "road_type":currentEdge["road_type"],
                                     "geometry":newGeom,
                                     "node_start":newEdge_ns,
                                     "node_end":newEdge_ne,
                                     "capacity":currentEdge["capacity"],
-                                    "lanes":currentEdge["lanes"]}
+                                    "lanes":currentEdge["lanes"]})
             newEdges.append(newEdge)
         dropedEdges.append(row_ind)
     edges = edges.drop(dropedEdges)
-    newEdges = gpd.GeoDataFrame(newEdges, crs=crs)
-    edges = pd.concat([edges, newEdges], ignore_index=True)
+    if len(newEdges)>0:
+        newEdges = gpd.GeoDataFrame(newEdges, crs=crs)
+        edges = pd.concat([edges, newEdges], ignore_index=True)
     edges = edges.reset_index(drop=True)
     nodesDF = gpd.GeoDataFrame(nodes_dict, crs = crs)
     return edges, nodesDF
@@ -231,10 +233,16 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
     with open(asset_source_file, "r") as sourceFile:
         assets_dict = json.load(sourceFile)
     
-    bridges_array = assets_dict["hwy_bridges"]
-    tunnels_array = assets_dict["hwy_tunnels"]
-    roads_array = assets_dict["roadways"]
-    nodes_dict= assets_dict["nodes"]
+    bridges_array = assets_dict.get("hwy_bridges",None)
+    tunnels_array = assets_dict.get("hwy_tunnels",None)
+    roads_array = assets_dict.get("roadways", None)
+    nodes_dict= assets_dict.get("nodes", None)
+    if nodes_dict is None:
+        print("JSON_to_AIM_tranportation ERROR: A key of 'nodes' is not found in the asset file: " + asset_source_file)
+        return
+    if tunnels_array is None and bridges_array is None and roads_array is None:
+        print("JSON_to_AIM_tranportation ERROR: None of 'hwy_bridges', 'hwy_tunnels', nor 'roadways' is not found in the asset file: " + asset_source_file)
+        return
     assets_array = []
 
     # if there is a filter, then pull out only the required bridges
@@ -272,91 +280,74 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
         roads_to_run = list(range(0, len(roads_array)))
 
     # Reconstruct road network
-    datacrs = assets_dict["crs"]
-    roadDF = pd.DataFrame.from_dict(selected_roads)
-    LineStringList = []
-    for ind in roadDF.index:
-        start_node = nodes_dict[str(roadDF.loc[ind, "start_node"])]
-        end_node = nodes_dict[str(roadDF.loc[ind, "end_node"])]
-        LineStringList.append(shapely.geometry.LineString([(start_node["lon"], start_node["lat"]), (end_node["lon"], end_node["lat"])]))
-    roadDF["geometry"] = LineStringList
-    roadDF = roadDF[["ID","road_type","lanes","capacity","geometry"]]
-    roadGDF = gpd.GeoDataFrame(roadDF, geometry="geometry", crs=datacrs)
-    graph = momepy.gdf_to_nx(roadGDF.to_crs("epsg:32610"), approach='primal')
-    with warnings.catch_warnings(): #Suppress the warning of disconnected components in the graph
-        warnings.simplefilter("ignore")
-        nodes, edges, sw = momepy.nx_to_gdf(graph, points=True, lines=True,
-                                            spatial_weights=True)
-    # Oneway or twoway is not considered in D&L, remove duplicated edges
-    edges = edges[edges.duplicated(['node_start', 'node_end'], keep="first")==False]
-    edges = edges.reset_index(drop=True).drop("mm_len",axis=1)
-    ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
-    for ind in edges.index:
-        start = nodes.loc[edges.loc[ind, "node_start"],"geometry"]
-        end = nodes.loc[edges.loc[ind, "node_end"],"geometry"]
-        first = shapely.geometry.Point(edges.loc[ind,"geometry"].coords[0])
-        last = shapely.geometry.Point(edges.loc[ind,"geometry"].coords[-1])
-        #check if first and last are the same
-        if (start == first and end == last):
-            continue
-        elif (start == last and end == first):
-            newStartID = edges.loc[ind, "node_end"]
-            newEndID = edges.loc[ind, "node_start"]
-            edges.loc[ind,"node_start"] = newStartID
-            edges.loc[ind,"node_end"] = newEndID
-        else:
-            print(ind, "th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function")
-    nodesID_to_remove = [i for i, n in enumerate(graph.nodes) if len(list(graph.neighbors(n))) == 2]
-    nodes_to_remove = [n for i, n in enumerate(graph.nodes) if len(list(graph.neighbors(n))) == 2]
-    
-    edges = remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph)
-    remainingNodesOldID = list(set(edges["node_start"].values.tolist() + edges["node_end"].values.tolist()))
-    nodes = nodes.loc[remainingNodesOldID,:].sort_index()
-    nodes = nodes.reset_index(drop=True).reset_index().rename(columns={"index":"nodeID", "nodeID":"oldNodeID"})
-    edges = edges.merge(nodes[["nodeID", "oldNodeID"]], left_on="node_start",
-             right_on = "oldNodeID", how="left").drop(["node_start", "oldNodeID"], axis=1).rename(columns = {"nodeID":"node_start"})
-    edges = edges.merge(nodes[["nodeID", "oldNodeID"]], left_on="node_end",
-             right_on = "oldNodeID", how="left").drop(["node_end", "oldNodeID"], axis=1).rename(columns = {"nodeID":"node_end"})
-    edges, nodes = breakDownLongEdges(edges, roadSegLength, roadDF, nodes)
+    datacrs = assets_dict.get("crs", None)
+    if datacrs is None:
+        print("JSON_to_AIM_tranportation WARNING: 'crs' is not found in the asset file: " + asset_source_file)
+        print("The CRS epsg:4326 is used by default")
+        datacrs = "epsg:4326"
 
-    locationGS = gpd.GeoSeries(edges["geometry"].apply(lambda x: x.centroid),crs = edges.crs).to_crs(datacrs)
-    edges = edges.to_crs(datacrs).rename(columns = {"node_start":"start_node","node_end":"end_node"})
-    edges["location_lon"] = locationGS.apply(lambda x:x.x)
-    edges["location_lat"] = locationGS.apply(lambda x:x.y)
+    if len(selected_roads)>0:
+        roadDF = pd.DataFrame.from_dict(selected_roads)
+        LineStringList = []
+        for ind in roadDF.index:
+            start_node = nodes_dict[str(roadDF.loc[ind, "start_node"])]
+            end_node = nodes_dict[str(roadDF.loc[ind, "end_node"])]
+            LineStringList.append(shapely.geometry.LineString([(start_node["lon"], start_node["lat"]), (end_node["lon"], end_node["lat"])]))
+        roadDF["geometry"] = LineStringList
+        roadDF = roadDF[["ID","road_type","lanes","capacity","geometry"]]
+        roadGDF = gpd.GeoDataFrame(roadDF, geometry="geometry", crs=datacrs)
+        graph = momepy.gdf_to_nx(roadGDF.to_crs("epsg:6500"), approach='primal')
+        with warnings.catch_warnings(): #Suppress the warning of disconnected components in the graph
+            warnings.simplefilter("ignore")
+            nodes, edges, sw = momepy.nx_to_gdf(graph, points=True, lines=True,
+                                                spatial_weights=True)
+        # Oneway or twoway is not considered in D&L, remove duplicated edges
+        edges = edges[edges.duplicated(['node_start', 'node_end'], keep="first")==False]
+        edges = edges.reset_index(drop=True).drop("mm_len",axis=1)
+        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
+        for ind in edges.index:
+            start = nodes.loc[edges.loc[ind, "node_start"],"geometry"]
+            end = nodes.loc[edges.loc[ind, "node_end"],"geometry"]
+            first = shapely.geometry.Point(edges.loc[ind,"geometry"].coords[0])
+            last = shapely.geometry.Point(edges.loc[ind,"geometry"].coords[-1])
+            #check if first and last are the same
+            if (start == first and end == last):
+                continue
+            elif (start == last and end == first):
+                newStartID = edges.loc[ind, "node_end"]
+                newEndID = edges.loc[ind, "node_start"]
+                edges.loc[ind,"node_start"] = newStartID
+                edges.loc[ind,"node_end"] = newEndID
+            else:
+                print(ind, "th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function")
+        nodesID_to_remove = [i for i, n in enumerate(graph.nodes) if len(list(graph.neighbors(n))) == 2]
+        nodes_to_remove = [n for i, n in enumerate(graph.nodes) if len(list(graph.neighbors(n))) == 2]
+        
+        edges = remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph)
+        remainingNodesOldID = list(set(edges["node_start"].values.tolist() + edges["node_end"].values.tolist()))
+        nodes = nodes.loc[remainingNodesOldID,:].sort_index()
+        nodes = nodes.reset_index(drop=True).reset_index().rename(columns={"index":"nodeID", "nodeID":"oldNodeID"})
+        edges = edges.merge(nodes[["nodeID", "oldNodeID"]], left_on="node_start",
+                right_on = "oldNodeID", how="left").drop(["node_start", "oldNodeID"], axis=1).rename(columns = {"nodeID":"node_start"})
+        edges = edges.merge(nodes[["nodeID", "oldNodeID"]], left_on="node_end",
+                right_on = "oldNodeID", how="left").drop(["node_end", "oldNodeID"], axis=1).rename(columns = {"nodeID":"node_end"})
+        edges, nodes = breakDownLongEdges(edges, roadSegLength, roadDF, nodes)
 
-    # # check if a road filter is provided
-    # if road_filter is not None:
-    #     roads_requested = []
-    #     for assets in road_filter.split(','):
-    #         if "-" in assets:
-    #             asset_low, asset_high = assets.split("-")
-    #             roads_requested += list(range(int(asset_low), int(asset_high)+1))
-    #         else:
-    #             roads_requested.append(int(assets))
-    #     roads_requested = np.array(roads_requested)
-    # # if there is a filter, then pull out only the required assets
-    # if road_filter is not None:
-    #     assets_available = edges.index.values
-    #     roads_to_run = roads_requested[
-    #         np.where(np.in1d(roads_requested, assets_available))[0]]
-    # else:
-    #     roads_to_run = list(range(0, edges.shape[0]))
-    edges = edges.reset_index().rename(columns={"index":"AIM_id"})
-    edges["AIM_id"] = edges["AIM_id"].apply(lambda x:"r"+str(x))
-    # if saveFullNetwork:
-    #     edges.to_file(os.path.join(outDir,"roadNetworkEdges.geojson"), driver = "GeoJSON")
-    #     nodesNeeded = list(set(edges["start_node"].values.tolist() + edges["end_node"].values.tolist()))
-    #     allNodes = nodes.loc[nodesNeeded,:].to_crs(datacrs)[["nodeID","geometry"]]
-    #     allNodes.to_file(os.path.join(outDir,"roadNetworkNodes.geojson"), driver = "GeoJSON") 
-    #Edges below are selected edges
-    # edges = edges.iloc[roads_to_run,:]
-    edges.to_file(os.path.join(outDir,"roadNetworkEdgesSelected.geojson"), driver = "GeoJSON")
+        locationGS = gpd.GeoSeries(edges["geometry"].apply(lambda x: x.centroid),crs = edges.crs).to_crs(datacrs)
+        edges = edges.to_crs(datacrs).rename(columns = {"node_start":"start_node","node_end":"end_node"})
+        edges["location_lon"] = locationGS.apply(lambda x:x.x)
+        edges["location_lat"] = locationGS.apply(lambda x:x.y)
 
-    nodesNeeded = list(set(edges["start_node"].values.tolist() + edges["end_node"].values.tolist()))
-    nodes = nodes.loc[nodesNeeded,:]
-    nodes = nodes.to_crs(datacrs)[["nodeID","geometry"]]
-    nodes.to_file(os.path.join(outDir,"roadNetworkNodesSelected.geojson"), driver = "GeoJSON")
+        edges = edges.reset_index().rename(columns={"index":"AIM_id"})
+        edges["AIM_id"] = edges["AIM_id"].apply(lambda x:"r"+str(x))
+        edges.to_file(os.path.join(outDir,"roadNetworkEdgesSelected.geojson"), driver = "GeoJSON")
 
+        nodesNeeded = list(set(edges["start_node"].values.tolist() + edges["end_node"].values.tolist()))
+        nodes = nodes.loc[nodesNeeded,:]
+        nodes = nodes.to_crs(datacrs)[["nodeID","geometry"]]
+        nodes.to_file(os.path.join(outDir,"roadNetworkNodesSelected.geojson"), driver = "GeoJSON")
+    else:
+        edges = pd.DataFrame.from_dict({})
 
     count = 0
     ind = 0
