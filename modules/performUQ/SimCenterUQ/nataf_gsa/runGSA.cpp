@@ -676,7 +676,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 		}
 
 		while (1) {
-			status = model.learn(data, Kos, maha_dist, static_subset, 500, 500, V * 1.e-15, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
+			status = model.learn(data, Kos, maha_dist, static_subset, 1000, 1000, V * 1.e-12, false);// max kmeans iter = 100, max EM iter = 200, convergence variance = V*1.e-15
 			logL = model.sum_log_p(data);
 			if ((logL < oldLogL) || (Kos >= Kthres)) {
 				break;
@@ -785,12 +785,9 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			}
 			//In this case, (nqoi_eff == nqoi_red)
 			Si_tmp.push_back(calVar(mui)/ V_approx);
+
 			Var_tmp.push_back(V_approx);
 			total_qoi_count++;
-
-
-
-
 		}
 		else {
 			Ei.push_back(mui);
@@ -812,6 +809,7 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 				if (nq1 >= nq2) {
 					Sigmaij(nq1, nq2) = calCov(Ei[nq1], Ei[nq2]);
 					Sigmaij(nq2, nq1) = Sigmaij(nq1, nq2);
+
 				}
 			}
 		}
@@ -849,6 +847,9 @@ void runGSA::runSingleCombGSA(vector<vector<double>> gmat, int Ko, vector<int> c
 			double V = sum(aa % trans(lambs_red) % aa);
 			//double V = 0.1;
 			Si_tmp.push_back(Vi / V);
+            //std::cout<<"flag==========================="<<std::endl;
+            //std::cout<<Vi<<std::endl;
+            //std::cout<<V<<std::endl;
 			Var_tmp.push_back(V);
 			total_qoi_count++;
 		}
