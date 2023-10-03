@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <set>
 #include <string.h>
+#include <cmath>
 using namespace std;
 // parses JSON for random variables & returns number found
 

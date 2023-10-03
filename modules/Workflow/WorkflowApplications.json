@@ -425,7 +425,12 @@
         "ApplicationSpecificInputs":[
         ]
       },
-	
+      {
+        "Name": "CoupledDigitalTwin",
+        "ExecutablePath": "applications/createEVENT/coupledDigitalTwin/CoupledDigitalTwin.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },	
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
@@ -1090,7 +1095,7 @@
     "Applications": [
       {
         "Name": "REDi",
-        "ExecutablePath": "applications/performanceAssessment/REDiWrapper.py",
+        "ExecutablePath": "applications/performanceAssessment/REDi/REDiWrapper.py",
         "ApplicationSpecificInputs": [
           {
             "id": "dirnameOutput",
