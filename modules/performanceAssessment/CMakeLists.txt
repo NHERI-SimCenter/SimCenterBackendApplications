@@ -1,1 +1,1 @@
-simcenter_add_python_script(SCRIPT REDiWrapper.py)
+add_subdirectory(REDi)

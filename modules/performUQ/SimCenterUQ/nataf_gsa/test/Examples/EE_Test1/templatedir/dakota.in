@@ -1,0 +1,40 @@
+environment 
+ tabular_data 
+ tabular_data_file = 'dakotaTab.out' 
+
+method,
+ sampling
+ sample_type = lhs 
+ samples = 5 
+ seed = 413
+
+variables 
+ active uncertain 
+  discrete_uncertain_set
+    string = 1
+      num_set_values = 5 
+      set_values =  'PEER-Record-20' 'PEER-Record-30' 'PEER-Record-6' 'PEER-Record-68' 'PEER-Record-77'
+      descriptors = 'MultipleEvent' 
+
+
+
+interface 
+  analysis_driver = 'workflow_driver1.bat'
+  fork
+   parameters_file = 'paramsDakota.in'
+   results_file = 'results.out' 
+   aprepro 
+   work_directory
+     named 'workdir' 
+     directory_tag
+     directory_save
+     file_save
+     copy_files = 'templatedir/*' 
+  asynchronous evaluation_concurrency = 8
+
+responses
+ response_functions = 14
+ response_descriptors = '1-PFA-0-1' '1-PFA-1-1' '1-PFD-1-1' '1-PID-1-1' '1-PFA-2-1' '1-PFD-2-1' '1-PID-2-1' '1-PFA-3-1' '1-PFD-3-1' '1-PID-3-1' '1-PFA-4-1' '1-PFD-4-1' '1-PID-4-1' '1-PRD-1-1' 
+ no_gradients
+ no_hessians
+

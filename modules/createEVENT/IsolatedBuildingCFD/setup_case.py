@@ -4,13 +4,9 @@ directory.
 
 """
 import numpy as np
-import pandas as pd
 import sys
 import os
-import subprocess
 import json
-import stat
-import shutil
 import numpy as np
 import foam_dict_reader as foam
 from stl import mesh

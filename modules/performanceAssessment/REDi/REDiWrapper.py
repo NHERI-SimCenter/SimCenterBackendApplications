@@ -36,10 +36,13 @@
 # Contributors:
 # Stevan Gavrilovic
 
-import json, os, sys, time, math, argparse
+import json, io, sys, time, math, argparse
 from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
+from io import StringIO
+import zipfile
+import pandas as pd
 
 from REDi.go_redi import go_redi
 
@@ -95,6 +98,20 @@ def clean_up_nistr(nistr : str) -> str :
     return nistr
 
 
+def get_replacement_response(replacement_time : float) : 
+
+    return {
+            'repair_class': 'replacement',
+            'damage_by_component_all_DS': None,
+            'repair_schedule': 'replacement',
+            'component_qty': None,
+            'consequence_by_component_by_floor': None,
+            'impeding_delays': None,
+            'max_delay': 0.0,
+            'building_total_downtime': [replacement_time, replacement_time, replacement_time]
+            }
+
+
 def get_first_value(val : dict, num_levels : int) -> int :
     # Get the number of samples that pelicun returns
     
@@ -107,6 +124,8 @@ def get_first_value(val : dict, num_levels : int) -> int :
 
 
 def main(args):
+
+    print("***Running REDi Seismic Downtime engine***\n")
 
     pelicun_results_dir = Path(args.dirnameOutput)
 
@@ -154,6 +173,35 @@ def main(args):
     with open(pathComponentDV) as f:
         CMP_DV = json.load(f)
 
+    # Load the csv version of the decision vars
+    with zipfile.ZipFile(pelicun_results_dir/'DV_bldg_repair_sample.zip', 'r') as zip_ref:
+        # Read the CSV file inside the zip file into memory
+        with zip_ref.open('DV_bldg_repair_sample.csv') as csv_file:
+            # Load the CSV data into a pandas DataFrame
+            data = pd.read_csv(io.TextIOWrapper(csv_file, encoding='utf-8'))
+            
+    # Get the number of samples
+    num_samples = data.shape[0]
+
+    # Define a list of keywords to search for in column names
+    keywords = ['replacement-collapse', 'replacement-irreparable']
+    DVs = ['Cost','Time']
+
+    DVReplacementDict = {}
+    for DV in DVs : 
+        columns_to_check = [col for col in data.columns if any(f'{DV}-{keyword}' in col for keyword in keywords)]
+        # Create a boolean vector indicating whether non-zero values are present in each column
+        result_vector = data[columns_to_check].apply(max, axis=1)
+
+        DVReplacementDict[DV] = result_vector
+        
+
+    # Find columns containing replace or collapse keywords
+    buildingirreparableOrCollapsed = (data[columns_to_check] != 0).any(axis=1)
+
+    sum_collapsed_buildings = sum(buildingirreparableOrCollapsed)
+    
+    print(f"There are {sum_collapsed_buildings} collapsed or irreparable buildings from Pelicun")
 
     # Get some general information
     gen_info = AIM['DL']['Asset']
@@ -169,6 +217,7 @@ def main(args):
     # Get the replacement cost and time
     DL_info =  AIM['DL']['Losses']['BldgRepair']
     
+    # Note these are not the random
     replacementCost = DL_info['ReplacementCost']['Median']
     rediInputDict['replacement_cost'] = float(replacementCost)/1e6 #Needs to be in the millions of dollars
 
@@ -176,12 +225,15 @@ def main(args):
     rediInputDict['replacement_time'] = float(replacementTime)
 
 
-    num_samples = len(get_first_value(val=CMP,num_levels=2))
-
-
     final_results_dict = dict()
+    log_output : List[str] = []
 
     for sample in range(num_samples) :
+
+        if buildingirreparableOrCollapsed[sample] :
+            replacement_time=DVReplacementDict['Time'][sample]
+            final_results_dict[sample] = get_replacement_response(replacement_time=replacement_time)
+            continue 
         
         ### REDi input map ###
         # Assemble the component quantity vector
@@ -273,7 +325,7 @@ def main(args):
                         qty = qtys[sample]
 
                         if math.isnan(qty) :
-                            print(f'Collapse detected sample {sample}')
+                            log_output.append(f'Collapse detected sample {sample}. Skipping REDi run.\n')
                             collapse_flag = True
                             break
 
@@ -373,7 +425,22 @@ def main(args):
         with open(redi_input_dir/f'redi_{sample}.json', 'w') as f:
             json.dump(this_it_input, f, indent=4, cls=NumpyEncoder)
 
-        res = go_redi(building_dict=this_it_input)
+        # Create a StringIO object to capture the stdout
+        captured_output = StringIO()
+        
+        # Redirect sys.stdout to the captured_output stream
+        sys.stdout = captured_output
+        
+        try:
+            res = go_redi(building_dict=this_it_input)
+        finally:
+            # Reset sys.stdout to the original stdout
+            sys.stdout = sys.__stdout__
+
+        # Get the captured output as a string
+        output = captured_output.getvalue()
+        log_output.append(output)
+        captured_output.close()
 
         final_results_dict[sample] = res
 
@@ -409,6 +476,13 @@ def main(args):
     print(f'Saving all samples to: {redi_output_dir}/redi_summary_stats.json')
     with open(redi_output_dir/f'redi_summary_stats.json', 'w') as f:
         json.dump(summary_stats, f, indent=4, cls=NumpyEncoder)
+
+    # Write the log file
+    print(f'Saving REDi log file at: {redi_output_dir}/redi_log.txt')
+    with open(redi_output_dir/f'redi_log.txt', 'w') as file:
+        # Iterate through the list of strings and write each one to the file
+        for string in log_output:
+            file.write(string + '\n')
 
 
 
@@ -447,3 +521,5 @@ if __name__ == "__main__":
     elapsed_time = end_time - start_time
     print(f"REDi finished. Elapsed time: {elapsed_time:.2f} seconds")
 
+
+"/opt/homebrew/anaconda3/envs/simcenter/bin/python" "/Users/stevan.gavrilovic/Desktop/SimCenter/SimCenterBackendApplications/applications/performanceAssessment/REDi/REDiWrapper.py" "--riskParametersPath" "/Users/stevan.gavrilovic/Desktop/SimCenter/build-PBE-Qt_6_5_1_for_macOS-Debug/PBE.app/Contents/MacOS/Examples/pbdl-0003/src/risk_params.json" "--dirnameOutput" "/Users/stevan.gavrilovic/Documents/PBE/LocalWorkDir/tmp.SimCenter" 
