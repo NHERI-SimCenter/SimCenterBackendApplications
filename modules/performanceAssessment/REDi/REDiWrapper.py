@@ -209,6 +209,7 @@ def main(args):
     nStories = int(gen_info['NumberOfStories'])
     rediInputDict['nFloor'] = nStories
 
+    # Get the plan area
     plan_area = float(gen_info['PlanArea'])
 
     floor_areas = [plan_area for i in range(nStories + 1)]
@@ -223,6 +224,13 @@ def main(args):
 
     replacementTime = DL_info['ReplacementTime']['Median']
     rediInputDict['replacement_time'] = float(replacementTime)
+    
+    # Get the total building area
+    total_building_area = plan_area * nStories
+
+    # Estimate the number of workers
+    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
+    num_workers = int(total_building_area/1000)
 
 
     final_results_dict = dict()
@@ -231,7 +239,10 @@ def main(args):
     for sample in range(num_samples) :
 
         if buildingirreparableOrCollapsed[sample] :
-            replacement_time=DVReplacementDict['Time'][sample]
+            
+            # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
+            replacement_time = DVReplacementDict['Time'][sample] / num_workers
+                        
             final_results_dict[sample] = get_replacement_response(replacement_time=replacement_time)
             continue 
         
