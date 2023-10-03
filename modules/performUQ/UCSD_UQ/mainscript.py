@@ -12,7 +12,7 @@ import numpy as np
 
 from parseData import parseDataFunction
 from runTMCMC import run_TMCMC
-from calibration_utils import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions
+from calibration_utilities import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions
 
 # ======================================================================================================================
 
