@@ -5,7 +5,7 @@ import subprocess
 import sys
 import os
 import numpy as np
-from typing import Union, Optional
+from typing import Union, Optional, Any
 from numpy.typing import NDArray
 import traceback
 from multiprocessing.pool import Pool
@@ -255,22 +255,55 @@ class RandomVariablesHandler:
     def __init__(self, list_of_random_variables_data: list, correlation_matrix_data: NDArray) -> None:
         self.list_of_random_variables_data = list_of_random_variables_data
         self.correlation_matrix_data = correlation_matrix_data
+        self.marginal_ERAdistribution_objects_list = []
+        self.ERANataf_object = self._make_ERANataf_object()
     
-#     def create_one_marginal_distribution(self) -> ERADist:
-#         self.list_of_marginal_era_dists = 
+    def _create_one_marginal_distribution(self, rv_data) -> ERADist:
+        return ERADist(name=rv_data.name, opt=rv_data.opt, val=rv_data.val)
     
-#     def setup_marginal_distributions(self) -> list[ERADist]:
-#         self.marginal_distribution_objects_list = []
-#         for rv_data in self.list_of_random_variables_data:
-#              self.marginal_distribution_objects_list.append()
+    def _make_list_of_marginal_distributions(self) -> list[ERADist]:
+        marginal_ERAdistribution_objects_list = []
+        for rv_data in self.list_of_random_variables_data:
+            marginal_ERAdistribution_objects_list.append(self._create_one_marginal_distribution(rv_data))
+        return marginal_ERAdistribution_objects_list
     
-#     def setup_correlation_matrix(self) -> NDArray:
-#         self.correlation_matrix = self.correlation_matrix_data
+    def _append_to_list_of_marginal_distributions(self, list_of_marginal_distribution_objects: list[ERADist]) -> None:
+        self.marginal_ERAdistribution_objects_list = [*self.marginal_ERAdistribution_objects_list, *list_of_marginal_distribution_objects]   
+    
+    def _reset_list_of_marginal_distributions(self) -> None:
+        self.marginal_ERAdistribution_objects_list = []
+    
+    def _check_correlation_matrix(self, correlation_matrix_data: NDArray) -> NDArray:
+        return correlation_matrix_data
+    
+    def _make_correlation_matrix(self) -> NDArray:
+        self.correlation_matrix = self._check_correlation_matrix(self.correlation_matrix_data)
+        return self.correlation_matrix
 
-#     def setup_ERANataf_object(self) -> ERANataf:
-#         self.setup_marginal_distributions()
-#         self.setup_correlation_matrix()
-#         self.nataf_object = ERANataf(self.list_of_marginal_dists, self.correlation_matrix)
+    def _make_ERANataf_object(self) -> ERANataf:
+        self._make_list_of_marginal_distributions()
+        self._make_correlation_matrix()
+        ERANataf_object = ERANataf(self.marginal_ERAdistribution_objects_list, self.correlation_matrix)
+        return ERANataf_object
 
-#     def u_to_x(self, u: NDArray) -> NDArray:
-#         return 
+    def u_to_x(self, u: NDArray, jacobian: bool=False) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:
+        return self.ERANataf_object.U2X(U=u, Jacobian=jacobian) 
+    
+    def x_to_u(self, x: NDArray, jacobian: bool=False) -> Union[tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]], 
+                                                                NDArray[np.floating[Any]]]:
+        return self.ERANataf_object.X2U(X=x, Jacobian=jacobian)
+
+    def pdf(self, x: NDArray) -> Union[Any, NDArray[np.float64]]:
+        return self.ERANataf_object.pdf(X=x)
+    
+    def cdf(self, x: NDArray) -> float:
+        return self.ERANataf_object.cdf(X=x)
+    
+    def random(self, list_of_rngs: list[np.random.Generator]=[], n: int=1) -> Union[tuple[NDArray[np.float64], Any], 
+                                                                                 NDArray[np.float64]]:
+        if list_of_rngs == []:
+            list_of_rngs = [np.random.default_rng(seed=i) for i in range(len(self.marginal_ERAdistribution_objects_list))]
+        u = np.zeros((len(list_of_rngs), n))
+        for i, rng in enumerate(list_of_rngs):
+            u[i, :] = rng.normal(size=n).reshape((-1, 1))
+        return self.u_to_x(u)
