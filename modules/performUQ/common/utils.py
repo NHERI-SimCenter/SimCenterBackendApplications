@@ -9,8 +9,6 @@ from typing import Union, Optional, Any
 from numpy.typing import NDArray
 import traceback
 from multiprocessing.pool import Pool
-from mpi4py import MPI
-from mpi4py.futures import MPIPoolExecutor
 from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
 
@@ -33,9 +31,9 @@ def copytree(src, dst, symlinks=False, ignore=None):
     return "0"
 
 
-def append_msg_in_out_file(msg, out_file="ops.out"):
-    if glob.glob(out_file):
-        with open(out_file, "r") as text_file:
+def append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
+    if glob.glob(out_file_name):
+        with open(out_file_name, "r") as text_file:
             error_FEM = text_file.read()
 
         startingCharId = error_FEM.lower().find("error")
@@ -49,7 +47,7 @@ def append_msg_in_out_file(msg, out_file="ops.out"):
             msg += "\n"
             msg += "your model says...\n"
             msg += "........\n" + errmsg + "\n........ \n"
-            msg += "to read more, see " + os.path.join(os.getcwd(), out_file)
+            msg += "to read more, see " + os.path.join(os.getcwd(), out_file_name)
     
     return msg
 
@@ -145,17 +143,17 @@ class ModelEval:
             outputs = np.loadtxt("results.out").flatten()
         else:
             msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
-            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] == 0:
             msg = "Error running FEM: 'results.out' is empty\n"
-            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
         
         if outputs.shape[0] != self.length_of_results:
             msg = f"Error running FEM: 'results.out' contains {outputs.shape[0]} values, expected to get {self.length_of_results} values\n"
-            msg = append_msg_in_out_file(msg, out_file="ops.out")
+            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
 
         if not self.ignore_nans:
@@ -185,7 +183,7 @@ class ModelEval:
 
 
 class ParallelRunnerMultiprocessing:
-    def __init__(self, run_type="runningLocal") -> None:
+    def __init__(self, run_type: str = "runningLocal") -> None:
         self.run_type = run_type
         self.num_processors = self.get_num_processors()
     
@@ -204,15 +202,18 @@ class ParallelRunnerMultiprocessing:
     def close_pool(self) -> None:
         self.pool.close()
 
-    def run(self, func, iterable, chunksize: Optional[int]=None) -> list:
+    def run(self, func, iterable, chunksize: Optional[int] = None) -> list:
         try:
             isinstance(self.pool, Pool)
         except AttributeError:
             self.pool = self.get_pool()   
         return self.pool.starmap(func=func, iterable=iterable, chunksize=chunksize)
 
+
 class ParallelRunnerMPI4PY:
-    def __init__(self, run_type="runningRemote") -> None:
+    def __init__(self, run_type: str = "runningRemote") -> None:
+        from mpi4py import MPI
+        from mpi4py.futures import MPIPoolExecutor  
         self.run_type = run_type
         self.comm = MPI.COMM_WORLD
         self.num_processors = self.get_num_processors()
@@ -232,7 +233,7 @@ class ParallelRunnerMPI4PY:
     def close_pool(self) -> None:
         self.pool.shutdown()
 
-    def run(self, func, iterable, chunksize: int=1, unordered: bool=False) -> list:
+    def run(self, func, iterable, chunksize: int = 1, unordered: bool = False) -> list:
         try:
             isinstance(self.pool, MPIPoolExecutor)
         except AttributeError:
