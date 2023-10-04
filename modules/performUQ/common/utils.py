@@ -62,14 +62,13 @@ class ModelEvaluationError(Exception):
 
 
 class SimCenterWorkflowDriver:
-    def __init__(self, num_rv: int, full_path_of_tmpSimCenter_dir: str, 
+    def __init__(self, full_path_of_tmpSimCenter_dir: str, 
                  list_of_dir_names_to_copy_files_from: list[str], 
                  list_of_rv_names: list[str], driver_filename: str, 
                  length_of_results: int,
                  workdir_prefix: str = "workdir",
                  ignore_nans: bool = True) -> None:
         
-        self.num_rv = num_rv
         self.full_path_of_tmpSimCenter_dir = full_path_of_tmpSimCenter_dir
         self.list_of_dir_names_to_copy_files_from = \
             list_of_dir_names_to_copy_files_from
@@ -79,10 +78,7 @@ class SimCenterWorkflowDriver:
         self.workdir_prefix = workdir_prefix
         self.ignore_nans = ignore_nans
 
-        if self.num_rv != len(self.list_of_rv_names):
-            raise ModelEvaluationError(f"Error during model specification: \
-                    Inconsistency between number of rvs ({num_rv = }) and \
-                    length of list of rv names ({len(list_of_rv_names) = })")
+        self.num_rv = len(self.list_of_rv_names)
     
     def _check_size_of_sample(self, sample_values: NDArray) -> None:
         num_samples = len(sample_values)
