@@ -316,6 +316,9 @@ class RandomVariablesHandler:
     def pdf(self, x: NDArray) -> Union[Any, NDArray[np.float64]]:
         return self.ERANataf_object.pdf(X=x)
     
+    def logpdf(self, x: NDArray) -> NDArray[np.float64]:
+        return np.log(self.pdf(x))
+    
     def cdf(self, x: NDArray) -> float:
         return self.ERANataf_object.cdf(X=x)
     
