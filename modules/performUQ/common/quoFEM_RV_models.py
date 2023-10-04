@@ -6,9 +6,15 @@ from typing_extensions import Annotated
 import numpy as np
 
 
-_supported_distributions = typing.Literal["Beta", "ChiSquared", "Exponential", "Gamma", "Gumbel", "Lognormal", "Normal", "Uniform", "Weibull"]
-_supported_input_types = typing.Literal["Parameters", "Moments", "Dataset"]
-_supported_variable_classes = typing.Literal["Uncertain", "Design", "Uniform", "NA"]
+_supported_distributions = typing.Literal["Beta", "ChiSquared", 
+                                          "Exponential", "Gamma", 
+                                          "Gumbel", "Lognormal", 
+                                          "Normal", "Uniform", 
+                                          "Weibull"]
+_supported_input_types = typing.Literal["Parameters", "Moments", 
+                                        "Dataset"]
+_supported_variable_classes = typing.Literal["Uncertain", "Design", 
+                                             "Uniform", "NA"]
 
 
 def _get_ERADistObjectName(name_from_quoFEM: str) -> str:
@@ -57,7 +63,9 @@ class BetaUncertainData(RVData):
     @pydantic.validator('upperbound')
     def upper_bound_not_bigger_than_lower_bound(v, values):
         if 'lowerbound' in values and v <= values['lowerbound']:
-            raise ValueError(f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}.")
+            raise ValueError(f"The upper bound must be bigger than the \
+                             lower bound {values['lowerbound']}. \
+                             Got a value of {v}.")
         return v
 
 
@@ -66,7 +74,8 @@ class BetaParameters(BetaUncertainData):
     betas: pydantic.PositiveFloat
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [self.alphas, self.betas, self.lowerbound, self.upperbound]
+        self.ERAVal = [self.alphas, self.betas, self.lowerbound, 
+                       self.upperbound]
         return super().model_post_init(__context)
 
 
@@ -75,7 +84,8 @@ class BetaMoments(BetaUncertainData):
     standardDev: pydantic.PositiveFloat
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [self.mean, self.standardDev, self.lowerbound, self.upperbound]
+        self.ERAVal = [self.mean, self.standardDev, self.lowerbound, 
+                       self.upperbound]
         return super().model_post_init(__context)
 
 
@@ -83,7 +93,8 @@ class BetaDataset(BetaUncertainData):
     dataDir: str
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [np.genfromtxt(self.dataDir).tolist(), [self.lowerbound, self.upperbound]]
+        self.ERAVal = [np.genfromtxt(self.dataDir).tolist(), 
+                       [self.lowerbound, self.upperbound]]
         return super().model_post_init(__context)
 
 ############################################
@@ -265,13 +276,15 @@ class NormalDataset(NormalUncertainData):
         return super().model_post_init(__context)
     
 ############################################     
-# class TruncatedExponentialUncertainData(TruncatedExponentialUncertainVariable):
+# class TruncatedExponentialUncertainData(RVData):
 #     a: float
 #     b: float
 #     @pydantic.validator('b')
 #     def upper_bound_not_bigger_than_lower_bound(v, values):
 #         if 'a' in values and v <= values['a']:
-#             raise ValueError(f"The upper bound must be bigger than the lower bound {values['a']}. Got a value of {v}.")
+#             raise ValueError(f"The upper bound must be bigger than \
+#                              the lower bound {values['a']}. \
+#                              Got a value of {v}.")
 #         return v
 
 # class TruncatedExponentialParameters(TruncatedExponentialUncertainData):
@@ -297,7 +310,9 @@ class UniformParameters(UniformUncertainData):
     @pydantic.validator('upperbound')
     def upper_bound_not_bigger_than_lower_bound(v, values):
         if 'lowerbound' in values and v <= values['lowerbound']:
-            raise ValueError(f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}.")
+            raise ValueError(f"The upper bound must be bigger than the \
+                             lower bound {values['lowerbound']}. \
+                             Got a value of {v}.")
         return v
     
     def model_post_init(self, __context: Any) -> None:
