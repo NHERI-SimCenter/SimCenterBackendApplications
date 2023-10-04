@@ -232,50 +232,11 @@ class ParallelRunnerMultiprocessing:
                                  chunksize=chunksize)
 
 
-# class ParallelRunnerMPI4PY:
-#     def __init__(self, run_type: str = "runningRemote") -> None:
-#         from mpi4py import MPI
-#         from mpi4py.futures import MPIPoolExecutor  
-#         self.run_type = run_type
-#         self.comm = MPI.COMM_WORLD
-#         self.num_processors = self.get_num_processors()
-    
-#     def get_num_processors(self) -> int:
-#         num_processors = self.comm.Get_size()
-#         if num_processors is None:
-#             num_processors = 1
-#         if num_processors < 1:
-#             raise ValueError(f"Number of processes must be at least 1. \
-#                              Got {num_processors}")
-#         return num_processors
-#     try:
-#         MPIPoolExecutor
-#     except NameError:
-#         raise 
+# def get_parallel_runner_instance(run_type: str):
+#     if run_type == "runningRemote":
+#         return ParallelRunnerMPI4PY(run_type)
 #     else:
-#         def get_pool(self) -> MPIPoolExecutor:
-#             self.pool = MPIPoolExecutor(max_workers=self.num_processors)
-#             return self.pool
-        
-#         def close_pool(self) -> None:
-#             self.pool.shutdown()
-
-#         def run(self, func, iterable, chunksize: int = 1,
-#                 unordered: bool = False) -> list:
-#             try:
-#                 isinstance(self.pool, MPIPoolExecutor)
-#             except AttributeError:
-#                 self.pool = self.get_pool()   
-#             return list(self.pool.starmap(fn=func, iterable=iterable, 
-#                                         chunksize=chunksize, 
-#                                         unordered=unordered))
-
-
-def get_parallel_runner_instance(run_type: str):
-    if run_type == "runningRemote":
-        return ParallelRunnerMPI4PY(run_type)
-    else:
-        return ParallelRunnerMultiprocessing(run_type)
+#         return ParallelRunnerMultiprocessing(run_type)
 
 
 # def get_parallel_runner_function(parallel_runner: 
@@ -283,6 +244,25 @@ def get_parallel_runner_instance(run_type: str):
 #                                        ParallelRunnerMPI4PY]):
 #     return parallel_runner.run
 
+def make_ERADist_object(name, opt, val) -> ERADist:
+    return ERADist(name=name, opt=opt, val=val)
+
+
+def create_one_marginal_distribution(rv_data) -> ERADist:
+    string = f'quoFEM_RV_models.{rv_data["distribution"]}'\
+            + f'{rv_data["inputType"]}.model_validate({rv_data})'
+    rv = eval(string)
+    return make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, 
+                                        val=rv.ERAVal)
+
+
+def make_list_of_marginal_distributions(
+        list_of_random_variables_data) -> list[ERADist]:
+    marginal_ERAdistribution_objects_list = []
+    for rv_data in list_of_random_variables_data:
+        marginal_ERAdistribution_objects_list.append(
+            create_one_marginal_distribution(rv_data))
+    return marginal_ERAdistribution_objects_list
 
 class RandomVariablesHandler:
     def __init__(self, list_of_random_variables_data: list, 
@@ -292,26 +272,9 @@ class RandomVariablesHandler:
         self.correlation_matrix_data = correlation_matrix_data
         self.correlation_matrix = self._make_correlation_matrix()
         self.marginal_ERAdistribution_objects_list = \
-            self._make_list_of_marginal_distributions()
+            make_list_of_marginal_distributions(
+                self.list_of_random_variables_data)
         self.ERANataf_object = self._make_ERANataf_object()
-    
-    @staticmethod
-    def _make_ERADist_object(name, opt, val) -> ERADist:
-        return ERADist(name=name, opt=opt, val=val)
-    
-    def _create_one_marginal_distribution(self, rv_data) -> ERADist:
-        string = f'quoFEM_RV_models.{rv_data["distribution"]}'\
-               + f'{rv_data["inputType"]}.model_validate({rv_data})'
-        rv = eval(string)
-        return self._make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, 
-                                         val=rv.ERAVal)
-         
-    def _make_list_of_marginal_distributions(self) -> list[ERADist]:
-        marginal_ERAdistribution_objects_list = []
-        for rv_data in self.list_of_random_variables_data:
-            marginal_ERAdistribution_objects_list.append(
-                self._create_one_marginal_distribution(rv_data))
-        return marginal_ERAdistribution_objects_list
     
     def _append_to_list_of_marginal_distributions(self, 
                 list_of_marginal_distribution_objects: list[ERADist]) -> None:
@@ -333,7 +296,7 @@ class RandomVariablesHandler:
         return correlation_matrix
 
     def _make_ERANataf_object(self) -> ERANataf:
-        self._make_list_of_marginal_distributions()
+        make_list_of_marginal_distributions(self.list_of_random_variables_data)
         self._make_correlation_matrix()
         ERANataf_object = ERANataf(self.marginal_ERAdistribution_objects_list, 
                                    self.correlation_matrix)
