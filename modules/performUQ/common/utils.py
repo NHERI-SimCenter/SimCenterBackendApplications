@@ -14,14 +14,14 @@ from ERAClasses.ERANataf import ERANataf
 import quoFEM_RV_models 
 
 
-def copytree(src, dst, symlinks=False, ignore=None):
+def _copytree(src, dst, symlinks=False, ignore=None):
     if not os.path.exists(dst):
         os.makedirs(dst)
     for item in os.listdir(src):
         s = os.path.join(src, item)
         d = os.path.join(dst, item)
         if os.path.isdir(s):
-            copytree(s, d, symlinks, ignore)
+            _copytree(s, d, symlinks, ignore)
         else:
             try:
                 if not os.path.exists(d) or \
@@ -34,7 +34,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
     return "0"
 
 
-def append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
+def _append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
     if glob.glob(out_file_name):
         with open(out_file_name, "r") as text_file:
             error_FEM = text_file.read()
@@ -120,7 +120,7 @@ class ModelEval:
 
         for src_dir in self.list_of_dir_names_to_copy_files_from:
             src = os.path.join(self.full_path_of_tmpSimCenter_dir, src_dir)
-            msg = copytree(src, workdir)
+            msg = _copytree(src, workdir)
             if msg != "0":
                 raise ModelEvaluationError(msg)
         return workdir
@@ -158,19 +158,19 @@ class ModelEval:
             outputs = np.loadtxt("results.out").flatten()
         else:
             msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
-            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] == 0:
             msg = "Error running FEM: 'results.out' is empty\n"
-            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
         
         if outputs.shape[0] != self.length_of_results:
             msg = f"Error running FEM: 'results.out' contains \
                 {outputs.shape[0]} values, expected to get \
                 {self.length_of_results} values\n"
-            msg = append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
 
         if not self.ignore_nans:
@@ -252,8 +252,7 @@ def create_one_marginal_distribution(rv_data) -> ERADist:
     string = f'quoFEM_RV_models.{rv_data["distribution"]}'\
             + f'{rv_data["inputType"]}.model_validate({rv_data})'
     rv = eval(string)
-    return make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, 
-                                        val=rv.ERAVal)
+    return make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, val=rv.ERAVal)
 
 
 def make_list_of_marginal_distributions(
@@ -264,43 +263,30 @@ def make_list_of_marginal_distributions(
             create_one_marginal_distribution(rv_data))
     return marginal_ERAdistribution_objects_list
 
-class RandomVariablesHandler:
+
+def make_correlation_matrix(correlation_matrix_data, num_rvs) -> NDArray:
+    return np.atleast_2d(correlation_matrix_data).reshape((num_rvs, num_rvs))
+
+
+def make_ERANataf_object(list_of_ERADist, correlation_matrix) -> ERANataf:
+    return ERANataf(M=list_of_ERADist, Correlation=correlation_matrix)
+
+
+class ERANatafJointDistribution:
     def __init__(self, list_of_random_variables_data: list, 
                  correlation_matrix_data: NDArray) -> None:
         self.list_of_random_variables_data = list_of_random_variables_data
-        self.num_rvs = len(self.list_of_random_variables_data)
         self.correlation_matrix_data = correlation_matrix_data
-        self.correlation_matrix = self._make_correlation_matrix()
+
+        self.num_rvs = len(self.list_of_random_variables_data)
+        self.correlation_matrix = make_correlation_matrix(
+            self.correlation_matrix_data, self.num_rvs)
         self.marginal_ERAdistribution_objects_list = \
             make_list_of_marginal_distributions(
                 self.list_of_random_variables_data)
-        self.ERANataf_object = self._make_ERANataf_object()
-    
-    def _append_to_list_of_marginal_distributions(self, 
-                list_of_marginal_distribution_objects: list[ERADist]) -> None:
-        self.marginal_ERAdistribution_objects_list = [
-            *self.marginal_ERAdistribution_objects_list, 
-            *list_of_marginal_distribution_objects]   
-    
-    def _reset_list_of_marginal_distributions(self) -> None:
-        self.marginal_ERAdistribution_objects_list = []
-    
-    def _check_correlation_matrix(self, 
-                                  correlation_matrix_data: NDArray) -> NDArray:
-        return np.atleast_2d(correlation_matrix_data).reshape((self.num_rvs, 
-                                                               self.num_rvs))
-    
-    def _make_correlation_matrix(self) -> NDArray:
-        correlation_matrix = self._check_correlation_matrix(
-            self.correlation_matrix_data)
-        return correlation_matrix
-
-    def _make_ERANataf_object(self) -> ERANataf:
-        make_list_of_marginal_distributions(self.list_of_random_variables_data)
-        self._make_correlation_matrix()
-        ERANataf_object = ERANataf(self.marginal_ERAdistribution_objects_list, 
-                                   self.correlation_matrix)
-        return ERANataf_object
+        self.ERANataf_object = make_ERANataf_object(
+            self.marginal_ERAdistribution_objects_list, 
+            self.correlation_matrix)
 
     def u_to_x(self, u: NDArray, 
                jacobian: bool=False) -> Union[tuple[NDArray[np.float64], Any], 
