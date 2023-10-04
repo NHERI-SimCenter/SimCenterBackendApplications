@@ -61,7 +61,7 @@ class ModelEvaluationError(Exception):
         super().__init__(msg)
 
 
-class ModelEval:
+class SimCenterWorkflowDriver:
     def __init__(self, num_rv: int, full_path_of_tmpSimCenter_dir: str, 
                  list_of_dir_names_to_copy_files_from: list[str], 
                  list_of_rv_names: list[str], driver_filename: str, 
