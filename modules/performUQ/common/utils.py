@@ -11,6 +11,7 @@ import traceback
 from multiprocessing.pool import Pool
 from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
+import quoFEM_RV_models 
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -53,7 +54,6 @@ def append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
                                                        out_file_name)
     
     return msg
-
 
 
 class ModelEvaluationError(Exception):
@@ -232,39 +232,43 @@ class ParallelRunnerMultiprocessing:
                                  chunksize=chunksize)
 
 
-class ParallelRunnerMPI4PY:
-    def __init__(self, run_type: str = "runningRemote") -> None:
-        from mpi4py import MPI
-        from mpi4py.futures import MPIPoolExecutor  
-        self.run_type = run_type
-        self.comm = MPI.COMM_WORLD
-        self.num_processors = self.get_num_processors()
+# class ParallelRunnerMPI4PY:
+#     def __init__(self, run_type: str = "runningRemote") -> None:
+#         from mpi4py import MPI
+#         from mpi4py.futures import MPIPoolExecutor  
+#         self.run_type = run_type
+#         self.comm = MPI.COMM_WORLD
+#         self.num_processors = self.get_num_processors()
     
-    def get_num_processors(self) -> int:
-        num_processors = self.comm.Get_size()
-        if num_processors is None:
-            num_processors = 1
-        if num_processors < 1:
-            raise ValueError(f"Number of processes must be at least 1. \
-                             Got {num_processors}")
-        return num_processors
-    
-    def get_pool(self) -> MPIPoolExecutor:
-        self.pool = MPIPoolExecutor(max_workers=self.num_processors)
-        return self.pool
-    
-    def close_pool(self) -> None:
-        self.pool.shutdown()
+#     def get_num_processors(self) -> int:
+#         num_processors = self.comm.Get_size()
+#         if num_processors is None:
+#             num_processors = 1
+#         if num_processors < 1:
+#             raise ValueError(f"Number of processes must be at least 1. \
+#                              Got {num_processors}")
+#         return num_processors
+#     try:
+#         MPIPoolExecutor
+#     except NameError:
+#         raise 
+#     else:
+#         def get_pool(self) -> MPIPoolExecutor:
+#             self.pool = MPIPoolExecutor(max_workers=self.num_processors)
+#             return self.pool
+        
+#         def close_pool(self) -> None:
+#             self.pool.shutdown()
 
-    def run(self, func, iterable, chunksize: int = 1,
-            unordered: bool = False) -> list:
-        try:
-            isinstance(self.pool, MPIPoolExecutor)
-        except AttributeError:
-            self.pool = self.get_pool()   
-        return list(self.pool.starmap(fn=func, iterable=iterable, 
-                                      chunksize=chunksize, 
-                                      unordered=unordered))
+#         def run(self, func, iterable, chunksize: int = 1,
+#                 unordered: bool = False) -> list:
+#             try:
+#                 isinstance(self.pool, MPIPoolExecutor)
+#             except AttributeError:
+#                 self.pool = self.get_pool()   
+#             return list(self.pool.starmap(fn=func, iterable=iterable, 
+#                                         chunksize=chunksize, 
+#                                         unordered=unordered))
 
 
 def get_parallel_runner_instance(run_type: str):
@@ -274,23 +278,34 @@ def get_parallel_runner_instance(run_type: str):
         return ParallelRunnerMultiprocessing(run_type)
 
 
-def get_parallel_runner_function(parallel_runner: 
-                                 Union[ParallelRunnerMultiprocessing, 
-                                       ParallelRunnerMPI4PY]):
-    return parallel_runner.run
+# def get_parallel_runner_function(parallel_runner: 
+#                                  Union[ParallelRunnerMultiprocessing, 
+#                                        ParallelRunnerMPI4PY]):
+#     return parallel_runner.run
 
 
 class RandomVariablesHandler:
     def __init__(self, list_of_random_variables_data: list, 
                  correlation_matrix_data: NDArray) -> None:
         self.list_of_random_variables_data = list_of_random_variables_data
+        self.num_rvs = len(self.list_of_random_variables_data)
         self.correlation_matrix_data = correlation_matrix_data
-        self.marginal_ERAdistribution_objects_list = []
+        self.correlation_matrix = self._make_correlation_matrix()
+        self.marginal_ERAdistribution_objects_list = \
+            self._make_list_of_marginal_distributions()
         self.ERANataf_object = self._make_ERANataf_object()
     
-    def _create_one_marginal_distribution(self, rv_data) -> ERADist:
-        return ERADist(name=rv_data.name, opt=rv_data.opt, val=rv_data.val)
+    @staticmethod
+    def _make_ERADist_object(name, opt, val) -> ERADist:
+        return ERADist(name=name, opt=opt, val=val)
     
+    def _create_one_marginal_distribution(self, rv_data) -> ERADist:
+        string = f'quoFEM_RV_models.{rv_data["distribution"]}'\
+               + f'{rv_data["inputType"]}.model_validate({rv_data})'
+        rv = eval(string)
+        return self._make_ERADist_object(name=rv.ERAName, opt=rv.ERAOpt, 
+                                         val=rv.ERAVal)
+         
     def _make_list_of_marginal_distributions(self) -> list[ERADist]:
         marginal_ERAdistribution_objects_list = []
         for rv_data in self.list_of_random_variables_data:
@@ -309,12 +324,13 @@ class RandomVariablesHandler:
     
     def _check_correlation_matrix(self, 
                                   correlation_matrix_data: NDArray) -> NDArray:
-        return correlation_matrix_data
+        return np.atleast_2d(correlation_matrix_data).reshape((self.num_rvs, 
+                                                               self.num_rvs))
     
     def _make_correlation_matrix(self) -> NDArray:
-        self.correlation_matrix = self._check_correlation_matrix(
+        correlation_matrix = self._check_correlation_matrix(
             self.correlation_matrix_data)
-        return self.correlation_matrix
+        return correlation_matrix
 
     def _make_ERANataf_object(self) -> ERANataf:
         self._make_list_of_marginal_distributions()
@@ -346,7 +362,7 @@ class RandomVariablesHandler:
         if list_of_rngs == []:
             list_of_rngs = [np.random.default_rng(seed=i) for i in range(len(
                 self.marginal_ERAdistribution_objects_list))]
-        u = np.zeros((len(list_of_rngs), n))
+        u = np.zeros((n, len(list_of_rngs)))
         for i, rng in enumerate(list_of_rngs):
-            u[i, :] = rng.normal(size=n).reshape((-1, 1))
+            u[:, i] = rng.normal(size=n)
         return self.u_to_x(u)
