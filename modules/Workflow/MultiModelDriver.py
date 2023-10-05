@@ -66,6 +66,11 @@ def main(inputFile,
         inputs = json.load(f)
     
     localAppDir = inputs["localAppDir"]
+    remoteAppDir = inputs["remoteAppDir"]
+
+    appDir = localAppDir
+    if runType == "runningRemote":
+        appDir = remoteAppDir
 
     if 'referenceDir' in inputs:
         reference_dir = inputs['referenceDir']
@@ -148,10 +153,10 @@ def main(inputFile,
         driverFileBat = driverFile + ".bat"
         exeFileName = exeFileName + ".exe"
         with open(driverFileBat, "wb") as f:
-            f.write(bytes(os.path.join(localAppDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFileBat} {multiModelString}", "UTF-8"))
+            f.write(bytes(os.path.join(appDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFileBat} {multiModelString}", "UTF-8"))
     else:
         with open(driverFile, "wb") as f:
-            f.write(bytes(os.path.join(localAppDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFile} {multiModelString}", "UTF-8"))
+            f.write(bytes(os.path.join(appDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFile} {multiModelString}", "UTF-8"))
 
     for modelToRun in range(numModels):
 
@@ -184,7 +189,7 @@ def main(inputFile,
         # run the application to create driver file
         #
         
-        asset_command_list = application.get_command_list(appDir)
+        asset_command_list = application.get_command_list(localAppDir)
         indexInputFile = asset_command_list.index('--workflowInput') + 1
         asset_command_list[indexInputFile] = modelInputFile
         indexInputFile = asset_command_list.index('--driverFile') + 1
