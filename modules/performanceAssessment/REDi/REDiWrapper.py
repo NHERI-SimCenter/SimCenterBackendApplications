@@ -36,7 +36,7 @@
 # Contributors:
 # Stevan Gavrilovic
 
-import json, io, sys, time, math, argparse
+import json, io, os, sys, time, math, argparse
 from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
@@ -45,6 +45,12 @@ import zipfile
 import pandas as pd
 
 from REDi.go_redi import go_redi
+
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
+sys.path.insert(0, str(main_dir))
+
+from createEVENT.SimCenterEvent.SimCenterEvent import get_scale_factors
 
 class NumpyEncoder(json.JSONEncoder) :
     # Encode the numpy datatypes to json
@@ -232,6 +238,16 @@ def main(args):
     # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
     num_workers = int(total_building_area/1000)
 
+    # Get the units
+    input_units = {'length': AIM['GeneralInformation']['units']['length']}
+    output_units = {'length':'ft'}
+    
+    # scale the input data to the event unit used internally
+    f_scale_units = get_scale_factors(input_units, output_units)['length']
+    
+    
+    # Scale the building area
+    total_building_area = total_building_area*f_scale_units*f_scale_units
 
     final_results_dict = dict()
     log_output : List[str] = []
