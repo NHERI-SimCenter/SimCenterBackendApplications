@@ -966,7 +966,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t epsilonWallFunction;\n"
         added_part += "\t Cmu \t {:.4f};\n".format(0.09)
@@ -974,6 +974,15 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part += "\t E \t {:.4f};\n".format(9.8)
         added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
     
+    #Note:  Should be replaced with smooth wall function for epsilon,
+    #       now the same with rough wall function.
+    if ground_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t epsilonWallFunction;\n"
+        added_part += "\t Cmu \t {:.4f};\n".format(0.09)
+        added_part += "\t kappa \t {:.4f};\n".format(0.41)
+        added_part += "\t E \t {:.4f};\n".format(9.8)
+        added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
     dict_lines.insert(start_index, added_part)
     
     
@@ -1009,14 +1018,23 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t epsilonWallFunction;\n"
         added_part += "\t Cmu \t {:.4f};\n".format(0.09)
         added_part += "\t kappa \t {:.4f};\n".format(0.4)
         added_part += "\t E \t {:.4f};\n".format(9.8)
         added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
-    
+
+    if building_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t epsilonWallFunction;\n"
+        added_part += "\t Cmu \t {:.4f};\n".format(0.09)
+        added_part += "\t kappa \t {:.4f};\n".format(0.4)
+        added_part += "\t E \t {:.4f};\n".format(9.8)
+        added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
+
+
     dict_lines.insert(start_index, added_part)
     
     #Write edited dict to file
@@ -1101,11 +1119,16 @@ def write_k_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "smoothWallFunction": 
         added_part = ""
         added_part += "\t type \t kqRWallFunction;\n"
         added_part += "\t value \t uniform {:.4f};\n".format(0.0)
-    
+
+    if ground_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
     dict_lines.insert(start_index, added_part)
     
     
@@ -1141,11 +1164,18 @@ def write_k_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "smoothWallFunction": 
         added_part = ""
         added_part += "\t type \t kqRWallFunction;\n"
         added_part += "\t value \t uniform {:.6f};\n".format(k0)
     
+    #Note:  should be replaced with k wall function for rough walls 
+    #       now it's the same with smooth wall function.
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.6f};\n".format(k0)
+
     dict_lines.insert(start_index, added_part)
     
     #Write edited dict to file
