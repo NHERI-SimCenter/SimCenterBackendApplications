@@ -865,8 +865,12 @@ class surrogate(UQengine):
                         m_mean.kern.lengthscale[[nx]]=  myrange[nx]*100
                         m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
                     else:
-                        m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
-                        m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
+                        if self.do_linear:
+                            m_mean.kern.Mat52.lengthscale[[nx]] = myrange[nx] * 5000
+                            m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
+                        else:  
+                            m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
+                            m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
 
         #m_mean.optimize(messages=True, max_f_eval=1000)
         #m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters

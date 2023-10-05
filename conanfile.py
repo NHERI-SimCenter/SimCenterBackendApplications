@@ -15,13 +15,13 @@ class simCenterBackendApps(ConanFile):
     build_policy = "missing"
     requires = ["jansson/2.13.1",
                "zlib/1.2.11",
-               "libcurl/7.72.0",
+               "libcurl/8.1.1",
                "eigen/3.3.7",
                "clara/1.1.5",
                "jsonformoderncpp/3.7.0",
-               #"smelt/1.2.0@simcenter/stable",
-               #"mkl-static/2019.4@simcenter/stable",
-               #"ipp-static/2019.4@simcenter/stable",
+               "smelt/1.2.0@simcenter/stable",
+               "mkl-static/2019.4@simcenter/stable",
+               "ipp-static/2019.4@simcenter/stable",
                "nanoflann/1.3.2",
                "nlopt/2.7.1"]
                    

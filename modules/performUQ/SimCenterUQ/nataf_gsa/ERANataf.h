@@ -49,6 +49,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "jsonInput.h"
 #include "Eigen/Dense"
 #include "writeErrors.h"
+#include <algorithm>
+#include <random>
 //#define MPI
 
 #ifdef MPI
@@ -74,12 +76,12 @@ public:
 	int nrv;
 	vector<vector<double>> Rhox;
 	vector<vector<double>> Rhoz;
-	vector<vector<double>> U;
-	vector<vector<int>> resampID;
-	vector<vector<string>> discreteStr;
-	vector<vector<double>> X;
-	vector<vector<string>> Xstr;
-	vector<vector<double>> G;
+	//vector<vector<double>> U;
+	//vector<vector<int>> resampID;
+	//vector<vector<string>> discreteStr;
+	//vector<vector<double>> X;
+	//vector<vector<string>> Xstr;
+	//vector<vector<double>> G;
 	Eigen::MatrixXd RhozMat, RhozInv;
 
 	vector<vector<double>> X2U(int nmc, vector<vector<double>> x);
@@ -89,7 +91,13 @@ public:
 	void simulateAppBatch(string workflowDriver,
 						 string osType, 
 						 string runType, 
-						 jsonInput inp, 
+						 jsonInput inp,
+						 vector<vector<double>> u,
+						 vector<vector<int>> resampIDs,
+						 vector<vector<string>> xstr,
+						int numExistingDirs,
+						vector<vector<double>> &x,
+						vector<vector<double>> &g,
 						 int procno,
 						 int nproc);
 	void simulateAppSequential(string workflowDriver, 
@@ -116,13 +124,21 @@ public:
 						string osType,
 						string runType,
 						jsonInput inp,
+						vector<vector<double>> u,
+						vector<vector<int>> resampIDs,
+						vector<vector<string>> xstr,
+						int numExistingDirs,
+						vector<vector<double>> &x,
+						vector<vector<double>> &g,
 						int procno,
 						int nproc);
 
-	void sample(jsonInput inp, int procno);
+	void sample(int nmc, jsonInput inp, int procno, vector<vector<double>> &uvals, vector<vector<int>> &resampIDvals, vector<vector<string>> &discreteStrSamps);
 	void readCSV(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
 	void readBin(string filename, int ndim, vector<vector<double>>& mat, int& nsamp);
-	void readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int &nmcs);
+	void readDataset(string inpFilePath, string outFilePath, int xdim, int ydim, string inpOption, string outOption, int &nmcs,
+		vector<vector<double>>& X,
+		vector<vector<double>>& G);
 
 
 private:
@@ -135,8 +151,8 @@ private:
 	double getJointPdf(vector<double> x);
 	double getJointCdf(vector<double> x);
 	double normCdf(double x);
-
-
+	bool isInteger(double x);
+    std::mt19937 generator;
 };
 
 // For MLE optimization
