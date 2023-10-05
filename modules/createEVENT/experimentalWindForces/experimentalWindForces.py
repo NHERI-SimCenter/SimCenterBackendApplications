@@ -210,7 +210,7 @@ def main(aimName,evtName,getRV):
     # Simulation of Gaussian Stochastic wind force coefficients
     #
 
-    f_full = f_target[1:] # exclude freq = 0 Hz
+    f_full = f_target[0:] # don't exclude freq = 0 Hz
     f_vH = (V_H / vRef) * f_full # scaledfreq.(Hz)
     V_vH = V # scaled eigenmodes
     D_vH = (V_H / vRef) ** 3 * D1 # scaled eigenvalues
@@ -375,8 +375,8 @@ def main(aimName,evtName,getRV):
 
 def perform_POD(s_target,f_target, ncomp, l_mo):
 
-    S_F = s_target[:,:,1:] # exclude freq = 0 Hz
-    f_full = f_target[1:] # exclude freq = 0 Hz
+    S_F = s_target[:,:,0:] # do not exclude freq = 0 Hz
+    f_full = f_target[0:] # do not exclude freq = 0 Hz
 
     SpeN = f_full.shape[0] # exclude freq = 0 Hz
 
@@ -407,7 +407,7 @@ def perform_POD(s_target,f_target, ncomp, l_mo):
 def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp, V_H, fcut, T_full):
     Fx_full = ms ** 2 * Fx # full scale Fx(N)
     Fy_full = ms ** 2 * Fy # full scale  Fy(N)
-    Tz_full = ms ** 2 * Tz # full scale Tz(N)
+    Tz_full = ms ** 3 * Tz # full scale Tz(N.m)
 
     # Force Coefficients (unitless)
     CFx = Fx_full/(0.5*air_dens*vRef**2*H_full*B_full)
@@ -482,7 +482,7 @@ def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_m
 
 
     F_jzm = np.zeros((ncomp,N_t)) #force coefficients initialize matrix
-    f_tmp = np.linspace(f_inc,(N_f-1)*f_inc,(N_f-1))
+    f_tmp = np.linspace(0,(N_f-1)*f_inc,N_f)
 
     for m in range(l_mo):
         mo = m # current        mode  #
@@ -494,13 +494,13 @@ def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_m
         VDmo = np.sqrt((V_H / vRef) ** 3) * np.abs(Vmo) * (np.ones((ncomp, 1)) * np.sqrt(Dmo)) # product of eigenvector X
 
         # Generate  random phase  angle for each frequency SpeN
-        varth = (2 * np.pi) * np.random.random(size=(1, N_f - 1))
+        varth = (2 * np.pi) * np.random.random(size=(1, N_f))
 
         # Loop over floors
         # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')
         F_jm = np.zeros((ncomp, N_t))
 
-        coef = np.sqrt(2) * np.sqrt(f_inc) * np.exp(-1j * varth)
+        coef = np.sqrt(2) * np.sqrt(f_inc) * np.exp(1j * varth)
         coef2 = np.exp(1j*((mo+1)/l_mo*f_inc)*tvec)
 
         fVDmo = interp1d(f, VDmo, kind='linear', fill_value="extrapolate")
@@ -516,7 +516,7 @@ def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_m
             fthetmo = interp1d(f,thetmo[j,:], kind='linear',fill_value="extrapolate")
 
             B_jm = np.zeros((N_t,),dtype = 'complex_')
-            B_jm[1:N_f] = coef * fV_interp[j,:] * fthet_interp[j,:]
+            B_jm[0:N_f] = coef * fV_interp[j,:] * fthet_interp[j,:]
 
             g_jm = np.fft.ifft(B_jm)*N_t
             F_jm[j,:] = np.real(g_jm*coef2)

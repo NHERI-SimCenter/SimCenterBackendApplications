@@ -1,0 +1,101 @@
+{
+    "Applications": {
+        "UQ": {
+            "Application": "SimCenter-UQ",
+            "ApplicationData": {
+            }
+        },
+    	"FEM":{
+                "Application": "OpenSees",
+                "ApplicationData": {
+    		"MS_Path": "{Current_Dir}/",
+    		"mainScript": "TrussModel.tcl",
+    		"postprocessScript": "TrussPost.tcl",
+    		"PS_Path": "{Current_Dir}/"
+    	    }
+    	}
+    },
+    "EDP": [
+        {
+            "name": "Node_3_Disp_2"
+        },
+        {
+            "name": "Node_2_Disp_2"
+        }
+    ],
+    "UQ": {
+        "samplingMethodData": {
+            "method": "Monte Carlo",
+            "samples": 500,
+            "seed": 536
+        },
+        "uqEngine": "SimCenter-UQ",
+        "uqType": "Sensitivity Analysis"
+    },
+    "correlationMatrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0.5,
+        0,
+        0,
+        0.5,
+        1
+    ],
+    "FEM":{
+    },
+    "localAppDir": "",
+    "python": "",
+    "randomVariables": [
+        {
+            "distribution": "Weibull",
+            "inputType": "Parameters",
+            "name": "E",
+            "refCount": 1,
+            "scaleparam": 210,
+            "shapeparam": 20,
+            "value": "RV.E",
+            "variableClass": "Uncertain"
+        },
+        {
+            "alphas": 2,
+            "betas": 2,
+            "distribution": "Beta",
+            "inputType": "Parameters",
+            "lowerbound": 20,
+            "name": "P",
+            "refCount": 1,
+            "upperbound": 30,
+            "value": "RV.P",
+            "variableClass": "Uncertain"
+        },
+        {
+            "distribution": "Normal",
+            "inputType": "Parameters",
+            "mean": 500,
+            "name": "Au",
+            "refCount": 1,
+            "stdDev": 100,
+            "value": "RV.Au",
+            "variableClass": "Uncertain"
+        },
+        {
+            "distribution": "Lognormal",
+            "inputType": "Moments",
+            "mean": 250,
+            "name": "Ao",
+            "refCount": 1,
+            "stdDev": 50,
+            "value": "RV.Ao",
+            "variableClass": "Uncertain"
+        }
+    ]
+}
