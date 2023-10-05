@@ -189,7 +189,7 @@ def main(inputFile,
         # run the application to create driver file
         #
         
-        asset_command_list = application.get_command_list(appDir)
+        asset_command_list = application.get_command_list(localAppDir)
         indexInputFile = asset_command_list.index('--workflowInput') + 1
         asset_command_list[indexInputFile] = modelInputFile
         indexInputFile = asset_command_list.index('--driverFile') + 1
