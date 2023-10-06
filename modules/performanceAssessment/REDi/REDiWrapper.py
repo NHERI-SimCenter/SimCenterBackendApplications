@@ -223,8 +223,25 @@ def main(args):
     # Get the plan area
     plan_area = float(gen_info['PlanArea'])
 
+    # Get the units
+    input_units = {'length': AIM['GeneralInformation']['units']['length']}
+    output_units = {'length':'ft'}
+    
+    # scale the input data to the length unit used internally
+    f_scale_units = get_scale_factors(input_units, output_units)['length']
+
+    # Scale the plan area
+    plan_area = plan_area*f_scale_units*f_scale_units
+
     floor_areas = [plan_area for i in range(nStories + 1)]
     rediInputDict['floor_areas'] = floor_areas
+
+    # Get the total building area
+    total_building_area = plan_area * nStories
+
+    # Estimate the number of workers
+    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
+    num_workers = max(int(total_building_area/1000), 1)
     
     # Get the replacement cost and time
     DL_info =  AIM['DL']['Losses']['BldgRepair']
@@ -233,26 +250,12 @@ def main(args):
     replacementCost = DL_info['ReplacementCost']['Median']
     rediInputDict['replacement_cost'] = float(replacementCost)/1e6 #Needs to be in the millions of dollars
 
-    replacementTime = DL_info['ReplacementTime']['Median']
-    rediInputDict['replacement_time'] = float(replacementTime)
-    
-    # Get the total building area
-    total_building_area = plan_area * nStories
+    replacementTime = float(DL_info['ReplacementTime']['Median'])
 
-    # Estimate the number of workers
-    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
-    num_workers = int(total_building_area/1000)
+    # convert replacement time to days from worker_days
+    replacementTime = replacementTime / num_workers
 
-    # Get the units
-    input_units = {'length': AIM['GeneralInformation']['units']['length']}
-    output_units = {'length':'ft'}
-    
-    # scale the input data to the event unit used internally
-    f_scale_units = get_scale_factors(input_units, output_units)['length']
-    
-    
-    # Scale the building area
-    total_building_area = total_building_area*f_scale_units*f_scale_units
+    rediInputDict['replacement_time'] = replacementTime
 
     final_results_dict = dict()
     log_output : List[str] = []
