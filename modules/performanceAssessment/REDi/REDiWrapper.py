@@ -63,11 +63,16 @@ class NumpyEncoder(json.JSONEncoder) :
 
 def get_stats(arr : np.array) -> dict : 
     # Returns a dictionary of summary stats from the array
+
+    if np.min(arr) > 0.0:
+        log_std = np.std(np.log(arr))
+    else:
+        log_std = ""
     
     return {
         'mean' : np.mean(arr),
         'std' : np.std(arr),
-        'log_std' : np.log(np.std(arr)),
+        'log_std' : log_std,
         'count' : len(arr),
         'min' : np.min(arr),
         'max' : np.max(arr),
