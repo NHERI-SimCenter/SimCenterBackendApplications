@@ -48,9 +48,9 @@ from REDi.go_redi import go_redi
 
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 main_dir = this_dir.parents[1]
-sys.path.insert(0, str(main_dir))
+sys.path.insert(0, str(main_dir / 'common'))
 
-from createEVENT.SimCenterEvent.SimCenterEvent import get_scale_factors
+from simcenter_common import get_scale_factors
 
 class NumpyEncoder(json.JSONEncoder) :
     # Encode the numpy datatypes to json
