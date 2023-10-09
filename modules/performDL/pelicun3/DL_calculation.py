@@ -97,7 +97,7 @@ damage_processes = {
         }
     },
 
-    'Hazus Earthquake': {
+    'Hazus Earthquake - Buildings': {
         "1_STR": {
             "DS5": "collapse_DS1"
         },
@@ -118,12 +118,14 @@ damage_processes = {
 
 default_DBs = {
     'fragility': {
-        'FEMA P-58': 'fragility_DB_FEMA_P58_2nd.csv',
-        'Hazus Earthquake': 'fragility_DB_HAZUS_EQ.csv'
+        'FEMA P-58': 'damage_DB_FEMA_P58_2nd.csv',
+        'Hazus Earthquake - Buildings': 'damage_DB_Hazus_EQ_bldg.csv',
+        'Hazus Earthquake - Transportation': 'damage_DB_Hazus_EQ_trnsp.csv'
     },
     'repair': {
-        'FEMA P-58': 'bldg_repair_DB_FEMA_P58_2nd.csv',
-        'Hazus Earthquake': 'bldg_repair_DB_HAZUS_EQ.csv'
+        'FEMA P-58': 'loss_repair_DB_FEMA_P58_2nd.csv',
+        'Hazus Earthquake - Buildings': 'loss_repair_DB_Hazus_EQ_bldg.csv',
+        'Hazus Earthquake - Transportation': 'loss_repair_DB_Hazus_EQ_trnsp.csv'
     }
 
 }
@@ -478,19 +480,29 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
         raw_demands = convert_to_MultiIndex(raw_demands, axis=1)
 
-        DEM_to_drop = np.full(raw_demands.shape[0], False)
+        raw_demands_no_units = raw_demands.copy()
+        if "Units" in raw_demands.index:
+            raw_demands_no_units.drop(["Units",], axis=0, inplace=True)
+        raw_demands_no_units = raw_demands_no_units.astype(float)
+
+        DEM_to_drop = np.full(raw_demands_no_units.shape[0], False)
 
         for DEM_type, limit in demand_config['CollapseLimits'].items():
 
-            if raw_demands.columns.nlevels == 4:
-                DEM_to_drop += raw_demands.loc[
+            if raw_demands_no_units.columns.nlevels == 4:
+                DEM_to_drop += raw_demands_no_units.loc[
                                :, idx[:, DEM_type, :, :]].max(axis=1) > float(limit)
 
             else:
-                DEM_to_drop += raw_demands.loc[
+                DEM_to_drop += raw_demands_no_units.loc[
                                :, idx[DEM_type, :, :]].max(axis=1) > float(limit)
 
-        raw_demands = raw_demands.loc[~DEM_to_drop, :]
+        raw_demands_no_units = raw_demands_no_units.loc[~DEM_to_drop, :]
+
+        if "Units" in raw_demands.index:
+            raw_demands_no_units = pd.concat([raw_demands_no_units, raw_demands.loc["Units",:].to_frame().T], axis=0)
+
+        raw_demands = raw_demands_no_units
 
         log_msg(f"{np.sum(DEM_to_drop)} realizations removed from the demand "
                 f"input because they exceed the collapse limit. The remaining "
@@ -778,7 +790,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
         # prepare additional fragility data
 
         # get the database header from the default P58 db
-        P58_data = PAL.get_default_data('fragility_DB_FEMA_P58_2nd')
+        P58_data = PAL.get_default_data('damage_DB_FEMA_P58_2nd')
 
         adf = pd.DataFrame(columns=P58_data.columns)
 
@@ -904,7 +916,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 dmg_process = damage_processes[dp_approach]
 
                 # For Hazus Earthquake, we need to specify the component ids
-                if dp_approach == 'Hazus Earthquake':
+                if dp_approach == 'Hazus Earthquake - Buildings':
 
                     cmp_list = cmp_sample.columns.unique(level=0)
 
@@ -1016,7 +1028,11 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     output_files.append('DMG_stats.csv')
 
                 if np.any(np.isin(['GroupedSample', 'GroupedStatistics'], out_reqs)):
-                    grp_damage = damage_sample.groupby(level=[0, 3], axis=1).sum()
+
+                    damage_groupby = damage_sample.groupby(level=[0,3], axis=1)
+
+                    grp_damage = damage_groupby.sum().mask(
+                        damage_groupby.count()==0, np.nan)                    
 
                     if 'GroupedSample' in out_reqs:
                         grp_damage_s = convert_to_SimpleIndex(grp_damage, axis=1)
@@ -1143,7 +1159,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     adf.loc[rc, ('DS1', 'Theta_0')] = 0
 
                 # for Hazus EQ, use 1.0 as a loss_ratio
-                elif DL_method == 'Hazus Earthquake':
+                elif DL_method == 'Hazus Earthquake - Buildings':
                     adf.loc[rc, ('Quantity', 'Unit')] = '1 EA'
                     adf.loc[rc, ('DV', 'Unit')] = 'loss_ratio'
 
@@ -1183,7 +1199,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     adf.loc[rt, ('DS1', 'Theta_0')] = 0
 
                 # for Hazus EQ, use 1.0 as a loss_ratio
-                elif DL_method == 'Hazus Earthquake':
+                elif DL_method == 'Hazus Earthquake - Buildings':
                     adf.loc[rt, ('Quantity', 'Unit')] = '1 EA'
                     adf.loc[rt, ('DV', 'Unit')] = 'day'
 
@@ -1370,8 +1386,11 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
                     if np.any(np.isin(
                             ['GroupedSample', 'GroupedStatistics'], out_reqs)):
-                        grp_repair = repair_sample.groupby(
-                            level=[0, 1, 2], axis=1).sum()
+                        
+                        repair_groupby = repair_sample.groupby(
+                            level=[0,1,2], axis=1)
+                        grp_repair = repair_groupby.sum().mask(
+                            repair_groupby.count()==0, np.nan)
 
                         if 'GroupedSample' in out_reqs:
                             grp_repair_s = convert_to_SimpleIndex(grp_repair, axis=1)
