@@ -974,8 +974,14 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 log_msg(f"Prescribed Damage Process not recognized: "
                         f"{dp_approach}")
 
-        # calculate damages
-        PAL.damage.calculate(dmg_process=dmg_process)
+        if config_ap["GeneralInformation"].get("assetSubtype",None)=="hwy_bridge":
+            #modify damage model for slight
+            PAL.damage.calculate(dmg_process=dmg_process)
+            #modify damage model for upper damage
+            PAL.damage.calculate(dmg_process=dmg_process)
+        else:
+            # calculate damages
+            PAL.damage.calculate(dmg_process=dmg_process)
 
         # if requested, save results
         if out_config.get('Damage', None) != None:
