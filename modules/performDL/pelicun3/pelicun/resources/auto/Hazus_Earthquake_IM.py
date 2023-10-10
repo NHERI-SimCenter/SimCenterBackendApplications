@@ -38,6 +38,7 @@
 # Adam Zsarnóczay
 
 import pandas as pd
+import math
 
 ap_DesignLevel = {
     1940: 'PC',
@@ -52,71 +53,100 @@ ap_DesignLevel_W1 = {
     1975: 'MC',
     2100: 'HC'
 }
+
+length_to_meter = {
+    "m":1,
+    "mm":0.001,
+    "cm":0.01,
+    "km" : 1000,
+    "inch" :0.0254,
+    "ft" : 0.0254*12.,
+    "mile" : 0.0254*12*5280.
+}
+def EQ1(N):
+    return 1+0.25/(N-1) if N>1 else 1.25
+def EQ2(N):
+    return 1+0.33/(N-0)
+def EQ3(N):
+    return 1+0.33/(N-1) if N>1 else 1.33
+def EQ4(N):
+    return 1+0.09/(N-1) if N>1 else 1.09
+def EQ5(N):
+    return 1+0.05/(N-0) 
+def EQ6(N):
+    return 1+0.20/(N-1) if N>1 else 1.20
+def EQ7(N):
+    return 1+0.10/(N-0) 
+
 def convertBridgeToHAZUSclass(AIM):
+    # return HAZUS bridge class, K_3D, and I_shape. K_3D is calculated based on Basoz and Mander (1999)
+    # if HAZUS and Basoz and Mander (1999) are different
     structureType = AIM["bridge_class"]
     # if type(structureType)== str and len(structureType)>3 and structureType[:3] == "HWB" and 0 < int(structureType[3:]) and 29 > int(structureType[3:]):
     #     return AIM["bridge_class"]
     state = AIM["state_code"]
     yr_built = AIM["year_built"]
     num_span = AIM["nspans"]
-    len_max_span = AIM["lmaxspan"]
+    scale_factor = length_to_meter.get(AIM["units"]["length"], 0.0254)
+    len_max_span = AIM["lmaxspan"]*scale_factor # convert to meter
+
     seismic = (int(state)==6 and int(yr_built)>=1975) or (int(state)!=6 and int(yr_built)>=1990)
     if not seismic and len_max_span > 150:
-        return "HWB1"
+        return "HWB1", 1, 0 
     elif seismic and len_max_span > 150:
-        return "HWB2"
+        return "HWB2", 1, 0
     elif not seismic and num_span == 1:
-        return "HWB3"
+        return "HWB3", 1, 1
     elif seismic and num_span == 1:
-        return "HWB4"
+        return "HWB4", 1, 1
     elif not seismic and 101 <= structureType and structureType <= 106 and state != 6:
-        return "HWB5"
+        return "HWB5", EQ1(num_span), 0
     elif not seismic and 101 <= structureType and structureType <= 106 and state ==6:
-        return "HWB6"
+        return "HWB6", EQ1(num_span), 0
     elif seismic and 101 <= structureType and structureType <= 106:
-        return "HWB7"
+        return "HWB7", EQ1(num_span), 0
     elif not seismic and 205 <= structureType and structureType <= 206:
-        return "HWB8"
+        return "HWB8", EQ2(num_span), 0
     elif seismic and 205 <= structureType and structureType <= 206:
-        return "HWB9"
+        return "HWB9", EQ3(num_span), 0
     elif not seismic and 201 <= structureType and structureType <= 206:
-        return "HWB10"
+        return "HWB10", EQ2(num_span), 1
     elif seismic and 201 <= structureType and structureType <= 206:
-        return "HWB11"
+        return "HWB11", EQ3(num_span), 1
     elif not seismic and 301 <= structureType and structureType <= 306 and state != 6:
-        return "HWB12"
+        return "HWB12", EQ4(num_span), 0
     elif not seismic and 301 <= structureType and structureType <= 306 and state == 6:
-        return "HWB13"
+        return "HWB13", EQ4(num_span), 0
     elif seismic and 301 <= structureType and structureType <= 306:
-        return "HWB14"
+        return "HWB14", EQ1(num_span), 0
     elif not seismic and 402 <= structureType and structureType <= 410:
-        return "HWB15"
+        return "HWB15", EQ5(num_span), 1
     elif seismic and 402 <= structureType and structureType <= 410:
-        return "HWB16"
+        return "HWB16", EQ3(num_span), 1
     elif not seismic and 501 <= structureType and structureType <= 506 and state != 6:
-        return "HWB17"
+        return "HWB17", EQ1(num_span), 0
     elif not seismic and 501 <= structureType and structureType <= 506 and state == 6:
-        return "HWB18"
+        return "HWB18", EQ1(num_span), 0
     elif seismic and 501 <= structureType and structureType <= 506:
-        return "HWB19"
+        return "HWB19", EQ1(num_span), 0
     elif not seismic and 605 <= structureType and structureType <= 606:
-        return "HWB20"
+        return "HWB20", EQ2(num_span), 0
     elif seismic and 605 <= structureType and structureType <= 606:
-        return "HWB21"
+        return "HWB21", EQ3(num_span), 0
     elif not seismic and 601 <= structureType and structureType <= 607:
-        return "HWB22"
+        return "HWB22", EQ2(num_span), 1
     elif seismic and 601 <= structureType and structureType <= 607:
-        return "HWB23"
+        return "HWB23", EQ3(num_span), 1
     elif not seismic and 301 <= structureType and structureType <= 306 and state != 6:
-        return "HWB24"
+        return "HWB24", EQ6(num_span), 0
     elif not seismic and 301 <= structureType and structureType <= 306 and state == 6:
-        return "HWB25"
+        return "HWB25", EQ6(num_span), 0
     elif not seismic and 402 <= structureType and structureType <= 410 and state != 6:
-        return "HWB26"
+        return "HWB26", EQ7(num_span), 1
     elif not seismic and 402 <= structureType and structureType <= 410 and state == 6:
-        return "HWB27"
+        return "HWB27", EQ7(num_span), 1
     else:
-        return "HWB28"
+        return "HWB28", 1, 0
 
 def convertTunnelToHAZUSclass(AIM):
     if "Bored" in AIM["cons_type"] or "Drilled" in AIM["cons_type"]:
@@ -254,7 +284,7 @@ def auto_populate(AIM):
         inf_type = AIM["assetSubtype"]
         if inf_type == "hwy_bridge":
             # get the bridge class
-            bt = convertBridgeToHAZUSclass(AIM)
+            bt, k_3D, I_shape = convertBridgeToHAZUSclass(AIM)
             AIM_ap['BridgeHazusClass'] = bt
 
             CMP = pd.DataFrame(
@@ -282,6 +312,9 @@ def auto_populate(AIM):
                     }
                 }
             }
+            AIM_ap['Kskew'] = math.sqrt(math.sin((90-AIM["skew"])/180.0*math.pi))
+            AIM_ap['K_3D'] = k_3D
+            AIM_ap['I_shape'] = I_shape
         elif inf_type == "hwy_tunnel":
             # get the tunnel class
             tt = convertTunnelToHAZUSclass(AIM)
