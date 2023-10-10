@@ -1,1 +1,2 @@
 simcenter_add_python_script(SCRIPT JSON_to_AIM_transport.py)
+simcenter_add_python_script(SCRIPT GeoJSON_to_AIM_transport.py)
