@@ -210,9 +210,6 @@ class UQengine:
             self.IM_names = IM_names
             X_new = np.hstack([X,np.array(IM_vals)])
             X = X_new.astype(np.double)
-        print(self.IM_names)
-        print(X)
-        print(IM_matrix)
             
         return X, Y, id_sim + Nsim
 
