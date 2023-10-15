@@ -151,8 +151,33 @@ def get_rupture_distance(erf, source_index, rupture_index, lat, lon):
 
     return distToRupture
 
+def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):
+    rupSource = erf.getSource(source_index)
+    rupList = rupSource.getRuptureList()
+    rupSurface = rupList.get(rupture_index).getRuptureSurface()
+    distToRupture = []
+    distJB = []
+    distX = []
+    for i in range(len(siteList)):
+        siteList[i].update({"rRup":float(rupSurface.getDistanceRup(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+        siteList[i].update({"rJB":float(rupSurface.getDistanceJB(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+        siteList[i].update({"rX":float(rupSurface.getDistanceX(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+        # distToRupture.append(float(rupSurface.getDistanceRup(Location(siteList[i]['lat'], siteList[i]['lon']))))
+        # distJB.append(float(rupSurface.getDistanceJB(Location(siteList[i]['lat'], siteList[i]['lon']))))
+        # distX.append(float(rupSurface.getDistanceX(Location(siteList[i]['lat'], siteList[i]['lon']))))
+    site_rup_info = {
+        "dip" : float(rupSurface.getAveDip()),
+        "width" : float(rupSurface.getAveWidth()),
+        "zTop" : float(rupSurface.getAveRupTopDepth()),
+        "aveRake" : float(rupList.get(rupture_index).getAveRake())
+        # "rRup":distToRupture,
+        # "rJB":distJB,
+        # "rX":distX
+        } 
+    return site_rup_info, siteList
 
-def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0, maxSources = 500):
+
+def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0):
 
     # Initializing
     erf_data = {"type": "FeatureCollection"}
@@ -173,15 +198,12 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         })
     # Sorting sources
     source_collection = df.sort_values(['sourceDist'], ascending = (True))
+    source_collection = source_collection[source_collection["sourceDist"]<maxDistance]
     # Collecting source features
-    maxSources = min(maxSources, num_sources)
     feature_collection = []
-    for i in tqdm(range(maxSources), desc='Sources'):
+    for i in tqdm(range(source_collection.shape[0]), desc='Sources'):
         source_index = source_collection.iloc[i, 0]
         distanceToSource = source_collection.iloc[i, 1]
-        # Checking maximum distance
-        if (distanceToSource > maxDistance):
-            continue
         # Getting rupture distances
         rupSource = erf.getSource(source_index)
         try:
@@ -278,16 +300,17 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print('FetchOpenSHA: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
-    num_preview = 1000
-    if len(feature_collection_sorted) > num_preview:
-        preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
-    else:
-        preview_erf_data = erf_data
+    # num_preview = 1000
+    # if len(feature_collection_sorted) > num_preview:
+    #     preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
+    # else:
+    #     preview_erf_data = erf_data
     # Output
     if outfile is not None:
+        print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
-            json.dump(preview_erf_data, f, indent=2)
-    del preview_erf_data
+            json.dump(erf_data, f, indent=2)
+    # del preview_erf_data
     # return
     return erf_data
 
@@ -627,3 +650,32 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
 
     # return
     return vs30
+
+def get_site_z1pt0_from_opensha(lat, lon):
+    sites = ArrayList()
+    sites.add(Site(Location(lat, lon)))
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+    for data in siteData:
+        if data.getValue(0).getDataType()=='Depth to Vs = 1.0 km/sec':
+            z1pt0 = float(data.getValue(0).getValue())
+            if not np.isnan(z1pt0):
+                break
+    return z1pt0*1000.0
+
+def get_site_z2pt5_from_opensha(lat, lon):
+    sites = ArrayList()
+    sites.add(Site(Location(lat, lon)))
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+    for data in siteData:
+        if data.getValue(0).getDataType()=='Depth to Vs = 2.5 km/sec':
+            z2pt5 = float(data.getValue(0).getValue())
+            if not np.isnan(z2pt5):
+                break
+    return z2pt5*1000.0
+
+
+

@@ -44,6 +44,7 @@ import pandas as pd
 import socket
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import get_site_vs30_from_opensha
+    from FetchOpenSHA import get_site_z1pt0_from_opensha, get_site_z2pt5_from_opensha
 
 
 def get_label(options, labels, label_name):
@@ -194,6 +195,7 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
     elif len(nan_loc):
         print('CreateStation: Default zore depth to rock for sites missing the data.')
         selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]
+        
 
     # rename column headers to standard keywords
     selected_stn.rename(columns={lat_label: 'Latitude', lon_label: 'Longitude', vs30_label: 'Vs30',
@@ -286,14 +288,24 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         if stn.get('z1pt0'):
             tmp.update({'z1pt0': stn.get('z1pt0')})
         else:
-            if z1_tag:
+            if z1_tag==1:
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
+            elif z1_tag==2:
+                z1pt0 = get_site_z1pt0_from_opensha(tmp['Latitude'], tmp['Longitude'])
+                if np.isnan(z1pt0):
+                    z1pt0 = get_z1(tmp.get('Vs30'))
+                tmp.update({'z1pt0': z1pt0})
 
         if stn.get('z2pt5'):
             tmp.update({'z2pt5': stn.get('z2pt5')})
         else:
-            if z25_tag:
+            if z25_tag==1:
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
+            elif z25_tag==2:
+                z2pt5 = get_site_z2pt5_from_opensha(tmp['Latitude'], tmp['Longitude'])
+                if np.isnan(z2pt5):
+                    z2pt5 = get_z25(tmp['z1pt0'])
+                tmp.update({'z2pt5': z2pt5})
 
         if stn.get('DepthToRock'):
             tmp.update({'DepthToRock': stn.get('DepthToRock')})
@@ -321,12 +333,14 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 json.dump(stn_file, f, indent=2)
         if 'OpenQuake' in output_file:
             df_csv = {
+                'ID': [id for id, _ in enumerate(stn_file['Stations'])],
                 'lon': [x['Longitude'] for x in stn_file['Stations']],
                 'lat': [x['Latitude'] for x in stn_file['Stations']],
                 'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
                 'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
                 'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
-                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']]
+                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
+                'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
             }
             # no backarc by default
             if stn_file['Stations'][0].get('backarc',None):
@@ -449,7 +463,7 @@ def get_vs30_thompson(lat, lon):
 
 def get_z1(vs30):
     """
-    Compute z1 based on the prediction equation by Chiou and Youngs (2013)
+    Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)
     """
 
     z1 = -7.15 / 4.0 * np.log((vs30 ** 4 + 571.0 ** 4) / (1360.0 ** 4 + 571.0 ** 4))

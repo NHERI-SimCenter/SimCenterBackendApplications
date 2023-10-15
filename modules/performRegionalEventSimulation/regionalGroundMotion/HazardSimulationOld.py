@@ -49,24 +49,117 @@ import importlib
 
 R2D = True
 
+def site_job(hazard_info):
+
+    # Sites and stations
+    print('HazardSimulation: creating stations.')
+    site_info = hazard_info['Site']
+    if site_info['Type'] == 'From_CSV':
+        input_file = os.path.join(input_dir,site_info['input_file'])
+        output_file = site_info.get('output_file',False)
+        if output_file:
+            output_file = os.path.join(output_dir, output_file)
+        min_ID = site_info['min_ID']
+        max_ID = site_info['max_ID']
+        # forward compatibility
+        if minID:
+            min_ID = minID
+            site_info['min_ID'] = minID
+        if maxID:
+            max_ID = maxID
+            site_info['max_ID'] = maxID
+        # Creating stations from the csv input file
+        z1_tag = 0
+        z25_tag = 0
+        # Vs30
+        if 'Global Vs30' in site_info['Vs30']['Type']:
+            vs30_tag = 1
+        elif 'Thompson' in site_info['Vs30']['Type']:
+            vs30_tag = 2
+        elif 'National Crustal Model' in site_info['Vs30']['Type']:
+            vs30_tag = 3
+        else:
+            vs30_tag = 0
+        # Bedrock depth
+        zTR_tag = 0
+        if 'SoilGrid250' in site_info['BedrockDepth']['Type']:
+            zTR_tag = 0
+        elif 'National Crustal Model' in site_info['BedrockDepth']['Type']:
+            zTR_tag = 1
+        # soil model if any
+        if site_info.get('SoilModel', None) is not None:
+            soil_model_type = site_info['SoilModel'].get('Type', 'EI')
+        else:
+            soil_model_type = None
+        # user soil model function file path
+        soil_user_fun = None
+        if soil_model_type == 'User':
+            soil_user_fun = site_info['SoilModel'].get('Parameters', None)
+            if soil_user_fun is not None:
+                soil_user_fun = os.path.join(input_dir, soil_user_fun)
+        # Creating stations from the csv input file
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag, zTR_tag=zTR_tag, 
+                                   soil_flag=True, soil_model_type=soil_model_type, soil_user_fun=soil_user_fun)
+    if stations:
+        print('HazardSimulation: site data are fetched and saved in {}.'.format(output_file))
+    else:
+        print('HazardSimulation: please check the "Input" directory in the configuration json file.')
+        exit()
+
+
 def hazard_job(hazard_info):
-    # Read Site .csv
-    site_file = hazard_info['Site']["siteFile"]
-    try:
-        stations = pd.read_csv(site_file).to_dict(orient='records')
-        print('HazardSimulation: stations loaded.')
-    except:
-        print('HazardSimulation: please check the station file {}'.format(site_file))
+
+    # Sites and stations
+    print('HazardSimulation: creating stations.')
+    site_info = hazard_info['Site']
+    if site_info['Type'] == 'From_CSV':
+        input_file = os.path.join(input_dir,site_info['input_file'])
+        output_file = site_info.get('output_file',False)
+        if output_file:
+            output_file = os.path.join(input_dir, output_file)
+        min_ID = site_info['min_ID']
+        max_ID = site_info['max_ID']
+        # forward compatibility
+        if minID:
+            min_ID = minID
+            site_info['min_ID'] = minID
+        if maxID:
+            max_ID = maxID
+            site_info['max_ID'] = maxID
+        # Creating stations from the csv input file
+        z1_tag = 0
+        z25_tag = 0
+        if 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']:
+            z1_tag = 1
+            z25_tag = 1
+        if 'Global Vs30' in site_info['Vs30']['Type']:
+            vs30_tag = 1
+        elif 'Thompson' in site_info['Vs30']['Type']:
+            vs30_tag = 2
+        elif 'NCM' in site_info['Vs30']['Type']:
+            vs30_tag = 3
+        else:
+            vs30_tag = 0
+        # Creating stations from the csv input file
+        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
+    if stations:
+        print('HazardSimulation: stations created.')
+    else:
+        print('HazardSimulation: please check the "Input" directory in the configuration json file.')
         exit()
     #print(stations)
 
     # Scenarios
-    print('HazardSimulation: loading scenarios.')
+    print('HazardSimulation: creating scenarios.')
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # KZ-10/31/2022: checking user-provided scenarios
-        rupFile = scenario_info['sourceFile']
-        scenarios = load_earthquake_rupFile(scenario_info, rupFile)
+        user_scenarios = scenario_info.get('EqRupture').get('UserScenarioFile', False)
+        if user_scenarios:
+            scenarios = load_earthquake_scenarios(scenario_info, stations, dir_info)
+        # Creating earthquake scenarios
+        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
+            scenarios = create_earthquake_scenarios(scenario_info, stations, dir_info)
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -74,7 +167,7 @@ def hazard_job(hazard_info):
         # TODO: extending this to other hazards
         print('HazardSimulation: currently only supports EQ and Wind simulations.')
     #print(scenarios)
-    print('HazardSimulation: scenarios loaded.')
+    print('HazardSimulation: scenarios created.')
 
     # Computing intensity measures
     print('HazardSimulation: computing intensity measures.')
@@ -82,7 +175,7 @@ def hazard_job(hazard_info):
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
         if opensha_flag:
-            im_raw, im_info = compute_im(scenarios, stations, scenario_info["EqRupture"],
+            im_raw, im_info = compute_im(scenarios, stations['Stations'],
                                 event_info['GMPE'], event_info['IntensityMeasure'],
                                 scenario_info.get('EqRupture').get('HazardOccurrence',None), output_dir, mth_flag=False)
             # update the im_info
@@ -177,7 +270,7 @@ def hazard_job(hazard_info):
         print('num_gm_per_site = ',num_gm_per_site)
         if not scenario_info['EqRupture']['Type'] in ['OpenQuakeClassicalPSHA','OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
             # Computing correlated IMs
-            ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations, im_raw,
+            ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations['Stations'], im_raw,
                                                                 num_gm_per_site,
                                                                 event_info['CorrelationModel'],
                                                                 event_info['IntensityMeasure'])
@@ -213,7 +306,7 @@ def hazard_job(hazard_info):
             
         if event_info['SaveIM'] and ln_im_mr:
             print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations, im_list,
+            _ = export_im(stations['Stations'], im_list,
                           ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1)
             print('HazardSimulation: simulated intensity measures saved.')
         else:
@@ -271,6 +364,11 @@ if __name__ == '__main__':
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
+    parser.add_argument('--filter', default=None)
+    parser.add_argument('-d', '--referenceDir', default=None)
+    parser.add_argument('-w', '--workDir', default=None)
+    parser.add_argument('--hcid', default=None)
+    parser.add_argument('-j', '--job_type', default='Hazard')
     args = parser.parse_args()
 
     # read the hazard configuration file
@@ -278,13 +376,32 @@ if __name__ == '__main__':
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
-    work_dir = hazard_info['Directory']
-    input_dir = os.path.join(work_dir, "Input")
-    output_dir = os.path.join(work_dir, "Output")
+    dir_info = hazard_info['Directory']
+    work_dir = dir_info['Work']
+    input_dir = dir_info['Input']
+    output_dir = dir_info['Output']
+    if args.referenceDir:
+        input_dir = args.referenceDir
+        dir_info['Input'] = input_dir
+    if args.workDir:
+        output_dir = args.workDir
+        dir_info['Output'] = output_dir
+        dir_info['Work'] = output_dir
     try:
         os.mkdir(f"{output_dir}")
     except:
         print('HazardSimulation: output folder already exists.')
+
+    # site filter (if explicitly defined)
+    minID = None
+    maxID = None
+    if args.filter:
+        tmp = [int(x) for x in args.filter.split('-')]
+        if len(tmp) == 1:
+            minID = tmp[0]
+            maxID = minID
+        else:
+            [minID, maxID] = tmp
 
     # parse job type for set up environment and constants
     try:
@@ -345,17 +462,23 @@ if __name__ == '__main__':
         from FetchOpenQuake import *
 
     # untar site databases
-    # site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-    # print('HazardSimulation: Extracting site databases.')
-    # cwd = os.path.dirname(os.path.realpath(__file__))
-    # for cur_database in site_database:
-    #     subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
+    print('HazardSimulation: Extracting site databases.')
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    for cur_database in site_database:
+        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
 
     # Initial process list
     import psutil
     proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
 
-    hazard_job(hazard_info)
+    # run the job
+    if args.job_type == 'Hazard':
+        hazard_job(hazard_info)
+    elif args.job_type == 'Site':
+        site_job(hazard_info)
+    else:
+        print('HazardSimulation: --job_type = Hazard or Site (please check).')
 
     # Closing the current process
     sys.exit(0)
