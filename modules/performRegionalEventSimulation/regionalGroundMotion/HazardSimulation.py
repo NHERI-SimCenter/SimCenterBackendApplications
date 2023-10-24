@@ -84,7 +84,7 @@ def hazard_job(hazard_info):
         if opensha_flag:
             im_raw, im_info = compute_im(scenarios, stations, scenario_info["EqRupture"],
                                 event_info['GMPE'], event_info['IntensityMeasure'],
-                                scenario_info.get('EqRupture').get('HazardOccurrence',None), output_dir, mth_flag=False)
+                                scenario_info['Generator'], output_dir, mth_flag=False)
             # update the im_info
             event_info['IntensityMeasure'] = im_info
         elif oq_flag:
@@ -128,14 +128,14 @@ def hazard_job(hazard_info):
         #im_type = 'SA'
         #period = 1.0
         #im_level = 0.2*np.ones((len(im_raw[0].get('GroundMotions')),1))
-        occurrence_sampling = scenario_info.get('EqRupture').get('OccurrenceSampling',False)
+        occurrence_sampling = scenario_info['Generator']["method"]=='Subsampling'
         if occurrence_sampling:
             # read all configurations
-            occurrence_info = scenario_info.get('EqRupture').get('HazardOccurrence')
+            occurrence_info = scenario_info['Generator']['Parameters']
             reweight_only = occurrence_info.get('ReweightOnly',False)
             # KZ-10/31/22: adding a flag for whether to re-sample ground motion maps or just monte-carlo
             sampling_gmms = occurrence_info.get('SamplingGMMs', True)
-            occ_dict = configure_hazard_occurrence(input_dir, output_dir, hzo_config=occurrence_info, site_config=stations['Stations'])
+            occ_dict = configure_hazard_occurrence(input_dir, output_dir, hzo_config=occurrence_info, site_config=stations)
             model_type = occ_dict.get('Model')
             num_target_eqs = occ_dict.get('NumTargetEQs')
             num_target_gmms = occ_dict.get('NumTargetGMMs')
@@ -188,7 +188,7 @@ def hazard_job(hazard_info):
             #print('im_list = ',im_list)
             im_exceedance_prob_gmm = get_im_exceedance_probability_gm(np.exp(ln_im_mr), im_list, im_type, period, hc_curves)
             # sample the earthquake scenario occurrence
-            occurrence_model_gmm = sample_earthquake_occurrence(model_type,num_target_gmms,return_periods,im_exceedance_prob_gmm)
+            occurrence_model_gmm = sample_earthquake_occurrence(model_type,num_target_gmms,return_periods,im_exceedance_prob_gmm, reweight_only, occurence_rate_origin)
             #print(occurrence_model)
             P_gmm, Z_gmm = occurrence_model_gmm.get_selected_earthquake()
             # now update the im_raw with selected eqs with Z > 0

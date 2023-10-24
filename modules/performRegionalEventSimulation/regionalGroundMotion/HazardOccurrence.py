@@ -87,9 +87,9 @@ def configure_hazard_occurrence(input_dir,
         hazard_curve_collector = []
         for site_id in range(len(site_config)):
             cur_site = site_config[site_id]
-            cur_lon = cur_site.get('Longitude')
-            cur_lat = cur_site.get('Latitude')
-            cur_vs30 = cur_site.get('Vs30',760)
+            cur_lon = cur_site.get('lon')
+            cur_lat = cur_site.get('lat')
+            cur_vs30 = cur_site.get('vs30',760)
             hazard_curve_collector.append(USGS_HazardCurve(longitude=cur_lon,
                                                            latitude=cur_lat,
                                                            vs30=cur_vs30,
@@ -233,11 +233,18 @@ def get_im_exceedance_probility(im_raw,
         return im_exceedance_prob
         
     # check period
-    if period not in im_raw[0].get('Periods'):
-        print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(period,im_raw[0].get('Periods')))
-        return im_exceedance_prob
+    if im_type == 'PGA':
+        if 'PGA' not in im_raw[0]['IM']:
+            print('IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.format(period,im_raw[0].get('IM')))
+            return im_exceedance_prob
+        else:
+            periodID = 0
     else:
-        periodID = im_raw[0].get('Periods').index(period)
+        if period not in im_raw[0].get('Periods'):
+            print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(period,im_raw[0].get('Periods')))
+            return im_exceedance_prob
+        else:
+            periodID = im_raw[0].get('Periods').index(period)
 
     # start to compute the exceedance probability
     for k in range(num_scen):
@@ -290,7 +297,7 @@ def sample_earthquake_occurrence(model_type,
                                  return_periods,
                                  im_exceedance_prob,
                                  reweight_only,
-                                 occurence_rate_origin):
+                                 occurence_rate_origin = None):
 
     # model type
     if model_type == 'Manzour & Davidson (2016)':

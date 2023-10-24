@@ -46,7 +46,8 @@
 LOCAL_IM_GMPE = {"DS575H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
                  "DS595H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
 				 "DS2080H": ["Afshari & Stewart (2016)"],
-				 "SA":["Chiou & Youngs (2014)"]}
+				 "SA":["Chiou & Youngs (2014)", "Abrahamson, Silva & Kamai (2014)"],
+				 "PGA":["Chiou & Youngs (2014)", "Abrahamson, Silva & Kamai (2014)"]}
 
 OPENSHA_IM_GMPE = {"SA": ["Abrahamson, Silva & Kamai (2014)", "Boore, Stewart, Seyhan & Atkinson (2014)", 
                           "Campbell & Bozorgnia (2014)", "Chiou & Youngs (2014)"],
@@ -90,6 +91,8 @@ import threading
 class IM_Calculator:
 	# Chiou & Youngs (2014) GMPE class
 	CY = None
+	# Abrahamson, Silvar, & Kamai (2014)
+	ASK = None
 
 	# profile
 	timeGetRuptureInfo = 0
@@ -264,15 +267,21 @@ class IM_Calculator:
 			# get distance
 			if source_info['Type'] == 'PointSource':
 				# no earth curvature is considered
-				site_rup_dist.append(np.sqrt((eq_loc[0]-cur_lat)**2+(eq_loc[1]-cur_lon)^2+eq_loc[2]**2))
+				site_rup_dist.append(np.sqrt((eq_loc[0]-cur_lat)**2+(eq_loc[1]-cur_lon)**2+eq_loc[2]**2))
 			else:
 				site_rup_dist.append(get_rupture_distance(erf, source_index, rupture_index, [cur_lat], [cur_lon])[0])
 		# evaluate gmpe
 		site_rup_dist = []
-		if 'Chiou & Youngs (2014)' in gmpe_list:
-			start = time.process_time_ns()
-			site_rup_dict, station_info = get_rupture_info_CY2014(erf, source_index, rupture_index, station_info)
-			self.timeGetRuptureInfo += time.process_time_ns() - start
+		if source_info['Type']=='ERF':
+			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list:
+				start = time.process_time_ns()
+				site_rup_dict, station_info = get_rupture_info_CY2014(erf, source_index, rupture_index, station_info)
+				self.timeGetRuptureInfo += time.process_time_ns() - start
+		elif source_info['Type']=='PointSource':
+			if 'Chiou & Youngs (2014)' in gmpe_list:
+				start = time.process_time_ns()
+				site_rup_dict, station_info = get_PointSource_info_CY2014(source_info, station_info)
+				self.timeGetRuptureInfo += time.process_time_ns() - start
 		for cur_gmpe in gmpe_list:
 			gm_collector = []
 			if cur_gmpe not in avail_gmpe:
@@ -303,6 +312,10 @@ class IM_Calculator:
 				elif cur_gmpe == 'Chiou & Youngs (2014)':
 					start = time.process_time_ns()
 					tmpResult = self.CY.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
+					self.timeGetIM += time.process_time_ns() - start
+				elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
+					start = time.process_time_ns()
+					tmpResult = self.ASK.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
 					self.timeGetIM += time.process_time_ns() - start
 				else:
 					print('ComputeIntensityMeasure.get_im_from_local: gmpe_name {} is not supported.'.format(cur_gmpe))
@@ -436,7 +449,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 	return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, hazard_occur_info, output_dir, filename='IntensityMeasureMeanStd.json', mth_flag=True):
+def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generator_info, output_dir, filename='IntensityMeasureMeanStd.json', mth_flag=True):
 
 	# Calling OpenSHA to compute median PSA
 	im_raw = []
@@ -457,10 +470,10 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, hazard_o
 	station_info = {'Type': 'SiteList',
 					'SiteList': station_list}
 	# hazard occurrent model
-	if hazard_occur_info is not None:
+	if generator_info['method']=='Subsampling':
 		# check if the period in the hazard curve is in the period list in the intensity measure
-		if hazard_occur_info.get('IntensityMeasure')=='SA':
-			ho_period = hazard_occur_info.get('Period')
+		if generator_info['Parameters'].get('IntensityMeasure')=='SA':
+			ho_period = generator_info['Parameters'].get('Period')
 			if ho_period in im_info.get('Periods'):
 				pass
 			else:
@@ -493,6 +506,8 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, hazard_o
 			for gmpe in gmpe_dict[key]:
 				if gmpe == "Chiou & Youngs (2014)":
 					im_calculator.CY = openSHAGMPE.chiou_youngs_2013()
+				if gmpe == 'Abrahamson, Silva & Kamai (2014)':
+					im_calculator.ASK = openSHAGMPE.abrahamson_silva_kamai_2014()
 		# im_calculator.erf = getERF([elem for elem in scenarios.values()][0]['RuptureForecast'], True)
 		for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
 		# for i, key in enumerate(scenarios.keys()):
@@ -535,10 +550,10 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, hazard_o
 
 	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
 
-	# save im_raw
-	im_raw_preview = {"IntensityMeasures": im_raw}
-	with open(os.path.join(output_dir, filename), "w") as f:
-		json.dump(im_raw_preview, f, indent=2)
+	# save im_raw comment out for debug
+	# im_raw_preview = {"IntensityMeasures": im_raw}
+	# with open(os.path.join(output_dir, filename), "w") as f:
+	# 	json.dump(im_raw_preview, f, indent=2)
 
 	# return
 	return im_raw, im_info
@@ -873,7 +888,8 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 					try:
 						os.mkdir(os.path.join(output_dir, cur_scen_folder))
 					except:
-						print('ComputeIntensityMeasure: scenario folder already exists.')
+						pass
+						# print('ComputeIntensityMeasure: scenario folder already exists.')
 					cur_output_dir = os.path.join(output_dir, cur_scen_folder)
 				else:
 					cur_output_dir = output_dir
