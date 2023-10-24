@@ -31,3 +31,7 @@ cmake-build-debug
 cmake-build-debug-visual-studio
 cmake-build-release-visual-studio
 build2
+CMakeFiles
+googletest
+out
+currently_not_used

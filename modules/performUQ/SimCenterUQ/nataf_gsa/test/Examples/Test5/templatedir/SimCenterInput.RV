@@ -1,0 +1,12 @@
+pset fy "RV.fy"
+pset E "RV.E"
+pset b "RV.b"
+pset cR1 "RV.cR1"
+pset cR2 "RV.cR2"
+pset a1 "RV.a1"
+pset a3 "RV.a3"
+
+ set listQoI "stress "
+
+
+ source matTestAllParamsReadStrain.tcl
