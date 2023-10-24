@@ -176,7 +176,53 @@ def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):
         } 
     return site_rup_info, siteList
 
+def horzDistanceFast(lat1, lon1, lat2, lon2):
+    lat1 = lat1/180*np.pi
+    lon1 = lon1/180*np.pi
+    lat2 = lat2/180*np.pi
+    lon2 = lon2/180*np.pi
+    dlon = np.abs(lon2 - lon1) 
+    dlat = np.abs(lat2 - lat1)
+    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+    c = 2 * np.arcsin(np.sqrt(a)) 
+    EARTH_RADIUS_MEAN = 6371.0072 #https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/commons/geo/GeoTools.java#L22
+    # return EARTH_RADIUS_MEAN * np.sqrt((dLat * dLat) + (dLon * dLon))
+    return EARTH_RADIUS_MEAN * c
 
+def getPtSrcDistCorr(horzDist, mag, type):
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
+    if type == "FIELD":
+        rupLen =  np.power(10.0,-3.22+0.69*mag)
+        return 0.7071 + (1.0-0.7071)/(1 + np.power(rupLen/(horzDist*0.87),1.1))
+    elif type == "NSHMP08":
+        print("The NSHMP08 rJB correction has not been implemented. corr=1.0 is used instead")
+        # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
+        return 1.0
+    else:
+        return 1.0
+def get_PointSource_info_CY2014(source_info, siteList):
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L118
+    sourceLat = source_info['Location']['Latitude']
+    sourceLon = source_info['Location']['Longitude']
+    sourceDepth = source_info['Location']['Depth']
+    for i in range(len(siteList)):
+        siteLat = siteList[i]['lat']
+        siteLon = siteList[i]['lon']
+        horiD = horzDistanceFast(sourceLat, sourceLon, siteLat, siteLon)
+        rJB = horiD * getPtSrcDistCorr (horiD, source_info['Magnitude'],'NONE')
+        rRup = np.sqrt(rJB**2 + sourceDepth**2)
+        rX = 0.0
+        siteList[i].update({"rRup":rRup})
+        siteList[i].update({"rJB":rJB})
+        siteList[i].update({"rX":rX})
+    site_rup_info = {
+        "dip" : float(source_info['AverageDip']),
+        "width" : 0.0,#https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L68
+        "zTop" : sourceDepth,
+        "aveRake" : float(source_info['AverageRake'])
+        }
+    return site_rup_info, siteList 
+    
 def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0):
 
     # Initializing

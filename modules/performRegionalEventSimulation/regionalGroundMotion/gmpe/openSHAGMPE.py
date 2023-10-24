@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 import os
 import time
+############### Chiou and Young (2014)
 class chiou_youngs_2013():
     timeSetImt = 0
     timeCalc = 0
@@ -237,44 +238,283 @@ class chiou_youngs_2013():
         style = self.getFaultFromRake(site_rup_dict["aveRake"])
         if 'SA' in im_info['Type']:
             cur_T = im_info.get('Periods', None)
-            meanList = []
-            stdDevList = []
-            InterEvStdDevList = []
-            IntraEvStdDevList = []
-            for Tj in cur_T:
-                start = time.process_time_ns()
-                self.setIMT(Tj)
-                self.timeSetImt += time.process_time_ns() - start
-                start = time.process_time_ns()
-                mean, stdDev, InterEvStdDev, IntraEvStdDev = self.calc(Mw, site_info["rJB"], site_info["rRup"], site_info["rX"], site_rup_dict["dip"], site_rup_dict["zTop"], site_info["vs30"], vsInf, site_info["z1pt0"]/1000.0, style)
-                self.timeCalc += time.process_time_ns() - start
-                meanList.append(mean)
-                stdDevList.append(stdDev)
-                InterEvStdDevList.append(InterEvStdDev)
-                IntraEvStdDevList.append(IntraEvStdDev)
-            saResult = {'Mean': meanList,
-                    'TotalStdDev': stdDevList,
-                    'InterEvStdDev': InterEvStdDevList,
-                    'IntraEvStdDev': IntraEvStdDevList}
-            return saResult
+        elif im_info['Type'] == 'PGA':
+            cur_T = ['PGA']
+        elif im_info['Type'] == 'PGV':
+            cur_T = ['PGV']
+        else:
+            print(f'The IM type {im_info["Type"]} is not supported')
+        meanList = []
+        stdDevList = []
+        InterEvStdDevList = []
+        IntraEvStdDevList = []
+        for Tj in cur_T:
+            start = time.process_time_ns()
+            self.setIMT(Tj)
+            self.timeSetImt += time.process_time_ns() - start
+            start = time.process_time_ns()
+            mean, stdDev, InterEvStdDev, IntraEvStdDev = self.calc(Mw, site_info["rJB"], site_info["rRup"], site_info["rX"], site_rup_dict["dip"], site_rup_dict["zTop"], site_info["vs30"], vsInf, site_info["z1pt0"]/1000.0, style)
+            self.timeCalc += time.process_time_ns() - start
+            meanList.append(mean)
+            stdDevList.append(stdDev)
+            InterEvStdDevList.append(InterEvStdDev)
+            IntraEvStdDevList.append(IntraEvStdDev)
+        saResult = {'Mean': meanList,
+                'TotalStdDev': stdDevList,
+                'InterEvStdDev': InterEvStdDevList,
+                'IntraEvStdDev': IntraEvStdDevList}
+        return saResult
         
         # Station
         # if station_info['Type'] == 'SiteList':
         #     siteSpec = station_info['SiteList']
         # for i in range(len(site_list)):
 
-
+############## Abrahamson, Silva, and Kamai (2014)
 class abrahamson_silva_kamai_2014():
     timeSetImt = 0
     timeCalc = 0
     supportedImt = None
     def __init__(self):
-        self.coeff = pd.read_csv(os.path.join(os.path.dirname(__file__),'data','CY14.csv'))
+        self.coeff = pd.read_csv(os.path.join(os.path.dirname(__file__),'data','ASK14.csv'))
         self.coeff.iloc[:-2,0] = self.coeff.iloc[:-2,0].apply(lambda x: float(x))
         self.coeff = self.coeff.set_index('T')
         self.supportedImt = list(self.coeff.index)
         self.coeff = self.coeff.to_dict()
         
+        # Authors declared constants
+        self.A3 = 0.275
+        self.A4 = -0.1
+        self.A5 = -0.41
+        self.M2 = 5.0
+        self.N  = 1.5
+        self.C4 = 4.5
+        
+        # implementation constants
+        self.A = np.power(610, 4)
+        self.B = np.power(1360, 4) + self.A
+        self.VS_RK = 1180.0
+        self.A2_HW = 0.2
+        self.H1 = 0.25
+        self.H2 = 1.5
+        self.H3 = -0.75
+        self.PHI_AMP_SQ = 0.16
 
+    def setIMT(self, imt):
+        if imt not in self.supportedImt:
+            print(f"The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)")
+            return None
+        self.imt = imt
+        self.a1  = self.coeff['a1'][imt]        
+        self.a2  = self.coeff['a2'][imt]
+        self.a6  = self.coeff['a6'][imt]
+        self.a8  = self.coeff['a8'][imt]
+        self.a10 = self.coeff['a10'][imt]        
+        self.a12 = self.coeff['a12'][imt]
+        self.a13 = self.coeff['a13'][imt]
+        self.a14 = self.coeff['a14'][imt]
+        self.a15 = self.coeff['a15'][imt]        
+        self.a17 = self.coeff['a17'][imt]
+        self.a43 = self.coeff['a43'][imt]
+        self.a44 = self.coeff['a44'][imt]
+        self.a45 = self.coeff['a45'][imt]        
+        self.a46 = self.coeff['a46'][imt]
+        self.b   = self.coeff['b'][imt]
+        self.c   = self.coeff['c'][imt]
+        self.s1e = self.coeff['s1e'][imt]
+        self.s2e = self.coeff['s2e'][imt]
+        self.s3  = self.coeff['s3'][imt]        
+        self.s4  = self.coeff['s4'][imt]
+        self.s1m = self.coeff['s1m'][imt]
+        self.s2m = self.coeff['s2m'][imt]
+        self.s5  = self.coeff['s5'][imt]        
+        self.s6  = self.coeff['s6'][imt]
+        self.M1  = self.coeff['M1'][imt]        
+        self.Vlin= self.coeff['Vlin'][imt]
 
+    def getV1(self):
+        try:
+            if self.imt == "PGA" or self.imt == "PGV":
+                return 1500.0
+            if self.imt >= 3.0:
+                return 800.0
+            if self.imt > 0.5:
+                return np.exp( -0.35 * np.log(self.imt / 0.5) + np.log(1500.0))
+            return 1500.0
+        except:
+            return 1500.0
+    def calcZ1ref(self, vs30):
+        vsPow4 = vs30 * vs30 * vs30 * vs30
+        return np.exp(-7.67 / 4.0 * np.log((vsPow4 + self.A) / self.B)) / 1000.0
+
+    def calcSoilTerm(self, vs30, z1p0):
+        if np.isnan(z1p0):
+            return 0.0
+        z1ref = self.calcZ1ref(vs30)
+        vsCoeff = np.array([self.a43, self.a44, self.a45, self.a46, self.a46])
+        VS_BINS = np.array([150.0, 250.0, 400.0, 700.0, 1000.0])
+        z1c = np.interp(vs30, VS_BINS, vsCoeff)
+        return z1c * np.log((z1p0 + 0.01) / (z1ref + 0.01))
+
+    def getPhiA(self, Mw, s1, s2):
+        if Mw < 4.0:
+            return s1
+        if Mw > 6.0:
+            return s2
+        else:
+            return s1 + ((s2 - s1) / 2) * (Mw - 4.0)
+
+    def getTauA(self, Mw, s3, s4):
+        if Mw < 5.0:
+            return s3
+        if Mw > 7.0:
+            return s4
+        return s3 + ((s4 - s3) / 2) * (Mw - 5.0)
+    
+    def get_dAmp(self, b, c, vLin, vs30, saRock):
+        if (vs30 >= vLin):
+            return 0.0
+        return (-b * saRock) / (saRock + c) + (b * saRock) / (saRock + c * np.power(vs30 / vLin, self.N))
+        
+    def calcValues(self, Mw, rJB, rRup, rX, rY0, dip, width, zTop, vs30, vsInferred, z1p0, style):
+        if Mw > 5:
+            c4mag = self.C4
+        elif Mw > 4:
+            c4mag = self.C4 - (self.C4 - 1.0) * (5.0 - Mw)
+        else:
+            c4mag = 1.0
+        # -- Equation 3
+        R = np.sqrt(rRup * rRup + c4mag * c4mag)
+        # -- Equation 2
+        MaxMwSq = (8.5 - Mw) * (8.5 - Mw)
+        MwM1 = Mw - self.M1
+
+        f1 = self.a1 + self.a17 * rRup
+        if Mw > self.M1:
+            f1 += self.A5 * MwM1 + self.a8 * MaxMwSq + (self.a2 + self.A3 * MwM1) * np.log(R)
+        elif Mw >= self.M2:
+            f1 += self.A4 * MwM1 + self.a8 * MaxMwSq + (self.a2 + self.A3 * MwM1) * np.log(R)
+        else:
+            M2M1 = self.M2 - self.M1
+            MaxM2Sq = (8.5 - self.M2) * (8.5 - self.M2)
+            MwM2 = Mw - self.M2
+            f1 += self.A4 * M2M1 + self.a8 * MaxM2Sq + self.a6 * MwM2 + (self.a2 + self.A3 * M2M1) * np.log(R)
+        
+        # Hanging Wall Model
+        f4 = 0.0
+        if rJB < 30 and rX >= 0.0 and Mw > 5.5 and zTop <= 10.0:
+            T1 = ((90.0 - dip) / 45 if (dip > 30.0) else 1.33333333)
+            dM = Mw - 6.5
+            T2 = (1 + self.A2_HW * dM if Mw>=6.5 else 1 + self.A2_HW * dM - (1 - self.A2_HW) * dM * dM)
+            T3 = 0.0
+            r1 = width * np.cos(dip * np.pi/180.0)
+            r2 = 3 * r1
+            if rX <= r1:
+                rXr1 = rX / r1
+                T3 = self.H1 + self.H2 * rXr1 + self.H3 * rXr1 * rXr1
+            elif rX <= r2:
+                T3 = 1-(rX-r1)/(r2-r1)
+            T4 = 1 - (zTop * zTop) / 100.0
+            T5 = (1.0 if rJB == 0.0 else 1-rJB/30.0)
+            f4 = self.a13 * T1 * T2 * T3 * T4 * T5
+        f6 = self.a15
+        if zTop < 20.0:
+            f6 *= zTop / 20.0
+        if style == "NORMAL":
+            if Mw > 5.0:
+                f78 = self.a12
+            else:
+                if Mw >= 4.0:
+                    f78 = self.a12 * (Mw - 4)
+                else:
+                    f78 = 0.0
+        else:
+            f78 = 0.0
+        # -- Equation 17
+        f10 = self.calcSoilTerm(vs30, z1p0)
+
+        # Site Response Model
+        f5 = 0.0
+        v1 = self.getV1() # -- Equation 9
+        vs30s = (vs30 if (vs30 < v1) else v1) # -- Equation 8
+
+        # Site term -- Equation 7
+        saRock = 0.0; # calc Sa1180 (rock reference) if necessary 
+        if vs30 < self.Vlin:
+            if self.VS_RK < v1:
+                vs30s_rk = self.VS_RK
+            else:
+                vs30s_rk = v1
+            f5_rk = (self.a10 + self.b * self.N) * np.log(vs30s_rk / self.Vlin)
+            saRock = np.exp(f1 + f78 + f5_rk + f4 + f6)
+            f5 = self.a10 * np.log(vs30s / self.Vlin) - self.b * np.log(saRock + self.c) + self.b * np.log(saRock + self.c * pow(vs30s / self.Vlin, self.N))
+        else:
+            f5 = (self.a10 + self.b * self.N) * np.log(vs30s / self.Vlin)
+        # total model (no aftershock f11) -- Equation 1
+        mean = f1 + f78 + f5 + f4 + f6 + f10
+
+        # ****** Aleatory uncertainty model ******
+        # Intra-event term -- Equation 24
+        if vsInferred:
+            phiAsq = self.getPhiA(Mw, self.s1e, self.s2e)
+        else:
+            phiAsq = self.getPhiA(Mw, self.s1m, self.s2m)
+        phiAsq *= phiAsq
+        # Inter-event term -- Equation 25
+        tauB = self.getTauA(Mw, self.s3, self.s4)
+        # Intra-event term with site amp variability removed -- Equation 27
+        phiBsq = phiAsq - self.PHI_AMP_SQ
+        # Parital deriv. of ln(soil amp) w.r.t. ln(SA1180) -- Equation 30
+		# saRock subject to same vs30 < Vlin test as in mean model
+        dAmp_p1 = self.get_dAmp(self.b, self.c, self.Vlin, vs30, saRock) + 1.0
+        # phi squared, with non-linear effects -- Equation 28
+        phiSq = phiBsq * dAmp_p1 * dAmp_p1 + self.PHI_AMP_SQ
+        #  tau squared, with non-linear effects -- Equation 29
+        tau = tauB * dAmp_p1
+        # total std dev
+        stdDev = np.sqrt(phiSq + tau * tau)
+
+        return mean, stdDev, np.sqrt(phiSq), tau
+    
+    def getFaultFromRake(self,rake):
+        if(rake >= 135 or rake <= -135):
+            return "STRIKE_SLIP"
+        elif rake>=-45 and rake <=45:
+            return "STRIKE_SLIP"
+        elif rake>=45 and rake <=135:
+            return "REVERSE"
+        else:
+            return "NORMAL"
+    
+    def get_IM(self, Mw, site_rup_dict, site_info, im_info):
+        vsInf = not bool(site_info["vs30measured"])
+        style = self.getFaultFromRake(site_rup_dict["aveRake"])
+        if 'SA' in im_info['Type']:
+            cur_T = im_info.get('Periods', None)
+        elif im_info['Type'] == 'PGA':
+            cur_T = ['PGA']
+        elif im_info['Type'] == 'PGV':
+            cur_T = ['PGV']
+        else:
+            print(f'The IM type {im_info["Type"]} is not supported')
+        meanList = []
+        stdDevList = []
+        InterEvStdDevList = []
+        IntraEvStdDevList = []
+        for Tj in cur_T:
+            start = time.process_time_ns()
+            self.setIMT(Tj)
+            self.timeSetImt += time.process_time_ns() - start
+            start = time.process_time_ns()
+            mean, stdDev, InterEvStdDev, IntraEvStdDev = self.calcValues(Mw, site_info["rJB"], site_info["rRup"], site_info["rX"], -1, site_rup_dict["dip"], site_rup_dict["width"], site_rup_dict["zTop"], site_info["vs30"], vsInf, site_info["z1pt0"]/1000.0, style)
+            self.timeCalc += time.process_time_ns() - start
+            meanList.append(mean)
+            stdDevList.append(stdDev)
+            InterEvStdDevList.append(InterEvStdDev)
+            IntraEvStdDevList.append(IntraEvStdDev)
+        saResult = {'Mean': meanList,
+                'TotalStdDev': stdDevList,
+                'InterEvStdDev': InterEvStdDevList,
+                'IntraEvStdDev': IntraEvStdDevList}
+        return saResult
 
