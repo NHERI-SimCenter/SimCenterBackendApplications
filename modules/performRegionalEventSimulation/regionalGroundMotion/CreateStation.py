@@ -295,6 +295,9 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 if np.isnan(z1pt0):
                     z1pt0 = get_z1(tmp.get('Vs30'))
                 tmp.update({'z1pt0': z1pt0})
+            elif z1_tag == 0:
+                z1pt0 = get_z1(tmp.get('Vs30'))
+                tmp.update({'z1pt0': z1pt0})
 
         if stn.get('z2pt5'):
             tmp.update({'z2pt5': stn.get('z2pt5')})
@@ -305,6 +308,9 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                 z2pt5 = get_site_z2pt5_from_opensha(tmp['Latitude'], tmp['Longitude'])
                 if np.isnan(z2pt5):
                     z2pt5 = get_z25(tmp['z1pt0'])
+                tmp.update({'z2pt5': z2pt5})
+            elif z25_tag ==0:
+                z2pt5 = get_z25(tmp['z1pt0'])
                 tmp.update({'z2pt5': z2pt5})
 
         if stn.get('DepthToRock'):

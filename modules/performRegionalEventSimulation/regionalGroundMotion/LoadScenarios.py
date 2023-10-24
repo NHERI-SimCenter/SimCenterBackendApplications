@@ -87,7 +87,7 @@ if __name__ == '__main__':
     except:
         opensha_flag = False
     try:
-        oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
+        oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type'] or 'oqSourceXML' in hazard_info['Scenario']['EqRupture']['Type']
     except:
         oq_flag = False
 
@@ -112,21 +112,21 @@ if __name__ == '__main__':
         memory_request = int(memory_total*0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
         jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
-    if oq_flag:
-        # clear up old db.sqlite3 if any
-        if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
-            new_db_sqlite3 = True
-            try:
-                os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
-            except:
-                new_db_sqlite3 = False
-        # data dir
-        os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
-        print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
-        if os.path.exists(os.environ.get('OQ_DATADIR')):
-            print('HazardSimulation: local OQ folder already exists, overwiting it now...')
-            shutil.rmtree(os.environ.get('OQ_DATADIR'))
-        os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
+    # if oq_flag:
+    #     # clear up old db.sqlite3 if any
+    #     if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
+    #         new_db_sqlite3 = True
+    #         try:
+    #             os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
+    #         except:
+    #             new_db_sqlite3 = False
+    #     # data dir
+    #     os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
+    #     print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
+    #     if os.path.exists(os.environ.get('OQ_DATADIR')):
+    #         print('HazardSimulation: local OQ folder already exists, overwiting it now...')
+    #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
+    #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
     # import modules
     from CreateStation import *
@@ -198,8 +198,8 @@ if __name__ == '__main__':
         if user_scenarios:
             load_earthquake_scenarios(scenario_info, stations, input_dir)
         # Creating earthquake scenarios
-        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF']:
-            create_earthquake_scenarios(scenario_info, stations, output_dir)
+        elif scenario_info['EqRupture']['Type'] in ['PointSource', 'ERF', 'oqSourceXML']:
+            create_earthquake_scenarios(scenario_info, stations, work_dir, hazard_info['Site']['output_file'])
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         create_wind_scenarios(scenario_info, stations, input_dir)
