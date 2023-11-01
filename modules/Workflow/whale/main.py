@@ -2364,7 +2364,7 @@ class Workflow(object):
     def aggregate_results(self, asst_data, asset_type = '',
 
         #out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization'], 
-        out_types = ['AIM', 'EDP', 'DM', 'DV', 'every_realization'], 
+        out_types = ['AIM', 'EDP', 'DMG', 'DV', 'every_realization'], 
         headers = None):
         """
         Short description
@@ -2387,158 +2387,342 @@ class Workflow(object):
         min_id = int(asst_data[0]['id'])
         max_id = int(asst_data[0]['id'])
 
+        #TODO: ugly, ugly, I know. 
+        # Only temporary solution while we have both Pelicuns in parallel
+        if self.workflow_apps['DL']['Buildings'].name == 'Pelicun3':
 
-        if headers is None :
-            headers = dict(
-                IM = [0, 1, 2, 3],
-                AIM = [0, ],
-                EDP = [0, 1, 2, 3],
-                DM = [0, 1, 2],
-                DV = [0, 1, 2, 3])
+            # we assume all assets of the same type are in one folder
+            bldg_dir = Path(os.path.dirname(asst_data[0]['file'])).resolve()
+            main_dir = bldg_dir.parent
 
-        for out_type in out_types:
-            if ((self.output_types is None) or
-                (self.output_types.get(out_type, False))):
+            for a_i, asst in enumerate(asst_data):
 
-                if out_type == 'every_realization':
+                asset_id = asst['id']
+                asset_dir = bldg_dir/asset_id
 
-                        realizations_EDP = None
-                        realizations_DL = None
+                # always get the AIM info
 
-                        for asst in asst_data:
+                AIM_file = None
 
-                            print("ASSET", asst);
-                        
-                            asst_file = asst['file']
-                        
-                            # Get the folder containing the results
-                            aimDir = os.path.dirname(asst_file)
-                        
-                            asst_id = asst['id']
-                            min_id = min(int(asst_id), min_id)
-                            max_id = max(int(asst_id), max_id)
+                if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
+                    AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
 
-                            # save all EDP realizations
+                elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
+                    AIM_file = asset_dir / f"{asset_id}-AIM.json"
 
-                            df_i = pd.read_csv(aimDir+'/'+asst_id+'/response.csv', header=0, index_col=0)
+                else:
+                    # skip this asset if there is no AIM file available
+                    show_warning(
+                        "Couldn't find AIM file for building {asset_id}")
+                    continue
 
-                            if realizations_EDP == None:
-                                realizations_EDP = dict([(col, []) for col in df_i.columns])
+                with open(AIM_file, 'r') as f:
+                    AIM_data_i = json.load(f)
 
-                            for col in df_i.columns:
-                                vals = df_i.loc[:,col].to_frame().T
-                                vals.index = [asst_id,]
-                                realizations_EDP[col].append(vals)
+                sample_size = AIM_data_i['Applications']['DL']['ApplicationData']['Realizations']
 
-                            # If damage and loss assessment is part of the workflow
-                            # then save the DL outputs too
-                            if 'DL' in self.workflow_apps.keys():
+                # initialize the output dict if this is the first asset
+                if a_i == 0:
 
-                                try:
-                                #if True:
-                                    df_i = pd.read_csv(aimDir+'/'+asst_id+f'/DL_summary.csv',
-                                                       header=0, index_col=0)
-                                    
-                                    if realizations_DL == None:
-                                        realizations_DL = dict([(col, []) for col in df_i.columns])
+                    # We assume all assets have the same output sample size
+                    # Variable sample size doesn't seem to make sense
+                    realizations = {rlz_i:{} for rlz_i in range(sample_size)}
 
-                                    for col in df_i.columns:
-                                        vals = df_i.loc[:,col].to_frame().T
-                                        vals.index = [asst_id,]
-                                        realizations_DL[col].append(vals)
+                    # We also create a dict to collect deterministic info, i.e.,
+                    # data that is identical for all realizations
+                    deterministic = {}
 
-                                except:
-                                    log_msg(f'Error reading DL realization data for asset {asset_type} {asst_id}',
-                                            prepend_timestamp=False)
+                # Currently, all GI data is deterministic                
+                GI_data_i_det = AIM_data_i['GeneralInformation']
+                
+                # TODO: later update this to handle probabilistic GI attributes
+                GI_data_i_prob = {}
 
-                        for d_type in realizations_EDP.keys():
-                            d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
+                for rlz_i in range(sample_size):
+                    realizations[rlz_i].update(
+                        {asset_id:{'GeneralInformation':GI_data_i_prob}})
 
-                            with warnings.catch_warnings():
-                                warnings.simplefilter(action='ignore')
+                deterministic.update({asset_id:
+                    {'GeneralInformation':GI_data_i_det}})
 
-                                d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+                if 'EDP' in out_types:
 
-                        if 'DL' in self.workflow_apps.keys():
-                            for d_type in realizations_DL.keys():
-                                d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
-                                #d_agg.sort_index(axis=0, inplace=True)
+                    edp_out_file_i = 'DEM_sample.json'
+
+                    if edp_out_file_i not in os.listdir(asset_dir):
+
+                        show_warning(
+                            f"Couldn't find EDP file for building {asset_id}")
+
+                    else:
+
+                        with open(asset_dir/edp_out_file_i, 'r') as f:
+                            edp_data_i = json.load(f)
+
+                        # remove the ONE demand
+                        edp_data_i.pop('ONE-0-1')
+
+                        # parse the demand data into a DataFrame
+                        # we assume demands are stored in JSON with a SimpleIndex
+                        edp_data_i = pd.DataFrame(edp_data_i)
+
+                        # extract EDP unit info
+                        edp_units = edp_data_i.loc["Units"].to_dict()
+                        edp_data_i.drop("Units", inplace=True)
+
+                        # convert to a realization-by-realization format
+                        edp_output = {
+                            int(rlz_i):{col:float(edp_data_i.loc[rlz_i,col]) 
+                                        for col in edp_data_i.columns
+                            } 
+                            for rlz_i in edp_data_i.index
+                        }
+
+                        # save the EDP intensities in each realization
+                        for rlz_i in range(sample_size):
+                            realizations[rlz_i][asset_id].update(
+                                {'Demand':edp_output[rlz_i]})
+
+                        # save the EDP units
+                        deterministic[asset_id].update({
+                            "Demand": {"Units": edp_units}
+                            })
+
+                if 'DMG' in out_types:
+
+                    dmg_out_file_i = 'DMG_grp.json'
+
+                    if dmg_out_file_i not in os.listdir(asset_dir):
+
+                        show_warning(
+                            f"Couldn't find DMG file for building {asset_id}")
+
+                    else:
+
+                        with open(asset_dir/dmg_out_file_i, 'r') as f:
+                            dmg_data_i = json.load(f)
+
+                        # parse damage data into a DataFrame
+                        dmg_data_i = pd.DataFrame(dmg_data_i)
+
+                        # convert to realization-by-realization format
+                        dmg_output = {
+                            rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
+                                   for col in dmg_data_i.columns
+                            } 
+                            for rlz_i in dmg_data_i.index
+                        }
+
+                        # we assume that damage information is condensed
+                        #TODO: implement condense_ds flag in DL_calc
+                        for rlz_i in range(sample_size):
+                            realizations[rlz_i][asset_id].update(
+                                {'Damage':dmg_output[rlz_i]})
+
+                if 'DV' in out_types:
+
+                    dv_out_file_i = 'DV_bldg_repair_grp.json'
+
+                    if dv_out_file_i not in os.listdir(asset_dir):
+
+                        show_warning(
+                            f"Couldn't find DV file for building {asset_id}")
+
+                    else:
+
+                        with open(asset_dir/dv_out_file_i, 'r') as f:
+                            dv_data_i = json.load(f)
+
+                        # parse decision variable data into a DataFrame
+                        dv_data_i = pd.DataFrame(dv_data_i)
+
+                        # get a list of dv types
+                        dv_types = np.unique(
+                            [col.split('-')[0] for col in dv_data_i.columns])
+
+                        # convert to realization-by-realization format
+                        dv_output = {
+                            int(rlz_i):{
+                                dv_type:{
+                                    col[len(dv_type)+1:]:
+                                        float(dv_data_i.loc[rlz_i,col]) 
+                                    for col in dv_data_i.columns 
+                                    if col.startswith(dv_type)
+                                } 
+                                for dv_type in dv_types
+                            } 
+                            for rlz_i in dv_data_i.index
+                        }
+
+                        # save loss data
+                        for rlz_i in range(sample_size):
+                            realizations[rlz_i][asset_id].update(
+                                {'Loss':{'Repair':dv_output[rlz_i]}})
+
+            # save outputs to JSON files
+            for rlz_i, rlz_data in realizations.items():
+
+                with open(main_dir/f"buildings_{rlz_i}.json", 'w') as f:
+                    json.dump(rlz_data, f, indent=2)
+
+            with open(main_dir/f"buildings_det.json", 'w') as f:
+                json.dump(deterministic, f, indent=2)
+
+        else:
+            # This is legacy for Pelicun 2 runs
+
+
+            if headers is None :
+                headers = dict(
+                    IM = [0, 1, 2, 3],
+                    AIM = [0, ],
+                    EDP = [0, 1, 2, 3],
+                    DM = [0, 1, 2],
+                    DV = [0, 1, 2, 3])
+
+            for out_type in out_types:
+                if ((self.output_types is None) or
+                    (self.output_types.get(out_type, False))):
+
+                    if out_type == 'every_realization':
+
+                            realizations_EDP = None
+                            realizations_DL = None
+
+                            for asst in asst_data:
+
+                                print("ASSET", asst);
+                            
+                                asst_file = asst['file']
+                            
+                                # Get the folder containing the results
+                                aimDir = os.path.dirname(asst_file)
+                            
+                                asst_id = asst['id']
+                                min_id = min(int(asst_id), min_id)
+                                max_id = max(int(asst_id), max_id)
+
+                                # save all EDP realizations
+
+                                df_i = pd.read_csv(aimDir+'/'+asst_id+'/response.csv', header=0, index_col=0)
+
+                                if realizations_EDP == None:
+                                    realizations_EDP = dict([(col, []) for col in df_i.columns])
+
+                                for col in df_i.columns:
+                                    vals = df_i.loc[:,col].to_frame().T
+                                    vals.index = [asst_id,]
+                                    realizations_EDP[col].append(vals)
+
+                                # If damage and loss assessment is part of the workflow
+                                # then save the DL outputs too
+                                if 'DL' in self.workflow_apps.keys():
+
+                                    try:
+                                    #if True:
+                                        df_i = pd.read_csv(aimDir+'/'+asst_id+f'/DL_summary.csv',
+                                                           header=0, index_col=0)
+                                        
+                                        if realizations_DL == None:
+                                            realizations_DL = dict([(col, []) for col in df_i.columns])
+
+                                        for col in df_i.columns:
+                                            vals = df_i.loc[:,col].to_frame().T
+                                            vals.index = [asst_id,]
+                                            realizations_DL[col].append(vals)
+
+                                    except:
+                                        log_msg(f'Error reading DL realization data for asset {asset_type} {asst_id}',
+                                                prepend_timestamp=False)
+
+                            for d_type in realizations_EDP.keys():
+                                d_agg = pd.concat(realizations_EDP[d_type], axis=0, sort=False)
 
                                 with warnings.catch_warnings():
                                     warnings.simplefilter(action='ignore')
 
-                                    d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
+                                    d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'EDP-{d_type}', mode='a', format='fixed')
+
+                            if 'DL' in self.workflow_apps.keys():
+                                for d_type in realizations_DL.keys():
+                                    d_agg = pd.concat(realizations_DL[d_type], axis=0, sort=False)
+                                    #d_agg.sort_index(axis=0, inplace=True)
+
+                                    with warnings.catch_warnings():
+                                        warnings.simplefilter(action='ignore')
+
+                                        d_agg.to_hdf(f'realizations_{min_id}-{max_id}.hdf', f'DL-{d_type}', mode='a', format='fixed')
 
 
 
-                else:
-
-                    out_list = []
-                    count = 0;
-                    for asst in asst_data:
-
-                        if count % self.numP == self.procID:
-
-                            print("ASSET", self.procID, self.numP, asst['file']);
-                            
-                            asst_file = asst['file']
-                        
-                            # Get the folder containing the results
-                            aimDir = os.path.dirname(asst_file)
-                    
-                            asst_id = asst['id']
-                            min_id = min(int(asst_id), min_id)
-                            max_id = max(int(asst_id), max_id)
-
-                            try:
-                                #if True:
-                        
-                                csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
-                                                        
-                                # EDP data
-                                df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
-                        
-                                df_i.index = [asst_id,]
-                            
-                                out_list.append(df_i)
-                            
-                            except:
-                                log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
-
-                        # increment counter
-                        count = count + 1
-
-
-                    # save the collected DataFrames as csv files
-                    if self.procID == 0:
-                        outPath = posixpath.join(run_path,f'{out_type}.csv')
                     else:
-                        outPath = posixpath.join(run_path,f'{out_type}_tmp_{self.procID}.csv')
 
-                    # if not P0 output file & barrier 
-                    if self.procID != 0:
+                        out_list = []
+                        count = 0;
+                        for asst in asst_data:
 
-                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
-                        out_agg.to_csv(outPath)
-                        self.comm.Barrier()
+                            if count % self.numP == self.procID:
 
-                    else: 
+                                print("ASSET", self.procID, self.numP, asst['file']);
+                                
+                                asst_file = asst['file']
+                            
+                                # Get the folder containing the results
+                                aimDir = os.path.dirname(asst_file)
+                        
+                                asst_id = asst['id']
+                                min_id = min(int(asst_id), min_id)
+                                max_id = max(int(asst_id), max_id)
 
-                        # P0 if parallel & parallel, barrier then read other, and merge
-                        if self.numP > 1:
+                                try:
+                                    #if True:
+                            
+                                    csvPath = aimDir+'/'+asst_id+f'/{out_type}.csv'
+                                                            
+                                    # EDP data
+                                    df_i = pd.read_csv(csvPath, header=headers[out_type], index_col=0)
+                            
+                                    df_i.index = [asst_id,]
+                                
+                                    out_list.append(df_i)
+                                
+                                except:
+                                    log_msg(f'Error reading {out_type} data for asset {asset_type} {asst_id}', prepend_timestamp=False)
 
+                            # increment counter
+                            count = count + 1
+
+
+                        # save the collected DataFrames as csv files
+                        if self.procID == 0:
+                            outPath = posixpath.join(run_path,f'{out_type}.csv')
+                        else:
+                            outPath = posixpath.join(run_path,f'{out_type}_tmp_{self.procID}.csv')
+
+                        # if not P0 output file & barrier 
+                        if self.procID != 0:
+
+                            out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                            out_agg.to_csv(outPath)
                             self.comm.Barrier()
-                            
-                            # fileList = []
-                            for i in range (1, self.numP):
-                                fileToAppend = posixpath.join(run_path,f'{out_type}_tmp_{i}.csv')
-                                #fileList.append(fileToAppend)
-                                out_list.append(pd.read_csv(fileToAppend, header=headers[out_type], index_col=0))
-                            
 
-                        # write file
-                        out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
-                        out_agg.to_csv(outPath)
+                        else: 
+
+                            # P0 if parallel & parallel, barrier then read other, and merge
+                            if self.numP > 1:
+
+                                self.comm.Barrier()
+                                
+                                # fileList = []
+                                for i in range (1, self.numP):
+                                    fileToAppend = posixpath.join(run_path,f'{out_type}_tmp_{i}.csv')
+                                    #fileList.append(fileToAppend)
+                                    out_list.append(pd.read_csv(fileToAppend, header=headers[out_type], index_col=0))
+                                
+
+                            # write file
+                            out_agg = pd.DataFrame() if len(out_list) < 1 else pd.concat(out_list, axis=0, sort=False)
+                            out_agg.to_csv(outPath)
 
 
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
