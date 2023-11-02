@@ -43,16 +43,43 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  */
 
 #include "runForward.h"
+#include "ERANataf.h"
 #include <iterator>
 
 runForward::runForward() {}
-runForward::runForward(vector<vector<double>> xval, vector<vector<string>> xstrval, vector<vector<double>> gmat, int procno)
+runForward::runForward(string workflowDriver,
+	string osType,
+	string runType,
+	jsonInput inp,
+	ERANataf T,
+	int procno,
+	int nproc)
 {
+	vector<vector<double>> uvals(inp.nmc, vector<double>(inp.nrv, 0.0));
+	vector<vector<int>> resampIDvals(inp.nmc, vector<int>(inp.nreg, 0.0));
+	vector<vector<string>> discreteStrSamps(inp.nmc, vector<string>(inp.nst, ""));
+	vector<vector<double>> gvals(inp.nmc, std::vector<double>(inp.nqoi, 0));
+
+	T.sample(inp.nmc, inp, procno, uvals, resampIDvals, discreteStrSamps);
+	vector<vector<double>> xvals(inp.nmc, vector<double>(inp.nrv, 0.0));
+
+	T.simulateAppBatch(workflowDriver, osType, runType, inp, uvals, resampIDvals, discreteStrSamps, 0, xvals, gvals, procno, nproc);
+
+	this->xval = xvals;
+	this->xstrval = discreteStrSamps;
+	this->gval = gvals;
+}
+
+runForward::~runForward() {};
+
+void 
+runForward::computeStatistics(int procno) {
+
 	if (procno == 0) {
 
-		this->xval = xval;
-		this->xstrval = xstrval;
-		this->gval = gmat;
+		//this->xval = xval;
+		//this->xstrval = xstrval;
+		//this->gval = gmat;
 		nmc = xval.size();
 		nrv = xval[0].size();
 
@@ -68,7 +95,7 @@ runForward::runForward(vector<vector<double>> xval, vector<vector<string>> xstrv
 			double skewness_val = calSkewness(xvec, mean_val, stdDev_val);
 			double kurtosis_val = calKurtosis(xvec, mean_val, stdDev_val);
 
-			std::cout << "RV " << nr+1 << ": ";
+			std::cout << "RV " << nr + 1 << ": ";
 			std::cout << mean_val << " " << stdDev_val << " " << skewness_val << " " << kurtosis_val << '\n';
 
 			mean.push_back(mean_val);
@@ -76,14 +103,13 @@ runForward::runForward(vector<vector<double>> xval, vector<vector<string>> xstrv
 			skewness.push_back(skewness_val);
 			kurtosis.push_back(kurtosis_val);
 			if (nr > 100) {
-				std::cout << "RVs from " << nr +2 << " to " << nrv+1 << " not displayed here for memory efficiency" << '\n';
+				std::cout << "RVs from " << nr + 2 << " to " << nrv + 1 << " not displayed here for memory efficiency" << '\n';
 				break;
 			}
-		}	
+		}
 	}
-}
 
-runForward::~runForward() {};
+}
 
 double runForward::calMean(vector<double> x) {
 	double sum = std::accumulate(std::begin(x), std::end(x), 0.0);
@@ -175,17 +201,28 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 		}
 		Taboutfile << '\n';
 
+		std::string multiModel = "MultiModel";
 
 		for (int ns = 0; ns < inp.nmc; ns++) {
 			Taboutfile << std::to_string(ns + 1) << "\t";
 			for (int nr = 0; nr < inp.nrv + inp.nco + inp.nre; nr++) {
-				Taboutfile << std::to_string(xval[ns][nr]) << "\t";
+
+				if ((inp.rvNames[nr].compare(0, multiModel.length(), multiModel) == 0) && isInteger(xval[ns][nr])) {
+					// if rv name starts with "MultiModel", write as integer
+					Taboutfile << std::to_string(int(xval[ns][nr])) << "\t";
+				}
+				else {
+					Taboutfile << std::scientific << std::setprecision(7) << (xval[ns][nr]) << "\t";
+				}
+				//Taboutfile << std::to_string(xval[ns][nr]) << "\t";
+				
 			}
 			for (int nr = 0; nr < inp.nst; nr++) {
 				Taboutfile << xstrval[ns][nr] << "\t";
 			}
 			for (int nq = 0; nq < inp.nqoi; nq++) {
-				Taboutfile << std::to_string(gval[ns][nq]) << "\t";
+				Taboutfile << std::scientific << std::setprecision(7) << (gval[ns][nq]) << "\t";
+				//Taboutfile << std::to_string(gval[ns][nq]) << "\t";
 			}
 			Taboutfile << '\n';
 
@@ -217,4 +254,9 @@ void runForward::writeTabOutputs(jsonInput inp, int procno)
 		readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
 		std::cout << "Elapsed time to write Tab.json: " << readEnd << " s\n";
 	}
+}
+
+bool runForward::isInteger(double a) {
+	double b = round(a), epsilon = 1e-9; //some small range of error
+	return (a <= b + epsilon && a >= b - epsilon);
 }

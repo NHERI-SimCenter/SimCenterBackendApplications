@@ -1,0 +1,10 @@
+pset E "RV.E"
+pset P "RV.P"
+pset Au "RV.Au"
+pset Ao "RV.Ao"
+
+ set listQoI "Node_3_Disp_2 Node_2_Disp_2 "
+
+
+ source TrussModel.tcl
+ source TrussPost.tcl

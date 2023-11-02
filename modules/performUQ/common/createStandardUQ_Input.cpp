@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <set>
 #include <string.h>
+#include <cmath>
 using namespace std;
 // parses JSON for random variables & returns number found
 
@@ -71,6 +72,7 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	if (fileRandomVariables != NULL) {
 	  // std::cerr << "RANDOM VARIABLES: " << json_dumps(fileRandomVariables, JSON_ENCODE_ANY) << "\n\n";	  
 	  int numRVs = json_array_size(fileRandomVariables);
+	  //std::cerr << "numRVs=" <<numRVs <<std::endl;
 	  for (int i=0; i<numRVs; i++) {
 	    json_t *fileRandomVariable = json_array_get(fileRandomVariables,i);
 	    json_t *nameValue = json_object_get(fileRandomVariable, "name");
@@ -87,8 +89,41 @@ gatherRV(json_t *rootINPUT, std::set<std::string> &rvFiles){
 	      randomVariableNames.push_back(nameS);
 	      json_array_append(rootRVs, fileRandomVariable);
 	    }
+
+
 	  }
-	  
+
+    json_t * corrMatJson =  json_object_get(rootINPUT,"correlationMatrix");
+	  json_t * newCorrMatJson = json_array();
+    // if correlation matrix exists
+    if (corrMatJson != NULL) {
+
+      int numCorrs = json_array_size(corrMatJson);
+  	  int numOrgRVs = std::sqrt(numCorrs);
+  	  int numTotRVs = json_array_size(rootRVs);
+
+    	if (numOrgRVs<numTotRVs){
+
+	  	  double val;
+		  	for (int i=0;i<numTotRVs;i++) {
+		  		for (int j=0; j<numTotRVs; j++) {
+		  			if ((i<numOrgRVs) && (j<numOrgRVs)) {
+		  				val = json_number_value(json_array_get(corrMatJson,i + numOrgRVs*j)); // symmetry so i,j order does not matter
+		  			} else {
+		  				val = 0.0;
+		  			}
+		  			json_array_append(newCorrMatJson,json_real(val));
+		  		}
+		  	}
+	  	}
+	  	//json_object_update_existing(json_object_get(rootINPUT,"correlationMatrix"),newCorrMatJson);
+
+    	json_object_set(rootINPUT, "correlationMatrix", newCorrMatJson);
+		  //std::cerr << "STTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " << json_dumps(newCorrMatJson, JSON_ENCODE_ANY) << "\n\n";
+
+	  }
+
+
 	  // KZ: commented for fixing RVs not in BIM.json which is not passed to inidividual json files (i.e., EVENT.json, SIM.json, SAM.json)
 	  //if (numRVs != 0) {
 	  rvFiles.insert(std::string(fName));

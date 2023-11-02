@@ -1,0 +1,79 @@
+{
+    "UQ": {
+        "samplingMethodData": {
+            "method": "LHS",
+            "samples": 50,
+            "seed": 949
+        },
+        "uqEngine": "Dakota",
+        "uqType": "Forward Propagation"
+    },
+    "FEM": {
+    },
+    "EDP": [
+        {
+            "name": "Node_3_Disp_2"
+        },
+        {
+            "name": "Node_2_Disp_2"
+        }
+    ],
+    "randomVariables": [
+        {
+            "name": "E",
+            "title": "elastic modulus",
+            "distribution": "Lognormal",	    
+            "refCount": 1,
+            "mean": 205.0,
+            "stdDev": 15.0,	    
+            "value": "RV.E",
+            "variableClass": "Uncertain"
+        },
+        {
+            "name": "P",
+            "title": "load magnitude",
+            "distribution": "Normal",
+            "mean": 25.0,
+            "refCount": 1,
+            "stdDev": 3.0,	    
+            "value": "RV.P",
+            "variableClass": "Uncertain"
+        },
+        {
+            "name": "Ao",
+            "title": "cross sectional area for the other six bars",
+            "distribution": "Lognormal",
+            "mean": 250.0,
+            "refCount": 1,
+            "stdDev": 10.0,
+            "value": "RV.Ao",
+            "variableClass": "Uncertain"
+        },
+        {
+            "name": "Au",
+            "title": "cross sectional area for the upper three bars",
+            "distribution": "Normal",
+            "mean": 500.0,
+            "refCount": 1,
+            "stdDev": 25.0,
+            "value": "RV.Au",
+            "variableClass": "Uncertain"
+        }
+    ],
+    "$schema": "https://raw.githubusercontent.com/claudioperez/SimCenterDocumentation/examples/docs/common/user_manual/schemas/quoFEM_Schema.json",
+    "Applications": {
+        "UQ": {
+            "Application": "Dakota-UQ",
+            "ApplicationData": {}
+        },
+        "FEM": {
+            "Application": "OpenSees",
+            "ApplicationData": {
+		"MS_Path": "{Current_Dir}/",
+		"mainScript": "TrussModel.tcl",
+		"postprocessScript": "TrussPost.tcl",
+		"PS_Path": "{Current_Dir}/"
+	    }
+        }	
+    }
+}

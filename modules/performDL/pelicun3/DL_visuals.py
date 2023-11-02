@@ -426,12 +426,10 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
 
             # create two subplots, one for the curve and one for the tabular data
             fig = make_subplots(
-                rows=2, cols=2,
-                specs = [[{"type":"xy"},{"rowspan": 2,"type":"table"}],
-                         [{"type":"xy"}, None]],
-                shared_xaxes = True,
-                column_widths = [0.5, 0.5],
-                row_heights = [0.2, 0.8],
+                rows=1, cols=3,
+                specs = [[{"type":"xy"},{"type":"xy"},{"type":"table"}],],
+                shared_yaxes = True,
+                column_widths = [0.45,0.05, 0.52],                
                 horizontal_spacing = 0.02,
                 vertical_spacing=0.02
                 )
@@ -534,7 +532,7 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                     line = dict(color='black'),
                     font = dict(color='black', size=font_size)
                     )
-                ), row=1, col=2)
+                ), row=1, col=3)
 
             # get the number (and label) of damage states
             limit_states = model_params[0]
@@ -592,14 +590,14 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                 # x anchor for annotations providing median function data
                 x_loc_func = 0.697 if lots_of_ds == False else 0.689
 
-                need_y_axis = False
+                need_x_axis = False
                 
                 for ds_i, mu_capacity in enumerate(model_params[1]):
 
                     # first, check if the median is a function:
                     if '|' in str(mu_capacity):
 
-                        need_y_axis = True
+                        need_x_axis = True
 
                         # get the consequence (Y) and quantity (X) values
                         c_vals, q_vals = np.array([
@@ -621,8 +619,8 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
 
                     # plot the median consequence
                     fig.add_trace(go.Scatter(                        
-                        x = c_vals,
-                        y = q_vals,
+                        x = q_vals,
+                        y = c_vals,
                         mode = 'lines',
                         line = dict(
                             width=3,
@@ -630,7 +628,7 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                         ),
                         name = model_params[0][ds_i],
                         legendgroup = model_params[0][ds_i]
-                    ), row=2, col=1)
+                    ), row=1, col=1)
 
                     # check if dispersion is prescribed for this consequence
                     dispersion = model_params[3][ds_i]
@@ -656,8 +654,8 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
 
                         # plot the std lines
                         fig.add_trace(go.Scatter(                            
-                            x = std_plus,
-                            y = q_vals,
+                            x = q_vals,
+                            y = std_plus,
                             mode = 'lines',
                             line = dict(
                                 width=1,
@@ -667,11 +665,11 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                             name = model_params[0][ds_i]+' '+std_plus_label,
                             legendgroup = model_params[0][ds_i],
                             showlegend = False
-                        ), row=2, col=1)
+                        ), row=1, col=1)
 
                         fig.add_trace(go.Scatter(                            
-                            x = std_minus,
-                            y = q_vals,
+                            x = q_vals,
+                            y = std_minus,
                             mode = 'lines',
                             line = dict(
                                 width=1,
@@ -681,7 +679,7 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                             name = model_params[0][ds_i]+' '+std_minus_label,
                             legendgroup = model_params[0][ds_i],
                             showlegend = False
-                        ), row=2, col=1)
+                        ), row=1, col=1)
 
                         # and plot distribution pdfs on top
                         if model_params[2][ds_i] == 'normal':
@@ -707,18 +705,18 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                         c_pdf /= np.max(c_pdf)
 
                         fig.add_trace(go.Scatter(                            
-                            x = q_pdf,
-                            y = c_pdf,
+                            x = c_pdf,
+                            y = q_pdf,
                             mode = 'lines',
                             line = dict(
                                 width=1,
                                 color=colors[np.min([len(model_params[1]),7])][ds_i % 7]
                             ),                            
-                            fill = 'tozerox',
+                            fill = 'tozeroy',
                             name = model_params[0][ds_i]+' pdf',
                             legendgroup = model_params[0][ds_i],
                             showlegend = False
-                        ), row=1, col=1)
+                        ), row=1, col=2)
 
                     # adjust y_loc for annotations
                     y_loc = y_loc - y_space
@@ -784,7 +782,7 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                         color=colors[1][0]
                     ),
                     name = f'Incomplete Repair {c_type} Consequence Data',
-                ), row=1, col=1)
+                ), row=1, col=2)
 
             shared_ax_props = dict(
                 showgrid = True,
@@ -807,7 +805,7 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
             fig.update_layout(
 
                 # minimize margins
-                margin=dict(b=5,r=5,l=5,t=5),
+                margin=dict(b=50,r=5,l=5,t=5),
 
                 # height and width targets single-column web view
                 height=400,
@@ -821,27 +819,27 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                 showlegend=True,
 
                 xaxis1 = dict(
+                    title_text = f"Damage Quantity [{quantity_unit}]",
+                    range=[q_min, q_max],
+                    **shared_ax_props
+                ) if need_x_axis == True else dict(
                     showgrid = False,
-                    showticklabels = False,
-                    title_text = "",
+                    showticklabels = False
                 ),
 
-                xaxis2 = dict(
+                yaxis1 = dict(
                     title_text=f"{c_type} [{dv_unit}]", 
                     rangemode='tozero',
                     **shared_ax_props,
                 ),
 
-                yaxis1 = dict(
+                xaxis2 = dict(
                     showgrid = False,
-                    showticklabels = False
+                    showticklabels = False,
+                    title_text = "",
                 ),
 
                 yaxis2 = dict(
-                    title_text = f"Damage Quantity [{quantity_unit}]",
-                    range=[q_min, q_max],
-                    **shared_ax_props
-                ) if need_y_axis == True else dict(
                     showgrid = False,
                     showticklabels = False
                 ),
