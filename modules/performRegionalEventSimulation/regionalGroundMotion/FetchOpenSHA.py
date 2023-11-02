@@ -93,6 +93,8 @@ def getERF(erf_name, update_flag):
     # ERF model options
     if erf_name == 'WGCEP (2007) UCERF2 - Single Branch':
         erf = MeanUCERF2()
+        erf.getParameter(UCERF2.BACK_SEIS_NAME).setValue(UCERF2.BACK_SEIS_EXCLUDE)
+        # erf.updateForecast()
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
         erf = Frankel02_AdjustableEqkRupForecast()
     elif erf_name == 'WGCEP UCERF 1.0 (2005)':
@@ -352,10 +354,14 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     # else:
     #     preview_erf_data = erf_data
     # Output
+    import time
+    startTime = time.process_time_ns()
     if outfile is not None:
         print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
             json.dump(erf_data, f, indent=2)
+    print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
+
     # del preview_erf_data
     # return
     return erf_data

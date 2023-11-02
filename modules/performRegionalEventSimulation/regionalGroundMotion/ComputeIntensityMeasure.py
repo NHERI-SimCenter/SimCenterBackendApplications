@@ -522,7 +522,10 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 				im_calculator.set_im_type(cur_im_type)
 				res_list.append(im_calculator.calculate_im())
 			# Collecting outputs
-			im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
+			collectedResult = collect_multi_im_res(res_list)
+			collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
+			im_raw.append(collectedResult)
+			# im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
 
 	if mth_flag:
 		res_dict = {}
@@ -551,9 +554,9 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
 
 	# save im_raw comment out for debug
-	# im_raw_preview = {"IntensityMeasures": im_raw}
-	# with open(os.path.join(output_dir, filename), "w") as f:
-	# 	json.dump(im_raw_preview, f, indent=2)
+	im_raw_preview = {"IntensityMeasures": im_raw}
+	with open(os.path.join(output_dir, filename), "w") as f:
+		json.dump(im_raw_preview, f, indent=2)
 
 	# return
 	return im_raw, im_info
