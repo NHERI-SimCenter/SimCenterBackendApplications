@@ -520,7 +520,7 @@ def main(inputArgs):
     logFileName = "logFileTMCMC.txt"
     try:
         os.remove('dakotaTab.out')
-        os.remove('dakotTabPrior.out')
+        os.remove('dakotaTabPrior.out')
     except OSError:
         pass
 

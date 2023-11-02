@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import os
+import json
 
 
 def main(input_args):
@@ -13,12 +14,32 @@ def main(input_args):
     input_file = input_args[5]
 
     try:
-        os.remove('dakotaTab.out')
-        os.remove('dakotTabPrior.out')
+        os.remove("dakotaTab.out")
+        os.remove("dakotaTabPrior.out")
     except OSError:
         pass
 
-    print(f"{mainscript_path = }\n{workdir_main = }\n{workdir_template = }\n{run_type = }\n{workflow_driver = }\n{input_file = }")
+    with open(input_file, "r") as f:
+        inputs = json.load(f)
+    
+    applications_inputs = inputs["Applications"]
+    edp_inputs = inputs["EDP"]
+    fem_inputs = inputs["FEM"]
+    uq_inputs = inputs["UQ"]
+    correlation_matrix_inputs = inputs["correlationMatrix"]
+    local_applications_directory = inputs["localAppDir"]
+    rv_inputs = inputs["randomVariables"]
+    remote_applications_directory = inputs["remoteAppDir"]
+    # run_type = inputs["runType"]
+    working_directory = inputs["workingDir"]
+
+
+    
+
+    print(
+        f"{mainscript_path = }\n{workdir_main = }\n{workdir_template = }\n{run_type = }\n{workflow_driver = }\n{input_file = }"
+    )
+
 
 if __name__ == "__main__":
     input_args = sys.argv
