@@ -151,11 +151,11 @@ def breakDownLongEdges(edges, delta, roadDF, nodesDF, tolerance = 10e-3):
                 newEdge_ne = currentEdge["node_end"]
             newEdge = currentEdge.copy()
             newEdge.update({"ID":newID,
-                                    "road_type":currentEdge["road_type"],
+                                    "roadType":currentEdge["roadType"],
                                     "geometry":newGeom,
                                     "node_start":newEdge_ns,
                                     "node_end":newEdge_ne,
-                                    "capacity":currentEdge["capacity"],
+                                    "maxMPH":currentEdge["maxMPH"],
                                     "lanes":currentEdge["lanes"]})
             newEdges.append(newEdge)
         dropedEdges.append(row_ind)
@@ -294,7 +294,7 @@ def create_asset_files(output_file, asset_source_file, bridge_filter,
             end_node = nodes_dict[str(roadDF.loc[ind, "end_node"])]
             LineStringList.append(shapely.geometry.LineString([(start_node["lon"], start_node["lat"]), (end_node["lon"], end_node["lat"])]))
         roadDF["geometry"] = LineStringList
-        roadDF = roadDF[["ID","road_type","lanes","capacity","geometry"]]
+        roadDF = roadDF[["ID","roadType","lanes","maxMPH","geometry"]]
         roadGDF = gpd.GeoDataFrame(roadDF, geometry="geometry", crs=datacrs)
         graph = momepy.gdf_to_nx(roadGDF.to_crs("epsg:6500"), approach='primal')
         with warnings.catch_warnings(): #Suppress the warning of disconnected components in the graph

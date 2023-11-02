@@ -82,9 +82,9 @@ def breakDownLongEdges(edges, delta, tolerance = 10e-3):
             newGeom = sLS
             newEdge = currentEdge.copy()
             newEdge.update({"ID":newID,
-                                    "road_type":currentEdge["road_type"],
+                                    "roadType":currentEdge["roadType"],
                                     "geometry":newGeom,
-                                    "capacity":currentEdge["capacity"],
+                                    "maxMPH":currentEdge["maxMPH"],
                                     "lanes":currentEdge["lanes"]})
             newEdges.append(newEdge)
         dropedEdges.append(row_ind)
@@ -265,7 +265,7 @@ def create_asset_files(output_file, asset_source_road,
             # save every label as-is
             AIM_i["GeneralInformation"].update(asset)
             # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
-            AIM_i["GeneralInformation"].update({"assetSubtype":"hwy_bridge"})
+            AIM_i["GeneralInformation"].update({"assetSubtype":"hwyBridge"})
             AIM_file_name = "{}-AIM.json".format(asset_id)
         
             AIM_file_name = os.path.join(outDir,AIM_file_name)
@@ -299,7 +299,7 @@ def create_asset_files(output_file, asset_source_road,
             # save every label as-is
             AIM_i["GeneralInformation"].update(asset)
             # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
-            AIM_i["GeneralInformation"].update({"assetSubtype":"hwy_tunnel"})
+            AIM_i["GeneralInformation"].update({"assetSubtype":"hwyTunnel"})
             AIM_file_name = "{}-AIM.json".format(asset_id)
         
             AIM_file_name = os.path.join(outDir,AIM_file_name)
