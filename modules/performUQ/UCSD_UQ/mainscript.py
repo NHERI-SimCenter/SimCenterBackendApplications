@@ -43,7 +43,7 @@ def main(inputArgs):
     else:
         mainScript = os.path.join(mainScriptPath, "mainscript_tmcmc.py")
     
-    if platform.system() != "Windows":
+    if platform.system() == "Windows":
         pythonCommand = "python"
     else:
         pythonCommand = "python3"
