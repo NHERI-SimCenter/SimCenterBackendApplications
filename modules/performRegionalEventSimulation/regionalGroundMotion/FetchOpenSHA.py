@@ -58,6 +58,7 @@ from org.opensha.commons.param import *
 from org.opensha.commons.param.event import *
 from org.opensha.commons.param.constraint import *
 from org.opensha.commons.util import ServerPrefUtils
+from org.opensha.commons.param.impl import DoubleParameter
 
 from org.opensha.sha.earthquake import *
 from org.opensha.sha.earthquake.param import *
@@ -86,32 +87,85 @@ from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
 from org.opensha.sha.gcim.calc import *
 
 
-def getERF(erf_name, update_flag):
+def getERF(scenario_info, update_flag=True):
 
     # Initialization
     erf = None
+    erf_name = scenario_info['EqRupture']['Model']
+    erf_selection = scenario_info['EqRupture']['ModelParameters']
     # ERF model options
     if erf_name == 'WGCEP (2007) UCERF2 - Single Branch':
         erf = MeanUCERF2()
-        erf.getParameter(UCERF2.BACK_SEIS_NAME).setValue(UCERF2.BACK_SEIS_EXCLUDE)
-        # erf.updateForecast()
+        if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+            ("Treat Background Seismicity As" in erf_selection.keys()):
+            value = erf_selection.pop("Treat Background Seismicity As")
+            print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+        for key, value in erf_selection.items():
+            erf.setParameter(key, value)
+            # erf.getParameter(key).setValue(value)
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
         erf = Frankel02_AdjustableEqkRupForecast()
     elif erf_name == 'WGCEP UCERF 1.0 (2005)':
         erf = WGCEP_UCERF1_EqkRupForecast()
     elif erf_name == 'Mean UCERF3':
         tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.BOTH_FM_BRANCH_AVG)
-        erf = tmp
-        del tmp
-    elif erf_name == 'Mean UCERF3 FM3.1':
-        tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.FM3_1_BRANCH_AVG)
-        erf = tmp
-        del tmp
-    elif erf_name == 'Mean UCERF3 FM3.2':
-        tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.FM3_2_BRANCH_AVG)
+        if erf_selection.get("preset", None) == "(POISSON ONLY) Both FM Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.BOTH_FM_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+        elif erf_selection.get("preset", None) == "FM3.1 Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.FM3_1_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
+            setERFProbabilityModelOptions(tmp, erf_selection)
+        elif erf_selection.get("preset", None) == "FM3.2 Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.FM3_2_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
+            setERFProbabilityModelOptions(tmp, erf_selection)
+        else:
+            print(f"""The specified Mean UCERF3 preset {erf_selection.get("preset", None)} is not implemented""")
         erf = tmp
         del tmp
     elif erf_name == 'WGCEP Eqk Rate Model 2 ERF':
@@ -123,6 +177,84 @@ def getERF(erf_name, update_flag):
         erf.updateForecast()
     # return
     return erf
+
+def setERFbackgroundOptions(erf, selection):
+    option = selection.get('Background Seismicity', None)
+    if option == "Include":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.INCLUDE)
+    elif option == "Exclude":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.EXCLUDE)
+    elif option == "Only":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.ONLY)
+
+def setERFtreatBackgroundOptions(erf, selection):
+    option = selection.get('Treat Background Seismicity As', None)
+    if option is None:
+        pass
+    elif option == 'Point Sources':
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.POINT)
+    elif option == "Single Random Strike Faults":
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.FINITE)
+    elif option == "Two Perpendicular Faults":
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.CROSSHAIR)
+
+def setERFProbabilityModelOptions(erf, selection):
+    option = selection.get('Probability Model', None)
+    if option is None:
+        pass
+    elif option == 'Poisson':
+        erf.setParameter('Probability Model', ProbabilityModelOptions.POISSON)
+    elif option == "UCERF3 BPT":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.U3_BPT)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFMagDependentAperiodicityOptions(erf, selection)
+        setERFBPTAveragingTypeOptions(erf, selection)
+    elif option == "UCERF3 Preferred Blend":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.U3_PREF_BLEND)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFBPTAveragingTypeOptions(erf, selection)
+    elif option == "WG02 BPT":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.WG02_BPT)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFMagDependentAperiodicityOptions(erf, selection)
+
+def setERFMagDependentAperiodicityOptions(erf, selection):
+    option = selection.get('Aperiodicity', None)
+    if option is None:
+        pass
+    elif option =='0.4,0.3,0.2,0.1':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.LOW_VALUES)
+    elif option =='0.5,0.4,0.3,0.2':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.MID_VALUES)
+    elif option =='0.6,0.5,0.4,0.3':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.HIGH_VALUES)
+    elif option =='All 0.1':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT1_VALUES)
+    elif option =='All 0.2':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT2_VALUES)
+    elif option =='All 0.3':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT3_VALUES)
+    elif option =='All 0.4':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT4_VALUES)
+    elif option =='All 0.5':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT5_VALUES)
+    elif option =='All 0.6':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT6_VALUES)
+    elif option =='All 0.7':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT7_VALUES)
+    elif option =='All 0.8':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT8_VALUES)
+
+def setERFBPTAveragingTypeOptions(erf, selection):
+    option = selection.get('BPT Averaging Type', None)
+    if option is None:
+        pass
+    elif option =='AveRI and AveTimeSince':
+        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE)
+    elif option =='AveRI and AveNormTimeSince':
+        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE)
+    elif option =='AveRate and AveNormTimeSince':
+        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RATE_AVE_NORM_TIME_SINCE)
 
 def get_source_rupture(erf, source_index, rupture_index):
 
@@ -230,14 +362,16 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     # Initializing
     erf_data = {"type": "FeatureCollection"}
     site_loc = Location(site_loc[0], site_loc[1])
+    site = Site(site_loc)
     # Total source number
     num_sources = erf.getNumSources()
     source_tag = []
     source_dist = []
     for i in range(num_sources):
         rupSource = erf.getSource(i)
-        sourceSurface = rupSource.getSourceSurface()
-        distanceToSource = sourceSurface.getDistanceRup(site_loc)
+        distanceToSource = rupSource.getMinDistance(site)
+        # sourceSurface = rupSource.getSourceSurface()
+        # distanceToSource = sourceSurface.getDistanceRup(site_loc)
         source_tag.append(i)
         source_dist.append(distanceToSource)
     df = pd.DataFrame.from_dict({
@@ -257,7 +391,11 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         try:
             rupList = rupSource.getRuptureList()
         except:
-            continue
+            numOfRup = rupSource.getNumRuptures()
+            rupList = []
+            for n in range(numOfRup):
+                rupList.append(rupSource.getRupture(n))
+            rupList = ArrayList(rupList)
         rup_tag = []
         rup_dist = []
         for j in range(rupList.size()):

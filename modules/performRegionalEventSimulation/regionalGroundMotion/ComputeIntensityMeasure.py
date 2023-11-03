@@ -499,7 +499,7 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 		im_calculator = IM_Calculator(im_dict=im_dict, gmpe_dict=gmpe_dict, 
 									gmpe_weights_dict=gmpe_weights_dict, site_info=stations)
 		if EqRupture_info.get("Model", None):
-			im_calculator.erf = getERF(EqRupture_info["Model"], True)
+			im_calculator.erf = getERF(EqRupture_info)
 		else:
 			im_calculator.erf = None
 		for key in im_dict.keys():

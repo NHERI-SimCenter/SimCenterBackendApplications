@@ -36,7 +36,7 @@
 #
 # Contributors:
 # Kuanshi Zhong
-#
+# Jinyan Zhao
 
 import os, shutil, psutil
 import sys
@@ -47,14 +47,11 @@ import pandas as pd
 import time
 import importlib
 
-R2D = True
-
 if __name__ == '__main__':
 
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--hazard_config')
-    parser.add_argument('--filter', default=None)
     args = parser.parse_args()
 
     # read the hazard configuration file
@@ -70,17 +67,6 @@ if __name__ == '__main__':
     except:
         print('HazardSimulation: output folder already exists.')
 
-    # site filter (if explicitly defined)
-    minID = None
-    maxID = None
-    if args.filter:
-        tmp = [int(x) for x in args.filter.split('-')]
-        if len(tmp) == 1:
-            minID = tmp[0]
-            maxID = minID
-        else:
-            [minID, maxID] = tmp
-
     # parse job type for set up environment and constants
     try:
         opensha_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['PointSource', 'ERF']
@@ -92,12 +78,13 @@ if __name__ == '__main__':
         oq_flag = False
 
     # dependencies
-    if R2D:
-        packages = ['tqdm', 'psutil', 'PuLP', 'requests']
-    else:
-        packages = ['selenium', 'tqdm', 'psutil', 'PuLP', 'requests']
+    packages = ['tqdm', 'psutil', 'pulp', 'requests']
     for p in packages:
         if importlib.util.find_spec(p) is None:
+            # print(f"""The Python package {p} is required but not found.
+            #        Please install it by running 
+            #       "{sys.executable} -m pip install -q {p}"
+            #        in your terminal or command prompt""")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", p])
 
     # set up environment
@@ -112,6 +99,9 @@ if __name__ == '__main__':
         memory_request = int(memory_total*0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
         jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
+    from CreateStation import create_stations
+    from CreateScenario import load_earthquake_scenarios, create_earthquake_scenarios,\
+        create_wind_scenarios
     # if oq_flag:
     #     # clear up old db.sqlite3 if any
     #     if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
@@ -128,9 +118,6 @@ if __name__ == '__main__':
     #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
     #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
-    # import modules
-    from CreateStation import *
-    from CreateScenario import *
     if oq_flag:
         # import FetchOpenQuake
         from FetchOpenQuake import *
@@ -142,9 +129,9 @@ if __name__ == '__main__':
     for cur_database in site_database:
         subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
 
-    # Initial process list
-    import psutil
-    proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+    # # Initial process list
+    # import psutil
+    # proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
 
     # Sites and stations
     print('HazardSimulation: creating stations.')
@@ -156,13 +143,6 @@ if __name__ == '__main__':
             output_file = os.path.join(input_dir, output_file)
         min_ID = site_info['min_ID']
         max_ID = site_info['max_ID']
-        # forward compatibility
-        if minID:
-            min_ID = minID
-            site_info['min_ID'] = minID
-        if maxID:
-            max_ID = maxID
-            site_info['max_ID'] = maxID
         # Creating stations from the csv input file
         z1_tag = 0
         z25_tag = 0
@@ -183,8 +163,10 @@ if __name__ == '__main__':
             # openSHA database: https://github.com/opensha/opensha/blob/16aaf6892fe2a31b5e497270429b8d899098361a/src/main/java/org/opensha/commons/data/siteData/OrderedSiteDataProviderList.java
         # Creating stations from the csv input file
         stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
+    else:
+        print("""Only From_CSV site_info['Type'] is supported now""")
     if stations:
-        print('HazardSimulation: stations created.')
+        print('ScenarioForecast: stations created.')
     else:
         print('HazardSimulation: please check the "Input" directory in the configuration json file.')
         exit()

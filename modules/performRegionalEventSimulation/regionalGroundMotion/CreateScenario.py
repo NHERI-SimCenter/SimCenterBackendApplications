@@ -138,7 +138,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):
     samp_method = scenario_info['EqRupture'].get('Sampling','Random')
     # source model
     source_model = scenario_info['EqRupture']['Model']
-    eq_source = getERF(source_model, True)
+    eq_source = getERF(scenario_info)
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     # Collecting all sites
@@ -194,10 +194,6 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
     #     # Large number to consider all sources in the ERF
     #     source_num = 10000000
     out_dir = os.path.join(work_dir,"Output")
-    in_dir = os.path.join(work_dir,"Input")
-    # sampling method
-    samp_method = scenario_info['EqRupture'].get('Sampling','Random')
-    # Directly defining earthquake ruptures
     if scenario_info['Generator'] == 'Simulation':
         # TODO:
         print('Physics-based earthquake simulation is under development.')
@@ -220,7 +216,7 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
         if source_type == 'ERF':
             if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
                 source_model = scenario_info['EqRupture']['Model']
-                eq_source = getERF(source_model, True)
+                eq_source = getERF(scenario_info)
                 # check source index list and rupture index list
                 if type(scenario_info['EqRupture']['SourceIndex']) == int:
                     source_index_list = [scenario_info['EqRupture']['SourceIndex']]
@@ -254,7 +250,7 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
                 min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
-                eq_source = getERF(source_model, True)
+                eq_source = getERF(scenario_info)
                 erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(out_dir,'RupFile.json'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
