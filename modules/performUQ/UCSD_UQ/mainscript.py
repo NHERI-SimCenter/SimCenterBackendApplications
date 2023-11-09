@@ -3,58 +3,49 @@ authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aak
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
 """
+
 # ======================================================================================================================
-import os
 import sys
 import json
 import platform
 from pathlib import Path
 import subprocess
 
+
 # ======================================================================================================================
-def main(inputArgs):
+def main(input_args):
 
     # Initialize analysis
-    mainscriptPath = os.path.abspath(inputArgs[0])
-    workdirMain = os.path.abspath(inputArgs[1])
-    workdirTemplate = os.path.abspath(inputArgs[2])
-    runType = inputArgs[3]  # either "runningLocal" or "runningRemote"
-    workflowDriver = inputArgs[4]
-    inputFile = inputArgs[5]
-    
-    mainScriptPath = os.path.dirname(os.path.realpath(__file__))
-    cwd = os.getcwd()
-    templateDir = cwd
-    tmpSimCenterDir = str(Path(cwd).parents[0])
+    path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent
+    path_to_working_directory = Path(input_args[1]).resolve()
+    path_to_template_directory = Path(input_args[2]).resolve()
+    run_type = input_args[3]  # either "runningLocal" or "runningRemote"
+    driver_file_name = input_args[4]
+    input_file_name = input_args[5]
 
-    try:
-        os.remove('dakotaTab.out')
-        os.remove('dakotaTabPrior.out')
-    except OSError:
-        pass
+    Path("dakotaTab.out").unlink(missing_ok=True)
+    Path("dakotaTabPrior.out").unlink(missing_ok=True)
 
-    with open(inputFile, "r") as f:
+    with open(input_file_name, "r") as f:
         inputs = json.load(f)
-    
+
     uq_inputs = inputs["UQ"]
     if uq_inputs["uqType"] == "Metropolis Within Gibbs Sampler":
-        mainScript = os.path.join(mainScriptPath, "mainscript_hierarchical_bayesian.py")
+        main_script = (
+            path_to_UCSD_UQ_directory / "mainscript_hierarchical_bayesian.py"
+        )
     else:
-        mainScript = os.path.join(mainScriptPath, "mainscript_tmcmc.py")
-    
-    if platform.system() == "Windows":
-        pythonCommand = "python"
-    else:
-        pythonCommand = "python3"
+        main_script = path_to_UCSD_UQ_directory / "mainscript_tmcmc.py"
 
-    command = '"{}" "{}" "{}" "{}" {} {} {}'.format(
-        pythonCommand,
-        mainScript,
-        tmpSimCenterDir,
-        templateDir,
-        runType,
-        workflowDriver,
-        inputFile,
+    if platform.system() == "Windows":
+        python_command = "python"
+    else:
+        python_command = "python3"
+
+    command = (
+        f'"{python_command}" "{main_script}" '
+        f'"{path_to_working_directory}" "{path_to_template_directory}" '
+        f"{run_type} {driver_file_name} {input_file_name}"
     )
     print(command)
     try:
@@ -67,11 +58,10 @@ def main(inputArgs):
         returnCode = e.returncode
 
 
-
 # ======================================================================================================================
 
 if __name__ == "__main__":
-    inputArgs = sys.argv
-    main(inputArgs)
+    input_args = sys.argv
+    main(input_args)
 
-# ====================================================================================================================== 
+# ======================================================================================================================
