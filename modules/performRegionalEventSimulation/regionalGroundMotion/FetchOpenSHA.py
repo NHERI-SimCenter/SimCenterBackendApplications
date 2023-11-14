@@ -59,6 +59,7 @@ from org.opensha.commons.param.event import *
 from org.opensha.commons.param.constraint import *
 from org.opensha.commons.util import ServerPrefUtils
 from org.opensha.commons.param.impl import DoubleParameter
+from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
 
 from org.opensha.sha.earthquake import *
 from org.opensha.sha.earthquake.param import *
@@ -278,7 +279,7 @@ def get_source_distance(erf, source_index, lat, lon):
 def get_rupture_distance(erf, source_index, rupture_index, lat, lon):
 
     rupSource = erf.getSource(source_index)
-    rupSurface = rupSource.getRuptureList().get(rupture_index).getRuptureSurface()
+    rupSurface = rupSource.getRupture(rupture_index).getRuptureSurface()
     distToRupture = []
     for i in range(len(lat)):
         distToRupture.append(float(rupSurface.getDistanceRup(Location(lat[i], lon[i]))))
@@ -399,8 +400,12 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         rup_tag = []
         rup_dist = []
         for j in range(rupList.size()):
-            rupture = rupList.get(j)
-            cur_dist = rupture.getRuptureSurface().getDistanceRup(site_loc)
+            ruptureSurface = rupList.get(j).getRuptureSurface()
+            # If pointsource rupture distance correction 
+            if isinstance(ruptureSurface, PointSurface):
+                distCorrType = PtSrcDistCorr.Type.NONE # or 'FIELD' or 'NSHMP08'
+                (PointSurface@ruptureSurface).setDistCorrMagAndType(rupList.get(j).getMag(), distCorrType);
+            cur_dist = ruptureSurface.getDistanceRup(site_loc)
             rup_tag.append(j)
             if (cur_dist < maxDistance):
                 rup_dist.append(cur_dist)

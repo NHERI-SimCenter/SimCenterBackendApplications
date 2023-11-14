@@ -82,7 +82,7 @@ def hazard_job(hazard_info):
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
         if opensha_flag:
-            im_raw, im_info = compute_im(scenarios, stations, scenario_info["EqRupture"],
+            im_raw, im_info = compute_im(scenarios, stations, scenario_info,
                                 event_info['GMPE'], event_info['IntensityMeasure'],
                                 scenario_info['Generator'], output_dir, mth_flag=False)
             # update the im_info

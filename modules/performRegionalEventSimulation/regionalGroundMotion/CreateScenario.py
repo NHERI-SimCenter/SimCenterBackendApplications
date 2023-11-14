@@ -63,7 +63,24 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
         print('CreateScenario: source file is empty.')
         return {}
     # If there is a filter
-    if scenario_info["Generator"].get("method", None) == "UserSelection":
+    if scenario_info["Generator"].get("method", None) == "ScenarioSpecific":
+        SourceIndex = scenario_info["Generator"].get("SourceIndex", None)
+        RupIndex = scenario_info['Generator'].get('RuptureIndex', None)
+        if (SourceIndex is None) or (RupIndex is None):
+            print("Both SourceIndex and RuptureIndex are needed for"\
+                  "ScenarioSpecific analysis")
+            return
+        rups_to_run = []
+        for ind in range(len(user_scenarios.get('features'))):
+            cur_rup = user_scenarios.get('features')[ind]
+            cur_id_source = cur_rup.get('properties').get('Source', None)
+            if cur_id_source != SourceIndex:
+                continue
+            cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
+            if cur_id_rupture == RupIndex:
+                rups_to_run.append(ind)
+                break
+    elif scenario_info["Generator"].get("method", None) == "UserSelection":
         rup_filter = scenario_info["Generator"].get("filter", None)
         if rup_filter is None or len(rup_filter)==0:
             rups_to_run = list(range(0, num_scenarios))
@@ -79,8 +96,6 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
             rups_available = list(range(0, num_scenarios))
             rups_to_run = rups_requested[
                 np.where(np.in1d(rups_requested, rups_available))[0]]
-    elif scenario_info["Generator"].get("method", None) == "MCS":
-        rups_to_run = list(range(0, num_scenarios))
         # Select all
     elif scenario_info["Generator"].get("method", None) == "Subsampling":
         rups_to_run = list(range(0, num_scenarios))
