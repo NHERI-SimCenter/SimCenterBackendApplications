@@ -100,6 +100,12 @@ runMFMC::runMFMC(string workflowDriver,
 		numModels_list.push_back(T.M[modelID].theDist->getParam().size() / 2);
 	}
 
+   if (numModels_list.size()==0)
+   {
+       std::string errMsg = "Error running UQ engine: Multi-fidelity MC expects more than one model";
+       theErrorFile.write(errMsg);
+   }
+
 	if (std::adjacent_find(numModels_list.begin(), numModels_list.end(), std::not_equal_to<>()) == numModels_list.end())
 	{
 		// all elements are equal to each other

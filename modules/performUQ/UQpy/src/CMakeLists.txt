@@ -1,0 +1,7 @@
+simcenter_add_python_script(SCRIPT quofemDTOs.py)
+simcenter_add_python_script(SCRIPT UQpyDTO.py)
+add_subdirectory(distributions)
+add_subdirectory(modules)
+add_subdirectory(reliability)
+add_subdirectory(runmodel)
+add_subdirectory(sampling)

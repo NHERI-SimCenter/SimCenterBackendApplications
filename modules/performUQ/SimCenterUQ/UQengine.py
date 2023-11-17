@@ -22,6 +22,7 @@ class UQengine:
         self.run_type = inputArgs[5]
 
         self.IM_names = [] # used in EEUQ
+        self.removeWorkDirs = True
 
 
 
@@ -51,28 +52,7 @@ class UQengine:
 
         del_paths = glob.glob(os.path.join(self.work_dir, "workdir*"))
         for del_path in del_paths:
-            # change permission for  workflow_driver.bat
-            self.workflowDriver_path = os.path.join(del_path, self.workflowDriver)
-            # if os.path.exists(self.workflowDriver_path):
-            #     os.chmod(self.workflowDriver_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-            # Change permission
-            for root, dirs, files in os.walk(del_path):
-                for d in dirs:
-                    os.chmod(
-                        os.path.join(root, d),
-                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
-                    )
-                for f in files:
-                    os.chmod(
-                        os.path.join(root, f),
-                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
-                    )
-
-            try:
-                shutil.rmtree(del_path)
-            except Exception as msg:
-                self.exit(str(msg))
+            cleanup_dir(del_path)
 
         del_outputs = glob.glob(os.path.join(self.work_dir, "*out"))
         for del_out in del_outputs:
@@ -122,12 +102,13 @@ class UQengine:
         if not self.do_parallel:
             Y = np.zeros((nsamp, self.y_dim))
             for ns in range(nsamp):
-                Y_tmp, id_sim_current = run_FEM(
+                Y_tmp, id_sim_current, im = run_FEM(
                     X[ns, :],
                     id_sim + ns,
                     self.rv_name,
                     self.work_dir,
                     workflowDriver,
+                    self.removeWorkDirs,
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
@@ -159,6 +140,7 @@ class UQengine:
                     self.rv_name,
                     self.work_dir,
                     self.workflowDriver,
+                    self.removeWorkDirs,
                     runIdx,
                 )
                 for i in range(nsamp)
@@ -175,7 +157,9 @@ class UQengine:
 
             Nsim = len(list((result_objs)))
             Y = np.zeros((Nsim, self.y_dim))
-            for val, id in result_objs:
+            IM_vals = None # size (Nsim,nIM), but we don't know nIM yet
+            IM_found = False
+            for val, id, im in result_objs:
                 if isinstance(val, str):
                     self.exit(val)
                 elif val.shape[0]:
@@ -186,11 +170,20 @@ class UQengine:
                         self.exit(msg)
 
                 if np.isnan(np.sum(val)):
-                    Nsim = id - id_sim
+                    Nsim = id - id_sim # ignore
                     X = X[:Nsim, :]
                     Y = Y[:Nsim, :]
                 else:
                     Y[id - id_sim, :] = val
+
+                if not (im is None):
+                    IM_names = list(map(str, im))[1:]
+                    IM_matrix = im.to_numpy()[:,1:]
+                    if IM_found:
+                        IM_vals = np.vstack([IM_vals,IM_matrix])
+                    else:
+                        IM_vals = IM_matrix
+                        IM_found = True
 
         if len(alterInput)>0:
             idx = alterInput[0]
@@ -208,60 +201,19 @@ class UQengine:
         # In case EEUQ
         #
         
-        IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
-        if IM_vals is None:
+        #IM_vals = compute_IM(self.work_dir, id_sim+1, id_sim + Nsim)
+        if not IM_found:
             X = X.astype(np.double)
         else:
-            self.IM_names = list(map(str, IM_vals))[1:]
-            X_new = np.hstack([X,IM_vals.to_numpy()[:,1:]])
+            #self.IM_names = list(map(str, IM_vals))[1:]
+            #X_new = np.hstack([X,IM_vals.to_numpy()[:,1:]])
+            self.IM_names = IM_names
+            X_new = np.hstack([X,np.array(IM_vals)])
             X = X_new.astype(np.double)
-
             
         return X, Y, id_sim + Nsim
 
-    def compute_IM(self, i_begin, i_end):
-        workdir_list = [os.path.join(self.work_dir,'workdir.{}'.format(int(i))) for i in range(i_begin,i_end+1)]
-
-        # intensity measure app
-        computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                 'createEVENT', 'groundMotionIM', 'IntensityMeasureComputer.py')
-
-        pythonEXE = sys.executable
-        # compute IMs
-        for cur_workdir in workdir_list:
-            os.chdir(cur_workdir)
-            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
-                os.system(
-                    f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar")
-            os.chdir(self.work_dir)
-
-        # collect IMs from different workdirs
-        for i, cur_workdir in enumerate(workdir_list):
-            cur_id = int(cur_workdir.split('.')[-1])
-            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
-                print("IM.csv found in wordir.{}".format(cur_id))
-                tmp1 = pd.read_csv(os.path.join(cur_workdir, 'IM.csv'), index_col=None)
-                if tmp1.empty:
-                    print("IM.csv in wordir.{} is empty.".format(cur_id))
-                    return
-                tmp2 = pd.DataFrame({'%eval_id': [cur_id for x in range(len(tmp1.index))]})
-                if i == 0:
-                    im_collector = pd.concat([tmp2, tmp1], axis=1)
-                else:
-                    tmp3 = pd.concat([tmp2, tmp1], axis=1)
-                    im_collector = pd.concat([im_collector, tmp3])
-            else:
-                print("IM.csv NOT found in wordir.{}".format(cur_id))
-                return
-        im_collector = im_collector.sort_values(by=['%eval_id'])
-
-        return im_collector
-        #im_collector.to_csv('IM.csv', index=False)
-
-
-
-
-
+    
     def readJson(self):
         pass
 
@@ -271,7 +223,7 @@ class UQengine:
         if self.run_type.lower() == "runninglocal":
             from multiprocessing import Pool
 
-            n_processor = os.cpu_count()
+            n_processor = os.cpu_count() - 1
             pool = Pool(n_processor)
         else:
             from mpi4py import MPI
@@ -303,8 +255,9 @@ class UQengine:
     #
 
 
-def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
+def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, removeWorkDirs, runIdx=0):
 
+    im =[]
     if runIdx == 0:
         templatedirFolder = "/templatedir"
         workdirFolder = "/workdir." + str(id_sim + 1)
@@ -317,7 +270,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
 
     if X.shape[0] > 1:
         msg = "do one simulation at a time"
-        return msg, id_sim
+        return msg, id_sim, im
     #
     # (1) create "workdir.idx " folder :need C++17 to use the files system namespace
     #
@@ -332,7 +285,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
 
         except Exception as ex:
             msg = "Error running FEM: " + str(ex)
-            return msg, id_sim
+            return msg, id_sim, im
 
     #
     # (2) write param.in file
@@ -394,7 +347,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
                 msg += "........\n" + errmsg + "\n........ \n"
                 msg += "to read more, see " + os.path.join(os. getcwd(),"ops.out")
 
-        return msg, id_sim
+        return msg, id_sim, im
 
     if g.shape[0] == 0:
         msg = "Error running FEM: results.out is empty"
@@ -415,7 +368,9 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
                 msg += "........\n" + errmsg + "\n........ \n"
                 msg += "to read more, see " + os.path.join(os. getcwd(),"ops.out")
 
-        return msg, id_sim
+        return msg, id_sim, im
+
+    im = compute_IM(work_dir, id_sim+1, id_sim+1)
 
     os.chdir("../")
 
@@ -423,9 +378,83 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
         msg = "Error running FEM: Response value at workdir.{} is NaN".format(
             id_sim + 1
         )
-        return msg, id_sim
+        return msg, id_sim, im
 
-    return g, id_sim
+
+    #
+    # sy- should be here, but currently at compute_IM()
+    #
+    if removeWorkDirs:
+        cleanup_dir(current_dir_i)
+
+    return g, id_sim, im
+
+
+
+def cleanup_dir(del_path):
+
+        # Change permission
+        for root, dirs, files in os.walk(del_path):
+            for d in dirs:
+                os.chmod(
+                    os.path.join(root, d),
+                    stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+                )
+            for f in files:
+                os.chmod(
+                    os.path.join(root, f),
+                    stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+                )
+
+        try:
+            shutil.rmtree(del_path)
+        except Exception as msg:
+            self.exit(str(msg))
+
+        return
+
+
+def compute_IM(work_dir, i_begin, i_end):
+        workdir_list = [os.path.join(work_dir,'workdir.{}'.format(int(i))) for i in range(i_begin,i_end+1)]
+
+        # intensity measure app
+        computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                 'createEVENT', 'groundMotionIM', 'IntensityMeasureComputer.py')
+
+        pythonEXE = sys.executable
+        # compute IMs
+        for cur_workdir in workdir_list:
+            os.chdir(cur_workdir)
+            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
+                os.system(
+                    f"{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar")
+            os.chdir(work_dir)
+
+        # collect IMs from different workdirs
+        for i, cur_workdir in enumerate(workdir_list):
+            cur_id = int(cur_workdir.split('.')[-1])
+            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
+                print("IM.csv found in wordir.{}".format(cur_id))
+                tmp1 = pd.read_csv(os.path.join(cur_workdir, 'IM.csv'), index_col=None)
+                if tmp1.empty:
+                    print("IM.csv in wordir.{} is empty.".format(cur_id))
+                    return
+                tmp2 = pd.DataFrame({'%eval_id': [cur_id for x in range(len(tmp1.index))]})
+                if i == 0:
+                    im_collector = pd.concat([tmp2, tmp1], axis=1)
+                else:
+                    tmp3 = pd.concat([tmp2, tmp1], axis=1)
+                    im_collector = pd.concat([im_collector, tmp3])
+            else:
+                print("IM.csv NOT found in wordir.{}".format(cur_id))
+                return
+
+        im_collector = im_collector.sort_values(by=['%eval_id'])
+
+        return im_collector
+
+
+
 
     # def readCSV(self):
     #     pass
