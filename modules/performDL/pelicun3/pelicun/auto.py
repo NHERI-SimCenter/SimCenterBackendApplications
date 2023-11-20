@@ -87,13 +87,9 @@ def auto_populate(config, auto_script_path, **kwargs):
     sys.path.insert(0, str(ASP.parent)+'/')
     auto_script = importlib.__import__(ASP.name[:-3], globals(), locals(), [], 0)
     auto_populate_ext = auto_script.auto_populate
-    # # Option 1: update AIM
-    # AIM["assetType"].update(config["assetType"])
-    # AIM["ground_failure"].update(config["Applications"]["DL"]["ApplicationData"]["ground_failure"])
-    # # generate the DL input data
-    # AIM_ap, DL_ap, CMP = auto_populate_ext(AIM = AIM)
-    # Option 2: feed config to auto_populate_ext
-    AIM_ap, DL_ap, CMP = auto_populate_ext(config)
+
+    # generate the DL input data
+    AIM_ap, DL_ap, CMP = auto_populate_ext(AIM=config)
 
     # assemble the extended config
     config['GeneralInformation'].update(AIM_ap)

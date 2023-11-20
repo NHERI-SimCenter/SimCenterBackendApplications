@@ -38,7 +38,6 @@
 # Adam Zsarnóczay
 
 import pandas as pd
-import math
 
 ap_DesignLevel = {
     1940: 'PC',
@@ -53,115 +52,181 @@ ap_DesignLevel_W1 = {
     1975: 'MC',
     2100: 'HC'
 }
-
-length_to_meter = {
-    "m":1,
-    "mm":0.001,
-    "cm":0.01,
-    "km" : 1000,
-    "inch" :0.0254,
-    "ft" : 0.0254*12.,
-    "mile" : 0.0254*12*5280.
-}
-def EQ1(N):
-    return 1+0.25/(N-1) if N>1 else 1.25
-def EQ2(N):
-    return 1+0.33/(N-0)
-def EQ3(N):
-    return 1+0.33/(N-1) if N>1 else 1.33
-def EQ4(N):
-    return 1+0.09/(N-1) if N>1 else 1.09
-def EQ5(N):
-    return 1+0.05/(N-0) 
-def EQ6(N):
-    return 1+0.20/(N-1) if N>1 else 1.20
-def EQ7(N):
-    return 1+0.10/(N-0) 
-
 def convertBridgeToHAZUSclass(AIM):
-    # return HAZUS bridge class, K_3D, and I_shape. K_3D is calculated based on Basoz and Mander (1999)
-    # if HAZUS and Basoz and Mander (1999) are different
+
+    #TODO: replace labels in AIM with standard CamelCase versions
     structureType = AIM["bridge_class"]
     # if type(structureType)== str and len(structureType)>3 and structureType[:3] == "HWB" and 0 < int(structureType[3:]) and 29 > int(structureType[3:]):
     #     return AIM["bridge_class"]
     state = AIM["state_code"]
-    yr_built = AIM["year_built"]
+    yr_built = AIM["year_built"] 
     num_span = AIM["nspans"]
-    scale_factor = length_to_meter.get(AIM["units"]["length"], 0.0254)
-    len_max_span = AIM["lmaxspan"]*scale_factor # convert to meter
+    len_max_span = AIM["lmaxspan"] 
 
-    seismic = (int(state)==6 and int(yr_built)>=1975) or (int(state)!=6 and int(yr_built)>=1990)
+    seismic = ((int(state)==6 and int(yr_built)>=1975) or 
+               (int(state)!=6 and int(yr_built)>=1990))
+
+    # Use a catch-all, other class by default
+    bridge_class = "HWB28"
+    
+    if len_max_span > 150:
+        if not seismic:
+            bridge_class = "HWB1"
+        else:
+            bridge_class = "HWB2"
+
+    elif num_span == 1:
+        if not seismic:
+            bridge_class = "HWB3"
+        else:
+            bridge_class = "HWB4"
+
+    elif structureType in list(range(101,107)):
+        if not seismic:
+            if state != 6:
+                bridge_class = "HWB5"
+            else:
+                bridge_class = "HWB6"
+        else:
+            bridge_class = "HWB7"
+
+    elif structureType in [205,206]:
+        if not seismic:
+            bridge_class = "HWB8"
+        else:
+            bridge_class = "HWB9"
+
+    elif structureType in list(range(201,207)):
+        if not seismic:
+            bridge_class = "HWB10"
+        else:
+            bridge_class = "HWB11"
+
+    elif structureType in list(range(301,307)):
+        if not seismic:
+            if state != 6:
+                bridge_class = "HWB12"
+            else:
+                bridge_class = "HWB13"
+        else:
+            bridge_class = "HWB14"
+
+    elif structureType in list(range(402,411)):
+        if not seismic:
+            bridge_class = "HWB15"
+        else:
+            bridge_class = "HWB16"
+
+    elif structureType in list(range(501,507)):
+        if not seismic:
+            if state != 6:
+                bridge_class = "HWB17"
+            else:
+                bridge_class = "HWB18"
+        else:
+            bridge_class = "HWB19"
+
+    elif structureType in [605,606]:
+        if not seismic:
+            bridge_class = "HWB20"
+        else:
+            bridge_class = "HWB21"
+
+    elif structureType in list(range(601,608)):
+        if not seismic:
+            bridge_class = "HWB22"
+        else:
+            bridge_class = "HWB23"
+    
+    #TODO: review and add HWB24-27 rules
+    #TODO: also double check rules for HWB10-11 and HWB22-23
+
+    return bridge_class
+
+
+    # original code by JZ
+    """
     if not seismic and len_max_span > 150:
-        return "HWB1", 1, 0 
+        return "HWB1"
     elif seismic and len_max_span > 150:
-        return "HWB2", 1, 0
+        return "HWB2"
     elif not seismic and num_span == 1:
-        return "HWB3", 1, 1
+        return "HWB3"
     elif seismic and num_span == 1:
-        return "HWB4", 1, 1
+        return "HWB4"
     elif not seismic and 101 <= structureType and structureType <= 106 and state != 6:
-        return "HWB5", EQ1(num_span), 0
+        return "HWB5"
     elif not seismic and 101 <= structureType and structureType <= 106 and state ==6:
-        return "HWB6", EQ1(num_span), 0
+        return "HWB6"
     elif seismic and 101 <= structureType and structureType <= 106:
-        return "HWB7", EQ1(num_span), 0
+        return "HWB7"
     elif not seismic and 205 <= structureType and structureType <= 206:
-        return "HWB8", EQ2(num_span), 0
+        return "HWB8"
     elif seismic and 205 <= structureType and structureType <= 206:
-        return "HWB9", EQ3(num_span), 0
+        return "HWB9"
     elif not seismic and 201 <= structureType and structureType <= 206:
-        return "HWB10", EQ2(num_span), 1
+        return "HWB10"
     elif seismic and 201 <= structureType and structureType <= 206:
-        return "HWB11", EQ3(num_span), 1
+        return "HWB11"
     elif not seismic and 301 <= structureType and structureType <= 306 and state != 6:
-        return "HWB12", EQ4(num_span), 0
+        return "HWB12"
     elif not seismic and 301 <= structureType and structureType <= 306 and state == 6:
-        return "HWB13", EQ4(num_span), 0
+        return "HWB13"
     elif seismic and 301 <= structureType and structureType <= 306:
-        return "HWB14", EQ1(num_span), 0
+        return "HWB14"
     elif not seismic and 402 <= structureType and structureType <= 410:
-        return "HWB15", EQ5(num_span), 1
+        return "HWB15"
     elif seismic and 402 <= structureType and structureType <= 410:
-        return "HWB16", EQ3(num_span), 1
+        return "HWB16"
     elif not seismic and 501 <= structureType and structureType <= 506 and state != 6:
-        return "HWB17", EQ1(num_span), 0
+        return "HWB17"
     elif not seismic and 501 <= structureType and structureType <= 506 and state == 6:
-        return "HWB18", EQ1(num_span), 0
+        return "HWB18"
     elif seismic and 501 <= structureType and structureType <= 506:
-        return "HWB19", EQ1(num_span), 0
+        return "HWB19"
     elif not seismic and 605 <= structureType and structureType <= 606:
-        return "HWB20", EQ2(num_span), 0
+        return "HWB20"
     elif seismic and 605 <= structureType and structureType <= 606:
-        return "HWB21", EQ3(num_span), 0
+        return "HWB21"
     elif not seismic and 601 <= structureType and structureType <= 607:
-        return "HWB22", EQ2(num_span), 1
+        return "HWB22"
     elif seismic and 601 <= structureType and structureType <= 607:
-        return "HWB23", EQ3(num_span), 1
+        return "HWB23"
+
     elif not seismic and 301 <= structureType and structureType <= 306 and state != 6:
-        return "HWB24", EQ6(num_span), 0
+        return "HWB24"
     elif not seismic and 301 <= structureType and structureType <= 306 and state == 6:
-        return "HWB25", EQ6(num_span), 0
+        return "HWB25"
     elif not seismic and 402 <= structureType and structureType <= 410 and state != 6:
-        return "HWB26", EQ7(num_span), 1
+        return "HWB26"
     elif not seismic and 402 <= structureType and structureType <= 410 and state == 6:
-        return "HWB27", EQ7(num_span), 1
+        return "HWB27"
     else:
-        return "HWB28", 1, 0
+        return "HWB28"
+    """
 
 def convertTunnelToHAZUSclass(AIM):
-    if "Bored" in AIM["cons_type"] or "Drilled" in AIM["cons_type"]:
+
+    if ("Bored" in AIM["cons_type"]) or ("Drilled" in AIM["cons_type"]):
         return "HTU1"
-    elif "Cut" in AIM["cons_type"] or "Cover" in AIM["cons_type"]:
+    elif ("Cut" in AIM["cons_type"]) or ("Cover" in AIM["cons_type"]):
         return "HTU2"
     else:
-        return "HTU2" # HTU2 fragility function is more conservative than HTU1. Select HTU2 for unclassfied tunnels
+        # Select HTU2 for unclassfied tunnels because it is more conservative. 
+        return "HTU2" 
+
 def convertRoadToHAZUSclass(AIM):
-    if AIM["road_type"]=="primary" or AIM["road_type"] == "secondary":
+
+    if AIM["road_type"] in ["primary", "secondary"]:
         return "HRD1"
+
     elif AIM["road_type"]=="residential":
         return "HRD2"
+
     else:
-        return "HRD2" # many unclassified roads are urban roads
+        # many unclassified roads are urban roads
+        return "HRD2" 
+
 def auto_populate(AIM):
     """
     Automatically creates a performance model for PGA-based Hazus EQ analysis.
@@ -174,9 +239,9 @@ def auto_populate(AIM):
 
     Returns
     -------
-    AIM_ap: dict
-        Extended Asset Information Model - extends the input AIM with additional
-        features that were inferred. These features are typically used in 
+    GI_ap: dict
+        Extended General Information - extends the GI from the input AIM with 
+        additional inferred features. These features are typically used in 
         intermediate steps during the auto-population and are not required 
         for the performance assessment. They are returned to allow reviewing 
         how these latent variables affect the final results.
@@ -187,18 +252,27 @@ def auto_populate(AIM):
         Component assignment - Defines the components (in rows) and their 
         location, direction, and quantity (in columns).
     """
-    print("JZ Debug: the Hazus_Earthquake_IM.py auto_popu is used")
-    config = AIM.copy()
-    AIM = AIM.get('GeneralInformation', None)
-    AIM_ap = AIM.copy()
-    assetType = config["assetType"]
-    groun_failure = config["Applications"]["DL"]["ApplicationData"]["ground_failure"]
+
+    # extract the General Information
+    GI = AIM.get('GeneralInformation', None)
+
+    if GI==None:
+        #TODO: show an error message
+        pass
+
+    # initialize the auto-populated GI
+    GI_ap = GI.copy()
+
+    assetType = AIM["assetType"]
+    ground_failure = AIM["Applications"]["DL"]["ApplicationData"]["ground_failure"]
+
     if assetType=="Buildings":
+
         # get the building parameters
-        bt = AIM['StructureType'] #building type
+        bt = GI['StructureType'] #building type
 
         # get the number of stories / height
-        stories = AIM.get('NumberOfStories', None)
+        stories = GI.get('NumberOfStories', None)
 
         if stories!=None:
             # We assume that the structure type does not include height information
@@ -222,15 +296,15 @@ def auto_populate(AIM):
                         bt += 'M'
 
             stories = 1
-            AIM_ap['BuildingType'] = bt
+            GI_ap['BuildingType'] = bt
 
         # get the design level
-        dl = AIM.get('DesignLevel', None)
+        dl = GI.get('DesignLevel', None)
 
         if dl == None:
             # If there is no DesignLevel provided, we assume that the YearBuilt is
             # available
-            year_built = AIM['YearBuilt']
+            year_built = GI['YearBuilt']
 
             if 'W1' in bt:
                 DesignL = ap_DesignLevel_W1
@@ -242,28 +316,36 @@ def auto_populate(AIM):
                     dl = DesignL[year]            
                     break
 
-            AIM_ap['DesignLevel'] = dl
+            GI_ap['DesignLevel'] = dl
 
         # get the occupancy class
-        ot = AIM['OccupancyClass']
-        if groun_failure:
-            foundation_type = 'S'
-            CMP = pd.DataFrame(
-                {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A'],
-                f'GF.H.{foundation_type}':['ea', 1, 1, 1, 'N/A'],
-                f'GF.V.{foundation_type}':['ea', 1, 3, 1, 'N/A']},
-                index = [         'Units','Location','Direction','Theta_0','Family']
-            ).T
-        else:
-            CMP = pd.DataFrame(
+        ot = GI['OccupancyClass']
+
+        CMP = pd.DataFrame(
                 {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A']},
                 index = [         'Units','Location','Direction','Theta_0','Family']
-            ).T 
+            ).T
+
+        # if needed, add components to simulate damage from ground failure
+        if ground_failure:
+
+            foundation_type = 'S'
+
+            FG_GF_H = f'GF.H.{foundation_type}'
+            FG_GF_V = f'GF.V.{foundation_type}'
+            
+            CMP_GF = pd.DataFrame(
+                {f'{FG_GF_H}':[  'ea',         1,          1,        1,   'N/A'],
+                 f'{FG_GF_V}':[  'ea',         1,          3,        1,   'N/A']},
+                index = [     'Units','Location','Direction','Theta_0','Family']
+            ).T
+
+            CMP = pd.concat([CMP, CMP_GF], axis=0)
         
         DL_ap = {
             "Asset": {
                 "ComponentAssignmentFile": "CMP_QNT.csv",
-                "ComponentDatabase": "Hazus Earthquake",
+                "ComponentDatabase": "Hazus Earthquake - Buildings",
                 "NumberOfStories": f"{stories}",
                 "OccupancyType": f"{ot}",
                 "PlanArea": "1"
@@ -275,101 +357,105 @@ def auto_populate(AIM):
             },
             "Losses": {
                 "BldgRepair": {
-                    "ConsequenceDatabase": "Hazus Earthquake",
+                    "ConsequenceDatabase": "Hazus Earthquake - Buildings",
                     "MapApproach": "Automatic"
                 }
             }
         }
+
     elif assetType == "TransportationNetwork":
-        inf_type = AIM["assetSubtype"]
+
+        inf_type = GI["assetSubtype"]
+        
         if inf_type == "hwy_bridge":
+
             # get the bridge class
-            bt, k_3D, I_shape = convertBridgeToHAZUSclass(AIM)
-            AIM_ap['BridgeHazusClass'] = bt
+            bt = convertBridgeToHAZUSclass(GI)
+            GI_ap['BridgeHazusClass'] = bt
 
             CMP = pd.DataFrame(
                 {f'HWB.GS.{bt[3:]}': [  'ea',         1,          1,        1,   'N/A'],
-                f'HWB.GF':[  'ea',         1,          1,        1,   'N/A']},
-                index = [         'Units','Location','Direction','Theta_0','Family']
+                 f'HWB.GF':          [  'ea',         1,          1,        1,   'N/A']},
+                index = [            'Units','Location','Direction','Theta_0','Family']
             ).T
 
             DL_ap = {
                 "Asset": {
                     "ComponentAssignmentFile": "CMP_QNT.csv",
-                    "ComponentDatabase": "Hazus Earthquake Transportation",
+                    "ComponentDatabase": "Hazus Earthquake - Transportation",
                     "BridgeHazusClass": bt,
                     "PlanArea": "1"
                 },
                 "Damage": {
-                    "DamageProcess": "Hazus Earthquake Transportation"
+                    "DamageProcess": "Hazus Earthquake"
                 },
                 "Demands": {        
                 },
                 "Losses": {
                     "BldgRepair": {
-                        "ConsequenceDatabase": "Hazus Earthquake Transportation",
+                        "ConsequenceDatabase": "Hazus Earthquake - Transportation",
                         "MapApproach": "Automatic"
                     }
                 }
             }
-            AIM_ap['Kskew'] = math.sqrt(math.sin((90-AIM["skew"])/180.0*math.pi))
-            AIM_ap['K_3D'] = k_3D
-            AIM_ap['I_shape'] = I_shape
+
         elif inf_type == "hwy_tunnel":
+
             # get the tunnel class
-            tt = convertTunnelToHAZUSclass(AIM)
-            AIM_ap['TunnelHazusClass'] = tt
+            tt = convertTunnelToHAZUSclass(GI)
+            GI_ap['TunnelHazusClass'] = tt
 
             CMP = pd.DataFrame(
                 {f'HTU.GS.{tt[3:]}': [  'ea',         1,          1,        1,   'N/A'],
-                f'HTU.GF':[  'ea',         1,          1,        1,   'N/A']},
-                index = [         'Units','Location','Direction','Theta_0','Family']
+                 f'HTU.GF':          [  'ea',         1,          1,        1,   'N/A']},
+                index = [            'Units','Location','Direction','Theta_0','Family']
             ).T
 
             DL_ap = {
                 "Asset": {
                     "ComponentAssignmentFile": "CMP_QNT.csv",
-                    "ComponentDatabase": "Hazus Earthquake Transportation",
+                    "ComponentDatabase": "Hazus Earthquake - Transportation",
                     "TunnelHazusClass": tt,
                     "PlanArea": "1"
                 },
                 "Damage": {
-                    "DamageProcess": "Hazus Earthquake Transportation"
+                    "DamageProcess": "Hazus Earthquake"
                 },
                 "Demands": {        
                 },
                 "Losses": {
                     "BldgRepair": {
-                        "ConsequenceDatabase": "Hazus Earthquake Transportation",
+                        "ConsequenceDatabase": "Hazus Earthquake - Transportation",
                         "MapApproach": "Automatic"
                     }
                 }
             }
         elif inf_type == "roadway":
+
             # get the road class
-            rt = convertRoadToHAZUSclass(AIM)
-            AIM_ap['RoadHazusClass'] = rt
+            rt = convertRoadToHAZUSclass(GI)
+            GI_ap['RoadHazusClass'] = rt
 
             CMP = pd.DataFrame(
                 {f'HRD.GF.{rt[3:]}':[  'ea',         1,          1,        1,   'N/A']},
-                index = [         'Units','Location','Direction','Theta_0','Family']
+                index = [           'Units','Location','Direction','Theta_0','Family']
             ).T
 
             DL_ap = {
                 "Asset": {
                     "ComponentAssignmentFile": "CMP_QNT.csv",
-                    "ComponentDatabase": "Hazus Earthquake Transportation",
+                    "ComponentDatabase": "Hazus Earthquake - Transportation",
                     "RoadHazusClass": rt,
                     "PlanArea": "1"
                 },
                 "Damage": {
-                    "DamageProcess": "Hazus Earthquake Transportation"
+                    "DamageProcess": "Hazus Earthquake"
                 },
                 "Demands": {        
                 },
                 "Losses": {
                     "BldgRepair": {
-                        "ConsequenceDatabase": "Hazus Earthquake Transportation",
+                        "ConsequenceDatabase": "Hazus Earthquake - Transportation",
                         "MapApproach": "Automatic"
                     }
                 }
@@ -379,4 +465,4 @@ def auto_populate(AIM):
     else:
         print(f"AssetType: {assetType} is not supported in Hazus Earthquake IM DL method")
 
-    return AIM_ap, DL_ap, CMP
+    return GI_ap, DL_ap, CMP

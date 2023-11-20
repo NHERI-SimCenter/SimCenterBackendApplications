@@ -36,7 +36,7 @@
 # Contributors:
 # Stevan Gavrilovic
 
-import json, io, sys, time, math, argparse
+import json, io, os, sys, time, math, argparse
 from pathlib import Path
 from typing import List, Dict, Any
 import numpy as np
@@ -45,6 +45,12 @@ import zipfile
 import pandas as pd
 
 from REDi.go_redi import go_redi
+
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+main_dir = this_dir.parents[1]
+sys.path.insert(0, str(main_dir / 'common'))
+
+from simcenter_common import get_scale_factors
 
 class NumpyEncoder(json.JSONEncoder) :
     # Encode the numpy datatypes to json
@@ -57,11 +63,16 @@ class NumpyEncoder(json.JSONEncoder) :
 
 def get_stats(arr : np.array) -> dict : 
     # Returns a dictionary of summary stats from the array
+
+    if np.min(arr) > 0.0:
+        log_std = np.std(np.log(arr))
+    else:
+        log_std = ""
     
     return {
         'mean' : np.mean(arr),
         'std' : np.std(arr),
-        'log_std' : np.log(np.std(arr)),
+        'log_std' : log_std,
         'count' : len(arr),
         'min' : np.min(arr),
         'max' : np.max(arr),
@@ -209,10 +220,28 @@ def main(args):
     nStories = int(gen_info['NumberOfStories'])
     rediInputDict['nFloor'] = nStories
 
+    # Get the plan area
     plan_area = float(gen_info['PlanArea'])
+
+    # Get the units
+    input_units = {'length': AIM['GeneralInformation']['units']['length']}
+    output_units = {'length':'ft'}
+    
+    # scale the input data to the length unit used internally
+    f_scale_units = get_scale_factors(input_units, output_units)['length']
+
+    # Scale the plan area
+    plan_area = plan_area*f_scale_units*f_scale_units
 
     floor_areas = [plan_area for i in range(nStories + 1)]
     rediInputDict['floor_areas'] = floor_areas
+
+    # Get the total building area
+    total_building_area = plan_area * nStories
+
+    # Estimate the number of workers
+    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
+    num_workers = max(int(total_building_area/1000), 1)
     
     # Get the replacement cost and time
     DL_info =  AIM['DL']['Losses']['BldgRepair']
@@ -221,9 +250,12 @@ def main(args):
     replacementCost = DL_info['ReplacementCost']['Median']
     rediInputDict['replacement_cost'] = float(replacementCost)/1e6 #Needs to be in the millions of dollars
 
-    replacementTime = DL_info['ReplacementTime']['Median']
-    rediInputDict['replacement_time'] = float(replacementTime)
+    replacementTime = float(DL_info['ReplacementTime']['Median'])
 
+    # convert replacement time to days from worker_days
+    replacementTime = replacementTime / num_workers
+
+    rediInputDict['replacement_time'] = replacementTime
 
     final_results_dict = dict()
     log_output : List[str] = []
@@ -231,7 +263,10 @@ def main(args):
     for sample in range(num_samples) :
 
         if buildingirreparableOrCollapsed[sample] :
-            replacement_time=DVReplacementDict['Time'][sample]
+            
+            # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
+            replacement_time = DVReplacementDict['Time'][sample] / num_workers
+                        
             final_results_dict[sample] = get_replacement_response(replacement_time=replacement_time)
             continue 
         

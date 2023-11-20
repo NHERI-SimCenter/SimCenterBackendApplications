@@ -1,2 +1,3 @@
 simcenter_add_python_script(SCRIPT preprocessUQpy.py)
 simcenter_add_python_script(SCRIPT UQpyEngine.py)
+add_subdirectory(src)

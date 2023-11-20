@@ -149,17 +149,18 @@ class PelicunModel:
                 args = []
                 for t_i, theta_i in enumerate(theta):
 
-                    try:
-                        # if theta is a scalar, just store it
-                        if theta_i is not None:
-                            theta[t_i] = float(theta_i)
+                    # if theta_i evaluates to NaN, it is considered undefined
+                    if pd.isna(theta_i):
+                        args.append([])
+                        continue
+
+                    # otherwise, we first check if it is a single scalar
+                    try:                        
+                        # if yes, we just store it
+                        theta[t_i] = float(theta_i)
                         args.append([])
 
-                    except ValueError:
-
-                        if pd.isna(theta_i):
-                            args.append([])
-                            continue
+                    except ValueError:                      
 
                         # otherwise, we assume it is a string using SimCenter
                         # array notation to identify coordinates of a
@@ -194,7 +195,7 @@ class PelicunModel:
                         # scale arguments, if needed
                         for a_i, arg in enumerate(args):
 
-                            if arg != []:
+                            if isinstance(arg, np.ndarray):
                                 args[a_i] = arg * arg_unit_factor
 
                 # convert the distribution parameters to SI
@@ -1373,7 +1374,7 @@ class DamageModel(PelicunModel):
 
             if 'PelicunDefault/' in data_path:
                 data_paths[d_i] = data_path.replace(
-                    'PelicunDefault/', f'{base.pelicun_path}/resources/')
+                    'PelicunDefault/', f'{base.pelicun_path}/resources/SimCenterDBDL/')
 
         data_list = []
         # load the data files one by one
@@ -2641,7 +2642,7 @@ class LossModel(PelicunModel):
             if 'PelicunDefault/' in data_path:
                 data_paths[d_i] = data_path.replace('PelicunDefault/',
                                                     str(base.pelicun_path) +
-                                                    '/resources/')
+                                                    '/resources/SimCenterDBDL/')
 
         data_list = []
         # load the data files one by one
@@ -3285,23 +3286,27 @@ class BldgRepairModel(LossModel):
 
             if self._asmnt.options.eco_scale["AcrossDamageStates"] == True:
 
-                eco_qnt = dmg_quantities.groupby(level=[0, ], axis=1).sum()
-                eco_qnt.columns.names = ['cmp', ]
+                eco_levels = [0, ]
+                eco_columns = ['cmp', ]
 
             else:
 
-                eco_qnt = dmg_quantities.groupby(level=[0, 3], axis=1).sum()
-                eco_qnt.columns.names = ['cmp', 'ds']
+                eco_levels = [0, 3]
+                eco_columns = ['cmp', 'ds']
 
         elif self._asmnt.options.eco_scale["AcrossDamageStates"] == True:
 
-            eco_qnt = dmg_quantities.groupby(level=[0, 1], axis=1).sum()
-            eco_qnt.columns.names = ['cmp', 'loc']
+            eco_levels = [0, 1]
+            eco_columns = ['cmp', 'loc']
 
         else:
 
-            eco_qnt = dmg_quantities.groupby(level=[0, 1, 3], axis=1).sum()
-            eco_qnt.columns.names = ['cmp', 'loc', 'ds']
+            eco_levels = [0, 1, 3]
+            eco_columns = ['cmp', 'loc', 'ds']
+
+        eco_group = dmg_quantities.groupby(level=eco_levels, axis=1)
+        eco_qnt = eco_group.sum().mask(eco_group.count()==0, np.nan)
+        eco_qnt.columns.names = eco_columns
 
         self.log_msg("Successfully aggregated damage quantities.",
                      prepend_timestamp=False)
@@ -3311,7 +3316,7 @@ class BldgRepairModel(LossModel):
         self.log_msg("\nCalculating the median repair consequences...",
                      prepend_timestamp=False)
 
-        medians = self._calc_median_consequence(eco_qnt)
+        medians = self._calc_median_consequence(eco_qnt)        
 
         self.log_msg("Successfully determined median repair consequences.",
                      prepend_timestamp=False)
@@ -3422,14 +3427,14 @@ class BldgRepairModel(LossModel):
                             if cmp_i in prob_cmp_list:
                                 std_i = std_sample.loc[:, (DV_type, cmp_i, ds, loc)]
                             else:
-                                std_i = None                        
+                                std_i = None                                             
 
                         if std_i is not None:
                             res_list.append(dmg_i.mul(median_i, axis=0) * std_i)
                         else:
                             res_list.append(dmg_i.mul(median_i, axis=0))
 
-                        loc_list.append(loc)
+                        loc_list.append(loc)                         
 
                     if self._asmnt.options.eco_scale["AcrossFloors"] is True:
                         ds_list += [ds, ]
@@ -3453,7 +3458,8 @@ class BldgRepairModel(LossModel):
         DV_sample = pd.concat(res_list, axis=1, keys=key_list,
                               names=lvl_names)
 
-        DV_sample = DV_sample.fillna(0).convert_dtypes()
+        #DV_sample = DV_sample.fillna(0).convert_dtypes()
+        DV_sample = DV_sample.astype(float)
         DV_sample.columns.names = lvl_names
 
         # When the 'replacement' consequence is triggered, all local repair
@@ -3472,7 +3478,7 @@ class BldgRepairModel(LossModel):
         locs = locs[locs != '0']
 
         if id_replacement is not None:
-            DV_sample.loc[id_replacement, idx[:, :, :, :, locs]] = 0.0
+            DV_sample.loc[id_replacement, idx[:, :, :, :, locs]] = np.nan
 
         self._sample = DV_sample
 

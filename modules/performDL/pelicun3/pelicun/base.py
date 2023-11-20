@@ -469,7 +469,7 @@ def describe(df, percentiles=(0.001, 0.023, 0.10, 0.159, 0.5, 0.841, 0.90,
 
     for col in desc.columns:
         if np.min(df[col]) > 0.0:
-            desc.loc['log_std', col] = np.std(np.log(df[col]))
+            desc.loc['log_std', col] = np.std(np.log(df[col]), ddof=1)
 
     return desc
 
@@ -487,19 +487,6 @@ def str2bool(v):
 
 
 # Input specs
-
-CMP_data_path = dict(
-    P58='/resources/FEMA_P58_2nd_ed.hdf',
-    HAZUS_EQ='/resources/HAZUS_MH_2.1_EQ.hdf',
-    HAZUS_HU='/resources/HAZUS_MH_2.1.hdf',
-    HAZUS_FL='/resources/HAZUS_MH_2.1_FL.hdf',
-    HAZUS_MISC='/resources/HAZUS_MH_2.1_MISC.hdf'
-)
-
-POP_data_path = dict(
-    P58='/resources/FEMA_P58_2nd_ed.hdf',
-    HAZUS_EQ='/resources/HAZUS_MH_2.1_EQ.hdf'
-)
 
 EDP_to_demand_type = {
     # Drifts

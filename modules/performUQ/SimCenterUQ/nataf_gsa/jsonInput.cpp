@@ -236,7 +236,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 		nmc = 0;
 		rseed = 0;
-
+        nst = 0;
 		if (procno == 0)  std::cout << " Yes, no sampling\n";
 
 		return;

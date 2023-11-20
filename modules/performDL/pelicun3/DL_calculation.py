@@ -64,6 +64,8 @@ from pelicun.assessment import Assessment
 # pylint: disable=too-many-nested-blocks
 # pylint: disable=too-many-branches
 
+#pd.set_option('display.max_rows', None)
+
 # suppress FutureWarnings by default - credit: ioannis_vm
 if not sys.warnoptions:
     warnings.filterwarnings(
@@ -82,6 +84,9 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 idx = pd.IndexSlice
 
+#TODO: separate Damage Processes for Hazus Earthquake - Buildings and - Transportation
+#TODO: Loss map for Hazus EQ Transportation
+
 damage_processes = {
     'FEMA P-58': {
         "1_excessive.coll.DEM": {
@@ -95,6 +100,7 @@ damage_processes = {
         }
     },
 
+    #TODO: expand with ground failure logic
     'Hazus Earthquake': {
         "1_STR": {
             "DS5": "collapse_DS1"
@@ -116,14 +122,14 @@ damage_processes = {
 
 default_DBs = {
     'fragility': {
-        'FEMA P-58': 'fragility_DB_FEMA_P58_2nd.csv',
-        'Hazus Earthquake': 'fragility_DB_HAZUS_EQ.csv',
-        'Hazus Earthquake Transportation': 'damage_DB_Hazus_EQ_trnsp.csv'
+        'FEMA P-58': 'damage_DB_FEMA_P58_2nd.csv',
+        'Hazus Earthquake - Buildings': 'damage_DB_Hazus_EQ_bldg.csv',
+        'Hazus Earthquake - Transportation': 'damage_DB_Hazus_EQ_trnsp.csv'
     },
     'repair': {
-        'FEMA P-58': 'bldg_repair_DB_FEMA_P58_2nd.csv',
-        'Hazus Earthquake': 'bldg_repair_DB_HAZUS_EQ.csv',
-        'Hazus Earthquake Transportation' : 'loss_repair_DB_Hazus_EQ_trnsp.csv'
+        'FEMA P-58': 'loss_repair_DB_FEMA_P58_2nd.csv',
+        'Hazus Earthquake - Buildings': 'loss_repair_DB_Hazus_EQ_bldg.csv',
+        'Hazus Earthquake - Transportation': 'loss_repair_DB_Hazus_EQ_trnsp.csv'
     }
 
 }
@@ -146,6 +152,72 @@ output_files = [
     "DL_summary.csv",
     "DL_summary_stats.csv",
 ]
+
+full_out_config = {
+    'Demand': {
+        'Sample': True,
+        'Statistics': True
+    },
+    'Asset': {
+        'Sample': True,
+        'Statistics': True
+    },
+    'Damage': {
+        'Sample': True,
+        'Statistics': True,
+        'GroupedSample': True,
+        'GroupedStatistics': True
+    },
+    'Loss': {
+        'BldgRepair': {
+            'Sample': True,
+            'Statistics': True,
+            'GroupedSample': True,
+            'GroupedStatistics': True,
+            'AggregateSample': True,
+            'AggregateStatistics': True
+        }
+    },
+    'Format': {
+        'CSV': True,
+        'JSON': True
+    }
+}
+
+regional_out_config = {
+    'Demand': {
+        'Sample': True,
+        'Statistics': False
+    },
+    'Asset': {
+        'Sample': True,
+        'Statistics': False
+    },
+    'Damage': {
+        'Sample': False,
+        'Statistics': False,
+        'GroupedSample': True,
+        'GroupedStatistics': False
+    },
+    'Loss': {
+        'BldgRepair': {
+            'Sample': True,
+            'Statistics': True,
+            'GroupedSample': True,
+            'GroupedStatistics': False,
+            'AggregateSample': True,
+            'AggregateStatistics': True
+        }
+    },
+    'Format': {
+        'CSV': False,
+        'JSON': True
+    },
+    'Settings': {
+        'CondenseDS': True,
+        'SimpleIndexInJSON': True
+    }
+}
 
 
 def convert_df_to_dict(df, axis=1):
@@ -350,15 +422,18 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
             # if detailed results are not requested, add a lean output config
             if detailed_results == False:
                 config_ap['DL'].update({
-                    'Outputs': {  
-                        'Demand': {},
-                        'Asset': {},
-                        'Damage': {},
-                        'Loss': {
-                            'BldgRepair': {}                   
-                        }
-                    }
+                    'Outputs': regional_out_config
                 })
+            else:
+                config_ap['DL'].update({
+                    'Outputs': full_out_config
+                })
+                # add output settings from regional output config
+                if 'Settings' not in config_ap['DL']['Outputs'].keys():
+                    config_ap['DL']['Outputs'].update({'Settings':{}})
+
+                config_ap['DL']['Outputs']['Settings'].update(
+                    regional_out_config['Settings'])
 
             # save the extended config to a file
             config_ap_path = Path(config_path.stem + '_ap.json').resolve()
@@ -383,32 +458,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
     
     # provide all outputs if the files are not specified
     if out_config == None:
-        out_config = {
-            'Demand': {
-                'Sample': True,
-                'Statistics': True
-            },
-            'Asset': {
-                'Sample': True,
-                'Statistics': True
-            },
-            'Damage': {
-                'Sample': True,
-                'Statistics': True,
-                'GroupedSample': True,
-                'GroupedStatistics': True
-            },
-            'Loss': {
-                'BldgRepair': {
-                    'Sample': True,
-                    'Statistics': True,
-                    'GroupedSample': True,
-                    'GroupedStatistics': True,
-                    'AggregateSample': True,
-                    'AggregateStatistics': True
-                }
-            }
-        }
+        out_config = full_out_config
 
     # provide outputs in CSV by default
     if ('Format' in out_config.keys()) == False:
@@ -427,6 +477,10 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 'JSON': 'json' in output_format,
             }
         })
+
+    # add empty Settings to output config to simplify code below
+    if ('Settings' in out_config.keys()) == False:
+        out_config.update({'Settings':{}})
 
     if asset_config is None:
         log_msg("Asset configuration missing. Terminating analysis.")
@@ -575,10 +629,12 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
         out_reqs = [out if val else "" for out, val in out_config['Demand'].items()]
 
         if np.any(np.isin(['Sample', 'Statistics'], out_reqs)):
-            demand_sample = PAL.demand.save_sample()
+            demand_sample, demand_units = PAL.demand.save_sample(save_units=True)
 
             if 'Sample' in out_reqs:
-                demand_sample_s = convert_to_SimpleIndex(demand_sample, axis=1)
+                demand_sample_s = demand_sample.copy()
+                demand_sample_s = pd.concat([demand_sample_s,demand_units.to_frame().T])
+                demand_sample_s = convert_to_SimpleIndex(demand_sample_s, axis=1)
                 demand_sample_s.to_csv(output_path/"DEM_sample.zip",
                                        index_label=demand_sample_s.columns.name,
                                        compression=dict(
@@ -587,8 +643,9 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                 output_files.append('DEM_sample.zip')             
 
             if 'Statistics' in out_reqs:
-                demand_stats = convert_to_SimpleIndex(
-                    describe(demand_sample), axis=1)
+                demand_stats = describe(demand_sample)
+                demand_stats = pd.concat([demand_stats,demand_units.to_frame().T])
+                demand_stats = convert_to_SimpleIndex(demand_stats, axis=1)
                 demand_stats.to_csv(output_path/"DEM_stats.csv",
                                     index_label=demand_stats.columns.name)
                 output_files.append('DEM_stats.csv')
@@ -772,7 +829,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
         # prepare additional fragility data
 
         # get the database header from the default P58 db
-        P58_data = PAL.get_default_data('fragility_DB_FEMA_P58_2nd')
+        P58_data = PAL.get_default_data('damage_DB_FEMA_P58_2nd')
 
         adf = pd.DataFrame(columns=P58_data.columns)
 
@@ -1011,7 +1068,18 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     output_files.append('DMG_stats.csv')
 
                 if np.any(np.isin(['GroupedSample', 'GroupedStatistics'], out_reqs)):
-                    grp_damage = damage_sample.groupby(level=[0, 3], axis=1).sum()
+
+                    damage_groupby = damage_sample.groupby(level=[0,3], axis=1)
+
+                    grp_damage = damage_groupby.sum().mask(
+                        damage_groupby.count()==0, np.nan)  
+
+                    # if requested, condense DS output to a single column
+                    if out_config['Settings'].get('CondenseDS', False) == True:
+                        ds_list = grp_damage.columns.get_level_values(1).astype(int)
+                    
+                        grp_damage = grp_damage.mul(ds_list, axis=1).groupby(
+                            level=0, axis=1).sum().astype(int)
 
                     if 'GroupedSample' in out_reqs:
                         grp_damage_s = convert_to_SimpleIndex(grp_damage, axis=1)
@@ -1156,7 +1224,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                     adf.loc[rt, ('DS1', 'Theta_0')] = 0
 
                 # for Hazus EQ, use 1.0 as a loss_ratio
-                elif DL_method == 'Hazus Earthquake':
+                elif DL_method == 'Hazus Earthquake - Buildings':
                     adf.loc[rt, ('Quantity', 'Unit')] = '1 EA'
                     adf.loc[rt, ('DV', 'Unit')] = 'day'
 
@@ -1200,7 +1268,7 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
                             drivers.append(f'DMG-{dmg_cmp}')
                             loss_models.append(dmg_cmp)
 
-                elif DL_method == 'Hazus Earthquake' or DL_method == 'Hazus Earthquake Transportation':
+                elif DL_method in ['Hazus Earthquake', 'Hazus Earthquake Transportation']:
 
                     # with Hazus Earthquake we assume that consequence
                     # archetypes are only differentiated by occupancy type
@@ -1273,8 +1341,11 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
 
                     if np.any(np.isin(
                             ['GroupedSample', 'GroupedStatistics'], out_reqs)):
-                        grp_repair = repair_sample.groupby(
-                            level=[0, 1, 2], axis=1).sum()
+                        
+                        repair_groupby = repair_sample.groupby(
+                            level=[0,1,2], axis=1)
+                        grp_repair = repair_groupby.sum().mask(
+                            repair_groupby.count()==0, np.nan)
 
                         if 'GroupedSample' in out_reqs:
                             grp_repair_s = convert_to_SimpleIndex(grp_repair, axis=1)
@@ -1357,7 +1428,10 @@ def run_pelicun(config_path, demand_file, output_path, coupled_EDP,
             
             filename_json = filename[:-3]+'json'
             
-            df = convert_to_MultiIndex(pd.read_csv(output_path/filename, index_col=0),axis=1)
+            if out_config['Settings'].get('SimpleIndexInJSON', False) == True:
+                df = pd.read_csv(output_path/filename, index_col=0)
+            else:
+                df = convert_to_MultiIndex(pd.read_csv(output_path/filename, index_col=0),axis=1)
             
             out_dict = convert_df_to_dict(df)
             
