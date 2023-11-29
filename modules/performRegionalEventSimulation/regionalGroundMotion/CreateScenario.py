@@ -266,7 +266,7 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
                 eq_source = getERF(scenario_info)
-                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(out_dir,'RupFile.json'), \
+                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(out_dir,'RupFile.geojson'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
                                         )
@@ -307,7 +307,7 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
                 # del erf_data
         elif source_type == 'PointSource':
             # Export to a geojson format RupFile.json
-            outfile = os.path.join(out_dir,'RupFile.json')
+            outfile = os.path.join(out_dir,'RupFile.geojson')
             pointSource_data = {"type": "FeatureCollection"}
             feature_collection = []
             newRup = {

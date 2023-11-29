@@ -1263,7 +1263,7 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
     from openquake.commonlib import readinput
     import json
     in_dir = os.path.join(work_dir,'Input')
-    outfile = os.path.join(work_dir,'Output','RupFile.json')
+    outfile = os.path.join(work_dir,'Output','RupFile.geojson')
     erf_data = {"type": "FeatureCollection"}
     oq = readinput.get_oqparam(dict(
                     calculation_mode='classical',
