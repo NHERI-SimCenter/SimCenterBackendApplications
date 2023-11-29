@@ -42,6 +42,7 @@ import json, copy
 import numpy as np
 import pandas as pd
 import socket
+from tqdm import tqdm
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import get_site_vs30_from_opensha
     from FetchOpenSHA import get_site_z1pt0_from_opensha, get_site_z2pt5_from_opensha
@@ -257,7 +258,10 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
                                      'z2p5', 'Model', 'Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
                         user_param_list.pop(user_param_list.index(cur_param))
 
-    for stn_id, stn in selected_stn.iterrows():
+    for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
+        stn = selected_stn.iloc[ind,:]
+        stn_id = stn.index
+    # for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
         STN.append(Station(
             stn['Longitude'], stn['Latitude'],
