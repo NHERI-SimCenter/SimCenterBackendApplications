@@ -861,17 +861,17 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 			station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
 			lat = [stations[j]['lat'] for j in range(len(stations))]
 			lon = [stations[j]['lon'] for j in range(len(stations))]
-			vs30 = [stations[j]['vs30'] for j in range(len(stations))]
-			zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
+			# vs30 = [stations[j]['vs30'] for j in range(len(stations))]
+			# zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
 			df = pd.DataFrame({
 				'GP_file': station_name,
 				'Longitude': lon,
 				'Latitude': lat,
-				'Vs30': vs30,
-				'DepthToRock': zTR
+				# 'Vs30': vs30,
+				# 'DepthToRock': zTR
 			})
-			if cur_eq[2]:
-				df['SiteSourceDistance'] = cur_eq[2]
+			# if cur_eq[2]:
+			# 	df['SiteSourceDistance'] = cur_eq[2]
 			output_dir = os.path.join(os.path.dirname(Path(output_dir)),
 									os.path.basename(Path(output_dir)))
 			# seperate directory for IM
