@@ -309,8 +309,8 @@ def create_asset_files(output_file,
             input_data = json.load(f)
         input_config = input_data["Applications"]["Assets"]["TransportationNetwork"]\
             ["ApplicationData"]
-        if input_config.get("Roadway", None):
-            roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', None))
+        # if input_config.get("Roadway", None):
+        #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
         component_dict = split_and_select_components(input_config)
         component_dir = init_workdir(component_dict, outDir)
         assets_array = []
@@ -323,12 +323,12 @@ def create_asset_files(output_file,
                 AIMgenerator = lineAIMGenerator(output_file)
                 AIMgenerator.set_asset_gdf(component_data)
                 selected_Asset_idxs = AIMgenerator.selectAssets(None)
-                AIMgenerator.breakDownLongLines(roadSegLength)
-                # AIMgenerator.defineConnectivities(None, "hwy_edges",\
-                #                                   "hwy_nodes")
-                # Because the number of asset changes after break long lines.
-                # Run this to select all assets
-                selected_Asset_idxs = AIMgenerator.selectAssets(None)    
+                # AIMgenerator.breakDownLongLines(roadSegLength)
+                # # AIMgenerator.defineConnectivities(None, "hwy_edges",\
+                # #                                   "hwy_nodes")
+                # # Because the number of asset changes after break long lines.
+                # # Run this to select all assets
+                # selected_Asset_idxs = AIMgenerator.selectAssets(None)    
             # for each asset...
             count = 0
             for asset_idx in selected_Asset_idxs:
