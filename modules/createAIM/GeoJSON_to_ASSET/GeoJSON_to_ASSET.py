@@ -64,7 +64,7 @@ class generalAIMGenerator:
         AIM_i = {
             "RandomVariables": [],
             "GeneralInformation": dict(
-                AIM_id = asset_id,
+                AIM_id = str(asset_id),
                 location = {
                     'latitude': asset["geometry"].centroid.coords[0][1],
                     'longitude': asset["geometry"].centroid.coords[0][0]
