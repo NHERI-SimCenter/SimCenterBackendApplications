@@ -702,7 +702,7 @@ class Workflow(object):
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
         
         # Create the asset registry
-        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
+        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork', 'TransportationNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
 
         self.run_type = run_type
@@ -1175,6 +1175,13 @@ class Workflow(object):
 
             asset_command_list = asset_app.get_command_list(app_path = self.app_dir_local)
 
+            # The GEOJSON_TO_ASSET application is special because it can be used
+            # for multiple asset types. "asset_type" needs to be added so the app
+            # knows which asset_type it's processing.  
+            if asset_app.name == 'GEOJSON_TO_ASSET':
+                asset_command_list = asset_command_list + [u'--assetType',\
+                                asset_type, u'--inputJsonFile', self.input_file]
+
             asset_command_list.append(u'--getRV')
 
             # Create the asset command list
@@ -1554,6 +1561,7 @@ class Workflow(object):
                 shutil.copy(src,dst)
             
                 print("Copied AIM file to: ",dst)
+                # os.remove(src)
  
             except:
                 print("Error occurred while copying file: ",dst)
@@ -1580,9 +1588,10 @@ class Workflow(object):
             #dst = posixpath.join(os.getcwd(),AIM_file)
             if AIM_file_path != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
-
+        
         log_msg('Simulation directory successfully initialized.\n',prepend_timestamp=False)
         log_div()
+        return dst
 
     def cleanup_simdir(self, asst_id):
         """
@@ -1659,7 +1668,7 @@ class Workflow(object):
         log_div()
 
 
-    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None) :
+    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None, asset_type = None) :
         """
         Short description
 
@@ -1704,6 +1713,8 @@ class Workflow(object):
                     if type(workflow_app) is dict :
                     
                         for itemKey, item in workflow_app.items() :
+                            if asset_type is not None and asset_type != itemKey :
+                                continue
                         
                             item.defaults['filenameAIM'] = AIM_file_path
                             
@@ -2384,18 +2395,21 @@ class Workflow(object):
         
         os.chdir(run_path)
         
-        min_id = int(asst_data[0]['id'])
-        max_id = int(asst_data[0]['id'])
+        min_id = min([x['id'] for x in asst_data]) #min_id = int(asst_data[0]['id'])
+        max_id = max([x['id'] for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
-        if self.workflow_apps['DL']['Buildings'].name == 'Pelicun3':
-
-            # we assume all assets of the same type are in one folder
-            bldg_dir = Path(os.path.dirname(asst_data[0]['file'])).resolve()
-            main_dir = bldg_dir.parent
+        if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
 
             for a_i, asst in enumerate(asst_data):
+
+                bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
+                main_dir = bldg_dir
+                assetTypeHierarchy = [bldg_dir.name]
+                while main_dir.parent.name != 'Results':
+                    main_dir = bldg_dir.parent
+                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
 
                 asset_id = asst['id']
                 asset_dir = bldg_dir/asset_id
@@ -2426,11 +2440,26 @@ class Workflow(object):
 
                     # We assume all assets have the same output sample size
                     # Variable sample size doesn't seem to make sense
-                    realizations = {rlz_i:{} for rlz_i in range(sample_size)}
+                    realizations = {rlz_i:{asset_type:{}}\
+                                    for rlz_i in range(sample_size)}
 
                     # We also create a dict to collect deterministic info, i.e.,
                     # data that is identical for all realizations
-                    deterministic = {}
+                    deterministic = {asset_type: {}}
+
+                # Check if the asset type hierarchy exist in deterministic and 
+                # realizations. Create a hierarchy if it doesn't exist.
+                deter_pointer = deterministic
+                rlzn_pointer = {rlz_i:realizations[rlz_i]\
+                                    for rlz_i in range(sample_size)}
+                for assetTypeIter in assetTypeHierarchy:
+                    if assetTypeIter not in deter_pointer.keys():
+                        deter_pointer.update({assetTypeIter: {}})
+                    deter_pointer = deter_pointer[assetTypeIter]
+                    for rlz_i in range(sample_size):
+                        if assetTypeIter not in rlzn_pointer[rlz_i].keys():
+                            rlzn_pointer[rlz_i].update({assetTypeIter: {}})
+                        rlzn_pointer[rlz_i] = rlzn_pointer[rlz_i][assetTypeIter]
 
                 # Currently, all GI data is deterministic                
                 GI_data_i_det = AIM_data_i['GeneralInformation']
@@ -2439,10 +2468,11 @@ class Workflow(object):
                 GI_data_i_prob = {}
 
                 for rlz_i in range(sample_size):
-                    realizations[rlz_i].update(
+                    rlzn_pointer[rlz_i].update(
                         {asset_id:{'GeneralInformation':GI_data_i_prob}})
 
-                deterministic.update({asset_id:
+
+                deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
 
                 if 'EDP' in out_types:
@@ -2480,11 +2510,11 @@ class Workflow(object):
 
                         # save the EDP intensities in each realization
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Demand':edp_output[rlz_i]})
 
                         # save the EDP units
-                        deterministic[asset_id].update({
+                        deter_pointer[asset_id].update({
                             "Demand": {"Units": edp_units}
                             })
 
@@ -2505,6 +2535,9 @@ class Workflow(object):
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
 
+                        # JZ: Temporary for json dmg_grp.json format
+                        dmg_data_i = dmg_data_i.drop(index='Units')
+                        dmg_data_i = dmg_data_i.set_index(pd.Series(dmg_data_i.index).apply(lambda x:int(x)))
                         # convert to realization-by-realization format
                         dmg_output = {
                             rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
@@ -2516,7 +2549,7 @@ class Workflow(object):
                         # we assume that damage information is condensed
                         #TODO: implement condense_ds flag in DL_calc
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Damage':dmg_output[rlz_i]})
 
                 if 'DV' in out_types:
@@ -2535,7 +2568,9 @@ class Workflow(object):
 
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-
+                        # JZ: Temporary for json dmg_grp.json format
+                        dv_data_i = dv_data_i.drop(index='Units')
+                        dv_data_i = dv_data_i.set_index(pd.Series(dv_data_i.index).apply(lambda x:int(x)))
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns])
@@ -2556,16 +2591,16 @@ class Workflow(object):
 
                         # save loss data
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
 
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
-                with open(main_dir/f"buildings_{rlz_i}.json", 'w') as f:
+                with open(main_dir/f"{asset_type}_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
 
-            with open(main_dir/f"buildings_det.json", 'w') as f:
+            with open(main_dir/f"{asset_type}_det.json", 'w') as f:
                 json.dump(deterministic, f, indent=2)
 
         else:
@@ -2599,8 +2634,8 @@ class Workflow(object):
                                 aimDir = os.path.dirname(asst_file)
                             
                                 asst_id = asst['id']
-                                min_id = min(int(asst_id), min_id)
-                                max_id = max(int(asst_id), max_id)
+                                min_id = min((asst_id), min_id)
+                                max_id = max((asst_id), max_id)
 
                                 # save all EDP realizations
 
