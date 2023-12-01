@@ -1175,6 +1175,13 @@ class Workflow(object):
 
             asset_command_list = asset_app.get_command_list(app_path = self.app_dir_local)
 
+            # The GEOJSON_TO_ASSET application is special because it can be used
+            # for multiple asset types. "asset_type" needs to be added so the app
+            # knows which asset_type it's processing.  
+            if asset_app.name == 'GEOJSON_TO_ASSET':
+                asset_command_list = asset_command_list + [u'--assetType',\
+                                asset_type, u'--inputJsonFile', self.input_file]
+
             asset_command_list.append(u'--getRV')
 
             # Create the asset command list
@@ -1554,6 +1561,7 @@ class Workflow(object):
                 shutil.copy(src,dst)
             
                 print("Copied AIM file to: ",dst)
+                # os.remove(src)
  
             except:
                 print("Error occurred while copying file: ",dst)
@@ -1580,9 +1588,10 @@ class Workflow(object):
             #dst = posixpath.join(os.getcwd(),AIM_file)
             if AIM_file_path != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
-
+        
         log_msg('Simulation directory successfully initialized.\n',prepend_timestamp=False)
         log_div()
+        return dst
 
     def cleanup_simdir(self, asst_id):
         """
@@ -2391,13 +2400,14 @@ class Workflow(object):
 
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
-        if self.workflow_apps['DL']['Buildings'].name == 'Pelicun3':
-
-            # we assume all assets of the same type are in one folder
-            bldg_dir = Path(os.path.dirname(asst_data[0]['file'])).resolve()
-            main_dir = bldg_dir.parent
+        if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
 
             for a_i, asst in enumerate(asst_data):
+
+                bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
+                main_dir = bldg_dir
+                while main_dir.parent.name != 'Results':
+                    main_dir = bldg_dir.parent
 
                 asset_id = asst['id']
                 asset_dir = bldg_dir/asset_id
@@ -2507,6 +2517,9 @@ class Workflow(object):
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
 
+                        # JZ: Temporary for json dmg_grp.json format
+                        dmg_data_i = dmg_data_i.drop(index='Units')
+                        dmg_data_i = dmg_data_i.set_index(pd.Series(dmg_data_i.index).apply(lambda x:int(x)))
                         # convert to realization-by-realization format
                         dmg_output = {
                             rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
@@ -2537,7 +2550,9 @@ class Workflow(object):
 
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-
+                        # JZ: Temporary for json dmg_grp.json format
+                        dv_data_i = dv_data_i.drop(index='Units')
+                        dv_data_i = dv_data_i.set_index(pd.Series(dv_data_i.index).apply(lambda x:int(x)))
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns])
@@ -2564,10 +2579,10 @@ class Workflow(object):
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
-                with open(main_dir/f"buildings_{rlz_i}.json", 'w') as f:
+                with open(main_dir/f"{asset_type}_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
 
-            with open(main_dir/f"buildings_det.json", 'w') as f:
+            with open(main_dir/f"{asset_type}_det.json", 'w') as f:
                 json.dump(deterministic, f, indent=2)
 
         else:
