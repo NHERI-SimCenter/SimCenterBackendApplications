@@ -2406,8 +2406,10 @@ class Workflow(object):
 
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
                 main_dir = bldg_dir
+                assetTypeHierarchy = [bldg_dir.name]
                 while main_dir.parent.name != 'Results':
                     main_dir = bldg_dir.parent
+                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
 
                 asset_id = asst['id']
                 asset_dir = bldg_dir/asset_id
@@ -2438,11 +2440,26 @@ class Workflow(object):
 
                     # We assume all assets have the same output sample size
                     # Variable sample size doesn't seem to make sense
-                    realizations = {rlz_i:{} for rlz_i in range(sample_size)}
+                    realizations = {rlz_i:{asset_type:{}}\
+                                    for rlz_i in range(sample_size)}
 
                     # We also create a dict to collect deterministic info, i.e.,
                     # data that is identical for all realizations
-                    deterministic = {}
+                    deterministic = {asset_type: {}}
+
+                # Check if the asset type hierarchy exist in deterministic and 
+                # realizations. Create a hierarchy if it doesn't exist.
+                deter_pointer = deterministic
+                rlzn_pointer = {rlz_i:realizations[rlz_i]\
+                                    for rlz_i in range(sample_size)}
+                for assetTypeIter in assetTypeHierarchy:
+                    if assetTypeIter not in deter_pointer.keys():
+                        deter_pointer.update({assetTypeIter: {}})
+                    deter_pointer = deter_pointer[assetTypeIter]
+                    for rlz_i in range(sample_size):
+                        if assetTypeIter not in rlzn_pointer[rlz_i].keys():
+                            rlzn_pointer[rlz_i].update({assetTypeIter: {}})
+                        rlzn_pointer[rlz_i] = rlzn_pointer[rlz_i][assetTypeIter]
 
                 # Currently, all GI data is deterministic                
                 GI_data_i_det = AIM_data_i['GeneralInformation']
@@ -2451,10 +2468,11 @@ class Workflow(object):
                 GI_data_i_prob = {}
 
                 for rlz_i in range(sample_size):
-                    realizations[rlz_i].update(
+                    rlzn_pointer[rlz_i].update(
                         {asset_id:{'GeneralInformation':GI_data_i_prob}})
 
-                deterministic.update({asset_id:
+
+                deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
 
                 if 'EDP' in out_types:
@@ -2492,11 +2510,11 @@ class Workflow(object):
 
                         # save the EDP intensities in each realization
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Demand':edp_output[rlz_i]})
 
                         # save the EDP units
-                        deterministic[asset_id].update({
+                        deter_pointer[asset_id].update({
                             "Demand": {"Units": edp_units}
                             })
 
@@ -2531,7 +2549,7 @@ class Workflow(object):
                         # we assume that damage information is condensed
                         #TODO: implement condense_ds flag in DL_calc
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Damage':dmg_output[rlz_i]})
 
                 if 'DV' in out_types:
@@ -2573,7 +2591,7 @@ class Workflow(object):
 
                         # save loss data
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
 
             # save outputs to JSON files
