@@ -271,106 +271,68 @@ def create_asset_files(output_file,
                 numP = 1
                 procID = 0
     outDir = os.path.dirname(output_file)
-
-    if asset_type == 'Buildings':
-        with open(input_file, 'r') as f:
-            input_data = json.load(f)
-        input_config = input_data["Applications"]["Assets"]["Buildings"]\
-            ["ApplicationData"]
-        filterString = input_config["filter"]
-        asset_source_file = input_config["asset_source_file"]
-        AIMgenerator = generalAIMGenerator(output_file)
-        AIMgenerator.load_asset_gdf(asset_source_file)
-        selected_Asset_idxs = AIMgenerator.selectAssets(filterString)
-        assets_array = []
+                
+    with open(input_file, 'r') as f:
+        input_data = json.load(f)
+    input_config = input_data["Applications"]["Assets"][asset_type]\
+        ["ApplicationData"]
+    # if input_config.get("Roadway", None):
+    #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
+    component_dict = split_and_select_components(input_config)
+    component_dir = init_workdir(component_dict, outDir)
+    assets_array = []
+    for component_type, component_data in component_dict.items():
+        geom_type = type(component_data['geometry'].values[0])
+        if geom_type in [shapely.Point, shapely.Polygon]:
+        # if component_type in ["HwyBridge", "HwyTunnel"]:
+            AIMgenerator = generalAIMGenerator(output_file)
+            AIMgenerator.set_asset_gdf(component_data)
+            selected_Asset_idxs = AIMgenerator.selectAssets(None)
+        # elif component_type in ["Roadway"]:
+        elif geom_type in [shapely.LineString]:
+            AIMgenerator = lineAIMGenerator(output_file)
+            AIMgenerator.set_asset_gdf(component_data)
+            selected_Asset_idxs = AIMgenerator.selectAssets(None)
+            # AIMgenerator.breakDownLongLines(roadSegLength)
+            # # AIMgenerator.defineConnectivities(None, "hwy_edges",\
+            # #                                   "hwy_nodes")
+            # # Because the number of asset changes after break long lines.
+            # # Run this to select all assets
+            # selected_Asset_idxs = AIMgenerator.selectAssets(None)
+        else:
+            sys.exit((f"The geometry type {geom_type} defined for the") + \
+                     (f"components {component_type} is not supported in ")+\
+                     (f"the assets {asset_type}"))    
         # for each asset...
         count = 0
         for asset_idx in selected_Asset_idxs:
             if runParallel == False or (count % numP) == procID:
-
                 # initialize the AIM file
-                AIM_i = AIMgenerator.createAIM(asset_idx)
+                AIM_i = AIMgenerator.createAIM(asset_idx, component_type)
                 AIM_file_name = AIMgenerator.dumpAIM(AIM_i)
                 assets_array.append(dict(id=AIM_i['GeneralInformation']['AIM_id'], file=AIM_file_name))
             count = count + 1
-        if procID != 0:
-        # if not P0, write data to output file with procID in name and barrier
-            output_file_p = os.path.join(outDir,f'tmp_{procID}.json')
-            with open(output_file_p, 'w') as f:
-                json.dump(assets_array, f, indent=0)
-            comm.Barrier() 
-        else:
-            if runParallel == True:
-                # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
-                comm.Barrier()        
-                for i in range(1, numP):
-                    fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                    with open(fileToAppend, 'r') as data_file:
-                        json_data = data_file.read()
-                    assetsToAppend = json.loads(json_data)
-                    assets_array += assetsToAppend
-            with open(output_file, 'w') as f:
-                json.dump(assets_array, f, indent=2)
-                
-    elif asset_type == 'TransportationNetwork':
-        with open(input_file, 'r') as f:
-            input_data = json.load(f)
-        input_config = input_data["Applications"]["Assets"][asset_type]\
-            ["ApplicationData"]
-        # if input_config.get("Roadway", None):
-        #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
-        component_dict = split_and_select_components(input_config)
-        component_dir = init_workdir(component_dict, outDir)
-        assets_array = []
-        for component_type, component_data in component_dict.items():
-            geom_type = type(component_data['geometry'].values[0])
-            # if geom_type is in [shapely.Point]
-            if component_type in ["HwyBridge", "HwyTunnel"]:
-                AIMgenerator = generalAIMGenerator(output_file)
-                AIMgenerator.set_asset_gdf(component_data)
-                selected_Asset_idxs = AIMgenerator.selectAssets(None)
-            elif component_type in ["Roadway"]:
-                AIMgenerator = lineAIMGenerator(output_file)
-                AIMgenerator.set_asset_gdf(component_data)
-                selected_Asset_idxs = AIMgenerator.selectAssets(None)
-                # AIMgenerator.breakDownLongLines(roadSegLength)
-                # # AIMgenerator.defineConnectivities(None, "hwy_edges",\
-                # #                                   "hwy_nodes")
-                # # Because the number of asset changes after break long lines.
-                # # Run this to select all assets
-                # selected_Asset_idxs = AIMgenerator.selectAssets(None)    
-            # for each asset...
-            count = 0
-            for asset_idx in selected_Asset_idxs:
-                if runParallel == False or (count % numP) == procID:
-                    # initialize the AIM file
-                    AIM_i = AIMgenerator.createAIM(asset_idx, component_type)
-                    AIM_file_name = AIMgenerator.dumpAIM(AIM_i)
-                    assets_array.append(dict(id=AIM_i['GeneralInformation']['AIM_id'], file=AIM_file_name))
-                count = count + 1
-        if procID != 0:
-        # if not P0, write data to output file with procID in name and barrier
-            output_file_p = os.path.join(outDir,f'tmp_{procID}.json')
-            with open(output_file_p, 'w') as f:
-                json.dump(assets_array, f, indent=0)
-            comm.Barrier() 
-        else:
-            if runParallel == True:
-                # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
-                comm.Barrier()        
-                for i in range(1, numP):
-                    fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                    with open(fileToAppend, 'r') as data_file:
-                        json_data = data_file.read()
-                    assetsToAppend = json.loads(json_data)
-                    assets_array += assetsToAppend
-            with open(output_file, 'w') as f:
-                json.dump(assets_array, f, indent=2, cls=NpEncoder)
-    elif asset_type == 'WaterNetworks':
-        print("under development")
+    if procID != 0:
+    # if not P0, write data to output file with procID in name and barrier
+        output_file_p = os.path.join(outDir,f'tmp_{procID}.json')
+        with open(output_file_p, 'w') as f:
+            json.dump(assets_array, f, indent=0)
+        comm.Barrier() 
     else:
-        print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")
-        sys.exit(1)
+        if runParallel == True:
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
+            comm.Barrier()        
+            for i in range(1, numP):
+                fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
+                with open(fileToAppend, 'r') as data_file:
+                    json_data = data_file.read()
+                assetsToAppend = json.loads(json_data)
+                assets_array += assetsToAppend
+        with open(output_file, 'w') as f:
+            json.dump(assets_array, f, indent=2, cls=NpEncoder)
+    # else:
+    #     print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")
+    #     sys.exit(1)
 
 if __name__ == '__main__':
 
