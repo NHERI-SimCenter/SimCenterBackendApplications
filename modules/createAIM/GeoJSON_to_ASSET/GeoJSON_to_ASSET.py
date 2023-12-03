@@ -201,23 +201,31 @@ def split_and_select_components(input_config):
     featureList = source_data["features"]
     requested_dict = dict()
     for key, value in input_config.items():
-        if isinstance(value, dict) and value.get('filter', None):
-            filterString = value['filter']
+        if isinstance(value, dict):
+            filterString = value.get('filter', None)
+            if filterString is None:
+                continue
             assets_requested = []
-            for assets in filterString.split(','):
-                if "-" in assets:
-                    asset_low, asset_high = assets.split("-")
-                    assets_requested += list(range(int(asset_low), int(asset_high)+1))
-                else:
-                    assets_requested.append(int(assets))
-            assets_requested = np.array(assets_requested)
-            requested_dict.update({key:assets_requested})
-            component_dict.update({key:[]})
+            if filterString == '':
+                assets_requested = np.array(assets_requested)
+                requested_dict.update({key:assets_requested})
+                component_dict.update({key:[]})
+            else:
+                for assets in filterString.split(','):
+                    if "-" in assets:
+                        asset_low, asset_high = assets.split("-")
+                        assets_requested += list(range(int(asset_low), int(asset_high)+1))
+                    else:
+                        assets_requested.append(int(assets))
+                assets_requested = np.array(assets_requested)
+                requested_dict.update({key:assets_requested})
+                component_dict.update({key:[]})
     for feat in featureList:
         component_type = feat["properties"].get("type", None)
         if (component_type in component_dict.keys()):
             feat_id = int(feat["id"])
-            if feat_id in requested_dict[component_type]:
+            if (feat_id in requested_dict[component_type]) or \
+                (requested_dict[component_type].size == 0):
                 feat["properties"].update({"id":feat_id})
                 component_dict[component_type].append(feat)
     for component in component_dict.keys():
@@ -307,7 +315,7 @@ def create_asset_files(output_file,
     elif asset_type == 'TransportationNetwork':
         with open(input_file, 'r') as f:
             input_data = json.load(f)
-        input_config = input_data["Applications"]["Assets"]["TransportationNetwork"]\
+        input_config = input_data["Applications"]["Assets"][asset_type]\
             ["ApplicationData"]
         # if input_config.get("Roadway", None):
         #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
@@ -315,6 +323,8 @@ def create_asset_files(output_file,
         component_dir = init_workdir(component_dict, outDir)
         assets_array = []
         for component_type, component_data in component_dict.items():
+            geom_type = type(component_data['geometry'].values[0])
+            # if geom_type is in [shapely.Point]
             if component_type in ["HwyBridge", "HwyTunnel"]:
                 AIMgenerator = generalAIMGenerator(output_file)
                 AIMgenerator.set_asset_gdf(component_data)
