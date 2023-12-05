@@ -75,7 +75,7 @@ import pandas as pd
 import platform
 from pathlib import Path, PurePath
 
-import shapely
+import shapely.wkt, shapely.geometry
 
 #import posixpath
 #import ntpath
@@ -2397,8 +2397,8 @@ class Workflow(object):
         
         os.chdir(run_path)
         
-        min_id = min([x['id'] for x in asst_data]) #min_id = int(asst_data[0]['id'])
-        max_id = max([x['id'] for x in asst_data]) #max_id = int(asst_data[0]['id'])
+        min_id = min([int(x['id']) for x in asst_data]) #min_id = int(asst_data[0]['id'])
+        max_id = max([int(x['id']) for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
@@ -2827,6 +2827,7 @@ class Workflow(object):
                     try:
                         if "geometry" in asst_GI:
                             asst_geom = shapely.wkt.loads(asst_GI["geometry"])
+                            asst_geom = shapely.geometry.mapping(asst_geom)
                             asst_GI.pop("geometry")
                         elif "Footprint" in asst_GI:
                             asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
@@ -2836,6 +2837,7 @@ class Workflow(object):
                         asst_lon = asst_GI['location']['longitude']
                         asst_geom = { "type": "Point", "coordinates": [\
                             asst_lon, asst_lat]}
+                    asst_GI.pop("units")
                     DL_summary_file = asset_dir/"DL_summary_stats.json"
                     with open(DL_summary_file, 'r') as f:
                         DL_summary = json.load(f)
@@ -2847,16 +2849,23 @@ class Workflow(object):
                     with open(DMG_grp_file, 'r') as f:
                         DMG_grp = json.load(f)
                     DMG_results = {}
+                    all_DMG = []
                     for key, value in DMG_grp.items():
                         value.pop("Units")
                         valueList = [int(v) for k, v in value.items()]
+                        all_DMG.append(valueList)
                         DMG_results.update({key: max(set(valueList),\
                                                      key=valueList.count)})
+                    highest_DMG = np.amax(np.array(all_DMG), axis = 0)
+                    DMG_results.update({"highest_DMG":int(max(set(highest_DMG),\
+                                        key=list(highest_DMG).count))})
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
                     ft["properties"].update(DL_results)
                     ft["properties"].update(DMG_results)
                     geojson_result["features"].append(ft)
+                with open(run_path/"R2D_results.geojson", 'w') as f:
+                    json.dump(geojson_result, f, indent=2)
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i:{} for rlz_i in range(sample_size)}
