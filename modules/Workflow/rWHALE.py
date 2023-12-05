@@ -258,7 +258,9 @@ def main(run_type, input_file, app_registry,
                                      headers = headers)
 
         if doParallel == True:
-            comm.Barrier()                
+            comm.Barrier()
+    
+    WF.combine_assets_results(asset_files)                
 
     if force_cleanup:
         # clean up intermediate files from the working directory
