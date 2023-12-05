@@ -74,14 +74,15 @@ class generalAIMGenerator:
         # save every label as-is
         AIM_i["GeneralInformation"].update(asset)
         AIM_i["GeneralInformation"]['geometry'] = AIM_i["GeneralInformation"]['geometry'].wkt
-        if component_type is not None:
-            AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
+        # if component_type is not None:
+        #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
         return AIM_i
     def dumpAIM(self, AIM_i):
-        assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)
+        # assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)
+        componentType = AIM_i['GeneralInformation'].get("type", None)
         outDir = os.path.dirname(self.output_file)
-        if assetSubtype:
-            outDir = os.path.join(outDir, assetSubtype)
+        if componentType:
+            outDir = os.path.join(outDir, componentType)
         asset_id = AIM_i["GeneralInformation"]["AIM_id"]
         AIM_file_name = "{}-AIM.json".format(asset_id)
         AIM_file_name = os.path.join(outDir,AIM_file_name)

@@ -75,6 +75,8 @@ import pandas as pd
 import platform
 from pathlib import Path, PurePath
 
+import shapely.wkt, shapely.geometry
+
 #import posixpath
 #import ntpath
 
@@ -2395,8 +2397,8 @@ class Workflow(object):
         
         os.chdir(run_path)
         
-        min_id = min([x['id'] for x in asst_data]) #min_id = int(asst_data[0]['id'])
-        max_id = max([x['id'] for x in asst_data]) #max_id = int(asst_data[0]['id'])
+        min_id = min([int(x['id']) for x in asst_data]) #min_id = int(asst_data[0]['id'])
+        max_id = max([int(x['id']) for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
@@ -2593,7 +2595,13 @@ class Workflow(object):
                         for rlz_i in range(sample_size):
                             rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
-
+            # This is also ugly but necessary for backward compatibility so that 
+            # file structure created from apps other than GeoJSON_TO_ASSET can be
+            # dealt with
+            if len(assetTypeHierarchy) == 1:
+                deterministic = {assetTypeHierarchy[0]: deterministic}
+                for rlz_i, rlz_data in realizations.items():
+                    rlz_data = {assetTypeHierarchy[0]:rlz_data}
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
@@ -2762,4 +2770,127 @@ class Workflow(object):
 
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
+
+    def combine_assets_results(self, asset_files):
+        run_path = self.run_dir
+        isPelicun3 = True
+        for asset_type in asset_files.keys():
+            if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
+                isPelicun3 = False
+        if isPelicun3:
+            # get metadata
+            with open(self.input_file, 'r') as f:
+                input_data = json.load(f)
+            metadata = {"Name": input_data["Name"],
+                        "Units": input_data["units"],
+                        "Author": input_data["Author"],
+                        "WorkflowType": input_data["WorkflowType"],
+                        "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+            ## create the geojson for R2D visualization
+            geojson_result = {
+                "type": "FeatureCollection",
+                "crs": {
+                    "type": "name",
+                    "properties": {
+                    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+                    }
+                },
+                "metadata":metadata,
+                "features":[]
+            }
+            for asset_type, assetIt in asset_files.items():
+                with open(assetIt, 'r') as f:
+                    asst_data = json.load(f)
+                for asst in asst_data:
+                    bldg_dir = Path(os.path.dirname(asst['file'])).resolve()
+                    asset_id = asst['id']
+                    main_dir = bldg_dir
+                    assetTypeHierarchy = [bldg_dir.name]
+                    while main_dir.parent.name != 'Results':
+                        main_dir = bldg_dir.parent
+                        assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
+                    asset_dir = bldg_dir/asset_id
+                    AIM_file = None
+                    if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
+                        AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
+                    elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
+                        AIM_file = asset_dir / f"{asset_id}-AIM.json"
+                    else:
+                        # skip this asset if there is no AIM file available
+                        show_warning(
+                            "Couldn't find AIM file for building {asset_id}")
+                    with open(AIM_file, 'r') as f:
+                        asst_aim = json.load(f)
+                    sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
+                    ft = {"type":"Feature"}
+                    asst_GI = asst_aim['GeneralInformation'].copy()
+                    try:
+                        if "geometry" in asst_GI:
+                            asst_geom = shapely.wkt.loads(asst_GI["geometry"])
+                            asst_geom = shapely.geometry.mapping(asst_geom)
+                            asst_GI.pop("geometry")
+                        elif "Footprint" in asst_GI:
+                            asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
+                            asst_GI.pop("Footprint")
+                    except:
+                        asst_lat = asst_GI['location']['latitude']
+                        asst_lon = asst_GI['location']['longitude']
+                        asst_geom = { "type": "Point", "coordinates": [\
+                            asst_lon, asst_lat]}
+                    asst_GI.pop("units")
+                    DL_summary_file = asset_dir/"DL_summary_stats.json"
+                    with open(DL_summary_file, 'r') as f:
+                        DL_summary = json.load(f)
+                    DL_results = {}
+                    for key, value in DL_summary.items():
+                        DL_results.update({f"mean {key}":value["mean"]})
+                        DL_results.update({f"std of {key}":value["std"]})
+                    DMG_grp_file = asset_dir/"DMG_grp.json"
+                    with open(DMG_grp_file, 'r') as f:
+                        DMG_grp = json.load(f)
+                    DMG_results = {}
+                    all_DMG = []
+                    for key, value in DMG_grp.items():
+                        value.pop("Units")
+                        valueList = [int(v) for k, v in value.items()]
+                        all_DMG.append(valueList)
+                        DMG_results.update({key: max(set(valueList),\
+                                                     key=valueList.count)})
+                    highest_DMG = np.amax(np.array(all_DMG), axis = 0)
+                    DMG_results.update({"highest_DMG":int(max(set(highest_DMG),\
+                                        key=list(highest_DMG).count))})
+                    ft.update({"geometry":asst_geom})
+                    ft.update({"properties":asst_GI})
+                    ft["properties"].update(DL_results)
+                    ft["properties"].update(DMG_results)
+                    geojson_result["features"].append(ft)
+                with open(run_path/"R2D_results.geojson", 'w') as f:
+                    json.dump(geojson_result, f, indent=2)
+            ## Create the Results_det.json and Results_rlz_i.json for recoverary
+            deterministic = {}
+            realizations = {rlz_i:{} for rlz_i in range(sample_size)}
+            for asset_type in asset_files.keys():
+                asset_dir = self.run_dir/asset_type
+                determine_file = asset_dir/f"{asset_type}_det.json"
+                with open(determine_file, 'r') as f:
+                    determ_i = json.load(f)
+                deterministic.update(determ_i)
+                for rlz_i in range(sample_size):
+                    rlz_i_file = asset_dir/f"{asset_type}_{rlz_i}.json"
+                    with open(rlz_i_file, 'r') as f:
+                        rlz_i_i = json.load(f)
+                    realizations[rlz_i].update(rlz_i_i)
+            
+            determine_file = self.run_dir/"Results_det.json"
+            with open (determine_file, 'w') as f:
+                json.dump(deterministic, f, indent=2)
+            for rlz_i, rlz_data in realizations.items():
+                with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
+                    json.dump(rlz_data, f, indent=2)
+        else:
+            print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
+
+
+
+
 
