@@ -4,5 +4,6 @@ add_subdirectory(openSees_R)
 add_subdirectory(openSeesPy)
 add_subdirectory(IMasEDP)
 add_subdirectory(customPy)
+add_subdirectory(surrogateRegionalPy)
 add_subdirectory(surrogateSimulation)
 
