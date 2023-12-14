@@ -35,7 +35,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
     #
 
     msg0 = os.path.basename(os.getcwd()) + " : "
-    file_object = open('../surrogateLog.log', 'a')
+    file_object = open('surrogateLog.log', 'a')
 
     folderName = os.path.basename(os.getcwd())
     sampNum = folderName.split(".")[-1]
@@ -65,40 +65,41 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
             error_exit(msg)
 
     isEEUQ = sur["isEEUQ"]
+
     if isEEUQ:
         dakota_path = 'sc_scInput.json'
     else:
         dakota_path = input_json
-        #dakota_path = 'scInput.json'
 
-    # if not (os.path.exists(dakota_path) or  os.path.exists(os.path.join(os.getcwd(),dakota_path))) :
-    #     msg = "Input file does not exist: "+ dakota_path
-    #     error_exit(msg)
-
-
-    print(dakota_path)
-    with open(dakota_path) as f: # current input file
-        try:
+    try:
+        with open(dakota_path) as f: # current input file
             inp_tmp = json.load(f)
+    except:
+        try:
+            with open('sc_inputRWHALE.json') as f: # current input file
+                inp_tmp = json.load(f)     
+        except:
+            pass      
 
-        except ValueError:
-            msg = 'invalid json format - dakota.json'
-            error_exit(msg)
 
+    try:
+        if isEEUQ:
+            inp_fem = inp_tmp["Applications"]["Modeling"]
+        else:
+            inp_fem = inp_tmp["FEM"]
+    except:
+        inp_fem={}
+        print('invalid json format - dakota.json')
 
-
-    if isEEUQ:
-        inp_fem = inp_tmp["Applications"]["Modeling"]
-    else:
-        # quoFEM
-        inp_fem = inp_tmp["FEM"]
-
-    norm_var_thr = inp_fem["varThres"]
-    when_inaccurate = inp_fem["femOption"]
-    do_mf = inp_tmp
-    np.random.seed(int(inp_fem["gpSeed"])+int(sampNum))
-
-    # sampNum=0
+    norm_var_thr = inp_fem.get("varThres",0.02)
+    when_inaccurate = inp_fem.get("femOption","continue")
+    do_mf = False
+    myseed = inp_fem.get("gpSeed",None)
+    prediction_option = inp_fem.get("predictionOption", "random")
+    if myseed==None:
+        folderName = os.path.basename(os.path.dirname(os.getcwd()))
+        myseed = int(folderName)*int(1.e7)
+    np.random.seed(int(myseed)+int(sampNum))
 
     # if no g and rv,
 
@@ -263,17 +264,27 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
     t_total = time.process_time()
     first_rv_found = False
     first_dummy_found = False
+
+    #
+    # Check how many RVs overlap
+    #
+
     with open(params_dir, "r") as x_file:
         data = x_file.readlines()
         nrv = int(data[0])
 
-        # rv_name = list()
         for i in range(nrv):
             name_values = data[i + 1].split()
             name = name_values[0]
-            if name == 'MultipleEvent' and isEEUQ:
+
+            #= pass if is string. GP cannot handle that
+            if ((name == 'MultipleEvent') or (name == 'eventID')) and isEEUQ:
+                continue
+            if not name_values[1].replace('.','',1).isdigit():  
+                # surrogate model does not accept descrete
                 continue
 
+            #= atleast_2d because there may be multiple samples
             samples = np.atleast_2d([float(vals) for vals in name_values[1:]]).T
             ns = len(samples)
             if not name in rv_name_sur:
@@ -306,8 +317,6 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                 msg = 'Error importing input data: sample size in params.in is not consistent.'
                 error_exit(msg)
 
-
-
         g_idx = []
         for edp in (inp_tmp["EDP"]):
             edp_names = []
@@ -335,6 +344,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
         computeIM = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                  'createEVENT', 'groundMotionIM', 'IntensityMeasureComputer.py')
 
+        
         pythonEXE = sys.executable
         # compute IMs
 
@@ -379,9 +389,14 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                     error_exit(msg)
     # todo: fix for different nys m
 
+        print(id_vec)
+        print(id_vec2)
+        print(nrv_sur)
         if len(id_vec+id_vec2) != nrv_sur:
             missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec + id_vec2)
             s = [str(rv_name_sur[id]) for id in missing_ids]
+            print(missing_ids)
+            print(s)
             if first_eeuq_found and all([missingEDP.endswith("-2") for missingEDP in s]):
                 msg = "ground motion dimension does not match with that of the training"
                 # for i in range(len(s)):
@@ -414,8 +429,8 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
         msg += " at RV tab"
         error_exit(msg)
 
-    if os.path.getsize('../surrogateLog.log') == 0:
-        file_object.write("numRV "+ str(nrv+len(rv_name_dummy)) +"\n")
+    #if os.path.getsize('../surrogateLog.log') == 0:
+    #    file_object.write("numRV "+ str(nrv+len(rv_name_dummy)) +"\n")
 
     rv_val = np.zeros((nsamp,nrv))
     for i in range(nrv):
@@ -756,18 +771,18 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                 msg2 = msg0+msg1[ns]+'- CONTINUE [Warning: results may not be accurate]\n'
                 error_warning(msg2)
 
-                if inp_fem["predictionOption"].lower().startswith("median"):
+                if prediction_option.lower().startswith("median"):
                     y_pred_subset[ns,:]  = y_pred_median[ns,g_idx]
-                elif inp_fem["predictionOption"].lower().startswith("rand"):
+                elif prediction_option.lower().startswith("rand"):
                     y_pred_subset[ns,:]  = y_samp[ns,g_idx]
 
         else:
             msg3 = msg0+'Prediction error level of output {} is {:.2f}%\n'.format(idx[ns], np.max(error_ratio2[ns])*100)
             error_warning(msg3)
 
-            if inp_fem["predictionOption"].lower().startswith("median"):
+            if prediction_option.lower().startswith("median"):
                 y_pred_subset[ns,:]  = y_pred_median[ns,g_idx]
-            elif inp_fem["predictionOption"].lower().startswith("rand"):
+            elif prediction_option.lower().startswith("rand"):
                 y_pred_subset[ns,:]  = y_samp[ns,g_idx]
 
     np.savetxt(result_file, y_pred_subset, fmt='%.5e')
