@@ -2774,10 +2774,12 @@ class Workflow(object):
     def combine_assets_results(self, asset_files):
         run_path = self.run_dir
         isPelicun3 = True
-        for asset_type in asset_files.keys():
+        asset_types = list(asset_files.keys())
+        for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
-                isPelicun3 = False
-        if isPelicun3:
+                # isPelicun3 = False
+                asset_files.pop(asset_type)
+        if asset_files: # If any asset_type uses Pelicun3 as DL app
             # get metadata
             with open(self.input_file, 'r') as f:
                 input_data = json.load(f)
@@ -2824,6 +2826,7 @@ class Workflow(object):
                     sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
                     ft = {"type":"Feature"}
                     asst_GI = asst_aim['GeneralInformation'].copy()
+                    asst_GI.update({"assetType":asset_type})
                     try:
                         if "geometry" in asst_GI:
                             asst_geom = shapely.wkt.loads(asst_GI["geometry"])
