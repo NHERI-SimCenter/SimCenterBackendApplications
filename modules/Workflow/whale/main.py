@@ -2613,7 +2613,7 @@ class Workflow(object):
 
         else:
             # This is legacy for Pelicun 2 runs
-
+            out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
             if headers is None :
                 headers = dict(
@@ -2642,8 +2642,8 @@ class Workflow(object):
                                 aimDir = os.path.dirname(asst_file)
                             
                                 asst_id = asst['id']
-                                min_id = min((asst_id), min_id)
-                                max_id = max((asst_id), max_id)
+                                min_id = min(int(asst_id), min_id)
+                                max_id = max(int(asst_id), max_id)
 
                                 # save all EDP realizations
 
@@ -2891,7 +2891,8 @@ class Workflow(object):
                 with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
         else:
-            print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
+            pass
+            # print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
 
 
 
