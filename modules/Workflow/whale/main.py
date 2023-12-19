@@ -2845,9 +2845,25 @@ class Workflow(object):
                     with open(DL_summary_file, 'r') as f:
                         DL_summary = json.load(f)
                     DL_results = {}
+                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                          'repair_time-parallel':'RepairTimeParallel',
+                                          'repair_time-sequential':'RepairTimeSequential',
+                                          'collapse':'Collapse',
+                                          'irreparable':'Irreparable'}
                     for key, value in DL_summary.items():
-                        DL_results.update({f"mean {key}":value["mean"]})
-                        DL_results.update({f"std of {key}":value["std"]})
+                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
+                                           :value["mean"]})
+                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
+                                           :value["std"]})
+                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
+                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
+                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
+                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
+                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
+                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
+                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
+                            DL_results.pop('R2Dres_std_RepairTimeParallel')
+                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
                     DMG_grp_file = asset_dir/"DMG_grp.json"
                     with open(DMG_grp_file, 'r') as f:
                         DMG_grp = json.load(f)
@@ -2857,10 +2873,12 @@ class Workflow(object):
                         value.pop("Units")
                         valueList = [int(v) for k, v in value.items()]
                         all_DMG.append(valueList)
-                        DMG_results.update({key: max(set(valueList),\
-                                                     key=valueList.count)})
+                        DMG_results.update({f'R2Dres_MostLikelyDamageState_{key}'\
+                                            : max(set(valueList),\
+                                            key=valueList.count)})
                     highest_DMG = np.amax(np.array(all_DMG), axis = 0)
-                    DMG_results.update({"highest_DMG":int(max(set(highest_DMG),\
+                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
+                                        :int(max(set(highest_DMG),\
                                         key=list(highest_DMG).count))})
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
