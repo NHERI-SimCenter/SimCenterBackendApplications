@@ -2613,7 +2613,7 @@ class Workflow(object):
 
         else:
             # This is legacy for Pelicun 2 runs
-
+            out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
             if headers is None :
                 headers = dict(
@@ -2642,8 +2642,8 @@ class Workflow(object):
                                 aimDir = os.path.dirname(asst_file)
                             
                                 asst_id = asst['id']
-                                min_id = min((asst_id), min_id)
-                                max_id = max((asst_id), max_id)
+                                min_id = min(int(asst_id), min_id)
+                                max_id = max(int(asst_id), max_id)
 
                                 # save all EDP realizations
 
@@ -2774,10 +2774,12 @@ class Workflow(object):
     def combine_assets_results(self, asset_files):
         run_path = self.run_dir
         isPelicun3 = True
-        for asset_type in asset_files.keys():
+        asset_types = list(asset_files.keys())
+        for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
-                isPelicun3 = False
-        if isPelicun3:
+                # isPelicun3 = False
+                asset_files.pop(asset_type)
+        if asset_files: # If any asset_type uses Pelicun3 as DL app
             # get metadata
             with open(self.input_file, 'r') as f:
                 input_data = json.load(f)
@@ -2824,6 +2826,7 @@ class Workflow(object):
                     sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
                     ft = {"type":"Feature"}
                     asst_GI = asst_aim['GeneralInformation'].copy()
+                    asst_GI.update({"assetType":asset_type})
                     try:
                         if "geometry" in asst_GI:
                             asst_geom = shapely.wkt.loads(asst_GI["geometry"])
@@ -2842,9 +2845,25 @@ class Workflow(object):
                     with open(DL_summary_file, 'r') as f:
                         DL_summary = json.load(f)
                     DL_results = {}
+                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                          'repair_time-parallel':'RepairTimeParallel',
+                                          'repair_time-sequential':'RepairTimeSequential',
+                                          'collapse':'Collapse',
+                                          'irreparable':'Irreparable'}
                     for key, value in DL_summary.items():
-                        DL_results.update({f"mean {key}":value["mean"]})
-                        DL_results.update({f"std of {key}":value["std"]})
+                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
+                                           :value["mean"]})
+                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
+                                           :value["std"]})
+                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
+                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
+                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
+                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
+                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
+                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
+                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
+                            DL_results.pop('R2Dres_std_RepairTimeParallel')
+                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
                     DMG_grp_file = asset_dir/"DMG_grp.json"
                     with open(DMG_grp_file, 'r') as f:
                         DMG_grp = json.load(f)
@@ -2854,10 +2873,12 @@ class Workflow(object):
                         value.pop("Units")
                         valueList = [int(v) for k, v in value.items()]
                         all_DMG.append(valueList)
-                        DMG_results.update({key: max(set(valueList),\
-                                                     key=valueList.count)})
+                        DMG_results.update({f'R2Dres_MostLikelyDamageState_{key}'\
+                                            : max(set(valueList),\
+                                            key=valueList.count)})
                     highest_DMG = np.amax(np.array(all_DMG), axis = 0)
-                    DMG_results.update({"highest_DMG":int(max(set(highest_DMG),\
+                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
+                                        :int(max(set(highest_DMG),\
                                         key=list(highest_DMG).count))})
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
@@ -2888,7 +2909,8 @@ class Workflow(object):
                 with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
         else:
-            print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
+            pass
+            # print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
 
 
 
