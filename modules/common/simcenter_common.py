@@ -85,7 +85,7 @@ unit_types = {
     'length'       : ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
     'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
     'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
-    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps'],
+    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps', 'kph', 'fps', 'kts'],
     'acceleration' : ['mps2', 'cmps2', 'inchps2', 'ftps2', 'g'],
     'mass'         : ['kg', 'ton', 'lb'],
     'force'        : ['N', 'kN', 'lbf', 'kip', 'kips'],
@@ -141,6 +141,9 @@ mph = mile / h
 
 inchps = inch / sec
 ftps = ft / sec
+kph = km / h
+fps = ft / sec
+kts = 1.15078 * mph
 
 # acceleration
 mps2 = m / sec2

@@ -83,8 +83,12 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
     lon_E = grid_df['Longitude']
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
+
+    if filter_label == "":
+        grid_extra_keys = list(grid_df.drop(['GP_file','Longitude','Latitude'], axis = 1).columns)
+    
     # prepare the tree for the nearest neighbor search
-    if filter_label != "":
+    if filter_label != "" or len(grid_extra_keys)>0:
         neighbors_to_get = min(neighbors*10, len(lon_E))
     else:
         neighbors_to_get = neighbors
@@ -126,6 +130,7 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
         rng = np.random.default_rng()
 
     count = 0
+    
     # iterate through the buildings and store the selected events in the AIM
     for asset_i, (AIM_id, dist_list, ind_list) in enumerate(zip(AIM_df.index,
                                                           distances,
@@ -156,6 +161,34 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             # distance, just take the first neighbors grid points of each
             dist_list = dist_list[:neighbors]
             ind_list = ind_list[:neighbors]
+        
+        if len(grid_extra_keys)>0:
+            filter_labels = []
+            for key in asset_data['GeneralInformation'].keys():
+                if key in grid_extra_keys:
+                    filter_labels.append(key)
+
+            filter_list = [True for i in dist_list]
+            for filter_label in filter_labels:
+                asset_label = asset_data['GeneralInformation'][filter_label]
+                grid_label = grid_df[filter_label][ind_list]
+                filter_list_i = (grid_label==asset_label).values
+                filter_list = filter_list and filter_list_i
+            
+            # only keep the distances and indices corresponding to neighbors
+            # with the same soil type
+            dist_list  = dist_list[filter_list]
+            ind_list   = ind_list[filter_list]
+
+            # return dist_list & ind_list with a length equals neighbors
+            # assuming that at least neighbors grid points exist with
+            # the same filter_label as the building
+
+            # because dist_list, ind_list sorted initially in order of increasing
+            # distance, just take the first neighbors grid points of each
+            dist_list = dist_list[:neighbors]
+            ind_list = ind_list[:neighbors]
+
 
         # calculate the weights for each neighbor based on their distance
         dist_list = 1./(dist_list**2.0)
