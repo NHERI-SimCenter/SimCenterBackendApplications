@@ -197,7 +197,7 @@ def main(run_type, input_file, app_registry,
         # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network
         run_asset_type = asset_type
 
-        if asset_type == 'Buildings' :
+        if asset_type == 'Buildings' or asset_type == "TransportationNetwork":
             pass
         elif asset_type == 'WaterNetworkNodes' :
             continue # Run the nodes with the pipelines, i.e., the water distribution network
@@ -240,7 +240,7 @@ def main(run_type, input_file, app_registry,
             comm.Barrier()
                 
         # aggregate results
-        if asset_type == 'Buildings' :
+        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
 
             WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
             
@@ -258,7 +258,9 @@ def main(run_type, input_file, app_registry,
                                      headers = headers)
 
         if doParallel == True:
-            comm.Barrier()                
+            comm.Barrier()
+    
+    WF.combine_assets_results(asset_files)                
 
     if force_cleanup:
         # clean up intermediate files from the working directory
