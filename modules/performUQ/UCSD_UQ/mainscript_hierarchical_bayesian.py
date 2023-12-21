@@ -430,10 +430,10 @@ def metropolis_within_gibbs_sampler(
     num_datasets = len(list_of_datasets)
     random_state = uq_inputs["Random State"]
     tuning_interval = 200
-    if uq_inputs["Tuning Interval"]:
+    if "Tuning Interval" in uq_inputs:
         tuning_interval = uq_inputs["Tuning Interval"]
     tuning_period = 1000
-    if uq_inputs["Tuning Period"]:
+    if "Tuning Period" in uq_inputs:
         tuning_period = uq_inputs["Tuning Period"]
     num_samples = uq_inputs["Sample Size"] + tuning_period
     parent_distribution_prng = (
