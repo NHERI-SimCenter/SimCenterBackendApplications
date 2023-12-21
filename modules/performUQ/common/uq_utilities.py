@@ -13,6 +13,8 @@ from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
 
+import scipy.stats
+
 
 def _copytree(src, dst, symlinks=False, ignore=None):
     if not os.path.exists(dst):
@@ -30,8 +32,9 @@ def _copytree(src, dst, symlinks=False, ignore=None):
                 ):
                     shutil.copy2(s, d)
             except Exception as ex:
-                msg = f"Could not copy {s}. \
-                    The following error occurred: \n{ex}"
+                msg = (
+                    f"Could not copy {s}. The following error occurred: \n{ex}"
+                )
                 return msg
     return "0"
 
@@ -90,15 +93,21 @@ class SimCenterWorkflowDriver:
     def _check_size_of_sample(self, sample_values: NDArray) -> None:
         num_samples = len(sample_values)
         if num_samples > 1:
-            msg = f"Do one simulation at a time. There were {num_samples} \
-                samples provided in the sample value {sample_values}."
+            msg = (
+                f"Do one simulation at a time. There were {num_samples}       "
+                "          samples provided in the sample value"
+                f" {sample_values}."
+            )
             raise ModelEvaluationError(msg)
 
         for i in range(num_samples):
             num_values_in_each_sample = len(sample_values[i])
             if num_values_in_each_sample != self.num_rv:
-                msg = f"Expected {self.num_rv} values in each sample, found \
-                    {num_values_in_each_sample} in {sample_values}."
+                msg = (
+                    f"Expected {self.num_rv} values in each sample, found     "
+                    f"                {num_values_in_each_sample} in"
+                    f" {sample_values}."
+                )
                 raise ModelEvaluationError(msg)
 
     def _create_workdir(self, simulation_number: int) -> str:
@@ -118,8 +127,10 @@ class SimCenterWorkflowDriver:
                     try:
                         shutil.rmtree(os.path.join(root, dir))
                     except:
-                        msg = f"Could not remove directory {dir} \
-                            from {workdir}."
+                        msg = (
+                            f"Could not remove directory {dir}                "
+                            f"             from {workdir}."
+                        )
                         raise ModelEvaluationError(msg)
 
         for src_dir in self.list_of_dir_names_to_copy_files_from:
@@ -141,13 +152,15 @@ class SimCenterWorkflowDriver:
                 f.write("\n".join(list_of_strings_to_write))
         except Exception as ex:
             raise ModelEvaluationError(
-                f"Failed to create params.in file in \
-                        {workdir}. The following error occurred: \n{ex}"
+                "Failed to create params.in file in                        "
+                f" {workdir}. The following error occurred: \n{ex}"
             )
 
     def _execute_driver_file(self, workdir: str) -> None:
-        command = f"{os.path.join(workdir, self.driver_filename)} \
-                     1> model_eval.log 2>&1"
+        command = (
+            f"{os.path.join(workdir, self.driver_filename)}                   "
+            "   1> model_eval.log 2>&1"
+        )
         os.chdir(workdir)
         completed_process = subprocess.run(command, shell=True)
         try:
@@ -155,8 +168,8 @@ class SimCenterWorkflowDriver:
         except subprocess.CalledProcessError as ex:
             returnStringList = ["Failed to run the model."]
             returnStringList.append(
-                f"The command to run the model was \
-                                    {ex.cmd}"
+                "The command to run the model was                            "
+                f"         {ex.cmd}"
             )
             returnStringList.append(f"The return code was {ex.returncode}")
             returnStringList.append(f"The following error occurred: \n{ex}")
@@ -176,9 +189,11 @@ class SimCenterWorkflowDriver:
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] != self.length_of_results:
-            msg = f"Error running FEM: 'results.out' contains \
-                {outputs.shape[0]} values, expected to get \
-                {self.length_of_results} values\n"
+            msg = (
+                "Error running FEM: 'results.out' contains                "
+                f" {outputs.shape[0]} values, expected to get                "
+                f" {self.length_of_results} values\n"
+            )
             msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
             raise ModelEvaluationError(msg)
 
@@ -225,8 +240,8 @@ class ParallelRunnerMultiprocessing:
             num_processors = 1
         if num_processors < 1:
             raise ValueError(
-                f"Number of processes must be at least 1. \
-                             Got {num_processors}"
+                "Number of processes must be at least 1.                     "
+                f"         Got {num_processors}"
             )
         return num_processors
 
@@ -245,19 +260,6 @@ class ParallelRunnerMultiprocessing:
         return self.pool.starmap(
             func=func, iterable=iterable, chunksize=chunksize
         )
-
-
-# def get_parallel_runner_instance(run_type: str):
-#     if run_type == "runningRemote":
-#         return ParallelRunnerMPI4PY(run_type)
-#     else:
-#         return ParallelRunnerMultiprocessing(run_type)
-
-
-# def get_parallel_runner_function(parallel_runner:
-#                                  Union[ParallelRunnerMultiprocessing,
-#                                        ParallelRunnerMPI4PY]):
-#     return parallel_runner.run
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:
@@ -319,9 +321,7 @@ class ERANatafJointDistribution:
     ) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:
         return self.ERANataf_object.U2X(U=u, Jacobian=jacobian)
 
-    def x_to_u(
-        self, x: NDArray, jacobian: bool = False
-    ) -> Union[
+    def x_to_u(self, x: NDArray, jacobian: bool = False) -> Union[
         tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],
         NDArray[np.floating[Any]],
     ]:
@@ -348,3 +348,128 @@ class ERANatafJointDistribution:
         for i, rng in enumerate(list_of_rngs):
             u[:, i] = rng.normal(size=n)
         return self.u_to_x(u)
+
+
+def get_list_of_pseudo_random_number_generators(entropy, num_spawn):
+    seed_sequence = np.random.SeedSequence(entropy=entropy).spawn(num_spawn)
+    prngs = [
+        np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence
+    ]
+    return prngs
+
+
+def get_parallel_runner_instance(run_type: str):
+    if run_type == "runningRemote":
+        from parallel_runner_mpi4py import ParallelRunnerMPI4PY
+
+        return ParallelRunnerMPI4PY(run_type)
+    else:
+        return ParallelRunnerMultiprocessing(run_type)
+
+
+def make_list_of_rv_names(all_rv_data):
+    list_of_rv_names = []
+    for rv_data in all_rv_data:
+        list_of_rv_names.append(rv_data["name"])
+    return list_of_rv_names
+
+
+def get_length_of_results(edp_data):
+    length_of_results = 0
+    for edp in edp_data:
+        length_of_results += int(float(edp["length"]))
+    return length_of_results
+
+
+def create_default_model(
+    run_directory,
+    list_of_dir_names_to_copy_files_from,
+    list_of_rv_names,
+    driver_filename,
+    length_of_results,
+    workdir_prefix,
+):
+    model = SimCenterWorkflowDriver(
+        full_path_of_tmpSimCenter_dir=run_directory,
+        list_of_dir_names_to_copy_files_from=list_of_dir_names_to_copy_files_from,
+        list_of_rv_names=list_of_rv_names,
+        driver_filename=driver_filename,
+        length_of_results=length_of_results,
+        workdir_prefix=workdir_prefix,
+    )
+    return model
+
+
+def get_default_model_evaluation_function(model):
+    return model.evaluate_model_once
+
+
+def get_ERANataf_joint_distribution_instance(
+    list_of_rv_data, correlation_matrix_data
+):
+    joint_distribution = ERANatafJointDistribution(
+        list_of_rv_data, correlation_matrix_data
+    )
+    return joint_distribution
+
+
+def get_std_normal_to_rv_transformation_function(joint_distribution):
+    transformation_function = joint_distribution.u_to_x
+    return transformation_function
+
+
+def get_default_model(
+    list_of_rv_data,
+    edp_data,
+    list_of_dir_names_to_copy_files_from,
+    run_directory,
+    driver_filename="driver",
+    workdir_prefix="workdir",
+):
+    list_of_rv_names = make_list_of_rv_names(list_of_rv_data)
+    length_of_results = get_length_of_results(edp_data)
+    list_of_dir_names_to_copy_files_from = list_of_dir_names_to_copy_files_from
+    driver_filename = driver_filename
+    workdir_prefix = workdir_prefix
+
+    model = create_default_model(
+        run_directory,
+        list_of_dir_names_to_copy_files_from,
+        list_of_rv_names,
+        driver_filename,
+        length_of_results,
+        workdir_prefix,
+    )
+    return model
+
+
+def model_evaluation_function(
+    func,
+    list_of_iterables,
+):
+    return func(*list_of_iterables)
+
+
+def get_random_number_generators(entropy, num_prngs):
+    return get_list_of_pseudo_random_number_generators(entropy, num_prngs)
+
+
+def get_standard_normal_random_variates(list_of_prngs, size=1):
+    return [prng.standard_normal(size=size) for prng in list_of_prngs]
+
+
+def get_inverse_gamma_random_variate(prng, shape, scale, size=1):
+    return scipy.stats.invgamma.rvs(
+        shape, scale=scale, size=size, random_state=prng
+    )
+
+def multivariate_normal_logpdf(x, mean, cov):
+    eigenvalues, eigenvectors = np.linalg.eigh(cov)
+    logdet = np.sum(np.log(eigenvalues))
+    valsinv = 1./eigenvalues
+    U = eigenvectors * np.sqrt(valsinv)
+    dim = len(eigenvalues)
+    dev = x - mean
+    maha = np.square(dev.T @ U).sum()
+    log2pi = np.log(2 * np.pi)
+    return -0.5 * (dim * log2pi + maha + logdet)
