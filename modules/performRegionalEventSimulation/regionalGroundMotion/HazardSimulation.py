@@ -430,7 +430,10 @@ if __name__ == '__main__':
         memory_total = psutil.virtual_memory().total/(1024.**3)
         memory_request = int(memory_total*0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
+        try:
+            jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
+        except:
+            print(f"StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory")
     if oq_flag:
         # clear up old db.sqlite3 if any
         if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
