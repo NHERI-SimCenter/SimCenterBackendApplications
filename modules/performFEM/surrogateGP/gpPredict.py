@@ -57,6 +57,10 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
         file_object.write(msg)
         #print(msg)
 
+    if not os.path.exists(json_dir):
+       msg = 'Error in surrogate prediction: File not found -' + json_dir
+       error_exit(msg)
+
     with open(json_dir) as f:
         try:
             sur = json.load(f)
@@ -178,7 +182,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                     self.Y_metadata = Y_metadata
                 else:
                     self.Y_metadata.update(Y_metadata)
-                    print("metadata_updated")
+                    #print("metadata_updated")
 
             self.set_XY(X, Y)
 
@@ -206,7 +210,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                 kernel_var = GPy.kern.Matern52(input_dim=nrv_sur, ARD=True) + GPy.kern.Linear(input_dim=nrv_sur, ARD=True)
                 log_vars = np.log(Y_var[idx_repl])
                 m_var = GPy.models.GPRegression(X_unique[idx_repl, :], log_vars, kernel_var, normalizer=True, Y_metadata=None)
-                print("Collecting variance field of ny={}".format(ny))
+                #print("Collecting variance field of ny={}".format(ny))
                 for key, val in sur["modelInfo"][g_name_sur[ny]+"_Var"].items():
                     exec('m_var.' + key + '= np.array(val)')
 
@@ -234,7 +238,7 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                 m_var = GPy.models.GPRegression(X, log_vars, kernel_var, normalizer=True,
                                                 Y_metadata=None)
 
-                print("Variance field obtained for ny={}".format(ny))
+                #print("Variance field obtained for ny={}".format(ny))
                 for key, val in sur["modelInfo"][g_name_sur[ny] + "_Var"].items():
                     exec('m_var.' + key + '= np.array(val)')
 
@@ -272,15 +276,16 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
     with open(params_dir, "r") as x_file:
         data = x_file.readlines()
         nrv = int(data[0])
-
         for i in range(nrv):
             name_values = data[i + 1].split()
             name = name_values[0]
+            #print(name)
 
             #= pass if is string. GP cannot handle that
             if ((name == 'MultipleEvent') or (name == 'eventID')) and isEEUQ:
                 continue
-            if not name_values[1].replace('.','',1).isdigit():  
+
+            if not name_values[1].replace('.','',1).replace('e','',1).replace('-','',1).replace('+','',1).isdigit():  
                 # surrogate model does not accept descrete
                 continue
 
@@ -297,6 +302,8 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                 continue;
 
             id_map = rv_name_sur.index(name)
+            #print(name)
+            #print(rv_name_sur)
             #try:
             #    id_map = rv_name_sur.index(name)
             #except ValueError:
@@ -356,10 +363,10 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
 
         first_eeuq_found = False
         if os.path.exists( 'IM.csv'):
-            print("IM.csv found")
+            #print("IM.csv found")
             tmp1 = pd.read_csv(('IM.csv'), index_col=None)
             if tmp1.empty:
-                print("IM.csv in wordir.{} is empty.".format(cur_id))
+                #print("IM.csv in wordir.{} is empty.".format(cur_id))
                 return
 
             IMnames = list(map(str, tmp1))
@@ -389,14 +396,11 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
                     error_exit(msg)
     # todo: fix for different nys m
 
-        print(id_vec)
-        print(id_vec2)
-        print(nrv_sur)
+ 
         if len(id_vec+id_vec2) != nrv_sur:
             missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec + id_vec2)
             s = [str(rv_name_sur[id]) for id in missing_ids]
-            print(missing_ids)
-            print(s)
+
             if first_eeuq_found and all([missingEDP.endswith("-2") for missingEDP in s]):
                 msg = "ground motion dimension does not match with that of the training"
                 # for i in range(len(s)):
@@ -420,9 +424,10 @@ def main(params_dir,surrogate_dir,json_dir,result_file,input_json):
             id_vec = id_vec2
 
     nrv = len(id_vec)
-
     if nrv != nrv_sur:
-        missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)
+        # missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)
+        missing_ids = set([i for i in range(len(rv_name_sur))]).difference(set(id_vec))
+        #print(missing_ids)
         s = [str(rv_name_sur[id]) for id in missing_ids]
         msg = 'Error in Surrogate prediction: Number of dimension inconsistent: Please define '
         msg += ", ".join(s)
