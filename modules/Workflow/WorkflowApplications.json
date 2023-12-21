@@ -77,6 +77,27 @@
         ]
       },
       {
+        "Name": "GEOJSON_TO_ASSET",
+          "ExecutablePath": "applications/createAIM/GeoJSON_to_ASSET/GeoJSON_to_ASSET.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "assetType",
+            "type": "string",
+            "description": "name of the asset type e.g., Building, Transportation Network"
+          },
+          {
+            "id": "inputJsonFile",
+            "type": "path",
+            "description": "path to the rWHALE.json"
+          }
+        ]
+      },
+      {
         "Name": "CSV_to_AIM",
         "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
         "RunsParallel": true,	  
@@ -162,6 +183,38 @@
             "id": "WaterNetworkPipelines",
             "type": "json",
             "description": "water network node information"
+          }
+        ]
+      },
+      {
+        "Name": "JSON_to_TRANSPORTNETWORK",
+        "ExecutablePath": "modules/createAIM/JSON_to_AIM/JSON_to_AIM_transport.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "bridgesFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of bridges from the inventory"
+          },
+          {
+            "id": "tunnelsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of tunnels from the inventory"
+          },
+          {
+            "id": "roadsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of roads from the inventory"
+          },
+          {
+            "id": "roadSegLength",
+            "type": "float",
+            "description": "Maximum length (m) of road segments in the created AIM files",
+            "default": 100
           }
         ]
       }

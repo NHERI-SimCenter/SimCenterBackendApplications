@@ -75,6 +75,8 @@ import pandas as pd
 import platform
 from pathlib import Path, PurePath
 
+import shapely.wkt, shapely.geometry
+
 #import posixpath
 #import ntpath
 
@@ -702,7 +704,7 @@ class Workflow(object):
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
         
         # Create the asset registry
-        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork']
+        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork', 'TransportationNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
 
         self.run_type = run_type
@@ -1175,6 +1177,13 @@ class Workflow(object):
 
             asset_command_list = asset_app.get_command_list(app_path = self.app_dir_local)
 
+            # The GEOJSON_TO_ASSET application is special because it can be used
+            # for multiple asset types. "asset_type" needs to be added so the app
+            # knows which asset_type it's processing.  
+            if asset_app.name == 'GEOJSON_TO_ASSET':
+                asset_command_list = asset_command_list + [u'--assetType',\
+                                asset_type, u'--inputJsonFile', self.input_file]
+
             asset_command_list.append(u'--getRV')
 
             # Create the asset command list
@@ -1554,6 +1563,7 @@ class Workflow(object):
                 shutil.copy(src,dst)
             
                 print("Copied AIM file to: ",dst)
+                # os.remove(src)
  
             except:
                 print("Error occurred while copying file: ",dst)
@@ -1580,9 +1590,10 @@ class Workflow(object):
             #dst = posixpath.join(os.getcwd(),AIM_file)
             if AIM_file_path != self.input_file:
                 shutil.copy(src = self.input_file, dst = dst)
-
+        
         log_msg('Simulation directory successfully initialized.\n',prepend_timestamp=False)
         log_div()
+        return dst
 
     def cleanup_simdir(self, asst_id):
         """
@@ -1659,7 +1670,7 @@ class Workflow(object):
         log_div()
 
 
-    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None) :
+    def preprocess_inputs(self, app_sequence, AIM_file_path = 'AIM.json', asst_id=None, asset_type = None) :
         """
         Short description
 
@@ -1704,6 +1715,8 @@ class Workflow(object):
                     if type(workflow_app) is dict :
                     
                         for itemKey, item in workflow_app.items() :
+                            if asset_type is not None and asset_type != itemKey :
+                                continue
                         
                             item.defaults['filenameAIM'] = AIM_file_path
                             
@@ -2384,18 +2397,21 @@ class Workflow(object):
         
         os.chdir(run_path)
         
-        min_id = int(asst_data[0]['id'])
-        max_id = int(asst_data[0]['id'])
+        min_id = min([int(x['id']) for x in asst_data]) #min_id = int(asst_data[0]['id'])
+        max_id = max([int(x['id']) for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
-        if self.workflow_apps['DL']['Buildings'].name == 'Pelicun3':
-
-            # we assume all assets of the same type are in one folder
-            bldg_dir = Path(os.path.dirname(asst_data[0]['file'])).resolve()
-            main_dir = bldg_dir.parent
+        if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
 
             for a_i, asst in enumerate(asst_data):
+
+                bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
+                main_dir = bldg_dir
+                assetTypeHierarchy = [bldg_dir.name]
+                while main_dir.parent.name != 'Results':
+                    main_dir = bldg_dir.parent
+                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
 
                 asset_id = asst['id']
                 asset_dir = bldg_dir/asset_id
@@ -2426,11 +2442,26 @@ class Workflow(object):
 
                     # We assume all assets have the same output sample size
                     # Variable sample size doesn't seem to make sense
-                    realizations = {rlz_i:{} for rlz_i in range(sample_size)}
+                    realizations = {rlz_i:{asset_type:{}}\
+                                    for rlz_i in range(sample_size)}
 
                     # We also create a dict to collect deterministic info, i.e.,
                     # data that is identical for all realizations
-                    deterministic = {}
+                    deterministic = {asset_type: {}}
+
+                # Check if the asset type hierarchy exist in deterministic and 
+                # realizations. Create a hierarchy if it doesn't exist.
+                deter_pointer = deterministic
+                rlzn_pointer = {rlz_i:realizations[rlz_i]\
+                                    for rlz_i in range(sample_size)}
+                for assetTypeIter in assetTypeHierarchy:
+                    if assetTypeIter not in deter_pointer.keys():
+                        deter_pointer.update({assetTypeIter: {}})
+                    deter_pointer = deter_pointer[assetTypeIter]
+                    for rlz_i in range(sample_size):
+                        if assetTypeIter not in rlzn_pointer[rlz_i].keys():
+                            rlzn_pointer[rlz_i].update({assetTypeIter: {}})
+                        rlzn_pointer[rlz_i] = rlzn_pointer[rlz_i][assetTypeIter]
 
                 # Currently, all GI data is deterministic                
                 GI_data_i_det = AIM_data_i['GeneralInformation']
@@ -2439,10 +2470,11 @@ class Workflow(object):
                 GI_data_i_prob = {}
 
                 for rlz_i in range(sample_size):
-                    realizations[rlz_i].update(
+                    rlzn_pointer[rlz_i].update(
                         {asset_id:{'GeneralInformation':GI_data_i_prob}})
 
-                deterministic.update({asset_id:
+
+                deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
 
                 if 'EDP' in out_types:
@@ -2480,11 +2512,11 @@ class Workflow(object):
 
                         # save the EDP intensities in each realization
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Demand':edp_output[rlz_i]})
 
                         # save the EDP units
-                        deterministic[asset_id].update({
+                        deter_pointer[asset_id].update({
                             "Demand": {"Units": edp_units}
                             })
 
@@ -2505,6 +2537,9 @@ class Workflow(object):
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
 
+                        # JZ: Temporary for json dmg_grp.json format
+                        dmg_data_i = dmg_data_i.drop(index='Units')
+                        dmg_data_i = dmg_data_i.set_index(pd.Series(dmg_data_i.index).apply(lambda x:int(x)))
                         # convert to realization-by-realization format
                         dmg_output = {
                             rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
@@ -2516,7 +2551,7 @@ class Workflow(object):
                         # we assume that damage information is condensed
                         #TODO: implement condense_ds flag in DL_calc
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Damage':dmg_output[rlz_i]})
 
                 if 'DV' in out_types:
@@ -2535,7 +2570,9 @@ class Workflow(object):
 
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-
+                        # JZ: Temporary for json dmg_grp.json format
+                        dv_data_i = dv_data_i.drop(index='Units')
+                        dv_data_i = dv_data_i.set_index(pd.Series(dv_data_i.index).apply(lambda x:int(x)))
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns])
@@ -2556,21 +2593,27 @@ class Workflow(object):
 
                         # save loss data
                         for rlz_i in range(sample_size):
-                            realizations[rlz_i][asset_id].update(
+                            rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
-
+            # This is also ugly but necessary for backward compatibility so that 
+            # file structure created from apps other than GeoJSON_TO_ASSET can be
+            # dealt with
+            if len(assetTypeHierarchy) == 1:
+                deterministic = {assetTypeHierarchy[0]: deterministic}
+                for rlz_i, rlz_data in realizations.items():
+                    rlz_data = {assetTypeHierarchy[0]:rlz_data}
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
-                with open(main_dir/f"buildings_{rlz_i}.json", 'w') as f:
+                with open(main_dir/f"{asset_type}_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
 
-            with open(main_dir/f"buildings_det.json", 'w') as f:
+            with open(main_dir/f"{asset_type}_det.json", 'w') as f:
                 json.dump(deterministic, f, indent=2)
 
         else:
             # This is legacy for Pelicun 2 runs
-
+            out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
             if headers is None :
                 headers = dict(
@@ -2727,4 +2770,149 @@ class Workflow(object):
 
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
+
+    def combine_assets_results(self, asset_files):
+        run_path = self.run_dir
+        isPelicun3 = True
+        asset_types = list(asset_files.keys())
+        for asset_type in asset_types:
+            if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
+                # isPelicun3 = False
+                asset_files.pop(asset_type)
+        if asset_files: # If any asset_type uses Pelicun3 as DL app
+            # get metadata
+            with open(self.input_file, 'r') as f:
+                input_data = json.load(f)
+            metadata = {"Name": input_data["Name"],
+                        "Units": input_data["units"],
+                        "Author": input_data["Author"],
+                        "WorkflowType": input_data["WorkflowType"],
+                        "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+            ## create the geojson for R2D visualization
+            geojson_result = {
+                "type": "FeatureCollection",
+                "crs": {
+                    "type": "name",
+                    "properties": {
+                    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+                    }
+                },
+                "metadata":metadata,
+                "features":[]
+            }
+            for asset_type, assetIt in asset_files.items():
+                with open(assetIt, 'r') as f:
+                    asst_data = json.load(f)
+                for asst in asst_data:
+                    bldg_dir = Path(os.path.dirname(asst['file'])).resolve()
+                    asset_id = asst['id']
+                    main_dir = bldg_dir
+                    assetTypeHierarchy = [bldg_dir.name]
+                    while main_dir.parent.name != 'Results':
+                        main_dir = bldg_dir.parent
+                        assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
+                    asset_dir = bldg_dir/asset_id
+                    AIM_file = None
+                    if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
+                        AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
+                    elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
+                        AIM_file = asset_dir / f"{asset_id}-AIM.json"
+                    else:
+                        # skip this asset if there is no AIM file available
+                        show_warning(
+                            "Couldn't find AIM file for building {asset_id}")
+                    with open(AIM_file, 'r') as f:
+                        asst_aim = json.load(f)
+                    sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
+                    ft = {"type":"Feature"}
+                    asst_GI = asst_aim['GeneralInformation'].copy()
+                    asst_GI.update({"assetType":asset_type})
+                    try:
+                        if "geometry" in asst_GI:
+                            asst_geom = shapely.wkt.loads(asst_GI["geometry"])
+                            asst_geom = shapely.geometry.mapping(asst_geom)
+                            asst_GI.pop("geometry")
+                        elif "Footprint" in asst_GI:
+                            asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
+                            asst_GI.pop("Footprint")
+                    except:
+                        asst_lat = asst_GI['location']['latitude']
+                        asst_lon = asst_GI['location']['longitude']
+                        asst_geom = { "type": "Point", "coordinates": [\
+                            asst_lon, asst_lat]}
+                    asst_GI.pop("units")
+                    DL_summary_file = asset_dir/"DL_summary_stats.json"
+                    with open(DL_summary_file, 'r') as f:
+                        DL_summary = json.load(f)
+                    DL_results = {}
+                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                          'repair_time-parallel':'RepairTimeParallel',
+                                          'repair_time-sequential':'RepairTimeSequential',
+                                          'collapse':'Collapse',
+                                          'irreparable':'Irreparable'}
+                    for key, value in DL_summary.items():
+                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
+                                           :value["mean"]})
+                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
+                                           :value["std"]})
+                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
+                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
+                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
+                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
+                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
+                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
+                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
+                            DL_results.pop('R2Dres_std_RepairTimeParallel')
+                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
+                    DMG_grp_file = asset_dir/"DMG_grp.json"
+                    with open(DMG_grp_file, 'r') as f:
+                        DMG_grp = json.load(f)
+                    DMG_results = {}
+                    all_DMG = []
+                    for key, value in DMG_grp.items():
+                        value.pop("Units")
+                        valueList = [int(v) for k, v in value.items()]
+                        all_DMG.append(valueList)
+                        DMG_results.update({f'R2Dres_MostLikelyDamageState_{key}'\
+                                            : max(set(valueList),\
+                                            key=valueList.count)})
+                    highest_DMG = np.amax(np.array(all_DMG), axis = 0)
+                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
+                                        :int(max(set(highest_DMG),\
+                                        key=list(highest_DMG).count))})
+                    ft.update({"geometry":asst_geom})
+                    ft.update({"properties":asst_GI})
+                    ft["properties"].update(DL_results)
+                    ft["properties"].update(DMG_results)
+                    geojson_result["features"].append(ft)
+                with open(run_path/"R2D_results.geojson", 'w') as f:
+                    json.dump(geojson_result, f, indent=2)
+            ## Create the Results_det.json and Results_rlz_i.json for recoverary
+            deterministic = {}
+            realizations = {rlz_i:{} for rlz_i in range(sample_size)}
+            for asset_type in asset_files.keys():
+                asset_dir = self.run_dir/asset_type
+                determine_file = asset_dir/f"{asset_type}_det.json"
+                with open(determine_file, 'r') as f:
+                    determ_i = json.load(f)
+                deterministic.update(determ_i)
+                for rlz_i in range(sample_size):
+                    rlz_i_file = asset_dir/f"{asset_type}_{rlz_i}.json"
+                    with open(rlz_i_file, 'r') as f:
+                        rlz_i_i = json.load(f)
+                    realizations[rlz_i].update(rlz_i_i)
+            
+            determine_file = self.run_dir/"Results_det.json"
+            with open (determine_file, 'w') as f:
+                json.dump(deterministic, f, indent=2)
+            for rlz_i, rlz_data in realizations.items():
+                with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
+                    json.dump(rlz_data, f, indent=2)
+        else:
+            pass
+            # print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
+
+
+
+
 
