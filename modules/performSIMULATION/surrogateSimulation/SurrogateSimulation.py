@@ -35,15 +35,9 @@
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # Contributors:
-# Sang-ri Yi
 # Adam Zsarnóczay
 # Joanna J. Zou
 #
-
-# Description:
-# Run surrogate prediction module, map responses to EDP keys, and save it to EDP.json
-# Input files: AIM.json, surrogate.json (user provided)
-# Output files: EDP.json
 
 import os, sys
 import argparse, json
@@ -52,6 +46,8 @@ import sys
 import numpy as np
 
 from pathlib import Path
+
+#from simcenter_common import *
 
 convert_EDP = {
     'max_abs_acceleration' : 'PFA',
@@ -64,26 +60,25 @@ convert_EDP = {
 
 def run_surrogateGP(AIM_input_path, EDP_input_path):
 
-    
-    #
-    # Find surrogate path
-    #
+    # these imports are here to save time when the app is called without
+    # the -getRV flag
+    #import openseespy.opensees as ops
 
     with open(AIM_input_path, 'r') as f:
         root_AIM = json.load(f)
+    #root_GI = root_AIM['GeneralInformation']
 
-    print("General Information tab is ignored")
     root_SAM = root_AIM['Applications']['Modeling']
 
-    print(root_SAM['ApplicationData']['MS_Path'])
-    print(root_SAM['ApplicationData']['mainScript'])
     surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
 
+    # with open(surrogate_path, 'r') as f:
+    #     surrogate_model = json.load(f)
+
 
     #
-    # Run surrogate backend module located at performFEM/surrogateGP/gpPredict.py
+    # Let's call GPdriver creater
     #
-    
     pythonEXE = sys.executable
 
     surrogatePredictionPath = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -96,29 +91,29 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):
     surrogate_meta_name = os.path.join(curpath,root_SAM['ApplicationData']['mainScript'])   # json
 
     # compute IMs
-    print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name} 1> ops.out 2>&1")
-    os.system(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name} 1> ops.out 2>&1")
+    # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
+    os.system(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
 
     #
     # check if the correct workflow applications are selected
     #
-    print(root_AIM["Applications"])
+
     if (root_AIM["Applications"]["Modeling"]["Application"] != "SurrogateGPBuildingModel") and (root_AIM["Applications"]["Simulation"]["Application"] != "SurrogateRegionalPy"):
             with open("../workflow.err","w") as f:
                 f.write("Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.")
             exit(-1)
-    return 0
 
-def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
+
+def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
+
     with open(AIM_input_path, 'r') as f:
         root_AIM = json.load(f)
 
     if newEDP_input_path ==None:
         newEDP_input_path = EDP_input_path
-        
+
     root_SAM = root_AIM['Applications']['Modeling']
     surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
-    print(surrogate_path)
 
     with open(surrogate_path, 'r') as f:
         surrogate_model = json.load(f)
@@ -203,6 +198,8 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
     with open(newEDP_input_path, 'w') as f:
         json.dump(rootEDP, f, indent=2)
 
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -218,5 +215,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not args.getRV:
-        run_surrogateGP(args.filenameAIM, args.filenameEDP)
+        run_surrogateGP(args.filenameAIM,args.filenameEDP)
         write_EDP(args.filenameAIM, args.filenameEDP)

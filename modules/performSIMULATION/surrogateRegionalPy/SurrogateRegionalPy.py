@@ -75,7 +75,7 @@ def main(aimName,samName, evtName,
     sys.path.insert(0, filateFilePath)
     analysis_script = importlib.__import__(filterFileName[:-3], globals(), locals(), ['model_distributor',], 0)
     model_distributor = analysis_script.model_distributor
-    modelName, value = model_distributor(GI,SAM)
+    modelName = model_distributor(GI,SAM)
 
     if getRV:
         runDefault(root_AIM, aimName,samName, evtName, edpName, simName, getRV)
@@ -128,7 +128,7 @@ def runDefault(root_AIM, aimName,samName, evtName, edpName, simName, getRV=False
         #
         # run correct backend app
         #
-        print(newAimName)
+        # print(newAimName)
         sys.path.insert(0, mySimAppPath)
         sim_module = importlib.__import__(mySimAppName[:-3], globals(), locals(), ['main'], 0)
 
@@ -217,6 +217,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
 
         if surFileName is None:
             print("surrogate model {} is not found".format(modelName))
+            exit(-1)
 
         #
         # find surrogate model prediction app
