@@ -20,8 +20,13 @@ def copytree(src, dst, symlinks=False, ignore=None):
         if os.path.isdir(s):
             copytree(s, d, symlinks, ignore)
         else:
-            if not os.path.exists(d) or os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
-                shutil.copy2(s, d)
+            try:
+                if not os.path.exists(d) or os.stat(s).st_mtime - os.stat(d).st_mtime > 1:
+                    shutil.copy2(s, d)
+            except Exception as ex:
+                msg = f"Could not copy {s}. The following error occurred: \n{ex}"
+                return msg
+    return "0"
 
 
 def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
@@ -82,3 +87,4 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
     else:
         os.chdir("../")
         return -np.inf
+    
