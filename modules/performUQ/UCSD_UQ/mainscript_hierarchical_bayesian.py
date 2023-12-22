@@ -716,6 +716,17 @@ def metropolis_within_gibbs_sampler(
         sample_from_predictive_distribution = transformation_function(
             sample_from_predictive_t_distribution
         )
+        while (
+            np.sum(np.isfinite(sample_from_predictive_distribution)) < num_rv
+        ):
+            sample_from_predictive_t_distribution = (
+                predictive_distribution.rvs(
+                    random_state=parent_distribution_prng
+                )
+            )
+            sample_from_predictive_distribution = transformation_function(
+                sample_from_predictive_t_distribution
+            )
         predictive_distribution_sample_values_list = []
         for val in sample_from_predictive_distribution:
             predictive_distribution_sample_values_list.append(f"{val}")
