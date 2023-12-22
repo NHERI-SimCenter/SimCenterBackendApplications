@@ -898,6 +898,20 @@ vector<vector<double>> ERANataf::simulateAppOnce(int i, string workingDirs, stri
 			}
 		}
 	}
+
+    bool clean_workdir = false;
+    if (clean_workdir) {
+        auto entry = workDir;
+        for (auto fname : { "driver.bat", "sc_driver.bat", "MultiModel_1_driver.bat", "MultiModel_2_driver.bat", "MultiModel_3_driver.bat","workflow_driver1.bat" }) {
+            std::filesystem::permissions(entry + "/" + fname, std::filesystem::perms::others_all);
+        }
+        std::filesystem::remove_all(entry);
+    }
+
+
+
+
+
 	return gmat_tmp;
 	//return {0.,0,};
 }

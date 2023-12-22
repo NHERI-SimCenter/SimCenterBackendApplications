@@ -60,7 +60,6 @@ IM_MAP = {'PeakGroundResponse': ['PGA', 'PGV', 'PGD'],
 class IntensityMeasureComputer:
 
     def __init__(self, time_hist_dict=dict(), units=dict(), ampScaled=False):
-
         self.time_hist_dict = time_hist_dict
         self.units = units
         self._define_constants()
@@ -456,7 +455,7 @@ def load_records(event_file, ampScaled):
         event_data = event_data[0]
     
     # check type
-    if event_data.get('type', None) != 'Seismic':
+    if (event_data.get('type', None) != 'Seismic') and (event_data.get('type', None) != 'timeHistory'):
         return dict()
     
     # get time series attribute

@@ -1929,7 +1929,7 @@ class Workflow(object):
             
                 workflow_app = self.workflow_apps[app_type]
 
-                print('FMK runtype', self.run_type)
+                #print('FMK runtype', self.run_type)
                 if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                 
                     if type(workflow_app) is dict :
