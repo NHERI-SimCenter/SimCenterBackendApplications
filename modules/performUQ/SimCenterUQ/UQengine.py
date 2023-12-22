@@ -287,16 +287,20 @@ class UQengine:
     #
 
     def create_errLog(self):
-        self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "w")
+        #self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
+        pass
 
     def exit(self, msg):
+        print(msg, file=sys.stderr)
         print(msg)
-        self.errfile.write(msg)
-        self.errfile.close()
+        # sys.stderr.write(msg)
+        # self.errfile.write(msg)
+        # self.errfile.close()
         exit(-1)
 
     def terminate_errLog(self):
-        self.errfile.close()
+        # self.errfile.close()
+        pass
 
     #
     # To read text

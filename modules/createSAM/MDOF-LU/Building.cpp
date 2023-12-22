@@ -47,6 +47,8 @@ Building::StruType Building::s2StruType(string s)
     if(s=="MH")
         return MH;
 
+    std::cout<< "ERROR: the StructureType "<<s<<" is not supported.\n";
+    exit(-1);
     return UNKNOWN;
 }
 
@@ -424,7 +426,7 @@ string Building::GetHazusType()
         suffix="M";
     else
         suffix="H";
-
+    
     switch (strutype) {
     case RM1:
         if(nStory<=3)
