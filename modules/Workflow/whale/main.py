@@ -2867,6 +2867,7 @@ class Workflow(object):
                         DL_summary = json.load(f)
                     DL_results = {}
                     pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                          'repair_cost': 'RepairCost',  
                                           'repair_time-parallel':'RepairTimeParallel',
                                           'repair_time-sequential':'RepairTimeSequential',
                                           'collapse':'Collapse',
