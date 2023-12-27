@@ -2494,13 +2494,13 @@ class Workflow(object):
                         # remove the ONE demand
                         edp_data_i.pop('ONE-0-1')
 
+                        # extract EDP unit info
+                        edp_units = edp_data_i['Units']
+                        del edp_data_i['Units']
+                    
                         # parse the demand data into a DataFrame
                         # we assume demands are stored in JSON with a SimpleIndex
                         edp_data_i = pd.DataFrame(edp_data_i)
-
-                        # extract EDP unit info
-                        edp_units = edp_data_i.loc["Units"].to_dict()
-                        edp_data_i.drop("Units", inplace=True)
 
                         # convert to a realization-by-realization format
                         edp_output = {
@@ -2534,19 +2534,28 @@ class Workflow(object):
                         with open(asset_dir/dmg_out_file_i, 'r') as f:
                             dmg_data_i = json.load(f)
 
+                        # remove damage unit info                        
+                        del dmg_data_i['Units']
+
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
 
-                        # JZ: Temporary for json dmg_grp.json format
-                        dmg_data_i = dmg_data_i.drop(index='Units')
-                        dmg_data_i = dmg_data_i.set_index(pd.Series(dmg_data_i.index).apply(lambda x:int(x)))
+                        # JZ: Temporary for json dmg_grp.json format                        
+                        #dmg_data_i = dmg_data_i.set_index(dmg_data_i.index.astype(int))
+                        #dmg_data_i = dmg_data_i.astype(float)
+
                         # convert to realization-by-realization format
-                        dmg_output = {
-                            rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
-                                   for col in dmg_data_i.columns
-                            } 
-                            for rlz_i in dmg_data_i.index
-                        }
+                        dmg_output = {}
+                        for rlz_i in dmg_data_i.index:
+
+                            rlz_output = {}
+
+                            for col in dmg_data_i.columns:
+
+                                if not pd.isna(dmg_data_i.loc[rlz_i,col]):
+                                    rlz_output.update({col: int(dmg_data_i.loc[rlz_i,col])})
+
+                            dmg_output.update({rlz_i: rlz_output})                        
 
                         # we assume that damage information is condensed
                         #TODO: implement condense_ds flag in DL_calc
@@ -2568,11 +2577,16 @@ class Workflow(object):
                         with open(asset_dir/dv_out_file_i, 'r') as f:
                             dv_data_i = json.load(f)
 
+                        # extract DV unit info
+                        dv_units = dv_data_i['Units']
+                        del dv_data_i['Units']
+
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-                        # JZ: Temporary for json dmg_grp.json format
-                        dv_data_i = dv_data_i.drop(index='Units')
-                        dv_data_i = dv_data_i.set_index(pd.Series(dv_data_i.index).apply(lambda x:int(x)))
+
+                        # JZ: Temporary for json dmg_grp.json format 
+                        #dv_data_i = dv_data_i.set_index(dv_data_i.index.astype(int))
+                        
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns])
@@ -2595,6 +2609,12 @@ class Workflow(object):
                         for rlz_i in range(sample_size):
                             rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
+
+                        # save DV units
+                        deter_pointer[asset_id].update({
+                            "Loss": {"Units": dv_units}
+                            })
+
             # This is also ugly but necessary for backward compatibility so that 
             # file structure created from apps other than GeoJSON_TO_ASSET can be
             # dealt with
@@ -2602,6 +2622,7 @@ class Workflow(object):
                 deterministic = {assetTypeHierarchy[0]: deterministic}
                 for rlz_i, rlz_data in realizations.items():
                     rlz_data = {assetTypeHierarchy[0]:rlz_data}
+
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
@@ -2864,29 +2885,39 @@ class Workflow(object):
                             std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
                             DL_results.pop('R2Dres_std_RepairTimeParallel')
                             DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
+                    
+
                     DMG_grp_file = asset_dir/"DMG_grp.json"
                     with open(DMG_grp_file, 'r') as f:
                         DMG_grp = json.load(f)
+
+                    # remove units
+                    del DMG_grp['Units']
+
                     DMG_results = {}
                     all_DMG = []
                     for key, value in DMG_grp.items():
-                        value.pop("Units")
-                        valueList = [int(v) for k, v in value.items()]
+                        valueList = value #[float(v) for k, v in value.items()]
                         all_DMG.append(valueList)
-                        DMG_results.update({f'R2Dres_MostLikelyDamageState_{key}'\
-                                            : max(set(valueList),\
-                                            key=valueList.count)})
+                        DMG_results.update({
+                            f'R2Dres_MostLikelyDamageState_{key}': max(set(valueList), 
+                                                                       key=valueList.count)})
+                    
                     highest_DMG = np.amax(np.array(all_DMG), axis = 0)
+                    
                     DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
                                         :int(max(set(highest_DMG),\
                                         key=list(highest_DMG).count))})
+                    
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
                     ft["properties"].update(DL_results)
                     ft["properties"].update(DMG_results)
                     geojson_result["features"].append(ft)
+                
                 with open(run_path/"R2D_results.geojson", 'w') as f:
                     json.dump(geojson_result, f, indent=2)
+
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i:{} for rlz_i in range(sample_size)}
