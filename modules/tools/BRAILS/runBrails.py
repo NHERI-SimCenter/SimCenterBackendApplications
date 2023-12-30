@@ -25,7 +25,7 @@ def log_msg(msg):
 def runBrails(latMin, latMax, longMin, longMax, seed, numBuildings, gKey):    
     # Initialize InventoryGenerator:
     invGenerator = InventoryGenerator(location=(longMin,latMin,longMax,latMax),
-                                      nbldgs=numBuildings, randomSelection=True,
+                                      nbldgs=numBuildings, randomSelection=seed,
                                       GoogleAPIKey=gKey)
 
     # Run InventoryGenerator to generate an inventory for the entered location:
@@ -48,8 +48,8 @@ def main(args):
     runBrails(
         args.latMin, args.latMax,
         args.longMin, args.longMax,
-        args.numBuildings,
-        args.seed, args.googKey)
+        args.seed, args.numBuildings,
+        args.googKey)
 
     log_msg('BRAILS successfully generated the requested building inventory')
     
