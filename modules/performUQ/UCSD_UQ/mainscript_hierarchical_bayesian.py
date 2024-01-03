@@ -716,6 +716,17 @@ def metropolis_within_gibbs_sampler(
         sample_from_predictive_distribution = transformation_function(
             sample_from_predictive_t_distribution
         )
+        while (
+            np.sum(np.isfinite(sample_from_predictive_distribution)) < num_rv
+        ):
+            sample_from_predictive_t_distribution = (
+                predictive_distribution.rvs(
+                    random_state=parent_distribution_prng
+                )
+            )
+            sample_from_predictive_distribution = transformation_function(
+                sample_from_predictive_t_distribution
+            )
         predictive_distribution_sample_values_list = []
         for val in sample_from_predictive_distribution:
             predictive_distribution_sample_values_list.append(f"{val}")
@@ -803,7 +814,9 @@ def main(input_args):
     workflow_driver = input_args[4]
     input_file = input_args[5]
 
-    with open(input_file, "r") as f:
+    input_file_full_path = template_directory / input_file
+
+    with open(input_file_full_path, "r") as f:
         inputs = json.load(f)
 
     uq_inputs = inputs["UQ"]
