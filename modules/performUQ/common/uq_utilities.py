@@ -119,6 +119,7 @@ class SimCenterWorkflowDriver:
             for root, dirs, files in os.walk(workdir):
                 for file in files:
                     try:
+                        os.chmod(os.path.join(root, file), 0o777)
                         os.unlink(os.path.join(root, file))
                     except:
                         msg = f"Could not remove file {file} from {workdir}."
@@ -177,7 +178,7 @@ class SimCenterWorkflowDriver:
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob("results.out"):
-            outputs = np.loadtxt("results.out").flatten()
+            outputs = np.loadtxt("results.out", dtype=float).flatten()
         else:
             msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
             msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
