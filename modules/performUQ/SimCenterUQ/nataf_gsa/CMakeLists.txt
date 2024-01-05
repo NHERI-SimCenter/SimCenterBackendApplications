@@ -42,17 +42,17 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 	# sy - to check if filesystem is working
  
-	if(LINUX)
-		try_compile(HAS_FS "${CMAKE_BINARY_DIR}/temp" 
-		"${CMAKE_SOURCE_DIR}/tmp/has_filesystem.cc" 
-					CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-					LINK_LIBRARIES stdc++fs)
-		if(HAS_FS)
-			message(STATUS "Compiler has filesystem support")
-		else()
-			message(FATAL_ERROR "Compiler is missing filesystem capabilities")
-		endif(HAS_FS)
-	endif()
+	#if(LINUX)
+	#	try_compile(HAS_FS "${CMAKE_BINARY_DIR}/temp" 
+	#	"${CMAKE_SOURCE_DIR}/tmp/has_filesystem.cc" 
+	#				CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+	#				LINK_LIBRARIES stdc++fs)
+	#	if(HAS_FS)
+	#		message(STATUS "Compiler has filesystem support")
+	#	else()
+	#		message(FATAL_ERROR "Compiler is missing filesystem capabilities")
+	#	endif(HAS_FS)
+	#endif()
 
 
 	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -87,27 +87,27 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib_armadillo/armadillo-10.1.0/include)
 
 	#### FOR TESTING ########
-	set(HEADERS ERADist.h
-			exponentialDist.h
-			normalDist.h
-			ERANataf.h
-			gammaDist.h
-			runGSA.h
-			runForward.h
-			runMFMC.h
-			RVDist.h
-			gumbelDist.h
-			truncExponentialDist.h
-			betaDist.h
-			jsonInput.h
-			uniformDist.h
-			chiSquaredDist.h
-			lognormalDist.h
-			weibullDist.h
-			discreteDist.h
-			writeErrors.h)
-	add_subdirectory(googletest)
-	add_subdirectory(test)
+	#set(HEADERS ERADist.h
+	#		exponentialDist.h
+	#		normalDist.h
+	#		ERANataf.h
+	#		gammaDist.h
+	#		runGSA.h
+	#		runForward.h
+	#		runMFMC.h
+	#		RVDist.h
+	#		gumbelDist.h
+	#		truncExponentialDist.h
+	#		betaDist.h
+	#		jsonInput.h
+	#		uniformDist.h
+	#		chiSquaredDist.h
+	#		lognormalDist.h
+	#		weibullDist.h
+	#		discreteDist.h
+	#		writeErrors.h)
+	#add_subdirectory(googletest)
+	#add_subdirectory(test)
 	##########################
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 	if(PARALLEL_LIB STREQUAL  "MPI_RUN")

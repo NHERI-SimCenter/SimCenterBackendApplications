@@ -66,6 +66,8 @@ from UQengine import UQengine
 
 # import pip installed modules
 
+
+
 try:
     moduleName = "numpy"
     import numpy as np
@@ -159,6 +161,12 @@ class surrogate(UQengine):
         self.save_model("SimGpModel")
 
     def check_packages(self,error_tag, moduleName):
+
+        if error_tag == True and moduleName =="GPy":
+            if self.os_type.lower().startswith("darwin"):
+                msg = ("Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate")
+                self.exit(msg)
+
         if error_tag == True:
             if self.os_type.lower().startswith("win"):
                 msg = (
