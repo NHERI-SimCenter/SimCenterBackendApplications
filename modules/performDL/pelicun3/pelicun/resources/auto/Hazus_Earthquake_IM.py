@@ -52,16 +52,33 @@ ap_DesignLevel_W1 = {
     1975: 'MC',
     2100: 'HC'
 }
+
+ap_Occupancy = {
+    'Other/Unknown': 'RES3',
+    'Residential - Single-Family': 'RES1',
+    'Residential - Town-Home': 'RES3',
+    'Residential - Multi-Family': 'RES3',
+    'Residential - Mixed Use': 'RES3',
+    'Office': 'COM4',
+    'Hotel': 'RES4',
+    'School': 'EDU1',
+    'Industrial - Light': 'IND2',
+    'Industrial - Warehouse': 'IND2',
+    'Industrial - Heavy': 'IND1',
+    'Retail': 'COM1',
+    'Parking' : 'COM10'
+}
+
 def convertBridgeToHAZUSclass(AIM):
 
     #TODO: replace labels in AIM with standard CamelCase versions
-    structureType = AIM["bridge_class"]
+    structureType = AIM["BridgeClass"]
     # if type(structureType)== str and len(structureType)>3 and structureType[:3] == "HWB" and 0 < int(structureType[3:]) and 29 > int(structureType[3:]):
     #     return AIM["bridge_class"]
-    state = AIM["state_code"]
-    yr_built = AIM["year_built"] 
-    num_span = AIM["nspans"]
-    len_max_span = AIM["lmaxspan"] 
+    state = AIM["StateCode"]
+    yr_built = AIM["YearBuilt"] 
+    num_span = AIM["NumOfSpans"]
+    len_max_span = AIM["MaxSpanLength"] 
 
     seismic = ((int(state)==6 and int(yr_built)>=1975) or 
                (int(state)!=6 and int(yr_built)>=1990))
@@ -104,16 +121,27 @@ def convertBridgeToHAZUSclass(AIM):
 
     elif structureType in list(range(301,307)):
         if not seismic:
-            if state != 6:
-                bridge_class = "HWB12"
+            if len_max_span>=20:
+                if state != 6:
+                    bridge_class = "HWB12"
+                else:
+                    bridge_class = "HWB13"
             else:
-                bridge_class = "HWB13"
+                if state != 6:
+                    bridge_class = "HWB24"
+                else:
+                    bridge_class = "HWB25"
         else:
             bridge_class = "HWB14"
 
     elif structureType in list(range(402,411)):
         if not seismic:
-            bridge_class = "HWB15"
+            if len_max_span>=20:
+                bridge_class = "HWB15"
+            elif state != 6:
+                bridge_class = "HWB26"
+            else:
+                bridge_class = "HWB27"
         else:
             bridge_class = "HWB16"
 
@@ -137,6 +165,7 @@ def convertBridgeToHAZUSclass(AIM):
             bridge_class = "HWB22"
         else:
             bridge_class = "HWB23"
+    
     
     #TODO: review and add HWB24-27 rules
     #TODO: also double check rules for HWB10-11 and HWB22-23
@@ -207,9 +236,9 @@ def convertBridgeToHAZUSclass(AIM):
 
 def convertTunnelToHAZUSclass(AIM):
 
-    if ("Bored" in AIM["cons_type"]) or ("Drilled" in AIM["cons_type"]):
+    if ("Bored" in AIM["ConstructType"]) or ("Drilled" in AIM["ConstructType"]):
         return "HTU1"
-    elif ("Cut" in AIM["cons_type"]) or ("Cover" in AIM["cons_type"]):
+    elif ("Cut" in AIM["ConstructType"]) or ("Cover" in AIM["ConstructType"]):
         return "HTU2"
     else:
         # Select HTU2 for unclassfied tunnels because it is more conservative. 
@@ -217,15 +246,63 @@ def convertTunnelToHAZUSclass(AIM):
 
 def convertRoadToHAZUSclass(AIM):
 
-    if AIM["road_type"] in ["primary", "secondary"]:
+    if AIM["RoadType"] in ["Primary", "Secondary"]:
         return "HRD1"
 
-    elif AIM["road_type"]=="residential":
+    elif AIM["RoadType"]=="Residential":
         return "HRD2"
 
     else:
         # many unclassified roads are urban roads
         return "HRD2" 
+
+def convert_story_rise(structureType, stories):
+
+
+    if structureType in ['W1', 'W2', 'S3', 'PC1', 'MH']:
+
+        # These archetypes have no rise information in their IDs
+        rise = None
+
+    else:
+
+        # First, check if we have valid story information
+        try:
+
+            stories = int(stories)
+
+        except:
+
+            raise ValueError('Missing "NumberOfStories" information, '
+                             'cannot infer rise attribute of archetype')
+
+        if structureType == 'RM1':
+
+            if stories <= 3:
+                rise = "L"
+
+            else:
+                rise = "M"
+
+        elif structureType == 'URM':
+            if stories <= 2:
+                rise = "L"
+
+            else:
+                rise = "M"
+
+        elif structureType in ['S1', 'S2', 'S4', 'S5', 'C1', 'C2', 'C3', \
+                               'PC2', 'RM2']:
+            if stories <=3:
+                rise = "L"
+
+            elif stories <= 7:
+                rise = "M"
+
+            else:
+                rise = "H"
+            
+    return rise
 
 def auto_populate(AIM):
     """
@@ -271,33 +348,6 @@ def auto_populate(AIM):
         # get the building parameters
         bt = GI['StructureType'] #building type
 
-        # get the number of stories / height
-        stories = GI.get('NumberOfStories', None)
-
-        if stories!=None:
-            # We assume that the structure type does not include height information
-            # and we append it here based on the number of story information
-
-            if bt not in ['W1', 'W2', 'S3', 'PC1', 'MH']:
-                if bt not in ['URM']:
-                    if stories <= 3:
-                        bt += 'L'
-                    elif stories <= 7:
-                        bt += 'M'
-                    else:
-                        if bt in ['RM']:
-                            bt += 'M'
-                        else:
-                            bt += 'H'
-                else:
-                    if stories <= 2:
-                        bt += 'L'
-                    else:
-                        bt += 'M'
-
-            stories = 1
-            GI_ap['BuildingType'] = bt
-
         # get the design level
         dl = GI.get('DesignLevel', None)
 
@@ -318,11 +368,22 @@ def auto_populate(AIM):
 
             GI_ap['DesignLevel'] = dl
 
-        # get the occupancy class
-        ot = GI['OccupancyClass']
+        # get the number of stories / height
+        stories = GI.get('NumberOfStories', None)
+
+        # We assume that the structure type does not include height information
+        # and we append it here based on the number of story information
+        rise = convert_story_rise(bt, stories)
+
+        if rise is not None:
+            LF = f'LF.{bt}.{rise}.{dl}'
+            GI_ap['BuildingRise'] = rise
+        else:
+            LF = f'LF.{bt}.{dl}'
+
 
         CMP = pd.DataFrame(
-                {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A']},
+                {f'{LF}': [  'ea',         1,          1,        1,   'N/A']},
                 index = [         'Units','Location','Direction','Theta_0','Family']
             ).T
 
@@ -341,6 +402,16 @@ def auto_populate(AIM):
             ).T
 
             CMP = pd.concat([CMP, CMP_GF], axis=0)
+
+        # set the number of stories to 1
+        # there is only one component in a building-level resolution
+        stories = 1
+
+        # get the occupancy class
+        if GI['OccupancyClass'] in ap_Occupancy.keys():
+            ot = ap_Occupancy[GI['OccupancyClass']]
+        else:
+            ot = GI['OccupancyClass']
         
         DL_ap = {
             "Asset": {
@@ -367,7 +438,7 @@ def auto_populate(AIM):
 
         inf_type = GI["assetSubtype"]
         
-        if inf_type == "hwy_bridge":
+        if inf_type == "HwyBridge":
 
             # get the bridge class
             bt = convertBridgeToHAZUSclass(GI)
@@ -399,7 +470,7 @@ def auto_populate(AIM):
                 }
             }
 
-        elif inf_type == "hwy_tunnel":
+        elif inf_type == "HwyTunnel":
 
             # get the tunnel class
             tt = convertTunnelToHAZUSclass(GI)
@@ -430,7 +501,7 @@ def auto_populate(AIM):
                     }
                 }
             }
-        elif inf_type == "roadway":
+        elif inf_type == "Roadway":
 
             # get the road class
             rt = convertRoadToHAZUSclass(GI)

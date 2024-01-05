@@ -26,7 +26,9 @@ def main(input_args):
     Path("dakotaTab.out").unlink(missing_ok=True)
     Path("dakotaTabPrior.out").unlink(missing_ok=True)
 
-    with open(input_file_name, "r") as f:
+    input_file_full_path = path_to_template_directory / input_file_name
+
+    with open(input_file_full_path, "r") as f:
         inputs = json.load(f)
 
     uq_inputs = inputs["UQ"]

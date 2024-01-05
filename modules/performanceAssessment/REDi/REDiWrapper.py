@@ -174,22 +174,36 @@ def main(args):
     with open(pathComponent) as f:
         CMP = json.load(f)
 
+        # remove Units information - for now
+        if "Units" in CMP:
+            del CMP['Units']
+
     # Get the DMG_sample json from Pelicun
     pathComponentDmg = pelicun_results_dir/'DMG_sample.json'
     with open(pathComponentDmg) as f:
         CMP_DMG = json.load(f)
+
+        # remove Units information - for now
+        if "Units" in CMP_DMG:
+            del CMP_DMG['Units']
 
     # Get the DV_bldg_repair_sample json from Pelicun
     pathComponentDV = pelicun_results_dir/'DV_bldg_repair_sample.json'
     with open(pathComponentDV) as f:
         CMP_DV = json.load(f)
 
+        # remove Units information - for now
+        if "Units" in CMP_DV:
+            del CMP_DV['Units']
+
     # Load the csv version of the decision vars
     with zipfile.ZipFile(pelicun_results_dir/'DV_bldg_repair_sample.zip', 'r') as zip_ref:
         # Read the CSV file inside the zip file into memory
         with zip_ref.open('DV_bldg_repair_sample.csv') as csv_file:
             # Load the CSV data into a pandas DataFrame
-            data = pd.read_csv(io.TextIOWrapper(csv_file, encoding='utf-8'))
+            data = pd.read_csv(io.TextIOWrapper(csv_file, encoding='utf-8'), index_col=0)
+            # Drop Units row for now to avoid breaking the code - would be good to use this info in the future
+            data = data.drop("Units").astype(float)
             
     # Get the number of samples
     num_samples = data.shape[0]
@@ -300,17 +314,17 @@ def main(args):
 
                 # If no directionality, i.e., direction is 0, divide the components evenly in the two directions
                 if '0' in dirs :
-                    qnty = dirs['0'][sample]
+                    qnty = float(dirs['0'][sample])
                     dir_1 = 0.5 * qnty
                     dir_2 = 0.5 * qnty
 
                 elif '1'  in dirs or '2' in dirs :
 
                     if '1'  in dirs :
-                        dir_1 = dirs['1'][sample]
+                        dir_1 = float(dirs['1'][sample])
 
                     if '2'  in dirs :
-                        dir_2 = dirs['2'][sample]
+                        dir_2 = float(dirs['2'][sample])
 
                 else :
                     raise ValueError('Could not parse the directionality in the Pelicun output.')
@@ -357,7 +371,7 @@ def main(args):
                     for ds, qtys in dir_qty.items() :
 
                         ds = int(ds)
-                        qty = qtys[sample]
+                        qty = float(qtys[sample])
 
                         if math.isnan(qty) :
                             log_output.append(f'Collapse detected sample {sample}. Skipping REDi run.\n')
@@ -436,8 +450,8 @@ def main(args):
                     total_cost=0.0
                     total_time=0.0
                     for dir in cost_dirs_dict.keys() :
-                        total_cost += cost_dirs_dict[dir][sample]
-                        total_time += time_dirs_dict[dir][sample]
+                        total_cost += float(cost_dirs_dict[dir][sample])
+                        total_time += float(time_dirs_dict[dir][sample])
 
                     cost_floor_list[floor-1][ds-1] = total_cost
                     time_floor_list[floor-1][ds-1] = total_time
