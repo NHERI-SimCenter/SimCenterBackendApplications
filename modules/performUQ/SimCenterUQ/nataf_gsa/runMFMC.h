@@ -147,7 +147,8 @@ private:
 	//
 
 	double CB_init; // computational budget
-	std::chrono::time_point<std::chrono::steady_clock> globalElapseStart;
+	//std::chrono::time_point<std::chrono::steady_clock> globalElapseStart;
+	std::chrono::time_point<std::chrono::high_resolution_clock> globalElapseStart;
 };
 
 #endif// RUN_MFMC_H
