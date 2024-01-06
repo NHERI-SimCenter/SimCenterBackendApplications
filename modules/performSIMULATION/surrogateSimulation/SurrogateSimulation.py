@@ -128,7 +128,7 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
     
     if not os.path.isfile('results.out'):
         # not found
-        print("Skiping surrogateEDP - results.out does not exists in " + os.getcwd())
+        print("Skiping surrogateEDP - results.out does not exist in " + os.getcwd())
         exit(-1)
     elif os.stat('results.out').st_size == 0:
         # found but empty
