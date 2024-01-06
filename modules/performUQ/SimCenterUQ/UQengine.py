@@ -287,20 +287,15 @@ class UQengine:
     #
 
     def create_errLog(self):
-        if self.run_type.lower()=="runninglocal":
-            pass
-        else:
-            self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
-        
+        #self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
+        pass
+
     def exit(self, msg):
         print(msg, file=sys.stderr)
         print(msg)
         # sys.stderr.write(msg)
-        
-        if self.run_type.lower()=="runningremote":
-            self.errfile.write(msg)
-            self.errfile.close()
-            
+        # self.errfile.write(msg)
+        # self.errfile.close()
         exit(-1)
 
     def terminate_errLog(self):
