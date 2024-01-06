@@ -181,7 +181,7 @@ class UQengine:
                 elif val.shape[0]:
                     if val.shape[0] != self.y_dim:
                         msg = "model output <results.out> in sample {} contains {} value(s) while the number of QoIs specified is {}".format(
-                        id, Y_tmp.shape[0],  self.y_dim
+                        id+1, val.shape[0],  self.y_dim
                         )
                         self.exit(msg)
 
