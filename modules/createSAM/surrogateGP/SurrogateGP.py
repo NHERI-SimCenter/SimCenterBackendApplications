@@ -61,7 +61,8 @@ def create_SAM(AIM_file, SAM_file):
 
     # find and load surrogate json
 
-    surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    surrogate_path = os.path.join(os.getcwd(),root_SAM['ApplicationData']['mainScript'])
     print(surrogate_path)
 
     with open(surrogate_path, 'r') as f:
