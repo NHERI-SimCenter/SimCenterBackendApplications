@@ -814,9 +814,9 @@ def main(input_args):
     workflow_driver = input_args[4]
     input_file = input_args[5]
 
-    input_file_full_path = template_directory / input_file
+    # input_file_full_path = template_directory / input_file
 
-    with open(input_file_full_path, "r") as f:
+    with open(input_file, "r") as f:
         inputs = json.load(f)
 
     uq_inputs = inputs["UQ"]

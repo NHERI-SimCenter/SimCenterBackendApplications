@@ -106,7 +106,8 @@ def main(input_args):
     # # ================================================================================================================
 
     # Process input json file
-    input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
+    # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
+    input_json_filename_full_path = input_json_filename
     logfile.write("\n\n==========================")
     logfile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
     (number_of_samples, seed_value, calibration_data_filename, loglikelihood_module, write_outputs, variables_list, 

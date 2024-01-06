@@ -45,9 +45,9 @@ def main(input_args):
         python_command = "python3"
 
     command = (
-        f"\"{python_command}\" \"{main_script}\" "
-        f"\"{path_to_working_directory}\" \"{path_to_template_directory}\" "
-        f"{run_type} {driver_file_name} {input_file_name}"
+        f'"{python_command}" "{main_script}" '
+        f'"{path_to_working_directory}" "{path_to_template_directory}" '
+        f"{run_type} {driver_file_name} {input_file_full_path}"
     )
     print(command)
     try:
