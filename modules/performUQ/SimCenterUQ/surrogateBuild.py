@@ -3052,11 +3052,15 @@ def read_txt(text_dir, exit_fun):
     return X
 
 
-if __name__ == "__main__":
 
-    f = open('dakota.err', 'a')
+
+if __name__ == "__main__":
+    errFileName = 'dakota.err'
     try:
         main(sys.argv)
+        open(os.path.join(os.getcwd(), errFileName ), 'w').close()
     except Exception:
+        f = open(os.path.join(os.getcwd(), errFileName ), 'w')
         traceback.print_exc(file=f)
-    f.close()
+        f.close()
+    exit(1)
