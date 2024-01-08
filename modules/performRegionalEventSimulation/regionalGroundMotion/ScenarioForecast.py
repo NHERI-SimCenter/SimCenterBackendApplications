@@ -141,8 +141,7 @@ if __name__ == '__main__':
         output_file = site_info.get('output_file',False)
         if output_file:
             output_file = os.path.join(input_dir, output_file)
-        min_ID = site_info['min_ID']
-        max_ID = site_info['max_ID']
+        filter = site_info['filter']
         # Creating stations from the csv input file
         z1_tag = 0
         z25_tag = 0
@@ -162,7 +161,7 @@ if __name__ == '__main__':
             z25_tag = 2 # interpolate from openSHA default database
             # openSHA database: https://github.com/opensha/opensha/blob/16aaf6892fe2a31b5e497270429b8d899098361a/src/main/java/org/opensha/commons/data/siteData/OrderedSiteDataProviderList.java
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
+        stations = create_stations(input_file, output_file, filter, vs30_tag, z1_tag, z25_tag)
     else:
         print("""Only From_CSV site_info['Type'] is supported now""")
     if stations:
