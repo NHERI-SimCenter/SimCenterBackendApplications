@@ -352,12 +352,7 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
         #    'z2.5': stn.get(z2p5_label, 9.0)
         #})
     # Saving data to the output file
-    if output_file:
-        if '.json' in output_file:
-            with open(output_file, 'w') as f:
-                json.dump(stn_file, f, indent=2)
-        if 'OpenQuake' in output_file:
-            df_csv = {
+    df_csv = {
                 'ID': [id for id, _ in enumerate(stn_file['Stations'])],
                 'lon': [x['Longitude'] for x in stn_file['Stations']],
                 'lat': [x['Latitude'] for x in stn_file['Stations']],
@@ -368,23 +363,44 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
                 'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
             }
             # no backarc by default
-            if stn_file['Stations'][0].get('backarc',None):
-                df_csv.update({
-                    'backarc': [x.get('backarc') for x in stn_file['Stations']]
-                })
-            pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
-        if 'SiteData' in output_file:
-            df_csv = {
-                'id': list(range(len(stn_file['Stations']))),
-                'Longitude': [x['Longitude'] for x in stn_file['Stations']],
-                'Latitude': [x['Latitude'] for x in stn_file['Stations']],
-                'Vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
-                'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']],
-                'Model': [x.get('Model','EI') for x in stn_file['Stations']]
-            }
-            for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']+user_param_list:
-                df_csv.update({cur_param: [x.get(cur_param) for x in stn_file['Stations']]})
-            pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
+    if stn_file['Stations'][0].get('backarc',None):
+        df_csv.update({
+            'backarc': [x.get('backarc') for x in stn_file['Stations']]
+        })
+    pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
+    # if output_file:
+    #     if '.json' in output_file:
+    #         with open(output_file, 'w') as f:
+    #             json.dump(stn_file, f, indent=2)
+    #     if 'OpenQuake' in output_file:
+    #         df_csv = {
+    #             'ID': [id for id, _ in enumerate(stn_file['Stations'])],
+    #             'lon': [x['Longitude'] for x in stn_file['Stations']],
+    #             'lat': [x['Latitude'] for x in stn_file['Stations']],
+    #             'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
+    #             'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
+    #             'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
+    #             'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
+    #             'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
+    #         }
+    #         # no backarc by default
+    #         if stn_file['Stations'][0].get('backarc',None):
+    #             df_csv.update({
+    #                 'backarc': [x.get('backarc') for x in stn_file['Stations']]
+    #             })
+    #         pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
+    #     if 'SiteData' in output_file:
+    #         df_csv = {
+    #             'id': list(range(len(stn_file['Stations']))),
+    #             'Longitude': [x['Longitude'] for x in stn_file['Stations']],
+    #             'Latitude': [x['Latitude'] for x in stn_file['Stations']],
+    #             'Vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
+    #             'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']],
+    #             'Model': [x.get('Model','EI') for x in stn_file['Stations']]
+    #         }
+    #         for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']+user_param_list:
+    #             df_csv.update({cur_param: [x.get(cur_param) for x in stn_file['Stations']]})
+    #         pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
 
@@ -491,7 +507,7 @@ def get_z1(vs30):
     Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)
     """
 
-    z1 = -7.15 / 4.0 * np.log((vs30 ** 4 + 571.0 ** 4) / (1360.0 ** 4 + 571.0 ** 4))
+    z1 = np.exp(-7.15 / 4.0 * np.log((vs30 ** 4 + 571.0 ** 4) / (1360.0 ** 4 + 571.0 ** 4)))
     # return
     return z1
 
@@ -501,6 +517,15 @@ def get_z25(z1):
     Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)
     """
     z25 = 0.748 + 2.218 * z1
+    # return
+    return z25
+
+def get_z25fromVs(vs):
+    """
+    Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
+    Vs is m/s
+    """
+    z25 = (7.089 - 1.144 * np.log(vs))*1000
     # return
     return z25
 
