@@ -86,12 +86,19 @@ def main(input_args):
     t1 = time.time()
 
     # Initialize analysis
-    mainscript_path = os.path.abspath(input_args[0])
-    working_directory = os.path.abspath(input_args[1])
-    template_directory = os.path.abspath(input_args[2])
-    run_type = input_args[3]  # either "runningLocal" or "runningRemote"
-    driver_file = input_args[4]
-    input_json_filename = input_args[5]
+    # mainscript_path = os.path.abspath(input_args[0])
+    # working_directory = os.path.abspath(input_args[1])
+    # template_directory = os.path.abspath(input_args[2])
+    # run_type = input_args[3]  # either "runningLocal" or "runningRemote"
+    # driver_file = input_args[4]
+    # input_json_filename = input_args[5]
+
+    mainscript_path = os.path.abspath(__file__)
+    working_directory = os.path.abspath(input_args[0])
+    template_directory = os.path.abspath(input_args[1])
+    run_type = input_args[2]  # either "runningLocal" or "runningRemote"
+    driver_file = input_args[3]
+    input_json_filename = input_args[4]
 
     logfile_name = "logFileTMCMC.txt"
     logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
