@@ -31,7 +31,6 @@ class CommandLineArguments:
 def _handle_arguments(
     command_line_arguments: CommandLineArguments,
 ) -> InputsType:
-    # inputs = command_line_arguments.inputs
     working_directory_path = command_line_arguments.working_directory_path
     template_directory_path = command_line_arguments.template_directory_path
     run_type = command_line_arguments.run_type
@@ -165,7 +164,9 @@ def main(arguments: InputsType):
             str(destination_dir_name),
         ]
         edp_data = edp_inputs[sample_number]
-        data = np.genfromtxt(destination_dir_name / calibration_data_file_name, dtype=float)
+        data = np.genfromtxt(
+            destination_dir_name / calibration_data_file_name, dtype=float
+        )
         list_of_datasets.append(data)
         list_of_dataset_lengths.append(edp_data["length"])
 

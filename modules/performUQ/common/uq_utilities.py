@@ -256,15 +256,6 @@ class ParallelRunnerMultiprocessing:
     def close_pool(self) -> None:
         self.pool.close()
 
-    # def run(self, func, iterable, chunksize: Optional[int] = None) -> list:
-    #     # try:
-    #     #     isinstance(self.pool, Pool)
-    #     # except AttributeError:
-    #     #     self.pool = self.get_pool()
-    #     return self.pool.starmap(
-    #         func=func, iterable=iterable, chunksize=chunksize
-    #     )
-
 
 def make_ERADist_object(name, opt, val) -> ERADist:
     return ERADist(name=name, opt=opt, val=val)
@@ -495,7 +486,6 @@ class InverseGammaParameters:
 
     def _to_shape_and_scale(self):
         return (self.alpha_scalar, 1 / self.beta_scalar)
-
 
 
 def _get_tabular_results_file_name_for_dataset(

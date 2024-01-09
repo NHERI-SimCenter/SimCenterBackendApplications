@@ -1,6 +1,7 @@
 from mpi4py import MPI
 from mpi4py.futures import MPIPoolExecutor
 
+
 class ParallelRunnerMPI4PY:
     def __init__(self, run_type: str = "runningRemote") -> None:
         self.run_type = run_type
@@ -14,8 +15,7 @@ class ParallelRunnerMPI4PY:
             num_processors = 1
         if num_processors < 1:
             raise ValueError(
-                "Number of processes must be at least 1.                 "
-                f"                Got {num_processors}"
+                "Number of processes must be at least 1. Got {num_processors}"
             )
         return num_processors
 
@@ -25,13 +25,3 @@ class ParallelRunnerMPI4PY:
 
     def close_pool(self) -> None:
         self.pool.shutdown()
-
-        # def run(self, func, iterable, chunksize: int = 1,
-        #         unordered: bool = False) -> list:
-        #     # try:
-        #     #     isinstance(self.pool, MPIPoolExecutor)
-        #     # except AttributeError:
-        #     #     self.pool = self.get_pool()
-        #     return list(self.pool.starmap(fn=func, iterable=iterable,
-        #                                 chunksize=chunksize,
-        #                                 unordered=unordered))

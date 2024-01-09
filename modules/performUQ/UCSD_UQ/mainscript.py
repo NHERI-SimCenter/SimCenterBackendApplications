@@ -14,6 +14,7 @@ path_to_common_uq = Path(__file__).parent.parent / "common"
 sys.path.append(str(path_to_common_uq))
 import uq_utilities
 
+
 # ======================================================================================================================
 def main(input_args):
 
@@ -35,35 +36,26 @@ def main(input_args):
 
     uq_inputs = inputs["UQ"]
     if uq_inputs["uqType"] == "Metropolis Within Gibbs Sampler":
-        main_script = (
-            path_to_UCSD_UQ_directory / "mainscript_hierarchical_bayesian.py"
-        )
         import mainscript_hierarchical_bayesian
+
         main_function = mainscript_hierarchical_bayesian.main
     else:
-        main_script = path_to_UCSD_UQ_directory / "mainscript_tmcmc.py"
         import mainscript_tmcmc
+
         main_function = mainscript_tmcmc.main
 
     command = (
-        # f'"{main_script}" '
         f'"{path_to_working_directory}" "{path_to_template_directory}" '
         f'{run_type} "{driver_file_name}" "{input_file_full_path}"'
     )
     command_list = shlex.split(command)
-    print(f"\n\n{command_list = }\n\n")
     main_function(command_list)
-    print("Done!")
+
 
 # ======================================================================================================================
 
 if __name__ == "__main__":
     input_args = sys.argv
     main(input_args)
-    # err_file = Path(input_args[1]) / "UCSD_UQ.err"
-    # with open(err_file, "w") as f:
-    #     sys.stderr = f
-    #     main(input_args)
-
 
 # ======================================================================================================================
