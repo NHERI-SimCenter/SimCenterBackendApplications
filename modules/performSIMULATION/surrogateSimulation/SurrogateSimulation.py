@@ -113,7 +113,9 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
         newEDP_input_path = EDP_input_path
 
     root_SAM = root_AIM['Applications']['Modeling']
-    surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    curpath = os.getcwd()
+    #surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    surrogate_path = os.path.join(curpath,root_SAM['ApplicationData']['mainScript'])
 
     with open(surrogate_path, 'r') as f:
         surrogate_model = json.load(f)
@@ -123,6 +125,17 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
     #
 
     edp_names = surrogate_model["ylabels"]
+    
+    if not os.path.isfile('results.out'):
+        # not found
+        print("Skiping surrogateEDP - results.out does not exist in " + os.getcwd())
+        exit(-1)
+    elif os.stat('results.out').st_size == 0:
+        # found but empty
+        print("Skiping surrogateEDP - results.out is empty in " + os.getcwd())
+        exit(-1)
+
+
     edp_vals = np.loadtxt('results.out').tolist()
 
 
