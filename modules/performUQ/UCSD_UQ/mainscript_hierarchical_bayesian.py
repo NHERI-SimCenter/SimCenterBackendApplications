@@ -300,6 +300,10 @@ def main(input_args):
         list_of_proposal_covariance_kernels,
     )
 
+    if run_type == "runningRemote":
+        from mpi4py import MPI
+        MPI.COMM_WORLD.Abort(0)
+
 
 if __name__ == "__main__":
     input_args = sys.argv
