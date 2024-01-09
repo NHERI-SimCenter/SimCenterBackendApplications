@@ -14,6 +14,8 @@ from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
 
 import scipy.stats
+import numpy.typing as npt
+from dataclasses import dataclass
 
 
 def _copytree(src, dst, symlinks=False, ignore=None):
@@ -234,6 +236,7 @@ class ParallelRunnerMultiprocessing:
     def __init__(self, run_type: str = "runningLocal") -> None:
         self.run_type = run_type
         self.num_processors = self.get_num_processors()
+        self.pool = self.get_pool()
 
     def get_num_processors(self) -> int:
         num_processors = os.cpu_count()
@@ -253,14 +256,14 @@ class ParallelRunnerMultiprocessing:
     def close_pool(self) -> None:
         self.pool.close()
 
-    def run(self, func, iterable, chunksize: Optional[int] = None) -> list:
-        try:
-            isinstance(self.pool, Pool)
-        except AttributeError:
-            self.pool = self.get_pool()
-        return self.pool.starmap(
-            func=func, iterable=iterable, chunksize=chunksize
-        )
+    # def run(self, func, iterable, chunksize: Optional[int] = None) -> list:
+    #     # try:
+    #     #     isinstance(self.pool, Pool)
+    #     # except AttributeError:
+    #     #     self.pool = self.get_pool()
+    #     return self.pool.starmap(
+    #         func=func, iterable=iterable, chunksize=chunksize
+    #     )
 
 
 def make_ERADist_object(name, opt, val) -> ERADist:
@@ -359,7 +362,7 @@ def get_list_of_pseudo_random_number_generators(entropy, num_spawn):
     return prngs
 
 
-def get_parallel_runner_instance(run_type: str):
+def get_parallel_pool_instance(run_type: str):
     if run_type == "runningRemote":
         from parallel_runner_mpi4py import ParallelRunnerMPI4PY
 
@@ -464,13 +467,51 @@ def get_inverse_gamma_random_variate(prng, shape, scale, size=1):
         shape, scale=scale, size=size, random_state=prng
     )
 
+
 def multivariate_normal_logpdf(x, mean, cov):
     eigenvalues, eigenvectors = np.linalg.eigh(cov)
     logdet = np.sum(np.log(eigenvalues))
-    valsinv = 1./eigenvalues
+    valsinv = 1.0 / eigenvalues
     U = eigenvectors * np.sqrt(valsinv)
     dim = len(eigenvalues)
     dev = x - mean
     maha = np.square(dev.T @ U).sum()
     log2pi = np.log(2 * np.pi)
     return -0.5 * (dim * log2pi + maha + logdet)
+
+
+@dataclass
+class NormalInverseWishartParameters:
+    mu_vector: npt.NDArray
+    lambda_scalar: float
+    nu_scalar: float
+    psi_matrix: npt.NDArray
+
+
+@dataclass
+class InverseGammaParameters:
+    alpha_scalar: float
+    beta_scalar: float
+
+    def _to_shape_and_scale(self):
+        return (self.alpha_scalar, 1 / self.beta_scalar)
+
+
+
+def _get_tabular_results_file_name_for_dataset(
+    tabular_results_file_base_name, dataset_number
+):
+    tabular_results_parent = tabular_results_file_base_name.parent
+    tabular_results_stem = tabular_results_file_base_name.stem
+    tabular_results_extension = tabular_results_file_base_name.suffix
+
+    tabular_results_file = (
+        tabular_results_parent
+        / f"{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}"
+    )
+    return tabular_results_file
+
+
+def _write_to_tabular_results_file(tabular_results_file, string_to_write):
+    with tabular_results_file.open("a") as f:
+        f.write(string_to_write)
