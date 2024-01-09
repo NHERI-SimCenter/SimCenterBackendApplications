@@ -27,6 +27,7 @@ def main(args):
 
         if platform.system() == "Windows":
             pythonCommand = "python"
+            driverFile = driverFile + ".bat"
         else:
             pythonCommand = "python3"
 

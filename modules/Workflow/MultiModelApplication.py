@@ -261,7 +261,7 @@ if __name__ == '__main__':
                         default='log.txt',
                         help="Path where the log file will be saved.")
 
-    args = parser.parse_args()        
+    args, unknown  = parser.parse_known_args()        
     
     main(inputFile = args.filenameAIM,
          appKey = args.appKey,

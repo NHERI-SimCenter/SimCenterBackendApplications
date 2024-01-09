@@ -177,7 +177,7 @@ def main(arguments: InputsType):
             str(destination_dir_name),
         ]
         edp_data = edp_inputs[sample_number]
-        data = np.genfromtxt(destination_dir_name / calibration_data_file_name)
+        data = np.genfromtxt(destination_dir_name / calibration_data_file_name, dtype=float)
         list_of_datasets.append(data)
         list_of_dataset_lengths.append(edp_data["length"])
 
