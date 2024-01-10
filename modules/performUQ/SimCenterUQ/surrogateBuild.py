@@ -56,6 +56,7 @@ import time
 from copy import deepcopy
 import random
 import warnings
+import traceback
 warnings.filterwarnings("ignore")
 
 
@@ -3051,5 +3052,20 @@ def read_txt(text_dir, exit_fun):
     return X
 
 
+
+
 if __name__ == "__main__":
+    errFileName = 'dakota.err'
+    sys.stderr = open(errFileName, 'w')
     main(sys.argv)
+
+
+    
+    # try:
+    #     main(sys.argv)
+    #     open(os.path.join(os.getcwd(), errFileName ), 'w').close()
+    # except Exception:
+    #     f = open(os.path.join(os.getcwd(), errFileName ), 'w')
+    #     traceback.print_exc(file=f)
+    #     f.close()
+    # exit(1)

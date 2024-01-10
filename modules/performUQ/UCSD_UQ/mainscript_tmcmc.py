@@ -86,12 +86,19 @@ def main(input_args):
     t1 = time.time()
 
     # Initialize analysis
-    mainscript_path = os.path.abspath(input_args[0])
-    working_directory = os.path.abspath(input_args[1])
-    template_directory = os.path.abspath(input_args[2])
-    run_type = input_args[3]  # either "runningLocal" or "runningRemote"
-    driver_file = input_args[4]
-    input_json_filename = input_args[5]
+    # mainscript_path = os.path.abspath(input_args[0])
+    # working_directory = os.path.abspath(input_args[1])
+    # template_directory = os.path.abspath(input_args[2])
+    # run_type = input_args[3]  # either "runningLocal" or "runningRemote"
+    # driver_file = input_args[4]
+    # input_json_filename = input_args[5]
+
+    mainscript_path = os.path.abspath(__file__)
+    working_directory = os.path.abspath(input_args[0])
+    template_directory = os.path.abspath(input_args[1])
+    run_type = input_args[2]  # either "runningLocal" or "runningRemote"
+    driver_file = input_args[3]
+    input_json_filename = input_args[4]
 
     logfile_name = "logFileTMCMC.txt"
     logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
@@ -106,7 +113,8 @@ def main(input_args):
     # # ================================================================================================================
 
     # Process input json file
-    input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
+    # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
+    input_json_filename_full_path = input_json_filename
     logfile.write("\n\n==========================")
     logfile.write("\nParsing the json input file {}".format(input_json_filename_full_path))
     (number_of_samples, seed_value, calibration_data_filename, loglikelihood_module, write_outputs, variables_list, 
@@ -248,52 +256,6 @@ def main(input_args):
         logfile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
 
         syncLogFile(logfile)
-
-        # Write the results of the last stage to a file named dakotaTab.out for quoFEM to be able to read the results
-        logfile.write(
-            "\n\n\t\tWriting posterior samples to 'dakotaTab.out' for quoFEM to read the results"
-        )
-        tabFilePath = os.path.join(working_directory, "dakotaTab.out")
-
-        # Create the headings, which will be the first line of the file
-        headings = "eval_id\tinterface\t"
-        if model_number == 0:
-            logfile.write("\n\t\t\tCreating headings")
-            for v in parameters_of_model["names"]:
-                headings += "{}\t".format(v)
-            if write_outputs:  # create headings for outputs
-                for i, edp in enumerate(edp_names_list):
-                    if edp_lengths_list[i] == 1:
-                        headings += "{}\t".format(edp)
-                    else:
-                        for comp in range(edp_lengths_list[i]):
-                            headings += "{}_{}\t".format(edp, comp + 1)
-            headings += "\n"
-
-        # Get the data from the last stage
-        logfile.write("\n\t\t\tGetting data from last stage")
-        dataToWrite = mytrace[-1][0]
-        
-        logfile.write("\n\t\t\tWriting to file {}".format(tabFilePath))
-        with open(tabFilePath, "a+") as f:
-            if model_number == 0:
-                f.write(headings)
-            for i in range(number_of_samples):
-                string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
-                for j in range(len(parameters_of_model["names"])):
-                    string += "{}\t".format(dataToWrite[i, j])
-                if write_outputs:  # write the output data
-                    #TODO: Fix this by storing the results corresponding to the proposed states that are accepted in the chain
-                    analysisNumString = "workdir." + str(i + 1)
-                    prediction = np.atleast_2d(
-                        np.genfromtxt(
-                            os.path.join(working_directory, analysisNumString, "results.out")
-                        )
-                    ).reshape((1, -1))
-                    for predNum in range(np.shape(prediction)[1]):
-                        string += "{}\t".format(prediction[0, predNum])
-                string += "\n"
-                f.write(string)
 
         logfile.write("\n\n\t==========================")
         logfile.write("\n\tPost processing finished")

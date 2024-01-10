@@ -100,7 +100,7 @@ def main(args):
         #  
 
         if uq_data['uqType'] == 'Train GP Surrogate Model':
-            simCenterUQCommand = '"{}" "{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2> dakota.err'.format(python,myScriptDir,surrogate,workdir_main,inputFile, workflowDriver, osType, runType)
+            simCenterUQCommand = '"{}" "{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(python,myScriptDir,surrogate,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Sensitivity Analysis':
             simCenterUQCommand = '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(myScriptDir,natafExe,workdir_main,inputFile, workflowDriver, osType, runType)
         elif uq_data['uqType'] == 'Forward Propagation':

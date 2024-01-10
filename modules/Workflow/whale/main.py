@@ -1964,7 +1964,7 @@ class Workflow(object):
             if platform.system() == 'Windows':
                 driverFile = driverFile+'.bat'
             log_msg(driverFile)
-            with open(driverFile,'w') as f:
+            with open(driverFile,'w', newline='\n') as f:
                 f.write(driver_script)
 
             log_msg('Workflow driver file successfully created.',prepend_timestamp=False)

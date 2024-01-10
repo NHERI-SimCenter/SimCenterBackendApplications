@@ -805,7 +805,7 @@
       },
       {
         "Name": "SurrogateEDP",
-        "ExecutablePath": "applications/createEDP/SurrogateEDP/SurrogateEDP.py",
+        "ExecutablePath": "applications/createEDP/surrogateEDP/surrogateEDP.py",
         "ApplicationSpecificInputs": []
       }
     ]
