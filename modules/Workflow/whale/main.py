@@ -1571,7 +1571,7 @@ class Workflow(object):
         else:
 
             for dir_or_file in os.listdir(os.getcwd()):
-                if dir_or_file not in ['log.txt', 'templatedir']:
+                if dir_or_file not in ['log.txt', 'templatedir', 'input_data']:
                     if os.path.isdir(dir_or_file):
                         shutil.rmtree(dir_or_file)
                     else:
