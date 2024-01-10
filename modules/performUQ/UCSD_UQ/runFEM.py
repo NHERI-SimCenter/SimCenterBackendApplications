@@ -80,10 +80,11 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
     if os.path.exists('results.out'):
         with open('results.out', 'r') as f:
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
+        preds = prediction.copy()
 
         os.chdir("../")
         return (log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
-                            edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors), prediction)
+                            edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors), preds)
     else:
         os.chdir("../")
         return (-np.inf, np.atleast_2d([-np.inf]*sum(edpLengthsList)).reshape((1, -1)))
