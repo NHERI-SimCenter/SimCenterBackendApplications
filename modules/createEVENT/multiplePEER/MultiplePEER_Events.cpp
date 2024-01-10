@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+
 using namespace std;
 
 #include <jansson.h>  // for Json
@@ -361,7 +363,30 @@ int createSimCenterEvent(json_t *peerEvent) {
 
     // open file
 
-    ifstream fileIn(fileName);
+    
+    //
+    // fileName may be in input_data folder .. if so revise path
+    //
+    
+    char *fileNameToOpen;
+    if (std::filesystem::exists(fileName)) {
+      fileNameToOpen = new char[strlen(fileName)+1];
+      strcpy(fileNameToOpen, fileName);
+    } else {
+      
+      std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+      std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+      newFilePath.append("input_data");
+      newFilePath.append(fileName);
+      std::string stringPath; stringPath = newFilePath.string();
+      const char *charPath = stringPath.c_str();
+      fileNameToOpen = new char[strlen(charPath)+1];
+      strcpy(fileNameToOpen, charPath);
+    }
+    
+    std::cerr << "MultiplePEER::addEvent FILE PATH: " << fileNameToOpen;    
+
+    ifstream fileIn(fileNameToOpen);
 
     // read dT and numPoints
 
