@@ -656,7 +656,7 @@ void ERANataf::simulateAppBatch(string workflowDriver,
 
 		// save the final results
 
-		vector<vector<double>> gvals(nmc, std::vector<double>(inp.nqoi, 0));
+		//vector<vector<double>> gvals(nmc, std::vector<double>(inp.nqoi, 0));
 		for (int i = 0; i < nmc; i++) {
 			for (int j = 0; j < inp.nqoi; j++) {
 				gvals[i][j] = rbuf[i * inp.nqoi + j];

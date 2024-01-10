@@ -80,7 +80,7 @@ def get_prediction_from_workdirs(i, working_directory):
     return prediction
 
 
-def write_prior_data_to_files(logfile, working_directory, model_number, model_parameters, 
+def write_data_to_tab_files(logfile, working_directory, model_number, model_parameters, 
                               edp_names_list, edp_lengths_list, number_of_samples, dataToWrite, 
                               tab_file_name, predictions):
     
@@ -97,7 +97,7 @@ def write_prior_data_to_files(logfile, working_directory, model_number, model_pa
             for j in range(len(model_parameters['names'])):
                 row_string += "{}\t".format(dataToWrite[i, j])
             if write_outputs:  # write the output data
-                prediction = predictions[i, :]
+                prediction = np.atleast_2d(predictions[i, :])
                 for pred in range(np.shape(prediction)[1]):
                     row_string += "{}\t".format(prediction[0, pred])
             row_string += "\n"
@@ -159,38 +159,37 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
                   scale_factors, shift_factors, driver_file) for ind in range(number_of_samples)]
 
     # Evaluate log-likelihood at current samples Sm
-    if parallelize_MCMC:
-        if run_type == "runningLocal":
-            processor_count = mp.cpu_count()
-            pool = Pool(processes=processor_count)
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, proc_count=processor_count, stage_num=stage_number)
-            log_likelihoods_list = pool.starmap(runFEM, iterables)
-        else:
-            from mpi4py.futures import MPIPoolExecutor
-            executor = MPIPoolExecutor(max_workers=MPI_size)
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
-            log_likelihoods_list = list(executor.starmap(runFEM, iterables))
-        log_likelihood_values = np.array(log_likelihoods_list).squeeze()
+    if run_type == "runningLocal":
+        processor_count = mp.cpu_count()
+        pool = Pool(processes=processor_count)
+        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, proc_count=processor_count, stage_num=stage_number)
+        outputs = pool.starmap(runFEM, iterables)
+        log_likelihoods_list = []
+        predictions_list = []
+        for output in outputs:
+            log_likelihoods_list.append(output[0])
+            predictions_list.append(output[1])
     else:
-        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
-        log_likelihood_values = np.array([runFEM(ind, sample_values[ind], model_parameters, working_directory, log_likelihood_function,
-                              calibration_data, number_of_experiments, covariance_matrix_list,
-                              edp_names_list, edp_lengths_list, scale_factors,
-                              shift_factors, driver_file)
-                       for ind in range(number_of_samples)]).squeeze()
+        from mpi4py.futures import MPIPoolExecutor
+        executor = MPIPoolExecutor(max_workers=MPI_size)
+        write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
+        outputs = list(executor.starmap(runFEM, iterables))
+        log_likelihoods_list = []
+        predictions_list = []
+        for output in outputs:
+            log_likelihoods_list.append(output[0])
+            predictions_list.append(output[1])
+    log_likelihood_values = np.array(log_likelihoods_list).squeeze()
+    prediction_values = np.array(predictions_list).squeeze()
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write("\n\n\t\tTotal number of model evaluations so far: {}".format(total_number_of_model_evaluations))
 
     # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results
     logfile.write("\n\n\t\tWriting prior samples to 'dakotaTabPrior.out' for quoFEM to read the results")
-    predictions = []
-    for i in range(number_of_samples):
-        predictions.append(get_prediction_from_workdirs(i, working_directory))
-    predictions = np.atleast_2d(np.array(predictions))
-    write_prior_data_to_files(logfile, working_directory, model_number, model_parameters, 
+    write_data_to_tab_files(logfile, working_directory, model_number, model_parameters, 
                               edp_names_list, edp_lengths_list, number_of_samples, dataToWrite=sample_values, 
-                              tab_file_name="dakotaTabPrior.out", predictions=predictions)
+                              tab_file_name="dakotaTabPrior.out", predictions=prediction_values)
 
     total_log_evidence = 0
 
@@ -224,13 +223,14 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         resampled_values = sample_values[resample_ids]
         resampled_log_likelihood_values = log_likelihood_values[resample_ids]
         resampled_unnormalized_posterior_pdf_values = unnormalized_posterior_pdf_values[resample_ids]
+        resampled_prediction_values = np.atleast_2d(prediction_values[resample_ids, :])
 
         # save to trace
         # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
         mytrace.append([sample_values, log_likelihood_values, weights, effective_sample_size, beta, resampled_values])
 
         # Write Data to '.csv' files
-        data_to_write = mytrace[stage_number - 1][0]
+        data_to_write = np.hstack((sample_values, prediction_values))
         write_data_to_csvfile(logfile, total_number_of_models_in_ensemble, stage_number, model_number, 
                                 working_directory, data_to_write)
 
@@ -249,31 +249,22 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
                       working_directory, default_rng(child_seeds[sample_num]),
                       calibration_data, number_of_experiments, covariance_matrix_list,
                       edp_names_list, edp_lengths_list, scale_factors,
-                      shift_factors, driver_file)
+                      shift_factors, driver_file, resampled_prediction_values[sample_num, :].reshape((1, -1)))
                       for sample_num in range(number_of_samples)]
         
-        if parallelize_MCMC:
-            if run_type == "runningLocal":
-                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, proc_count=processor_count, stage_num=stage_number)
-                results = pool.starmap(tmcmcFunctions.MCMC_MH, iterables)
-            else:
-                write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
-                results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
+        if run_type == "runningLocal":
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, proc_count=processor_count, stage_num=stage_number)
+            results = pool.starmap(tmcmcFunctions.MCMC_MH, iterables)
         else:
-            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, stage_num=stage_number)
-            results = [tmcmcFunctions.MCMC_MH(j1, scaled_proposal_covariance_matrix, number_of_MCMC_steps, resampled_values[j1], resampled_log_likelihood_values[j1], 
-                                              resampled_unnormalized_posterior_pdf_values[j1], beta, number_of_accepted_states_in_this_stage, all_distributions_list,
-                                              log_likelihood_function, model_parameters, working_directory, 
-                                              default_rng(child_seeds[j1]),
-                                              calibration_data, number_of_experiments, covariance_matrix_list,
-                                              edp_names_list, edp_lengths_list, scale_factors, shift_factors, driver_file)
-                        for j1 in range(number_of_samples)]
+            write_eval_data_to_logfile(logfile, parallelize_MCMC, run_type, MPI_size=MPI_size, stage_num=stage_number)
+            results = list(executor.starmap(tmcmcFunctions.MCMC_MH, iterables))
 
-        samples_list, loglikes_list, posterior_pdf_vals_list, num_accepts, all_proposals, all_PLP = zip(*results)
+        samples_list, loglikes_list, posterior_pdf_vals_list, num_accepts, all_proposals, all_PLP, preds_list = zip(*results)
         # for next beta
         sample_values = np.asarray(samples_list)
         log_likelihood_values = np.asarray(loglikes_list)
         unnormalized_posterior_pdf_values = np.asarray(posterior_pdf_vals_list)
+        prediction_values = np.asarray(preds_list).squeeze()
 
         num_accepts = np.asarray(num_accepts)
         number_of_accepted_states_in_this_stage = sum(num_accepts)
@@ -304,19 +295,13 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
     mytrace.append([sample_values, log_likelihood_values, np.ones(len(weights)), 'notValid', 1, 'notValid'])
 
     # Write last stage data to '.csv' file
-    data_to_write = mytrace[stage_number][0]
-    logfile.write("\n\n\t\tWriting samples from stage {} to csv file".format(stage_number))
+    data_to_write = np.hstack((sample_values, prediction_values))
+    write_data_to_csvfile(logfile, total_number_of_models_in_ensemble, stage_number, model_number, 
+                        working_directory, data_to_write)
 
-    if total_number_of_models_in_ensemble > 1:
-        stringToAppend = f'resultsStage{stage_number}_Model_{model_number+1}.csv'
-    else:
-        stringToAppend = f'resultsStage{stage_number}.csv'
-    resultsFilePath = os.path.join(os.path.abspath(working_directory), stringToAppend)
-
-    with open(resultsFilePath, 'w', newline='') as csvfile:
-        csvWriter = csv.writer(csvfile)
-        csvWriter.writerows(data_to_write)
-    logfile.write("\n\t\t\tWrote to file {}".format(resultsFilePath))
+    write_data_to_tab_files(logfile, working_directory, model_number, model_parameters, 
+                            edp_names_list, edp_lengths_list, number_of_samples, dataToWrite=sample_values, 
+                            tab_file_name="dakotaTab.out", predictions=prediction_values)
 
     if parallelize_MCMC == 'yes':
         if run_type == "runningLocal":

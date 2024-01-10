@@ -56,6 +56,7 @@ import time
 from copy import deepcopy
 import random
 import warnings
+import traceback
 warnings.filterwarnings("ignore")
 
 
@@ -65,6 +66,8 @@ sys.path.append(file_dir)
 from UQengine import UQengine
 
 # import pip installed modules
+
+
 
 try:
     moduleName = "numpy"
@@ -159,6 +162,12 @@ class surrogate(UQengine):
         self.save_model("SimGpModel")
 
     def check_packages(self,error_tag, moduleName):
+
+        if error_tag == True and moduleName =="GPy":
+            if self.os_type.lower().startswith("darwin"):
+                msg = ("Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate")
+                self.exit(msg)
+
         if error_tag == True:
             if self.os_type.lower().startswith("win"):
                 msg = (
@@ -3043,5 +3052,20 @@ def read_txt(text_dir, exit_fun):
     return X
 
 
+
+
 if __name__ == "__main__":
+    errFileName = 'dakota.err'
+    sys.stderr = open(errFileName, 'w')
     main(sys.argv)
+
+
+    
+    # try:
+    #     main(sys.argv)
+    #     open(os.path.join(os.getcwd(), errFileName ), 'w').close()
+    # except Exception:
+    #     f = open(os.path.join(os.getcwd(), errFileName ), 'w')
+    #     traceback.print_exc(file=f)
+    #     f.close()
+    # exit(1)

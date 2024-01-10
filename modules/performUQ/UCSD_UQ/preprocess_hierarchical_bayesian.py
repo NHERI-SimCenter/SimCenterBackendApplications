@@ -14,7 +14,6 @@ import uq_utilities
 InputsType = tuple[
     Path,
     Path,
-    Path,
     Literal["runningLocal", "runningRemote"],
     Path,
     dict,
@@ -22,7 +21,6 @@ InputsType = tuple[
 
 
 class CommandLineArguments:
-    main_script_directory_path: Path
     working_directory_path: Path
     template_directory_path: Path
     run_type: Union[Literal["runningLocal"], Literal["runningRemote"]]
@@ -33,10 +31,6 @@ class CommandLineArguments:
 def _handle_arguments(
     command_line_arguments: CommandLineArguments,
 ) -> InputsType:
-    # inputs = command_line_arguments.inputs
-    main_script_directory_path = (
-        command_line_arguments.main_script_directory_path.resolve().parent
-    )
     working_directory_path = command_line_arguments.working_directory_path
     template_directory_path = command_line_arguments.template_directory_path
     run_type = command_line_arguments.run_type
@@ -45,7 +39,6 @@ def _handle_arguments(
     with open(input_file, "r") as f:
         inputs = json.load(f)
     return (
-        main_script_directory_path,
         working_directory_path,
         template_directory_path,
         run_type,
@@ -60,11 +53,6 @@ def _create_parser() -> argparse.ArgumentParser:
             "Preprocess the inputs to the hierarchical Bayesian updating"
             " algorithm"
         )
-    )
-    parser.add_argument(
-        "main_script_directory_path",
-        help="path to the main script for the hierarchical Bayesian analysis",
-        type=Path,
     )
     parser.add_argument(
         "working_directory_path",
@@ -126,7 +114,6 @@ def _print_end_message(demarcation_string: str = "=", start_space: str = ""):
 
 def main(arguments: InputsType):
     (
-        main_script_directory,
         working_directory_path,
         template_directory_path,
         run_type,
@@ -177,7 +164,9 @@ def main(arguments: InputsType):
             str(destination_dir_name),
         ]
         edp_data = edp_inputs[sample_number]
-        data = np.genfromtxt(destination_dir_name / calibration_data_file_name)
+        data = np.genfromtxt(
+            destination_dir_name / calibration_data_file_name, dtype=float
+        )
         list_of_datasets.append(data)
         list_of_dataset_lengths.append(edp_data["length"])
 
@@ -195,8 +184,8 @@ def main(arguments: InputsType):
             uq_utilities.get_default_model_evaluation_function(model)
         )
 
-    parallel_runner = uq_utilities.get_parallel_runner_instance(run_type)
-    parallel_evaluation_function = parallel_runner.run
+    parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
+    # parallel_evaluation_function = parallel_pool.run
     function_to_evaluate = uq_utilities.model_evaluation_function
 
     restart_file_name = Path(uq_inputs["Restart File Name"]).name
@@ -205,7 +194,7 @@ def main(arguments: InputsType):
         restart_file_path = None
 
     return (
-        parallel_evaluation_function,
+        parallel_pool,
         function_to_evaluate,
         joint_distribution,
         num_rv,

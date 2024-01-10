@@ -120,9 +120,9 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 ;		// If FEM exists
 		if (UQjson["Applications"].find("FEM") != UQjson["Applications"].end()) {
 			femAppName = UQjson["Applications"]["FEM"]["Application"];
+            std::cout << femAppName << " \n";
 		}
 	}
-	std::cout << femAppName << " \n";
 
 	//
 	// get EDP names

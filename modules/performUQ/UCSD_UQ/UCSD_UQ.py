@@ -1,11 +1,11 @@
 import argparse
-import json
 import os
 import platform
 import stat
 import subprocess
 from pathlib import Path
 import sys
+import shlex
 
 
 def main(args):
@@ -27,6 +27,7 @@ def main(args):
 
         if platform.system() == "Windows":
             pythonCommand = "python"
+            driverFile = driverFile + ".bat"
         else:
             pythonCommand = "python3"
 
@@ -42,16 +43,34 @@ def main(args):
         driverFile = "./" + driverFile
         print("WORKFLOW: " + driverFile)
 
-        command = f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}" "{templateDir}" {runType} {driverFile} {workflowInput}'
+        command = (
+            f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
+            f' "{templateDir}" {runType} {driverFile} {workflowInput}'
+        )
         print(command)
+
+        command_list = shlex.split(command)
+
+        result = subprocess.run(
+            command_list,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            text=True,
+        )
+
+        err_file = Path(tmpSimCenterDir) / "UCSD_UQ.err"
+        err_file.touch()
+
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-            returnCode = 0
-        except subprocess.CalledProcessError as e:
-            result = e.output
-            print('RUNNING UCSD_UQ ERROR: ', result)
-            returnCode = e.returncode
+            result.check_returncode()
+        except subprocess.CalledProcessError:
+            with open(err_file, "a") as f:
+                f.write(f"ERROR: {result.stderr}\n\n")
+                f.write(f"The command was: {result.args}\n\n")
+                f.write(f"The return code was: {result.returncode}\n\n")
+                f.write(f"The output of the command was: {result.stdout}\n\n")
 
 
-if __name__ == '__main__':
-    main(sys.argv[1:])     
+if __name__ == "__main__":
+    main(sys.argv[1:])

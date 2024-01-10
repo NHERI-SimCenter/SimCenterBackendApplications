@@ -8,18 +8,29 @@ import shutil
 from scipy.stats import lognorm, norm
 import subprocess
 
+
 try:
-    moduleName = "emukit"
-    from emukit.multi_fidelity.convert_lists_to_array import  convert_x_list_to_array, convert_xy_lists_to_arrays
     moduleName = "GPy"
     import GPy as GPy
+except:
+    print("Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate")
+    exit(-1)
+    
+
+
+try:
+    moduleName = "GPy"
+    import GPy as GPy
+    moduleName = "emukit"
+    from emukit.multi_fidelity.convert_lists_to_array import  convert_x_list_to_array, convert_xy_lists_to_arrays
     moduleName = "Pandas"
     import pandas as pd
 
     error_tag = False  # global variable
 except:
     error_tag = True
-    print("Failed to import module:" + moduleName)
+    print("Error running surrogate prediction - Failed to import module:" + moduleName)
+    exit(-1)
 
 # from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
