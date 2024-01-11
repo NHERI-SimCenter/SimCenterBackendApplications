@@ -45,6 +45,7 @@ import random
 import numpy as np
 import pandas as pd
 import socket
+import sys
 if 'stampede2' not in socket.gethostname():
 	from FetchOpenSHA import *
 
@@ -74,13 +75,13 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
         for ind in range(len(user_scenarios.get('features'))):
             cur_rup = user_scenarios.get('features')[ind]
             cur_id_source = cur_rup.get('properties').get('Source', None)
-            if cur_id_source != SourceIndex:
+            if cur_id_source != int(SourceIndex):
                 continue
             cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
-            if cur_id_rupture == RupIndex:
+            if cur_id_rupture == int(RupIndex):
                 rups_to_run.append(ind)
                 break
-    elif scenario_info["Generator"].get("method", None) == "UserSelection":
+    elif scenario_info["Generator"].get("method", None) == "MonteCarlo":
         rup_filter = scenario_info["Generator"].get("filter", None)
         if rup_filter is None or len(rup_filter)==0:
             rups_to_run = list(range(0, num_scenarios))
@@ -100,8 +101,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
     elif scenario_info["Generator"].get("method", None) == "Subsampling":
         rups_to_run = list(range(0, num_scenarios))
     else:
-        print(f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available')
-        return {}
+        sys.exit(f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available')
         
     # get rupture and source ids
     scenario_data = {}
@@ -124,6 +124,8 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
                 'SiteRuptureDistance': cur_rup.get('properties').get('DistanceRup', None)
             }})
     elif source_type == "PointSource":
+        sourceID = 0
+        rupID = 0
         for rup_tag in rups_to_run:
             try:
                 cur_rup = user_scenarios.get('features')[rup_tag]
@@ -136,8 +138,11 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
                     'Magnitude': magnitude,
                     'Location': location,
                     'AverageRake': average_rake,
-                    'AverageDip': average_dip
+                    'AverageDip': average_dip,
+                    'SourceIndex':sourceID,
+                    'RuptureIndex':rupID
                 }})
+                rupID = rupID + 1
             except:
                 print('Please check point-source inputs.')
     
@@ -317,7 +322,9 @@ def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSite
                     'Magnitude': scenario_info['EqRupture']['Magnitude'],
                     'Location': scenario_info['EqRupture']['Location'],
                     'AverageRake': scenario_info['EqRupture']['AverageRake'],
-                    'AverageDip': scenario_info['EqRupture']['AverageDip']}
+                    'AverageDip': scenario_info['EqRupture']['AverageDip'],
+                    'Source':0,
+                    'Rupture':0}
             }
             newRup['geometry'] = dict()
             newRup['geometry'].update({'type': 'Point'})

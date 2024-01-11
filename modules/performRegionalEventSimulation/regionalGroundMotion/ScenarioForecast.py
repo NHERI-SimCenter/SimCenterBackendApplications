@@ -136,6 +136,17 @@ if __name__ == '__main__':
     # Sites and stations
     print('HazardSimulation: creating stations.')
     site_info = hazard_info['Site']
+    z1_tag = 0
+    z25_tag = 0
+    if 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']:
+        z1_tag = 1
+        z25_tag = 1
+    if opensha_flag:
+        z1_tag = 2 # interpolate from openSHA default database
+        z25_tag = 2 # interpolate from openSHA default database
+        # openSHA database: https://github.com/opensha/opensha/blob/16aaf6892fe2a31b5e497270429b8d899098361a/src/main/java/org/opensha/commons/data/siteData/OrderedSiteDataProviderList.java
+    site_info['Z1pt0'].update({'z1_tag':z1_tag})
+    site_info['Z2pt5'].update({'z25_tag':z25_tag})
     if site_info['Type'] == 'From_CSV':
         input_file = os.path.join(input_dir,site_info['input_file'])
         output_file = site_info.get('output_file',False)
@@ -143,25 +154,8 @@ if __name__ == '__main__':
             output_file = os.path.join(input_dir, output_file)
         filter = site_info['filter']
         # Creating stations from the csv input file
-        z1_tag = 0
-        z25_tag = 0
-        if 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']:
-            z1_tag = 1
-            z25_tag = 1
-        if 'Global Vs30' in site_info['Vs30']['Type']:
-            vs30_tag = 1
-        elif 'Thompson' in site_info['Vs30']['Type']:
-            vs30_tag = 2
-        elif 'NCM' in site_info['Vs30']['Type']:
-            vs30_tag = 3
-        else:
-            vs30_tag = 0
-        if opensha_flag:
-            z1_tag = 2 # interpolate from openSHA default database
-            z25_tag = 2 # interpolate from openSHA default database
-            # openSHA database: https://github.com/opensha/opensha/blob/16aaf6892fe2a31b5e497270429b8d899098361a/src/main/java/org/opensha/commons/data/siteData/OrderedSiteDataProviderList.java
-        # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, filter, vs30_tag, z1_tag, z25_tag)
+        stations = create_stations(input_file, output_file, filter,
+                    site_info['Vs30'], site_info['Z1pt0'], site_info['Z2pt5'])
     else:
         print("""Only From_CSV site_info['Type'] is supported now""")
     if stations:

@@ -234,7 +234,7 @@ class chiou_youngs_2013():
             return "NORMAL"
         
     def get_IM(self, Mw, site_rup_dict, site_info, im_info):
-        vsInf = not bool(site_info["vs30measured"])
+        vsInf = bool(site_info["vsInferred"])
         style = self.getFaultFromRake(site_rup_dict["aveRake"])
         if 'SA' in im_info['Type']:
             cur_T = im_info.get('Periods', None)
@@ -487,7 +487,7 @@ class abrahamson_silva_kamai_2014():
             return "NORMAL"
     
     def get_IM(self, Mw, site_rup_dict, site_info, im_info):
-        vsInf = not bool(site_info["vs30measured"])
+        vsInf = bool(site_info["vsInferred"])
         style = self.getFaultFromRake(site_rup_dict["aveRake"])
         if 'SA' in im_info['Type']:
             cur_T = im_info.get('Periods', None)

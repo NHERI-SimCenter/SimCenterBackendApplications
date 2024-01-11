@@ -102,6 +102,8 @@ def getERF(scenario_info, update_flag=True):
             value = erf_selection.pop("Treat Background Seismicity As")
             print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
         for key, value in erf_selection.items():
+            if type(value) is int:
+                value = float(value)
             erf.setParameter(key, value)
             # erf.getParameter(key).setValue(value)
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
@@ -251,11 +253,11 @@ def setERFBPTAveragingTypeOptions(erf, selection):
     if option is None:
         pass
     elif option =='AveRI and AveTimeSince':
-        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE)
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE)
     elif option =='AveRI and AveNormTimeSince':
-        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE)
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE)
     elif option =='AveRate and AveNormTimeSince':
-        erf.setParameter('Aperiodicity', BPTAveragingTypeOptions.AVE_RATE_AVE_NORM_TIME_SINCE)
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RATE_AVE_NORM_TIME_SINCE)
 
 def get_source_rupture(erf, source_index, rupture_index):
 

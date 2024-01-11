@@ -42,6 +42,7 @@ import json, copy
 import numpy as np
 import pandas as pd
 import socket
+import sys
 from tqdm import tqdm
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import get_site_vs30_from_opensha
@@ -82,7 +83,7 @@ class Station:
         return self.z2p5
 
 
-def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False, soil_model_type=None, soil_user_fun=None):
+def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z25Config, zTR_tag=0, soil_flag=False, soil_model_type=None, soil_user_fun=None):
     """
     Reading input csv file for stations and saving data to output json file
     Input:
@@ -90,7 +91,7 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
         output_file: the filename of the output json file
         min_id: the min ID to start
         max_id: the max ID to end
-        vs30_tag: 1 - interpolate global Vs30, 2 - Thompson vs30, 0 - leave Vs30
+        vs30Config: a dict of the config of vs30
         z1_tag: z1pt0 tag: 1 - using empirical equation, 0 - leave it as null
         z2pt5_tag: z2pt5 tag: 1 - using empirical equation, 0 - leave it as null
     Output:
@@ -104,7 +105,7 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
         run_tag = 0
         return run_tag
     # Max and Min IDs
-    if filterIDs is not None:
+    if len(filterIDs)>0:
         stns_requested = []
         for stns in filterIDs.split(','):
             if "-" in stns:
@@ -166,7 +167,11 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
         'Stations': []
     }
     # Get Vs30
-    if vs30_label in selected_stn.keys():
+    if vs30Config['Type'] == "User-specified":
+        if vs30_label not in selected_stn.keys():
+            sys.exit("ERROR: User-specified option is selected for Vs30 model but the provided."+
+                     "but the provided Site File doesn't contain a column named 'Vs30'."+
+                     "\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.") 
         tmp = selected_stn.iloc[:,list(selected_stn.keys()).index(vs30_label)].values.tolist()
         if len(tmp):
             nan_loc = [x[0] for x in np.argwhere(np.isnan(tmp)).tolist()]
@@ -174,6 +179,14 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
             nan_loc = []
     else:
         nan_loc = list(range(len(selected_stn.index)))
+    if 'Global Vs30' in vs30Config['Type']:
+        vs30_tag = 1
+    elif 'Thompson' in  vs30Config['Type']:
+        vs30_tag = 2
+    elif 'NCM' in  vs30Config['Type']:
+        vs30_tag = 3
+    else:
+        vs30_tag = 0
     if len(nan_loc) and vs30_tag == 1:
         print('CreateStation: Interpolating global Vs30 map for defined stations.')
         selected_stn.loc[nan_loc,vs30_label] = get_vs30_global(selected_stn.iloc[nan_loc,list(selected_stn.keys()).index(lat_label)].values.tolist(), 
@@ -212,9 +225,8 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
         print('CreateStation: Default zore depth to rock for sites missing the data.')
         selected_stn[zTR_label] = [0.0 for x in range(len(selected_stn.index))]
         
-
     # rename column headers to standard keywords
-    selected_stn.rename(columns={lat_label: 'Latitude', lon_label: 'Longitude', vs30_label: 'Vs30',
+    selected_stn = selected_stn.rename(columns={lat_label: 'Latitude', lon_label: 'Longitude', vs30_label: 'Vs30',
                                  z1p0_label: 'z1p0', z2p5_label: 'z2p5', zTR_label: 'DepthToRock'})
     if soil_flag:
         selected_stn.rename(columns={soil_model_label: 'Model'})
@@ -303,10 +315,12 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
             elif vs30_tag == 0:
                 tmp.update({'Vs30': get_site_vs30_from_opensha([stn[lat_label]], [stn[lon_label]])[0]})
             """
-
-        if stn.get('z1pt0'):
+        if (z1Config["Type"]=="User-specified") and stn.get('z1pt0'):
             tmp.update({'z1pt0': stn.get('z1pt0')})
-        else:
+        elif (z1Config["Type"]=="User-specified") and z1Config.get('Parameters', False):
+            tmp.update({'z1pt0': float(z1Config["Parameters"]["value"])})
+        elif z1Config["Type"]=="OpenSHA default model":
+            z1_tag = z1Config["z1_tag"]
             if z1_tag==1:
                 tmp.update({'z1pt0': get_z1(tmp['Vs30'])})
             elif z1_tag==2:
@@ -318,9 +332,12 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
                 z1pt0 = get_z1(tmp.get('Vs30'))
                 tmp.update({'z1pt0': z1pt0})
 
-        if stn.get('z2pt5'):
+        if (z25Config["Type"]=="User-specified") and stn.get('z2pt5'):
             tmp.update({'z2pt5': stn.get('z2pt5')})
-        else:
+        elif (z25Config["Type"]=="User-specified") and z25Config.get('Parameters', False):
+            tmp.update({'z2pt5': float(z25Config["Parameters"]["value"])})
+        elif z25Config["Type"]=="OpenSHA default model":
+            z25_tag = z25Config["z25_tag"]
             if z25_tag==1:
                 tmp.update({'z2pt5': get_z25(tmp['z1pt0'])})
             elif z25_tag==2:
@@ -332,7 +349,7 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
                 z2pt5 = get_z25(tmp['z1pt0'])
                 tmp.update({'z2pt5': z2pt5})
 
-        if stn.get('DepthToRock'):
+        if 'DepthToRock' in stn.index:
             tmp.update({'DepthToRock': stn.get('DepthToRock')})
         else:
             #tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})
@@ -343,6 +360,18 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
             for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']+user_param_list:
                 tmp.update({cur_param: stn.get(cur_param, None)})
         
+        if stn.get('vsInferred'):
+            if stn.get('vsInferred') not in [0, 1]:
+                sys.exit("CreateStation: Only '0' or '1' can be assigned to the"+
+                         " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true." )
+            print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+
+                " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")
+            tmp.update({'vsInferred': stn.get('vs30Inferred')})
+        else:
+            tmp.update({'vsInferred': (1 if vs30Config['Parameters']['vsInferred'] else 0) })
+        
+
+
         stn_file['Stations'].append(tmp)
         #stn_file['Stations'].append({
         #    'ID': stn_id,
@@ -359,8 +388,9 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
                 'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
                 'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
                 'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
-                'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
-                'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
+                'vsInferred': [x.get('vsInferred',0) for x in stn_file['Stations']]
+                # DepthToRock is not used in NGA-West2 GMPEs and is not saved
+                # 'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
             }
             # no backarc by default
     if stn_file['Stations'][0].get('backarc',None):
@@ -368,39 +398,6 @@ def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_ta
             'backarc': [x.get('backarc') for x in stn_file['Stations']]
         })
     pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
-    # if output_file:
-    #     if '.json' in output_file:
-    #         with open(output_file, 'w') as f:
-    #             json.dump(stn_file, f, indent=2)
-    #     if 'OpenQuake' in output_file:
-    #         df_csv = {
-    #             'ID': [id for id, _ in enumerate(stn_file['Stations'])],
-    #             'lon': [x['Longitude'] for x in stn_file['Stations']],
-    #             'lat': [x['Latitude'] for x in stn_file['Stations']],
-    #             'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
-    #             'z1pt0': [x.get('z1pt0',9) for x in stn_file['Stations']],
-    #             'z2pt5': [x.get('z2pt5',12) for x in stn_file['Stations']],
-    #             'vs30measured': [x.get('vs30measured',0) for x in stn_file['Stations']],
-    #             'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
-    #         }
-    #         # no backarc by default
-    #         if stn_file['Stations'][0].get('backarc',None):
-    #             df_csv.update({
-    #                 'backarc': [x.get('backarc') for x in stn_file['Stations']]
-    #             })
-    #         pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
-    #     if 'SiteData' in output_file:
-    #         df_csv = {
-    #             'id': list(range(len(stn_file['Stations']))),
-    #             'Longitude': [x['Longitude'] for x in stn_file['Stations']],
-    #             'Latitude': [x['Latitude'] for x in stn_file['Stations']],
-    #             'Vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
-    #             'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']],
-    #             'Model': [x.get('Model','EI') for x in stn_file['Stations']]
-    #         }
-    #         for cur_param in ['Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']+user_param_list:
-    #             df_csv.update({cur_param: [x.get(cur_param) for x in stn_file['Stations']]})
-    #         pd.DataFrame.from_dict(df_csv).to_csv(output_file, index=False)
     # Returning the final run state
     return stn_file
 
