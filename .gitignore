@@ -87,7 +87,6 @@ MDOF_BuildingModelToSAM
 applications.tar
 DEDM_HRP
 LowRiseTPU
-MultiplePEER
 WindTunnelExperiment
 preprocessDakota
 simCenterDprepro
