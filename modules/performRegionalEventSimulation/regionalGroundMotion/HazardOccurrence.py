@@ -196,13 +196,13 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
         periods = IMdata['IntensityMeasures'][0]['Periods']
-        im_ind = np.where(np.array(periods)==period)
+        im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
         im_ind = 0
     c_vect = np.zeros(len(IMdata['IntensityMeasures']))
     for j in tqdm(range(len(IMdata['IntensityMeasures'])), desc="Calculate "\
-                  f"Hazard Curves from {len(IMdata['IntensityMeasures'])} scenarios"):
+                  f"Hazard Contribution of {len(IMdata['IntensityMeasures'])} scenarios"):
         c_j = 0
         scenario = IMdata['IntensityMeasures'][j]
         mar = scenario['MeanAnnualRate']
@@ -235,7 +235,7 @@ def calc_hazard_curves(IMdata, site_config, im):
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
         periods = IMdata['IntensityMeasures'][0]['Periods']
-        im_ind = np.where(np.array(periods)==period)
+        im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
         im_ind = 0
