@@ -7,9 +7,12 @@ affiliation: University of California, San Diego, *SimCenter, University of Cali
 # ======================================================================================================================
 import sys
 import json
-import platform
 from pathlib import Path
-import subprocess
+import shlex
+
+path_to_common_uq = Path(__file__).parent.parent / "common"
+sys.path.append(str(path_to_common_uq))
+import uq_utilities
 
 
 # ======================================================================================================================
@@ -33,31 +36,20 @@ def main(input_args):
 
     uq_inputs = inputs["UQ"]
     if uq_inputs["uqType"] == "Metropolis Within Gibbs Sampler":
-        main_script = (
-            path_to_UCSD_UQ_directory / "mainscript_hierarchical_bayesian.py"
-        )
-    else:
-        main_script = path_to_UCSD_UQ_directory / "mainscript_tmcmc.py"
+        import mainscript_hierarchical_bayesian
 
-    if platform.system() == "Windows":
-        python_command = "python"
+        main_function = mainscript_hierarchical_bayesian.main
     else:
-        python_command = "python3"
+        import mainscript_tmcmc
+
+        main_function = mainscript_tmcmc.main
 
     command = (
-        f'"{python_command}" "{main_script}" '
         f'"{path_to_working_directory}" "{path_to_template_directory}" '
-        f"{run_type} {driver_file_name} {input_file_full_path}"
+        f'{run_type} "{driver_file_name}" "{input_file_full_path}"'
     )
-    print(command)
-    try:
-        result = subprocess.check_output(
-            command, stderr=subprocess.STDOUT, shell=True
-        )
-        returnCode = 0
-    except subprocess.CalledProcessError as e:
-        result = e.output
-        returnCode = e.returncode
+    command_list = shlex.split(command)
+    main_function(command_list)
 
 
 # ======================================================================================================================
