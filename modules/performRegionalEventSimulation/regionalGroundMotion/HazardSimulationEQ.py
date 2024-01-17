@@ -50,6 +50,12 @@ import importlib
 R2D = True
 
 def hazard_job(hazard_info):
+    from CreateScenario import load_ruptures_openquake
+    try:
+        # oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
+        oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type'] 
+    except:
+        oq_flag = False
     # Read Site .csv
     site_file = hazard_info['Site']["siteFile"]
     try:
@@ -65,8 +71,15 @@ def hazard_job(hazard_info):
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # KZ-10/31/2022: checking user-provided scenarios
-        rupFile = scenario_info['sourceFile']
-        scenarios = load_earthquake_rupFile(scenario_info, rupFile)
+        if scenario_info['EqRupture']['Type'] == 'oqSourceXML':
+            #The rup file is not enough for oq erf, so the rupture needs to be recalculated
+            rupFile = scenario_info['sourceFile']
+            scenarios = load_ruptures_openquake(scenario_info, stations,
+                                                    work_dir, site_file, rupFile)
+        else:
+            rupFile = scenario_info['sourceFile']
+            scenarios = load_earthquake_rupFile(scenario_info, rupFile)
+        
     elif scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         scenarios = create_wind_scenarios(scenario_info, stations, input_dir)
@@ -81,7 +94,7 @@ def hazard_job(hazard_info):
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
-        if opensha_flag:
+        if opensha_flag or hazard_info['Scenario']['EqRupture']['Type'] == 'oqSourceXML':
             im_raw, im_info = compute_im(scenarios, stations, scenario_info,
                                 event_info['GMPE'], event_info['IntensityMeasure'],
                                 scenario_info['Generator'], output_dir, mth_flag=False)
@@ -89,7 +102,7 @@ def hazard_job(hazard_info):
             event_info['IntensityMeasure'] = im_info
         elif oq_flag:
             # Preparing config ini for OpenQuake
-            filePath_ini, oq_ver_loaded, event_info = openquake_config(site_info, scenario_info, event_info, dir_info)
+            filePath_ini, oq_ver_loaded, event_info = openquake_config(hazard_info['Site'], scenario_info, event_info, hazard_info['Directory'])
             if not filePath_ini:
                 # Error in ini file
                 sys.exit('HazardSimulation: errors in preparing the OpenQuake configuration file.') 
@@ -113,9 +126,9 @@ def hazard_job(hazard_info):
                     im_list = []
                 #stn_new = stations['Stations']
 
-            elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+            elif scenario_info['EqRupture']['Type'] == 'oqSourceXML':
                 # Creating and conducting OpenQuake calculations
-                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=dir_info)
+                oq_calc = OpenQuakeHazardCalc(filePath_ini, event_info, oq_ver_loaded, dir_info=hazard_info['Directory'])
                 oq_calc.run_calc()
                 im_raw = [oq_calc.eval_calc()]
                 #stn_new = stations['Stations']
@@ -239,7 +252,7 @@ def hazard_job(hazard_info):
             start_time = time.time()
             gm_id, gm_file = select_ground_motion(im_list, ln_im_mr, data_source,
                                                   sf_max, sf_min, output_dir, 'EventGrid.csv',
-                                                  stations['Stations'])
+                                                  stations)
             print('HazardSimulation: ground motion records selected  ({0} s).'.format(time.time() - start_time))
             #print(gm_id)
             gm_id = [int(i) for i in np.unique(gm_id)]
@@ -296,7 +309,7 @@ if __name__ == '__main__':
     except:
         opensha_flag = False
     try:
-        oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
+        oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
     except:
         oq_flag = False
 

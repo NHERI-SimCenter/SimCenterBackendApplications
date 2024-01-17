@@ -52,18 +52,19 @@ import time
 import importlib
 import socket
 
+
 install_requires = []
-default_oq_version = '3.12.0'
+default_oq_version = '3.17.1'
 
 
-def openquake_config(site_info, scen_info, event_info, dir_info):
+def openquake_config(site_info, scen_info, event_info, workDir):
 
-    dir_input = dir_info['Input']
-    dir_output = dir_info['Output']
+    dir_input = os.path.join(workDir, "Input")
+    dir_output = os.path.join(workDir, "Output")
     import configparser
     cfg = configparser.ConfigParser()
     # general section
-    if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+    if scen_info['EqRupture']['Type'] == 'oqSourceXML': #OpenQuakeScenario
         cfg['general'] = {'description': 'Scenario Hazard Config File',
                           'calculation_mode': 'scenario'}
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
@@ -127,18 +128,18 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
         cfg['calculation']['source_model_logic_tree_file'] = os.path.join(cfg['calculation'].get('source_model_logic_tree_file'))
         cfg['calculation']['gsim_logic_tree_file'] = os.path.join(cfg['calculation'].get('gsim_logic_tree_file'))
     else:
-
         # sites
-        tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
-        tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
-        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
-        cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        # tmpSites = pd.read_csv(site_info['siteFile'], header=0, index_col=0)
+        # tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
+        # tmpSitesLoc.to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
+        # cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        cfg['geometry'] = {'sites_csv': os.path.basename(site_info['siteFile'])}
         # rupture
         cfg['erf'] = {'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0), 
                     'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
                     'area_source_discretization': scen_info['EqRupture'].get('AreaMesh', 10.0)}
         # site_params (saved in the output_file)
-        cfg['site_params'] = {'site_model_file': site_info['output_file']}
+        cfg['site_params'] = {'site_model_file': 'tmp_oq_site_model.csv'}
         # hazard_calculation
         mapGMPE = {'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
                 'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
@@ -150,7 +151,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                 'ChiouYoungs2014': 'ChiouYoungs2014'
                 }
         
-        if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+        if scen_info['EqRupture']['Type'] == 'oqSourceXML':#OpenQuakeScenario
             imt = ''
             if event_info['IntensityMeasure']['Type'] == 'SA':
                 for curT in event_info['IntensityMeasure']['Periods']:
@@ -158,7 +159,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                 imt = imt[:-2]
             else:
                 imt = event_info['IntensityMeasure']['Type']
-            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['Filename'], 
+            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['sourceFile'], 
                                 'gsim': mapGMPE[event_info['GMPE']['Type']],
                                 'intensity_measure_types': imt, 
                                 'random_seed': 42, 
@@ -1422,3 +1423,24 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
         print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
             json.dump(erf_data, f, indent=2)
+        
+def get_site_rup_info_oq(source_info, siteList):
+    from openquake.hazardlib import site
+    from openquake.hazardlib.calc.filters import get_distances
+    rup = source_info['rup']
+    distToRupture = []
+    distJB = []
+    distX = []
+    for i in range(len(siteList)):
+        siteMeanCol = site.SiteCollection.from_points([siteList[i]['lon']], [siteList[i]['lat']])
+        siteList[i].update({"rRup":get_distances(rup, siteMeanCol, 'rrup')[0]})
+        siteList[i].update({"rJB":get_distances(rup, siteMeanCol, 'rjb')[0]})
+        siteList[i].update({"rX":get_distances(rup, siteMeanCol, 'rx')[0]})
+    site_rup_info = {
+        "dip" : float(rup.surface.get_dip()),
+        "width" : float(rup.surface.get_width()),
+        "zTop" : float(rup.rake),
+        "zHyp" : float(rup.hypocenter.depth),
+        "aveRake" : source_info['rup'].surface.mesh[0:1].depths[0]
+        } 
+    return site_rup_info, siteList
