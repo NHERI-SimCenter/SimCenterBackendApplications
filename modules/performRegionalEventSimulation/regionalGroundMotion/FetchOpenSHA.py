@@ -292,24 +292,30 @@ def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):
     rupSource = erf.getSource(source_index)
     rupList = rupSource.getRuptureList()
     rupSurface = rupList.get(rupture_index).getRuptureSurface()
-    distToRupture = []
-    distJB = []
-    distX = []
+    if rupList.get(rupture_index).getHypocenterLocation() is None:
+        upperEdge = rupSurface.getEvenlyDiscritizedUpperEdge()
+        upperDepth = []
+        for i in range(upperEdge.size()):
+            upperDepth.append(upperEdge[i].getDepth())
+        upperDepth = np.mean(upperDepth)
+        lowerEdge = rupSurface.getEvenlyDiscritizedLowerEdge()
+        lowerDepth = []
+        for i in range(lowerEdge.size()):
+            lowerDepth.append(lowerEdge[i].getDepth())
+        lowerDepth = np.mean(lowerDepth)    
+        zHyp = (upperDepth + lowerDepth)/2
+    else:
+        zHyp = rupList.get(rupture_index).getHypocenterLocation().getDepth()
     for i in range(len(siteList)):
         siteList[i].update({"rRup":float(rupSurface.getDistanceRup(Location(siteList[i]['lat'], siteList[i]['lon'])))})
         siteList[i].update({"rJB":float(rupSurface.getDistanceJB(Location(siteList[i]['lat'], siteList[i]['lon'])))})
         siteList[i].update({"rX":float(rupSurface.getDistanceX(Location(siteList[i]['lat'], siteList[i]['lon'])))})
-        # distToRupture.append(float(rupSurface.getDistanceRup(Location(siteList[i]['lat'], siteList[i]['lon']))))
-        # distJB.append(float(rupSurface.getDistanceJB(Location(siteList[i]['lat'], siteList[i]['lon']))))
-        # distX.append(float(rupSurface.getDistanceX(Location(siteList[i]['lat'], siteList[i]['lon']))))
     site_rup_info = {
         "dip" : float(rupSurface.getAveDip()),
         "width" : float(rupSurface.getAveWidth()),
         "zTop" : float(rupSurface.getAveRupTopDepth()),
-        "aveRake" : float(rupList.get(rupture_index).getAveRake())
-        # "rRup":distToRupture,
-        # "rJB":distJB,
-        # "rX":distX
+        "aveRake" : float(rupList.get(rupture_index).getAveRake()),
+        "zHyp":zHyp
         } 
     return site_rup_info, siteList
 
