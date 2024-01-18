@@ -408,11 +408,11 @@ def markhvida_ceferino_baker_correlation_2017(stations, im_name_list, num_simu, 
     num_stations = len(stations)
     stn_dist = np.zeros((num_stations, num_stations))
     for i in range(num_stations):
-        loc_i = np.array([stations[i]['Latitude'],
-                          stations[i]['Longitude']])
+        loc_i = np.array([stations[i]['lat'],
+                          stations[i]['lon']])
         for j in range(num_stations):
-            loc_j = np.array([stations[j]['Latitude'],
-                              stations[j]['Longitude']])
+            loc_j = np.array([stations[j]['lat'],
+                              stations[j]['lon']])
             stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 19 principal components are used
     c0 = c0 / MCB_var.iloc[0, num_pc - 1]

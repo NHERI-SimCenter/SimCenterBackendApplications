@@ -52,18 +52,19 @@ import time
 import importlib
 import socket
 
+
 install_requires = []
-default_oq_version = '3.12.0'
+default_oq_version = '3.17.1'
 
 
-def openquake_config(site_info, scen_info, event_info, dir_info):
+def openquake_config(site_info, scen_info, event_info, workDir):
 
-    dir_input = dir_info['Input']
-    dir_output = dir_info['Output']
+    dir_input = os.path.join(workDir, "Input")
+    dir_output = os.path.join(workDir, "Output")
     import configparser
     cfg = configparser.ConfigParser()
     # general section
-    if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+    if scen_info['EqRupture']['Type'] == 'oqSourceXML': #OpenQuakeScenario
         cfg['general'] = {'description': 'Scenario Hazard Config File',
                           'calculation_mode': 'scenario'}
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
@@ -127,18 +128,18 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
         cfg['calculation']['source_model_logic_tree_file'] = os.path.join(cfg['calculation'].get('source_model_logic_tree_file'))
         cfg['calculation']['gsim_logic_tree_file'] = os.path.join(cfg['calculation'].get('gsim_logic_tree_file'))
     else:
-
         # sites
-        tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
-        tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
-        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
-        cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        # tmpSites = pd.read_csv(site_info['siteFile'], header=0, index_col=0)
+        # tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
+        # tmpSitesLoc.to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
+        # cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
+        cfg['geometry'] = {'sites_csv': os.path.basename(site_info['siteFile'])}
         # rupture
         cfg['erf'] = {'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0), 
                     'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
                     'area_source_discretization': scen_info['EqRupture'].get('AreaMesh', 10.0)}
         # site_params (saved in the output_file)
-        cfg['site_params'] = {'site_model_file': site_info['output_file']}
+        cfg['site_params'] = {'site_model_file': 'tmp_oq_site_model.csv'}
         # hazard_calculation
         mapGMPE = {'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
                 'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
@@ -150,7 +151,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                 'ChiouYoungs2014': 'ChiouYoungs2014'
                 }
         
-        if scen_info['EqRupture']['Type'] == 'OpenQuakeScenario':
+        if scen_info['EqRupture']['Type'] == 'oqSourceXML':#OpenQuakeScenario
             imt = ''
             if event_info['IntensityMeasure']['Type'] == 'SA':
                 for curT in event_info['IntensityMeasure']['Periods']:
@@ -158,7 +159,7 @@ def openquake_config(site_info, scen_info, event_info, dir_info):
                 imt = imt[:-2]
             else:
                 imt = event_info['IntensityMeasure']['Type']
-            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['Filename'], 
+            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['sourceFile'], 
                                 'gsim': mapGMPE[event_info['GMPE']['Type']],
                                 'intensity_measure_types': imt, 
                                 'random_seed': 42, 
@@ -1253,3 +1254,193 @@ def to_imt_unit_values(vals, imt):
     if str(imt) == 'MMI':
         return vals
     return np.exp(vals)
+
+
+def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
+    from openquake.hazardlib import nrml, sourceconverter, site
+    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
+    from openquake.hazardlib.geo.surface.base import BaseSurface
+    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
+    from openquake.commonlib import readinput
+    import json
+    in_dir = os.path.join(work_dir,'Input')
+    outfile = os.path.join(work_dir,'Output','RupFile.geojson')
+    erf_data = {"type": "FeatureCollection"}
+    oq = readinput.get_oqparam(dict(
+                    calculation_mode='classical',
+                    inputs = {
+                    "site_model":[siteFile]},
+                    intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}", #place holder for initiating oqparam. Not used in ERF
+                    investigation_time=str(scenario_info['EqRupture'].get('investigation_time', '50.0')),
+                    gsim='AbrahamsonEtAl2014', #place holder for initiating oqparam, not used in ERF
+                    truncation_level='99.0', # place holder for initiating oqparam. not used in ERF
+                    maximum_distance=str(scenario_info['EqRupture'].get('maximum_distance', '2000')),
+                    width_of_mfd_bin = str(scenario_info['EqRupture'].get('width_of_mfd_bin', '1.0')),
+                    area_source_discretization=str(scenario_info['EqRupture'].get('area_source_discretization', '10'))
+                    ))
+    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
+    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']    
+    [src_nrml] = nrml.read(os.path.join(in_dir, scenario_info['EqRupture']['sourceFile']))
+    conv = sourceconverter.SourceConverter(
+    scenario_info['EqRupture']['investigation_time'],
+    rupture_mesh_spacing,
+    width_of_mfd_bin=scenario_info['EqRupture']['width_of_mfd_bin'],
+    area_source_discretization=scenario_info['EqRupture']['area_source_discretization'])
+    src_raw = conv.convert_node(src_nrml)
+    sources = []
+    sources_dist = []
+    sources_id = []
+    id = 0
+    siteMeanCol = site.SiteCollection.from_points([mlon], [mlat])
+    srcfilter = SourceFilter(siteMeanCol, oq.maximum_distance)
+    minMag = scenario_info['EqRupture']['min_mag']
+    maxMag = scenario_info['EqRupture']['max_mag']
+    for i in range(len(src_nrml)):
+        subnode = src_nrml[i]
+        subSrc = src_raw[i]
+        tag = subnode.tag.rsplit('}')[1] if subnode.tag.startswith('{') else subnode.tag
+        if tag == "sourceGroup":
+            for j in range(len(subnode)):
+                subsubnode = subnode[j]
+                subsubSrc = subSrc[j]
+                subtag = subsubnode.tag.rsplit('}')[1] if subsubnode.tag.startswith('{') else subsubnode.tag
+                if subtag.endswith('Source') and srcfilter.get_close_sites(subsubSrc) is not None:
+                    subsubSrc.id = id
+                    sources_id.append(id)
+                    id += 1
+                    sources.append(subsubSrc)
+                    sourceMesh = subsubSrc.polygon.discretize(rupture_mesh_spacing)
+                    sourceSurface = BaseSurface(sourceMesh)
+                    siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
+                    sources_dist. append(sourceSurface.get_min_distance(siteMesh))
+        elif tag.endswith('Source') and srcfilter.get_close_sites(subSrc) is not None:
+            subSrc.id = id
+            sources_id.append(id)
+            id += 1
+            sources.append(subSrc)
+            sourceMesh = subSrc.polygon.discretize(rupture_mesh_spacing)
+            sourceSurface = BaseSurface(sourceMesh)
+            siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
+            sources_dist. append(sourceSurface.get_min_distance(siteMesh))
+    sources_df = pd.DataFrame.from_dict({
+        'source': sources,
+        'sourceDist': sources_dist,
+        'sourceID':sources_id
+    })
+    sources_df = sources_df.sort_values(['sourceDist'], ascending = (True))
+    sources_df = sources_df.set_index('sourceID')
+    allrups = []
+    allrups_rRup = []
+    allrups_srcId = []
+    for src in sources_df["source"]:
+        src_rups = list(src.iter_ruptures())
+        for i, rup in enumerate(src_rups):
+            rup.rup_id = src.offset + i
+            allrups.append(rup)
+            allrups_rRup.append(rup.surface.get_min_distance(siteMeanCol))
+            allrups_srcId.append(src.id)
+    rups_df = pd.DataFrame.from_dict({
+        'rups':allrups,
+        'rups_rRup':allrups_rRup,
+        'rups_srcId':allrups_srcId
+    })
+    rups_df = rups_df.sort_values(['rups_rRup'], ascending = (True))
+    feature_collection = []
+    for ind in rups_df.index:
+        cur_dict = {'type': 'Feature'}
+        cur_dist = rups_df.loc[ind, "rups_rRup"]
+        if cur_dist <= 0.:
+            # skipping ruptures with distance exceeding the maxDistance
+            continue
+        rup = rups_df.loc[ind, "rups"]
+        # s0=number of multi surfaces, s1=number of rows, s2=number of columns
+        arrays = surface_to_arrays(rup.surface)  # shape (s0, 3, s1, s2)
+        src_id = rups_df.loc[ind,"rups_srcId"]
+        maf = rup.occurrence_rate
+        if maf <= 0.:
+            continue
+        ruptureSurface = rup.surface
+        # Properties
+        cur_dict['properties'] = dict()
+        name = sources_df.loc[src_id, "source"].name
+        cur_dict['properties'].update({'Name': name})
+        Mag = float(rup.mag)
+        if (Mag < minMag) or (Mag > maxMag):
+            continue
+        cur_dict['properties'].update({'Magnitude': Mag})
+        cur_dict['properties'].update({'Rupture': int(rup.rup_id)})
+        cur_dict['properties'].update({'Source': int(src_id)})
+        cur_dict['properties'].update({'Rake': rup.rake})
+        cur_dict['properties'].update({'Lon': rup.hypocenter.x})
+        cur_dict['properties'].update({'Lat': rup.hypocenter.y})
+        cur_dict['properties'].update({'Depth': rup.hypocenter.z})
+        cur_dict['properties'].update({'trt': rup.tectonic_region_type})
+        cur_dict['properties'].update({'mesh' : json.dumps(
+            [[[[round(float(z), 5) for z in y] for y in x] for x in array]
+            for array in arrays])})
+        if hasattr(rup, 'probs_occur'):
+            cur_dict['properties'].update({'Probability': rup.probs_occur})
+        else:
+            cur_dict['properties'].update({'MeanAnnualRate': rup.occurrence_rate})
+        if hasattr(rup, 'weight'):
+            cur_dict['properties'].update({'weight': rup.weight})
+        cur_dict['properties'].update({'Distance': get_distances(rup, siteMeanCol, 'rrup')[0]})
+        cur_dict['properties'].update({'DistanceRup': get_distances(rup, siteMeanCol, 'rrup')[0]})
+        # cur_dict['properties'].update({'DistanceSeis': get_distances(rup, siteMeanCol, 'rrup')})
+        cur_dict['properties'].update({'DistanceJB': get_distances(rup, siteMeanCol, 'rjb')[0]})
+        cur_dict['properties'].update({'DistanceX': get_distances(rup, siteMeanCol, 'rx')[0]})
+        cur_dict['geometry'] = dict()
+        # if (len(arrays)==1 and arrays[0].shape[1]==1 and arrays[0].shape[2]==1):
+        #     # Point Source
+        #     cur_dict['geometry'].update({'type': 'Point'})
+        #     cur_dict['geometry'].update({'coordinates': [arrays[0][0][0][0], arrays[0][1][0][0]]})
+        # elif len(rup.surface.mesh.shape)==1:
+        if len(rup.surface.mesh.shape)==1:
+            # Point Source or area source
+            top_edge = rup.surface.mesh # See the get_top_edge_depth method of the BaseSurface class
+            coordinates = []
+            for i in range(len(top_edge.lats)):
+                coordinates.append([top_edge.lons[i], top_edge.lats[i]])
+            cur_dict['geometry'].update({'type': 'LineString'})
+            cur_dict['geometry'].update({'coordinates': coordinates})
+        else:
+            # Line source
+            top_edge = rup.surface.mesh[0:1] # See the get_top_edge_depth method of the BaseSurface class
+            coordinates = []
+            for i in range(len(top_edge.lats[0])):
+                coordinates.append([top_edge.lons[0][i], top_edge.lats[0][i]])
+            cur_dict['geometry'].update({'type': 'LineString'})
+            cur_dict['geometry'].update({'coordinates': coordinates})
+        feature_collection.append(cur_dict)
+    maf_list_n = [-x['properties']['MeanAnnualRate'] for x in feature_collection]
+    sort_ids = np.argsort(maf_list_n)
+    feature_collection_sorted = [feature_collection[i] for i in sort_ids]
+    del feature_collection
+    erf_data.update({'features': feature_collection_sorted})
+    print('FetchOpenquake: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
+    # Output
+    if outfile is not None:
+        print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
+        with open(outfile, 'w') as f:
+            json.dump(erf_data, f, indent=2)
+        
+def get_site_rup_info_oq(source_info, siteList):
+    from openquake.hazardlib import site
+    from openquake.hazardlib.calc.filters import get_distances
+    rup = source_info['rup']
+    distToRupture = []
+    distJB = []
+    distX = []
+    for i in range(len(siteList)):
+        siteMeanCol = site.SiteCollection.from_points([siteList[i]['lon']], [siteList[i]['lat']])
+        siteList[i].update({"rRup":get_distances(rup, siteMeanCol, 'rrup')[0]})
+        siteList[i].update({"rJB":get_distances(rup, siteMeanCol, 'rjb')[0]})
+        siteList[i].update({"rX":get_distances(rup, siteMeanCol, 'rx')[0]})
+    site_rup_info = {
+        "dip" : float(rup.surface.get_dip()),
+        "width" : float(rup.surface.get_width()),
+        "zTop" : float(rup.rake),
+        "zHyp" : float(rup.hypocenter.depth),
+        "aveRake" : source_info['rup'].surface.mesh[0:1].depths[0]
+        } 
+    return site_rup_info, siteList
