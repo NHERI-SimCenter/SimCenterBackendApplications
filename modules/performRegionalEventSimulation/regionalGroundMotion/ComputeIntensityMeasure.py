@@ -895,7 +895,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 				maf_out.append(tmp)
 			res = {'Station_lnIM': res,
 				   'Earthquake_MAF': maf_out}
-			# save
+			# save SiteIM.json
 			with open(os.path.join(output_dir, filename), "w") as f:
 				json.dump(res, f, indent=2)
 
