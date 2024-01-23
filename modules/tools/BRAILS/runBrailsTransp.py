@@ -10,9 +10,9 @@ required = {'BRAILS', 'argparse'}
 installed = {pkg.key for pkg in pkg_resources.working_set}
 missing = required - installed
 
-# if missing:
-#     python = sys.executable
-#     subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
+if missing:
+    python = sys.executable
+    subprocess.check_call([python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL)
 
 import argparse
 from brails.TranspInventoryGenerator import TranspInventoryGenerator
@@ -47,8 +47,7 @@ def runBrails(latMin, latMax, longMin, longMax,\
 
     #Combine and format the generated inventory to SimCenter transportation network inventory json format
     if combineGeoJSON:
-        invGenerator.combineAndFormat_HWY(minimumHAZUS, connectivity,\
-                                          maxRoadLength, lengthUnit)
+        invGenerator.combineAndFormat_HWY(minimumHAZUS, connectivity,maxRoadLength)
 
 def main(args):
     parser = argparse.ArgumentParser()
