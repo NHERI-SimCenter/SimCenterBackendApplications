@@ -461,12 +461,6 @@ if __name__ == '__main__':
         # import FetchOpenQuake
         from FetchOpenQuake import *
 
-    # untar site databases
-    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-    print('HazardSimulation: Extracting site databases.')
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    for cur_database in site_database:
-        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
 
     # Initial process list
     import psutil
