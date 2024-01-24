@@ -80,7 +80,7 @@ class Station:
         return self.z2p5
 
 
-def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False, soil_model_type=None, soil_user_fun=None):
+def create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_tag, zTR_tag=0, soil_flag=False, soil_model_type=None, soil_user_fun=None):
     """
     Reading input csv file for stations and saving data to output json file
     Input:
@@ -102,15 +102,30 @@ def create_stations(input_file, output_file, min_id, max_id, vs30_tag, z1_tag, z
         run_tag = 0
         return run_tag
     # Max and Min IDs
-    stn_ids_min = np.min(stn_df.index.values)
-    stn_ids_max = np.max(stn_df.index.values)
-    if min_id is None:
-        min_id = stn_ids_min
-    if max_id is None:
-        max_id = stn_ids_max
-    min_id = np.max([stn_ids_min, min_id])
-    max_id = np.min([stn_ids_max, max_id])
-    selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])
+    if filterIDs is not None:
+        stns_requested = []
+        for stns in filterIDs.split(','):
+            if "-" in stns:
+                stn_low, stn_high = stns.split("-")
+                stns_requested += list(range(int(stn_low), int(stn_high)+1))
+            else:
+                stns_requested.append(int(stns))
+        stns_requested = np.array(stns_requested)
+        stns_available = stn_df.index.values
+        stns_to_run = stns_requested[
+            np.where(np.in1d(stns_requested, stns_available))[0]]
+        selected_stn = stn_df.loc[stns_to_run]
+    else:
+        selected_stn = stn_df
+    # stn_ids_min = np.min(stn_df.index.values)
+    # stn_ids_max = np.max(stn_df.index.values)
+    # if min_id is None:
+    #     min_id = stn_ids_min
+    # if max_id is None:
+    #     max_id = stn_ids_max
+    # min_id = np.max([stn_ids_min, min_id])
+    # max_id = np.min([stn_ids_max, max_id])
+    # selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])
     selected_stn.index = list(range(len(selected_stn.index)))
     # Extracting data
     labels = selected_stn.columns.values
