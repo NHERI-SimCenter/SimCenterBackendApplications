@@ -46,6 +46,7 @@ import numpy as np
 import pandas as pd
 import time
 import importlib
+import tarfile
 
 if __name__ == '__main__':
 
@@ -127,7 +128,10 @@ if __name__ == '__main__':
     print('HazardSimulation: Extracting site databases.')
     cwd = os.path.dirname(os.path.realpath(__file__))
     for cur_database in site_database:
-        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+        # subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+        tar = tarfile.open(cwd+"/database/site/"+cur_database, "r:gz")
+        tar.extractall(cwd+"/database/site/")
+        tar.close()
 
     # # Initial process list
     # import psutil
