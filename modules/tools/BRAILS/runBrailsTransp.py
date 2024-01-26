@@ -5,7 +5,12 @@ import importlib.metadata
 
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
-installed = {x.name for x in importlib.metadata.distributions()}
+installed = set()
+for x in importlib.metadata.distributions():
+    try:
+        installed.add(x.name)
+    except:
+        pass
 missing = required - installed
 
 python = sys.executable
@@ -58,8 +63,7 @@ def runBrails(latMin, latMax, longMin, longMax,
     invGenerator.generate()
 
     #Combine and format the generated inventory to SimCenter transportation network inventory json format
-    if combineGeoJSON:
-        invGenerator.combineAndFormat_HWY(minimumHAZUS, maxRoadLength, lengthUnit)
+    invGenerator.combineAndFormat_HWY(minimumHAZUS, maxRoadLength, lengthUnit)
 
 
 def main(args):

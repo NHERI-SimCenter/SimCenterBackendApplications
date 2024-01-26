@@ -5,7 +5,12 @@ import importlib.metadata
 
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
-installed = {x.name for x in importlib.metadata.distributions()}
+installed = set()
+for x in importlib.metadata.distributions():
+    try:
+        installed.add(x.name)
+    except:
+        pass
 missing = required - installed
 
 python = sys.executable
@@ -55,7 +60,7 @@ def main(args):
     parser.add_argument('--outputFile', default=None)
     parser.add_argument('--googKey', default=None)
     parser.add_argument('--seed', default=None, type=int)
-    parser.add_argument('--numBuildings', default=None, type=int)
+    parser.add_argument('--numBuildings', default=None, type=int)  
 
     args = parser.parse_args(args)
 
