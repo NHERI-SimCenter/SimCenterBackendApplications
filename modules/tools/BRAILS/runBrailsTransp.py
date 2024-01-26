@@ -48,7 +48,8 @@ def log_msg(msg):
     print(formatted_msg)
 
 # Define a way to call BRAILS TranspInventoryGenerator:
-def runBrails(latMin, latMax, longMin, longMax):
+def runBrails(latMin, latMax, longMin, longMax, 
+              minimumHAZUS, maxRoadLength, lengthUnit):
 
     # Initialize TranspInventoryGenerator:
     invGenerator = TranspInventoryGenerator(location=(longMin,latMin,longMax,latMax))
@@ -58,7 +59,7 @@ def runBrails(latMin, latMax, longMin, longMax):
 
     # Combine and format the generated inventory to SimCenter transportation 
     # network inventory GeoJSON format:
-    invGenerator.combineAndFormat_HWY()
+    invGenerator.combineAndFormat_HWY(minimumHAZUS, maxRoadLength, lengthUnit)
 
 def main(args):
     parser = argparse.ArgumentParser()
@@ -66,7 +67,12 @@ def main(args):
     parser.add_argument('--latMax', default=None, type=float)
     parser.add_argument('--longMin', default=None, type=float)
     parser.add_argument('--longMax', default=None, type=float)
-    parser.add_argument('--outputFolder', default=None)   
+    parser.add_argument('--outputFolder', default=None)
+    parser.add_argument('--minimumHAZUS', default = True, 
+                        type = str2bool, nargs='?', const=True)
+    parser.add_argument('--maxRoadLength', default = 100, type=float)
+    parser.add_argument('--lengthUnit', default="m", type=str)
+    
     args = parser.parse_args(args)
     
     # Change the current directory to the user-defined output folder:
@@ -74,7 +80,8 @@ def main(args):
     os.chdir(args.outputFolder)
     
     # Run BRAILS TranspInventoryGenerator with the user-defined arguments:
-    runBrails(args.latMin, args.latMax, args.longMin, args.longMax)
+    runBrails(args.latMin, args.latMax, args.longMin, args.longMax, 
+              args.minimumHAZUS, args.maxRoadLength, args.lengthUnit)
 
     log_msg('BRAILS successfully generated the requested transportation inventory')
 
