@@ -197,14 +197,14 @@ def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
     station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
     lat = [stations[j]['lat'] for j in range(len(stations))]
     lon = [stations[j]['lon'] for j in range(len(stations))]
-    vs30 = [stations[j]['vs30'] for j in range(len(stations))]
+    # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
     # DepthToRock is not used in NGA-West2 GMPEs and is not saved
     # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
     df = pd.DataFrame({
         'GP_file': station_name,
         'Longitude': lon,
-        'Latitude': lat,
-		'Vs30': vs30,
+        'Latitude': lat
+		# 'Vs30': vs30,
         # DepthToRock is not used in NGA-West2 GMPEs and is not saved
 		# 'DepthToRock': zTR
     })
