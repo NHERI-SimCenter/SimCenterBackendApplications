@@ -57,9 +57,10 @@ def runBrails(latMin, latMax, longMin, longMax,
     # Run TranspInventoryGenerator to generate an inventory for the entered location:
     invGenerator.generate()
 
-    # Combine and format the generated inventory to SimCenter transportation 
-    # network inventory GeoJSON format:
-    invGenerator.combineAndFormat_HWY(minimumHAZUS, maxRoadLength, lengthUnit)
+    #Combine and format the generated inventory to SimCenter transportation network inventory json format
+    if combineGeoJSON:
+        invGenerator.combineAndFormat_HWY(minimumHAZUS, connectivity,maxRoadLength, lengthUnit)
+
 
 def main(args):
     parser = argparse.ArgumentParser()
