@@ -63,8 +63,9 @@ def runBrails(latMin, latMax, longMin, longMax,
     invGenerator.generate()
 
     #Combine and format the generated inventory to SimCenter transportation network inventory json format
-    invGenerator.combineAndFormat_HWY(minimumHAZUS, maxRoadLength, lengthUnit)
-
+    invGenerator.combineAndFormat_HWY(minimumHAZUS=minimumHAZUS, 
+                                      maxRoadLength=maxRoadLength, 
+                                      lengthUnit=lengthUnit)
 
 def main(args):
     parser = argparse.ArgumentParser()
