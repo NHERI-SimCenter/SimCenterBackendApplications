@@ -11,7 +11,7 @@ This is OS dependent. Have a look at the appvey.yml file included to see what ne
 
 ## Acknowledgments
 
-This material is based upon work supported by the National Science Foundation under Grant No. 1612843.
+This material is based upon work supported by the National Science Foundation under grants #1612843 and #2131111
 
 ### Contact
 
