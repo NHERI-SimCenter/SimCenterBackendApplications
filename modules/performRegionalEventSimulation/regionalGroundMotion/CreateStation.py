@@ -366,7 +366,7 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
                          " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true." )
             print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+
                 " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")
-            tmp.update({'vsInferred': stn.get('vs30Inferred')})
+            tmp.update({'vsInferred': stn.get('vsInferred')})
         else:
             tmp.update({'vsInferred': (1 if vs30Config['Parameters']['vsInferred'] else 0) })
         
