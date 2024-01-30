@@ -41,14 +41,17 @@ def log_msg(msg):
     print(formatted_msg)
 
 # Define a way to call BRAILS InventoryGenerator:
-def runBrails(latMin, latMax, longMin, longMax, seed, numBuildings, gKey, outputFile):    
+def runBrails(latMin, latMax, longMin, longMax,
+              seed, numBuildings, gKey, outputFile, lengthUnit):    
+    
     # Initialize InventoryGenerator:
     invGenerator = InventoryGenerator(location=(longMin,latMin,longMax,latMax),
                                       nbldgs=numBuildings, randomSelection=seed,
                                       GoogleAPIKey=gKey)
 
     # Run InventoryGenerator to generate an inventory for the entered location:
-    invGenerator.generate(attributes='all', outFile=outputFile)
+    invGenerator.generate(attributes='all', outFile=outputFile, 
+                          lengthUnit=lengthUnit)
 
 # Define a way to collect GUI input:
 def main(args):
@@ -61,6 +64,7 @@ def main(args):
     parser.add_argument('--googKey', default=None)
     parser.add_argument('--seed', default=None, type=int)
     parser.add_argument('--numBuildings', default=None, type=int)  
+    parser.add_argument('--lengthUnit', default="m", type=str) 
 
     args = parser.parse_args(args)
 
@@ -70,11 +74,9 @@ def main(args):
 
     # Run BRAILS BRAILS InventoryGenerator with the user-defined arguments:
     runBrails(
-        args.latMin, args.latMax,
-        args.longMin, args.longMax,
-        args.seed, args.numBuildings,
-        args.googKey,
-        args.outputFile)
+        args.latMin, args.latMax, args.longMin, args.longMax,
+        args.seed, args.numBuildings, args.googKey, args.outputFile,
+        args.lengthUnit)
 
     log_msg('BRAILS successfully generated the requested building inventory')
     
