@@ -7,9 +7,10 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-    format      ascii;
-    class       volScalarField;
+    version     2.0;
+    format      ascii;    
     location    "0";
+    class       volScalarField;
     object      epsilon;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

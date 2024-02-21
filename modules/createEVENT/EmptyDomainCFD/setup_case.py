@@ -21,6 +21,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     # Returns JSON object as a dictionary
     mesh_data = json_data["blockMeshParameters"]
     geom_data = json_data['GeometricData']
+    boundary_data = json_data["boundaryConditions"]    
 
     origin = np.array(geom_data['origin'])
     scale =  geom_data['geometricScale']
@@ -38,13 +39,19 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     y_grading = mesh_data['yGrading']
     z_grading = mesh_data['zGrading']
 
-    inlet_type = mesh_data['inletBoundaryType']
-    outlet_type = mesh_data['outletBoundaryType']
-    ground_type = mesh_data['groundBoundaryType']
-    top_type = mesh_data['topBoundaryType']
-    front_type = mesh_data['frontBoundaryType']
-    back_type = mesh_data['backBoundaryType']
-    
+
+    bc_map = {"slip": 'wall', "cyclic": 'cyclic', "noSlip": 'wall', 
+                     "symmetry": 'symmetry', "empty": 'empty', "TInf": 'patch', 
+                     "MeanABL": 'patch', "Uniform": 'patch', "zeroPressureOutlet": 'patch',
+                     "roughWallFunction": 'wall',"smoothWallFunction": 'wall'}
+
+    inlet_type = bc_map[boundary_data['inletBoundaryCondition']]
+    outlet_type = bc_map[boundary_data['outletBoundaryCondition']]
+    ground_type = bc_map[boundary_data['groundBoundaryCondition']]  
+    top_type = bc_map[boundary_data['topBoundaryCondition']]
+    front_type = bc_map[boundary_data['sidesBoundaryCondition']]
+    back_type = bc_map[boundary_data['sidesBoundaryCondition']]
+
     length_unit = json_data['lengthUnit']
 
     
@@ -234,23 +241,44 @@ def write_boundary_data_files(input_json_path, case_path):
 
     # Returns JSON object as a dictionary
     boundary_data = json_data["boundaryConditions"]    
-    
-    wind_profiles =  boundary_data['windProfiles']
+    geom_data = json_data['GeometricData']
+
+    wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
 
     bd_path = case_path + "/constant/boundaryData/inlet/"
 
     #Write points file
-    foam.write_foam_field(wind_profiles[:, 0:3], bd_path + "points")
+    n_pts = np.shape(wind_profiles)[0]
+    points  = np.zeros((n_pts, 3))
+
+
+    origin = np.array(geom_data['origin'])
+    
+    Ly = geom_data['domainWidth']
+    Lf = geom_data['fetchLength']
+    
+    x_min = -Lf - origin[0]
+    y_min = -Ly/2.0 - origin[1]
+    y_max = y_min + Ly
+
+    points[:,0] = x_min
+    points[:,1] = (y_min + y_max)/2.0  
+    points[:,2] = wind_profiles[:, 0]
+
+    #Shift the last element of the y coordinate 
+    #a bit to make planer interpolation easier
+    points[-1:, 1] = y_max
+
+    foam.write_foam_field(points, bd_path + "points")
 
     #Write wind speed file as a scalar field 
-    foam.write_scalar_field(wind_profiles[:, 3], bd_path + "U")
+    foam.write_scalar_field(wind_profiles[:, 1], bd_path + "U")
 
     #Write Reynolds stress profile (6 columns -> it's a symmetric tensor field) 
-    foam.write_foam_field(wind_profiles[:, 4:10], bd_path + "R")
+    foam.write_foam_field(wind_profiles[:, 2:8], bd_path + "R")
 
     #Write length scale file (8 columns -> it's a tensor field)
-    foam.write_foam_field(wind_profiles[:, 10:19], bd_path + "L")
-
+    foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
 
 
 def write_U_file(input_json_path, template_dict_path, case_path):
@@ -283,7 +311,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     #Initialize the internal fields frow a lower velocity to avoid Courant number 
     #instability when the solver starts. Now %10 of roof-height wind speed is set      
     start_index = foam.find_keyword_line(dict_lines, "internalField") 
-    dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(0.1*wind_speed)
+    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)
+
+    #Set the internal field to zero to make it easy for the solver to start
+    dict_lines[start_index] = "internalField   uniform (0 0 0);\n"
 
 
     ###################### Inlet BC ##############################  
@@ -309,9 +340,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t turbulentDFMInlet;\n"
         added_part += "\t filterType \t exponential;\n"
-        added_part += "\t filterFactor \t {:.4f};\n".format(4)
-        added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(0.1*wind_speed)
-        added_part += "\t periodicInZ \t {};\n".format("true")
+        added_part += "\t filterFactor \t {};\n".format(4)
+        added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
+        added_part += "\t periodicInY \t {};\n".format("true")
+        added_part += "\t periodicInZ \t {};\n".format("false")
         added_part += "\t constMeanU \t {};\n".format("true")
         added_part += "\t Uref \t {:.4f};\n".format(wind_speed)
 
@@ -321,9 +353,14 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     
     start_index = foam.find_keyword_line(dict_lines, "outlet") + 2 
     added_part = ""
-    added_part += "\t type \t pressureInletOutletVelocity;\n"
-    added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
+    added_part += "\t type \t inletOutlet;\n"
+    added_part += "\t inletValue \t uniform (0 0 0);\n"
+    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
+    added_part += "\t value \t uniform (0 0 0);\n"
     
+    # added_part += "\t type    zeroGradient;\n"
+
+
     dict_lines.insert(start_index, added_part)
     
     ###################### Ground BC ##############################  
@@ -1510,6 +1547,7 @@ if __name__ == '__main__':
     
     #Write results to be monitored
     write_wind_profiles_file(input_json_path, template_dict_path, case_path)
+
     write_vtk_plane_file(input_json_path, template_dict_path, case_path)
     
     #Write fvSolution dict

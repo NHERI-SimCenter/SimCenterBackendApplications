@@ -39,7 +39,8 @@
 
 #
 # This script reads OpenFOAM output and plot the characteristics of the 
-# approaching wind. For now, it read and plots only velocity field data.  
+# approaching wind. For now, it read and plots only velocity field data and 
+# pressure on predified set of probes.  
 #
 
 import sys
@@ -59,6 +60,331 @@ from scipy import stats
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+
+def readPressureProbes(fileName):
+    """
+    Created on Wed May 16 14:31:42 2018
+    
+    Reads pressure probe data from OpenFOAM and return the probe location, time, and the pressure
+    for each time step.
+    
+    @author: Abiy F. Melaku
+    """
+    probes = []
+    p = []
+    time  = []
+        
+    with open(fileName, "r") as f:
+        for line in f:
+            if line.startswith('#'):
+                if line.startswith('# Probe'):
+                    line = line.replace('(','')
+                    line = line.replace(')','')
+                    line = line.split()
+                    probes.append([float(line[3]),float(line[4]),float(line[5])])
+                else:
+                    continue
+            else: 
+                line = line.split()
+                time.append(float(line[0]))
+                p_probe_i = np.zeros([len(probes)])
+                for i in  range(len(probes)):
+                    p_probe_i[i] = float(line[i + 1])
+                p.append(p_probe_i)
+    
+    probes = np.asarray(probes, dtype=np.float32)
+    time = np.asarray(time, dtype=np.float32)
+    p = np.asarray(p, dtype=np.float32)
+    
+    return probes, time, p
+
+def read_pressure_data(file_names):
+    """
+    This functions takes names of different OpenFOAM presume measurements and connect
+    them into one file removing overlaps if any. All the probes must be in the same 
+    location, otherwise an error might show up. 
+
+    Parameters
+    ----------
+    *args 
+        List of file paths of pressure data to be connected together. 
+
+    Returns
+    -------
+    time, pressure
+        Returns the pressure time and pressure data of the connected file.
+    """
+    no_files  = len(file_names)
+    connected_time = [] # Connected array of time 
+    connected_p = []  # connected array of pressure.
+
+    time1 = []
+    p1    = []
+    time2 = []
+    p2    = []
+    probes= []
+               
+    for i in range(no_files):            
+        probes, time2, p2 = readPressureProbes(file_names[i])        
+        
+        if i==0:
+            connected_time = time2
+            connected_p = p2  
+        else:
+            try:
+                index = np.where(time2 > time1[-1])[0][0]
+                # index += 1                
+
+            except:
+                # sys.exit('Fatal Error!: the pressure files have time gap')
+                index = 0 # Joint them even if they have a time gap        
+
+            connected_time = np.concatenate((connected_time, time2[index:]))
+            connected_p = np.concatenate((connected_p, p2[index:]))
+
+        time1 = time2
+        p1 = p2
+    return probes, connected_time, connected_p
+
+
+class PressureData:
+    """
+    A class that holds a pressure data and performs the fallowing operations:
+            - mean and rms pressure coefficients 
+            - peak pressure coefficients     
+    """
+    def __init__(self, path, u_ref=0.0, rho=1.25, p_ref=0.0,
+                 start_time=None, end_time=None):
+        self.path = path
+        self.u_ref = u_ref
+        self.p_ref = p_ref
+        self.rho = rho
+        self.start_time = start_time
+        self.end_time = end_time
+        self.__read_cfd_data()
+        self.__set_time()
+        self.Nt = len(self.time)
+        self.T = self.time[-1]
+        self.z = self.probes[:,2]
+        self.y = self.probes[:,1]
+        self.x = self.probes[:,0]
+        self.dt = np.mean(np.diff(self.time))    
+        self.probe_count = np.shape(self.probes)[0]
+
+    def __read_cfd_data (self):
+        if os.path.isdir(self.path):
+            print("Reading from path : %s" % (self.path))
+            time_names = os.listdir(self.path)
+            sorted_index = np.argsort(np.float_(time_names)).tolist()
+            # print(sorted_index)
+            # print("\tTime directories: %s" %(time_names))
+            file_names  = []
+            
+            for i in range(len(sorted_index)):
+                file_name = os.path.join(self.path, time_names[sorted_index[i]],'p')
+                file_names.append(file_name)
+                
+            # print(file_names)
+            self.probes, self.time, self.p = read_pressure_data(file_names)
+            self.p = self.rho*np.transpose(self.p) # OpenFOAM gives p/rho
+
+            # self.p = np.transpose(self.p) # OpenFOAM gives p/rho
+        else:
+            print("Cannot find the file path: %s" % (self.path))  
+        
+            
+    def __set_time (self):
+        if(self.start_time != None):
+            start_index = int(np.argmax(self.time > self.start_time))
+            self.time = self.time[start_index:]
+            # self.cp = self.cp[:,start_index:]
+            try:
+                self.p = self.p[:,start_index:]
+            except: 
+                pass
+
+
+        if(self.end_time != None):
+            end_index = int(np.argmax(self.time > self.end_time))
+            self.time = self.time[:end_index]
+            # self.cp = self.cp[:,:end_index]
+            try:
+                self.p = self.p[:,:end_index]               
+            except:
+                pass
+
+        
+
+
+
+def von_karman_spectrum(f, Uav, I, L, comp=0):
+    
+    psd  = np.zeros(len(f))
+
+    if comp==0:
+        return 4.0*np.power(I*Uav, 2.0)*(L/Uav)/np.power(1.0 + 70.8*np.power(f*L/ Uav, 2.0), 5.0 / 6.0)
+
+    if comp==1 or comp==2:      
+       return 4.0*np.power(I*Uav, 2.0)*(L/Uav)*(1.0 + 188.4*np.power(2.0*f*L/Uav, 2.0)) /np.power(1.0 + 70.8*np.power(2.0*f*L/Uav, 2.0), 11.0/6.0)
+
+def psd(x, dt, nseg):
+    """
+    Calculates the power spectral density of a given signal using the welch
+    method. 
+
+    Parameters
+    ----------
+    x 
+        The time history of the signal.         
+    dt
+        The time step . 
+    nseg
+        The the number of segments to average the time series. 
+
+    Returns
+    -------
+    freq, spectra
+        Returns the frequency and spectra of the signal
+    
+    """
+    x_no_mean = x - np.mean(x)
+    freq, spectra = signal.welch(x_no_mean, fs=1.0/dt, nperseg=len(x_no_mean)/nseg)
+       
+    return freq[1:], spectra[1:]
+
+
+def write_open_foam_vector_field(p, file_name):
+       
+    """
+    Writes a given vector-field (n x 3) array to OpenFOAM 'vectorField'
+    format. 
+        
+    """   
+    f = open(file_name,"w+")
+    f.write('%d' % len(p[:,2]))
+    f.write('\n(')
+    for i in range(len(p[:,2])):
+        f.write('\n ({:.7e} {:.7e} {:.7e})'.format(p[i,0], p[i,1], p[i,2]))
+    
+    f.write('\n);')   
+    f.close()   
+
+
+def read_openFoam_scalar_field(file_name):
+       
+    """
+    Reads a given vectorField OpenFOAM into numpy (n x 3) array format. 
+    """   
+
+
+    sField = []
+    
+    with open(file_name, "r") as f:
+        itrf = iter(f)
+        next(itrf)
+        for line in itrf:
+            if line.startswith('(') or line.startswith(')'):
+               continue
+            else:
+                line = line.split()
+                sField.append(float(line[0]))
+    
+    sField = np.asarray(sField, dtype=np.float32)
+
+    
+    return sField
+
+def read_openFoam_vector_field(file_name):
+       
+    """
+    Reads a given vectorField OpenFOAM into numpy (n x 3) array format. 
+    """   
+
+
+    vField = []
+    
+    with open(file_name, "r") as f:
+        for line in f:
+            if line.startswith('('):
+                line = line.replace('(','')
+                line = line.replace(')','')
+                line = line.split()
+                
+                if len(line) < 3:
+                    continue
+                
+                vField.append([float(line[0]),float(line[1]),float(line[2])])
+    
+    vField = np.asarray(vField, dtype=np.float32)
+
+    
+    return vField
+
+
+def read_openFoam_tensor_field(file_name):
+       
+    """
+    Reads a given vectorField OpenFOAM into numpy (n x 3) array format. 
+    """   
+
+    vField = []
+    
+    row_count = 9
+
+    with open(file_name, "r") as f:
+        for line in f:
+            if line.startswith('('):
+                line = line.replace('(','')
+                line = line.replace(')','')
+                line = line.split()
+                
+                if len(line) < row_count:
+                    continue
+                
+                row = np.zeros(row_count)
+
+                for i in range(row_count):
+                    row[i] = float(line[i])
+                
+                vField.append(row)
+    
+    vField = np.asarray(vField, dtype=np.float32)
+
+    
+    return vField
+
+def read_openFoam_symmetric_tensor_field(file_name):
+       
+    """
+    Reads a given vectorField OpenFOAM into numpy (n x 3) array format. 
+    """   
+
+    vField = []
+    
+    row_count = 6
+
+    with open(file_name, "r") as f:
+        for line in f:
+            if line.startswith('('):
+                line = line.replace('(','')
+                line = line.replace(')','')
+                line = line.split()
+                
+                if len(line) < row_count:
+                    continue
+                
+                row = np.zeros(row_count)
+                for i in range(row_count):
+                    row[i] = float(line[i])
+                
+                vField.append(row)
+    
+    vField = np.asarray(vField, dtype=np.float32)
+
+    
+    return vField
+
 
 
 def read_velocity_data(path):
@@ -348,7 +674,7 @@ class VelocityData:
         return f(z)
 
 
-def plot_wind_profiles(case_path, prof_name):
+def plot_wind_profiles_and_spectra(case_path, prof_name):
     
     #Read JSON data    
     json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
@@ -357,7 +683,9 @@ def plot_wind_profiles(case_path, prof_name):
       
     # Returns JSON object as a dictionary
     wc_data = json_data["windCharacteristics"]
-    rm_data = json_data['resultMonitoring']
+    
+    ref_h = wc_data["referenceHeight"]
+    
 
     prof_path  = os.path.join(case_path,  "postProcessing", prof_name)
     
@@ -371,71 +699,115 @@ def plot_wind_profiles(case_path, prof_name):
     Path(output_path).mkdir(parents=True, exist_ok=True)
 
     #Create wind profile data profile z, Uav, Iu ..., Lu ...,
-    prof_np = np.zeros((len(prof.y), 9))
-    prof_np[:,0] = prof.y
+    prof_np = np.zeros((len(prof.z), 9))
+    prof_np[:,0] = prof.z
     prof_np[:,1] = prof.Uav
     prof_np[:,2] = prof.I[:,0]
     prof_np[:,3] = prof.I[:,1]
     prof_np[:,4] = prof.I[:,2]
-    prof_np[:,5] = prof.uv_bar/np.square(prof.Uav)
+    prof_np[:,5] = prof.uw_bar
     prof_np[:,6] = prof.L[:,0]
     prof_np[:,7] = prof.L[:,1]
     prof_np[:,8] = prof.L[:,2]
-   
+
+    
+
+    #Read the target wind profile data
+    tar_path = os.path.join(case_path, "constant", "boundaryData", "inlet")
+
+    tar_p = read_openFoam_vector_field(os.path.join(tar_path, "points"))
+    tar_U = read_openFoam_scalar_field(os.path.join(tar_path, "U"))
+    tar_R = read_openFoam_symmetric_tensor_field(os.path.join(tar_path, "R"))
+    tar_L = read_openFoam_tensor_field(os.path.join(tar_path, "L"))
+    
+    tar_U_ref =  np.interp(ref_h, tar_p[:,2], tar_U)
+    
+    
+    tar_Iu = np.sqrt(tar_R[:, 0])/tar_U
+    tar_Iv = np.sqrt(tar_R[:, 3])/tar_U
+    tar_Iw = np.sqrt(tar_R[:, 5])/tar_U
+    tar_uw = tar_R[:, 2]
+    
+    tar_Lu = tar_L[:, 0]
+    tar_Lv = tar_L[:, 3]
+    tar_Lw = tar_L[:, 6]
+    
+    tar_I = np.zeros((3, len(tar_Iu)))
+    tar_L = np.zeros((3, len(tar_Lu)))
+    
+    tar_I[0,:] = tar_Iu
+    tar_I[1,:] = tar_Iv
+    tar_I[2,:] = tar_Iw
+    
+    tar_L[0,:] = tar_Lu
+    tar_L[1,:] = tar_Lv
+    tar_L[2,:] = tar_Lw
+    
+    
     subplot_titles = ("Mean Velocity", "Turbulence Intensity, Iu", "Turbulence Intensity, Iv", "Turbulence Intensity, Iw",
                        "Shear Stress", "Length Scale, Lu", "Length Scale, Lv", "Length Scale, Lw")
     
     fig = make_subplots(rows=2, cols=4, start_cell="top-left", subplot_titles=subplot_titles, vertical_spacing=0.15)
 
-
-
-    # Mean Velocity
-    fig.add_trace(go.Scatter(x=prof_np[:,1], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=1)
-    fig.update_xaxes(title_text="$U_{av} [m/s]$", range=[0, 1.15*np.max(prof_np[:,1])], 
+        
+    fig.add_trace(go.Scatter(x=tar_U, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=1, col=1)
+    fig.add_trace(go.Scatter(x=prof_np[:,1], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=1, col=1)
+    
+    fig.update_xaxes(title_text="$U_{av} [m/s]$", range=[0, 1.25*np.max(prof_np[:,1])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
     fig.update_yaxes(title_text="$z [m]$", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
    
 
     # Turbulence Intensity Iu
-    fig.add_trace(go.Scatter(x=prof_np[:,2], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=2)
+    fig.add_trace(go.Scatter(x=tar_Iu, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=1, col=2)
+    fig.add_trace(go.Scatter(x=prof_np[:,2], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=1, col=2)
     fig.update_xaxes(title_text="$I_{u}$", range=[0, 1.3*np.max(prof_np[:,2])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=2)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=1, col=2)
 
     # Turbulence Intensity Iv
-    fig.add_trace(go.Scatter(x=prof_np[:,3], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=3)
+    fig.add_trace(go.Scatter(x=tar_Iw, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=1, col=3)
+    fig.add_trace(go.Scatter(x=prof_np[:,3], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=1, col=3)
     fig.update_xaxes(title_text="$I_{v}$", range=[0, 1.3*np.max(prof_np[:,3])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=3)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=1, col=3)
 
     # Turbulence Intensity Iw
-    fig.add_trace(go.Scatter(x=prof_np[:,4], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=4)
+    fig.add_trace(go.Scatter(x=tar_Iw, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=1, col=4)
+    fig.add_trace(go.Scatter(x=prof_np[:,4], y=prof_np[:,0], line=dict(color='firebrick', width=2.5), 
+                             mode='lines+markers', name=prof_name, ), row=1, col=4)
     fig.update_xaxes(title_text="$I_{w}$", range=[0, 1.3*np.max(prof_np[:,4])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=4)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=1, col=4)
 
 
-
     # Shear Stress Profile 
-    fig.add_trace(go.Scatter(x=prof_np[:,5], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=2, col=1)
-    fig.update_xaxes(title_text=r'$\overline{uv}/U^2_{av}$', range=[1.3*np.min(prof_np[:,5]), 1.5*np.max(prof_np[:,5])], 
+    fig.add_trace(go.Scatter(x=tar_uw, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=2, col=1)
+    fig.add_trace(go.Scatter(x=prof_np[:,5], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=2, col=1)
+    fig.update_xaxes(title_text=r'$\overline{uw}$', range=[1.3*np.min(prof_np[:,5]), 1.5*np.max(prof_np[:,5])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=2, col=1)
     fig.update_yaxes(title_text="$z [m]$", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=2, col=1)
 
 
     # Length scale Lu
-    fig.add_trace(go.Scatter(x=prof_np[:,6], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=2, col=2)
+    fig.add_trace(go.Scatter(x=tar_Lu, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=2, col=2)
+    fig.add_trace(go.Scatter(x=prof_np[:,6], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=2, col=2)
     fig.update_xaxes(title_text="$L_{u} [m]$", range=[0, 1.5*np.max(prof_np[:,6])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=2, col=2)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
@@ -443,8 +815,10 @@ def plot_wind_profiles(case_path, prof_name):
 
 
     # Length scale Lv
-    fig.add_trace(go.Scatter(x=prof_np[:,7], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=2, col=3)
+    fig.add_trace(go.Scatter(x=tar_Lv, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=2, col=3)
+    fig.add_trace(go.Scatter(x=prof_np[:,7], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=2, col=3)
     fig.update_xaxes(title_text="$L_{v} [m]$", range=[0, 1.5*np.max(prof_np[:,7])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=2, col=3)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
@@ -452,8 +826,10 @@ def plot_wind_profiles(case_path, prof_name):
 
 
     # Length scale Lw
-    fig.add_trace(go.Scatter(x=prof_np[:,8], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=2, col=4)
+    fig.add_trace(go.Scatter(x=tar_Lw, y=tar_p[:,2], line=dict(color='black', width=3.0, dash='dot'),
+                             mode='lines', name='Target', ), row=2, col=4)
+    fig.add_trace(go.Scatter(x=prof_np[:,8], y=prof_np[:,0], line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=2, col=4)
     fig.update_xaxes(title_text="$L_{w} [m]$", range=[0, 1.5*np.max(prof_np[:,8])], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=2, col=4)
     fig.update_yaxes(title_text="", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
@@ -466,40 +842,113 @@ def plot_wind_profiles(case_path, prof_name):
 
 
 
-    subplot_titles = ("u-component", "v-component", "w-component")
+    #Plot the spectra at four locations    
     
-    fig = make_subplots(rows=1, cols=3, start_cell="top-left", subplot_titles=subplot_titles, vertical_spacing=0.15)
+    spec_h = ref_h*np.array([0.25, 0.50, 1.00, 2.00])        
 
-
-
-    #u-component
-    fig.add_trace(go.Scatter(x=prof_np[:,1], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=1)
+    n_spec = len(spec_h)
+    nseg = 5
+    ncomp = 3
+    ylabel = ['$fS_{u}/\sigma^2_{u}$',
+              '$fS_{v}/\sigma^2_{v}$',
+              '$fS_{w}/\sigma^2_{w}$']
     
-    fig.update_xaxes(type="log", title_text="$U_{av} [m/s]$", range=[0, 1.15*np.max(prof_np[:,1])], 
+
+    for i in range(n_spec):
+        loc = np.argmin(np.abs(prof_np[:,0] - spec_h[i]))
+        
+        loc_tar = np.argmin(np.abs(tar_p[:,2] - spec_h[i]))
+        
+        subplot_titles = ("u-component", "v-component", "w-component")
+        fig = make_subplots(rows=1, cols=3, start_cell="top-left", subplot_titles=subplot_titles, vertical_spacing=0.15)
+        
+        U_ref_prof =  np.interp(spec_h[i], prof_np[:,0], prof_np[:,1])
+        U_ref_tar =  np.interp(spec_h[i], tar_p[:,2], tar_U)
+
+        #Plot each component        
+        for j in range(ncomp):
+            freq, spec = psd(prof.u[loc, j,:], prof.dt, nseg)  
+            
+            f_min = np.min(freq)/1.5
+            f_max = 1.5*np.max(freq)
+
+            u_var = np.var(prof.u[loc, j,:])
+                        
+            spec = freq*spec/u_var
+            freq = freq*spec_h[i]/U_ref_prof
+            
+            
+            tar_Iz = tar_I[j,loc_tar]
+            tar_Lz = tar_L[j,loc_tar]
+            
+            
+            vonk_f = np.logspace(np.log10(f_min), np.log10(f_max), 200)
+            vonk_psd = von_karman_spectrum(vonk_f, U_ref_tar, tar_Iz, tar_Lz, j)
+            
+            vonk_psd = vonk_f*vonk_psd/np.square(U_ref_tar*tar_Iz)
+            vonk_f = vonk_f*spec_h[i]/U_ref_tar
+        
+
+            fig.add_trace(go.Scatter(x=freq, y=spec, line=dict(color='firebrick', width=1.5),
+                                     mode='lines', name=prof_name, ), row=1, col=1+j)
+            fig.add_trace(go.Scatter(x=vonk_f, y=vonk_psd, line=dict(color='black', width=3.0, dash='dot'), 
+                                     mode='lines', name='Target(von Karman)', ), row=1, col=1+j)
+            fig.update_xaxes(type="log", title_text="$fz/U$", 
+                             showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1+j)
+            fig.update_yaxes(type="log", title_text=ylabel[j], showline=True, 
+                             linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1+j)
+        
+        fig.update_layout(height=450, width=1500, title_text="",showlegend=False)
+        fig.show()
+        fig.write_html(os.path.join(output_path, "spectra_" + prof_name + "_H" + str(1 + i) + ".html"), include_mathjax="cdn")
+    
+
+
+
+def plot_pressure_profile(case_path, prof_name):
+    
+    #Read JSON data    
+    json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
+    with open(json_path) as json_file:
+        json_data =  json.load(json_file)
+      
+
+    prof_path  = os.path.join(case_path,  "postProcessing", prof_name)
+    
+
+    prof = PressureData(prof_path, start_time=1.0, end_time=None, u_ref=0.0, rho=1.25, p_ref=0.0)
+
+
+    std_p = np.std(prof.p, axis=1)
+    
+    output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
+
+
+    
+    subplot_titles = ("Pressure Fluctuation",)
+    
+    fig = make_subplots(rows=1, cols=1, start_cell="top-left", subplot_titles=subplot_titles, vertical_spacing=0.15)
+
+
+    # Plot pressure fluctuation Velocity
+    fig.add_trace(go.Scatter(x=prof.x-np.min(prof.x), y=std_p, line=dict(color='firebrick', width=2.5),
+                             mode='lines+markers', name=prof_name, ), row=1, col=1)
+    
+    fig.update_xaxes(title_text="Distance from inlet (x) [m]", range=[np.min(prof.x-np.min(prof.x)), np.max(prof.x-np.min(prof.x))], 
                      showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
-    
-    fig.update_yaxes(type="log", title_text="$z [m]$", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
+    fig.update_yaxes(title_text=r"Pressure R.M.S", range=[0, 1.15*np.max(std_p)], showline=True, 
                      linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
+  
 
-    #v-component
-    fig.add_trace(go.Scatter(x=prof_np[:,1], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=1)
-    
-    fig.update_xaxes(type="log", title_text="$U_{av} [m/s]$", range=[0, 1.15*np.max(prof_np[:,1])], 
-                     showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
-    fig.update_yaxes(type="log", title_text="$z [m]$", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
-                     linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
+
+    fig.update_layout(height=400, width=800, title_text="",showlegend=False)
+    fig.show()
+    fig.write_html(os.path.join(output_path, "pressure_" + prof_name + ".html"), include_mathjax="cdn")
+
+
+
     
 
-    #v-component
-    fig.add_trace(go.Scatter(x=prof_np[:,1], y=prof_np[:,0], 
-                             mode='lines+markers', name='Inflow', ), row=1, col=1)
-    
-    fig.update_xaxes(type="log", title_text="$U_{av} [m/s]$", range=[0, 1.15*np.max(prof_np[:,1])], 
-                     showline=True, linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
-    fig.update_yaxes(type="log", title_text="$z [m]$", range=[0, 1.01*np.max(prof_np[:,0])], showline=True, 
-                     linewidth=1.5, linecolor='black',ticks='outside', row=1, col=1)
 
 if __name__ == '__main__':    
     
@@ -509,8 +958,9 @@ if __name__ == '__main__':
     # case_path = sys.argv[1]
     # prof_name = sys.argv[2]
 
-    case_path = "C:\\Users\\fanta\\OneDrive\\Documents\\WE-UQ\\LocalWorkDir\\EmptyDomainCFD"
-    prof_name = "probe7H"
+    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\EmptyDomainCFD"
+    prof_name_u = "Profile1"
+    prof_name_p = "Profile3"
     
-    plot_wind_profiles(case_path, prof_name)
-    
+    plot_wind_profiles_and_spectra(case_path, prof_name_u)
+    plot_pressure_profile(case_path, prof_name_p)
