@@ -49,7 +49,7 @@ maxCo           5;
 
 maxDeltaT       0.01;
 
-libs ("libatmosphericModels.so");
+libs ("libatmosphericModels.so" "libturbulentInflow.so");
 
 functions
 {
