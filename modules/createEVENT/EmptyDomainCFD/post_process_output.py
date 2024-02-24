@@ -69,7 +69,7 @@ def readPressureProbes(fileName):
     Reads pressure probe data from OpenFOAM and return the probe location, time, and the pressure
     for each time step.
     
-    @author: Abiy F. Melaku
+    @author: Abiy
     """
     probes = []
     p = []
@@ -101,14 +101,14 @@ def readPressureProbes(fileName):
 
 def read_pressure_data(file_names):
     """
-    This functions takes names of different OpenFOAM presume measurements and connect
+    This functions takes names of different OpenFOAM pressure measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same 
     location, otherwise an error might show up. 
 
     Parameters
     ----------
     *args 
-        List of file paths of pressure data to be connected together. 
+        List of file pashes of pressure data to be connected together. 
 
     Returns
     -------
@@ -137,7 +137,7 @@ def read_pressure_data(file_names):
                 # index += 1                
 
             except:
-                # sys.exit('Fatal Error!: the pressure files have time gap')
+                # sys.exit('Fatal Error!: the pressure filese have time gap')
                 index = 0 # Joint them even if they have a time gap        
 
             connected_time = np.concatenate((connected_time, time2[index:]))
@@ -150,7 +150,7 @@ def read_pressure_data(file_names):
 
 class PressureData:
     """
-    A class that holds a pressure data and performs the fallowing operations:
+    A class that holds a pressure data and performs the following operations:
             - mean and rms pressure coefficients 
             - peak pressure coefficients     
     """
@@ -534,7 +534,7 @@ class VelocityData:
             - integral scale of turbulence profiles      
     """
     def __init__(self, path,sampling_rate=400, filter_data=False, filter_freq=400, 
-                 start_time=None, end_time=None, uDirn='x', resample_dt = None):
+                 start_time=None, end_time=None, resample_dt = None):
         self.path = path
         self.sampling_rate = sampling_rate
         self.filter_data = filter_data
@@ -542,7 +542,6 @@ class VelocityData:
         self.start_time = start_time
         self.end_time = end_time
         self.component_count = 3
-        self.uDirn = uDirn
         self.resample_dt = resample_dt
         self.__read_cfd_data()        
         self.__set_time()
@@ -572,7 +571,15 @@ class VelocityData:
                 
             self.probes, self.time, self.U = read_velocity_data(file_names)     
             
-            
+            #Distance along the path of the profile 
+
+            n_points = np.shape(self.probes)[0]
+            self.dist = np.zeros(n_points)
+
+            for i in range(n_points-1):
+                self.dist[i + 1] = self.dist[i] + np.linalg.norm(self.probes[i + 1, :] - self.probes[i, :])
+
+
             # Coefficient of variation
             cv = np.std(np.diff(self.time))/np.mean(np.diff(self.time))
             
@@ -628,12 +635,9 @@ class VelocityData:
         self.u = np.zeros((self.probe_count, self.component_count, self.Nt))
 
         #Calculate the mean velocity profile.
-        if self.uDirn == 'x':
-            self.Uav = np.mean(self.U[:,0,:], axis=1)
-        if self.uDirn == 'y':
-           self.Uav = np.mean(self.U[:,1,:], axis=1)
-        if self.uDirn == 'z':
-           self.Uav = np.mean(self.U[:,2,:], axis=1)
+
+        self.Uav = np.mean(self.U[:,0,:], axis=1)
+
            
         #Calculate the turbulence intensity.
         self.I = np.std(self.U, axis=2) # gets the standard deviation
@@ -661,25 +665,20 @@ class VelocityData:
             self.uv_bar[i] = np.cov(self.U[i,0,:], self.U[i,1,:])[0,1]
             self.uw_bar[i] = np.cov(self.U[i,0,:], self.U[i,2,:])[0,1]
 
-    def get_Uav(self, z, dixn='z'):
+    def get_Uav(self, z):
         from scipy import interpolate
         
-        if dixn == 'x':
-            f = interpolate.interp1d(self.x, self.Uav)
-        elif dixn == 'y':
-            f = interpolate.interp1d(self.y, self.Uav)
-        else:
-            f = interpolate.interp1d(self.z, self.Uav)
+        f = interpolate.interp1d(self.z, self.Uav)
         
         return f(z)
 
 
-def plot_wind_profiles_and_spectra(case_path, prof_name):
+def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
     
     #Read JSON data    
     json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
     with open(json_path) as json_file:
-        json_data =  json.load(json_file)
+        json_data = json.load(json_file)
       
     # Returns JSON object as a dictionary
     wc_data = json_data["windCharacteristics"]
@@ -687,16 +686,10 @@ def plot_wind_profiles_and_spectra(case_path, prof_name):
     ref_h = wc_data["referenceHeight"]
     
 
-    prof_path  = os.path.join(case_path,  "postProcessing", prof_name)
+    prof_path = os.path.join(case_path, "postProcessing", prof_name)
     
     prof = VelocityData(prof_path, start_time=None, end_time=None)
     
-    output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
-
-    if os.path.exists(output_path):
-        shutil.rmtree(output_path)
-
-    Path(output_path).mkdir(parents=True, exist_ok=True)
 
     #Create wind profile data profile z, Uav, Iu ..., Lu ...,
     prof_np = np.zeros((len(prof.z), 9))
@@ -905,13 +898,7 @@ def plot_wind_profiles_and_spectra(case_path, prof_name):
 
 
 
-def plot_pressure_profile(case_path, prof_name):
-    
-    #Read JSON data    
-    json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
-    with open(json_path) as json_file:
-        json_data =  json.load(json_file)
-      
+def plot_pressure_profile(case_path, output_path, prof_name):     
 
     prof_path  = os.path.join(case_path,  "postProcessing", prof_name)
     
@@ -921,9 +908,6 @@ def plot_pressure_profile(case_path, prof_name):
 
     std_p = np.std(prof.p, axis=1)
     
-    output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
-
-
     
     subplot_titles = ("Pressure Fluctuation",)
     
@@ -944,9 +928,6 @@ def plot_pressure_profile(case_path, prof_name):
     fig.update_layout(height=400, width=800, title_text="",showlegend=False)
     fig.show()
     fig.write_html(os.path.join(output_path, "pressure_" + prof_name + ".html"), include_mathjax="cdn")
-
-
-
     
 
 
@@ -954,13 +935,43 @@ if __name__ == '__main__':
     
     input_args = sys.argv
 
-    # # Set filenames
-    # case_path = sys.argv[1]
+
+    case_path = sys.argv[1]
     # prof_name = sys.argv[2]
 
-    case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\EmptyDomainCFD"
-    prof_name_u = "Profile1"
-    prof_name_p = "Profile3"
+    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\EmptyDomainCFD_V2"
     
-    plot_wind_profiles_and_spectra(case_path, prof_name_u)
-    plot_pressure_profile(case_path, prof_name_p)
+    #Read JSON data    
+    json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
+    with open(json_path) as json_file:
+        json_data =  json.load(json_file)
+    
+    # Returns JSON object as a dictionary
+    rm_data = json_data["resultMonitoring"]
+    
+    wind_profiles = rm_data['windProfiles']
+    
+    
+    output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
+
+    #Check if it exists and remove files
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+        
+    #Create new path
+    Path(output_path).mkdir(parents=True, exist_ok=True)
+
+
+    #Plot wind and pressure profiles
+    for prof in wind_profiles:
+        name = prof["name"]
+        field = prof["field"]
+        print(name)
+        print(field)
+        
+        if field=="Velocity":
+            plot_wind_profiles_and_spectra(case_path, output_path, name)
+            
+        if field=="Pressure":
+            plot_pressure_profile(case_path, output_path, name)
+
