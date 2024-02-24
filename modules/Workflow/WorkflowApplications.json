@@ -77,9 +77,30 @@
         ]
       },
       {
+        "Name": "GEOJSON_TO_ASSET",
+          "ExecutablePath": "applications/createAIM/GeoJSON_to_ASSET/GeoJSON_to_ASSET.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "assetType",
+            "type": "string",
+            "description": "name of the asset type e.g., Building, Transportation Network"
+          },
+          {
+            "id": "inputJsonFile",
+            "type": "path",
+            "description": "path to the rWHALE.json"
+          }
+        ]
+      },
+      {
         "Name": "CSV_to_AIM",
-        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",	
-        "RunsParallel": true,	  
+        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",  
+        "RunsParallel": true,   
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -164,6 +185,38 @@
             "description": "water network node information"
           }
         ]
+      },
+      {
+        "Name": "JSON_to_TRANSPORTNETWORK",
+        "ExecutablePath": "modules/createAIM/JSON_to_AIM/JSON_to_AIM_transport.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetSourceFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "bridgesFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of bridges from the inventory"
+          },
+          {
+            "id": "tunnelsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of tunnels from the inventory"
+          },
+          {
+            "id": "roadsFilter",
+            "type": "string",
+            "description": "Filter applied to select a subset of roads from the inventory"
+          },
+          {
+            "id": "roadSegLength",
+            "type": "float",
+            "description": "Maximum length (m) of road segments in the created AIM files",
+            "default": 100
+          }
+        ]
       }
   ]
   },
@@ -230,7 +283,7 @@
       {
         "Name": "RegionalSiteResponse",
         "ExecutablePath": "applications/Workflow/siteResponseWHALE.py",
-        "RunsParallel": true,	  
+        "RunsParallel": true,   
         "ApplicationSpecificInputs": [
         ]
       }
@@ -253,7 +306,7 @@
       {
         "Name": "NearestNeighborEvents",
         "ExecutablePath": "applications/performRegionalMapping/NearestNeighborEvents/NNE.py",
-	"RunsParallel": true,
+  "RunsParallel": true,
         "ApplicationSpecificInputs": [
           {
             "id": "filenameEVENTgrid",
@@ -285,7 +338,7 @@
       {
         "Name": "SiteSpecifiedEvents",
           "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
-	"RunsParallel": true,	  
+  "RunsParallel": true,   
         "ApplicationSpecificInputs": [
           {
             "id": "filenameEVENTgrid",
@@ -377,7 +430,7 @@
         "Name": "HighRiseTPU",
         "ExecutablePath": "applications/createEVENT/HighRiseTPU/HighRiseTPU",
         "ApplicationSpecificInputs":[]
-      },	
+      },  
       {
         "Name": "WindTunnelExperiment",
         "ExecutablePath": "applications/createEVENT/windTunnelExperiment/WindTunnelExperiment",
@@ -404,20 +457,20 @@
           }
         ]
       },
-	{
+  {
             "Name": "CFDEvent",
             "ExecutablePath": "applications/createEVENT/CFDEvent/CFDEvent.py",
             "ApplicationSpecificInputs":[
-	      {
-		  "id":"OpenFOAMCase",
-		  "type":"string",
-		  "description": "Remote directory containing OpenFOAM case input"
-	      },
-		{
-		    "id":"OpenFOAMSolver",
-		    "type":"string",
-		    "description": "OpenFOAM solver used"
-		}]
+        {
+      "id":"OpenFOAMCase",
+      "type":"string",
+      "description": "Remote directory containing OpenFOAM case input"
+        },
+    {
+        "id":"OpenFOAMSolver",
+        "type":"string",
+        "description": "OpenFOAM solver used"
+    }]
         },
       {
         "Name": "IsolatedBuildingCFD",
@@ -425,7 +478,12 @@
         "ApplicationSpecificInputs":[
         ]
       },
-	
+      {
+        "Name": "CoupledDigitalTwin",
+        "ExecutablePath": "applications/createEVENT/coupledDigitalTwin/CoupledDigitalTwin.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },  
       {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
@@ -636,8 +694,8 @@
               {"id": "appKey",
                "type": "string",
                "description": "keyword of application data in input file"
-	      }
-	  ]
+        }
+    ]
       },
       {
         "Name": "SteelBuildingModel",
@@ -747,7 +805,7 @@
       },
       {
         "Name": "SurrogateEDP",
-        "ExecutablePath": "applications/createEDP/SurrogateEDP/SurrogateEDP.py",
+        "ExecutablePath": "applications/createEDP/surrogateEDP/surrogateEDP.py",
         "ApplicationSpecificInputs": []
       }
     ]
@@ -808,9 +866,9 @@
               {"id": "appKey",
                "type": "string",
                "description": "keyword of application data in input file"
-	      }
-	  ]
-      },	
+        }
+    ]
+      },  
       {
         "Name": "OpenSees-Simulation_R",
         "ExecutablePath": "applications/performSIMULATION/openSees_R/OpenSeesSimulation.py"
@@ -822,6 +880,10 @@
       {
         "Name": "SurrogateSimulation",
         "ExecutablePath": "applications/performSIMULATION/surrogateSimulation/SurrogateSimulation.py"
+      },
+      {
+        "Name": "SurrogateRegionalPy",
+        "ExecutablePath": "applications/performSIMULATION/surrogateRegionalPy/SurrogateRegionalPy.py"
       },
       {
         "Name": "MultiModel-FEA",
@@ -867,7 +929,7 @@
       {
         "Name": "UQpy",
         "ExecutablePath": "applications/performUQ/UQpy/UQpyEngine.py"
-      },		
+      },    
       {
         "Name": "Dakota-FEM",
         "ExecutablePath": "applications/performUQ/dakota_R/DakotaFEM.py"
@@ -929,7 +991,7 @@
         "Name": "Custom",
         "ExecutablePath": "applications/performFEM/Custom/createCustomDriver",
         "ApplicationSpecificInputs": []
-      }	
+      } 
     ]
   },    
   "DLApplications": {
@@ -1076,6 +1138,32 @@
         "Name": "CBCitiesDL",
         "ExecutablePath": "applications/performDL/CBCities/CBCitiesWDNDL.py",
         "ApplicationSpecificInputs": [
+        ]
+      }
+    ]
+  },
+  "PerformanceApplications": {
+    "API": {
+      "Inputs": [
+      ],
+      "Outputs": [
+      ]
+    },
+    "Applications": [
+      {
+        "Name": "REDi",
+        "ExecutablePath": "applications/performanceAssessment/REDi/REDiWrapper.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "dirnameOutput",
+            "type": "string",
+            "description": "Path to the working directory containing the Pelicun results."
+          },
+          {
+            "id": "riskParametersPath",
+            "type": "string",
+            "description": "Path to the risk parameters json file ."
+          }
         ]
       }
     ]

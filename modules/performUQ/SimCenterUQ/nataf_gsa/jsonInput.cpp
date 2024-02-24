@@ -48,6 +48,8 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 jsonInput::jsonInput(string workDir, string inpFile, int procno)
 {
 
+	// presetting - change this only for testing
+
 	if (procno == 0)  std::cout << "Reading input json scripts.." << " \n";
 
 	this->workDir = workDir;
@@ -55,6 +57,16 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	//
 	// finding json file
 	//
+
+    // sy & frank - designsafe shell will always pass me scInput.json as input file name which is not good for non-quofem apps
+    // check if the sc_Input.json exists and if so overwirte the input file name
+
+    std::string sc_jsonPath  = workDir + "/templatedir/sc_scInput.json";
+    bool sc_exists = std::filesystem::exists(sc_jsonPath);
+    if (sc_exists)
+    {
+        inpFile = sc_jsonPath;
+    }
 
 	std::filesystem::path jsonPath(inpFile);
 
@@ -64,6 +76,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
+
 		std::string errMsg = "Error running UQ engine: Unable to open JSON " + jsonPath.u8string();
 		theErrorFile.write(errMsg);
 	}
@@ -83,13 +96,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	uqType = UQjson["UQ"]["uqType"];
 
-	if ((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) {
+	if (((uqType.compare("Forward Propagation") == 0) || (uqType.compare("Sensitivity Analysis") == 0)) ) {
 		// pass
 	} else
 	{
 		//*ERROR*
 		std::string methodType = UQjson["UQ"]["uqType"];
-		std::string errMsg = "Error reading json: 'Forward Analysis' or 'Sensitivity Analysis' backend is called, but the user requested " + methodType;
+		std::string errMsg = "Error reading json: 'Forward Analysis', 'Sensitivity Analysis' or 'Multi-fidelity Monte Carlo' backend is called, but the user requested " + methodType;
 		theErrorFile.write(errMsg);
 	}
 
@@ -107,9 +120,9 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 ;		// If FEM exists
 		if (UQjson["Applications"].find("FEM") != UQjson["Applications"].end()) {
 			femAppName = UQjson["Applications"]["FEM"]["Application"];
+            std::cout << femAppName << " \n";
 		}
 	}
-	std::cout << femAppName << " \n";
 
 	//
 	// get EDP names
@@ -209,15 +222,14 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// Basic Info
 	//
 
-	UQmethod = UQjson["UQ"]["samplingMethodData"]["method"];
-
+	uqMethod = UQjson["UQ"]["samplingMethodData"]["method"];
 
 	//
 	// Else if we read samples...
 	//
 	if (procno == 0)  std::cout << " - Import files?";
 
-	if (UQmethod.compare("Import Data Files") == 0) {
+	if (uqMethod.compare("Import Data Files") == 0) {
 
 		nrv = 0;
 		for (auto& elem : UQjson["randomVariables"])
@@ -235,11 +247,22 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 		nmc = 0;
 		rseed = 0;
-
+        nst = 0;
 		if (procno == 0)  std::cout << " Yes, no sampling\n";
 
 		return;
-	}
+	} else if (uqMethod.compare("Multi-fidelity Monte Carlo") == 0) {
+        inpPath = "";
+        outPath = "";
+        //nmc = UQjson["UQ"]["samplingMethodData"]["samples"];
+        nmc = 0;
+        nPilot = UQjson["UQ"]["samplingMethodData"]["numPilot"];
+        compBudget = UQjson["UQ"]["samplingMethodData"]["maxTime"];
+        compBudget *= 60.0; // sec
+        rseed = UQjson["UQ"]["samplingMethodData"]["seed"];
+        doLogTransform = UQjson["UQ"]["samplingMethodData"]["logTransform"];
+
+    }
 	else {
 		inpPath = "";
 		outPath = "";
@@ -252,9 +275,9 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	//
-	// Specify parameters in each distributions.
+	// Specify parameters of each distribution.
 	//
-	if (procno == 0)  std::cout << " - Reading RV Data groups";
+	if (procno == 0)  std::cout << " - Reading RV Data groups\n";
 
 	//std::vector<int> corrIdx;
 	std::vector<int> randIdx, constIdx, resampIdx, discreteStrIdx; // random variables, constant variables, resampling variables
@@ -269,16 +292,18 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		// if the key "sensitivityGroups" exists
 		resampGroupTxt = UQjson["UQ"]["samplingMethodData"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
+		std::cout << resampGroupTxt << std::endl;
 	}
 	else if (UQjson["UQ"].find("RVdataGroup") != UQjson["UQ"].end()) {
 		// FOR VERSION COMPETIBILITY - TO BE REMOVED SOON.... sy 08/12/2022
 		resampGroupTxt = UQjson["UQ"]["RVdataGroup"];
 		resampGroupTxt.erase(remove(resampGroupTxt.begin(), resampGroupTxt.end(), ' '), resampGroupTxt.end());
+		std::cout << resampGroupTxt << std::endl;
 	}
 	else {
 		resampGroupTxt = "";
 	}
-	std::cout << resampGroupTxt << std::endl;
+	
 	vector<vector<string>> resamplingGroupsString;
 	vector<string> flattenResamplingGroups;
 
@@ -296,18 +321,23 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	//
-	// Specify parameters in each distributions.
+	// Specify parameters of each distribution.
 	//
 	if (procno == 0)  std::cout << " - Reading RV parameters\n";
 
 	for (auto& elem : UQjson["randomVariables"])
 	{
 		std::string distName = elem["distribution"];
+		// name of distribution
+		std::transform(distName.begin(), distName.end(), distName.begin(), ::tolower); // make it lower case
+		distName.erase(remove_if(distName.begin(), distName.end(), isspace), distName.end()); // remove space
 
 		std::string inpType;
 		if ((elem.find("inputType") == elem.end()))
 		{
 			if (distName=="discrete_design_set_string") {
+				inpType = "Parameters";
+			} else if (distName=="normal") {
 				inpType = "Parameters";
 			} else {
 				std::string errMsg = "Error reading json: input file does not have the key 'inputType'";
@@ -319,9 +349,6 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		}
 		// if key "correlationMatrix" exists
 		
-		// name of distribution
-		std::transform(distName.begin(), distName.end(), distName.begin(), ::tolower); // make it lower case
-		distName.erase(remove_if(distName.begin(), distName.end(), isspace), distName.end()); // remove space
 
 		// type of input (PAR, MOM, or DAT)
 		std::string inpTypeSub = inpType.substr(0, 3);
@@ -423,7 +450,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			vals.push_back(vals_tmp);
 
 			if (vals_tmp.size() < 1) { //*ERROR*
-				int a = vals_tmp.size();
+				auto a = vals_tmp.size();
 
 				std::string errMsg = "Error reading json: data file of " + rvNames[nrv] + " has less then one sample.";
 				theErrorFile.write(errMsg);
@@ -454,7 +481,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 			// Parameter (moment) values inside vals
 			if (distNames[nrv].compare("discrete") == 0) {
 				std::vector<double> vals_tmp;
-				int numdisc = elem[pnames[0]].size();
+				auto numdisc = elem[pnames[0]].size();
 				for (int i = 0; i < numdisc; i++)
 				{
 					vals_tmp.push_back(elem[pnames[0]][i]);
@@ -462,7 +489,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 				}
 				vals.push_back(vals_tmp);
 			}else if (distNames[nrv].compare("discrete_design_set_string") == 0) {
-				int nelem = elem["elements"].size();
+				auto nelem = elem["elements"].size();
 				std::vector<double> vals_tmp(nelem);
 				std::iota(vals_tmp.begin(), vals_tmp.end(), 1);
 				vals.push_back(vals_tmp);
@@ -499,14 +526,13 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 		randIdx.push_back(count);
 		nrv++;
 		count++;
-		std::cout << nrv <<"\n";
 	}
 
 	//
 	// get resamples
 	//
 
-	if (procno == 0)  std::cout << " - Getting resampling indices.. if any";
+	if (procno == 0)  std::cout << " - Getting resampling indices.. if any\n";
 
 	for (int i : resampIdx)
 	{
@@ -539,7 +565,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 		if (vals_tmp.size() < 1) { //*ERROR*
 			//*ERROR*
-			std::string errMsg = "Error reading json: data file of " + rvNames[nrv] + " has less then one sample.";
+			std::string errMsg = "Error reading json: data file of " + rvNames[i] + " has less then one sample.";
 			theErrorFile.write(errMsg);
 
 		}
@@ -553,7 +579,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// get constants
 	//
 
-	if (procno == 0)  std::cout << " - Getting constant variable names.. if any";
+	if (procno == 0)  std::cout << " - Getting constant variable names.. if any\n";
 	//for (auto& elem : UQjson["randomVariables"])
 	for (int i : constIdx)
 	{
@@ -594,7 +620,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// get discreteStr
 	//
 
-	if (procno == 0)  std::cout << " - Getting discreteStr variable names.. if any";
+	if (procno == 0)  std::cout << " - Getting discreteStr variable names.. if any\n";
 	//for (auto& elem : UQjson["randomVariables"])
 	for (int i : discreteStrIdx)
 	{
@@ -646,8 +672,15 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	}
 
 
-	if (procno == 0)  std::cout << " - Checking correlation matrix";
-	std::cout << nrv;
+	//if ((multiModelCount > 1)&& (uqType.compare("Multi-fidelity Monte Carlo") == 0)) {
+		//*ERROR*
+	//	std::string errMsg = "Error reading json: SimCenterUQ engine supports only one model group";
+	//	theErrorFile.write(errMsg);
+
+	//}
+
+
+	if (procno == 0)  std::cout << " - Checking correlation matrix\n";
 
 	if (UQjson.find("correlationMatrix") != UQjson.end()) {
 		corr = *new vector<vector<double>>(nrv, vector<double>(nrv, 0.0));
@@ -693,7 +726,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	for (int i = 0; i < nreg; i++) {
-		int length_old = vals[resamplingGroups[i][0]].size();
+		auto length_old = vals[resamplingGroups[i][0]].size();
 		int length_data;
 		for (int j = 1; j < resamplingGroups[i].size(); j++) {
 			length_data =vals[resamplingGroups[i][j]].size();
@@ -712,7 +745,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 void
 jsonInput::fromTextToId(string groupTxt, vector<string>& groupPool, vector<vector<int>>& groupIdVect)
 {
-	int nrv = groupPool.size();
+	auto nrv = groupPool.size();
     std::regex re(R"(\{([^}]+)\})"); // will get string inside {}
     //std::regex re(""); // will get string inside {}
     //auto re = std::regex("Hello");
@@ -957,7 +990,6 @@ jsonInput::getGroupIdx(json UQjson) {
 	//
 	// get group index matrix
 	//
-	std::cout << "THIS1-1\n";
 
 	bool generate_default_RVsensitivityGroup = true;
 	if (UQjson["UQ"].find("RVsensitivityGroup") != UQjson["UQ"].end()) {
@@ -972,7 +1004,6 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
-	std::cout << "THIS1-2\n";
 	if (generate_default_RVsensitivityGroup) {
 
 		for (int i = 0; i < nrv; i++) {
@@ -985,7 +1016,6 @@ jsonInput::getGroupIdx(json UQjson) {
 		}
 
 	}
-	std::cout << "THIS1-3\n";
 
 	ngr = groups.size();
 }

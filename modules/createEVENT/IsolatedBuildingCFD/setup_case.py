@@ -4,13 +4,9 @@ directory.
 
 """
 import numpy as np
-import pandas as pd
 import sys
 import os
-import subprocess
 import json
-import stat
-import shutil
 import numpy as np
 import foam_dict_reader as foam
 from stl import mesh
@@ -24,14 +20,18 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["blockMeshParameters"]
-          
-    scale =  json_data['geometricScale']
-    H = json_data['buildingHeight']/scale #convert to model-scale
+    geom_data = json_data['GeometricData']
+    boundary_data = json_data['boundaryConditions']
+
+    normalization_type = geom_data['normalizationType']
+    origin = np.array(geom_data['origin'])
+    scale =  geom_data['geometricScale']
+    H = geom_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = json_data['domainLength']
-    Ly = json_data['domainWidth']
-    Lz = json_data['domainHeight']
-    Lf = json_data['fetchLength']
+    Lx = geom_data['domainLength']
+    Ly = geom_data['domainWidth']
+    Lz = geom_data['domainHeight']
+    Lf = geom_data['fetchLength']
     
     x_cells = mesh_data['xNumCells']
     y_cells = mesh_data['yNumCells']
@@ -41,15 +41,20 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     y_grading = mesh_data['yGrading']
     z_grading = mesh_data['zGrading']
 
-    inlet_type = mesh_data['inletBoundaryType']
-    outlet_type = mesh_data['outletBoundaryType']
-    ground_type = mesh_data['groundBoundaryType']
-    top_type = mesh_data['topBoundaryType']
-    front_type = mesh_data['frontBoundaryType']
-    back_type = mesh_data['backBoundaryType']
+    bc_map = {"slip": 'wall', "cyclic": 'cyclic', "noSlip": 'wall', 
+                     "symmetry": 'symmetry', "empty": 'empty', "TInf": 'patch', 
+                     "MeanABL": 'patch', "Uniform": 'patch', "zeroPressureOutlet": 'patch',
+                     "roughWallFunction": 'wall',"smoothWallFunction": 'wall'}
+
+
+
+    inlet_type = bc_map[boundary_data['inletBoundaryCondition']]
+    outlet_type = bc_map[boundary_data['outletBoundaryCondition']]
+    ground_type = bc_map[boundary_data['groundBoundaryCondition']]  
+    top_type = bc_map[boundary_data['topBoundaryCondition']]
+    front_type = bc_map[boundary_data['sidesBoundaryCondition']]
+    back_type = bc_map[boundary_data['sidesBoundaryCondition']]
     
-    normalization_type = json_data['normalizationType']
-    origin = np.array(json_data['origin'])
     length_unit = json_data['lengthUnit']
 
     if normalization_type == "Relative":
@@ -132,8 +137,14 @@ def write_building_stl_file(input_json_path, case_path):
     with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
-      
-    scale =  json_data['geometricScale']
+    geom_data = json_data['GeometricData']
+
+    if geom_data["buildingShape"] == "Complex":
+        import_building_stl_file(input_json_path, case_path)
+        return  
+
+    #Else create the STL file
+    scale =  geom_data['geometricScale']
     length_unit =  json_data['lengthUnit']
 
     convert_to_meters = 1.0
@@ -150,19 +161,18 @@ def write_building_stl_file(input_json_path, case_path):
         convert_to_meters = 0.0254
     
     #Convert from full-scale to model-scale
-    B = convert_to_meters*json_data['buildingWidth']/scale
-    D = convert_to_meters*json_data['buildingDepth']/scale
-    H = convert_to_meters*json_data['buildingHeight']/scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    H = convert_to_meters*geom_data['buildingHeight']/scale
     
-    normalization_type = json_data['normalizationType']
+    normalization_type = geom_data['normalizationType']
 
-    origin = np.array(json_data['origin'])
-    wind_dxn = json_data['windDirection']
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']
 
     if normalization_type == "Relative":
         origin = origin*H
     
-
 
     wind_dxn_rad = np.deg2rad(wind_dxn)
     epsilon = 1.0e-5 
@@ -219,6 +229,69 @@ def write_building_stl_file(input_json_path, case_path):
     fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
     bldg.save(case_path + '/constant/geometry/building.stl', mode=fmt)
 
+def import_building_stl_file(input_json_path, case_path):
+    #Read JSON data    
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    if json_data["GeometricData"]["buildingShape"] == "Simple":
+        return  
+
+    # Returns JSON object as a dictionary
+    stl_path = json_data["GeometricData"]["importedSTLPath"]
+    scale_factor = json_data["GeometricData"]["stlScaleFactor"]
+    recenter = json_data["GeometricData"]["recenterToOrigin"]
+    use_stl_dimension = json_data["GeometricData"]["useSTLDimensions"]
+    account_wind_direction = json_data["GeometricData"]["accountWindDirection"]
+    origin = np.array(json_data["GeometricData"]['origin'])
+    wind_dxn = json_data["GeometricData"]['windDirection']
+    wind_dxn_rad = np.deg2rad(wind_dxn)
+
+    # Using an existing closed stl file:
+    bldg_mesh = mesh.Mesh.from_file(stl_path)
+
+    min_x = bldg_mesh.x.min()
+    max_x = bldg_mesh.x.max()
+    min_y = bldg_mesh.y.min()
+    max_y = bldg_mesh.y.max()
+    min_z = bldg_mesh.z.min()
+    max_z = bldg_mesh.z.max()
+
+    # if use_stl_dimension:
+    # Data to be written
+    stl_summary = {
+        "xMin": float(min_x),
+        "xMax": float(max_x),
+        "yMin": float(min_y),
+        "yMax": float(max_y),
+        "zMin": float(min_z),
+        "zMax": float(max_z)
+    }
+
+    # Serializing json
+    json_object = json.dumps(stl_summary, indent=4)
+    
+    # Writing to sample.json
+    with open(input_json_path + "/stlGeometrySummary.json", "w") as outfile:
+        outfile.write(json_object)
+    
+    #Translate the bottom center to origin
+    if recenter:
+        t = np.array([-((max_x - min_x)/2.0 + min_x), -((max_y - min_y)/2.0 + min_y), -min_z]) - origin/scale_factor
+        bldg_mesh.translate(t)
+    
+    #Account wind direction by rotation
+    if account_wind_direction:
+        #Rotate about z-axis
+        bldg_mesh.rotate(np.array([0, 0, 1.0]), wind_dxn_rad)
+
+    # Scale the mesh 
+    bldg_mesh.vectors *= scale_factor
+
+    # Write the mesh to file "building.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    bldg_mesh.save(case_path + '/constant/geometry/building.stl', mode=fmt)
+
 def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
     
   #Read JSON data    
@@ -227,10 +300,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     
   # Returns JSON object as a dictionary
   domain_data = json_data["snappyHexMeshParameters"]
-    
   building_stl_name = domain_data['buildingSTLName']
-
-
 
   #Open the template blockMeshDict (OpenFOAM file) for manipulation
   dict_file = open(template_dict_path + "/surfaceFeaturesDictTemplate", "r")
@@ -243,8 +313,6 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
   #Write 'addLayers' switch    
   start_index = foam.find_keyword_line(dict_lines, "surfaces")
   dict_lines[start_index] = "surfaces  (\"{}.stl\");\n".format(building_stl_name)
-  
-
   
   
   #Write edited dict to file
@@ -269,18 +337,19 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["snappyHexMeshParameters"]
-      
-    scale =  json_data['geometricScale']
-    H = json_data['buildingHeight']/scale #convert to model-scale
+
+    geom_data = json_data['GeometricData']
+
+    scale =  geom_data['geometricScale']
+    H = geom_data['buildingHeight']/scale #convert to model-scale
     
-    Lx = json_data['domainLength']
-    Ly = json_data['domainWidth']
-    Lz = json_data['domainHeight']
-    Lf = json_data['fetchLength']
+    Lx = geom_data['domainLength']
+    Ly = geom_data['domainWidth']
+    Lz = geom_data['domainHeight']
+    Lf = geom_data['fetchLength']
     
-    normalization_type = json_data['normalizationType']
-    origin = np.array(json_data['origin'])
-    length_unit = json_data['lengthUnit']
+    normalization_type = geom_data['normalizationType']
+    origin = np.array(geom_data['origin'])
     
     building_stl_name = mesh_data['buildingSTLName']
     num_cells_between_levels = mesh_data['numCellsBetweenLevels']
@@ -300,7 +369,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     
     add_prism_layers = mesh_data['addPrismLayers']
     number_of_prism_layers = mesh_data['numberOfPrismLayers']
-    prism_layer_expantion_ratio = mesh_data['prismLayerExpantionRatio']
+    prism_layer_expansion_ratio = mesh_data['prismLayerExpansionRatio']
     final_prism_layer_thickness = mesh_data['finalPrismLayerThickness']
     prism_layer_surface_name = mesh_data['prismLayerSurfaceName']
     prism_layer_relative_size = "on"  
@@ -401,7 +470,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add refinment surface
+    #Add refinement surface
     if add_surface_refinement:         
         start_index = foam.find_keyword_line(dict_lines, "refinementSurfaces") + 2 
         added_part = ""
@@ -416,7 +485,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         
         dict_lines.insert(start_index, added_part)
         
-    #Add surface refinment around the building as a refinment region
+    #Add surface refinement around the building as a refinement region
     # if surface_refinement_level > refinement_boxes[-1][1]:
     added_part = ""
     added_part += "         {}\n".format(refinement_surface_name)
@@ -428,7 +497,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
     dict_lines.insert(start_index, added_part)
     
-    #Add box refinments 
+    #Add box refinements 
     added_part = ""
     for i in range(n_boxes):
         added_part += "         {}\n".format(refinement_boxes[i][0])
@@ -459,7 +528,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Write 'expansionRatio'     
     start_index = foam.find_keyword_line(dict_lines, "expansionRatio")
-    dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expantion_ratio)
+    dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expansion_ratio)
     
     #Write 'finalLayerThickness'     
     start_index = foam.find_keyword_line(dict_lines, "finalLayerThickness")
@@ -508,9 +577,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     dict_file.close()
     
     ##################### Internal Field #########################
-    
+    #Initialize the internal fields frow a lower velocity to avoid Courant number 
+    #instability when the solver starts. Now %10 of roof-height wind speed is set      
     start_index = foam.find_keyword_line(dict_lines, "internalField") 
-    dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(wind_speed)
+    dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(0.1*wind_speed)
 
 
     ###################### Inlet BC ##############################  
@@ -524,11 +594,12 @@ def write_U_file(input_json_path, template_dict_path, case_path):
         
     if inlet_BC_type == "MeanABL":    
         added_part = ""
-        added_part += "\t ype \t atmBoundaryLayerInletVelocity;\n"
+        added_part += "\t type \t atmBoundaryLayerInletVelocity;\n"
         added_part += "\t Uref \t {:.4f};\n".format(wind_speed)
         added_part += "\t Zref \t {:.4f};\n".format(building_height)
         added_part += "\t zDir \t (0.0 0.0 1.0);\n"
-        added_part += "\t z0 uniform \t {:.4f};\n".format(roughness_length)
+        added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
+        added_part += "\t z0 uniform \t {:.4e};\n".format(roughness_length)
         added_part += "\t zGround \t uniform 0.0;\n"
         
     if inlet_BC_type == "Place holder for TInf":    
@@ -759,14 +830,20 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     
     if ground_BC_type == "noSlip": 
         added_part = ""
-        added_part += "\t type    zeroGradient;\n"
+        added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t nutkAtmRoughWallFunction;\n"
-        added_part += "\t z0 \t {:.4f};\n".format(roughness_length)
+        added_part += "\t z0  \t  uniform {:.4e};\n".format(roughness_length)
         added_part += "\t value \t uniform 0.0;\n"
-    
+
+    if ground_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutUSpaldingWallFunction;\n"
+        added_part += "\t value \t uniform 0;\n"
+
+
     dict_lines.insert(start_index, added_part)
     
     
@@ -803,11 +880,17 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
         added_part += "\t type \t fixedValue;\n"
         added_part += "\t value \t uniform 0;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "smoothWallFunction": 
         added_part = ""
         added_part += "\t type \t nutUSpaldingWallFunction;\n"
         added_part += "\t value \t uniform 0;\n"
     
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutkRoughWallFunction;\n"
+        added_part += "\t Ks \t uniform 1e-5;\n"
+        added_part += "\t Cs \t uniform 0.5;\n"
+        added_part += "\t value \t uniform 0;\n"
     
     dict_lines.insert(start_index, added_part)
     
@@ -867,7 +950,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     added_part += "\t Zref \t {:.4f};\n".format(building_height)
     added_part += "\t zDir \t (0.0 0.0 1.0);\n"
     added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-    added_part += "\t z0 \t  uniform {:.4f};\n".format(roughness_length)
+    added_part += "\t z0 \t  uniform {:.4e};\n".format(roughness_length)
     added_part += "\t zGround \t uniform 0.0;\n"
     
     dict_lines.insert(start_index, added_part)
@@ -890,14 +973,23 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t epsilonWallFunction;\n"
         added_part += "\t Cmu \t {:.4f};\n".format(0.09)
-        added_part += "\t kappa \t {:.4f};\n".format(0.4)
+        added_part += "\t kappa \t {:.4f};\n".format(0.41)
         added_part += "\t E \t {:.4f};\n".format(9.8)
         added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
     
+    #Note:  Should be replaced with smooth wall function for epsilon,
+    #       now the same with rough wall function.
+    if ground_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t epsilonWallFunction;\n"
+        added_part += "\t Cmu \t {:.4f};\n".format(0.09)
+        added_part += "\t kappa \t {:.4f};\n".format(0.41)
+        added_part += "\t E \t {:.4f};\n".format(9.8)
+        added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
     dict_lines.insert(start_index, added_part)
     
     
@@ -933,14 +1025,23 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "roughWallFunction": 
         added_part = ""
         added_part += "\t type \t epsilonWallFunction;\n"
         added_part += "\t Cmu \t {:.4f};\n".format(0.09)
         added_part += "\t kappa \t {:.4f};\n".format(0.4)
         added_part += "\t E \t {:.4f};\n".format(9.8)
         added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
-    
+
+    if building_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t epsilonWallFunction;\n"
+        added_part += "\t Cmu \t {:.4f};\n".format(0.09)
+        added_part += "\t kappa \t {:.4f};\n".format(0.4)
+        added_part += "\t E \t {:.4f};\n".format(9.8)
+        added_part += "\t value \t uniform {:.4f};\n".format(epsilon0)
+
+
     dict_lines.insert(start_index, added_part)
     
     #Write edited dict to file
@@ -982,7 +1083,10 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     
     
     #BC and initial condition (you may need to scale to model scale)
-    k0 = 1.3 #not in model scale
+    # k0 = 1.3 #not in model scale
+    
+    I = 0.1 
+    k0 = 1.5*(I*wind_speed)**2  
 
     ##################### Internal Field #########################
     
@@ -999,7 +1103,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     added_part += "\t Zref \t {:.4f};\n".format(building_height)
     added_part += "\t zDir \t (0.0 0.0 1.0);\n"
     added_part += "\t flowDir \t (1.0 0.0 0.0);\n"
-    added_part += "\t z0 \t uniform {:.4f};\n".format(roughness_length)
+    added_part += "\t z0 \t uniform {:.4e};\n".format(roughness_length)
     added_part += "\t zGround \t uniform 0.0;\n"
     
     dict_lines.insert(start_index, added_part)
@@ -1022,11 +1126,16 @@ def write_k_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if ground_BC_type == "wallFunction": 
+    if ground_BC_type == "smoothWallFunction": 
         added_part = ""
         added_part += "\t type \t kqRWallFunction;\n"
         added_part += "\t value \t uniform {:.4f};\n".format(0.0)
-    
+
+    if ground_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
     dict_lines.insert(start_index, added_part)
     
     
@@ -1062,14 +1171,18 @@ def write_k_file(input_json_path, template_dict_path, case_path):
         added_part = ""
         added_part += "\t type \t zeroGradient;\n"
     
-    if building_BC_type == "wallFunction": 
+    if building_BC_type == "smoothWallFunction": 
         added_part = ""
-        added_part += "\t type \t atmBoundaryLayerInletK;\n"
-        added_part += "\t Cmu  \t {:.4f};\n".format(0.09)
-        added_part += "\t kappa \t {:.4f};\n".format(0.4)
-        added_part += "\t E \t {:.4f};\n".format(9.8)
-        added_part += "\t value \t uniform {:.4f};\n".format(k0)
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.6f};\n".format(k0)
     
+    #Note:  should be replaced with k wall function for rough walls 
+    #       now it's the same with smooth wall function.
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.6f};\n".format(k0)
+
     dict_lines.insert(start_index, added_part)
     
     #Write edited dict to file
@@ -1128,7 +1241,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     #Write end time 
     start_index = foam.find_keyword_line(dict_lines, "endTime") 
-    dict_lines[start_index] = "endTime \t{:.4f};\n".format(duration)
+    dict_lines[start_index] = "endTime \t{:.6f};\n".format(duration)
     
     #Write time step time 
     start_index = foam.find_keyword_line(dict_lines, "deltaT") 
@@ -1159,22 +1272,22 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
      
     #Find function object location  
     start_index = foam.find_keyword_line(dict_lines, "functions") + 2
-    
-    #Write pressure sampling points 
-    if monitor_surface_pressure:
-        added_part = "    #includeFunc  pressureSamplingPoints \n"
-        dict_lines.insert(start_index, added_part)
-    
-    
+
     #Write story loads functionObjects  
-    added_part = "    #includeFunc  storyForces \n"
-    dict_lines.insert(start_index + 1, added_part)
+    added_part = "    #includeFunc  storyForces\n"
+    dict_lines.insert(start_index, added_part)
 
     #Write base loads functionObjects
     if monitor_base_load:
-        added_part = "    #includeFunc  baseForces \n"
-        dict_lines.insert(start_index + 1, added_part)
+        added_part = "    #includeFunc  baseForces\n"
+        dict_lines.insert(start_index, added_part)
     
+    #Write pressure sampling points 
+    if monitor_surface_pressure:
+        added_part = "    #includeFunc  pressureSamplingPoints\n"
+        dict_lines.insert(start_index, added_part)
+    
+
     #Write edited dict to file
     write_file_name = case_path + "/system/controlDict"
     
@@ -1310,7 +1423,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
     num_stories = rm_data['numStories']
     floor_height = rm_data['floorHeight']
     center_of_rotation = rm_data['centerOfRotation']
-    story_load_write_interval = rm_data['storyLoadWriteInterval']
+    base_load_write_interval = rm_data['baseLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']
 
     
@@ -1323,7 +1436,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
     #Write writeInterval 
     start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-    dict_lines[start_index] = "writeInterval \t{};\n".format(story_load_write_interval)    
+    dict_lines[start_index] = "writeInterval \t{};\n".format(base_load_write_interval)    
     
     #Write patch name to intergrate forces on 
     start_index = foam.find_keyword_line(dict_lines, "patches") 
@@ -1487,7 +1600,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 
     #Write type of the simulation 
     start_index = foam.find_keyword_line(dict_lines, "nu") 
-    dict_lines[start_index] = "nu\t\t[0 2 -1 0 0 0 0] {:.3e};\n".format(kinematic_viscosity)
+    dict_lines[start_index] = "nu\t\t[0 2 -1 0 0 0 0] {:.4e};\n".format(kinematic_viscosity)
 
 
     #Write edited dict to file
@@ -1705,6 +1818,7 @@ if __name__ == '__main__':
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
 
     #Create and write the building .stl file
+    #Also, import STL file if the shape is complex, the check is done inside the function
     write_building_stl_file(input_json_path, case_path)
     
     #Create and write the SnappyHexMeshDict file
@@ -1722,7 +1836,7 @@ if __name__ == '__main__':
     if simulation_type == "RANS" and RANS_type=="kEpsilon":
         write_epsilon_file(input_json_path, template_dict_path, case_path)
 
-    #Write controle dict
+    #Write control dict
     write_controlDict_file(input_json_path, template_dict_path, case_path)
     
     #Write results to be monitored

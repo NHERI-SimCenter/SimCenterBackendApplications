@@ -1,14 +1,14 @@
 import argparse
-import json
 import os
 import platform
 import stat
 import subprocess
-import sys
 from pathlib import Path
+import sys
+import shlex
 
-if __name__ == "__main__":
 
+def main(args):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--workflowInput")
@@ -18,63 +18,59 @@ if __name__ == "__main__":
 
     args, unknowns = parser.parse_known_args()
 
-    inputFile = args.workflowInput
+    workflowInput = args.workflowInput
+    workflowOutput = args.workflowOutput
+    driverFile = args.driverFile
     runType = args.runType
-    workflowDriver = args.driverFile
-    outputFile = args.workflowOutput
-
-    cwd = os.getcwd()
-    workdir_main = str(Path(cwd).parents[0])
-
-    # mainScriptPath = inputArgs[0]
-    # tmpSimCenterDir = inputArgs[1]
-    # templateDir = inputArgs[2]
-    # runType = inputArgs[3]  # either "runningLocal" or "runningRemote"
-
-    mainScriptPath = os.path.dirname(os.path.realpath(__file__))
-    templateDir = cwd
-    tmpSimCenterDir = str(Path(cwd).parents[0])
-
-    # Change permission of workflow driver
-    if platform.system() != "Windows":
-        workflowDriverFile = os.path.join(templateDir, workflowDriver)
-        if runType in ["runningLocal"]:
-            os.chmod(workflowDriverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
-        st = os.stat(workflowDriverFile)
-        os.chmod(workflowDriverFile, st.st_mode | stat.S_IEXEC)
-        pythonCommand = "python3"
-        workflowDriver = "./" + workflowDriver
-    else:
-        pythonCommand = "python"
-
-    print("WORKFLOW: " + workflowDriver)
 
     if runType in ["runningLocal"]:
 
-        # Get path to python from dakota.json file
-        dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)
-        with open(dakotaJsonFile, "r") as f:
-            jsonInputs = json.load(f)
-        # pythonCommand = jsonInputs["python"]
+        if platform.system() == "Windows":
+            pythonCommand = "python"
+            driverFile = driverFile + ".bat"
+        else:
+            pythonCommand = "python3"
 
-        # Get the path to the mainscript.py of TMCMC
-        #        mainScriptDir = os.path.split(mainScriptPath)[0]
-        mainScript = os.path.join(mainScriptPath, "mainscript.py")
-        command = '"{}" "{}" "{}" "{}" {} {} {}'.format(
-            pythonCommand,
-            mainScript,
-            tmpSimCenterDir,
-            templateDir,
-            runType,
-            workflowDriver,
-            inputFile,
+        mainScriptDir = os.path.dirname(os.path.realpath(__file__))
+        mainScript = os.path.join(mainScriptDir, "mainscript.py")
+        templateDir = os.getcwd()
+        tmpSimCenterDir = str(Path(templateDir).parents[0])
+
+        # Change permission of driver file
+        os.chmod(driverFile, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)
+        st = os.stat(driverFile)
+        os.chmod(driverFile, st.st_mode | stat.S_IEXEC)
+        driverFile = "./" + driverFile
+        print("WORKFLOW: " + driverFile)
+
+        command = (
+            f'"{pythonCommand}" "{mainScript}" "{tmpSimCenterDir}"'
+            f' "{templateDir}" {runType} {driverFile} {workflowInput}'
         )
         print(command)
+
+        command_list = shlex.split(command)
+
+        result = subprocess.run(
+            command_list,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            text=True,
+        )
+
+        err_file = Path(tmpSimCenterDir) / "UCSD_UQ.err"
+        err_file.touch()
+
         try:
-            result = subprocess.check_output(
-                command, stderr=subprocess.STDOUT, shell=True
-            )
-            returnCode = 0
-        except subprocess.CalledProcessError as e:
-            result = e.output
-            returnCode = e.returncode
+            result.check_returncode()
+        except subprocess.CalledProcessError:
+            with open(err_file, "a") as f:
+                f.write(f"ERROR: {result.stderr}\n\n")
+                f.write(f"The command was: {result.args}\n\n")
+                f.write(f"The return code was: {result.returncode}\n\n")
+                f.write(f"The output of the command was: {result.stdout}\n\n")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

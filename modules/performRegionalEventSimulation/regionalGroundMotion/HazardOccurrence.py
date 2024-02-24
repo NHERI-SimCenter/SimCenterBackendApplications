@@ -79,17 +79,17 @@ def configure_hazard_occurrence(input_dir,
     # get hazard curve input
     hc_input = hzo_config.get('HazardCurveInput',None)
     # return periods
-    cur_edition = hzo_config.get('Edition','E2014')
     if hc_input is None:
         return {}
-    elif hc_input == 'Inferred':
+    elif hc_input == 'Inferred_NSHMP':
         # fecthing hazard curve from usgs
+        cur_edition = hzo_config.get('Edition','E2014')
         hazard_curve_collector = []
         for site_id in range(len(site_config)):
             cur_site = site_config[site_id]
-            cur_lon = cur_site.get('Longitude')
-            cur_lat = cur_site.get('Latitude')
-            cur_vs30 = cur_site.get('Vs30',760)
+            cur_lon = cur_site.get('lon')
+            cur_lat = cur_site.get('lat')
+            cur_vs30 = cur_site.get('vs30',760)
             hazard_curve_collector.append(USGS_HazardCurve(longitude=cur_lon,
                                                            latitude=cur_lat,
                                                            vs30=cur_vs30,
@@ -130,6 +130,13 @@ def configure_hazard_occurrence(input_dir,
                     return
 
         print('HazardOCcurrence: all hazard curves fetched {0} sec.'.format(time.time()-t_start))
+    elif hc_input == 'Inferred_sourceFile':
+        IMfile = os.path.join(output_dir, 'IntensityMeasureMeanStd.json')
+        with open(IMfile, 'r') as f:
+            IMdata = json.load(f)
+        hc_data = calc_hazard_curves(IMdata,site_config, cur_imt)
+        c_vect = calc_hazard_contribution(IMdata, site_config,
+                                          return_periods, hc_data, cur_imt)
     else:
         hc_input = os.path.join(input_dir,hc_input)
         if hc_input.endswith('.csv'):
@@ -184,6 +191,78 @@ def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):
     # return
     return
 
+def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, im):
+    if im[0:2] == 'SA':
+        period = float(im[2:].replace('P','.'))
+        im_name = 'lnSA'
+        periods = IMdata['IntensityMeasures'][0]['Periods']
+        im_ind = np.where(np.array(periods)==period)[0][0]
+    else:
+        im_name = 'lnPGA'
+        im_ind = 0
+    c_vect = np.zeros(len(IMdata['IntensityMeasures']))
+    for j in tqdm(range(len(IMdata['IntensityMeasures'])), desc="Calculate "\
+                  f"Hazard Contribution of {len(IMdata['IntensityMeasures'])} scenarios"):
+        c_j = 0
+        scenario = IMdata['IntensityMeasures'][j]
+        mar = scenario['MeanAnnualRate']
+        for r in range(len(targetReturnPeriods)):
+            for i in range(len(site_config)):
+                lnIM = scenario['GroundMotions'][i][im_name] 
+                lnIM_mean = lnIM['Mean'][im_ind]
+                lnIM_std = lnIM['TotalStdDev'][im_ind]
+                y_ir = np.interp(targetReturnPeriods[r],
+                                 np.array(hc_data[i]['ReturnPeriod']),
+                                 np.array(hc_data[i]['IM']),
+                                 left=hc_data[i]['ReturnPeriod'][0],
+                                 right=hc_data[i]['ReturnPeriod'][-1])
+                p_exceed = 1 - norm.cdf(np.log(y_ir), lnIM_mean, lnIM_std)
+                normConstant = 0
+                for j2 in range(len(IMdata['IntensityMeasures'])):
+                    pj = IMdata['IntensityMeasures'][j2]['MeanAnnualRate']
+                    lnIM2 = IMdata['IntensityMeasures'][j2]['GroundMotions'][i][im_name] 
+                    lnIM_mean2 = lnIM2['Mean'][im_ind]
+                    lnIM_std2 = lnIM2['TotalStdDev'][im_ind]
+                    p_exceed2 = 1 - norm.cdf(np.log(y_ir), lnIM_mean2, lnIM_std2)
+                    normConstant += p_exceed2
+                c_j += pj * p_exceed / normConstant
+        c_vect[j] = c_j
+    return c_vect
+                 
+
+def calc_hazard_curves(IMdata, site_config, im):
+    if im[0:2] == 'SA':
+        period = float(im[2:].replace('P','.'))
+        im_name = 'lnSA'
+        periods = IMdata['IntensityMeasures'][0]['Periods']
+        im_ind = np.where(np.array(periods)==period)[0][0]
+    else:
+        im_name = 'lnPGA'
+        im_ind = 0
+    IMRange = np.power(10, np.linspace(-4, 2, 60))
+    exceedRate = np.zeros((len(IMRange), len(site_config)))
+    hc_data = [{'siteID':0,
+                'ReturnPeriod':list(exceedRate),
+                'IM':list(exceedRate)}]*len(site_config)
+    for scenario_ind in tqdm(range(len(IMdata['IntensityMeasures'])), desc="Calculate "\
+                  f"Hazard Curves from {len(IMdata['IntensityMeasures'])} scenarios"):
+        scenario = IMdata['IntensityMeasures'][scenario_ind]
+        mar = scenario['MeanAnnualRate']
+        for site_ind in range(len(site_config)):
+            lnIM = scenario['GroundMotions'][site_ind][im_name] 
+            lnIM_mean = lnIM['Mean'][im_ind]
+            lnIM_std = lnIM['TotalStdDev'][im_ind]
+            p_exceed = 1 - norm.cdf(np.log(IMRange), lnIM_mean, lnIM_std)
+            rate_exceed = mar * p_exceed
+            exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed
+    exceedRate[exceedRate<1e-20] = 1e-20
+    for site_ind, site in enumerate(site_config):
+        hc_data[site_ind] = {'SiteID': site['ID'],
+            "ReturnPeriod":list(1/exceedRate[:,site_ind]),
+            "IM":list(IMRange)
+        }
+    return hc_data
+    
 
 def get_hazard_curves(input_dir=None, 
                       input_csv=None, 
@@ -233,11 +312,18 @@ def get_im_exceedance_probility(im_raw,
         return im_exceedance_prob
         
     # check period
-    if period not in im_raw[0].get('Periods'):
-        print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(period,im_raw[0].get('Periods')))
-        return im_exceedance_prob
+    if im_type == 'PGA':
+        if 'PGA' not in im_raw[0]['IM']:
+            print('IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.format(period,im_raw[0].get('IM')))
+            return im_exceedance_prob
+        else:
+            periodID = 0
     else:
-        periodID = im_raw[0].get('Periods').index(period)
+        if period not in im_raw[0].get('Periods'):
+            print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(period,im_raw[0].get('Periods')))
+            return im_exceedance_prob
+        else:
+            periodID = im_raw[0].get('Periods').index(period)
 
     # start to compute the exceedance probability
     for k in range(num_scen):
@@ -290,7 +376,7 @@ def sample_earthquake_occurrence(model_type,
                                  return_periods,
                                  im_exceedance_prob,
                                  reweight_only,
-                                 occurence_rate_origin):
+                                 occurence_rate_origin = None):
 
     # model type
     if model_type == 'Manzour & Davidson (2016)':

@@ -99,8 +99,10 @@ def runSWhale(inputs,
         #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
         WF.init_simdir(assetID, assetAIM)
 
+        #Delete the origional AIM and use the templatedir/AIM from here
+
         # prepare the input files for the simulation
-        WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID)
+        WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID, asset_type)
         
         # create the workflow driver file
         WF.create_driver_file(WF_app_sequence, assetID, assetAIM)
@@ -114,12 +116,21 @@ def runSWhale(inputs,
     if WF.run_type != 'set_up':
 
         # run dl engine to estimate losses
+        # Use the templatedir/AIM.json for pelicun
         WF.estimate_losses(AIM_file_path = assetAIM,
                            asst_id = assetID,
                            asset_type = asset_type,
                            input_file = inputs,
                            copy_resources=copy_resources)
     
+
+        # run performance engine to assess asset performance, e.g., recovery
+        WF.estimate_performance(AIM_file_path = assetAIM,
+                                asst_id = assetID,
+                                asset_type = asset_type,
+                                input_file = inputs,
+                                copy_resources=copy_resources)
+
     if force_cleanup:
         #clean up intermediate files from the simulation
         WF.cleanup_simdir(assetID)
@@ -170,7 +181,7 @@ def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
         pass
 
     WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
+        app_type_list = ['Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL', 'Performance'],
         working_dir = working_dir,
         app_dir = app_dir)
         

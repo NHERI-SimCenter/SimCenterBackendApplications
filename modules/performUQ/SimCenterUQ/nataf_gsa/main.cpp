@@ -53,6 +53,7 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "ERANataf.h"
 #include "runGSA.h"
 #include "runForward.h"
+#include "runMFMC.h"
 #include <regex>
 
 #include "writeErrors.h"
@@ -67,169 +68,114 @@ UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
 writeErrors theErrorFile; // Error log
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
+    int a = 0;
+    int nprocs, procno;
+#ifdef MPI_RUN
+    //Running Remote
+    MPI_Comm comm;
+    MPI_Init(&argc, &argv);
+    comm = MPI_COMM_WORLD;
+    MPI_Comm_rank(comm, &procno);
+    MPI_Comm_size(comm, &nprocs);
+    if (procno == 0) std::cerr << "Main - running MPI" << std::endl;
+    if (procno == 0) std::cerr << "num proc = " << nprocs << std::endl;
+#else
+    //Running Local
+    procno = 0;
+    nprocs = 1;
+    if (procno == 0) std::cerr << "running OpenMP" << std::endl;
+#if !defined(ARMA_USE_OPENMP)
+#define ARMA_USE_OPENMP
+#endif
+#endif
 
-	int nprocs, procno;
-	#ifdef MPI_RUN
-		MPI_Comm comm;
-		MPI_Init(&argc, &argv);
-		comm = MPI_COMM_WORLD;
-		MPI_Comm_rank(comm, &procno);
-		MPI_Comm_size(comm, &nprocs);		
-		if (procno == 0) std::cerr << "Main - running MPI" << std::endl;
-        if (procno == 0) std::cerr << "num proc = " << nprocs << std::endl;
+    if ((argc != 6) && (procno == 0)) {
+        std::string errMsg = "Number of the additional commend line arguments is " + std::to_string(argc - 1) +
+                             ", but 5 is required. The arguments should always include the working directory / input file name / workflow driver name / os type / run type";
+        std::cerr << errMsg << std::endl;
+        theErrorFile.abort();
+    }
 
-	#else
-		procno = 0;
-		nprocs = 1;
-		if (procno == 0) std::cerr << "running OpenMP" << std::endl;
+    std::string workDir = argv[1];
+    std::string inpFile = argv[2];
+    std::string workflowDriver = argv[3];
+    std::string osType = argv[4];
+    std::string runType = argv[5];
 
-		#if !defined(ARMA_USE_OPENMP)
-			#define ARMA_USE_OPENMP
-		#endif
-	#endif
+    if (procno == 0) std::cerr << "* WORKDIR: " << workDir << "\n";
+    if (procno == 0) std::cerr << "* INPFILE: " << inpFile << "\n";
+    if (procno == 0) std::cerr << "* WORKDRIVER: " << workflowDriver << "\n";
+    if (procno == 0) std::cerr << "* OS: " << osType << "\n";
+    if (procno == 0) std::cerr << "* RUN: " << runType << "\n\n";
 
+    std::string errorDir = workDir + "/dakota.err";
+    theErrorFile.getFileName(errorDir, procno);
 
-		//std::regex re(R"(\{([^}]+)\})");
-		//std::cerr << "testing\n";
+    auto elapseStart = std::chrono::high_resolution_clock::now();
+    double elapsedTime;
 
-		if ((argc != 6) && (procno == 0)) {
-			std::string errMsg = "Number of the additional commend line arguments is " + std::to_string(argc - 1) + ", but 5 is required. The arguments should always include the working directory / input file name / workflow driver name / os type / run type";
-			std::cerr << errMsg << std::endl;
-			theErrorFile.abort();
-		}
+    //
+    //  (1) read JSON file
+    //
 
+    jsonInput inp(workDir, inpFile, procno);
 
-	std::string workDir = argv[1];
-	std::string inpFile = argv[2];
-	std::string workflowDriver = argv[3];
-	std::string osType = argv[4];
-	std::string runType = argv[5];
+    //
+    //	(2) Construct Nataf Object
+    //
+    ERANataf T(inp, procno);
 
-	if (procno == 0) std::cerr << "* WORKDIR: " << workDir << "\n";
-	if (procno == 0) std::cerr << "* INPFILE: " << inpFile << "\n";
-	if (procno == 0) std::cerr << "* WORKDRIVER: " << workflowDriver << "\n";
-	if (procno == 0) std::cerr << "* OS: " << osType << "\n";
-	if (procno == 0) std::cerr << "* RUN: " << runType << "\n\n";
+    //
+    //	(3) Run UQ analysis
+    //
 
-	//std::string workDir = "C:/Users/yisan/Documents/quoFEM/LocalWorkDir/tmp.SimCenter";
-	//std::string osType = "Windows";
-	//std::string runType = "runningLocal";
+    if (!inp.uqType.compare("Sensitivity Analysis")) {
 
-	std::string  errorDir = workDir + "/dakota.err" ;
-	theErrorFile.getFileName(errorDir, procno);
+        //
+        //	(3-1) Global sensitivity analysis - (parallel)
+        //
+        runGSA myGSA(workflowDriver, osType, runType, inp, T, procno, nprocs);
 
-	//auto elapseStart = std::chrono::high_resolution_clock::now();
-	auto elapseStart = std::chrono::high_resolution_clock::now();
-	double elapsedTime;
+        elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3;
+        myGSA.writeOutputs(inp, elapsedTime, procno); //	Write dakota.out
+        myGSA.writeTabOutputs(inp, procno); //	Write dakota.out
 
-	//
-	//  (1) read JSON file
-	//
-
-	jsonInput inp(workDir, inpFile, procno);
-
-
-	//
-	//	(2) Construct Nataf Object
-	//
-	ERANataf T(inp, procno);
-
-	//
-	//	(3-1) Random number generator Gaussian(mean=0,var=1) - (batch samples)
-	//	(4-1) FE Analysis - (parallel)
-	//
-
-	/*
-	auto readStart = std::chrono::high_resolution_clock::now();
-	mat C;
-	field<std::string> header;
-	C.load(csv_name("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt"));
-	auto readEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - readStart).count() / 1.e3;
-	std::cout << "  - reading took " << readEnd << " s\n";
-	std::cout << C.size() << " s\n";
-
-	for (int i=0; i < 10; i++) {
-		std::cout << C(0,i) << " s\n";
-	}
-	readStart = std::chrono::high_resolution_clock::now();
-	std::vector< std::vector<double> >  V(C.n_rows);
-	for (size_t i = 0; i < C.n_rows; ++i) {
-		V[i] = arma::conv_to< std::vector<double> >::from(C.row(i));
-	};
-	std::cout << "  - conversion took " << readEnd << " s\n";
-	*/
+    } else if (!inp.uqType.compare("Forward Propagation")) {
 
 
-	if (inp.femAppName.compare("SurrogateGP") == 0) {
+        if (!inp.uqMethod.compare("Monte Carlo")) {
+            std::cout << "Running Forward Propagation" << std::endl;
 
-		T.sample(inp, procno);
-		T.simulateAppBatchSurrogate(workflowDriver, osType, runType, inp, procno, nprocs);
+            //
+            //	(3-2) Forward analysis
+            //
+            runForward myForward(workflowDriver, osType, runType, inp, T, procno, nprocs);
 
-	} else if (inp.UQmethod.compare("Monte Carlo") == 0) {
+            myForward.writeTabOutputs(inp, procno);    //	Write dakotaTab.out
+            elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3;
+        } else if (!inp.uqMethod.compare("Multi-fidelity Monte Carlo")) {
 
-		T.sample(inp, procno);
-		T.simulateAppBatch(workflowDriver, osType, runType, inp, procno, nprocs);
+            std::cout << "Running MFMC" << std::endl;
 
-	}
+            //
+            //	(3-2) MFMC
+            //
 
+            runMFMC myMFMC(workflowDriver, osType, runType, inp, T, procno, nprocs);
 
-	//
-	//	(3-1)(4-1) Read dataset
+            myMFMC.writeTabOutputs();    //	Write dakotaTab.out
+            //myMFMC.writeInfo();    //	Write dakotaTab.out
 
-	else if (inp.UQmethod.compare("Import Data Files") == 0) {
-		if (runType.compare("runningLocal") != 0) {
-			std::string errMsg = "Error running SimCenterUQ: No need to run remotely when the data set is provided. Please try running it locally.";
-			theErrorFile.write(errMsg);
-		}
-		T.readDataset(inp.inpPath, inp.outPath, inp.nrv, inp.nqoi, inp.inpFileType, inp.outFileType, inp.nmc);
-	}
+            elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now() - elapseStart).count() / 1.e3;
+            myMFMC.writeOutputs(elapsedTime);
 
-	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.txt", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.txt", inp.nrv, inp.nqoi, "csv", inp.nmc);
-	//T.readDataset("C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/X.bin", "C:/Users/SimCenter/Dropbox/SimCenterPC/GSAPCA/Y.bin", inp.nrv, inp.nqoi, "binary", inp.nmc);
-	//
+        }
+    }
 
-	//std::cout<<"Just testing this location 1\n";
-	else {
-		std::string errMsg = "Error running SimCenterUQ: UQ method " + inp.UQmethod + " unknown.";
-		theErrorFile.write(errMsg);
-	}
-
-	//
-	//	(5) Run UQ analysis
-	//
-
-	if (!inp.uqType.compare("Sensitivity Analysis")) {
-
-		//
-		//	(5-1) Global sensitivity analysis - (parallel)
-		//
-
-
-		if (inp.UQmethod.compare("Import Data Files") != 0) {
-			std::cout << "Writing Tab.out" << std::endl;
-			runForward ForwardResults(T.X, T.Xstr, T.G, procno);
-			ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
-		}
-		std::cout << "Preparing sensitivity analysis" << std::endl;
-		runGSA GsaResults(T.X, T.Xstr, T.G, inp.groups, inp.PCAvarRatioThres, inp.qoiVectRange, 10, procno, nprocs); // int Kos = 25;
-		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count()/1.e3;
-		GsaResults.writeOutputs(inp, elapsedTime, procno); //	Write dakota.out
-	}
-	else if (!inp.uqType.compare("Forward Propagation")) {
-
-		std::cout << "Running Forward Propagation" << std::endl;
-
-		//
-		//	(5-2) Forward analysis
-		//
-		runForward ForwardResults(T.X, T.Xstr, T.G, procno);
-		ForwardResults.writeTabOutputs(inp, procno); 	//	Write dakotaTab.out
-		elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - elapseStart).count() /1.e3;
-		ForwardResults.writeOutputs(inp, procno);		//	Write dakota.out <- curretly not being used anywhere
-	}
-	theErrorFile.close();
 	if (procno == 0) std::cout << "Elapsed TOTAL ANALYSIS time: " << elapsedTime << " s\n";
 
 	#ifdef MPI_RUN
@@ -237,7 +183,10 @@ int main(int argc, char** argv)
 		theErrorFile.print("MPI done");
 	#else
 		theErrorFile.print("OpenMP done");
-	#endif
+	#endif	
+		
+	theErrorFile.close();
+
 	return 0;
 }
 

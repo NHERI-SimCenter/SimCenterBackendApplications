@@ -7,7 +7,9 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-    format      ascii;
+    version     2.0;
+    format      ascii;    
+    location    "0";
     class       volScalarField;
     object      k;
 }

@@ -58,6 +58,8 @@ from org.opensha.commons.param import *
 from org.opensha.commons.param.event import *
 from org.opensha.commons.param.constraint import *
 from org.opensha.commons.util import ServerPrefUtils
+from org.opensha.commons.param.impl import DoubleParameter
+from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
 
 from org.opensha.sha.earthquake import *
 from org.opensha.sha.earthquake.param import *
@@ -86,30 +88,87 @@ from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
 from org.opensha.sha.gcim.calc import *
 
 
-def getERF(erf_name, update_flag):
+def getERF(scenario_info, update_flag=True):
 
     # Initialization
     erf = None
+    erf_name = scenario_info['EqRupture']['Model']
+    erf_selection = scenario_info['EqRupture']['ModelParameters']
     # ERF model options
     if erf_name == 'WGCEP (2007) UCERF2 - Single Branch':
         erf = MeanUCERF2()
+        if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+            ("Treat Background Seismicity As" in erf_selection.keys()):
+            value = erf_selection.pop("Treat Background Seismicity As")
+            print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+        for key, value in erf_selection.items():
+            if type(value) is int:
+                value = float(value)
+            erf.setParameter(key, value)
+            # erf.getParameter(key).setValue(value)
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
         erf = Frankel02_AdjustableEqkRupForecast()
     elif erf_name == 'WGCEP UCERF 1.0 (2005)':
         erf = WGCEP_UCERF1_EqkRupForecast()
     elif erf_name == 'Mean UCERF3':
         tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.BOTH_FM_BRANCH_AVG)
-        erf = tmp
-        del tmp
-    elif erf_name == 'Mean UCERF3 FM3.1':
-        tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.FM3_1_BRANCH_AVG)
-        erf = tmp
-        del tmp
-    elif erf_name == 'Mean UCERF3 FM3.2':
-        tmp = MeanUCERF3()
-        tmp.setPreset(MeanUCERF3.Presets.FM3_2_BRANCH_AVG)
+        if erf_selection.get("preset", None) == "(POISSON ONLY) Both FM Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.BOTH_FM_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+        elif erf_selection.get("preset", None) == "FM3.1 Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.FM3_1_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
+            setERFProbabilityModelOptions(tmp, erf_selection)
+        elif erf_selection.get("preset", None) == "FM3.2 Branch Averaged":
+            tmp.setPreset(MeanUCERF3.Presets.FM3_2_BRANCH_AVG)
+            if (erf_selection.get('Background Seismicity',None) == "Exclude") and \
+                ("Treat Background Seismicity As" in erf_selection.keys()):
+                value = erf_selection.pop("Treat Background Seismicity As")
+                print(f"Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored")
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
+            # Set Apply Aftershock Filter
+            if erf_selection.get('Apply Aftershock Filter', None):
+                tmp.setParameter("Apply Aftershock Filter", erf_selection["Apply Aftershock Filter"])
+            # Set Aleatoiry mag-area stdDev
+            if erf_selection.get('Aleatory Mag-Area StdDev', None):
+                tmp.setParameter("Aleatory Mag-Area StdDev", erf_selection["Aleatory Mag-Area StdDev"])
+            # Set IncludeBackgroundOpetion
+            setERFbackgroundOptions(tmp, erf_selection)
+            # Set Treat Background Seismicity As Option
+            setERFtreatBackgroundOptions(tmp, erf_selection)
+            # Set Probability Model Option
+            setERFProbabilityModelOptions(tmp, erf_selection)
+        else:
+            print(f"""The specified Mean UCERF3 preset {erf_selection.get("preset", None)} is not implemented""")
         erf = tmp
         del tmp
     elif erf_name == 'WGCEP Eqk Rate Model 2 ERF':
@@ -121,6 +180,84 @@ def getERF(erf_name, update_flag):
         erf.updateForecast()
     # return
     return erf
+
+def setERFbackgroundOptions(erf, selection):
+    option = selection.get('Background Seismicity', None)
+    if option == "Include":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.INCLUDE)
+    elif option == "Exclude":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.EXCLUDE)
+    elif option == "Only":
+        erf.setParameter('Background Seismicity', IncludeBackgroundOption.ONLY)
+
+def setERFtreatBackgroundOptions(erf, selection):
+    option = selection.get('Treat Background Seismicity As', None)
+    if option is None:
+        pass
+    elif option == 'Point Sources':
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.POINT)
+    elif option == "Single Random Strike Faults":
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.FINITE)
+    elif option == "Two Perpendicular Faults":
+        erf.setParameter('Treat Background Seismicity As', BackgroundRupType.CROSSHAIR)
+
+def setERFProbabilityModelOptions(erf, selection):
+    option = selection.get('Probability Model', None)
+    if option is None:
+        pass
+    elif option == 'Poisson':
+        erf.setParameter('Probability Model', ProbabilityModelOptions.POISSON)
+    elif option == "UCERF3 BPT":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.U3_BPT)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFMagDependentAperiodicityOptions(erf, selection)
+        setERFBPTAveragingTypeOptions(erf, selection)
+    elif option == "UCERF3 Preferred Blend":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.U3_PREF_BLEND)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFBPTAveragingTypeOptions(erf, selection)
+    elif option == "WG02 BPT":
+        erf.setParameter('Probability Model', ProbabilityModelOptions.WG02_BPT)
+        erf.setParameter('Historic Open Interval', selection.get('Historic Open Interval'))
+        setERFMagDependentAperiodicityOptions(erf, selection)
+
+def setERFMagDependentAperiodicityOptions(erf, selection):
+    option = selection.get('Aperiodicity', None)
+    if option is None:
+        pass
+    elif option =='0.4,0.3,0.2,0.1':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.LOW_VALUES)
+    elif option =='0.5,0.4,0.3,0.2':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.MID_VALUES)
+    elif option =='0.6,0.5,0.4,0.3':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.HIGH_VALUES)
+    elif option =='All 0.1':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT1_VALUES)
+    elif option =='All 0.2':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT2_VALUES)
+    elif option =='All 0.3':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT3_VALUES)
+    elif option =='All 0.4':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT4_VALUES)
+    elif option =='All 0.5':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT5_VALUES)
+    elif option =='All 0.6':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT6_VALUES)
+    elif option =='All 0.7':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT7_VALUES)
+    elif option =='All 0.8':
+        erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.ALL_PT8_VALUES)
+
+def setERFBPTAveragingTypeOptions(erf, selection):
+    option = selection.get('BPT Averaging Type', None)
+    if option is None:
+        pass
+    elif option =='AveRI and AveTimeSince':
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE)
+    elif option =='AveRI and AveNormTimeSince':
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE)
+    elif option =='AveRate and AveNormTimeSince':
+        erf.setParameter('BPT Averaging Type', BPTAveragingTypeOptions.AVE_RATE_AVE_NORM_TIME_SINCE)
 
 def get_source_rupture(erf, source_index, rupture_index):
 
@@ -144,27 +281,106 @@ def get_source_distance(erf, source_index, lat, lon):
 def get_rupture_distance(erf, source_index, rupture_index, lat, lon):
 
     rupSource = erf.getSource(source_index)
-    rupSurface = rupSource.getRuptureList().get(rupture_index).getRuptureSurface()
+    rupSurface = rupSource.getRupture(rupture_index).getRuptureSurface()
     distToRupture = []
     for i in range(len(lat)):
         distToRupture.append(float(rupSurface.getDistanceRup(Location(lat[i], lon[i]))))
 
     return distToRupture
 
+def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):
+    rupSource = erf.getSource(source_index)
+    rupList = rupSource.getRuptureList()
+    rupSurface = rupList.get(rupture_index).getRuptureSurface()
+    if rupList.get(rupture_index).getHypocenterLocation() is None:
+        upperEdge = rupSurface.getEvenlyDiscritizedUpperEdge()
+        upperDepth = []
+        for i in range(upperEdge.size()):
+            upperDepth.append(upperEdge[i].getDepth())
+        upperDepth = np.mean(upperDepth)
+        lowerEdge = rupSurface.getEvenlyDiscritizedLowerEdge()
+        lowerDepth = []
+        for i in range(lowerEdge.size()):
+            lowerDepth.append(lowerEdge[i].getDepth())
+        lowerDepth = np.mean(lowerDepth)    
+        zHyp = (upperDepth + lowerDepth)/2
+    else:
+        zHyp = rupList.get(rupture_index).getHypocenterLocation().getDepth()
+    for i in range(len(siteList)):
+        siteList[i].update({"rRup":float(rupSurface.getDistanceRup(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+        siteList[i].update({"rJB":float(rupSurface.getDistanceJB(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+        siteList[i].update({"rX":float(rupSurface.getDistanceX(Location(siteList[i]['lat'], siteList[i]['lon'])))})
+    site_rup_info = {
+        "dip" : float(rupSurface.getAveDip()),
+        "width" : float(rupSurface.getAveWidth()),
+        "zTop" : float(rupSurface.getAveRupTopDepth()),
+        "aveRake" : float(rupList.get(rupture_index).getAveRake()),
+        "zHyp":zHyp
+        } 
+    return site_rup_info, siteList
 
-def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0, maxSources = 500):
+def horzDistanceFast(lat1, lon1, lat2, lon2):
+    lat1 = lat1/180*np.pi
+    lon1 = lon1/180*np.pi
+    lat2 = lat2/180*np.pi
+    lon2 = lon2/180*np.pi
+    dlon = np.abs(lon2 - lon1) 
+    dlat = np.abs(lat2 - lat1)
+    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+    c = 2 * np.arcsin(np.sqrt(a)) 
+    EARTH_RADIUS_MEAN = 6371.0072 #https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/commons/geo/GeoTools.java#L22
+    # return EARTH_RADIUS_MEAN * np.sqrt((dLat * dLat) + (dLon * dLon))
+    return EARTH_RADIUS_MEAN * c
+
+def getPtSrcDistCorr(horzDist, mag, type):
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
+    if type == "FIELD":
+        rupLen =  np.power(10.0,-3.22+0.69*mag)
+        return 0.7071 + (1.0-0.7071)/(1 + np.power(rupLen/(horzDist*0.87),1.1))
+    elif type == "NSHMP08":
+        print("The NSHMP08 rJB correction has not been implemented. corr=1.0 is used instead")
+        # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
+        return 1.0
+    else:
+        return 1.0
+def get_PointSource_info_CY2014(source_info, siteList):
+    # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L118
+    sourceLat = source_info['Location']['Latitude']
+    sourceLon = source_info['Location']['Longitude']
+    sourceDepth = source_info['Location']['Depth']
+    for i in range(len(siteList)):
+        siteLat = siteList[i]['lat']
+        siteLon = siteList[i]['lon']
+        horiD = horzDistanceFast(sourceLat, sourceLon, siteLat, siteLon)
+        rJB = horiD * getPtSrcDistCorr (horiD, source_info['Magnitude'],'NONE')
+        rRup = np.sqrt(rJB**2 + sourceDepth**2)
+        rX = 0.0
+        siteList[i].update({"rRup":rRup})
+        siteList[i].update({"rJB":rJB})
+        siteList[i].update({"rX":rX})
+    site_rup_info = {
+        "dip" : float(source_info['AverageDip']),
+        "width" : 0.0,#https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/PointSurface.java#L68
+        "zTop" : sourceDepth,
+        "aveRake" : float(source_info['AverageRake'])
+        }
+    return site_rup_info, siteList 
+    
+def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, maxMag = 10.0, maxDistance = 1000.0):
 
     # Initializing
     erf_data = {"type": "FeatureCollection"}
     site_loc = Location(site_loc[0], site_loc[1])
+    site = Site(site_loc)
     # Total source number
     num_sources = erf.getNumSources()
     source_tag = []
     source_dist = []
     for i in range(num_sources):
         rupSource = erf.getSource(i)
-        sourceSurface = rupSource.getSourceSurface()
-        distanceToSource = sourceSurface.getDistanceRup(site_loc)
+        distanceToSource = rupSource.getMinDistance(site)
+        # sourceSurface = rupSource.getSourceSurface()
+        # distanceToSource = sourceSurface.getDistanceRup(site_loc)
         source_tag.append(i)
         source_dist.append(distanceToSource)
     df = pd.DataFrame.from_dict({
@@ -173,26 +389,31 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
         })
     # Sorting sources
     source_collection = df.sort_values(['sourceDist'], ascending = (True))
+    source_collection = source_collection[source_collection["sourceDist"]<maxDistance]
     # Collecting source features
-    maxSources = min(maxSources, num_sources)
     feature_collection = []
-    for i in tqdm(range(maxSources), desc='Sources'):
+    for i in tqdm(range(source_collection.shape[0]), desc='Sources'):
         source_index = source_collection.iloc[i, 0]
         distanceToSource = source_collection.iloc[i, 1]
-        # Checking maximum distance
-        if (distanceToSource > maxDistance):
-            continue
         # Getting rupture distances
         rupSource = erf.getSource(source_index)
         try:
             rupList = rupSource.getRuptureList()
         except:
-            continue
+            numOfRup = rupSource.getNumRuptures()
+            rupList = []
+            for n in range(numOfRup):
+                rupList.append(rupSource.getRupture(n))
+            rupList = ArrayList(rupList)
         rup_tag = []
         rup_dist = []
         for j in range(rupList.size()):
-            rupture = rupList.get(j)
-            cur_dist = rupture.getRuptureSurface().getDistanceRup(site_loc)
+            ruptureSurface = rupList.get(j).getRuptureSurface()
+            # If pointsource rupture distance correction 
+            if isinstance(ruptureSurface, PointSurface):
+                distCorrType = PtSrcDistCorr.Type.NONE # or 'FIELD' or 'NSHMP08'
+                (PointSurface@ruptureSurface).setDistCorrMagAndType(rupList.get(j).getMag(), distCorrType);
+            cur_dist = ruptureSurface.getDistanceRup(site_loc)
             rup_tag.append(j)
             if (cur_dist < maxDistance):
                 rup_dist.append(cur_dist)
@@ -278,16 +499,21 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print('FetchOpenSHA: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
-    num_preview = 1000
-    if len(feature_collection_sorted) > num_preview:
-        preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
-    else:
-        preview_erf_data = erf_data
+    # num_preview = 1000
+    # if len(feature_collection_sorted) > num_preview:
+    #     preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
+    # else:
+    #     preview_erf_data = erf_data
     # Output
+    import time
+    startTime = time.process_time_ns()
     if outfile is not None:
+        print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
-            json.dump(preview_erf_data, f, indent=2)
-    del preview_erf_data
+            json.dump(erf_data, f, indent=2)
+    print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
+
+    # del preview_erf_data
     # return
     return erf_data
 
@@ -627,3 +853,32 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
 
     # return
     return vs30
+
+def get_site_z1pt0_from_opensha(lat, lon):
+    sites = ArrayList()
+    sites.add(Site(Location(lat, lon)))
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+    for data in siteData:
+        if data.getValue(0).getDataType()=='Depth to Vs = 1.0 km/sec':
+            z1pt0 = float(data.getValue(0).getValue())
+            if not np.isnan(z1pt0):
+                break
+    return z1pt0*1000.0
+
+def get_site_z2pt5_from_opensha(lat, lon):
+    sites = ArrayList()
+    sites.add(Site(Location(lat, lon)))
+    # prepare site data java object
+    siteDataProviders = OrderedSiteDataProviderList.createSiteDataProviderDefaults()
+    siteData = siteDataProviders.getAllAvailableData(sites)
+    for data in siteData:
+        if data.getValue(0).getDataType()=='Depth to Vs = 2.5 km/sec':
+            z2pt5 = float(data.getValue(0).getValue())
+            if not np.isnan(z2pt5):
+                break
+    return z2pt5*1000.0
+
+
+

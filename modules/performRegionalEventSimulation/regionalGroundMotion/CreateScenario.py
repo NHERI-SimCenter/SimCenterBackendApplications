@@ -45,8 +45,242 @@ import random
 import numpy as np
 import pandas as pd
 import socket
+import sys
 if 'stampede2' not in socket.gethostname():
 	from FetchOpenSHA import *
+
+def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):
+    # If there is a filter
+    if scenario_info["Generator"].get("method", None) == "ScenarioSpecific":
+        SourceIndex = scenario_info["Generator"].get("SourceIndex", None)
+        RupIndex = scenario_info['Generator'].get('RuptureIndex', None)
+        if (SourceIndex is None) or (RupIndex is None):
+            print("Both SourceIndex and RuptureIndex are needed for"\
+                  "ScenarioSpecific analysis")
+            return
+        rups_to_run = []
+        for ind in range(len(user_scenarios.get('features'))):
+            cur_rup = user_scenarios.get('features')[ind]
+            cur_id_source = cur_rup.get('properties').get('Source', None)
+            if cur_id_source != int(SourceIndex):
+                continue
+            cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
+            if cur_id_rupture == int(RupIndex):
+                rups_to_run.append(ind)
+                break
+    elif scenario_info["Generator"].get("method", None) == "MonteCarlo":
+        rup_filter = scenario_info["Generator"].get("RuptureFilter", None)
+        if rup_filter is None or len(rup_filter)==0:
+            rups_to_run = list(range(0, num_scenarios))
+        else:
+            rups_requested = []
+            for rups in rup_filter.split(','):
+                if "-" in rups:
+                    asset_low, asset_high = rups.split("-")
+                    rups_requested += list(range(int(asset_low), int(asset_high)+1))
+                else:
+                    rups_requested.append(int(rups))
+            rups_requested = np.array(rups_requested)
+            rups_requested = rups_requested - 1 # The input index starts from 1, not 0
+            rups_available = list(range(0, num_scenarios))
+            rups_to_run = rups_requested[
+                np.where(np.in1d(rups_requested, rups_available))[0]]
+        # Select all
+    elif scenario_info["Generator"].get("method", None) == "Subsampling":
+        rups_to_run = list(range(0, num_scenarios))
+    else:
+        sys.exit(f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available')
+    return rups_to_run
+
+def load_earthquake_rupFile(scenario_info, rupFilePath):
+    # Getting earthquake rupture forecast data
+    source_type = scenario_info['EqRupture']['Type']
+    try:
+        with open(rupFilePath, 'r') as f:
+            user_scenarios = json.load(f)
+    except:
+        sys.exit('CreateScenario: source file {} not found.'.format(rupFilePath))
+    # number of features (i.e., ruptures)
+    num_scenarios = len(user_scenarios.get('features',[]))
+    if num_scenarios < 1:
+        sys.exit('CreateScenario: source file is empty.')
+    rups_to_run = get_rups_to_run(scenario_info, user_scenarios, num_scenarios)    
+    # get rupture and source ids
+    scenario_data = {}
+    if source_type == "ERF":
+        # source model
+        source_model = scenario_info['EqRupture']['Model']
+        for rup_tag in rups_to_run:
+            cur_rup = user_scenarios.get('features')[rup_tag]
+            cur_id_source = cur_rup.get('properties').get('Source', None)
+            cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
+            scenario_data.update({rup_tag: {
+                'Type': source_type,
+                'RuptureForecast': source_model,
+                'Name': cur_rup.get('properties').get('Name', ""),
+                'Magnitude': cur_rup.get('properties').get('Magnitude', None),
+                'MeanAnnualRate': cur_rup.get('properties').get('MeanAnnualRate', None),
+                'SourceIndex': cur_id_source,
+                'RuptureIndex': cur_id_rupture,
+                'SiteSourceDistance': cur_rup.get('properties').get('Distance', None),
+                'SiteRuptureDistance': cur_rup.get('properties').get('DistanceRup', None)
+            }})
+    elif source_type == "PointSource":
+        sourceID = 0
+        rupID = 0
+        for rup_tag in rups_to_run:
+            try:
+                cur_rup = user_scenarios.get('features')[rup_tag]
+                magnitude = cur_rup.get('properties')['Magnitude']
+                location = cur_rup.get('properties')['Location']
+                average_rake = cur_rup.get('properties')['AverageRake']
+                average_dip = cur_rup.get('properties')['AverageDip']
+                scenario_data.update({0: {
+                    'Type': source_type,
+                    'Magnitude': magnitude,
+                    'Location': location,
+                    'AverageRake': average_rake,
+                    'AverageDip': average_dip,
+                    'SourceIndex':sourceID,
+                    'RuptureIndex':rupID
+                }})
+                rupID = rupID + 1
+            except:
+                print('Please check point-source inputs.')
+    # return
+    return scenario_data
+
+def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile):
+    # Collecting all possible earthquake scenarios
+    lat = []
+    lon = []
+    for s in stations:
+        lat.append(s['lat'])
+        lon.append(s['lon'])
+    # Reference location
+    mlat = np.mean(lat)
+    mlon = np.mean(lon)
+    from openquake.hazardlib import nrml, sourceconverter, site
+    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
+    from openquake.hazardlib.geo.surface.base import BaseSurface
+    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
+    from openquake.commonlib import readinput
+    import json
+    try:
+        with open(rupFile, 'r') as f:
+            user_scenarios = json.load(f)
+    except:
+        sys.exit('CreateScenario: source file {} not found.'.format(rupFile))
+    # number of features (i.e., ruptures)
+    num_scenarios = len(user_scenarios.get('features',[]))
+    if num_scenarios < 1:
+        sys.exit('CreateScenario: source file is empty.')
+    rups_to_run = get_rups_to_run(scenario_info, user_scenarios, num_scenarios)
+    in_dir = os.path.join(work_dir,'Input')
+    oq = readinput.get_oqparam(dict(
+                    calculation_mode='classical',
+                    inputs = {
+                    "site_model":[siteFile]},
+                    intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}", #place holder for initiating oqparam. Not used in ERF
+                    investigation_time=str(scenario_info['EqRupture'].get('investigation_time', '50.0')),
+                    gsim='AbrahamsonEtAl2014', #place holder for initiating oqparam, not used in ERF
+                    truncation_level='99.0', # place holder for initiating oqparam. not used in ERF
+                    maximum_distance=str(scenario_info['EqRupture'].get('maximum_distance', '2000')),
+                    width_of_mfd_bin = str(scenario_info['EqRupture'].get('width_of_mfd_bin', '1.0')),
+                    area_source_discretization=str(scenario_info['EqRupture'].get('area_source_discretization', '10'))
+                    ))
+    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
+    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']    
+    [src_nrml] = nrml.read(os.path.join(in_dir, scenario_info['EqRupture']['sourceFile']))
+    conv = sourceconverter.SourceConverter(
+    scenario_info['EqRupture']['investigation_time'],
+    rupture_mesh_spacing,
+    width_of_mfd_bin=scenario_info['EqRupture']['width_of_mfd_bin'],
+    area_source_discretization=scenario_info['EqRupture']['area_source_discretization'])
+    src_raw = conv.convert_node(src_nrml)
+    sources = []
+    sources_dist = []
+    sources_id = []
+    id = 0
+    siteMeanCol = site.SiteCollection.from_points([mlon], [mlat])
+    srcfilter = SourceFilter(siteMeanCol, oq.maximum_distance)
+    for i in range(len(src_nrml)):
+        subnode = src_nrml[i]
+        subSrc = src_raw[i]
+        tag = subnode.tag.rsplit('}')[1] if subnode.tag.startswith('{') else subnode.tag
+        if tag == "sourceGroup":
+            for j in range(len(subnode)):
+                subsubnode = subnode[j]
+                subsubSrc = subSrc[j]
+                subtag = subsubnode.tag.rsplit('}')[1] if subsubnode.tag.startswith('{') else subsubnode.tag
+                if subtag.endswith('Source') and srcfilter.get_close_sites(subsubSrc) is not None:
+                    subsubSrc.id = id
+                    sources_id.append(id)
+                    id += 1
+                    sources.append(subsubSrc)
+                    sourceMesh = subsubSrc.polygon.discretize(rupture_mesh_spacing)
+                    sourceSurface = BaseSurface(sourceMesh)
+                    siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
+                    sources_dist. append(sourceSurface.get_min_distance(siteMesh))
+        elif tag.endswith('Source') and srcfilter.get_close_sites(subSrc) is not None:
+            subSrc.id = id
+            sources_id.append(id)
+            id += 1
+            sources.append(subSrc)
+            sourceMesh = subSrc.polygon.discretize(rupture_mesh_spacing)
+            sourceSurface = BaseSurface(sourceMesh)
+            siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
+            sources_dist. append(sourceSurface.get_min_distance(siteMesh))
+    sources_df = pd.DataFrame.from_dict({
+        'source': sources,
+        'sourceDist': sources_dist,
+        'sourceID':sources_id
+    })
+    sources_df = sources_df.sort_values(['sourceDist'], ascending = (True))
+    sources_df = sources_df.set_index('sourceID')
+    allrups = []
+    allrups_rRup = []
+    allrups_srcId = []
+    allrups_mar = []
+    for src in sources_df["source"]:
+        src_rups = list(src.iter_ruptures())
+        for i, rup in enumerate(src_rups):
+            rup.rup_id = src.offset + i
+            allrups.append(rup)
+            allrups_rRup.append(rup.surface.get_min_distance(siteMeanCol))
+            allrups_srcId.append(src.id)
+            allrups_mar.append(rup.occurrence_rate)
+    rups_df = pd.DataFrame.from_dict({
+        'rups':allrups,
+        'rups_rRup':allrups_rRup,
+        'rups_srcId':allrups_srcId,
+        'MeanAnnualRate':allrups_mar
+    })
+    rups_df = rups_df.sort_values(['rups_rRup'], ascending = (True))
+    rups_df = rups_df[rups_df["rups_rRup"] > 0]
+    maf_list_n = [-x for x in rups_df['MeanAnnualRate']]
+    sort_ids = np.argsort(maf_list_n)
+    rups_df = rups_df.iloc[sort_ids]
+    # rups_df = rups_df = rups_df.sort_values(['MeanAnnualRate'], ascending = (False))
+    rups_df = rups_df.iloc[rups_to_run,:]
+    scenario_data = {}
+    for ind in rups_df.index:
+        src_id = int(rups_df.loc[ind,"rups_srcId"])
+        name = sources_df.loc[src_id, "source"].name
+        rup = rups_df.loc[ind, "rups"]
+        scenario_data.update({ind: {
+                'Type': "oqSourceXML",
+                'RuptureForecast': "oqERF",
+                'Name': name,
+                'Magnitude': float(rup.mag),
+                'MeanAnnualRate': getattr(rup, "occurrence_rate", None),
+                'SourceIndex': src_id,
+                'RuptureIndex': int(rup.rup_id),
+                'SiteSourceDistance': sources_df.loc[src_id, "sourceDist"][0],
+                'SiteRuptureDistance': get_distances(rup, siteMeanCol, 'rrup')[0],
+                'rup':rup
+            }})
+    return scenario_data
 
 def load_earthquake_scenarios(scenario_info, stations, dir_info):
 
@@ -56,7 +290,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):
     samp_method = scenario_info['EqRupture'].get('Sampling','Random')
     # source model
     source_model = scenario_info['EqRupture']['Model']
-    eq_source = getERF(source_model, True)
+    eq_source = getERF(scenario_info)
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     # Collecting all sites
@@ -104,16 +338,14 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):
     return scenario_data
     
 
-def create_earthquake_scenarios(scenario_info, stations, dir_info):
+def create_earthquake_scenarios(scenario_info, stations, work_dir, openquakeSiteFile = None):
 
-    # Number of scenarios
-    source_num = scenario_info.get('Number', 1)
-    if source_num == 'All':
-        # Large number to consider all sources in the ERF
-        source_num = 10000000
-    # sampling method
-    samp_method = scenario_info['EqRupture'].get('Sampling','Random')
-    # Directly defining earthquake ruptures
+    # # Number of scenarios
+    # source_num = scenario_info.get('Number', 1)
+    # if source_num == 'All':
+    #     # Large number to consider all sources in the ERF
+    #     source_num = 10000000
+    out_dir = os.path.join(work_dir,"Output")
     if scenario_info['Generator'] == 'Simulation':
         # TODO:
         print('Physics-based earthquake simulation is under development.')
@@ -136,7 +368,7 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
         if source_type == 'ERF':
             if 'SourceIndex' in scenario_info['EqRupture'].keys() and 'RuptureIndex' in scenario_info['EqRupture'].keys():
                 source_model = scenario_info['EqRupture']['Model']
-                eq_source = getERF(source_model, True)
+                eq_source = getERF(scenario_info)
                 # check source index list and rupture index list
                 if type(scenario_info['EqRupture']['SourceIndex']) == int:
                     source_index_list = [scenario_info['EqRupture']['SourceIndex']]
@@ -170,66 +402,78 @@ def create_earthquake_scenarios(scenario_info, stations, dir_info):
                 min_M = scenario_info['EqRupture'].get('min_Mag', 5.0)
                 max_M = scenario_info['EqRupture'].get('max_Mag', 9.0)
                 max_R = scenario_info['EqRupture'].get('max_Dist', 1000.0)
-                eq_source = getERF(source_model, True)
-                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(dir_info['Output'],'RupFile.json'), \
+                eq_source = getERF(scenario_info)
+                erf_data = export_to_json(eq_source, ref_station, outfile = os.path.join(out_dir,'RupFile.geojson'), \
                                         EqName = source_name, minMag = min_M, \
                                         maxMag = max_M, maxDistance = max_R, \
-                                        maxSources = np.max([500, source_num]))
+                                        )
                 # Parsing data
-                feat = erf_data['features']
-                """
-                tag = []
-                for i, cur_f in enumerate(feat):
-                    if source_name and (source_name not in cur_f['properties']['Name']):
-                        continue
-                    if min_M > cur_f['properties']['Magnitude']:
-                        continue
-                    tag.append(i)
-                # Abstracting desired ruptures
-                s_tag = random.sample(tag, min(source_num, len(tag)))
-                """
-                t_start = time.time()
-                s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
-                print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))
-                #erf_data['features'] = list(feat[i] for i in s_tag)
-                erf_data['features'] = [feat[i] for i in range(source_num)]
-                scenario_data = dict()
-                t_start = time.time()
-                for i, rup in enumerate(erf_data['features']):
-                    scenario_data.update({i: {
-                        'Type': source_type,
-                        'RuptureForecast': source_model,
-                        'Name': rup['properties']['Name'],
-                        'Magnitude': rup['properties']['Magnitude'],
-                        'MeanAnnualRate': rup['properties']['MeanAnnualRate'],
-                        'SourceIndex': rup['properties']['Source'],
-                        'RuptureIndex': rup['properties']['Rupture'],
-                        'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
-                        'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
-                    }})
-                print('CreateScenario: scenarios collected {0} sec'.format(time.time() - t_start))
-                # Cleaning tmp outputs
-                del erf_data
+                # feat = erf_data['features']
+                # """
+                # tag = []
+                # for i, cur_f in enumerate(feat):
+                #     if source_name and (source_name not in cur_f['properties']['Name']):
+                #         continue
+                #     if min_M > cur_f['properties']['Magnitude']:
+                #         continue
+                #     tag.append(i)
+                # # Abstracting desired ruptures
+                # s_tag = random.sample(tag, min(source_num, len(tag)))
+                # """
+                # t_start = time.time()
+                # s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
+                # print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))
+                # #erf_data['features'] = list(feat[i] for i in s_tag)
+                # erf_data['features'] = [feat[i] for i in range(source_num)]
+                # scenario_data = dict()
+                # t_start = time.time()
+                # for i, rup in enumerate(erf_data['features']):
+                #     scenario_data.update({i: {
+                #         'Type': source_type,
+                #         'RuptureForecast': source_model,
+                #         'Name': rup['properties']['Name'],
+                #         'Magnitude': rup['properties']['Magnitude'],
+                #         'MeanAnnualRate': rup['properties']['MeanAnnualRate'],
+                #         'SourceIndex': rup['properties']['Source'],
+                #         'RuptureIndex': rup['properties']['Rupture'],
+                #         'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
+                #         'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
+                #     }})
+                # print('CreateScenario: scenarios collected {0} sec'.format(time.time() - t_start))
+                # # Cleaning tmp outputs
+                # del erf_data
         elif source_type == 'PointSource':
-            scenario_data = dict()
-            try:
-                magnitude = scenario_info['EqRupture']['Magnitude']
-                location = scenario_info['EqRupture']['Location']
-                average_rake = scenario_info['EqRupture']['AverageRake']
-                average_dip = scenario_info['EqRupture']['AverageDip']
-                scenario_data.update({0: {
+            # Export to a geojson format RupFile.json
+            outfile = os.path.join(out_dir,'RupFile.geojson')
+            pointSource_data = {"type": "FeatureCollection"}
+            feature_collection = []
+            newRup = {
+                    'type': "Feature",
+                    "properties":{
                     'Type': source_type,
-                    'Magnitude': magnitude,
-                    'Location': location,
-                    'AverageRake': average_rake,
-                    'AverageDip': average_dip
-                }})
-            except:
-                print('Please check point-source inputs.')
-
+                    'Magnitude': scenario_info['EqRupture']['Magnitude'],
+                    'Location': scenario_info['EqRupture']['Location'],
+                    'AverageRake': scenario_info['EqRupture']['AverageRake'],
+                    'AverageDip': scenario_info['EqRupture']['AverageDip'],
+                    'Source':0,
+                    'Rupture':0}
+            }
+            newRup['geometry'] = dict()
+            newRup['geometry'].update({'type': 'Point'})
+            newRup['geometry'].update({'coordinates': [scenario_info['EqRupture']['Location']['Longitude'], scenario_info['EqRupture']['Location']['Latitude']]})
+            feature_collection.append(newRup)
+            pointSource_data.update({'features':feature_collection})
+            if outfile is not None:
+                print('The collected point source ruptures are saved in {}'.format(outfile))
+                with open(outfile, 'w') as f:
+                    json.dump(pointSource_data, f, indent=2)
+        elif source_type=='oqSourceXML':
+            import FetchOpenQuake
+            siteFile = os.path.join(work_dir,'Input',openquakeSiteFile)
+            FetchOpenQuake.export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir)
         print('CreateScenario: all scenarios configured {0} sec'.format(time.time() - t_start))
     # return
-    return scenario_data
+    return 
 
 
 def sample_scenarios(rup_info=[], sample_num=1, sample_type='Random', source_name=None, min_M=0.0):

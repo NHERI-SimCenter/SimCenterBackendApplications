@@ -4,8 +4,11 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	#
 	# Only for debuging... I need mkl
 	#
+
 	project(nataf_gsa_project)
 	enable_language(Fortran)
+	set(gtest_force_shared_crt on)
+	enable_testing()
 
 	if(UNIX)
 		if(NOT APPLE)
@@ -32,25 +35,24 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	set(CMAKE_CXX_STANDARD 17)
 	set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-
 	# sy - optimization flags
 	#if(MSVC)
 	#	add_compile_options("/W4" "$<$<CONFIG:RELEASE>:/O2>")
 	#endif()
 
 	# sy - to check if filesystem is working
-
-	if(LINUX)
-		try_compile(HAS_FS "${CMAKE_BINARY_DIR}/temp" 
-		"${CMAKE_SOURCE_DIR}/tmp/has_filesystem.cc" 
-					CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-					LINK_LIBRARIES stdc++fs)
-		if(HAS_FS)
-			message(STATUS "Compiler has filesystem support")
-		else()
-			message(FATAL_ERROR "Compiler is missing filesystem capabilities")
-		endif(HAS_FS)
-	endif()
+ 
+	#if(LINUX)
+	#	try_compile(HAS_FS "${CMAKE_BINARY_DIR}/temp" 
+	#	"${CMAKE_SOURCE_DIR}/tmp/has_filesystem.cc" 
+	#				CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
+	#				LINK_LIBRARIES stdc++fs)
+	#	if(HAS_FS)
+	#		message(STATUS "Compiler has filesystem support")
+	#	else()
+	#		message(FATAL_ERROR "Compiler is missing filesystem capabilities")
+	#	endif(HAS_FS)
+	#endif()
 
 
 	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -59,7 +61,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 	add_subdirectory("${PROJECT_SOURCE_DIR}/ARPACK")
 	set (ARPACK_LIBRARIES ARPACK)
 
-	# for visual studio, do on commandline: conan install . -s build_type=Debug -if=C:/Users/SimCenter/Sangri/nataf_gsa_cpp_mpi/out/build/x64-Debug/
+	# for visual studio, do on commandline: conan install . -s build_type=Debug -if=C:/Users/SimCenter/Sangri/SimCenterBackendApplications/modules/performUQ/SimCenterUQ/nataf_gsa/out/build2/x64-Debug/
 
 	set(SOURCES main.cpp
 			ERADist.cpp
@@ -69,6 +71,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 			gammaDist.cpp
 			runGSA.cpp
 			runForward.cpp
+			runMFMC.cpp
 			RVDist.cpp
 			gumbelDist.cpp
 			truncExponentialDist.cpp
@@ -83,6 +86,30 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib_armadillo/armadillo-10.1.0/include)
 
+	#### FOR TESTING ########
+	#set(HEADERS ERADist.h
+	#		exponentialDist.h
+	#		normalDist.h
+	#		ERANataf.h
+	#		gammaDist.h
+	#		runGSA.h
+	#		runForward.h
+	#		runMFMC.h
+	#		RVDist.h
+	#		gumbelDist.h
+	#		truncExponentialDist.h
+	#		betaDist.h
+	#		jsonInput.h
+	#		uniformDist.h
+	#		chiSquaredDist.h
+	#		lognormalDist.h
+	#		weibullDist.h
+	#		discreteDist.h
+	#		writeErrors.h)
+	#add_subdirectory(googletest)
+	#add_subdirectory(test)
+	##########################
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
 	if(PARALLEL_LIB STREQUAL  "MPI_RUN")
 		include_directories(${MPI_INCLUDE_PATH})
 		add_executable(nataf_gsa ${SOURCES})
@@ -114,6 +141,28 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
 	install(TARGETS nataf_gsa DESTINATION ../..)
 	#add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
+
+	#### FOR TESTING ######################################
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+	add_library(nataf_gsa2 STATIC ${SOURCES} ${HEADERS})
+	#add_library(nataf_gsa2  ${SOURCES} ${HEADERS})
+	target_link_libraries(nataf_gsa2
+	CONAN_PKG::boost
+	CONAN_PKG::jsonformoderncpp	
+	CONAN_PKG::nlopt
+	CONAN_PKG::eigen
+	CONAN_PKG::mkl-static
+	OpenMP::OpenMP_CXX
+    ${ARPACK_LIBRARIES}
+			)
+	add_compile_definitions(OPENMP_RUN)
+	
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>") # because of the error 'MTd_StaticDebug' doesn't match value 'MDd_DynamicDebug'
+	#set(CMAKE_CXX_FLAGS_DEBUG "/DWIN32 /D_WINDOWS /EHsc /wd4355 /wd4251 /wd4250 /wd4996" CACHE STRING "Debug compiler flags" FORCE
+	add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=2>)
+
+	###################################################
+
 
 else()
 
@@ -172,6 +221,7 @@ else()
 			gammaDist.cpp
 			runGSA.cpp
 			runForward.cpp
+			runMFMC.cpp
 			RVDist.cpp
 			gumbelDist.cpp
 			truncExponentialDist.cpp
@@ -205,7 +255,7 @@ else()
   
 	elseif(OpenMP_FOUND)
 
-	  #find_package(LAPACK REQUIRED)
+	  find_package(LAPACK REQUIRED)
 	  message(STATUS "nataf_gsa: OpenMP")	
 	  add_executable(nataf_gsa ${SOURCES})
 	  target_link_libraries(nataf_gsa

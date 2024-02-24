@@ -117,15 +117,12 @@ def hazard_job(hazard_info):
         output_file = site_info.get('output_file',False)
         if output_file:
             output_file = os.path.join(input_dir, output_file)
-        min_ID = site_info['min_ID']
-        max_ID = site_info['max_ID']
-        # forward compatibility
-        if minID:
-            min_ID = minID
-            site_info['min_ID'] = minID
-        if maxID:
-            max_ID = maxID
-            site_info['max_ID'] = maxID
+        min_ID = site_info.get('min_ID',None)
+        max_ID = site_info.get('max_ID',None)
+        filterIDs = site_info.get('filterIDs',None)
+        # backward compability. Deleter after new frontend releases
+        if min_ID is not None and max_ID is not None:
+            filterIDs = str(min_ID)+"-"+str(max_ID)
         # Creating stations from the csv input file
         z1_tag = 0
         z25_tag = 0
@@ -141,7 +138,7 @@ def hazard_job(hazard_info):
         else:
             vs30_tag = 0
         # Creating stations from the csv input file
-        stations = create_stations(input_file, output_file, min_ID, max_ID, vs30_tag, z1_tag, z25_tag)
+        stations = create_stations(input_file, output_file, filterIDs, vs30_tag, z1_tag, z25_tag)
     if stations:
         print('HazardSimulation: stations created.')
     else:
@@ -433,7 +430,10 @@ if __name__ == '__main__':
         memory_total = psutil.virtual_memory().total/(1024.**3)
         memory_request = int(memory_total*0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
+        try:
+            jpype.startJVM("-Xmx{}G".format(memory_request), convertStrings=False)
+        except:
+            print(f"StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory")
     if oq_flag:
         # clear up old db.sqlite3 if any
         if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
@@ -461,12 +461,6 @@ if __name__ == '__main__':
         # import FetchOpenQuake
         from FetchOpenQuake import *
 
-    # untar site databases
-    site_database = ['global_vs30_4km.tar.gz','global_zTR_4km.tar.gz','thompson_vs30_4km.tar.gz']
-    print('HazardSimulation: Extracting site databases.')
-    cwd = os.path.dirname(os.path.realpath(__file__))
-    for cur_database in site_database:
-        subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
 
     # Initial process list
     import psutil

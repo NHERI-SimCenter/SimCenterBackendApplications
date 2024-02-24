@@ -1,0 +1,18 @@
+pset A1 "RV.A1"
+pset A2 "RV.A2"
+pset A3 "RV.A3"
+pset A4 "RV.A4"
+pset A5 "RV.A5"
+pset A6 "RV.A6"
+pset A7 "RV.A7"
+pset A8 "RV.A8"
+pset A9 "RV.A9"
+pset A10 "RV.A10"
+pset A11 "RV.A11"
+pset A12 "RV.A12"
+
+ set listQoI "Node_3_Disp_2 Node_2_Disp_2 "
+
+
+ source TrussModel.tcl
+ source TrussPost.tcl

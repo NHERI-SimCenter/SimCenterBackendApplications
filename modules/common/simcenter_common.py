@@ -85,7 +85,7 @@ unit_types = {
     'length'       : ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
     'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
     'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
-    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps'],
+    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps', 'kph', 'fps', 'kts'],
     'acceleration' : ['mps2', 'cmps2', 'inchps2', 'ftps2', 'g'],
     'mass'         : ['kg', 'ton', 'lb'],
     'force'        : ['N', 'kN', 'lbf', 'kip', 'kips'],
@@ -141,6 +141,9 @@ mph = mile / h
 
 inchps = inch / sec
 ftps = ft / sec
+kph = km / h
+fps = ft / sec
+kts = 1.15078 * mph
 
 # acceleration
 mps2 = m / sec2
@@ -205,3 +208,111 @@ unit_bases = {
     'g': {}
 }
 unit_decoupling_type_list = ['TH_file']
+
+def get_scale_factors(input_units, output_units):
+    """
+    Determine the scale factor to convert input event to internal event data
+
+    """
+
+    # special case: if the input unit is not specified then do not do any scaling
+    if input_units is None:
+
+        scale_factors = {'ALL': 1.0}
+
+    else:
+
+        # parse output units:
+
+        # if no length unit is specified, 'inch' is assumed
+        unit_length = output_units.get('length', 'inch')
+        if unit_length == 'in':
+            unit_length = 'inch'
+        f_length = globals().get(unit_length, None)
+        if f_length is None:
+            raise ValueError(
+                f"Specified length unit not recognized: {unit_length}")
+
+        # if no time unit is specified, 'sec' is assumed
+        unit_time = output_units.get('time', 'sec')
+        f_time = globals().get(unit_time, None)
+        if f_time is None:
+            raise ValueError(
+                f"Specified time unit not recognized: {unit_time}")
+
+        scale_factors = {}
+
+        for input_name, input_unit in input_units.items():
+
+            # exceptions
+            if input_name in ['factor', ]:
+                f_scale = 1.0
+
+            else:
+
+                # get the scale factor to standard units
+                if input_unit == 'in':
+                    input_unit = 'inch'
+
+                f_in = globals().get(input_unit, None)
+                if f_in is None:
+                    raise ValueError(
+                        f"Input unit not recognized: {input_unit}")
+
+                unit_type = None
+                for base_unit_type, unit_set in globals()['unit_types'].items():
+                    if input_unit in unit_set:
+                        unit_type = base_unit_type
+
+                if unit_type is None:
+                    raise ValueError(f"Failed to identify unit type: {input_unit}")
+
+                # the output unit depends on the unit type
+                if unit_type == 'acceleration':
+                    f_out = f_time ** 2.0 / f_length
+
+                elif unit_type == 'speed':
+                    f_out = f_time / f_length
+
+                elif unit_type == 'length':
+                    f_out = 1.0 / f_length
+
+                else:
+                    raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
+
+                # the scale factor is the product of input and output scaling
+                f_scale = f_in * f_out
+
+            scale_factors.update({input_name: f_scale})
+
+    return scale_factors
+
+
+def get_unit_bases(input_units):
+    """
+    Decouple input units
+
+    """
+
+    # special case: if the input unit is not specified then do nothing
+    if input_units is None:
+
+        input_unit_bases = {}
+
+    else:
+        input_unit_bases = {}
+        unit_bases_dict = globals()['unit_bases']
+        for unit_type, input_unit in input_units.items():
+            if unit_type in globals()['unit_decoupling_type_list']:
+                cur_unit_bases = {"length": "m", 
+                                  "force": "N",
+                                  "time": "sec"}
+                for unit_name, unit_bases in unit_bases_dict.items():
+                    if unit_name == input_unit:
+                        for x, y in unit_bases.items():
+                            cur_unit_bases.update({x: y})
+                        break
+                input_unit_bases = cur_unit_bases
+                break
+
+    return input_unit_bases
