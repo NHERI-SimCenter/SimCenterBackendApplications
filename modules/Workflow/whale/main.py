@@ -2620,8 +2620,8 @@ class Workflow(object):
             # dealt with
             if len(assetTypeHierarchy) == 1:
                 deterministic = {assetTypeHierarchy[0]: deterministic}
-                for rlz_i, rlz_data in realizations.items():
-                    rlz_data = {assetTypeHierarchy[0]:rlz_data}
+                for rlz_i in realizations.keys():
+                    realizations[rlz_i] = {assetTypeHierarchy[0]:realizations[rlz_i]}
 
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
@@ -2809,6 +2809,7 @@ class Workflow(object):
                         "Author": input_data["Author"],
                         "WorkflowType": input_data["WorkflowType"],
                         "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+            sample_size = []
             ## create the geojson for R2D visualization
             geojson_result = {
                 "type": "FeatureCollection",
@@ -2822,6 +2823,8 @@ class Workflow(object):
                 "features":[]
             }
             for asset_type, assetIt in asset_files.items():
+                sample_size.append(input_data['Applications']['DL'][asset_type]\
+                                   ["ApplicationData"]['Realizations'])
                 with open(assetIt, 'r') as f:
                     asst_data = json.load(f)
                 for asst in asst_data:
@@ -2844,7 +2847,6 @@ class Workflow(object):
                             "Couldn't find AIM file for building {asset_id}")
                     with open(AIM_file, 'r') as f:
                         asst_aim = json.load(f)
-                    sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
                     ft = {"type":"Feature"}
                     asst_GI = asst_aim['GeneralInformation'].copy()
                     asst_GI.update({"assetType":asset_type})
@@ -2918,7 +2920,7 @@ class Workflow(object):
                 
                 with open(run_path/"R2D_results.geojson", 'w') as f:
                     json.dump(geojson_result, f, indent=2)
-
+            sample_size = min(sample_size)
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i:{} for rlz_i in range(sample_size)}
