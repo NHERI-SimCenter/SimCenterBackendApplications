@@ -2620,8 +2620,8 @@ class Workflow(object):
             # dealt with
             if len(assetTypeHierarchy) == 1:
                 deterministic = {assetTypeHierarchy[0]: deterministic}
-                for rlz_i, rlz_data in realizations.items():
-                    rlz_data = {assetTypeHierarchy[0]:rlz_data}
+                for rlz_i in realizations.keys():
+                    realizations[rlz_i] = {assetTypeHierarchy[0]:realizations[rlz_i]}
 
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
