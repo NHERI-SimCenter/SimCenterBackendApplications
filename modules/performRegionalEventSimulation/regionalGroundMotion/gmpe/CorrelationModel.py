@@ -387,6 +387,8 @@ def markhvida_ceferino_baker_correlation_2017(stations, im_name_list, num_simu, 
                 periods.append(float(cur_im[3:-1]))
             elif cur_im.startswith('PGA'):
                 periods.append(0.0)
+            else:
+                raise ValueError('CorrelationModel Markhvida et al. (2017): error - cannot handle {}'.format(cur_im))
         except ValueError:
             print('CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(cur_im))
     # Loading factors
@@ -442,6 +444,7 @@ def markhvida_ceferino_baker_correlation_2017(stations, im_name_list, num_simu, 
         # for PGA only (using 0.01 sec as the approxiamate)
         simu_coef = model_coef.iloc[0, :]
     else:
+        simu_periods = [0.01 if x == 0 else x for x in simu_periods]
         simu_coef = interp_fun(simu_periods)
     # Simulating residuals
     num_periods = len(simu_periods)
@@ -533,11 +536,11 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
     num_stations = len(stations)
     stn_dist = np.zeros((num_stations, num_stations))
     for i in range(num_stations):
-        loc_i = np.array([stations[i]['Latitude'],
-                          stations[i]['Longitude']])
+        loc_i = np.array([stations[i]['lat'],
+                          stations[i]['lon']])
         for j in range(num_stations):
-            loc_j = np.array([stations[j]['Latitude'],
-                              stations[j]['Longitude']])
+            loc_j = np.array([stations[j]['lat'],
+                              stations[j]['lon']])
             stn_dist[i, j] = get_distance_from_lat_lon(loc_i, loc_j)
     # Scaling variance if less than 23 principal components are used
     c1 = c1 / DN_var.iloc[0, num_pc - 1]
@@ -570,6 +573,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
         # for PGA only (using 0.01 sec as the approximate)
         simu_coef = model_coef.iloc[0, :]
     else:
+        simu_periods = [0.01 if x == 0 else x for x in simu_periods]
         simu_coef = interp_fun(simu_periods)
     # Simulating residuals
     num_periods = len(simu_periods)

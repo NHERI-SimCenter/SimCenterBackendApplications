@@ -94,9 +94,16 @@ def hazard_job(hazard_info):
     if scenario_info['Type'] == 'Earthquake':
         # Computing uncorrelated Sa
         event_info = hazard_info['Event']
+        # When vector IM is used. The PGA/SA needs to be computed before PGV
+        im_info = event_info['IntensityMeasure']
+        if im_info['Type']=='Vector' and 'PGV' in im_info.keys():
+            PGV_info = im_info.pop('PGV')
+            im_info.update({'PGV': PGV_info})
+            event_info['IntensityMeasure'] = im_info
+
         if opensha_flag or hazard_info['Scenario']['EqRupture']['Type'] == 'oqSourceXML':
             im_raw, im_info = compute_im(scenarios, stations, scenario_info,
-                                event_info['GMPE'], event_info['IntensityMeasure'],
+                                event_info.get('GMPE',None), event_info['IntensityMeasure'],
                                 scenario_info['Generator'], output_dir, mth_flag=False)
             # update the im_info
             event_info['IntensityMeasure'] = im_info
