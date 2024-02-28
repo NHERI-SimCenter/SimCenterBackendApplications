@@ -620,13 +620,13 @@ class boore_etal_2014():
         return lnFlin
     
     def calcF2(self, vs30):
-        f2 = self.f4 * (np.exp(self.f5 * (np.min(vs30, 760.0) - 360.0)) - 
+        f2 = self.f4 * (np.exp(self.f5 * (min(vs30, 760.0) - 360.0)) - 
 				np.exp(self.f5 * (760.0 - 360.0)))
         return f2
     
-    def calcFdz1(self, vs30, z1p0, imt):
+    def calcFdz1(self, vs30, z1p0):
         DZ1 = self.calcDeltaZ1(z1p0, vs30)
-        if imt!='PGA' and imt!='PGV' and imt >= 0.65:
+        if self.imt!='PGA' and self.imt!='PGV' and self.imt >= 0.65:
             if DZ1 <= (self.f7/self.f6):
                 Fdz1 = self.f6*DZ1
             else:
@@ -634,6 +634,13 @@ class boore_etal_2014():
         else:
             Fdz1 = 0.0
         return Fdz1
+    def calcDeltaZ1(self, z1p0, vs30):
+        if np.isnan(z1p0):
+            return 0.0
+        return z1p0 - self.calcZ1ref(vs30)
+    def calcZ1ref(self, vs30):
+        vsPow4 = np.power(vs30, 4)
+        return np.exp(-7.15/4.0*np.log((vsPow4+self.A)/self.B))/1000.0
     
     def calcMean(self, Mw, rJB, vs30, z1p0, style, pgaRock):
         Fe = self.calcSourceTerm(Mw, style)
@@ -674,9 +681,11 @@ class boore_etal_2014():
             tau = self.tau1 + (self.tau2 - self.tau1) * (Mw - 4.5)
         return tau
     
-    def calcStdDev(self, Mw, rJB, vs30):
-        tau = self.calcTau(Mw)
-        phiMRV = self.calcPhi(Mw, rJB, vs30)
+    # def calcStdDev(self, Mw, rJB, vs30):
+    #     tau = self.calcTau(Mw)
+    #     phiMRV = self.calcPhi(Mw, rJB, vs30)
+    #     return np.sqrt(phiMRV * phiMRV + tau * tau)
+    def calcStdDev(self, phiMRV, tau):
         return np.sqrt(phiMRV * phiMRV + tau * tau)
 
     def calc(self, Mw, rJB, vs30, z1p0, style):
@@ -928,7 +937,7 @@ class campbell_bozorgnia_2014():
             pgaRock = 0.0
         mean = self.calcMean(Mw, rJB, rRup, rX, dip, width, zTop,
 			zHyp, vs30, z2p5, style, pgaRock)
-        if (self.imt != 'PGA' and self.imt != 'PGB' and self.imt <= 0.25):
+        if (self.imt != 'PGA' and self.imt != 'PGV' and self.imt <= 0.25):
             imt_tmp = self.imt
             self.setIMT('PGA')
             pgaMean = self.calcMean(Mw, rJB, rRup, rX, dip,width, zTop, zHyp, vs30, z2p5, style, pgaRock)
