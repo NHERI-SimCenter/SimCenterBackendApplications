@@ -423,6 +423,9 @@ def get_im_dict(im_info):
 	if im_info.get("Type", None) == "Vector":
 		im_dict = im_info.copy()
 		im_dict.pop('Type')
+		if ("PGV" in im_dict.keys()):
+			PGV_dict = im_dict.pop('PGV')
+			im_dict.update({'PGV':PGV_dict})
 	else:
 		# back compatibility
 		im_dict = {im_info.get("Type"): im_info.copy()}
@@ -481,7 +484,8 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 		gmpe_list = [gmpe_info['Type']]
 		gmpe_weights = None
 		im_type = im_info.get('Type')
-		gmpe_dict = {im_type: gmpe_list}
+		# for im_type in im_types:
+		gmpe_dict.update({im_type: gmpe_list})
 		gmpe_weights_dict = {im_type: gmpe_weights}
 	# global parameters if any
 	gmpe_dict.update({'Parameters': gmpe_info.get('Parameters',dict())})
@@ -514,12 +518,23 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 		# check if the period in the hazard curve is in the period list in the intensity measure
 		if generator_info['Parameters'].get('IntensityMeasure')=='SA':
 			ho_period = generator_info['Parameters'].get('Period')
-			if ho_period in im_info.get('Periods'):
-				pass
+			if im_info['Type'] == 'Vector':
+				if im_info.get('SA') is None:
+					sys.exit('SA is used in hazard downsampling but not defined in the intensity measure tab')
+				else:
+					if ho_period in im_info['SA'].get('Periods'):
+						pass
+					else:
+						tmp_periods = im_info['SA']['Periods']+[ho_period]
+						tmp_periods.sort()
+						im_info['SA']['Periods'] = tmp_periods
 			else:
-				tmp_periods = im_info['Periods']+[ho_period]
-				tmp_periods.sort()
-				im_info['Periods'] = tmp_periods
+				if ho_period in im_info['SA'].get('Periods'):
+						pass
+				else:
+					tmp_periods = im_info['SA']['Periods']+[ho_period]
+					tmp_periods.sort()
+					im_info['SA']['Periods'] = tmp_periods
 	# Configuring site properties
 	siteSpec = []
 	sites = []
@@ -633,11 +648,12 @@ def compute_im_para(ids, scenario_infos, im_dict, gmpe_dict, gmpe_weights_dict, 
 
 class GM_Simulator:
 
-	def __init__(self, site_info = [], im_raw=dict(), num_simu=0, correlation_info=None):
+	def __init__(self, site_info = [], im_raw=dict(), num_simu=0,\
+			  correlation_info=None,im_info = None):
 
 		self.set_sites(site_info)
 		self.set_num_simu(num_simu)
-		self.parse_correlation_info(correlation_info)
+		self.parse_correlation_info(correlation_info, im_info)
 		self.set_im_raw(im_raw)
 		self.cross_check_im_correlation()
 
@@ -722,7 +738,7 @@ class GM_Simulator:
 			intra_sigma_im.append(tmp_im_data)
 		return intra_sigma_im
 
-	def parse_correlation_info(self, correlation_info):
+	def parse_correlation_info(self, correlation_info, im_info):
 
 		# default is no correlation model and uncorrelated motions if generated
 		self.inter_cm = None
@@ -731,6 +747,26 @@ class GM_Simulator:
 		if correlation_info is None:
 			print('GM_Simulator: warning - correlation information not found - results will be uncorrelated motions.')
 			return
+		if correlation_info.get('Type', None) == 'Vector':
+			inter_cm = dict()
+			im_info.pop('Type')
+			for im, item in im_info.items():
+			# for im in self.im_type_list:	
+				inter_cm.update({im:item['InterEventCorr']})
+			inter_cm_unique = list(set([item for _, item in inter_cm.items()]))
+			if len(inter_cm_unique) == 1:
+				inter_cm = inter_cm_unique[0]
+			self.inter_cm = inter_cm
+			intra_cm = dict()
+			for im, item in im_info.items():
+			# for im in self.im_type_list:
+				intra_cm.update({im:item['IntraEventCorr']})
+			intra_cm_unique = list(set([item for _, item in intra_cm.items()]))
+			if len(intra_cm_unique) == 1:
+				intra_cm = intra_cm_unique[0]
+			self.intra_cm = intra_cm
+			return
+		
 		# inter-event model
 		if correlation_info.get('InterEvent', None):
 			self.inter_cm = correlation_info['InterEvent']
@@ -753,64 +789,158 @@ class GM_Simulator:
 		# so hear we check if the correlation models are applicable for the required intensity measures
 		self.im_cm_inter_flag = True
 		self.im_cm_intra_flag = True
-		avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm)
-		avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm)
-		if avail_im_inter_cm is not None:
+		if type(self.inter_cm)==dict:
 			for cur_im in self.im_type_list:
+				avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm[cur_im])
 				if cur_im not in avail_im_inter_cm:
 					print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.inter_cm))
 					self.im_cm_inter_flag = False
 					continue
-		if avail_im_intra_cm is not None:
+		else:
+			avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm)
+			if avail_im_inter_cm is not None:
+				for cur_im in self.im_type_list:
+					if cur_im not in avail_im_inter_cm:
+						print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.inter_cm))
+						self.im_cm_inter_flag = False
+						continue
+		if type(self.intra_cm) ==dict:			
 			for cur_im in self.im_type_list:
+				avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm[cur_im])
 				if cur_im not in avail_im_intra_cm:
 					print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.intra_cm))
 					self.im_cm_intra_flag = False
 					continue
-
-	def compute_inter_event_residual(self):
-
-		if self.inter_cm == 'Baker & Jayaram (2008)':
-			rho = np.array([CorrelationModel.baker_jayaram_correlation_2008(im1, im2)
-							for im1 in self.im_name_list for im2 in self.im_name_list]).reshape([self.num_im, self.num_im])
-		elif self.inter_cm == 'Baker & Bradley (2017)':
-			rho = np.array([CorrelationModel.baker_bradley_correlation_2017(im1, im2)
-							for im1 in self.im_name_list for im2 in self.im_name_list]).reshape([self.num_im, self.num_im])
 		else:
-			# TODO: extending this to more inter-event correlation models
-			print('GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)')
+			avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm)
+			if avail_im_intra_cm is not None:
+				for cur_im in self.im_type_list:
+					if cur_im not in avail_im_intra_cm:
+						print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.intra_cm))
+						self.im_cm_intra_flag = False
+						continue
 
+	def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):
+		if cm == 'Baker & Jayaram (2008)':
+			rho = np.array([CorrelationModel.baker_jayaram_correlation_2008(im1, im2)
+								for im1 in im_name_list_1 for im2 in im_name_list_2]).\
+									reshape([len(im_name_list_1),\
+				  							len(im_name_list_2)])
+		elif cm == 'Baker & Bradley (2017)':
+			rho = np.array([CorrelationModel.baker_bradley_correlation_2017(im1, im2)
+								for im1 in im_name_list_1 for im2 in im_name_list_2]).\
+									reshape([len(im_name_list_1),\
+				  							len(im_name_list_2)])
+		else:
+				# TODO: extending this to more inter-event correlation models
+			sys.exit('GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)')
+		return rho
+
+	def replace_submatrix(self, mat, ind1, ind2, mat_replace):
+		for i, index in enumerate(ind1):
+			mat[index, ind2] = mat_replace[i, :]
+		return mat
+	def compute_inter_event_residual(self):
+		if type(self.inter_cm) == dict:
+			rho = np.zeros([self.num_im, self.num_im])
+			im_types = list(self.inter_cm.keys())
+			for i in range(len(im_types)):
+				for j in range(0,i+1):
+					im_type_i = im_types[i]
+					im_type_j = im_types[j]
+					im_name_list_i = [im_name for im_name in self.im_name_list\
+					   if im_name.startswith(im_type_i)]
+					im_indices_i = [index for index, element in enumerate(self.im_name_list)\
+					   if element.startswith(im_type_i)]
+					im_name_list_j = [im_name for im_name in self.im_name_list\
+					   if im_name.startswith(im_type_j)]
+					im_indices_j = [index for index, element in enumerate(self.im_name_list)\
+					   if element.startswith(im_type_j)]
+					# In R2D, use SA(0.01) to approximate PGA
+					im_name_list_i = ['SA(0.01)' if x == 'PGA' else x\
+					    for x in im_name_list_i]
+					im_name_list_j = ['SA(0.01)' if x == 'PGA' else x\
+					    for x in im_name_list_j]
+					rho_ij = self.compute_inter_event_residual_ij(\
+						self.inter_cm[im_types[i]],im_name_list_i, im_name_list_j)
+					rho = self.replace_submatrix(rho, im_indices_i, im_indices_j,\
+									rho_ij)
+					if i!=j:
+						rho = self.replace_submatrix(rho, im_indices_j, im_indices_i,\
+									rho_ij.T)
+		else:
+			rho = self.compute_inter_event_residual_ij(\
+				self.inter_cm, self.im_name_list, self.im_name_list)
 		# Simulating residuals
 		residuals = np.random.multivariate_normal(np.zeros(self.num_im), rho, self.num_simu).T
 		# return
 		return residuals
-
-	def compute_intra_event_residual(self):
-
-		if self.intra_cm == 'Jayaram & Baker (2009)':
-			rho = np.zeros((self.num_sites, self.num_sites, self.num_im))
+	def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):
+		if cm == 'Jayaram & Baker (2009)':
+			rho = np.zeros((self.num_sites, self.num_sites, len(im_name_list)))
 			for i in range(self.num_sites):
 				for j in range(self.num_sites):
 					cur_stn_dist = self.stn_dist[i, j]
-					for k in range(self.num_im):
-						rho[i, j, k] = CorrelationModel.jayaram_baker_correlation_2009(self.im_name_list[k], cur_stn_dist, 
+					for k in range(len(im_name_list)):
+						rho[i, j, k] = CorrelationModel.jayaram_baker_correlation_2009(im_name_list[k], cur_stn_dist, 
 						                                                               flag_clustering = False)
 			# Simulating residuals
-			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
+			residuals = np.zeros((self.num_sites, len(im_name_list), num_simu))
 			for k in range(self.num_im):
-				residuals[:, k, :] = np.random.multivariate_normal(np.zeros(self.num_sites), rho[:, :, k], self.num_simu).T
-
-		elif self.intra_cm == 'Loth & Baker (2013)':
-			residuals = CorrelationModel.loth_baker_correlation_2013(self.sites, self.im_name_list, self.num_simu)
-
-		elif self.intra_cm == 'Markhvida et al. (2017)':
+				residuals[:, k, :] = np.random.multivariate_normal(np.zeros(self.num_sites), rho[:, :, k], num_simu).T
+		elif cm == 'Loth & Baker (2013)':
+			residuals = CorrelationModel.loth_baker_correlation_2013(self.sites,\
+															im_name_list, num_simu)
+		elif cm == 'Markhvida et al. (2017)':
 			num_pc = 19
-			residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(self.sites, self.im_name_list, self.num_simu, num_pc)
-
-		elif self.intra_cm == 'Du & Ning (2021)':
+			residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(\
+				self.sites, im_name_list, num_simu, num_pc)
+		elif cm == 'Du & Ning (2021)':
 			num_pc = 23
-			residuals = CorrelationModel.du_ning_correlation_2021(self.sites, self.im_name_list, self.num_simu, num_pc)
+			residuals = CorrelationModel.du_ning_correlation_2021(self.sites,\
+												im_name_list, num_simu, num_pc)
+		else:
+				# TODO: extending this to more inter-event correlation models
+			sys.exit('GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)')
+		return residuals
 
+	def compute_intra_event_residual(self):
+		if type(self.intra_cm) == dict:
+			cm_groups = dict()
+			if (self.intra_cm['PGA']==self.intra_cm['SA']) and \
+				(self.intra_cm['PGA']!=self.intra_cm['PGV']):
+				cm_groups.update({self.intra_cm['PGA']:['PGA','SA'],
+					  self.intra_cm['PGV']:['PGV']})
+			elif (self.intra_cm['PGA']==self.intra_cm['SA']) and \
+				(self.intra_cm['PGA']==self.intra_cm['PGV']):
+				cm_groups.update({self.intra_cm['PGA']:['PGA','SA','PGV']})
+			else:
+				cm_groups.update({self.intra_cm['PGA']:['PGA'],
+					  self.intra_cm['SA']:['SA'],
+					  self.intra_cm['PGV']:['PGV']})
+			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
+			for cm, im_types in cm_groups.items():
+				# im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]
+				im_name_list = [im_name for im_name in self.im_name_list\
+				   if im_name.split('(')[0] in im_types]
+				im_indices = [index for index, element in enumerate(self.im_name_list)\
+				   if element.split('(')[0] in im_types]
+				residuals_i = self.compute_intra_event_residual_i(cm,\
+													im_name_list, self.num_simu)
+				for i, ind in enumerate(im_indices):
+					residuals[:,ind,:] = residuals_i[:,i,:]
+			# for im_type, cm in self.intra_cm.items():
+			# 	im_name_list = [im_name for im_name in self.im_name_list\
+			# 	   if im_name.startswith(im_type)]
+			# 	im_indices = [index for index, element in enumerate(self.im_name_list)\
+			# 	   if element.startswith(im_type)]
+			# 	residuals_i = self.compute_intra_event_residual_i(cm,\
+			# 										im_name_list, self.num_simu)
+			# 	for i, ind in enumerate(im_indices):
+			# 		residuals[:,ind,:] = residuals_i[:,i,:]
+		else:
+			residuals = self.compute_intra_event_residual_i(self.intra_cm,
+											self.im_name_list, self.num_simu)
 		# return
 		return residuals
 
@@ -979,7 +1109,8 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info):
 
 	# create a ground motion simulator
-	gm_simulator = GM_Simulator(site_info=stations, num_simu=num_simu, correlation_info=correlation_info)
+	gm_simulator = GM_Simulator(site_info=stations, num_simu=num_simu,\
+							 correlation_info=correlation_info, im_info=im_info)
 	ln_im_mr = []
 	mag_maf = []
 	t_start = time.time()
