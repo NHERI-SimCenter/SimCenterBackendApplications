@@ -533,6 +533,220 @@ def auto_populate(AIM):
             }
         else:
             print("subtype not supported in HWY")
+
+    elif assetType == "WaterDistributionNetwork":
+        
+        pipe_material_map ={"CI": "B", "AC": "B", "RCC": "B",
+                            "DI": "D", "PVC": "D",
+                            "DS": "B",
+                            "BS": "D",}
+        
+        #GI = AIM.get("GeneralInformation", None)
+        #if GI==None:
+            
+        
+        # initialize the auto-populated GI
+        wdn_element_type = GI_ap.get("type", "MISSING")
+        asset_name = GI_ap.get("AIM_id", None)
+        
+        
+        if wdn_element_type == "Pipe":
+            pipe_construction_year = GI_ap.get("year", None)
+            pipe_diameter = GI_ap.get("diameter", None)
+            #diamaeter value is a fundamental part of hydraulic performance assessment
+            if pipe_diameter == None:
+                raise ValueError(f"pipe diamater in asset type {assetType}, \
+                                 asset id \"{asset_name}\" has no diameter \
+                                     value.")
+            
+            pipe_length = GI_ap.get("length", None)
+            #length value is a fundamental part of hydraulic performance assessment
+            if pipe_diameter == None:
+                raise ValueError(f"pipe length in asset type {assetType}, \
+                                 asset id \"{asset_name}\" has no diameter \
+                                     value.")
+            
+            pipe_material = GI_ap.get("material", "missing")
+            
+            #pipe material can be not available or named "missing" in both case, pipe flexibility will be set to "missing"
+            
+            """
+            The assumed logic is that if the material is missing, if the pipe
+            is smaller than or equal to 20 inches, the material is Cast Iron
+            (CI) otherwise the pipe material is steel.
+                If the material is steel (ST), either based on user specified
+            input or the assumption due to the lack of the user-input, the year
+            that the pipe is constructed define the flexibility status per HAZUS
+            instructions. If the pipe is built in 1935 or after, it is, the pipe
+            is Ductile Steel (DS), and otherwise it is Brittle Steel (BS).
+                If the pipe is missing construction year and is built by steel,
+            we assume consevatively that the pipe is brittle (i.e., BS)
+            """
+            if pipe_material == "missing":
+                if pipe_diameter > 20 * 0.0254: #20 inches in meter
+                    print(f"Asset {asset_name} is missing material. Material is\
+                          assumed to be Cast Iron")
+                    pipe_material = "CI"
+                else:
+                    print(f"Asset {asset_name} is missing material. Material is\
+                          assumed to be Steel (ST)")
+                    pipe_material = "ST"
+                          
+            if pipe_material == "ST":
+                if pipe_construction_year >= 1935:
+                    print(f"Asset {asset_name} has material of \"ST\" is assumed to be\
+                          Ductile Steel")
+                    pipe_material = "DS"
+                else:
+                    print(f"Asset {asset_name} has material of \"ST\" is assumed to be\
+                          Brittle Steel")
+                    pipe_material = "BS"
+            
+            pipe_flexibility = pipe_material_map.get(pipe_material, "missing")
+            
+            GI_ap["material flexibility"] = pipe_flexibility
+            GI_ap["material"] = pipe_material
+            
+            CMP = pd.DataFrame(
+                {f'PWP.{pipe_flexibility}.GS': ['ea', 1, 1, pipe_length, 'N/A'],
+                 f'PWP.{pipe_flexibility}.GF': ['ea', 1, 1, pipe_length, 'N/A']},
+                index = ['Units','Location','Direction','Theta_0','Family']
+            ).T
+            
+            DL_ap = {
+                "Asset": {
+                    "ComponentAssignmentFile": "CMP_QNT.csv",
+                    "ComponentDatabase": "Hazus Earthquake - Water",
+                    "Material Flexibility": pipe_flexibility,
+                    "PlanArea": "1" # Sina: does not make sense for water. Kept it here since itw as also kept here for Transportation
+                },
+                "Damage": {
+                    "DamageProcess": "Hazus Earthquake"
+                },
+                "Demands": {        
+                },
+                "Losses": {
+                    # We don't have this
+                    #"BldgRepair": {
+                        #"ConsequenceDatabase": "Hazus Earthquake - Transportation",
+                        #"MapApproach": "Automatic"
+                    #}
+                }
+            }
+        
+        elif wdn_element_type == "Tank":
+            
+            tank_cmp_lines = {
+                ("OG", "C", 1):{'PST.G.C.A.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "C", 0):{'PST.G.C.U.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "S", 1):{'PST.G.S.A.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "S", 0):{'PST.G.S.U.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Wood is not defined for On Ground tanks
+                ("OG", "W", 0):{'PST.G.W.GS':   [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Steel is not defined for Above Ground tanks
+                ("AG", "S", 0):{'PST.A.S.GS':   [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Concrete is not defined for Buried tanks.
+                ("B", "C", 0):{'PST.B.C.GF':    [ 'ea', 1, 1, 1, 'N/A' ]}
+                }
+                
+            """
+            The default values are assumed: material = Concrete (C),
+            location= On Ground (OG), and Anchored = 1 
+            """
+            tank_material = GI_ap.get("material", "C")
+            tank_location = GI_ap.get("location", "OG")
+            tank_anchored = GI_ap.get("anchored", int(1) )
+            
+            tank_material_allowable = {"C", "S"}
+            if tank_material not in tank_material_allowable:
+                raise ValueError(f"Tank's material = \"{tank_material}\" is \
+                                 not allowable in tank {asset_name}. The \
+                                 material must be either C for concrete or S \
+                                 for steel.")
+            
+            tank_location_allowable = {"AG", "OG", "B"}
+            if tank_location not in tank_location_allowable:
+                raise ValueError(f"Tank's location = \"{tank_location}\" is \
+                                 not allowable in tank {asset_name}. The \
+                                 location must be either \"AG\" for Above \
+                                 ground, \"OG\" for On Ground or \"BG\" for \
+                                 Bellow Ground (burried) Tanks.")
+            
+            tank_anchored_allowable = {int(0), int(1)}
+            if tank_anchored not in tank_anchored_allowable:
+                raise ValueError(f"Tank's anchored status = \"{tank_location}\
+                                 \" is not allowable in tank {asset_name}. \
+                                     The anchored status must be either integer\
+                                     value 0 for unachored, or 1 for anchored")
+            
+            if tank_location == "AG" and tank_material == "C":
+                print(f"The tank {asset_name} is Above Ground (i.e., AG), but \
+                      the material type is Concrete (\"C\"). Tank type \"C\" is not \
+                    defiend for AG tanks. The tank is assumed to be Steel (\"S\")")
+                tank_material = "S"
+            
+            if tank_location == "AG" and tank_material == "W":
+                print(f"The tank {asset_name} is Above Ground (i.e., AG), but \
+                      the material type is Wood (\"W\"). Tank type \"W\" is not \
+                    defiend for AG tanks. The tank is assumed to be Steel (\"S\")")
+                tank_material = "S"
+
+            
+            if tank_location == "B" and tank_material == "S":
+                print(f"The tank {asset_name} is burried (i.e., B), but the\
+                      material type is Steel (\"S\"). Tank type \"S\" is not defiend for\
+                      B tanks. The tank is assumed to be Concrete (\"C\")")
+                tank_material = "C"
+            
+            if tank_location == "B" and tank_material == "W":
+                print(f"The tank {asset_name} is burried (i.e., B), but the\
+                      material type is Wood (\"W\"). Tank type \"W\" is not defiend for\
+                      B tanks. The tank is assumed to be Concrete (\"C\")")
+                tank_material = "C"
+                
+            if tank_anchored == 1:
+                 #Since anchore status does nto matter, there is no need to
+                 #print a warning
+                 tank_anchored = 0
+                
+            cur_tank_cmp_line = tank_cmp_lines[(tank_location, tank_material, tank_anchored)]
+            
+            CMP = pd.DataFrame(
+                cur_tank_cmp_line,
+                index = ['Units','Location','Direction','Theta_0','Family']
+            ).T
+            
+            DL_ap = {
+                "Asset": {
+                    "ComponentAssignmentFile": "CMP_QNT.csv",
+                    "ComponentDatabase": "Hazus Earthquake - Water",
+                    "Material": tank_material,
+                    "Location": tank_location,
+                    "Anchored": tank_anchored,
+                    "PlanArea": "1" # Sina: does not make sense for water. Kept it here since itw as also kept here for Transportation
+                },
+                "Damage": {
+                    "DamageProcess": "Hazus Earthquake"
+                },
+                "Demands": {        
+                },
+                "Losses": {
+                    # We don't have this
+                    #"BldgRepair": {
+                        #"ConsequenceDatabase": "Hazus Earthquake - Transportation",
+                        #"MapApproach": "Automatic"
+                    #}
+                }
+            }
+            
+                 
+            
+                 
+            
+            
+        else:
+            print(f"Water Distribution network element type {wdn_element_type} is not supported in Hazus Earthquake IM DL method")
+
     else:
         print(f"AssetType: {assetType} is not supported in Hazus Earthquake IM DL method")
 
