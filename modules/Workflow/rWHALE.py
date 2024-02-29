@@ -301,7 +301,7 @@ if __name__ == '__main__':
         default=os.path.join(os.getcwd(), 'input_data'),
         help="Relative paths in the config file are referenced to this directory.")
     workflowArgParser.add_argument("-w", "--workDir",
-        default=os.path.join(os.getcwd(), 'results'),
+        default=os.path.join(os.getcwd(), 'Results'),
         help="Absolute path to the working directory.")
     workflowArgParser.add_argument("-a", "--appDir",
         default=None,
