@@ -40,7 +40,7 @@
 #
 # This script reads OpenFOAM output and plot the characteristics of the 
 # approaching wind. For now, it read and plots only velocity field data and 
-# pressure on predified set of probes.  
+# pressure on predicted set of probes.  
 #
 
 import sys
@@ -60,6 +60,8 @@ from scipy import stats
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import argparse
+
 
 
 def readPressureProbes(fileName):
@@ -673,6 +675,52 @@ class VelocityData:
         return f(z)
 
 
+
+def copy_vtk_planes_and_order(input_path, output_path, field):
+    """
+    This code reads VTK sample plane data from OpenFOAM case directory and 
+    copies them into other directory with all vtks files ordered in their 
+    respective time sequence in one directory. 
+    
+    input_path: path of the vtk files in the postProcessing directory
+    ouput_path: path to write the vtk files in order
+
+    """
+
+    if not os.path.isdir(input_path):
+       print("Cannot find the path for: {}".format(input_path))  
+       return
+   
+    if not os.path.isdir(output_path):
+       print("Cannot find the path for: {}".format(output_path))  
+       return
+   
+    
+    print("Reading from path: {}".format(input_path))
+    time_names = os.listdir(input_path)
+    times = np.float_(time_names)
+    sorted_index = np.argsort(times).tolist()
+    
+    n_times  = len(times)
+    
+    print("\tNumber of time direcories: {} ".format(n_times))
+    print("\tTime step: {:.4f} s".format(np.mean(np.diff(times))))
+    print("\tTotal duration: {:.4f} s".format(times[sorted_index[-1]] - times[sorted_index[0]]))
+
+        
+    for i in range(n_times):
+        index = sorted_index[i]
+        pathi = os.path.join(input_path, time_names[index])
+        os.listdir(pathi)
+               
+        new_name = "{}_T{:04d}.vtk".format(field, i + 1)
+        for f in os.listdir(pathi):
+            if f.endswith(".vtk"):
+                new_path = os.path.join(output_path, new_name)
+                old_path = os.path.join(pathi, f)
+                shutil.copyfile(old_path, new_path)
+                print("Copied path: {}".format(old_path))
+
 def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
     
     #Read JSON data    
@@ -929,18 +977,24 @@ def plot_pressure_profile(case_path, output_path, prof_name):
     fig.show()
     fig.write_html(os.path.join(output_path, "pressure_" + prof_name + ".html"), include_mathjax="cdn")
     
-
-
 if __name__ == '__main__':    
+    """"
+    Entry point to read the simulation results from OpenFOAM case and post-process it.
+    """
+
+    #CLI parser
+    parser = argparse.ArgumentParser(description="Get EVENT file from OpenFOAM output")
+    parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
+
+    arguments, unknowns = parser.parse_known_args()
+
+ 
+    case_path = arguments.case    
     
-    input_args = sys.argv
+    print("Case full path: ", case_path)
 
-
-    case_path = sys.argv[1]
     # prof_name = sys.argv[2]
 
-    # case_path = "C:\\Users\\fanta\\Documents\\WE-UQ\\LocalWorkDir\\EmptyDomainCFD_V2"
-    
     #Read JSON data    
     json_path =  os.path.join(case_path, "constant", "simCenter", "input", "EmptyDomainCFD.json")
     with open(json_path) as json_file:
@@ -950,19 +1004,18 @@ if __name__ == '__main__':
     rm_data = json_data["resultMonitoring"]
     
     wind_profiles = rm_data['windProfiles']
-    
-    
-    output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
+    vtk_planes = rm_data['vtkPlanes']
+        
+    prof_output_path = os.path.join(case_path, "constant", "simCenter", "output", "windProfiles")
 
     #Check if it exists and remove files
-    if os.path.exists(output_path):
-        shutil.rmtree(output_path)
+    if os.path.exists(prof_output_path):
+        shutil.rmtree(prof_output_path)
         
     #Create new path
-    Path(output_path).mkdir(parents=True, exist_ok=True)
-
-
-    #Plot wind and pressure profiles
+    Path(prof_output_path).mkdir(parents=True, exist_ok=True)
+    
+    #Plot velocity and pressure profiles
     for prof in wind_profiles:
         name = prof["name"]
         field = prof["field"]
@@ -970,8 +1023,24 @@ if __name__ == '__main__':
         print(field)
         
         if field=="Velocity":
-            plot_wind_profiles_and_spectra(case_path, output_path, name)
+            plot_wind_profiles_and_spectra(case_path, prof_output_path, name)
             
         if field=="Pressure":
-            plot_pressure_profile(case_path, output_path, name)
+            plot_pressure_profile(case_path, prof_output_path, name)
+    
+    
+    # Copy the VTK files renamed
+    for pln in vtk_planes:
+        name = pln["name"]
+        field = pln["field"]
+        
+        vtk_path = os.path.join(case_path, "postProcessing", name)
+        vtk_path_renamed = os.path.join(case_path, "postProcessing", name + "_renamed")
 
+        Path(vtk_path_renamed).mkdir(parents=True, exist_ok=True)
+
+        copy_vtk_planes_and_order(vtk_path, vtk_path_renamed, field)
+        
+        #Check if it exists and remove files
+        if os.path.exists(vtk_path):
+            shutil.rmtree(vtk_path)

@@ -204,6 +204,11 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "locationInMesh")
     dict_lines[start_index] = "    locationInMesh ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
 
+    #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword    
+    start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
+    dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e-20)
+
+
     
     #Add box refinements 
     added_part = ""
@@ -899,16 +904,26 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     #Write time step time 
     start_index = foam.find_keyword_line(dict_lines, "deltaT") 
-    dict_lines[start_index] = "deltaT \t{:.6f};\n".format(time_step)
- 
+    dict_lines[start_index] = "deltaT \t\t{:.6f};\n".format(time_step)
+
+    #Write writeControl         
+    start_index = foam.find_keyword_line(dict_lines, "writeControl") 
+    if solver_type=="pimpleFoam":
+        dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
+    else:
+        dict_lines[start_index] = "writeControl \t\t{};\n".format("timeStep")
+    
     #Write adjustable time step or not  
     start_index = foam.find_keyword_line(dict_lines, "adjustTimeStep") 
     dict_lines[start_index] = "adjustTimeStep \t\t{};\n".format("yes" if adjust_time_step else "no")
  
     #Write writeInterval  
-    start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-    dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
-    
+    start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+    if solver_type=="pimpleFoam":
+        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval*time_step)
+    else:
+        dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
+
     #Write maxCo  
     start_index = foam.find_keyword_line(dict_lines, "maxCo") 
     dict_lines[start_index] = "maxCo \t{:.2f};\n".format(max_courant_number)
@@ -1019,12 +1034,10 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     # Returns JSON object as a dictionary
     rm_data = json_data["resultMonitoring"]
-      
 
     pressure_sampling_points = rm_data['pressureSamplingPoints']
     pressure_write_interval = rm_data['pressureWriteInterval']
 
-    
     #Open the template file (OpenFOAM file) for manipulation
     dict_file = open(template_dict_path + "/probeTemplate", "r")
 
@@ -1035,9 +1048,8 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
     #Write writeInterval 
     start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
     dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
-    
-    
-    #Write fields to be montored 
+        
+    #Write fields to be motored 
     start_index = foam.find_keyword_line(dict_lines, "fields") 
     dict_lines[start_index] = "fields \t\t(p);\n"
     
@@ -1071,7 +1083,11 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
 
     # Returns JSON object as a dictionary
     rm_data = json_data["resultMonitoring"]   
-    
+
+    ns_data = json_data["numericalSetup"]
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+
     wind_profiles = rm_data['windProfiles']
     write_interval = rm_data['profileWriteInterval']
     start_time = rm_data['profileStartTime']
@@ -1085,22 +1101,28 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
     #Write dict files for wind profiles
     for prof in wind_profiles:
         #Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + "/windProfileTemplate", "r")
+        dict_file = open(template_dict_path + "/probeTemplate", "r")
 
         dict_lines = dict_file.readlines()
         dict_file.close()
         
         #Write writeControl 
         start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-        dict_lines[start_index] = "  writeControl \t\t{};\n".format("timeStep")  
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeControl \t{};\n".format("adjustableRunTime")
+        else:
+            dict_lines[start_index] = "    writeControl \t{};\n".format("timeStep")  
 
-        #Write writeInterval 
-        start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-        dict_lines[start_index] = "  writeInterval \t{};\n".format(write_interval)    
-        
+        #Write writeInterval
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeInterval \t{:.6f};\n".format(write_interval*time_step)
+        else:
+            dict_lines[start_index] = "    writeInterval \t{};\n".format(write_interval)
+
         #Write start time for the probes  
         start_index = foam.find_keyword_line(dict_lines, "timeStart") 
-        dict_lines[start_index] = "  timeStart \t\t{:.6f};\n".format(start_time)   
+        dict_lines[start_index] = "    timeStart \t\t{:.6f};\n".format(start_time)   
 
         #Write name of the profile 
         name = prof["name"]
@@ -1158,6 +1180,10 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
     # Returns JSON object as a dictionary
     rm_data = json_data["resultMonitoring"]   
+    ns_data = json_data["numericalSetup"]
+    solver_type = ns_data['solverType']
+    time_step = ns_data['timeStep']
+
 
     vtk_planes = rm_data['vtkPlanes']
     write_interval = rm_data['vtkWriteInterval']
@@ -1178,11 +1204,17 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
         
         #Write writeControl 
         start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-        dict_lines[start_index] = "    writeControl  \t{};\n".format("timeStep")  
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeControl \t{};\n".format("adjustableRunTime")
+        else:
+            dict_lines[start_index] = "    writeControl \t{};\n".format("timeStep")  
 
-        #Write writeInterval 
-        start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-        dict_lines[start_index] = "    writeInterval \t{};\n".format(write_interval)    
+        #Write writeInterval
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        if solver_type=="pimpleFoam":
+            dict_lines[start_index] = "    writeInterval \t{:.6f};\n".format(write_interval*time_step)
+        else:
+            dict_lines[start_index] = "    writeInterval \t{};\n".format(write_interval)
 
         #Write start and end time for the section  
         start_time = pln['startTime']
@@ -1215,15 +1247,15 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
         normal_axis = pln["normalAxis"]
 
         start_index = foam.find_keyword_line(dict_lines, "point")    
-        dict_lines[start_index] = "\t    point\t\t({:.6f} {:.6f} {:.6f})\n".format(point_x, point_y, point_z)
+        dict_lines[start_index] = "\t    point\t\t({:.6f} {:.6f} {:.6f});\n".format(point_x, point_y, point_z)
 
         start_index = foam.find_keyword_line(dict_lines, "normal")  
         if normal_axis=="X":  
-            dict_lines[start_index] = "\t    normal\t\t({} {} {})\n".format(1, 0, 0)
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(1, 0, 0)
         if normal_axis=="Y":  
-            dict_lines[start_index] = "\t    normal\t\t({} {} {})\n".format(0, 1, 0)
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 1, 0)
         if normal_axis=="Z":  
-            dict_lines[start_index] = "\t    normal\t\t({} {} {})\n".format(0, 0, 1)
+            dict_lines[start_index] = "\t    normal\t\t({} {} {});\n".format(0, 0, 1)
 
         #Write edited dict to file
         write_file_name = case_path + "/system/" + name
