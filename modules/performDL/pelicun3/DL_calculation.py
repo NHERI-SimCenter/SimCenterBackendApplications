@@ -105,6 +105,7 @@ default_DBs = {
         'Hazus Earthquake - Buildings': 'damage_DB_Hazus_EQ_bldg.csv',
         'Hazus Earthquake - Stories': 'damage_DB_Hazus_EQ_story.csv',
         'Hazus Earthquake - Transportation': 'damage_DB_Hazus_EQ_trnsp.csv',
+        'Hazus Earthquake - Water': 'damage_DB_Hazus_EQ_water.csv',
         'Hazus Hurricane': 'damage_DB_SimCenter_Hazus_HU_bldg.csv',
     },
     'repair': {
