@@ -52,16 +52,33 @@ ap_DesignLevel_W1 = {
     1975: 'MC',
     2100: 'HC'
 }
+
+ap_Occupancy = {
+    'Other/Unknown': 'RES3',
+    'Residential - Single-Family': 'RES1',
+    'Residential - Town-Home': 'RES3',
+    'Residential - Multi-Family': 'RES3',
+    'Residential - Mixed Use': 'RES3',
+    'Office': 'COM4',
+    'Hotel': 'RES4',
+    'School': 'EDU1',
+    'Industrial - Light': 'IND2',
+    'Industrial - Warehouse': 'IND2',
+    'Industrial - Heavy': 'IND1',
+    'Retail': 'COM1',
+    'Parking' : 'COM10'
+}
+
 def convertBridgeToHAZUSclass(AIM):
 
     #TODO: replace labels in AIM with standard CamelCase versions
-    structureType = AIM["bridge_class"]
+    structureType = AIM["BridgeClass"]
     # if type(structureType)== str and len(structureType)>3 and structureType[:3] == "HWB" and 0 < int(structureType[3:]) and 29 > int(structureType[3:]):
     #     return AIM["bridge_class"]
-    state = AIM["state_code"]
-    yr_built = AIM["year_built"] 
-    num_span = AIM["nspans"]
-    len_max_span = AIM["lmaxspan"] 
+    state = AIM["StateCode"]
+    yr_built = AIM["YearBuilt"] 
+    num_span = AIM["NumOfSpans"]
+    len_max_span = AIM["MaxSpanLength"] 
 
     seismic = ((int(state)==6 and int(yr_built)>=1975) or 
                (int(state)!=6 and int(yr_built)>=1990))
@@ -104,16 +121,27 @@ def convertBridgeToHAZUSclass(AIM):
 
     elif structureType in list(range(301,307)):
         if not seismic:
-            if state != 6:
-                bridge_class = "HWB12"
+            if len_max_span>=20:
+                if state != 6:
+                    bridge_class = "HWB12"
+                else:
+                    bridge_class = "HWB13"
             else:
-                bridge_class = "HWB13"
+                if state != 6:
+                    bridge_class = "HWB24"
+                else:
+                    bridge_class = "HWB25"
         else:
             bridge_class = "HWB14"
 
     elif structureType in list(range(402,411)):
         if not seismic:
-            bridge_class = "HWB15"
+            if len_max_span>=20:
+                bridge_class = "HWB15"
+            elif state != 6:
+                bridge_class = "HWB26"
+            else:
+                bridge_class = "HWB27"
         else:
             bridge_class = "HWB16"
 
@@ -137,6 +165,7 @@ def convertBridgeToHAZUSclass(AIM):
             bridge_class = "HWB22"
         else:
             bridge_class = "HWB23"
+    
     
     #TODO: review and add HWB24-27 rules
     #TODO: also double check rules for HWB10-11 and HWB22-23
@@ -207,9 +236,9 @@ def convertBridgeToHAZUSclass(AIM):
 
 def convertTunnelToHAZUSclass(AIM):
 
-    if ("Bored" in AIM["cons_type"]) or ("Drilled" in AIM["cons_type"]):
+    if ("Bored" in AIM["ConstructType"]) or ("Drilled" in AIM["ConstructType"]):
         return "HTU1"
-    elif ("Cut" in AIM["cons_type"]) or ("Cover" in AIM["cons_type"]):
+    elif ("Cut" in AIM["ConstructType"]) or ("Cover" in AIM["ConstructType"]):
         return "HTU2"
     else:
         # Select HTU2 for unclassfied tunnels because it is more conservative. 
@@ -217,15 +246,63 @@ def convertTunnelToHAZUSclass(AIM):
 
 def convertRoadToHAZUSclass(AIM):
 
-    if AIM["road_type"] in ["primary", "secondary"]:
+    if AIM["RoadType"] in ["Primary", "Secondary"]:
         return "HRD1"
 
-    elif AIM["road_type"]=="residential":
+    elif AIM["RoadType"]=="Residential":
         return "HRD2"
 
     else:
         # many unclassified roads are urban roads
         return "HRD2" 
+
+def convert_story_rise(structureType, stories):
+
+
+    if structureType in ['W1', 'W2', 'S3', 'PC1', 'MH']:
+
+        # These archetypes have no rise information in their IDs
+        rise = None
+
+    else:
+
+        # First, check if we have valid story information
+        try:
+
+            stories = int(stories)
+
+        except:
+
+            raise ValueError('Missing "NumberOfStories" information, '
+                             'cannot infer rise attribute of archetype')
+
+        if structureType == 'RM1':
+
+            if stories <= 3:
+                rise = "L"
+
+            else:
+                rise = "M"
+
+        elif structureType == 'URM':
+            if stories <= 2:
+                rise = "L"
+
+            else:
+                rise = "M"
+
+        elif structureType in ['S1', 'S2', 'S4', 'S5', 'C1', 'C2', 'C3', \
+                               'PC2', 'RM2']:
+            if stories <=3:
+                rise = "L"
+
+            elif stories <= 7:
+                rise = "M"
+
+            else:
+                rise = "H"
+            
+    return rise
 
 def auto_populate(AIM):
     """
@@ -271,33 +348,6 @@ def auto_populate(AIM):
         # get the building parameters
         bt = GI['StructureType'] #building type
 
-        # get the number of stories / height
-        stories = GI.get('NumberOfStories', None)
-
-        if stories!=None:
-            # We assume that the structure type does not include height information
-            # and we append it here based on the number of story information
-
-            if bt not in ['W1', 'W2', 'S3', 'PC1', 'MH']:
-                if bt not in ['URM']:
-                    if stories <= 3:
-                        bt += 'L'
-                    elif stories <= 7:
-                        bt += 'M'
-                    else:
-                        if bt in ['RM']:
-                            bt += 'M'
-                        else:
-                            bt += 'H'
-                else:
-                    if stories <= 2:
-                        bt += 'L'
-                    else:
-                        bt += 'M'
-
-            stories = 1
-            GI_ap['BuildingType'] = bt
-
         # get the design level
         dl = GI.get('DesignLevel', None)
 
@@ -318,11 +368,22 @@ def auto_populate(AIM):
 
             GI_ap['DesignLevel'] = dl
 
-        # get the occupancy class
-        ot = GI['OccupancyClass']
+        # get the number of stories / height
+        stories = GI.get('NumberOfStories', None)
+
+        # We assume that the structure type does not include height information
+        # and we append it here based on the number of story information
+        rise = convert_story_rise(bt, stories)
+
+        if rise is not None:
+            LF = f'LF.{bt}.{rise}.{dl}'
+            GI_ap['BuildingRise'] = rise
+        else:
+            LF = f'LF.{bt}.{dl}'
+
 
         CMP = pd.DataFrame(
-                {f'LF.{bt}.{dl}': [  'ea',         1,          1,        1,   'N/A']},
+                {f'{LF}': [  'ea',         1,          1,        1,   'N/A']},
                 index = [         'Units','Location','Direction','Theta_0','Family']
             ).T
 
@@ -341,6 +402,16 @@ def auto_populate(AIM):
             ).T
 
             CMP = pd.concat([CMP, CMP_GF], axis=0)
+
+        # set the number of stories to 1
+        # there is only one component in a building-level resolution
+        stories = 1
+
+        # get the occupancy class
+        if GI['OccupancyClass'] in ap_Occupancy.keys():
+            ot = ap_Occupancy[GI['OccupancyClass']]
+        else:
+            ot = GI['OccupancyClass']
         
         DL_ap = {
             "Asset": {
@@ -367,7 +438,7 @@ def auto_populate(AIM):
 
         inf_type = GI["assetSubtype"]
         
-        if inf_type == "hwy_bridge":
+        if inf_type == "HwyBridge":
 
             # get the bridge class
             bt = convertBridgeToHAZUSclass(GI)
@@ -399,7 +470,7 @@ def auto_populate(AIM):
                 }
             }
 
-        elif inf_type == "hwy_tunnel":
+        elif inf_type == "HwyTunnel":
 
             # get the tunnel class
             tt = convertTunnelToHAZUSclass(GI)
@@ -430,7 +501,7 @@ def auto_populate(AIM):
                     }
                 }
             }
-        elif inf_type == "roadway":
+        elif inf_type == "Roadway":
 
             # get the road class
             rt = convertRoadToHAZUSclass(GI)
@@ -462,6 +533,203 @@ def auto_populate(AIM):
             }
         else:
             print("subtype not supported in HWY")
+
+    elif assetType == "WaterDistributionNetwork":
+        
+        pipe_material_map ={"CI": "B", "AC": "B", "RCC": "B",
+                            "DI": "D", "PVC": "D",
+                            "DS": "B",
+                            "BS": "D",}
+        
+        #GI = AIM.get("GeneralInformation", None)
+        #if GI==None:
+            
+        
+        # initialize the auto-populated GI
+        wdn_element_type = GI_ap.get("type", "MISSING")
+        asset_name = GI_ap.get("AIM_id", None)
+        
+        
+        if wdn_element_type == "Pipe":
+            pipe_construction_year = GI_ap.get("year", None)
+            pipe_diameter = GI_ap.get("Diam", None)
+            #diamaeter value is a fundamental part of hydraulic performance assessment
+            if pipe_diameter == None:
+                raise ValueError(f"pipe diamater in asset type {assetType}, \
+                                 asset id \"{asset_name}\" has no diameter \
+                                     value.")
+            
+            pipe_length = GI_ap.get("Len", None)
+            #length value is a fundamental part of hydraulic performance assessment
+            if pipe_diameter == None:
+                raise ValueError(f"pipe length in asset type {assetType}, \
+                                 asset id \"{asset_name}\" has no diameter \
+                                     value.")
+            
+            pipe_material = GI_ap.get("material", None)
+            
+            #pipe material can be not available or named "missing" in both case, pipe flexibility will be set to "missing"
+            
+            """
+            The assumed logic (rullset) is that if the material is missing, if the pipe
+            is smaller than or equal to 20 inches, the material is Cast Iron
+            (CI) otherwise the pipe material is steel.
+                If the material is steel (ST), either based on user specified
+            input or the assumption due to the lack of the user-input, the year
+            that the pipe is constructed define the flexibility status per HAZUS
+            instructions. If the pipe is built in 1935 or after, it is, the pipe
+            is Ductile Steel (DS), and otherwise it is Brittle Steel (BS).
+                If the pipe is missing construction year and is built by steel,
+            we assume consevatively that the pipe is brittle (i.e., BS)
+            """
+            if pipe_material == None:
+                if pipe_diameter > 20 * 0.0254: #20 inches in meter
+                    print(f"Asset {asset_name} is missing material. Material is\
+                          assumed to be Cast Iron")
+                    pipe_material = "CI"
+                else:
+                    print(f"Asset {asset_name} is missing material. Material is "
+                          f"assumed to be Steel (ST)")
+                    pipe_material = "ST"
+                          
+            if pipe_material == "ST":
+                if pipe_construction_year != None and pipe_construction_year >= 1935:
+                    print(f"Asset {asset_name} has material of \"ST\" is assumed to be\
+                          Ductile Steel")
+                    pipe_material = "DS"
+                else:
+                    print(f'Asset {asset_name} has material of "ST" is assumed to be '
+                          f'Brittle Steel')
+                    pipe_material = "BS"
+            
+            pipe_flexibility = pipe_material_map.get(pipe_material, "missing")
+            
+            GI_ap["material flexibility"] = pipe_flexibility
+            GI_ap["material"] = pipe_material
+            
+            CMP = pd.DataFrame(
+                {f'PWP.{pipe_flexibility}.GS': ['ea', 1, 1, pipe_length, 'N/A'],
+                 f'PWP.{pipe_flexibility}.GF': ['ea', 1, 1, pipe_length, 'N/A']},
+                index = ['Units','Location','Direction','Theta_0','Family']
+            ).T
+            
+            DL_ap = {
+                "Asset": {
+                    "ComponentAssignmentFile": "CMP_QNT.csv",
+                    "ComponentDatabase": "Hazus Earthquake - Water",
+                    "Material Flexibility": pipe_flexibility,
+                    "PlanArea": "1" # Sina: does not make sense for water. Kept it here since itw as also kept here for Transportation
+                },
+                "Damage": {
+                    "DamageProcess": "Hazus Earthquake"
+                },
+                "Demands": {        
+                }
+            }
+        
+        elif wdn_element_type == "Tank":
+            
+            tank_cmp_lines = {
+                ("OG", "C", 1):{'PST.G.C.A.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "C", 0):{'PST.G.C.U.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "S", 1):{'PST.G.S.A.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                ("OG", "S", 0):{'PST.G.S.U.GS': [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Wood is not defined for On Ground tanks
+                ("OG", "W", 0):{'PST.G.W.GS':   [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Steel is not defined for Above Ground tanks
+                ("AG", "S", 0):{'PST.A.S.GS':   [ 'ea', 1, 1, 1, 'N/A' ]},
+                #Anchored status and Concrete is not defined for Buried tanks.
+                ("B", "C", 0):{'PST.B.C.GF':    [ 'ea', 1, 1, 1, 'N/A' ]}
+                }
+                
+            """
+            The default values are assumed: material = Concrete (C),
+            location= On Ground (OG), and Anchored = 1 
+            """
+            tank_material = GI_ap.get("material", "C")
+            tank_location = GI_ap.get("location", "OG")
+            tank_anchored = GI_ap.get("anchored", int(1) )
+            
+            tank_material_allowable = {"C", "S"}
+            if tank_material not in tank_material_allowable:
+                raise ValueError(f"Tank's material = \"{tank_material}\" is \
+                                 not allowable in tank {asset_name}. The \
+                                 material must be either C for concrete or S \
+                                 for steel.")
+            
+            tank_location_allowable = {"AG", "OG", "B"}
+            if tank_location not in tank_location_allowable:
+                raise ValueError(f"Tank's location = \"{tank_location}\" is \
+                                 not allowable in tank {asset_name}. The \
+                                 location must be either \"AG\" for Above \
+                                 ground, \"OG\" for On Ground or \"BG\" for \
+                                 Bellow Ground (burried) Tanks.")
+            
+            tank_anchored_allowable = {int(0), int(1)}
+            if tank_anchored not in tank_anchored_allowable:
+                raise ValueError(f"Tank's anchored status = \"{tank_location}\
+                                 \" is not allowable in tank {asset_name}. \
+                                     The anchored status must be either integer\
+                                     value 0 for unachored, or 1 for anchored")
+            
+            if tank_location == "AG" and tank_material == "C":
+                print(f"The tank {asset_name} is Above Ground (i.e., AG), but \
+                      the material type is Concrete (\"C\"). Tank type \"C\" is not \
+                    defiend for AG tanks. The tank is assumed to be Steel (\"S\")")
+                tank_material = "S"
+            
+            if tank_location == "AG" and tank_material == "W":
+                print(f"The tank {asset_name} is Above Ground (i.e., AG), but \
+                      the material type is Wood (\"W\"). Tank type \"W\" is not \
+                    defiend for AG tanks. The tank is assumed to be Steel (\"S\")")
+                tank_material = "S"
+
+            
+            if tank_location == "B" and tank_material == "S":
+                print(f"The tank {asset_name} is burried (i.e., B), but the\
+                      material type is Steel (\"S\"). Tank type \"S\" is not defiend for\
+                      B tanks. The tank is assumed to be Concrete (\"C\")")
+                tank_material = "C"
+            
+            if tank_location == "B" and tank_material == "W":
+                print(f"The tank {asset_name} is burried (i.e., B), but the\
+                      material type is Wood (\"W\"). Tank type \"W\" is not defiend for\
+                      B tanks. The tank is assumed to be Concrete (\"C\")")
+                tank_material = "C"
+                
+            if tank_anchored == 1:
+                 #Since anchore status does nto matter, there is no need to
+                 #print a warning
+                 tank_anchored = 0
+                
+            cur_tank_cmp_line = tank_cmp_lines[(tank_location, tank_material, tank_anchored)]
+            
+            CMP = pd.DataFrame(
+                cur_tank_cmp_line,
+                index = ['Units','Location','Direction','Theta_0','Family']
+            ).T
+            
+            DL_ap = {
+                "Asset": {
+                    "ComponentAssignmentFile": "CMP_QNT.csv",
+                    "ComponentDatabase": "Hazus Earthquake - Water",
+                    "Material": tank_material,
+                    "Location": tank_location,
+                    "Anchored": tank_anchored,
+                    "PlanArea": "1" # Sina: does not make sense for water. Kept it here since itw as also kept here for Transportation
+                },
+                "Damage": {
+                    "DamageProcess": "Hazus Earthquake"
+                },
+                "Demands": {        
+                }
+            }  
+            
+        else:
+            print(f"Water Distribution network element type {wdn_element_type} is not supported in Hazus Earthquake IM DL method")
+            DL_ap = None
+            CMP = None
+
     else:
         print(f"AssetType: {assetType} is not supported in Hazus Earthquake IM DL method")
 
