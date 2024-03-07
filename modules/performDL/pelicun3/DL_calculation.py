@@ -370,6 +370,16 @@ def run_pelicun(
 
             config_ap, CMP = auto_populate(config, auto_script_path)
 
+            if config_ap['DL'] is None:
+
+                log_msg(
+                    "The prescribed auto-population script failed to identify "
+                    "a valid damage and loss configuration for this asset. "
+                    "Terminating analysis."
+                )
+
+                return 0
+
             # add the demand information
             config_ap['DL']['Demands'].update(
                 {'DemandFilePath': f'{demand_file}', 'SampleSize': f'{realizations}'}
