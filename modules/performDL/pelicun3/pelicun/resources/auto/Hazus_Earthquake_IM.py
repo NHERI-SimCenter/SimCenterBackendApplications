@@ -552,7 +552,7 @@ def auto_populate(AIM):
         
         if wdn_element_type == "Pipe":
             pipe_construction_year = GI_ap.get("year", None)
-            pipe_diameter = GI_ap.get("diameter", None)
+            pipe_diameter = GI_ap.get("Diam", None)
             #diamaeter value is a fundamental part of hydraulic performance assessment
             if pipe_diameter == None:
                 raise ValueError(f"pipe diamater in asset type {assetType}, \
@@ -566,12 +566,12 @@ def auto_populate(AIM):
                                  asset id \"{asset_name}\" has no diameter \
                                      value.")
             
-            pipe_material = GI_ap.get("material", "missing")
+            pipe_material = GI_ap.get("material", None)
             
             #pipe material can be not available or named "missing" in both case, pipe flexibility will be set to "missing"
             
             """
-            The assumed logic is that if the material is missing, if the pipe
+            The assumed logic (rullset) is that if the material is missing, if the pipe
             is smaller than or equal to 20 inches, the material is Cast Iron
             (CI) otherwise the pipe material is steel.
                 If the material is steel (ST), either based on user specified
@@ -582,7 +582,7 @@ def auto_populate(AIM):
                 If the pipe is missing construction year and is built by steel,
             we assume consevatively that the pipe is brittle (i.e., BS)
             """
-            if pipe_material == "missing":
+            if pipe_material == None:
                 if pipe_diameter > 20 * 0.0254: #20 inches in meter
                     print(f"Asset {asset_name} is missing material. Material is\
                           assumed to be Cast Iron")
@@ -593,7 +593,7 @@ def auto_populate(AIM):
                     pipe_material = "ST"
                           
             if pipe_material == "ST":
-                if pipe_construction_year >= 1935:
+                if pipe_construction_year != None and pipe_construction_year >= 1935:
                     print(f"Asset {asset_name} has material of \"ST\" is assumed to be\
                           Ductile Steel")
                     pipe_material = "DS"
@@ -746,6 +746,8 @@ def auto_populate(AIM):
             
         else:
             print(f"Water Distribution network element type {wdn_element_type} is not supported in Hazus Earthquake IM DL method")
+            DL_ap = None
+            CMP = None
 
     else:
         print(f"AssetType: {assetType} is not supported in Hazus Earthquake IM DL method")
