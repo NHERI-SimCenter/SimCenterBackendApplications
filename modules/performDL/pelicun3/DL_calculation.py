@@ -1685,9 +1685,6 @@ def run_pelicun(
     if 'damage_sample' not in locals():
         damage_sample = PAL.damage.save_sample()
 
-    if 'agg_repair' not in locals():
-        agg_repair = PAL.bldg_repair.aggregate_losses()
-
     damage_sample = damage_sample.groupby(level=[0, 3], axis=1).sum()
     damage_sample_s = convert_to_SimpleIndex(damage_sample, axis=1)
 
@@ -1701,7 +1698,16 @@ def run_pelicun(
     else:
         damage_sample_s['irreparable'] = np.zeros(damage_sample_s.shape[0])
 
-    agg_repair_s = convert_to_SimpleIndex(agg_repair, axis=1)
+    if loss_config is not None:
+
+        if 'agg_repair' not in locals():
+            agg_repair = PAL.bldg_repair.aggregate_losses()
+
+        agg_repair_s = convert_to_SimpleIndex(agg_repair, axis=1)
+
+    else:
+
+        agg_repair_s = pd.DataFrame()
 
     summary = pd.concat(
         [agg_repair_s, damage_sample_s[['collapse', 'irreparable']]], axis=1
