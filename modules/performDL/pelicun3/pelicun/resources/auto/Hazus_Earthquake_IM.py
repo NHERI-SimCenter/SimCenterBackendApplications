@@ -624,13 +624,6 @@ def auto_populate(AIM):
                     "DamageProcess": "Hazus Earthquake"
                 },
                 "Demands": {        
-                },
-                "Losses": {
-                    # We don't have this
-                    #"BldgRepair": {
-                        #"ConsequenceDatabase": "Hazus Earthquake - Transportation",
-                        #"MapApproach": "Automatic"
-                    #}
                 }
             }
         
@@ -729,20 +722,8 @@ def auto_populate(AIM):
                     "DamageProcess": "Hazus Earthquake"
                 },
                 "Demands": {        
-                },
-                "Losses": {
-                    # We don't have this
-                    #"BldgRepair": {
-                        #"ConsequenceDatabase": "Hazus Earthquake - Transportation",
-                        #"MapApproach": "Automatic"
-                    #}
                 }
-            }
-            
-                 
-            
-                 
-            
+            }  
             
         else:
             print(f"Water Distribution network element type {wdn_element_type} is not supported in Hazus Earthquake IM DL method")
