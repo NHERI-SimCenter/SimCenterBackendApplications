@@ -21,7 +21,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     # Returns JSON object as a dictionary
     mesh_data = json_data["blockMeshParameters"]
     geom_data = json_data['GeometricData']
-
+    boundary_data = json_data['boundaryConditions']
 
     normalization_type = geom_data['normalizationType']
     origin = np.array(geom_data['origin'])
@@ -41,12 +41,19 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     y_grading = mesh_data['yGrading']
     z_grading = mesh_data['zGrading']
 
-    inlet_type = mesh_data['inletBoundaryType']
-    outlet_type = mesh_data['outletBoundaryType']
-    ground_type = mesh_data['groundBoundaryType']
-    top_type = mesh_data['topBoundaryType']
-    front_type = mesh_data['frontBoundaryType']
-    back_type = mesh_data['backBoundaryType']
+    bc_map = {"slip": 'wall', "cyclic": 'cyclic', "noSlip": 'wall', 
+                     "symmetry": 'symmetry', "empty": 'empty', "TInf": 'patch', 
+                     "MeanABL": 'patch', "Uniform": 'patch', "zeroPressureOutlet": 'patch',
+                     "roughWallFunction": 'wall',"smoothWallFunction": 'wall'}
+
+
+
+    inlet_type = bc_map[boundary_data['inletBoundaryCondition']]
+    outlet_type = bc_map[boundary_data['outletBoundaryCondition']]
+    ground_type = bc_map[boundary_data['groundBoundaryCondition']]  
+    top_type = bc_map[boundary_data['topBoundaryCondition']]
+    front_type = bc_map[boundary_data['sidesBoundaryCondition']]
+    back_type = bc_map[boundary_data['sidesBoundaryCondition']]
     
     length_unit = json_data['lengthUnit']
 
