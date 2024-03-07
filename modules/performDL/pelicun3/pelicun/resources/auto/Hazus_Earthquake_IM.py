@@ -559,7 +559,7 @@ def auto_populate(AIM):
                                  asset id \"{asset_name}\" has no diameter \
                                      value.")
             
-            pipe_length = GI_ap.get("length", None)
+            pipe_length = GI_ap.get("Len", None)
             #length value is a fundamental part of hydraulic performance assessment
             if pipe_diameter == None:
                 raise ValueError(f"pipe length in asset type {assetType}, \
@@ -588,8 +588,8 @@ def auto_populate(AIM):
                           assumed to be Cast Iron")
                     pipe_material = "CI"
                 else:
-                    print(f"Asset {asset_name} is missing material. Material is\
-                          assumed to be Steel (ST)")
+                    print(f"Asset {asset_name} is missing material. Material is "
+                          f"assumed to be Steel (ST)")
                     pipe_material = "ST"
                           
             if pipe_material == "ST":
@@ -598,8 +598,8 @@ def auto_populate(AIM):
                           Ductile Steel")
                     pipe_material = "DS"
                 else:
-                    print(f"Asset {asset_name} has material of \"ST\" is assumed to be\
-                          Brittle Steel")
+                    print(f'Asset {asset_name} has material of "ST" is assumed to be '
+                          f'Brittle Steel')
                     pipe_material = "BS"
             
             pipe_flexibility = pipe_material_map.get(pipe_material, "missing")
