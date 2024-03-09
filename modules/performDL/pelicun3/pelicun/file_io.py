@@ -38,6 +38,7 @@
 # Adam Zsarnóczay
 # Pouria Kourehpaz
 # Kuanshi Zhong
+# John Vouvakis Manousakis
 
 """
 This module has classes and methods that handle file input and output.
@@ -46,11 +47,12 @@ This module has classes and methods that handle file input and output.
 
 .. autosummary::
 
+    dict_raise_on_duplicates
     get_required_resources
-    load_default_options
-    merge_default_config
     save_to_csv
     load_data
+    load_from_file
+    parse_units
 
 """
 
@@ -109,208 +111,6 @@ def dict_raise_on_duplicates(ordered_pairs):
     return d
 
 
-def get_required_resources(input_path, assessment_type):
-    """
-    List the data files required to perform an assessment.
-
-    It extracts the information from the config file about the methods and
-    functional data required for the analysis and provides a list of paths to
-    the files that would be used.
-    This method is helpful in an HPC context to copy the required resources to
-    the local node from the shared file storage.
-
-    Parameters
-    ----------
-    input_path: string
-        Location of the DL input json file.
-    assessment_type: {'P58', 'HAZUS_EQ', 'HAZUS_HU'}
-        Identifies the default databases based on the type of assessment.
-
-    Returns
-    -------
-    resources: list of strings
-        A list of paths to the required resource files.
-    """
-
-    resources = {}
-
-    AT = assessment_type
-
-    with open(input_path, 'r', encoding='utf-8') as f:
-        jd = json.load(f, object_pairs_hook=dict_raise_on_duplicates)
-
-    DL_input = jd['DamageAndLoss']
-
-    loss = DL_input.get('LossModel', None)
-    if loss is not None:
-        inhabitants = loss.get('Inhabitants', None)
-        dec_vars = loss.get('DecisionVariables', None)
-
-        if dec_vars is not None:
-            injuries = bool(dec_vars.get('Injuries', False))
-    else:
-        inhabitants = None
-        dec_vars = None
-        injuries = False
-
-    # check if the user specified custom data sources
-    path_CMP_data = DL_input.get("ComponentDataFolder", "")
-
-    if path_CMP_data == "":
-        # Use the P58 path as default
-        path_CMP_data = base.pelicun_path / base.CMP_data_path[AT]
-
-    resources.update({'component': path_CMP_data})
-
-    # HAZUS combination of flood and wind losses
-    if ((AT == 'HAZUS_HU') and (DL_input.get('Combinations', None) is not None)):
-        path_combination_data = base.pelicun_path / base.CMP_data_path['HAZUS_MISC']
-        resources.update({'combination': path_combination_data})
-
-    # The population data is only needed if we are interested in injuries
-    if inhabitants is not None:
-        path_POP_data = inhabitants.get("PopulationDataFile", "")
-    else:
-        path_POP_data = ""
-
-    if ((injuries) and (path_POP_data == "")):
-        path_POP_data = base.pelicun_path / base.POP_data_path[AT]
-        resources.update({'population': path_POP_data})
-
-    return resources
-
-
-def load_default_options():
-    """
-    Load the default_config.json file to set options to default values
-    """
-
-    with open(base.pelicun_path / "settings/default_config.json",
-              'r', encoding='utf-8') as f:
-        default_config = json.load(f)
-
-    default_options = default_config['Options']
-    return default_options
-
-
-def update_vals(
-        update, primary,
-        update_path, primary_path
-):
-    """
-    Updates the values of the `update` nested dictionary with
-    those provided in the `primary` nested dictionary. If a key
-    already exists in update, and does not map to another
-    dictionary, the value is left unchanged.
-
-    Parameters
-    ----------
-    update: dict
-        Dictionary -which can contain nested dictionaries- to be
-        updated based on the values of `primary`. New keys existing
-        in `primary` are added to `update`. Values of which keys
-        already exist in `primary` are left unchanged.
-    primary: dict
-        Dictionary -which can contain nested dictionaries- to
-        be used to update the values of `update`.
-    update_path: str
-        Identifier for the update dictionary. Used to make error
-        messages more meaningful.
-    primary_path: str
-        Identifier for the update dictionary. Used to make error
-        messages more meaningful.
-
-    Raises
-    ------
-    ValueError
-      If primary[key] is dict but update[key] is not.
-    ValueError
-      If update[key] is dict but primary[key] is not.
-    """
-
-    # pylint: disable=R5501
-    # (`consider using elif`)
-
-    # we go over the keys of `primary`
-    for key in primary:
-        # if `primary[key]` is a dictionary:
-        if isinstance(primary[key], dict):
-            # if the same `key` does not exist in update,
-            # we associate it with an empty dictionary.
-            if key not in update:
-                update[key] = {}
-            # if it exists already, it should map to
-            # a dictionary.
-            elif not isinstance(update[key], dict):
-                raise ValueError(
-                    f'{update_path}["{key}"] '
-                    'should map to a dictionary. '
-                    'The specified value is '
-                    f'{update_path}["{key}"] = {update[key]}, but '
-                    f'the default value is '
-                    f'{primary_path}["{key}"] = {primary[key]}. '
-                    f'Please revise {update_path}["{key}"].'
-                )
-            # With both being dictionaries, we recurse.
-            update_vals(
-                update[key], primary[key],
-                f'{update_path}["{key}"]', f'{primary_path}["{key}"]')
-        # if `primary[key]` is NOT a dictionary:
-        else:
-            # if `key` does not exist in `update`, we add it, with
-            # its corresponding value.
-            if key not in update:
-                update[key] = primary[key]
-            else:
-                # key exists in update and should be left alone,
-                # but we must check that it's not a dict here:
-                if isinstance(update[key], dict):
-                    raise ValueError(
-                        f'{update_path}["{key}"] '
-                        'should not map to a dictionary. '
-                        f'The specified value is '
-                        f'{update_path}["{key}"] = {update[key]}, but '
-                        f'the default value is '
-                        f'{primary_path}["{key}"] = {primary[key]}. '
-                        f'Please revise {update_path}["{key}"].'
-                    )
-    # pylint: enable=R5501
-
-
-def merge_default_config(user_config):
-    """
-    Merge the user-specified config with the configuration defined in
-    the default_config.json file. If the user-specified config does
-    not include some option available in the default options, then the
-    default option is used in the merged config.
-
-    Parameters.
-    ----------
-    user_config: dict
-        User-specified configuration dictionary
-
-    Returns
-    -------
-    user_config: dict
-        Merged configuration dictionary
-    """
-
-    config = user_config  # start from the user's config
-    default_config = load_default_options()
-
-    if config is None:
-        config = {}
-
-    # We fill out the user's config with the values available in the
-    # default config that were not set.
-    # We use a recursive function to handle nesting.
-    update_vals(
-        config, default_config,
-        'user_settings', 'default_settings')
-
-    return config
-
-
 def save_to_csv(data, filepath, units=None, unit_conversion_factors=None,
                 orientation=0, use_simpleindex=True, log=None):
     """
@@ -358,6 +158,8 @@ def save_to_csv(data, filepath, units=None, unit_conversion_factors=None,
         If units is not None but unit_conversion_factors is None
     ValueError
         If writing to a file fails.
+    ValueError
+        If the provided file name does not have the `.csv` suffix.
     """
 
     if filepath is None:
@@ -387,7 +189,7 @@ def save_to_csv(data, filepath, units=None, unit_conversion_factors=None,
 
             labels_to_keep = []
 
-            for unit_name in units.unique():                
+            for unit_name in units.unique():
 
                 labels = units.loc[units == unit_name].index.values
 
@@ -460,9 +262,14 @@ def save_to_csv(data, filepath, units=None, unit_conversion_factors=None,
     return None
 
 
-def load_data(data_source, unit_conversion_factors,
-              orientation=0, reindex=True, return_units=False,
-              convert=None, log=None):
+def load_data(
+    data_source,
+    unit_conversion_factors,
+    orientation=0,
+    reindex=True,
+    return_units=False,
+    log=None,
+):
     """
     Loads data assuming it follows standard SimCenter tabular schema.
 
@@ -476,10 +283,12 @@ def load_data(data_source, unit_conversion_factors,
         If it is a string, the data_source is assumed to point to the location
         of the source file. If it is a DataFrame, the data_source is assumed to
         hold the raw data.
-    unit_conversion_factors: dict
+    unit_conversion_factors: dict, optional
         Dictionary containing key-value pairs of unit names and their
-        corresponding factors. Conversion factors are defined as the number of
-        times a base unit fits in the alternative unit.
+        corresponding factors. Conversion factors are defined as the
+        number of times a base unit fits in the alternative unit. If
+        no conversion factors are specified, then no unit conversions
+        are made.
     orientation: int, {0, 1}, default: 0
         If 0, variables are organized along columns; otherwise they are along
         the rows. This is important when converting values to follow the
@@ -489,9 +298,6 @@ def load_data(data_source, unit_conversion_factors,
     return_units: bool
         If True, returns the units as well as the data to allow for adjustments
         in unit conversion.
-    convert: list of string
-        Specifies the columns (or rows if orientation==1) where unit conversion
-        needs to be applied.
     log: Logger
         Logger object to be used. If no object is specified, no logging
         is performed.
@@ -501,107 +307,98 @@ def load_data(data_source, unit_conversion_factors,
     data: DataFrame
         Parsed data.
     units: Series
-        Labels from the data and corresponding units specified. If no units
-        are specified, this return value is "None". units are only returned if
-        return_units is set to True.
+        Labels from the data and corresponding units specified in the
+        data. Units are only returned if return_units is set to True.
     """
 
-    # if the provided data_source is already a DataFrame...
     if isinstance(data_source, pd.DataFrame):
-
-        # we can just store it at proceed
-        # (copying is needed to avoid changing the original)
+        # store it at proceed (copying is needed to avoid changing the
+        # original)
         data = data_source.copy()
-
-    else:
+    elif isinstance(data_source, str):
         # otherwise, load the data from a file
         data = load_from_file(data_source)
+    else:
+        raise TypeError(f'Invalid data_source type: {type(data_source)}')
 
-    # if there is information about units, perform the conversion to SI
-    if ('Units' in data.index) or ('Units' in data.columns):
+    # Define a dictionary to decide the axis based on the orientation
+    axis = {0: 1, 1: 0}
+    the_index = data.columns if orientation == 1 else data.index
 
-        if log: log.msg('Converting units...', prepend_timestamp=False)
+    # if there is information about units, separate that information
+    # and optionally apply conversions to all numeric values
+    if 'Units' in the_index:
 
-        if orientation == 0:
-            units = data.loc['Units', :].copy().dropna()
-            data.drop('Units', inplace=True)
-            data = data.astype(float)
+        units = data['Units'] if orientation == 1 else data.loc['Units']
+        data.drop('Units', axis=orientation, inplace=True)
+        data = base.convert_dtypes(data)
 
-        else:  # elif orientation==1:
-            units = data.loc[:, 'Units'].copy().dropna()
-            data.drop('Units', axis=1, inplace=True)
+        if unit_conversion_factors is not None:
+            numeric_elements = (
+                (data.select_dtypes(include=[np.number]).index)
+                if orientation == 0
+                else (data.select_dtypes(include=[np.number]).columns)
+            )
 
-            if convert is None:
-                cols_to_scale = []
-                for col in data.columns:
-                    try:
-                        data.loc[:, col] = data.loc[:, col].astype(float)
-                        cols_to_scale.append(col)
-                    except ValueError:
-                        pass
+            if log:
+                log.msg('Converting units...', prepend_timestamp=False)
+
+            # todo lambda
+            def get_conversion_factor(unit):
+                """
+                Utility function to be used in `map`, handling the case
+                where unit is NaN and otherwise pulling values from the
+                `unit_conversion_factors` dictionary.
+                """
+                return (
+                    1.00
+                    if pd.isna(unit)
+                    else unit_conversion_factors.get(unit, 1.00)
+                )
+
+            conversion_factors = units.map(get_conversion_factor)
+
+            if orientation == 1:
+                data.loc[:, numeric_elements] = data.loc[
+                    :, numeric_elements
+                ].multiply(conversion_factors, axis=axis[orientation])
             else:
-                cols_to_scale = convert
+                data.loc[numeric_elements, :] = data.loc[
+                    numeric_elements, :
+                ].multiply(conversion_factors, axis=axis[orientation])
 
-        unique_unit_names = units.unique()
-
-        for unit_name in unique_unit_names:
-
-            unit_factor = unit_conversion_factors[unit_name]
-            unit_labels = units.loc[units == unit_name].index
-
-            if orientation == 0:
-                data.loc[:, unit_labels] *= unit_factor
-
-            else:  # elif orientation==1:
-                data.loc[unit_labels, cols_to_scale] *= unit_factor
-
-        if log: log.msg('Unit conversion successful.', prepend_timestamp=False)
+        if log:
+            log.msg('Unit conversion successful.', prepend_timestamp=False)
 
     else:
-
-        # data = data.convert_dtypes()
-        # enforcing float datatype is important even if there is no unit
-        # conversion
         units = None
-        if orientation == 0:
-            data = data.astype(float)
+        data = base.convert_dtypes(data)
 
-        else:
-            for col in data.columns:
-                try:
-                    data[col] = data[col].astype(float)
-                except ValueError:
-                    pass
-
-    # convert column to MultiIndex if needed
+    # convert columns or index to MultiIndex if needed
     data = base.convert_to_MultiIndex(data, axis=1)
-
     data.sort_index(axis=1, inplace=True)
 
     # reindex the data, if needed
     if reindex:
-
         data.index = np.arange(data.shape[0])
-
     else:
         # convert index to MultiIndex if needed
         data = base.convert_to_MultiIndex(data, axis=0)
-
         data.sort_index(inplace=True)
 
-    if log: log.msg('Data successfully loaded from file.', prepend_timestamp=False)
+    if log:
+        log.msg('Data successfully loaded from file.', prepend_timestamp=False)
 
     if return_units:
+        if units is not None:
+            # convert index in units Series to MultiIndex if needed
+            units = base.convert_to_MultiIndex(units, axis=0).dropna()
+            units.sort_index(inplace=True)
+        output = data, units
+    else:
+        output = data
 
-        # convert index in units Series to MultiIndex if needed
-        units = base.convert_to_MultiIndex(units, axis=0)
-
-        units.sort_index(inplace=True)
-
-        return data, units
-
-    # return_units=False
-    return data
+    return output
 
 
 def load_from_file(filepath, log=None):
