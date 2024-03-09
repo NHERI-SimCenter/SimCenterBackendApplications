@@ -37,7 +37,10 @@
 # Contributors:
 # Adam Zsarnóczay
 
+import os
+import json
 import pandas as pd
+import pelicun
 
 ap_DesignLevel = {
     1940: 'PC',
@@ -607,12 +610,69 @@ def auto_populate(AIM):
             GI_ap["material flexibility"] = pipe_flexibility
             GI_ap["material"] = pipe_material
             
+
+            # Pipes are broken into 20ft segments (rounding up) and
+            # each segment is represented by an individual entry in
+            # the performance model, `CMP`. The damage capcity of each
+            # segment is assumed to be independent and driven by the
+            # same EDP. We therefore replicate the EDP associated with
+            # the pipe to the various locations assgined to the
+            # segments.
+
+            # Determine number of segments
+            with open(
+                os.path.join(
+                    os.path.dirname(pelicun.__file__), 'settings/default_units.json'
+                ),
+                'r',
+                encoding='utf-8',
+            ) as f:
+                units = json.load(f)
+            pipe_length_unit = GI_ap['units']['length']
+            pipe_length_unit_factor = units['length'][pipe_length_unit]
+            pipe_length_in_base_unit = pipe_length * pipe_length_unit_factor
+            reference_length_in_base_unit = 20.00 * units['length']['ft']
+            if pipe_length_in_base_unit % reference_length_in_base_unit < 1e-2:
+                # If the lengths are equal, then that's one segment, not two.
+                num_segments = int(pipe_length_in_base_unit / reference_length_in_base_unit)
+            else:
+                # In all other cases, round up.
+                num_segments = int(pipe_length_in_base_unit / reference_length_in_base_unit) + 1
+            if num_segments > 1:
+                location_string = f'1--{num_segments}'
+            else:
+                location_string = '1'
+
+            # Define performance model
             CMP = pd.DataFrame(
-                {f'PWP.{pipe_flexibility}.GS': ['ea', 1, 1, pipe_length, 'N/A'],
-                 f'PWP.{pipe_flexibility}.GF': ['ea', 1, 1, pipe_length, 'N/A']},
+                {f'PWP.{pipe_flexibility}.GS': ['ea', location_string, '1', 1, 'N/A'],
+                 f'PWP.{pipe_flexibility}.GF': ['ea', location_string, '1', 1, 'N/A']},
                 index = ['Units','Location','Direction','Theta_0','Family']
             ).T
             
+            # Set up the demand cloning configuration for the pipe
+            # segments, if required.
+            demand_config = {}
+            if num_segments > 1:
+                # determine the EDP tags available for cloning
+                response_data = pelicun.file_io.load_data('response.csv', None)
+                num_header_entries = len(response_data.columns.names)
+                # if 4, assume a hazard level tag is present and remove it
+                if num_header_entries == 4:
+                    response_data.columns = pd.MultiIndex.from_tuples(
+                        [x[1::] for x in response_data.columns]
+                    )
+                demand_cloning_config = {}
+                for edp in response_data.columns:
+                    tag, location, direction = edp
+
+                    demand_cloning_config['-'.join(edp)] = [
+                        f'{tag}-{x}-{direction}'
+                        for x in [f'{i+1}' for i in range(num_segments)]
+                    ]
+                demand_config = {'DemandCloning': demand_cloning_config}
+
+            # Define the auto-populated config
             DL_ap = {
                 "Asset": {
                     "ComponentAssignmentFile": "CMP_QNT.csv",
@@ -623,8 +683,7 @@ def auto_populate(AIM):
                 "Damage": {
                     "DamageProcess": "Hazus Earthquake"
                 },
-                "Demands": {        
-                }
+                "Demands": demand_config
             }
         
         elif wdn_element_type == "Tank":

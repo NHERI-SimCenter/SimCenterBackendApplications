@@ -563,7 +563,7 @@ def run_pelicun(
         {
             "SampleSize": sample_size,
             'PreserveRawOrder': demand_config.get('CoupledDemands', False),
-            # 'DemandCloning': demand_config.get('DemandCloning', False)
+            'DemandCloning': demand_config.get('DemandCloning', False)
         }
     )
 
