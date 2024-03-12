@@ -26,7 +26,7 @@ def addFloorForceToEvent(timeSeriesArray, patternsArray, force, direction, floor
     """
     Add force (one component) time series and pattern in the event file
     """
-    seriesName = "WaterForceSeries_" + str(floor) + direction
+    seriesName = "HydroForceSeries_" + str(floor) + direction
     timeSeries = {
                 "name": seriesName,
                 "dT": dT,
@@ -35,11 +35,11 @@ def addFloorForceToEvent(timeSeriesArray, patternsArray, force, direction, floor
             }
     
     timeSeriesArray.append(timeSeries)
-    patternName = "WaterForcePattern_" + str(floor) + direction
+    patternName = "HydroForcePattern_" + str(floor) + direction
     pattern = {
         "name": patternName,
         "timeSeries": seriesName,
-        "type": "WaterFloorLoad",
+        "type": "HydroFloorLoad",
         "floor": str(floor),
         "dof": directionToDof(direction)
     }
@@ -50,12 +50,12 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):
     """
     Add force (one component) time series and pattern in the event file
     """
-    seriesName = "WaterForceSeries_" + str(floor) + direction
-    patternName = "WaterForcePattern_" + str(floor) + direction
+    seriesName = "HydroForceSeries_" + str(floor) + direction
+    patternName = "HydroForcePattern_" + str(floor) + direction
     pattern = {
         "name": patternName,
         "timeSeries": seriesName,
-        "type": "WaterFloorLoad",
+        "type": "HydroFloorLoad",
         "floor": str(floor),
         "dof": directionToDof(direction)
     }
@@ -81,7 +81,7 @@ def writeEVENT(forces, eventFilePath):
     timeSeriesArray = []
     patternsArray = []
     pressureArray = []
-    waterEventJson = {
+    hydroEventJson = {
         "type" : "Hydro", # Using HydroUQ
         "subtype": "MPM", # Using ClaymoreUW Material Point Method
         # "timeSeries": [], # From GeoClawOpenFOAM
@@ -97,7 +97,7 @@ def writeEVENT(forces, eventFilePath):
     }
 
     # Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {"randomVariables":[], "Events": [waterEventJson]}
+    eventDict = {"randomVariables":[], "Events": [hydroEventJson]}
 
     # Adding floor forces
     for floorForces in forces:
@@ -108,16 +108,13 @@ def writeEVENT(forces, eventFilePath):
         
     with open(eventFilePath, "w") as eventsFile:
         json.dump(eventDict, eventsFile)
-
-
+        
 
 def GetFloorsCount(BIMFilePath):
     with open(BIMFilePath,'r') as BIMFile:
-	    bim = json.load(BIMFile)
+        bim = json.load(BIMFile)
     return int(bim["GeneralInformation"]["stories"])
 	
- 
-
 if __name__ == "__main__":
     """
     Entry point to generate event file using HydroUQ MPM (ClaymoreUW Material Point Method)
@@ -126,7 +123,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Get sample EVENT file produced by HydroUQ MPM")
     parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
     parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
-    parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
+    parser.add_argument('--getRV', help= "getRV", required=False, action='store_true', default=False)
 
     # Parsing arguments
     arguments, unknowns = parser.parse_known_args()
