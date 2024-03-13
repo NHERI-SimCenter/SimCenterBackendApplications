@@ -74,7 +74,8 @@ def main(run_type, input_file, app_registry,
     
     mpi_spec = importlib.util.find_spec("mpi4py")
     found = mpi_spec is not None
-    if found:
+    if found and parallelType == 'parRUN':
+        
         import mpi4py
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
