@@ -165,7 +165,7 @@ regional_out_config = {
         'Sample': False,
         'Statistics': False,
         'GroupedSample': True,
-        'GroupedStatistics': False,
+        'GroupedStatistics': True,
     },
     'Loss': {
         'BldgRepair': {
@@ -979,6 +979,18 @@ def run_pelicun(
             adf.loc['irreparable', ('Demand', 'Unit')] = 'unitless'
             adf.loc['irreparable', ('LS1', 'Theta_0')] = 1e10
             adf.loc['irreparable', 'Incomplete'] = 0
+
+        # TODO: we can improve this by creating a water network-specific assessment class
+        if "Water" in asset_config['ComponentDatabase']:
+
+            # add a placeholder aggregate fragility that will never trigger
+            # damage, but allow damage processes to aggregate the various pipeline damages
+            adf.loc['aggregate', ('Demand', 'Directional')] = 1
+            adf.loc['aggregate', ('Demand', 'Offset')] = 0
+            adf.loc['aggregate', ('Demand', 'Type')] = 'Peak Ground Velocity'
+            adf.loc['aggregate', ('Demand', 'Unit')] = 'mps'
+            adf.loc['aggregate', ('LS1', 'Theta_0')] = 1e10
+            adf.loc['aggregate', 'Incomplete'] = 0
 
         PAL.damage.load_damage_model(
             component_db

@@ -645,8 +645,9 @@ def auto_populate(AIM):
 
             # Define performance model
             CMP = pd.DataFrame(
-                {f'PWP.{pipe_flexibility}.GS': ['ea', location_string, '1', 1, 'N/A'],
-                 f'PWP.{pipe_flexibility}.GF': ['ea', location_string, '1', 1, 'N/A']},
+                {f'PWP.{pipe_flexibility}.GS': ['ea', location_string, '0', 1, 'N/A'],
+                 f'PWP.{pipe_flexibility}.GF': ['ea', location_string, '0', 1, 'N/A'],
+                 f'aggregate':                 ['ea', location_string, '0', 1, 'N/A']},
                 index = ['Units','Location','Direction','Theta_0','Family']
             ).T
             
@@ -672,6 +673,17 @@ def auto_populate(AIM):
                     ]
                 demand_config = {'DemandCloning': demand_cloning_config}
 
+            # Create damage process
+            dmg_process = {
+                f"1_PWP.{pipe_flexibility}.GS": {"DS1": "aggregate_DS1"},
+                f"2_PWP.{pipe_flexibility}.GF": {"DS1": "aggregate_DS1"},
+                f"3_PWP.{pipe_flexibility}.GS": {"DS2": "aggregate_DS2"},
+                f"4_PWP.{pipe_flexibility}.GF": {"DS2": "aggregate_DS2"},                
+            }
+            dmg_process_filename = 'dmg_process.json'
+            with open(dmg_process_filename, 'w', encoding='utf-8') as f:
+                json.dump(dmg_process, f, indent=2)
+
             # Define the auto-populated config
             DL_ap = {
                 "Asset": {
@@ -681,7 +693,8 @@ def auto_populate(AIM):
                     "PlanArea": "1" # Sina: does not make sense for water. Kept it here since itw as also kept here for Transportation
                 },
                 "Damage": {
-                    "DamageProcess": "Hazus Earthquake"
+                    "DamageProcess": "User Defined",
+                    "DamageProcessFilePath": "dmg_process.json"
                 },
                 "Demands": demand_config
             }
