@@ -38,27 +38,41 @@
 # Adam Zsarnóczay
 # Sangri Kuanshi
 
+# Description:
+# Read SAM info saved the surrogate model file (it was saved when training the surrogate model) and write it to new SAM.json
+# Input files: AIM.json, surrogate.json (user provided)
+# Output files: SAM.json
+
 import sys, argparse,json, os
 
-def create_SAM(AIM_file, EVENT_file, SAM_file,
-    model_script):
+def create_SAM(AIM_file, SAM_file):
+
+    # 
+    # Find SAM.json info from surrogate model file
+    #
+
+    # load AIM
 
     with open(AIM_file, 'r') as f:
         root_AIM = json.load(f)
-    #root_GI = root_AIM['GeneralInformation']
 
     print("General Information tab is ignored")
     root_SAM = root_AIM['Applications']['Modeling']
 
-    surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    # find and load surrogate json
+
+    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
+    surrogate_path = os.path.join(os.getcwd(),root_SAM['ApplicationData']['mainScript'])
     print(surrogate_path)
 
     with open(surrogate_path, 'r') as f:
         surrogate_model = json.load(f) 
 
+    # find SAM in surrogate json
+
     root_SAM = surrogate_model['SAM']
 
-
+    # sanity check
 
     if root_AIM["Applications"]["EDP"]["Application"] != "SurrogateEDP":
             with open("../workflow.err","w") as f:
@@ -70,48 +84,7 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
                 f.write("Please select [None] in the FEM tab.")
             exit(-1)
 
-    #root_GI = root_AIM['GeneralInformation']
-
-    # Read "SAM" from the surrogate model, and dump it into SAM_file
-    '''
-    try:
-        stories = root_GI['NumberOfStories']
-    except:
-        raise ValueError("number of stories information missing")
-
-    if column_line is None:
-        # KZ: looking into SAM
-        root_SAM = root_AIM.get('Modeling', {})
-        nodes = root_SAM.get('centroidNodes', [])
-        if len(nodes) == 0:
-            nodes = list(range(stories+1))
-    else:
-        nodes = [int(node) for node in column_line.split(',')]
-        nodes = nodes[:stories+1]
-
-    node_map = []
-    for floor, node in enumerate(nodes):
-        node_entry = {}
-        node_entry['node'] = node
-        # KZ: correcting the cline
-        node_entry['cline'] = 'response'
-        node_entry['floor'] = f'{floor}'
-        node_map.append(node_entry)
-
-    root_SAM = {
-        'mainScript': model_script,
-        'modelPath': model_path,
-        'dofMap': dof_map,
-        'recorderNodes': nodes,
-        'type': 'CustomPyInput',
-        'NodeMapping': node_map,
-        'numStory': stories,
-        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
-        'ndm': int(ndm),
-        # TODO: improve this if we want random vars in the structure
-        'randomVar': []
-    }
-    '''
+    # write SAM.json
 
     with open(SAM_file, 'w') as f:
         json.dump(root_SAM, f, indent=2)
@@ -120,12 +93,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
-    parser.add_argument('--filenameEVENT')
+    parser.add_argument('--filenameEVENT') # not used
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
     parser.add_argument('--getRV', nargs='?', const=True, default=False) # Not used
     args = parser.parse_args()
 
-    sys.exit(create_SAM(
-        args.filenameAIM, args.filenameEVENT, args.filenameSAM,
-        args.mainScript))
+    sys.exit(create_SAM(args.filenameAIM, args.filenameSAM))

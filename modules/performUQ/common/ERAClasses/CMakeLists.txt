@@ -1,0 +1,4 @@
+simcenter_add_python_script(SCRIPT ERADist.py)
+simcenter_add_python_script(SCRIPT ERANataf.py)
+simcenter_add_python_script(SCRIPT ERACond.py)
+simcenter_add_python_script(SCRIPT ERARosen.py)

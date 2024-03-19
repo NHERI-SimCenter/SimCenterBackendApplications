@@ -60,6 +60,9 @@ import json
 import numpy as np
 from scipy.stats import norm
 import pandas as pd
+from pathlib import Path
+from copy import deepcopy
+
 from . import base
 from .uq import fit_distribution_to_percentiles
 
@@ -90,8 +93,9 @@ def parse_DS_Hierarchy(DSH):
 
 
 def create_FEMA_P58_fragility_db(source_file,
-                                 target_data_file='fragility_DB_FEMA_P58_2nd.csv',
-                                 target_meta_file='fragility_DB_FEMA_P58_2nd.json'):
+                                 meta_file='',
+                                 target_data_file='damage_DB_FEMA_P58_2nd.csv',
+                                 target_meta_file='damage_DB_FEMA_P58_2nd.json'):
     """
     Create a fragility parameter database based on the FEMA P58 data
 
@@ -102,6 +106,8 @@ def create_FEMA_P58_fragility_db(source_file,
     ----------
     source_file: string
         Path to the fragility database file.
+    meta_file: string
+        Path to the JSON file with metadata about the database.
     target_data_file: string
         Path where the fragility data file should be saved. A csv file is
         expected.
@@ -109,12 +115,24 @@ def create_FEMA_P58_fragility_db(source_file,
         Path where the fragility metadata should be saved. A json file is
         expected.
 
+    Raises
+    ------
+    ValueError
+        If there are problems with the mutually exclusive damage state
+        definition of some component.
     """
 
     # parse the source file
     df = pd.read_excel(source_file, sheet_name='Summary', header=2, index_col=1,
                        true_values=["YES", "Yes", "yes"],
                        false_values=["NO", "No", "no"])
+
+    # parse the extra metadata file
+    if Path(meta_file).is_file():
+        with open(meta_file, 'r') as f:
+            frag_meta = json.load(f)
+    else:
+        frag_meta = {}
 
     # remove the empty rows and columns
     df.dropna(axis=0, how='all', inplace=True)
@@ -221,6 +239,19 @@ def create_FEMA_P58_fragility_db(source_file,
     # initialize the dictionary that stores the fragility metadata
     meta_dict = {}
 
+    # add the general information to the meta dict
+    if "_GeneralInformation" in frag_meta.keys():
+
+        frag_meta = frag_meta["_GeneralInformation"]
+
+        # remove the decision variable part from the general info
+        frag_meta.pop("DecisionVariables", None)
+
+        meta_dict.update({"_GeneralInformation": frag_meta})
+
+        
+
+
     # conversion dictionary for demand types
     convert_demand_type = {
         'Story Drift Ratio': "Peak Interstory Drift Ratio",
@@ -272,8 +303,11 @@ def create_FEMA_P58_fragility_db(source_file,
 
         # store the global (i.e., not DS-specific) metadata
 
-        # every component is assumed to have a comp. description
-        comments = cmp_meta['Component_Description']
+        # start with a comp. description
+        if not pd.isna(cmp_meta['Component_Description']):
+            comments = cmp_meta['Component_Description']
+        else:
+            comments = ''
 
         # the additional fields are added to the description if they exist
 
@@ -348,10 +382,13 @@ def create_FEMA_P58_fragility_db(source_file,
                     for ds in LS_contents[1:]:
                         ds_id = ds[2]
 
+                        repair_action = cmp_meta[f"DS_{ds_id}_Repair_Description"]
+                        if pd.isna(repair_action) == True:
+                            repair_action = "<missing data>"
+
                         ls_meta.update({f"DS{ds_id}": {
                             "Description": cmp_meta[f"DS_{ds_id}_Description"],
-                            "RepairAction": cmp_meta[
-                                f"DS_{ds_id}_Repair_Description"]
+                            "RepairAction": repair_action
                         }})
 
                 else:
@@ -380,12 +417,15 @@ def create_FEMA_P58_fragility_db(source_file,
 
                             ds_pure_id = ds_map[::-1].find('1') + 1
 
+                            repair_action = cmp_meta[f"DS_{ds_pure_id}_Repair_Description"]
+                            if pd.isna(repair_action) == True:
+                                repair_action = "<missing data>"
+
                             ls_meta.update({f"DS{ds_id}": {
                                 "Description": f"Pure DS{ds_pure_id}. " +
                                 cmp_meta[f"DS_{ds_pure_id}_Description"],
-                                "RepairAction": cmp_meta[
-                                    f"DS_{ds_pure_id}_Repair_Description"]
-                            }})
+                                "RepairAction": repair_action
+                                }})
 
                         else:
 
@@ -421,9 +461,13 @@ def create_FEMA_P58_fragility_db(source_file,
                 theta_0 = getattr(cmp, f"DS_{ds_id}_Median_Demand")
                 theta_1 = getattr(cmp, f"DS_{ds_id}_Total_Dispersion_Beta")
 
+                repair_action = cmp_meta[f"DS_{ds_id}_Repair_Description"]
+                if pd.isna(repair_action) == True:
+                    repair_action = "<missing data>"
+
                 ls_meta.update({f"DS{ds_id}": {
                     "Description": cmp_meta[f"DS_{ds_id}_Description"],
-                    "RepairAction": cmp_meta[f"DS_{ds_id}_Repair_Description"]
+                    "RepairAction": repair_action
                 }})
 
             # FEMA P58 assumes lognormal distribution for every fragility
@@ -473,8 +517,9 @@ def create_FEMA_P58_fragility_db(source_file,
 
 def create_FEMA_P58_bldg_repair_db(
         source_file,
-        target_data_file='bldg_repair_DB_FEMA_P58_2nd.csv',
-        target_meta_file='bldg_repair_DB_FEMA_P58_2nd.json'):
+        meta_file='',
+        target_data_file='loss_repair_DB_FEMA_P58_2nd.csv',
+        target_meta_file='loss_repair_DB_FEMA_P58_2nd.json'):
     """
     Create a repair consequence parameter database based on the FEMA P58 data
 
@@ -485,6 +530,8 @@ def create_FEMA_P58_bldg_repair_db(
     ----------
     source_file: string
         Path to the fragility database file.
+    meta_file: string
+        Path to the JSON file with metadata about the database.
     target_data_file: string
         Path where the consequence data file should be saved. A csv file is
         expected.
@@ -498,6 +545,13 @@ def create_FEMA_P58_bldg_repair_db(
     df = pd.concat(
         [pd.read_excel(source_file, sheet_name=sheet, header=2, index_col=1)
          for sheet in ('Summary', 'Cost Summary', 'Env Summary')], axis=1)
+
+    # parse the extra metadata file
+    if Path(meta_file).is_file():
+        with open(meta_file, 'r') as f:
+            frag_meta = json.load(f)
+    else:
+        frag_meta = {}
 
     # remove duplicate columns
     # (there are such because we joined two tables that were read separately)
@@ -622,6 +676,13 @@ def create_FEMA_P58_bldg_repair_db(
     # initialize the dictionary that stores the loss metadata
     meta_dict = {}
 
+    # add the general information to the meta dict
+    if "_GeneralInformation" in frag_meta.keys():
+
+        frag_meta = frag_meta["_GeneralInformation"]
+
+        meta_dict.update({"_GeneralInformation": frag_meta})
+
     convert_family = {
         'LogNormal': 'lognormal',
         'Normal': 'normal'
@@ -658,8 +719,11 @@ def create_FEMA_P58_bldg_repair_db(
 
         # store the global (i.e., not DS-specific) metadata
 
-        # every component is assumed to have a comp. description
-        comments = cmp_meta['Component_Description']
+        # start with a comp. description
+        if not pd.isna(cmp_meta['Component_Description']):
+            comments = cmp_meta['Component_Description']
+        else:
+            comments = ''
 
         # the additional fields are added to the description if they exist
         if cmp_meta['Construction_Quality'] != 'Not Specified':
@@ -857,11 +921,14 @@ def create_FEMA_P58_bldg_repair_db(
 
                     ds_pure_id = ds_map[::-1].find('1') + 1
 
+                    repair_action = cmp_meta[f"DS_{ds_pure_id}_Repair_Description"]
+                    if pd.isna(repair_action) == True:
+                        repair_action = "<missing data>"
+
                     meta_data['DamageStates'].update({f"DS{DS_i}": {
                         "Description": f"Pure DS{ds_pure_id}. " +
                                        cmp_meta[f"DS_{ds_pure_id}_Description"],
-                        "RepairAction":
-                            cmp_meta[f"DS_{ds_pure_id}_Repair_Description"]
+                        "RepairAction": repair_action
                     }})
 
                 else:
@@ -908,11 +975,14 @@ def create_FEMA_P58_bldg_repair_db(
                     else:
                         incomplete_cost = True
 
+                    repair_action = cmp_meta[f"DS_{DS_i}_Repair_Description"]
+                    if pd.isna(repair_action) == True:
+                        repair_action = "<missing data>"
+
                     meta_data['DamageStates'].update({
                         f"DS{DS_i}": {
                             "Description": cmp_meta[f"DS_{DS_i}_Description"],
-                            "RepairAction": cmp_meta[
-                                f"DS_{DS_i}_Repair_Description"]}})
+                            "RepairAction": repair_action}})
 
                 # time
                 if not pd.isna(getattr(cmp, f'Best_Fit_DS{DS_i}_1')):
@@ -1160,8 +1230,11 @@ def create_FEMA_P58_bldg_injury_db(
 
         # store the global (i.e., not DS-specific) metadata
 
-        # every component is assumed to have a comp. description
-        comments = cmp_meta['Component_Description']
+        # start with a comp. description
+        if not pd.isna(cmp_meta['Component_Description']):
+            comments = cmp_meta['Component_Description']
+        else:
+            comments = ''
 
         # the additional fields are added to the description if they exist
         if cmp_meta['Construction_Quality'] != 'Not Specified':
@@ -1536,8 +1609,11 @@ def create_FEMA_P58_bldg_redtag_db(
 
         # store the global (i.e., not DS-specific) metadata
 
-        # every component is assumed to have a comp. description
-        comments = cmp_meta['Component_Description']
+        # start with a comp. description
+        if not pd.isna(cmp_meta['Component_Description']):
+            comments = cmp_meta['Component_Description']
+        else:
+            comments = ''
 
         # the additional fields are added to the description if they exist
         if cmp_meta['Construction_Quality'] != 'Not Specified':
@@ -1660,8 +1736,10 @@ def create_FEMA_P58_bldg_redtag_db(
 
 
 def create_Hazus_EQ_fragility_db(source_file,
-                                 target_data_file='fragility_DB_Hazus_EQ.csv',
-                                 target_meta_file='fragility_DB_Hazus_EQ.json'):
+                                 meta_file='',
+                                 target_data_file='damage_DB_Hazus_EQ_bldg.csv',
+                                 target_meta_file='damage_DB_Hazus_EQ_bldg.json',
+                                 resolution='building'):
     """
     Create a database file based on the HAZUS EQ Technical Manual
 
@@ -1673,18 +1751,36 @@ def create_Hazus_EQ_fragility_db(source_file,
     ----------
     source_file: string
         Path to the fragility database file.
+    meta_file: string
+        Path to the JSON file with metadata about the database.
     target_data_file: string
         Path where the fragility data file should be saved. A csv file is
         expected.
     target_meta_file: string
         Path where the fragility metadata should be saved. A json file is
         expected.
+    resoltuion: string
+        If building, the function produces the conventional Hazus 
+        fragilities. If story, the function produces story-level 
+        fragilities.
 
     """
+
+    # adjust the target filenames if needed
+    if resolution == 'story':
+        target_data_file = target_data_file.replace('bldg', 'story')
+        target_meta_file = target_meta_file.replace('bldg', 'story')
 
     # parse the source file
     with open(source_file, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
+
+    # parse the extra metadata file
+    if Path(meta_file).is_file():
+        with open(meta_file, 'r') as f:
+            frag_meta = json.load(f)
+    else:
+        frag_meta = {}
 
     # prepare lists of labels for various building features
     design_levels = list(
@@ -1729,6 +1825,28 @@ def create_Hazus_EQ_fragility_db(source_file,
         index=np.arange(len(building_types) * len(design_levels) * 5),
         dtype=float
     )
+
+    # initialize the dictionary that stores the fragility metadata
+    meta_dict = {}
+
+    # add the general information to the meta dict
+    if "_GeneralInformation" in frag_meta.keys():
+
+        GI = frag_meta["_GeneralInformation"]
+
+        # remove the decision variable part from the general info
+        GI.pop("DecisionVariables", None)
+
+        for key, item in deepcopy(GI).items():
+
+            if key == 'ComponentGroups_Damage':
+                GI.update({'ComponentGroups': item})
+
+            if key.startswith('ComponentGroups'):
+                GI.pop(key, None)
+
+        meta_dict.update({"_GeneralInformation": GI})
+
     counter = 0
 
     # First, prepare the structural fragilities
@@ -1738,16 +1856,74 @@ def create_Hazus_EQ_fragility_db(source_file,
         for dl in design_levels:
             if bt in S_data['EDP_limits'][dl].keys():
 
+                # add a dot in bt between structure and height labels, if needed
+                if ((len(bt)>2) and (bt[-1] in ['L','M','H'])):
+                    bt_exp = f'{bt[:-1]}.{bt[-1]}'
+                    st = bt[:-1]
+                    hc = bt[-1]
+                else:
+                    bt_exp = bt
+                    st = bt
+                    hc = None
+
+                # story-level fragilities are based only on the low rise archetypes
+                if resolution == 'story':
+                    if hc in ['M', 'H']:
+                        continue
+                    elif hc == 'L':
+                        bt_exp = st
+
                 # create the component id
-                cmp_id = f'STR.{bt}.{convert_design_level[dl]}'
+                cmp_id = f'STR.{bt_exp}.{convert_design_level[dl]}'
                 df_db.loc[counter, 'ID'] = cmp_id
 
                 # store demand specifications
-                df_db.loc[counter, 'Demand-Type'] = "Peak Roof Drift Ratio"
+                if resolution == 'building':
+                    df_db.loc[counter, 'Demand-Type'] = "Peak Roof Drift Ratio"
+                elif resolution == 'story':
+                    df_db.loc[counter, 'Demand-Type'] = "Peak Interstory Drift Ratio"
+
                 df_db.loc[counter, 'Demand-Unit'] = "rad"
                 df_db.loc[counter, 'Demand-Offset'] = 0
 
+                # add metadata
+                if hc != None:
+                    cmp_meta = {
+                        "Description": (
+                            frag_meta['Meta']['Collections']['STR']['Description']+", "+
+                            frag_meta['Meta']['StructuralSystems'][st]['Description']+", "+
+                            frag_meta['Meta']['HeightClasses'][hc]['Description'] + ", "+
+                            frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Description']
+                            ),
+                        "Comments": (
+                            frag_meta['Meta']['Collections']['STR']['Comment']+"\n"+
+                            frag_meta['Meta']['StructuralSystems'][st]['Comment']+"\n"+
+                            frag_meta['Meta']['HeightClasses'][hc]['Comment'] + "\n"+
+                            frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Comment']
+                            ),
+                        "SuggestedComponentBlockSize": "1 EA",
+                        "RoundUpToIntegerQuantity": "True",
+                        "LimitStates": {}
+                    }
+                else:
+                    cmp_meta = {
+                        "Description": (
+                            frag_meta['Meta']['Collections']['STR']['Description']+", "+
+                            frag_meta['Meta']['StructuralSystems'][st]['Description']+", "+
+                            frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Description']
+                            ),
+                        "Comments": (
+                            frag_meta['Meta']['Collections']['STR']['Comment']+"\n"+
+                            frag_meta['Meta']['StructuralSystems'][st]['Comment']+"\n"+
+                            frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Comment']
+                            ),
+                        "SuggestedComponentBlockSize": "1 EA",
+                        "RoundUpToIntegerQuantity": "True",
+                        "LimitStates": {}
+                    }
+
                 # store the Limit State parameters
+                ds_meta = frag_meta['Meta']['StructuralSystems'][st]['DamageStates']
                 for LS_i in range(1, 5):
 
                     df_db.loc[counter, f'LS{LS_i}-Family'] = 'lognormal'
@@ -1761,6 +1937,19 @@ def create_Hazus_EQ_fragility_db(source_file,
                         df_db.loc[counter, f'LS{LS_i}-DamageStateWeights'] = (
                             f'{1.0 - p_coll} | {p_coll}')
 
+                        cmp_meta["LimitStates"].update({"LS4": {
+                            "DS4": {"Description": ds_meta['DS4']},
+                            "DS5": {"Description": ds_meta['DS5']}
+                        }})
+
+                    else:
+                        cmp_meta["LimitStates"].update({f"LS{LS_i}": {
+                            f"DS{LS_i}": {"Description": ds_meta[f"DS{LS_i}"]}
+                        }})
+
+                # store metadata
+                meta_dict.update({cmp_id:cmp_meta})
+
                 counter += 1
 
     # Second, the non-structural drift sensitive one
@@ -1770,16 +1959,38 @@ def create_Hazus_EQ_fragility_db(source_file,
     df_db.loc[counter, 'ID'] = 'NSD'
 
     # store demand specifications
-    df_db.loc[counter, 'Demand-Type'] = "Peak Roof Drift Ratio"
+    if resolution == 'building':
+        df_db.loc[counter, 'Demand-Type'] = "Peak Roof Drift Ratio"
+    elif resolution == 'story':
+        df_db.loc[counter, 'Demand-Type'] = "Peak Interstory Drift Ratio"
+
     df_db.loc[counter, 'Demand-Unit'] = "rad"
     df_db.loc[counter, 'Demand-Offset'] = 0
 
+    # add metadata
+    cmp_meta = {
+        "Description": frag_meta['Meta']['Collections']['NSD']['Description'],
+        "Comments": frag_meta['Meta']['Collections']['NSD']['Comment'],
+        "SuggestedComponentBlockSize": "1 EA",
+        "RoundUpToIntegerQuantity": "True",
+        "LimitStates": {}
+    }
+
     # store the Limit State parameters
+    ds_meta = frag_meta['Meta']['Collections']['NSD']['DamageStates']
     for LS_i in range(1, 5):
         df_db.loc[counter, f'LS{LS_i}-Family'] = 'lognormal'
         df_db.loc[counter, f'LS{LS_i}-Theta_0'] = NSD_data['EDP_limits'][
             LS_i - 1]
         df_db.loc[counter, f'LS{LS_i}-Theta_1'] = NSD_data['Fragility_beta']
+
+        # add limit state metadata
+        cmp_meta["LimitStates"].update({f"LS{LS_i}": 
+            {f"DS{LS_i}": {"Description": ds_meta[f"DS{LS_i}"]}
+        }})
+
+    # store metadata
+    meta_dict.update({'NSD':cmp_meta})
 
     counter += 1
 
@@ -1797,46 +2008,131 @@ def create_Hazus_EQ_fragility_db(source_file,
         df_db.loc[counter, 'Demand-Unit'] = "g"
         df_db.loc[counter, 'Demand-Offset'] = 0
 
+        # add metadata
+        cmp_meta = {
+            "Description": (
+                frag_meta['Meta']['Collections']['NSA']['Description']+", "+
+                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Description']
+                ),
+            "Comments": (
+                frag_meta['Meta']['Collections']['NSA']['Comment']+"\n"+
+                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Comment']
+                ),
+            "SuggestedComponentBlockSize": "1 EA",
+            "RoundUpToIntegerQuantity": "True",
+            "LimitStates": {}
+        }
+
         # store the Limit State parameters
+        ds_meta = frag_meta['Meta']['Collections']['NSA']['DamageStates']
         for LS_i in range(1, 5):
             df_db.loc[counter, f'LS{LS_i}-Family'] = 'lognormal'
             df_db.loc[counter, f'LS{LS_i}-Theta_0'] = \
                 NSA_data['EDP_limits'][dl][LS_i - 1]
             df_db.loc[counter, f'LS{LS_i}-Theta_1'] = NSA_data['Fragility_beta']
 
+            # add limit state metadata
+            cmp_meta["LimitStates"].update({f"LS{LS_i}": 
+                {f"DS{LS_i}": {"Description": ds_meta[f"DS{LS_i}"]}
+            }})
+
+        # store metadata
+        meta_dict.update({cmp_id:cmp_meta})
+
         counter += 1
 
-    # Fourth, the lifeline facilities
-    LF_data = raw_data['Lifeline_Facilities']
+    # Fourth, the lifeline facilities - only at the building-level resolution
+    if resolution == 'building':
+        LF_data = raw_data['Lifeline_Facilities']
 
-    for bt in building_types:
-        for dl in design_levels:
-            if bt in LF_data['EDP_limits'][dl].keys():
+        for bt in building_types:
+            for dl in design_levels:
+                if bt in LF_data['EDP_limits'][dl].keys():
 
-                # create the component id
-                cmp_id = f'LF.{bt}.{convert_design_level[dl]}'
-                df_db.loc[counter, 'ID'] = cmp_id
+                    # add a dot in bt between structure and height labels, if needed
+                    if ((len(bt)>2) and (bt[-1] in ['L','M','H'])):
+                        bt_exp = f'{bt[:-1]}.{bt[-1]}'
+                        st = bt[:-1]
+                        hc = bt[-1]
+                    else:
+                        bt_exp = bt
+                        st = bt
+                        hc = None
 
-                # store demand specifications
-                df_db.loc[counter, 'Demand-Type'] = "Peak Ground Acceleration"
-                df_db.loc[counter, 'Demand-Unit'] = "g"
-                df_db.loc[counter, 'Demand-Offset'] = 0
+                    # create the component id
+                    cmp_id = f'LF.{bt_exp}.{convert_design_level[dl]}'
+                    df_db.loc[counter, 'ID'] = cmp_id
 
-                # store the Limit State parameters
-                for LS_i in range(1, 5):
+                    # store demand specifications
+                    df_db.loc[counter, 'Demand-Type'] = "Peak Ground Acceleration"
+                    df_db.loc[counter, 'Demand-Unit'] = "g"
+                    df_db.loc[counter, 'Demand-Offset'] = 0
 
-                    df_db.loc[counter, f'LS{LS_i}-Family'] = 'lognormal'
-                    df_db.loc[counter, f'LS{LS_i}-Theta_0'] = \
-                        LF_data['EDP_limits'][dl][bt][LS_i - 1]
-                    df_db.loc[counter, f'LS{LS_i}-Theta_1'] = \
-                        LF_data['Fragility_beta'][dl]
+                    # add metadata
+                    if hc != None:
+                        cmp_meta = {
+                            "Description": (
+                                frag_meta['Meta']['Collections']['LF']['Description']+", "+
+                                frag_meta['Meta']['StructuralSystems'][st]['Description']+", "+
+                                frag_meta['Meta']['HeightClasses'][hc]['Description'] + ", "+
+                                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Description']
+                                ),
+                            "Comments": (
+                                frag_meta['Meta']['Collections']['LF']['Comment']+"\n"+
+                                frag_meta['Meta']['StructuralSystems'][st]['Comment']+"\n"+
+                                frag_meta['Meta']['HeightClasses'][hc]['Comment'] + "\n"+
+                                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Comment']
+                                ),
+                            "SuggestedComponentBlockSize": "1 EA",
+                            "RoundUpToIntegerQuantity": "True",
+                            "LimitStates": {}
+                        }
+                    else:
+                        cmp_meta = {
+                            "Description": (
+                                frag_meta['Meta']['Collections']['LF']['Description']+", "+
+                                frag_meta['Meta']['StructuralSystems'][st]['Description']+", "+
+                                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Description']
+                                ),
+                            "Comments": (
+                                frag_meta['Meta']['Collections']['LF']['Comment']+"\n"+
+                                frag_meta['Meta']['StructuralSystems'][st]['Comment']+"\n"+
+                                frag_meta['Meta']['DesignLevels'][convert_design_level[dl]]['Comment']
+                                ),
+                            "SuggestedComponentBlockSize": "1 EA",
+                            "RoundUpToIntegerQuantity": "True",
+                            "LimitStates": {}
+                        }
 
-                    if LS_i == 4:
-                        p_coll = LF_data['P_collapse'][bt]
-                        df_db.loc[counter, f'LS{LS_i}-DamageStateWeights'] = (
-                            f'{1.0 - p_coll} | {p_coll}')
+                    # store the Limit State parameters
+                    ds_meta = frag_meta['Meta']['StructuralSystems'][st]['DamageStates']
+                    for LS_i in range(1, 5):
 
-                counter += 1
+                        df_db.loc[counter, f'LS{LS_i}-Family'] = 'lognormal'
+                        df_db.loc[counter, f'LS{LS_i}-Theta_0'] = \
+                            LF_data['EDP_limits'][dl][bt][LS_i - 1]
+                        df_db.loc[counter, f'LS{LS_i}-Theta_1'] = \
+                            LF_data['Fragility_beta'][dl]
+
+                        if LS_i == 4:
+                            p_coll = LF_data['P_collapse'][bt]
+                            df_db.loc[counter, f'LS{LS_i}-DamageStateWeights'] = (
+                                f'{1.0 - p_coll} | {p_coll}')
+
+                            cmp_meta["LimitStates"].update({"LS4": {
+                                "DS4": {"Description": ds_meta['DS4']},
+                                "DS5": {"Description": ds_meta['DS5']}
+                            }})
+
+                        else:
+                            cmp_meta["LimitStates"].update({f"LS{LS_i}": {
+                                f"DS{LS_i}": {"Description": ds_meta[f"DS{LS_i}"]}
+                            }})
+
+                    # store metadata
+                    meta_dict.update({cmp_id:cmp_meta})
+
+                    counter += 1
 
     # Fifth, the ground failure fragilities
     GF_data = raw_data['Ground_Failure']
@@ -1852,7 +2148,23 @@ def create_Hazus_EQ_fragility_db(source_file,
             df_db.loc[counter, 'Demand-Unit'] = "inch"
             df_db.loc[counter, 'Demand-Offset'] = 0
 
+            # add metadata
+            cmp_meta = {
+                "Description": (
+                    frag_meta['Meta']['Collections']['GF']['Description']+
+                    f", {direction} Direction, {f_depth} Foundation"
+                    ),
+                "Comments": (
+                    frag_meta['Meta']['Collections']['GF']['Comment']
+                    ),
+                "SuggestedComponentBlockSize": "1 EA",
+                "RoundUpToIntegerQuantity": "True",
+                "LimitStates": {}
+            }
+
             # store the Limit State parameters
+            ds_meta = frag_meta['Meta']['Collections']['GF']['DamageStates']
+
             df_db.loc[counter, 'LS1-Family'] = 'lognormal'
             df_db.loc[counter, 'LS1-Theta_0'] = \
                 GF_data['EDP_limits'][direction][f_depth]
@@ -1862,16 +2174,24 @@ def create_Hazus_EQ_fragility_db(source_file,
             df_db.loc[counter, 'LS1-DamageStateWeights'] = (
                 f'{1.0 - p_complete} | {p_complete}')
 
+            cmp_meta["LimitStates"].update({"LS1": {
+                "DS1": {"Description": ds_meta['DS1']},
+                "DS2": {"Description": ds_meta['DS2']}
+            }})
+
+            # store metadata
+            meta_dict.update({cmp_id:cmp_meta})
+
             counter += 1
 
     # remove empty rows (from the end)
     df_db.dropna(how='all', inplace=True)
 
     # All Hazus components have complete fragility info,
-    df_db.loc[:, 'Incomplete'] = 0
+    df_db['Incomplete'] = 0
 
     # none of them are directional,
-    df_db.loc[:, 'Demand-Directional'] = 0
+    df_db['Demand-Directional'] = 0
 
     # rename the index
     df_db.set_index("ID", inplace=True)
@@ -1882,16 +2202,18 @@ def create_Hazus_EQ_fragility_db(source_file,
     # save the fragility data
     df_db.to_csv(target_data_file)
 
-    # save the metadata - later
-    # with open(target_meta_file, 'w+') as f:
-    #    json.dump(meta_dict, f, indent=2)
+    # save the metadata
+    with open(target_meta_file, 'w+') as f:
+        json.dump(meta_dict, f, indent=2)
 
     print("Successfully parsed and saved the fragility data from Hazus EQ")
 
 
 def create_Hazus_EQ_bldg_repair_db(source_file,
-                                   target_data_file='bldg_repair_DB_Hazus_EQ.csv',
-                                   target_meta_file='bldg_repair_DB_Hazus_EQ.json'):
+                                   meta_file='',
+                                   target_data_file='loss_repair_DB_Hazus_EQ_bldg.csv',
+                                   target_meta_file='loss_repair_DB_Hazus_EQ_bldg.json',
+                                   resolution='building'):
     """
     Create a database file based on the HAZUS EQ Technical Manual
 
@@ -1903,18 +2225,36 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
     ----------
     source_file: string
         Path to the Hazus database file.
+    meta_file: string
+        Path to the JSON file with metadata about the database.
     target_data_file: string
         Path where the repair DB file should be saved. A csv file is
         expected.
     target_meta_file: string
         Path where the repair DB metadata should be saved. A json file is
         expected.
+    resoltuion: string
+        If building, the function produces the conventional Hazus 
+        fragilities. If story, the function produces story-level 
+        fragilities.
 
     """
+
+    # adjust the target filenames if needed
+    if resolution == 'story':
+        target_data_file = target_data_file.replace('bldg', 'story')
+        target_meta_file = target_meta_file.replace('bldg', 'story')
 
     # parse the source file
     with open(source_file, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
+
+    # parse the extra metadata file
+    if Path(meta_file).is_file():
+        with open(meta_file, 'r') as f:
+            frag_meta = json.load(f)
+    else:
+        frag_meta = {}
 
     # prepare lists of labels for various building features
     occupancies = list(
@@ -1945,6 +2285,24 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
         dtype=float
     )
 
+    # initialize the dictionary that stores the loss metadata
+    meta_dict = {}
+
+    # add the general information to the meta dict
+    if "_GeneralInformation" in frag_meta.keys():
+
+        GI = frag_meta["_GeneralInformation"]
+
+        for key, item in deepcopy(GI).items():
+
+            if key == 'ComponentGroups_Loss_Repair':
+                GI.update({'ComponentGroups': item})
+
+            if key.startswith('ComponentGroups'):
+                GI.pop(key, None)
+
+        meta_dict.update({"_GeneralInformation": GI})
+
     # First, prepare the structural damage consequences
     S_data = raw_data['Structural_Fragility_Groups']
 
@@ -1953,8 +2311,26 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
         # create the component id
         cmp_id = f'STR.{occ_type}'
 
+        cmp_meta = {
+            "Description": (
+                frag_meta['Meta']['Collections']['STR']['Description']+", "+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Description']
+                ),
+            "Comments": (
+                frag_meta['Meta']['Collections']['STR']['Comment']+"\n"+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Comment']                
+                ),
+            "SuggestedComponentBlockSize": "1 EA",
+            "RoundUpToIntegerQuantity": "True",
+            "DamageStates": {}
+        }
+
         # store the consequence values for each Damage State
+        ds_meta = frag_meta['Meta']['Collections']['STR']['DamageStates']
         for DS_i in range(1, 6):
+
+            cmp_meta["DamageStates"].update({f"DS{DS_i}": 
+                {"Description": ds_meta[f"DS{DS_i}"]}})
 
             # DS4 and DS5 have identical repair consequences
             if DS_i == 5:
@@ -1970,6 +2346,9 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
                 (cmp_id, 'Time'),
                 f'DS{DS_i}-Theta_0'] = S_data['Repair_time'][occ_type][ds_i-1]
 
+        # store metadata
+        meta_dict.update({cmp_id:cmp_meta})
+
     # Second, the non-structural drift sensitive one
     NSD_data = raw_data['NonStructural_Drift_Sensitive_Fragility_Groups']
 
@@ -1978,12 +2357,33 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
         # create the component id
         cmp_id = f'NSD.{occ_type}'
 
+        cmp_meta = {
+            "Description": (
+                frag_meta['Meta']['Collections']['NSD']['Description']+", "+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Description']
+                ),
+            "Comments": (
+                frag_meta['Meta']['Collections']['NSD']['Comment']+"\n"+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Comment']                
+                ),
+            "SuggestedComponentBlockSize": "1 EA",
+            "RoundUpToIntegerQuantity": "True",
+            "DamageStates": {}
+        }
+
         # store the consequence values for each Damage State
+        ds_meta = frag_meta['Meta']['Collections']['NSD']['DamageStates']
         for DS_i in range(1, 5):
+
+            cmp_meta["DamageStates"].update({f"DS{DS_i}": 
+                {"Description": ds_meta[f"DS{DS_i}"]}})
 
             df_db.loc[
                 (cmp_id, 'Cost'),
                 f'DS{DS_i}-Theta_0'] = NSD_data['Repair_cost'][occ_type][DS_i-1]
+
+        # store metadata
+        meta_dict.update({cmp_id:cmp_meta})
 
     # Third, the non-structural acceleration sensitive fragilities
     NSA_data = raw_data['NonStructural_Acceleration_Sensitive_Fragility_Groups']
@@ -1993,48 +2393,92 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
         # create the component id
         cmp_id = f'NSA.{occ_type}'
 
+        cmp_meta = {
+            "Description": (
+                frag_meta['Meta']['Collections']['NSA']['Description']+", "+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Description']
+                ),
+            "Comments": (
+                frag_meta['Meta']['Collections']['NSA']['Comment']+"\n"+
+                frag_meta['Meta']['OccupancyTypes'][occ_type]['Comment']                
+                ),
+            "SuggestedComponentBlockSize": "1 EA",
+            "RoundUpToIntegerQuantity": "True",
+            "DamageStates": {}
+        }
+
         # store the consequence values for each Damage State
+        ds_meta = frag_meta['Meta']['Collections']['NSA']['DamageStates']
         for DS_i in range(1, 5):
+
+            cmp_meta["DamageStates"].update({f"DS{DS_i}": 
+                {"Description": ds_meta[f"DS{DS_i}"]}})
 
             df_db.loc[
                 (cmp_id, 'Cost'),
                 f'DS{DS_i}-Theta_0'] = NSA_data['Repair_cost'][occ_type][DS_i-1]
 
-    # Fourth, the lifeline facilities
-    LF_data = raw_data['Lifeline_Facilities']
+        # store metadata
+        meta_dict.update({cmp_id:cmp_meta})
 
-    for occ_type in occupancies:
+    # Fourth, the lifeline facilities - only at the building-level resolution
+    if resolution == 'building':
+        LF_data = raw_data['Lifeline_Facilities']
 
-        # create the component id
-        cmp_id = f'LF.{occ_type}'
+        for occ_type in occupancies:
 
-        # store the consequence values for each Damage State
-        for DS_i in range(1, 6):
+            # create the component id
+            cmp_id = f'LF.{occ_type}'
 
-            # DS4 and DS5 have identical repair consequences
-            if DS_i == 5:
-                ds_i = 4
-            else:
-                ds_i = DS_i
+            cmp_meta = {
+                "Description": (
+                    frag_meta['Meta']['Collections']['LF']['Description']+", "+
+                    frag_meta['Meta']['OccupancyTypes'][occ_type]['Description']
+                    ),
+                "Comments": (
+                    frag_meta['Meta']['Collections']['LF']['Comment']+"\n"+
+                    frag_meta['Meta']['OccupancyTypes'][occ_type]['Comment']                
+                    ),
+                "SuggestedComponentBlockSize": "1 EA",
+                "RoundUpToIntegerQuantity": "True",
+                "DamageStates": {}
+            }
 
-            df_db.loc[
-                (cmp_id, 'Cost'),
-                f'DS{DS_i}-Theta_0'] = LF_data['Repair_cost'][occ_type][ds_i - 1]
+            # store the consequence values for each Damage State
+            ds_meta = frag_meta['Meta']['Collections']['LF']['DamageStates']
+            for DS_i in range(1, 6):
 
-            df_db.loc[
-                (cmp_id, 'Time'),
-                f'DS{DS_i}-Theta_0'] = LF_data['Repair_time'][occ_type][ds_i - 1]
+                # DS4 and DS5 have identical repair consequences
+                if DS_i == 5:
+                    ds_i = 4
+                else:
+                    ds_i = DS_i
+
+                cmp_meta["DamageStates"].update({f"DS{DS_i}": 
+                    {"Description": ds_meta[f"DS{DS_i}"]}})
+
+                df_db.loc[
+                    (cmp_id, 'Cost'),
+                    f'DS{DS_i}-Theta_0'] = LF_data['Repair_cost'][occ_type][ds_i - 1]
+
+                df_db.loc[
+                    (cmp_id, 'Time'),
+                    f'DS{DS_i}-Theta_0'] = LF_data['Repair_time'][occ_type][ds_i - 1]
+
+            # store metadata
+            meta_dict.update({cmp_id:cmp_meta})
 
     # remove empty rows (from the end)
     df_db.dropna(how='all', inplace=True)
 
     # All Hazus components have complete fragility info,
-    df_db.loc[:, 'Incomplete'] = 0
+    df_db['Incomplete'] = 0
+    #df_db.loc[:, 'Incomplete'] = 0
 
     # The damage quantity unit is the same for all consequence values
     df_db.loc[:, 'Quantity-Unit'] = "1 EA"
 
-    # The output units are also indentical among all components
+    # The output units are also identical among all components
     df_db.loc[idx[:, 'Cost'], 'DV-Unit'] = "loss_ratio"
     df_db.loc[idx[:, 'Time'], 'DV-Unit'] = "day"
 
@@ -2051,8 +2495,8 @@ def create_Hazus_EQ_bldg_repair_db(source_file,
     df_db.to_csv(target_data_file)
 
     # save the metadata - later
-    # with open(target_meta_file, 'w+') as f:
-    #    json.dump(meta_dict, f, indent=2)
+    with open(target_meta_file, 'w+') as f:
+        json.dump(meta_dict, f, indent=2)
 
     print("Successfully parsed and saved the repair consequence data from Hazus "
           "EQ")
@@ -2084,6 +2528,13 @@ def create_Hazus_EQ_bldg_injury_db(source_file,
     # parse the source file
     with open(source_file, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)
+
+    # parse the extra metadata file
+    if Path(meta_file).is_file():
+        with open(meta_file, 'r') as f:
+            frag_meta = json.load(f)
+    else:
+        frag_meta = {}
 
     # prepare lists of labels for various building features
     building_types = list(
@@ -2167,7 +2618,7 @@ def create_Hazus_EQ_bldg_injury_db(source_file,
     # The damage quantity unit is the same for all consequence values
     df_db.loc[:, 'Quantity-Unit'] = "1 EA"
 
-    # The output units are also indentical among all components
+    # The output units are also identical among all components
     df_db.loc[:, 'DV-Unit'] = "injury_rate"
 
     # convert to simple index

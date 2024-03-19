@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+
 using namespace std;
 
 #include <jansson.h>  // for Json
@@ -90,7 +92,8 @@ int main(int argc, char **argv)
 	json_object_set(eventObj,"subtype", json_string("MultipleSimCenterEvent"));
 	
 	json_t *existingEventsArray = json_object_get(value,"Events");
-	int numExisting = json_array_size(existingEventsArray);      
+	int numExisting = json_array_size(existingEventsArray);
+	
 	if (numExisting > 1) {
 	  json_t *randomVar = json_object();
 	  json_object_set(randomVar, "distribution",json_string("discrete_design_set_string"));
@@ -139,6 +142,7 @@ int main(int argc, char **argv)
     // 
 
     json_t *rootINPUT = json_load_file(filenameAIM, 0, &error);
+
     json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
     
     // load INPUT file
@@ -185,7 +189,7 @@ int main(int argc, char **argv)
 	    } else {
 
 	      //
-	      // we need to go get factor from input file  and set it in the event
+	      // we need to go get factor from input file and set it in the event
 	      //
 
 	      json_t *inputEvent = json_array_get(inputEventsArray,count);
@@ -226,9 +230,32 @@ int main(int argc, char **argv)
 
 void addEvent(const char *fileName, json_t *obj) {
 
+  //
+  // fileName may be in input_data folder .. if so revise path
+  //
+  
+  char *fileNameToOpen;
+  if (std::filesystem::exists(fileName)) {
+      fileNameToOpen = new char[strlen(fileName)+1];
+      strcpy(fileNameToOpen, fileName);
+  } else {
+
+    std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+    std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+    newFilePath.append("input_data");
+    newFilePath.append(fileName);
+    std::string stringPath; stringPath = newFilePath.string();
+    const char *charPath = stringPath.c_str();
+    fileNameToOpen = new char[strlen(charPath)+1];
+    strcpy(fileNameToOpen, charPath);
+  }
+
+
+  std::cerr << "MultpleSimCenter::addEvent: FILE PATH: " << fileNameToOpen;
+  
   // open file and get the first event
   json_error_t error;
-  json_t *rootEVENT = json_load_file(fileName, 0, &error);
+  json_t *rootEVENT = json_load_file(fileNameToOpen, 0, &error);
   json_t *eventsArray = json_object_get(rootEVENT,"Events");  
   json_t *eventToCopy = json_array_get(eventsArray,0);
 
@@ -239,9 +266,27 @@ void addEvent(const char *fileName, json_t *obj) {
 
 void addEvent(const char *fileName, json_t *obj, double factor) {
 
+  char *fileNameToOpen;
+  if (std::filesystem::exists(fileName)) {
+      fileNameToOpen = new char[strlen(fileName)+1];
+      strcpy(fileNameToOpen, fileName);
+  } else {
+
+    std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+    std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+    newFilePath.append("input_data");
+    newFilePath.append(fileName);
+    std::string stringPath; stringPath = newFilePath.string();
+    const char *charPath = stringPath.c_str();
+    fileNameToOpen = new char[strlen(charPath)+1];
+    strcpy(fileNameToOpen, charPath);
+  }
+
+  std::cerr << "addEvent: FILE PATH: " << fileNameToOpen;  
+  
   // open file and get the first event
   json_error_t error;
-  json_t *rootEVENT = json_load_file(fileName, 0, &error);
+  json_t *rootEVENT = json_load_file(fileNameToOpen, 0, &error);
   json_t *eventsArray = json_object_get(rootEVENT,"Events");  
   json_t *eventToCopy = json_array_get(eventsArray,0);
   json_object_set(eventToCopy,"factor",json_real(factor));

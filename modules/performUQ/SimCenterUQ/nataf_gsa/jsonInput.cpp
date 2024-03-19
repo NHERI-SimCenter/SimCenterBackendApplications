@@ -58,6 +58,16 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 	// finding json file
 	//
 
+    // sy & frank - designsafe shell will always pass me scInput.json as input file name which is not good for non-quofem apps
+    // check if the sc_Input.json exists and if so overwirte the input file name
+
+    std::string sc_jsonPath  = workDir + "/templatedir/sc_scInput.json";
+    bool sc_exists = std::filesystem::exists(sc_jsonPath);
+    if (sc_exists)
+    {
+        inpFile = sc_jsonPath;
+    }
+
 	std::filesystem::path jsonPath(inpFile);
 
 	if (jsonPath.is_relative()){
@@ -66,6 +76,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 	std::ifstream myfile(jsonPath.make_preferred());
 	if (!myfile.is_open()) {
+
 		std::string errMsg = "Error running UQ engine: Unable to open JSON " + jsonPath.u8string();
 		theErrorFile.write(errMsg);
 	}
@@ -109,9 +120,9 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 ;		// If FEM exists
 		if (UQjson["Applications"].find("FEM") != UQjson["Applications"].end()) {
 			femAppName = UQjson["Applications"]["FEM"]["Application"];
+            std::cout << femAppName << " \n";
 		}
 	}
-	std::cout << femAppName << " \n";
 
 	//
 	// get EDP names
@@ -264,7 +275,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	//
-	// Specify parameters in each distributions.
+	// Specify parameters of each distribution.
 	//
 	if (procno == 0)  std::cout << " - Reading RV Data groups\n";
 
@@ -310,7 +321,7 @@ jsonInput::jsonInput(string workDir, string inpFile, int procno)
 
 
 	//
-	// Specify parameters in each distributions.
+	// Specify parameters of each distribution.
 	//
 	if (procno == 0)  std::cout << " - Reading RV parameters\n";
 

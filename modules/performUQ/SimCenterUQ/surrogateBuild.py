@@ -53,9 +53,12 @@ import shutil
 import subprocess
 import sys
 import time
-import warnings
 from copy import deepcopy
 import random
+import warnings
+import traceback
+warnings.filterwarnings("ignore")
+
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
@@ -63,6 +66,8 @@ sys.path.append(file_dir)
 from UQengine import UQengine
 
 # import pip installed modules
+
+
 
 try:
     moduleName = "numpy"
@@ -85,31 +90,34 @@ except:
 #
 # Modify GPy package
 #
-def monkeypatch_method(cls):
-    def decorator(func):
-        setattr(cls, func.__name__, func)
-        return func
 
-    return decorator
+if error_tag == False:
+
+    def monkeypatch_method(cls):
+        def decorator(func):
+            setattr(cls, func.__name__, func)
+            return func
+
+        return decorator
 
 
-@monkeypatch_method(GPy.models.gp_regression.GPRegression)
-def randomize(self, rand_gen=None, *args, **kwargs):
-    if rand_gen is None:
-        rand_gen = np.random.normal
-    # first take care of all parameters (from N(0,1))
-    x = rand_gen(size=self._size_transformed(), *args, **kwargs)
-    updates = self.update_model()
-    self.update_model(False)  # Switch off the updates
-    self.optimizer_array = x  # makes sure all of the tied parameters get the same init (since there's only one prior object...)
-    # now draw from prior where possible
-    x = self.param_array.copy()
-    [np.put(x, ind, p.rvs(ind.size)) for p, ind in self.priors.items() if not p is None]
-    unfixlist = np.ones((self.size,), dtype=bool)
-    from paramz.transformations import __fixed__
-    unfixlist[self.constraints[__fixed__]] = False
-    self.param_array.flat[unfixlist] = x.view(np.ndarray).ravel()[unfixlist]
-    self.update_model(updates)
+    @monkeypatch_method(GPy.models.gp_regression.GPRegression)
+    def randomize(self, rand_gen=None, *args, **kwargs):
+        if rand_gen is None:
+            rand_gen = np.random.normal
+        # first take care of all parameters (from N(0,1))
+        x = rand_gen(size=self._size_transformed(), *args, **kwargs)
+        updates = self.update_model()
+        self.update_model(False)  # Switch off the updates
+        self.optimizer_array = x  # makes sure all of the tied parameters get the same init (since there's only one prior object...)
+        # now draw from prior where possible
+        x = self.param_array.copy()
+        [np.put(x, ind, p.rvs(ind.size)) for p, ind in self.priors.items() if not p is None]
+        unfixlist = np.ones((self.size,), dtype=bool)
+        from paramz.transformations import __fixed__
+        unfixlist[self.constraints[__fixed__]] = False
+        self.param_array.flat[unfixlist] = x.view(np.ndarray).ravel()[unfixlist]
+        self.update_model(updates)
 
 ## Main function
 
@@ -126,10 +134,9 @@ class surrogate(UQengine):
         #
         # Check if there was error in importing python packages
         #
-
+        self.create_errLog()
         self.check_packages(error_tag, moduleName)
         self.cleanup_workdir()
-        self.create_errLog()
 
         #
         # Read Json File
@@ -155,12 +162,18 @@ class surrogate(UQengine):
         self.save_model("SimGpModel")
 
     def check_packages(self,error_tag, moduleName):
+
+        if error_tag == True and moduleName =="GPy":
+            if self.os_type.lower().startswith("darwin"):
+                msg = ("Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate")
+                self.exit(msg)
+
         if error_tag == True:
             if self.os_type.lower().startswith("win"):
                 msg = (
                         "Failed to load python module ["
                         + moduleName
-                        + "]. Go to <File-Preference-Python> and reset the path."
+                        + "]. Go to File-Preference-Python and reset the path."
                 )
             else:
                 msg = (
@@ -168,8 +181,7 @@ class surrogate(UQengine):
                         + moduleName
                         + "]. Did you forget <pip3 install nheri_simcenter --upgrade>?"
                 )
-            print(msg)
-            exit(-1)
+            self.exit(msg)
 
     def readJson(self):
 
@@ -393,7 +405,6 @@ class surrogate(UQengine):
                 self.work_dir,
                 x_dim,
                 y_dim,
-                self.errfile,
                 self.n_processor,
                 idx=0,
             )
@@ -403,7 +414,6 @@ class surrogate(UQengine):
                 self.work_dir,
                 x_dim,
                 y_dim,
-                self.errfile,
                 self.n_processor,
                 idx=-1,
             )  # NONE model
@@ -415,7 +425,6 @@ class surrogate(UQengine):
                 self.work_dir,
                 x_dim,
                 y_dim,
-                self.errfile,
                 self.n_processor,
                 idx=1,
             )
@@ -425,7 +434,6 @@ class surrogate(UQengine):
                 self.work_dir,
                 x_dim,
                 y_dim,
-                self.errfile,
                 self.n_processor,
                 idx=2,
             )
@@ -821,7 +829,7 @@ class surrogate(UQengine):
                     myrange = np.max(X_repl, axis=0) - np.min(X_repl, axis=0)
                     # m_mean.Mat52.lengthscale[[nx]].constrain_bounded( myrange[nx]/X.shape[0], float("Inf"))
                     m_var.sum.Mat52.lengthscale[[nx]] = myrange[nx] * 100
-                    m_var.sum.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X_repl.shape[0]*10, myrange[nx] * 100)
+                    m_var.sum.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X_repl.shape[0]*10, myrange[nx] * 100,warning=False)
                     # TODO change the kernel
 
         m_var.optimize(max_f_eval=1000)
@@ -863,14 +871,14 @@ class surrogate(UQengine):
                     #m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
                     if self.isEEUQ:
                         m_mean.kern.lengthscale[[nx]]=  myrange[nx]*100
-                        m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100)
+                        m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx]/X.shape[0]*50, myrange[nx]*100,warning=False)
                     else:
                         if self.do_linear:
                             m_mean.kern.Mat52.lengthscale[[nx]] = myrange[nx] * 5000
-                            m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
+                            m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000,warning=False)
                         else:  
                             m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
-                            m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000)
+                            m_mean.kern.lengthscale[[nx]].constrain_bounded(myrange[nx] / X.shape[0] * 50, myrange[nx] * 10000,warning=False)
 
         #m_mean.optimize(messages=True, max_f_eval=1000)
         #m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
@@ -888,7 +896,7 @@ class surrogate(UQengine):
         
         mean_pred, mean_var = m_mean.predict(X)
 
-            
+        '''
         import matplotlib.pyplot as plt
         print(m_mean)
         #print(m_mean.Mat52.lengthscale)
@@ -896,7 +904,7 @@ class surrogate(UQengine):
         plt.plot(X[:, 4], mean_pred, 'rx');
         plt.errorbar(X[:, 4],mean_pred.T[0],yerr=np.sqrt(mean_var.T)[0],fmt='x');
         plt.show()
-
+        '''
         return mean_pred, mean_var
 
 
@@ -2631,12 +2639,11 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx="HF"):
 
 class model_info:
     def __init__(
-            self, surrogateJson, rvJson, work_dir, x_dim, y_dim, errfile, n_processor, idx=0
+            self, surrogateJson, rvJson, work_dir, x_dim, y_dim, n_processor, idx=0
     ):
         def exit_tmp(msg):
             print(msg)
-            errfile.write(msg)
-            errfile.close()
+            print(msg, file=sys.stderr)
             exit(-1)
 
         # idx = -1 : no info (dummy) paired with 0
@@ -2923,11 +2930,11 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
                         exec('m_tmp.'+parname+'[[nx]] = myrange[nx]')
                         
         elif nugget_opt_tmp == "Fixed Values":
-            m_tmp[variance_keyword].constrain_fixed(nuggetVal[ny]/normVar)
+            m_tmp[variance_keyword].constrain_fixed(nuggetVal[ny]/normVar,warning=False)
         elif nugget_opt_tmp == "Fixed Bounds":
-            m_tmp[variance_keyword].constrain_bounded(nuggetVal[ny][0]/normVar, nuggetVal[ny][1]/normVar)
+            m_tmp[variance_keyword].constrain_bounded(nuggetVal[ny][0]/normVar, nuggetVal[ny][1]/normVar,warning=False)
         elif nugget_opt_tmp == "Zero":
-            m_tmp[variance_keyword].constrain_fixed(0)
+            m_tmp[variance_keyword].constrain_fixed(0,warning=False)
             X = m_tmp.X
             for parname in m_tmp.parameter_names():
                 if parname.endswith("lengthscale"):
@@ -2942,7 +2949,7 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
                     for nx in range(X.shape[1]):
                         myrange = np.max(X, axis=0) - np.min(X, axis=0)
                         exec('m_tmp.'+parname+'[[nx]] = myrange[nx]*100')
-                        exec('m_tmp.'+parname+'[[nx]].constrain_bounded(myrange[nx] / X.shape[0], myrange[nx]*100)')
+                        exec('m_tmp.'+parname+'[[nx]].constrain_bounded(myrange[nx] / X.shape[0], myrange[nx]*100,warning=False)')
                         #m_tmp[parname][nx] = myrange[nx]*100
                         #m_tmp[parname][nx].constrain_bounded(myrange[nx] / X.shape[0], myrange[nx]*100)
                         # TODO change the kernel
@@ -2972,8 +2979,8 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
             # self.exit(msg)
 
         elif nugget_opt_tmp == "Zero":
-            m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(0)
-            m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0)
+            m_tmp.gpy_model.mixed_noise.Gaussian_noise.constrain_fixed(0,warning=False)
+            m_tmp.gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0,warning=False)
 
     if msg == "":
         m_tmp.optimize()
@@ -3045,5 +3052,20 @@ def read_txt(text_dir, exit_fun):
     return X
 
 
+
+
 if __name__ == "__main__":
+    errFileName = 'dakota.err'
+    sys.stderr = open(errFileName, 'w')
     main(sys.argv)
+
+
+    
+    # try:
+    #     main(sys.argv)
+    #     open(os.path.join(os.getcwd(), errFileName ), 'w').close()
+    # except Exception:
+    #     f = open(os.path.join(os.getcwd(), errFileName ), 'w')
+    #     traceback.print_exc(file=f)
+    #     f.close()
+    # exit(1)

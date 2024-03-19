@@ -1571,7 +1571,7 @@ class Workflow(object):
         else:
 
             for dir_or_file in os.listdir(os.getcwd()):
-                if dir_or_file not in ['log.txt', 'templatedir']:
+                if dir_or_file not in ['log.txt', 'templatedir', 'input_data']:
                     if os.path.isdir(dir_or_file):
                         shutil.rmtree(dir_or_file)
                     else:
@@ -1929,7 +1929,7 @@ class Workflow(object):
             
                 workflow_app = self.workflow_apps[app_type]
 
-                print('FMK runtype', self.run_type)
+                #print('FMK runtype', self.run_type)
                 if self.run_type in ['set_up', 'runningRemote', 'parSETUP']:
                 
                     if type(workflow_app) is dict :
@@ -1964,7 +1964,7 @@ class Workflow(object):
             if platform.system() == 'Windows':
                 driverFile = driverFile+'.bat'
             log_msg(driverFile)
-            with open(driverFile,'w') as f:
+            with open(driverFile,'w', newline='\n') as f:
                 f.write(driver_script)
 
             log_msg('Workflow driver file successfully created.',prepend_timestamp=False)
@@ -2494,13 +2494,13 @@ class Workflow(object):
                         # remove the ONE demand
                         edp_data_i.pop('ONE-0-1')
 
+                        # extract EDP unit info
+                        edp_units = edp_data_i['Units']
+                        del edp_data_i['Units']
+                    
                         # parse the demand data into a DataFrame
                         # we assume demands are stored in JSON with a SimpleIndex
                         edp_data_i = pd.DataFrame(edp_data_i)
-
-                        # extract EDP unit info
-                        edp_units = edp_data_i.loc["Units"].to_dict()
-                        edp_data_i.drop("Units", inplace=True)
 
                         # convert to a realization-by-realization format
                         edp_output = {
@@ -2534,19 +2534,28 @@ class Workflow(object):
                         with open(asset_dir/dmg_out_file_i, 'r') as f:
                             dmg_data_i = json.load(f)
 
+                        # remove damage unit info                        
+                        del dmg_data_i['Units']
+
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
 
-                        # JZ: Temporary for json dmg_grp.json format
-                        dmg_data_i = dmg_data_i.drop(index='Units')
-                        dmg_data_i = dmg_data_i.set_index(pd.Series(dmg_data_i.index).apply(lambda x:int(x)))
+                        # JZ: Temporary for json dmg_grp.json format                        
+                        #dmg_data_i = dmg_data_i.set_index(dmg_data_i.index.astype(int))
+                        #dmg_data_i = dmg_data_i.astype(float)
+
                         # convert to realization-by-realization format
-                        dmg_output = {
-                            rlz_i:{col:int(dmg_data_i.loc[rlz_i,col]) 
-                                   for col in dmg_data_i.columns
-                            } 
-                            for rlz_i in dmg_data_i.index
-                        }
+                        dmg_output = {}
+                        for rlz_i in dmg_data_i.index:
+
+                            rlz_output = {}
+
+                            for col in dmg_data_i.columns:
+
+                                if not pd.isna(dmg_data_i.loc[rlz_i,col]):
+                                    rlz_output.update({col: int(dmg_data_i.loc[rlz_i,col])})
+
+                            dmg_output.update({rlz_i: rlz_output})                        
 
                         # we assume that damage information is condensed
                         #TODO: implement condense_ds flag in DL_calc
@@ -2568,11 +2577,16 @@ class Workflow(object):
                         with open(asset_dir/dv_out_file_i, 'r') as f:
                             dv_data_i = json.load(f)
 
+                        # extract DV unit info
+                        dv_units = dv_data_i['Units']
+                        del dv_data_i['Units']
+
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-                        # JZ: Temporary for json dmg_grp.json format
-                        dv_data_i = dv_data_i.drop(index='Units')
-                        dv_data_i = dv_data_i.set_index(pd.Series(dv_data_i.index).apply(lambda x:int(x)))
+
+                        # JZ: Temporary for json dmg_grp.json format 
+                        #dv_data_i = dv_data_i.set_index(dv_data_i.index.astype(int))
+                        
                         # get a list of dv types
                         dv_types = np.unique(
                             [col.split('-')[0] for col in dv_data_i.columns])
@@ -2595,13 +2609,20 @@ class Workflow(object):
                         for rlz_i in range(sample_size):
                             rlzn_pointer[rlz_i][asset_id].update(
                                 {'Loss':{'Repair':dv_output[rlz_i]}})
+
+                        # save DV units
+                        deter_pointer[asset_id].update({
+                            "Loss": {"Units": dv_units}
+                            })
+
             # This is also ugly but necessary for backward compatibility so that 
             # file structure created from apps other than GeoJSON_TO_ASSET can be
             # dealt with
             if len(assetTypeHierarchy) == 1:
                 deterministic = {assetTypeHierarchy[0]: deterministic}
-                for rlz_i, rlz_data in realizations.items():
-                    rlz_data = {assetTypeHierarchy[0]:rlz_data}
+                for rlz_i in realizations.keys():
+                    realizations[rlz_i] = {assetTypeHierarchy[0]:realizations[rlz_i]}
+
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
@@ -2613,7 +2634,7 @@ class Workflow(object):
 
         else:
             # This is legacy for Pelicun 2 runs
-
+            out_types = ['IM', 'BIM', 'EDP', 'DM', 'DV', 'every_realization']
 
             if headers is None :
                 headers = dict(
@@ -2642,8 +2663,8 @@ class Workflow(object):
                                 aimDir = os.path.dirname(asst_file)
                             
                                 asst_id = asst['id']
-                                min_id = min((asst_id), min_id)
-                                max_id = max((asst_id), max_id)
+                                min_id = min(int(asst_id), min_id)
+                                max_id = max(int(asst_id), max_id)
 
                                 # save all EDP realizations
 
@@ -2774,10 +2795,12 @@ class Workflow(object):
     def combine_assets_results(self, asset_files):
         run_path = self.run_dir
         isPelicun3 = True
-        for asset_type in asset_files.keys():
+        asset_types = list(asset_files.keys())
+        for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
-                isPelicun3 = False
-        if isPelicun3:
+                # isPelicun3 = False
+                asset_files.pop(asset_type)
+        if asset_files: # If any asset_type uses Pelicun3 as DL app
             # get metadata
             with open(self.input_file, 'r') as f:
                 input_data = json.load(f)
@@ -2786,6 +2809,7 @@ class Workflow(object):
                         "Author": input_data["Author"],
                         "WorkflowType": input_data["WorkflowType"],
                         "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+            sample_size = []
             ## create the geojson for R2D visualization
             geojson_result = {
                 "type": "FeatureCollection",
@@ -2799,6 +2823,8 @@ class Workflow(object):
                 "features":[]
             }
             for asset_type, assetIt in asset_files.items():
+                sample_size.append(input_data['Applications']['DL'][asset_type]\
+                                   ["ApplicationData"]['Realizations'])
                 with open(assetIt, 'r') as f:
                     asst_data = json.load(f)
                 for asst in asst_data:
@@ -2821,9 +2847,9 @@ class Workflow(object):
                             "Couldn't find AIM file for building {asset_id}")
                     with open(AIM_file, 'r') as f:
                         asst_aim = json.load(f)
-                    sample_size = asst_aim['Applications']['DL']['ApplicationData']['Realizations']
                     ft = {"type":"Feature"}
                     asst_GI = asst_aim['GeneralInformation'].copy()
+                    asst_GI.update({"assetType":asset_type})
                     try:
                         if "geometry" in asst_GI:
                             asst_geom = shapely.wkt.loads(asst_GI["geometry"])
@@ -2832,6 +2858,8 @@ class Workflow(object):
                         elif "Footprint" in asst_GI:
                             asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
                             asst_GI.pop("Footprint")
+                        else:
+                            raise ValueError("No valid geometric information in GI.")
                     except:
                         asst_lat = asst_GI['location']['latitude']
                         asst_lon = asst_GI['location']['longitude']
@@ -2842,30 +2870,59 @@ class Workflow(object):
                     with open(DL_summary_file, 'r') as f:
                         DL_summary = json.load(f)
                     DL_results = {}
+                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                          'repair_cost': 'RepairCost',  
+                                          'repair_time-parallel':'RepairTimeParallel',
+                                          'repair_time-sequential':'RepairTimeSequential',
+                                          'collapse':'Collapse',
+                                          'irreparable':'Irreparable'}
                     for key, value in DL_summary.items():
-                        DL_results.update({f"mean {key}":value["mean"]})
-                        DL_results.update({f"std of {key}":value["std"]})
+                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
+                                           :value["mean"]})
+                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
+                                           :value["std"]})
+                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
+                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
+                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
+                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
+                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
+                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
+                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
+                            DL_results.pop('R2Dres_std_RepairTimeParallel')
+                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
+                    
+
                     DMG_grp_file = asset_dir/"DMG_grp.json"
                     with open(DMG_grp_file, 'r') as f:
                         DMG_grp = json.load(f)
+
+                    # remove units
+                    del DMG_grp['Units']
+
                     DMG_results = {}
                     all_DMG = []
                     for key, value in DMG_grp.items():
-                        value.pop("Units")
-                        valueList = [int(v) for k, v in value.items()]
+                        valueList = value #[float(v) for k, v in value.items()]
                         all_DMG.append(valueList)
-                        DMG_results.update({key: max(set(valueList),\
-                                                     key=valueList.count)})
+                        DMG_results.update({
+                            f'R2Dres_MostLikelyDamageState_{key}': max(set(valueList), 
+                                                                       key=valueList.count)})
+                    
                     highest_DMG = np.amax(np.array(all_DMG), axis = 0)
-                    DMG_results.update({"highest_DMG":int(max(set(highest_DMG),\
+                    
+                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
+                                        :int(max(set(highest_DMG),\
                                         key=list(highest_DMG).count))})
+                    
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
                     ft["properties"].update(DL_results)
                     ft["properties"].update(DMG_results)
                     geojson_result["features"].append(ft)
+                
                 with open(run_path/"R2D_results.geojson", 'w') as f:
                     json.dump(geojson_result, f, indent=2)
+            sample_size = min(sample_size)
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
             realizations = {rlz_i:{} for rlz_i in range(sample_size)}
@@ -2888,7 +2945,8 @@ class Workflow(object):
                 with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
                     json.dump(rlz_data, f, indent=2)
         else:
-            print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
+            pass
+            # print("Visualizing results of asset types besides buildings is only supported when Pelicun3 is used as the DL for all asset types")
 
 
 

@@ -89,7 +89,7 @@ runMFMC::runMFMC(string workflowDriver,
 			modelIDs.push_back(i);
 		}
 	}
-	if (modelIDs.size()< 0) {
+	if (modelIDs.size()<= 0) {
 		std::string errMsg = "Error running UQ engine: MultiModel index variable not found from the RV json";
 		theErrorFile.write(errMsg);
 	}

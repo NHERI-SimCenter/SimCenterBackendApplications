@@ -17,6 +17,7 @@ add_subdirectory(ASCE7_WindSpeed)
 add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
+add_subdirectory(EmptyDomainCFD)
 add_subdirectory(IsolatedBuildingCFD)
 add_subdirectory(coupledDigitalTwin)
 

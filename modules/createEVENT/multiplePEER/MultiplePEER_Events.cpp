@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+
 using namespace std;
 
 #include <jansson.h>  // for Json
@@ -74,8 +76,8 @@ int main(int argc, char **argv)
   
     int index;
     json_t *value;
-    
-    int numEDP = 0;
+
+    //    int numEDP = 0;
     
     json_array_foreach(eventsArray, index, value) {
       
@@ -96,8 +98,6 @@ int main(int argc, char **argv)
 	
 	json_t *existingEventsArray = json_object_get(value,"Events");
 	int numExisting = json_array_size(existingEventsArray);      
-
-	//	json_dump_file(existingEventsArray,"DEBUG-ONE",0);   
 
 	if (numExisting > 1) {
 
@@ -140,11 +140,10 @@ int main(int argc, char **argv)
     // write the variables & events
     json_object_set(rootEvent,"randomVariables",rvArray);
     json_object_set(rootEvent,"Events",newEventArray);
-    
 
     // dump the event file
-
-    json_dump_file(rootEvent,filenameEVENT,0);   
+    json_dump_file(rootEvent,filenameEVENT,0);
+    
     //    json_dump_file(rootEvent,filenameEVENT,JSON_INDENT(1));   
 
   }  else { // if not --getRV we want to copy file to EVENT fileName
@@ -159,14 +158,14 @@ int main(int argc, char **argv)
     json_t *rootEVENT = json_load_file(filenameEVENT, 0, &error);
     
     // load INPUT file
-    json_error_t error;
+    //    json_error_t error;
     json_t *inputEventsArray = json_object_get(rootINPUT,"Events");  
     json_t *eventsEventsArray = json_object_get(rootEVENT,"Events");  
     
     int count;
     json_t *value;
     
-    int numEDP = 0;
+    // int numEDP = 0;
     
     json_array_foreach(eventsEventsArray, count, value) {
       
@@ -202,7 +201,8 @@ int main(int argc, char **argv)
       }
     }
     // write rootEvent
-    json_dump_file(rootEVENT,filenameEVENT,0);   
+    json_dump_file(rootEVENT,filenameEVENT,0);
+    
   }  
 
   return 0;
@@ -216,9 +216,23 @@ int main(int argc, char **argv)
 
 int addEvent(const char *fileName, json_t *obj) {
 
+
   // open file and get the first event
   json_error_t error;
-  json_t *rootEVENT = json_load_file(fileName, 0, &error);
+  json_t *rootEVENT = 0;  
+  
+  if (std::filesystem::exists(fileName)) {
+    rootEVENT = json_load_file(fileName, 0, &error);
+  } else {
+    std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+    std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+    newFilePath.append("input_data");
+    newFilePath.append(fileName);
+    std::string stringPath; stringPath = newFilePath.string();
+    const char *charPath = stringPath.c_str();
+    rootEVENT = json_load_file(charPath, 0, &error);
+  }
+
   json_t *eventsArray = json_object_get(rootEVENT,"Events");  
   json_t *eventToCopy = json_array_get(eventsArray,0);
 
@@ -281,6 +295,7 @@ int addEvent(const char *fileName, json_t *obj) {
 //
 // procedure to create a SimCenter Event given the record in the peerEVENT
 //  - the SimCenter Event will be written to a file given by name value
+
 
 int createSimCenterEvent(json_t *peerEvent) {
 
@@ -361,7 +376,28 @@ int createSimCenterEvent(json_t *peerEvent) {
 
     // open file
 
-    ifstream fileIn(fileName);
+    
+    //
+    // fileName may be in input_data folder .. if so revise path
+    //
+
+    char *fileNameToOpen;
+    if (std::filesystem::exists(fileName)) {
+      fileNameToOpen = new char[strlen(fileName)+1];
+      strcpy(fileNameToOpen, fileName);
+    } else {
+      
+      std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+      std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+      newFilePath.append("input_data");
+      newFilePath.append(fileName);
+      std::string stringPath; stringPath = newFilePath.string();
+      const char *charPath = stringPath.c_str();
+      fileNameToOpen = new char[strlen(charPath)+1];
+      strcpy(fileNameToOpen, charPath);
+    }
+    
+    ifstream fileIn(fileNameToOpen);
 
     // read dT and numPoints
 
@@ -477,7 +513,19 @@ int createSimCenterEvent(json_t *peerEvent) {
   //
 
   //  json_dump_file(outputObj, eventName, JSON_INDENT(1));
-  json_dump_file(outputObj, eventName, JSON_COMPACT);
+
+  std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
+  std::filesystem::path newFilePath; newFilePath = currentDir.parent_path();
+  newFilePath.append("input_data");
+
+  if (std::filesystem::exists(newFilePath)) {  
+    newFilePath.append(eventName);
+    std::string stringPath; stringPath = newFilePath.string();
+    const char *charPath = stringPath.c_str();
+    json_dump_file(outputObj, charPath, JSON_COMPACT);
+  } else {
+    json_dump_file(outputObj, eventName, JSON_COMPACT);
+  }
 
   //
   // clear memory

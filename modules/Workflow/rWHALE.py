@@ -74,7 +74,8 @@ def main(run_type, input_file, app_registry,
     
     mpi_spec = importlib.util.find_spec("mpi4py")
     found = mpi_spec is not None
-    if found:
+    if found and parallelType == 'parRUN':
+        
         import mpi4py
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
@@ -301,7 +302,7 @@ if __name__ == '__main__':
         default=os.path.join(os.getcwd(), 'input_data'),
         help="Relative paths in the config file are referenced to this directory.")
     workflowArgParser.add_argument("-w", "--workDir",
-        default=os.path.join(os.getcwd(), 'results'),
+        default=os.path.join(os.getcwd(), 'Results'),
         help="Absolute path to the working directory.")
     workflowArgParser.add_argument("-a", "--appDir",
         default=None,
