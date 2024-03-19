@@ -3,6 +3,34 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import shapely, warnings, momepy, shutil
+from pathlib import Path
+
+def resolve_path(target_path, ref_path):
+
+    ref_path = Path(ref_path)
+
+    target_path = str(target_path).strip()
+
+    while target_path.startswith('/') or target_path.startswith('\\'):
+        target_path = target_path[1:]
+
+    if target_path == "":
+        target_path = ref_path
+
+    else:
+        target_path = Path(target_path)
+
+        if not target_path.exists():
+            target_path = Path(ref_path) / target_path
+
+        if target_path.exists():
+            target_path = target_path.resolve()
+        else:
+            #raise ValueError(
+            #    f"{target_path} does not point to a valid location")
+            print(f"{target_path} does not point to a valid location")
+
+    return target_path
 
 # https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
 class NpEncoder(json.JSONEncoder):
@@ -193,9 +221,10 @@ class lineAIMGenerator(generalAIMGenerator):
         self.gdf = edges
         return
 
-def split_and_select_components(input_config):
+def split_and_select_components(input_config, ref_dir):
     component_dict = dict()
     asset_source_file = input_config["assetSourceFile"]
+    asset_source_file = resolve_path(asset_source_file, ref_dir) # SN : So that relative path in the inputJSON Works
     with open(asset_source_file, 'r') as f:
         source_data = json.load(f)
     crs = source_data["crs"]
@@ -250,7 +279,7 @@ def init_workdir(component_dict, outDir):
     return component_dir
     
 def create_asset_files(output_file, 
-    asset_type, input_file, doParallel): 
+    asset_type, input_file, ref_dir, doParallel): 
     # check if running parallel
     numP = 1
     procID = 0
@@ -279,7 +308,7 @@ def create_asset_files(output_file,
         ["ApplicationData"]
     # if input_config.get("Roadway", None):
     #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
-    component_dict = split_and_select_components(input_config)
+    component_dict = split_and_select_components(input_config, ref_dir)
     component_dir = init_workdir(component_dict, outDir)
     assets_array = []
     for component_type, component_data in component_dict.items():
@@ -340,6 +369,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
     parser.add_argument('--assetType')
+    parser.add_argument('--referenceDir', default="./")
     parser.add_argument('--inputJsonFile')
     parser.add_argument('--doParallel', default="False")    
     parser.add_argument("-n", "--numP", default='8')
@@ -349,6 +379,6 @@ if __name__ == '__main__':
 
     if args.getRV:
         sys.exit(create_asset_files(args.assetFile, args.assetType,\
-                                    args.inputJsonFile, args.doParallel))
+                                    args.inputJsonFile,args.referenceDir, args.doParallel))
     else:
         pass # not used

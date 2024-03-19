@@ -1182,7 +1182,9 @@ class Workflow(object):
             # knows which asset_type it's processing.  
             if asset_app.name == 'GEOJSON_TO_ASSET':
                 asset_command_list = asset_command_list + [u'--assetType',\
-                                asset_type, u'--inputJsonFile', self.input_file]
+                                asset_type, u'--inputJsonFile', self.input_file] # SN : this is out of Workflow structure. I believe it could be better done
+                asset_command_list = asset_command_list + [u'--referenceDir',\
+                                self.reference_dir] # SN : For now. It may change after the discussion with the team leadership
 
             asset_command_list.append(u'--getRV')
 
