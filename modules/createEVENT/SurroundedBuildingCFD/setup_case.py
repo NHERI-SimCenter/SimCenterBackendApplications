@@ -11,11 +11,202 @@ import numpy as np
 import foam_file_processor as foam
 from stl import mesh
 
+def create_building_geometry(width, depth, height, center):
+
+    epsilon = 0.001*min(width, depth, height)
+     
+    # Define the 8 vertices of the building
+    vertices = np.array([[-depth/2.0, -width/2.0, -epsilon],
+                         [+depth/2.0, -width/2.0, -epsilon],
+                         [+depth/2.0, +width/2.0, -epsilon],
+                         [-depth/2.0, +width/2.0, -epsilon],
+                         [-depth/2.0, -width/2.0, +height],
+                         [+depth/2.0, -width/2.0, +height],
+                         [+depth/2.0, +width/2.0, +height],
+                         [-depth/2.0, +width/2.0, +height]])
+    
+    vertices += center
+
+    # Define the 12 triangles composing the rectangular building
+    faces = np.array([\
+        [0,3,1],
+        [1,3,2],
+        [0,4,7],
+        [0,7,3],
+        [4,5,6],
+        [4,6,7],
+        [5,1,2],
+        [5,2,6],
+        [2,3,6],
+        [3,7,6],
+        [0,1,5],
+        [0,5,4]])
+    
+    # Create the mesh
+    bldg = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+    for i, f in enumerate(faces):
+        for j in range(3):
+            bldg.vectors[i][j] = vertices[f[j],:]
+    
+    return bldg
+
+
+def create_surroundings_geometry(main_bldg_width, main_bldg_depth, sur_bldg_width, sur_bldg_depth, 
+                                 sur_bldg_height, street_width, bound_radius, randomness=0.0):    
+    
+    plan_x = max(main_bldg_depth, sur_bldg_depth)
+    plan_y = max(main_bldg_width, sur_bldg_width)
+    
+    n_grid_x = int((2.0*bound_radius - street_width)/(plan_x + street_width))
+    n_grid_y = int((2.0*bound_radius - street_width)/(plan_y + street_width))
+
+    if (n_grid_x % 2) == 0:
+        n_grid_x -=1
+
+    if (n_grid_y % 2) == 0:
+        n_grid_y -=1
+    
+
+    mid_ix = int(n_grid_x/2)
+    mid_iy = int(n_grid_y/2)
+
+    copies = []
+
+    min_h = 1.0 - randomness*0.5
+    max_h = 1.0 + randomness*0.5
+
+    rand_f = np.random.uniform(min_h, max_h, (n_grid_x, n_grid_y))
+
+    x_max = (street_width + plan_x)*n_grid_x - street_width
+    y_max = (street_width + plan_y)*n_grid_y - street_width
+    
+    bound_radius = max(x_max, y_max)/2.0
+
+    for ix in range(n_grid_x):
+        for iy in range(n_grid_y):
+            # skip the position where study building will be located
+            if ix == mid_ix and iy == mid_iy:
+                continue
+
+            center_x = -x_max/2.0 + ix*street_width + plan_x*(ix + 0.5)
+            center_y = -y_max/2.0 + iy*street_width + plan_y*(iy + 0.5)
+
+            bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)
+
+            #Add the building if it's within bounding radius
+            if bldg_R < bound_radius:
+                bldg = create_building_geometry(sur_bldg_width, sur_bldg_depth, sur_bldg_height*rand_f[ix, iy], 
+                                                np.array([center_x, center_y, 0.0]))
+
+                copies.append(bldg)
+
+    #Merge the buildings together into one geometric data
+    combined = mesh.Mesh(np.concatenate([copy.data for copy in copies]))
+
+    return combined
+
+def write_main_building_stl_file(input_json_path, case_path):
+    
+    #Read JSON data    
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+      
+    geom_data = json_data['GeometricData']
+
+    #Else create the STL file
+    scale =  geom_data['geometricScale']
+    length_unit =  json_data['lengthUnit']
+
+    convert_to_meters = 1.0
+
+    if length_unit=='m':
+        convert_to_meters = 1.0
+    elif length_unit=='cm':
+        convert_to_meters = 0.01
+    elif length_unit=='mm':
+        convert_to_meters = 0.001
+    elif length_unit=='ft':
+        convert_to_meters = 0.3048
+    elif length_unit=='in':
+        convert_to_meters = 0.0254
+    
+    #Convert from full-scale to model-scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    H = convert_to_meters*geom_data['buildingHeight']/scale
+    
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']   
+
+    wind_dxn_rad = np.deg2rad(wind_dxn)
+    
+    bldg = create_building_geometry(B, D, H, origin) 
+     
+    #Account for wind direction 
+    bldg.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
+    
+    # Write the mesh to file "building.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    bldg.save(case_path + '/constant/geometry/building.stl', mode=fmt)
+
+
+def write_surrounding_buildings_stl_file(input_json_path, case_path):
+    
+    #Read JSON data    
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+      
+    geom_data = json_data['GeometricData']
+    sur_data = geom_data['surroundingBuildingsInformation']
+
+    #Else create the STL file
+    scale =  geom_data['geometricScale']
+    length_unit =  json_data['lengthUnit']
+
+    convert_to_meters = 1.0
+
+    if length_unit=='m':
+        convert_to_meters = 1.0
+    elif length_unit=='cm':
+        convert_to_meters = 0.01
+    elif length_unit=='mm':
+        convert_to_meters = 0.001
+    elif length_unit=='ft':
+        convert_to_meters = 0.3048
+    elif length_unit=='in':
+        convert_to_meters = 0.0254
+    
+    #Convert from full-scale to model-scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    Sb = convert_to_meters*sur_data['surroundingBuildingsWidth']/scale
+    Sd = convert_to_meters*sur_data['surroundingBuildingsDepth']/scale
+    Sh = convert_to_meters*sur_data['surroundingBuildingsHeight']/scale
+    Sw = convert_to_meters*sur_data['streetWidth']/scale
+    Rb = convert_to_meters*sur_data['boundingRadius']/scale
+    
+    #Normalize 0 to 1
+    rand = sur_data['randomness']/100.0
+    
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']   
+
+    wind_dxn_rad = np.deg2rad(wind_dxn)    
+
+    surroundings = create_surroundings_geometry(B, D, Sb, Sd, Sh, Sw, Rb, rand)
+     
+    #Account for wind direction 
+    surroundings.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
+    
+    # Write the mesh to file "surroundings.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    surroundings.save(case_path + '/constant/geometry/surroundings.stl', mode=fmt)
+
 
 def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
@@ -125,7 +316,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
@@ -241,7 +432,7 @@ def write_boundary_data_files(input_json_path, case_path):
     if TInf options are used for the simulation.  
     """
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -289,7 +480,7 @@ def write_boundary_data_files(input_json_path, case_path):
 def write_U_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -419,7 +610,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 def write_p_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -511,7 +702,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 def write_nut_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -622,7 +813,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 def write_epsilon_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -744,7 +935,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 def write_k_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -863,7 +1054,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -971,7 +1162,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1029,7 +1220,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1078,7 +1269,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1175,7 +1366,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
 def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1272,7 +1463,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 def write_momentumTransport_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1326,7 +1517,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 def write_physicalProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1363,7 +1554,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 def write_transportProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1399,7 +1590,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1430,7 +1621,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1472,7 +1663,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
     
     fmax = 200.0
@@ -1532,24 +1723,10 @@ if __name__ == '__main__':
     # Set filenames
     input_json_path = sys.argv[1]
     template_dict_path = sys.argv[2]
-    case_path = sys.argv[3]
-    
-    
-    # input_json_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD/constant/simCenter/input"
-    # template_dict_path = "/home/abiy/SimCenter/SourceCode/NHERI-SimCenter/SimCenterBackendApplications/applications/createEVENT/EmptyDomainCFD/templateOF10Dicts"
-    # case_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD"
-    
-    # data_path = os.getcwd()
-    # script_path = os.path.dirname(os.path.realpath(__file__))
-    
-    
-    #Create case director
-    # set up goes here 
-
-    
+    case_path = sys.argv[3]    
     
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1561,6 +1738,10 @@ if __name__ == '__main__':
     
     #Write blockMesh
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
+
+    #Create and write the main building and surroundings "*.stl" file
+    write_main_building_stl_file(input_json_path, case_path)
+    write_surrounding_buildings_stl_file(input_json_path, case_path)
 
     #Create and write the SnappyHexMeshDict file
     write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
