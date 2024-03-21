@@ -1,2 +1,4 @@
+simcenter_add_python_script(SCRIPT getBRAILSLocationBoundary.py)
+simcenter_add_python_script(SCRIPT getBRAILSFootprints.py)
 simcenter_add_python_script(SCRIPT runBrails.py)
 simcenter_add_python_script(SCRIPT runBrailsTransp.py)

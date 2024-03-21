@@ -48,31 +48,35 @@ if  importlib_metadata.version('BRAILS')!=latestBrailsVersion:
 import argparse
 import os
 from time import gmtime, strftime
-from brails.InventoryGenerator import InventoryGenerator    
+from brails.workflow.FootprintHandler import FootprintHandler    
 
 # Define a standard way of printing program outputs:
 def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)
 
-# Define a way to call BRAILS InventoryGenerator:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSource,
-              fpAttrMap, seed, numBuildings, gKey, outputFile, lengthUnit):    
-    
-    # Initialize InventoryGenerator:
-    if locationStr=="":
-        invGenerator = InventoryGenerator(location=(longMin,latMin,longMax,latMax),
-                                          nbldgs=numBuildings, randomSelection=seed,
-                                          GoogleAPIKey=gKey)
-    else:
-        invGenerator = InventoryGenerator(location=locationStr,
-                                          nbldgs=numBuildings, randomSelection=seed,
-                                          GoogleAPIKey=gKey)
-    
+# Define a way to call BRAILS FootprintHandler:
+def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc, fpSourceAttrMap, 
+              outputfile, lengthunit):      
+    # Initialize FootprintHandler:
+    fpHandler = FootprintHandler()
 
-    # Run InventoryGenerator to generate an inventory for the entered location:
-    invGenerator.generate(attributes='all', outFile=outputFile, 
-                          lengthUnit=lengthUnit)
+    # Format location input based on the GUI input:
+    if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
+        location = fpSrc
+        fpSrc = 'osm'
+    elif locationStr=="":
+        location = (longMin,latMin,longMax,latMax)
+    else:
+        location = locationStr
+
+    print(location)
+    # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
+    if fpSourceAttrMap=='':
+        fpHandler.fetch_footprint_data(location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile)
+    else: 
+        fpHandler.fetch_footprint_data(location, fpSource=fpSrc, attrmap = fpSourceAttrMap,
+                                       lengthUnit=lengthunit, outputFile = outputfile)
 
 # Define a way to collect GUI input:
 def main(args):
@@ -83,26 +87,22 @@ def main(args):
     parser.add_argument('--longMax', default=None, type=float)
     parser.add_argument('--location', default=None, type=str)
     parser.add_argument('--fpSource', default=None, type=str)
-    parser.add_argument('--fpAttrMap', default=None, type=str)
+    parser.add_argument('--fpSourceAttrMap', default=None, type=str)    
     parser.add_argument('--outputFile', default=None)
-    parser.add_argument('--googKey', default=None)
-    parser.add_argument('--seed', default=None, type=int)
-    parser.add_argument('--numBuildings', default=None, type=int)  
-    parser.add_argument('--lengthUnit', default="m", type=str) 
-
+    parser.add_argument('--lengthUnit', default="m", type=str)     
+    
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
     outdir = os.path.abspath(args.outputFile).replace(os.path.split(args.outputFile)[-1],'')
     os.makedirs(outdir, exist_ok=True)
 
-    # Run BRAILS InventoryGenerator with the user-defined arguments:
+    # Run BRAILS FootprintHandler with the user-defined arguments:
     runBrails(
-        args.latMin, args.latMax, args.longMin, args.longMax, args.location,
-        args.fpSource, args.fpAttrMap, args.seed, args.numBuildings, args.googKey, 
-        args.outputFile, args.lengthUnit)
+        args.latMin, args.latMax, args.longMin, args.longMax, args.location, 
+        args.fpSource, args.fpSourceAttrMap, args.outputFile, args.lengthUnit)
 
-    log_msg('BRAILS successfully generated the requested building inventory')
+    log_msg('BRAILS successfully obtained the footprints for the entered location')
     
 # Run main:
 if __name__ == '__main__':
