@@ -1443,7 +1443,9 @@ class Workflow(object):
         
         app_command_list.append('--asset_type')
         app_command_list.append(asset_type)
-        app_command_list.append('--input_dir')
+        app_command_list.append('--input_file')
+        app_command_list.append(self.input_file)                
+        app_command_list.append('--working_dir')
         app_command_list.append(self.working_dir)        
         
         command = create_command(app_command_list)

@@ -1,13 +1,12 @@
 
-# fmk's greatest python application!
 # licencse: BSD 3
 
 import argparse, json
 import importlib
 
-def runReWet(asset_type, input_dir, running_parallel):
+def runReWet(asset_type, input_file, working_dir, running_parallel):
 
-    print('About to run ReWet: \n\t asset_type', asset_type, '\n\t inputDIR: ', input_dir, '\n\t running_parallel: ', running_parallel)
+    print('About to run ReWet: \n\t input_file: ' + input_file + '\n\t asset_type', asset_type, '\n\t inputDIR: ', working_dir, '\n\t running_parallel: ', running_parallel)
 
     #
     # import mpi only if running parallel as we do not require install for local runs
@@ -30,8 +29,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--asset_type')
-    parser.add_argument('--input_dir')
+    parser.add_argument('--working_dir')
+    parser.add_argument('--input_file')    
     parser.add_argument('--running_parallel', default="False")    
     args = parser.parse_args()    
     
-    runReWet(args.asset_type, args.input_dir, args.running_parallel)
+    runReWet(args.asset_type, args.input_file, args.working_dir, args.running_parallel)
