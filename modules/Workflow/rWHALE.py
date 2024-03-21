@@ -144,7 +144,7 @@ def main(run_type, input_file, app_registry,
                         app_type_list = ['Assets', 'RegionalEvent',
                                          'RegionalMapping', 'Event',
                                          'Modeling', 'EDP', 'Simulation',
-                                         'UQ', 'DL'],
+                                         'UQ', 'DL', 'SystemPerformance', 'Recovery'],
                         reference_dir = reference_dir,
                         working_dir = working_dir,
                         app_dir = app_dir,
@@ -263,6 +263,20 @@ def main(run_type, input_file, app_registry,
     
     WF.combine_assets_results(asset_files)                
 
+    #
+    # add system performance
+    #
+    
+    for asset_type in asset_files.keys() :
+        WF.perform_system_performance_assessment(asset_type)
+
+    #
+    # add recovery
+    #
+
+    # WF.perform_recovery_simulation(asset_files.keys())
+    
+    
     if force_cleanup:
         # clean up intermediate files from the working directory
         if procID == 0:                    
