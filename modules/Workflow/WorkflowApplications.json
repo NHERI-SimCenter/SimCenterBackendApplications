@@ -1128,6 +1128,11 @@
             "description": "Identifies the location of a python script that can be used to auto-populate the loss model."
           },
           {
+            "id": "custom_model_dir",
+            "type": "path",
+            "description": "Identifies the location of user-provided custom damage and loss models."
+          },
+          {
             "id": "regional",
             "type": "bool",
             "description": "If yes, the analysis is part of a regional simulation and results will be aggregated."
@@ -1142,6 +1147,22 @@
       }
     ]
   },
+    "SystemPerformanceApplications":{
+	"API": {
+	    "Inputs": [
+	    ],
+	    "Outputs": [
+	    ]
+	},
+	"Applications": [
+	    {
+		"Name": "ReWet",
+		"ExecutablePath": "applications/systemPerformance/ReWet/ReWetWrapper.py",
+		"ApplicationSpecificInputs": [		    
+		]
+	    }
+	]
+    },
   "PerformanceApplications": {
     "API": {
       "Inputs": [

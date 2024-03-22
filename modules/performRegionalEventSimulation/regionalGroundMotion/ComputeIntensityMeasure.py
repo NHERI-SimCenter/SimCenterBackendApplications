@@ -907,17 +907,12 @@ class GM_Simulator:
 	def compute_intra_event_residual(self):
 		if type(self.intra_cm) == dict:
 			cm_groups = dict()
-			if (self.intra_cm['PGA']==self.intra_cm['SA']) and \
-				(self.intra_cm['PGA']!=self.intra_cm['PGV']):
-				cm_groups.update({self.intra_cm['PGA']:['PGA','SA'],
-					  self.intra_cm['PGV']:['PGV']})
-			elif (self.intra_cm['PGA']==self.intra_cm['SA']) and \
-				(self.intra_cm['PGA']==self.intra_cm['PGV']):
-				cm_groups.update({self.intra_cm['PGA']:['PGA','SA','PGV']})
-			else:
-				cm_groups.update({self.intra_cm['PGA']:['PGA'],
-					  self.intra_cm['SA']:['SA'],
-					  self.intra_cm['PGV']:['PGV']})
+			# Group the IMs using the same cm
+			for key, item in self.intra_cm.items():
+				if item not in cm_groups.keys():
+					cm_groups.update({item:[key]})
+				else:
+					cm_groups['item'].append(key)	
 			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
 			for cm, im_types in cm_groups.items():
 				# im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]
@@ -929,15 +924,6 @@ class GM_Simulator:
 													im_name_list, self.num_simu)
 				for i, ind in enumerate(im_indices):
 					residuals[:,ind,:] = residuals_i[:,i,:]
-			# for im_type, cm in self.intra_cm.items():
-			# 	im_name_list = [im_name for im_name in self.im_name_list\
-			# 	   if im_name.startswith(im_type)]
-			# 	im_indices = [index for index, element in enumerate(self.im_name_list)\
-			# 	   if element.startswith(im_type)]
-			# 	residuals_i = self.compute_intra_event_residual_i(cm,\
-			# 										im_name_list, self.num_simu)
-			# 	for i, ind in enumerate(im_indices):
-			# 		residuals[:,ind,:] = residuals_i[:,i,:]
 		else:
 			residuals = self.compute_intra_event_residual_i(self.intra_cm,
 											self.im_name_list, self.num_simu)
