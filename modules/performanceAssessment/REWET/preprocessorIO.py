@@ -75,7 +75,62 @@ def readJSONFile(file_addr):
 #     return rwhale_data
 # =============================================================================
 
-def saveScenarioData(damage_data, damage_save_path, scenario_list):
+def save_damage_data(damage_save_path, damage_data, scn_number):
+    pipe_damage_data = damage_data["Pipe"]
+    node_damage_data = damage_data["Node"]
+    pump_damage_data = damage_data["Pump"]
+    tank_damage_data = damage_data["Tank"]
+    
+    pipe_damage_file_name = f"pipe_damage_{scn_number}"
+    node_damage_file_name = f"node_damage_{scn_number}"
+    pump_damage_file_name = f"pump_damage_{scn_number}"
+    tank_damage_file_name = f"tank_damage_{scn_number}"
+    
+    pipe_damage_file_path   = os.path.join(damage_save_path, pipe_damage_file_name)
+    node_damage_file_path   = os.path.join(damage_save_path, node_damage_file_name)
+    pump_damage_file_path   = os.path.join(damage_save_path, pump_damage_file_name)
+    tank_damage_file_path   = os.path.join(damage_save_path, tank_damage_file_name)
+    
+    pipe_damage_data.to_pickle(pipe_damage_file_path)
+    node_damage_data.to_pickle(node_damage_file_path)
+    pump_damage_data.to_pickle(pump_damage_file_path)
+    tank_damage_data.to_pickle(tank_damage_file_path)
+    
+    damage_file_name_list = {"Pipe": pipe_damage_file_name,
+                             "Node": node_damage_file_name,
+                             "Pump": pump_damage_file_name,
+                             "Tank": tank_damage_file_name}
+    
+    return damage_file_name_list
+
+def create_scneario_table():
+    scenario_table = pd.DataFrame(dtype="O", columns=["Scenario Name",
+                                                      "Pipe",
+                                                      "Node",
+                                                      "Pump",
+                                                      "Tank"])
+    return scenario_table
+
+def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):
+    
+    if isinstance(scenario_table, pd.core.frame.DataFrame):
+        scenario_table = scenario_table.to_dict("records")
+    elif isinstance(scenario_table, list):
+        pass
+    else:
+        raise ValueError("This is an unknown behavior.")
+    
+    new_row = {"Scenario Name":f"SCN_{scn_number}",
+               "Pipe":cur_damage_file_name_list["Pipe"],
+               "Node":cur_damage_file_name_list["Node"],
+               "Pump":cur_damage_file_name_list["Pump"],
+               "Tank":cur_damage_file_name_list["Tank"]}
+    
+    scenario_table.append(new_row)
+    
+    return scenario_table
+
+def save_scenario_table(scenario_table, scenario_table_file_path):
     """
     Saves the scneario data including scneario table and damaghe data acording
     to the table data/
@@ -90,34 +145,20 @@ def saveScenarioData(damage_data, damage_save_path, scenario_list):
     None.
 
     """
+    if isinstance(scenario_table, pd.core.frame.DataFrame):
+        pass
+    elif isinstance(scenario_table, list):
+        scenario_table = pd.DataFrame(scenario_table)    
+    else:
+        raise ValueError("This is an unknown behavior.")
+        
+    scenario_table = scenario_table.set_index("Scenario Name")
     
-    scenario_list = pd.DataFrame([scenario_list]).set_index("Scenario Name")
-    pipe_damage_data = damage_data["Pipe"]
-    node_damage_data = damage_data["Node"]
-    pump_damage_data = damage_data["Pump"]
-    tank_damage_data = damage_data["Tank"]
+    #scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)
     
-    scenario_list_file_name = f"{scenario_list.index[0]}.xlsx"
-    pipe_damage_file_name   = scenario_list.iloc[0]["Pipe Damage"]
-    node_damage_file_name   = scenario_list.iloc[0]["Nodal Damage"]
-    pump_damage_file_name   = scenario_list.iloc[0]["Pump Damage"]
-    tank_damage_file_name   = scenario_list.iloc[0]["Tank Damage"]
+    scenario_table.to_excel(scenario_table_file_path)
     
-    scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)
-    pipe_damage_file_path   = os.path.join(damage_save_path, pipe_damage_file_name)
-    node_damage_file_path   = os.path.join(damage_save_path, node_damage_file_name)
-    pump_damage_file_path   = os.path.join(damage_save_path, pump_damage_file_name)
-    tank_damage_file_path   = os.path.join(damage_save_path, tank_damage_file_name)
-    
-    scenario_list.to_excel(scenario_list_file_path)
-    pipe_damage_data.to_pickle(pipe_damage_file_path)
-    node_damage_data.to_pickle(node_damage_file_path)
-    pump_damage_data.to_pickle(pump_damage_file_path)
-    tank_damage_data.to_pickle(tank_damage_file_path)
-    
-    return scenario_list_file_path
-
-def saveSettingsFile(REWET_input_data, run_dir, prefix):
+def saveSettingsFile(REWET_input_data, save_directory, prefix):
     """
     Saves seetings data that REWET NEEDs.
 
@@ -133,9 +174,11 @@ def saveSettingsFile(REWET_input_data, run_dir, prefix):
     """
     
     settings = REWET_input_data["settings"]
-    
-    settings_file_name = prefix + "_" + "settings.json"
-    damage_save_path = Path(run_dir) / "Results" / "WaterDistributionNetwork" / "damage_input" / settings_file_name
+    if prefix == None:
+        settings_file_name = "settings.json"
+    else:
+        settings_file_name = prefix + "_" + "settings.json"
+    damage_save_path = save_directory / settings_file_name
     with open(damage_save_path, "w") as f:
         json.dump(settings , f, indent=4)
     

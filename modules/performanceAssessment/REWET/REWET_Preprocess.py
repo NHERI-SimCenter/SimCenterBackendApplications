@@ -10,8 +10,10 @@ import os
 import argparse
 import random
 import string
+import importlib
 from pathlib import Path
 import pandas as pd
+
 
 import damage_convertor
 import preprocessorIO
@@ -230,35 +232,61 @@ def setSettingsData(input_json, REWET_input_data):
     
     REWET_input_data["settings"]['limit_result_file_size'    ] = -1 #in Mb. 0 means no limit 
     REWET_input_data["settings"]['Pipe_damage_input_method'   ] = 'pickle'
-        
-
-
-
-
-
-
-
-
+   
 
 
 
 if __name__ == '__main__':
+    # Setting arg parser
     argParser = argparse.ArgumentParser(
         "Preprocess rwhale workflow to REWET input.")
     
     argParser.add_argument("--input", "-i",  default="inputRWHALE.json", 
                            help="rwhale input file json file")
     
-    argParser.add_argument("--damage", "-d",
-                           default="water_damage_input_structure.json", 
-                           help="water damage input json file. If provided, number of realization is ignored if prvided and number of realization is set to 1.")
+    #argParser.add_argument("--damage", "-d",
+                           #default="water_damage_input_structure.json", 
+                           #help="water damage input json file. If provided, number of realization is ignored if prvided and number of realization is set to 1.")
+    
+    argParser.add_argument("--dir", "-d",
+                           help="WDN damage result directory")
     
     argParser.add_argument("--number", "-n",
                            default=None,
-                           help="numebr of realizations. If not provided, number of realization is acquired from rwhale file.")
+                           help="If specified, indicates realization number, otherwise, all scnearios are run on all CPUS.")
+    
+    argParser.add_argument("--par", "-p",
+                           default=False,
+                           action="store_true",
+                           help="if speciied, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.")
     
     parser_data = argParser.parse_args()
     
+    # learnign about paralell or serial settings
+    
+    numP = 1
+    procID = 0
+    doParallel = False
+    
+    mpi_spec = importlib.util.find_spec("mpi4py")
+    found = mpi_spec is not None
+    if found and argParser.par:
+        
+        import mpi4py
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        numP = comm.Get_size()
+        procID = comm.Get_rank();
+        if numP < 2:
+            doParallel = False
+            numP = 1
+            procID = 0
+            print(f"Parallel running is not possible. Numebr of CPUS are are not enough.")
+        else:
+            doParallel = True;
+    
+    # Setting up run settings
+
     event_time = 2 * 3600 # this is the time of the event # TODO: Add it to teh front end
     
     REWET_input_data = {}
@@ -278,44 +306,75 @@ if __name__ == '__main__':
     run_directory = rwhale_input_Data["runDir"]
     number_of_realization = rwhale_input_Data["Applications"]\
         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]
-        
-    if parser_data.number != None:
-        number_of_realization = 1
-    else:
-        number_of_realization = rwhale_input_Data["Applications"]\
-            ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]
+    
+    REWET_input_data["settings"]["result_directory"] = os.path.join(\
+        run_directory,"Results","WaterDistributionNetwork", "REWET_Result")
 
+    REWET_input_data["settings"]["temp_directory"] = os.path.join(\
+        run_directory,"Results", "WaterDistributionNetwork", "REWET_RunFiles")
+   
+    REWET_input_data["settings"]['WN_INP'] = inp_file_addr
     
-    for scn_number in range(number_of_realization):
-        dl_file_path = getDLFileName(run_directory, parser_data.damage,
-                                     scn_number)
+    damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
+    damage_save_path_hir = damage_save_path
+    not_existing_hir = []
+    while os.path.exists(damage_save_path_hir) == False:
+        not_existing_hir.append(damage_save_path_hir.name)
+        damage_save_path_hir = damage_save_path_hir.parent
+    
+    while len(not_existing_hir):
+        damage_save_path_hir = damage_save_path_hir / not_existing_hir[-1]
+        damage_save_path_hir.mkdir()
+        not_existing_hir.pop(-1)
+    
+    
+    
+    if parser_data.number == None:
+        scneario_list_path = damage_save_path / f"scenario_table.xlsx"
+    else:
+        scneario_list_path = damage_save_path / f"scenario_table_{parser_data.number}.xlsx"
         
-        damage_data = damage_convertor.readDamagefile(
-            dl_file_path,  run_directory, event_time )
+    REWET_input_data["settings"]["pipe_damage_file_list"] = str(scneario_list_path)
+    REWET_input_data["settings"]["pipe_damage_file_directory"] = str(damage_save_path)
     
-        scenario_list, prefix = createScnearioList(run_directory, scn_number)
+    # Add Single Scneario or mutiple scenario
+    Damage_file_name = []
+    
+    if doParallel and procID > 0:
+        pass
+    else:
+        settings_json_file_path = preprocessorIO.saveSettingsFile(
+            REWET_input_data, damage_save_path, parser_data.number)
         
-        damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
-        scneario_list_path = preprocessorIO.saveScenarioData(damage_data, damage_save_path, scenario_list)
-    
-        #setSettingsData(rwhale_input_Data, REWET_input_data)
-        REWET_input_data["settings"]["result_directory"] = os.path.join(\
-            run_directory,"Results","WaterDistributionNetwork", "REWET_Result")
-    
-        REWET_input_data["settings"]["temp_directory"] = os.path.join(\
-            run_directory,"Results", "WaterDistributionNetwork", "REWET_RunFiles")
-    
-        REWET_input_data["settings"]["temp_directory"] = os.path.join(\
-            run_directory,"Results", "WaterDistributionNetwork", "REWET_RunFiles")
-    
-        REWET_input_data["settings"]['WN_INP'] = inp_file_addr
+        scenario_table = preprocessorIO.create_scneario_table()
         
-        REWET_input_data["settings"]["pipe_damage_file_list"] = scneario_list_path
-        REWET_input_data["settings"]["pipe_damage_file_directory"] = str( damage_save_path ) 
+        if parser_data.number == None:
+            Damage_file_name = list(range(0, number_of_realization))
+            
+        else:
+            Damage_file_name.append(parser_data.number)
         
-        settings_json_file_path = preprocessorIO.saveSettingsFile(REWET_input_data, run_directory, prefix)
-        REWET_starter = Starter()
-        REWET_starter.run(settings_json_file_path)
+        damage_save_path = scneario_list_path.parent
+        for scn_number in Damage_file_name:
+            dl_file_path = getDLFileName(run_directory, parser_data.dir,
+                                         scn_number)
+            
+            damage_data = damage_convertor.readDamagefile(
+                dl_file_path,  run_directory, event_time )
+            #damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
+            
+            cur_damage_file_name_list = preprocessorIO.save_damage_data(
+                damage_save_path, damage_data, scn_number)
+            
+            scenario_table = preprocessorIO.update_scenario_table(
+                scenario_table, cur_damage_file_name_list, scn_number)
+            
+            
+        preprocessorIO.save_scenario_table(scenario_table,
+                        REWET_input_data["settings"]["pipe_damage_file_list"])
+    
+    REWET_starter = Starter()
+    REWET_starter.run(settings_json_file_path)
         
     
     
