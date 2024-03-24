@@ -72,8 +72,8 @@ def create_surroundings_geometry(main_bldg_width, main_bldg_depth, sur_bldg_widt
 
     copies = []
 
-    min_h = 1.0 - randomness*0.5
-    max_h = 1.0 + randomness*0.5
+    min_h = 1.0 - randomness*0.95
+    max_h = 1.0 + randomness*0.95
 
     rand_f = np.random.uniform(min_h, max_h, (n_grid_x, n_grid_y))
 
@@ -1739,8 +1739,10 @@ if __name__ == '__main__':
     #Write blockMesh
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
 
-    #Create and write the main building and surroundings "*.stl" file
+    #Create and write the main building "*.stl" file
     write_main_building_stl_file(input_json_path, case_path)
+    
+    #Write surrounding building STL file
     write_surrounding_buildings_stl_file(input_json_path, case_path)
 
     #Create and write the SnappyHexMeshDict file
@@ -1785,4 +1787,4 @@ if __name__ == '__main__':
     # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
     
     #Write TInf files 
-    write_boundary_data_files(input_json_path, case_path)
+    # write_boundary_data_files(input_json_path, case_path)
