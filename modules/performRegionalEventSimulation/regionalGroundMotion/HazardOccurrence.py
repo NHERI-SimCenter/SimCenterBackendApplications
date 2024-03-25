@@ -135,8 +135,8 @@ def configure_hazard_occurrence(input_dir,
         with open(IMfile, 'r') as f:
             IMdata = json.load(f)
         hc_data = calc_hazard_curves(IMdata,site_config, cur_imt)
-        c_vect = calc_hazard_contribution(IMdata, site_config,
-                                          return_periods, hc_data, cur_imt)
+        # c_vect = calc_hazard_contribution(IMdata, site_config,
+        #                                   return_periods, hc_data, cur_imt)
     else:
         hc_input = os.path.join(input_dir,hc_input)
         if hc_input.endswith('.csv'):
@@ -190,6 +190,16 @@ def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):
             print('HazardOCcurrence: error in fetching hazard curve for site {}.'.format(cur_id))
     # return
     return
+
+def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):
+    if im[0:2] == 'SA':
+        period = float(im[2:].replace('P','.'))
+        im_name = 'lnSA'
+        periods = IMdata['IntensityMeasures'][0]['Periods']
+        im_ind = np.where(np.array(periods)==period)[0][0]
+    else:
+        im_name = 'lnPGA'
+        im_ind = 0
 
 def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, im):
     if im[0:2] == 'SA':

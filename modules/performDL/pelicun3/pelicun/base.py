@@ -36,6 +36,7 @@
 #
 # Contributors:
 # Adam Zsarnóczay
+# John Vouvakis Manousakis
 
 """
 This module defines constants, basic classes and methods for pelicun.
@@ -44,34 +45,34 @@ This module defines constants, basic classes and methods for pelicun.
 
 .. autosummary::
 
+    load_default_options
+    update_vals
+    merge_default_config
     convert_to_SimpleIndex
     convert_to_MultiIndex
-    convert_unit
     show_matrix
-    show_warning
-    print_system_info
-    log_div
-    log_msg
     describe
+    str2bool
     float_or_None
     int_or_None
     process_loc
-    str2bool
+    dedupe_index
 
     Options
+    Logger
 
 """
 
 import os
 import sys
 from datetime import datetime
+import json
 import warnings
 from pathlib import Path
 import argparse
 import pprint
 import numpy as np
 import pandas as pd
-from . import file_io
 
 
 # set printing options
@@ -83,11 +84,6 @@ pd.options.display.expand_frame_repr = True
 pd.options.display.width = 300
 
 idx = pd.IndexSlice
-
-# don't show FutureWarnings by default
-if not sys.warnoptions:
-    warnings.filterwarnings(
-        category=FutureWarning, action='ignore')
 
 
 class Options:
@@ -176,11 +172,6 @@ class Options:
 
         self._asmnt = assessment
 
-        self._verbose = False
-        self._log_show_ms = False
-        self._print_log = False
-        self._log_file = None
-
         self.defaults = None
         self.sampling_method = None
         self.list_all_ds = None
@@ -188,7 +179,7 @@ class Options:
         self._seed = None
 
         self._rng = np.random.default_rng()
-        merged_config_options = file_io.merge_default_config(
+        merged_config_options = merge_default_config(
             user_config_options)
 
         self._seed = merged_config_options['Seed']
@@ -204,6 +195,7 @@ class Options:
         # instantiate a Logger object with the finalized configuration
         self.log = Logger(
             merged_config_options['Verbose'],
+            merged_config_options['ShowWarnings'],
             merged_config_options['LogShowMS'],
             merged_config_options['LogFile'],
             merged_config_options['PrintLog'])
@@ -278,6 +270,7 @@ class Options:
         """
         self._units_file = value
 
+
 class Logger:
 
     """
@@ -292,6 +285,12 @@ class Logger:
         value is specified in the user's configuration dictionary,
         otherwise left as provided in the default configuration file
         (see settings/default_config.json in the pelicun source code).
+    show_warnings: bool
+        If True, future, deprecation, and performance warnings from python
+        packages such as numpy and pandas are printed to the log file
+        (and also to the standard output). Otherwise, they are
+        suppressed. This setting does not affect warnings defined within
+        pelicun that are specific to the damage and loss calculation.
     log_show_ms: bool
         If True, the timestamps in the log file are in microsecond
         precision. The value is specified in the user's configuration
@@ -312,7 +311,7 @@ class Logger:
     """
     # TODO: finalize docstring
 
-    def __init__(self, verbose, log_show_ms, log_file, print_log):
+    def __init__(self, verbose, show_warnings, log_show_ms, log_file, print_log):
         """
         Initializes a Logger object.
 
@@ -322,6 +321,7 @@ class Logger:
 
         """
         self.verbose = verbose
+        self.show_warnings = show_warnings
         self.log_show_ms = log_show_ms
         self.log_file = log_file
         self.print_log = print_log
@@ -340,12 +340,22 @@ class Logger:
         verbose property setter
         """
         self._verbose = bool(value)
-        # display FutureWarnings
-        if self._verbose is True:
-            if not sys.warnoptions:
-                warnings.filterwarnings(
-                    category=FutureWarning,
-                    action='default')
+
+    @property
+    def show_warnings(self):
+        """
+        show_warnings property
+        """
+        return self._show_warnings
+
+    @show_warnings.setter
+    def show_warnings(self, value):
+        """
+        show_warnings property setter
+        """
+        self._show_warnings = bool(value)
+        # control warnings according to the desired setting
+        control_warnings(show=self._show_warnings)
 
     @property
     def log_show_ms(self):
@@ -514,26 +524,188 @@ class Logger:
             f'pandas: {pd.__version__}\n',
             prepend_timestamp=False)
 
+
 # get the absolute path of the pelicun directory
 pelicun_path = Path(os.path.dirname(os.path.abspath(__file__)))
+
+
+def control_warnings(show):
+
+    """
+    Convenience function to turn warnings on/off
+
+    Parameters
+    ----------
+    show: bool
+        If True, warnings are set to the default level. If False,
+        warnings are ignored.
+
+    """
+    if show:
+        action = 'default'
+    else:
+        action = 'ignore'
+
+    if not sys.warnoptions:
+        warnings.filterwarnings(
+            category=FutureWarning, action=action)
+
+        warnings.filterwarnings(
+            category=DeprecationWarning, action=action)
+
+        warnings.filterwarnings(
+            category=pd.errors.PerformanceWarning, action=action)
+
+
+def load_default_options():
+    """
+    Load the default_config.json file to set options to default values
+    """
+
+    with open(pelicun_path / "settings/default_config.json",
+              'r', encoding='utf-8') as f:
+        default_config = json.load(f)
+
+    default_options = default_config['Options']
+    return default_options
+
+
+def update_vals(
+        update, primary,
+        update_path, primary_path
+):
+    """
+    Updates the values of the `update` nested dictionary with
+    those provided in the `primary` nested dictionary. If a key
+    already exists in update, and does not map to another
+    dictionary, the value is left unchanged.
+
+    Parameters
+    ----------
+    update: dict
+        Dictionary -which can contain nested dictionaries- to be
+        updated based on the values of `primary`. New keys existing
+        in `primary` are added to `update`. Values of which keys
+        already exist in `primary` are left unchanged.
+    primary: dict
+        Dictionary -which can contain nested dictionaries- to
+        be used to update the values of `update`.
+    update_path: str
+        Identifier for the update dictionary. Used to make error
+        messages more meaningful.
+    primary_path: str
+        Identifier for the update dictionary. Used to make error
+        messages more meaningful.
+
+    Raises
+    ------
+    ValueError
+      If primary[key] is dict but update[key] is not.
+    ValueError
+      If update[key] is dict but primary[key] is not.
+    """
+
+    # pylint: disable=else-if-used
+    # (`consider using elif`)
+
+    # we go over the keys of `primary`
+    for key in primary:
+        # if `primary[key]` is a dictionary:
+        if isinstance(primary[key], dict):
+            # if the same `key` does not exist in update,
+            # we associate it with an empty dictionary.
+            if key not in update:
+                update[key] = {}
+            # if it exists already, it should map to
+            # a dictionary.
+            elif not isinstance(update[key], dict):
+                raise ValueError(
+                    f'{update_path}["{key}"] '
+                    'should map to a dictionary. '
+                    'The specified value is '
+                    f'{update_path}["{key}"] = {update[key]}, but '
+                    f'the default value is '
+                    f'{primary_path}["{key}"] = {primary[key]}. '
+                    f'Please revise {update_path}["{key}"].'
+                )
+            # With both being dictionaries, we recurse.
+            update_vals(
+                update[key], primary[key],
+                f'{update_path}["{key}"]', f'{primary_path}["{key}"]')
+        # if `primary[key]` is NOT a dictionary:
+        else:
+            # if `key` does not exist in `update`, we add it, with
+            # its corresponding value.
+            if key not in update:
+                update[key] = primary[key]
+            else:
+                # key exists in update and should be left alone,
+                # but we must check that it's not a dict here:
+                if isinstance(update[key], dict):
+                    raise ValueError(
+                        f'{update_path}["{key}"] '
+                        'should not map to a dictionary. '
+                        f'The specified value is '
+                        f'{update_path}["{key}"] = {update[key]}, but '
+                        f'the default value is '
+                        f'{primary_path}["{key}"] = {primary[key]}. '
+                        f'Please revise {update_path}["{key}"].'
+                    )
+    # pylint: enable=else-if-used
+
+
+def merge_default_config(user_config):
+    """
+    Merge the user-specified config with the configuration defined in
+    the default_config.json file. If the user-specified config does
+    not include some option available in the default options, then the
+    default option is used in the merged config.
+
+    Parameters.
+    ----------
+    user_config: dict
+        User-specified configuration dictionary
+
+    Returns
+    -------
+    user_config: dict
+        Merged configuration dictionary
+    """
+
+    config = user_config  # start from the user's config
+    default_config = load_default_options()
+
+    if config is None:
+        config = {}
+
+    # We fill out the user's config with the values available in the
+    # default config that were not set.
+    # We use a recursive function to handle nesting.
+    update_vals(
+        config, default_config,
+        'user_settings', 'default_settings')
+
+    return config
 
 
 def convert_to_SimpleIndex(data, axis=0, inplace=False):
     """
     Converts the index of a DataFrame to a simple, one-level index
 
-    The target index uses standard SimCenter convention to identify different
-    levels: a dash character ('-') is used to separate each level of the index.
+    The target index uses standard SimCenter convention to identify
+    different levels: a dash character ('-') is used to separate each
+    level of the index.
 
     Parameters
     ----------
     data: DataFrame
         The DataFrame that will be modified.
     axis: int, optional, default:0
-        Identifies if the index (0) or the columns (1) shall be edited.
+        Identifies if the index (0) or the columns (1) shall be
+        edited.
     inplace: bool, optional, default:False
-        If yes, the operation is performed directly on the input DataFrame
-        and not on a copy of it.
+        If yes, the operation is performed directly on the input
+        DataFrame and not on a copy of it.
 
     Returns
     -------
@@ -559,9 +731,11 @@ def convert_to_SimpleIndex(data, axis=0, inplace=False):
             if data.index.nlevels > 1:
 
                 simple_name = '-'.join(
-                    [n if n is not None else "" for n in data.index.names])
-                simple_index = ['-'.join([str(id_i) for id_i in id])
-                                for id in data.index]
+                    [n if n is not None else "" for n in data.index.names]
+                )
+                simple_index = [
+                    '-'.join([str(id_i) for id_i in id]) for id in data.index
+                ]
 
                 data_mod.index = simple_index
                 data_mod.index.name = simple_name
@@ -572,9 +746,11 @@ def convert_to_SimpleIndex(data, axis=0, inplace=False):
             if data.columns.nlevels > 1:
 
                 simple_name = '-'.join(
-                    [n if n is not None else "" for n in data.columns.names])
-                simple_index = ['-'.join([str(id_i) for id_i in id])
-                                for id in data.columns]
+                    [n if n is not None else "" for n in data.columns.names]
+                )
+                simple_index = [
+                    '-'.join([str(id_i) for id_i in id]) for id in data.columns
+                ]
 
                 data_mod.columns = simple_index
                 data_mod.columns.name = simple_name
@@ -589,19 +765,20 @@ def convert_to_MultiIndex(data, axis=0, inplace=False):
     """
     Converts the index of a DataFrame to a MultiIndex
 
-    We assume that the index uses standard SimCenter convention to identify
-    different levels: a dash character ('-') is expected to separate each level
-    of the index.
+    We assume that the index uses standard SimCenter convention to
+    identify different levels: a dash character ('-') is expected to
+    separate each level of the index.
 
     Parameters
     ----------
     data: DataFrame
         The DataFrame that will be modified.
     axis: int, optional, default:0
-        Identifies if the index (0) or the columns (1) shall be edited.
+        Identifies if the index (0) or the columns (1) shall be
+        edited.
     inplace: bool, optional, default:False
-        If yes, the operation is performed directly on the input DataFrame
-        and not on a copy of it.
+        If yes, the operation is performed directly on the input
+        DataFrame and not on a copy of it.
 
     Returns
     -------
@@ -615,8 +792,9 @@ def convert_to_MultiIndex(data, axis=0, inplace=False):
     """
 
     # check if the requested axis is already a MultiIndex
-    if (((axis == 0) and (isinstance(data.index, pd.MultiIndex))) or (
-            (axis == 1) and (isinstance(data.columns, pd.MultiIndex)))):
+    if ((axis == 0) and (isinstance(data.index, pd.MultiIndex))) or (
+        (axis == 1) and (isinstance(data.columns, pd.MultiIndex))
+    ):
 
         # if yes, return the data unchanged
         return data
@@ -635,7 +813,9 @@ def convert_to_MultiIndex(data, axis=0, inplace=False):
     for l_i, labels in enumerate(index_labels):
 
         if len(labels) != max_lbl_len:
-            labels += ['', ] * (max_lbl_len - len(labels))
+            labels += [
+                '',
+            ] * (max_lbl_len - len(labels))
             index_labels[l_i] = labels
 
     index_labels = np.array(index_labels)
@@ -658,13 +838,43 @@ def convert_to_MultiIndex(data, axis=0, inplace=False):
     return data
 
 
+def convert_dtypes(dataframe):
+    """
+    Convert columns to a numeric datatype whenever possible. The
+    function replaces None with NA otherwise columns containing None
+    would continue to have the `object` type
+
+    Parameters
+    ----------
+    dataframe: DataFrame
+        The DataFrame that will be modified.
+
+    Returns
+    -------
+    DataFrame
+        The modified DataFrame.
+
+    """
+    dataframe.fillna(value=np.nan, inplace=True)
+    # note: `axis=0` applies the function to the columns
+    # note: ignoring errors is a bad idea and should never be done. In
+    # this case, however, that's not what we do, despite the name of
+    # this parameter. We simply don't convert the dtype of columns
+    # that cannot be interpreted as numeric. That's what
+    # `errors='ignore'` does.
+    # See:
+    # https://pandas.pydata.org/docs/reference/api/pandas.to_numeric.html
+    return dataframe.apply(lambda x: pd.to_numeric(x, errors='ignore'), axis=0)
+
+
 def show_matrix(data, use_describe=False):
     """
     Print a matrix in a nice way using a DataFrame
     """
     if use_describe:
-        pp.pprint(pd.DataFrame(data).describe(
-            percentiles=[0.01, 0.1, 0.5, 0.9, 0.99]))
+        pp.pprint(
+            pd.DataFrame(data).describe(percentiles=[0.01, 0.1, 0.5, 0.9, 0.99])
+        )
     else:
         pp.pprint(pd.DataFrame(data))
 

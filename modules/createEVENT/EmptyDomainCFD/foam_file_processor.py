@@ -32,7 +32,7 @@ def write_foam_field(field, file_name):
     if os.path.exists(file_name):
         os.remove(file_name)
 
-    foam_file = open(file_name,"w+")
+    foam_file = open(file_name, "w+")
 
     size = np.shape(field)
 
@@ -40,9 +40,9 @@ def write_foam_field(field, file_name):
     foam_file.write('\n(')
     
     for i in range(size[0]):
-        line = "\n ("
+        line = "\n("
         for j in range(size[1]):
-            line += "{:.6e} ".format(field[i,j])     
+            line += " {:.6e}".format(field[i,j])     
         line += ")"
         foam_file.write(line)
     
@@ -65,7 +65,7 @@ def write_scalar_field(field, file_name):
     foam_file.write('\n(')
     
     for i in range(size[0]):
-        foam_file.write("\n {:.6e}".format(field[i]))     
+        foam_file.write("\n {:.6e}".format(field.flatten()[i]))     
     
     foam_file.write('\n);')   
     foam_file.close()
