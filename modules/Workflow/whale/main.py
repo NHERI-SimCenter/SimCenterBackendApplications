@@ -1503,16 +1503,7 @@ class Workflow(object):
 
         reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list)
-
-        #
-        # defaults added to a system performance app are asset list , input_dir and running_parallel (default False)
-        #
-        
-        app_command_list.append('--assets')
-        app_command_list.append(asset_keys)
-        app_command_list.append('--input_dir')
-        app_command_list.append(self.working_dir)        
+        command = create_command(reg_event_command_list)    
         
         if (self.parType == 'parSETUP'):
 
@@ -2399,7 +2390,12 @@ class Workflow(object):
                         #dst = posixpath.join(self.run_dir, 'pelicun_log_{}.txt'.format(asst_id)))
                     except:
                         pass
-
+            # Remove the copied AIM since it is not used anymore
+            try:
+                dst = posixpath.join(aimDir, f'{asst_id}/{aimFileName}')
+                os.remove(dst)
+            except:
+                pass
             log_msg('Damage and loss assessment finished successfully.',
                     prepend_timestamp=False)
             log_div()
