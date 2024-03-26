@@ -241,7 +241,8 @@ def main(run_type, input_file, app_registry,
             comm.Barrier()
                 
         # aggregate results
-        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
+        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork'\
+        or asset_type == 'WaterDistributionNetwork':
 
             WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
             

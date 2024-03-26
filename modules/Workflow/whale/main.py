@@ -1185,7 +1185,9 @@ class Workflow(object):
             # knows which asset_type it's processing.  
             if asset_app.name == 'GEOJSON_TO_ASSET':
                 asset_command_list = asset_command_list + [u'--assetType',\
-                                asset_type, u'--inputJsonFile', self.input_file]
+                                asset_type, u'--inputJsonFile', self.input_file] # SN : this is out of Workflow structure. I believe it could be better done
+                asset_command_list = asset_command_list + [u'--referenceDir',\
+                                self.reference_dir] # SN : For now. It may change after the discussion with the team leadership
 
             asset_command_list.append(u'--getRV')
 
@@ -2975,6 +2977,14 @@ class Workflow(object):
                     while main_dir.parent.name != 'Results':
                         main_dir = bldg_dir.parent
                         assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
+                    
+                    # The damagefor Junctions and Reservoirs of WaterDistributionNetwork is
+                    # not modeled. So it should be skipped 
+                    if "WaterDistributionNetwork" in assetTypeHierarchy and\
+                        ("Junction" in assetTypeHierarchy or\
+                         "Reservoir" in assetTypeHierarchy):
+                            continue
+                        
                     asset_dir = bldg_dir/asset_id
                     AIM_file = None
                     if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
