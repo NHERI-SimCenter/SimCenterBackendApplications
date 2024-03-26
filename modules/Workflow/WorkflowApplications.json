@@ -1147,6 +1147,22 @@
       }
     ]
   },
+    "SystemPerformanceApplications":{
+	"API": {
+	    "Inputs": [
+	    ],
+	    "Outputs": [
+	    ]
+	},
+	"Applications": [
+	    {
+		"Name": "ReWet",
+		"ExecutablePath": "applications/systemPerformance/ReWet/ReWetWrapper.py",
+		"ApplicationSpecificInputs": [		    
+		]
+	    }
+	]
+    },
   "PerformanceApplications": {
     "API": {
       "Inputs": [
