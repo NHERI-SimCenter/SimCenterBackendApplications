@@ -109,7 +109,7 @@ main(int argc, char **argv) {
     json_t *type = json_object_get(inputEvent,"type");
     const char *eventType = json_string_value(type);
 
-    if (strcmp(eventType,"LowRiseTPU") != 0) {
+    if ((strcmp(eventType,"LowRiseTPU") != 0) && (strcmp(eventType,"ExperimentalWindPressures") != 0)) {
       
       json_array_append(outputEventsArray, inputEvent); 
       
