@@ -2999,7 +2999,11 @@ class Workflow(object):
                             asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
                             asst_GI.pop("Footprint")
                         else:
-                            raise ValueError("No valid geometric information in GI.")
+                            #raise ValueError("No valid geometric information in GI.")
+                            asst_lat = asst_GI['location']['latitude']
+                            asst_lon = asst_GI['location']['longitude']
+                            asst_geom = { "type": "Point", "coordinates": [\
+                                asst_lon, asst_lat]}
                     except:
                         asst_lat = asst_GI['location']['latitude']
                         asst_lon = asst_GI['location']['longitude']
