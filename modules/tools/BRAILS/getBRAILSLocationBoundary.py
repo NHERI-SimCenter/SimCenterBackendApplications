@@ -62,10 +62,10 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):
 
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
     if locationStr=="":
-        invGenerator = fpHandler._FootprintHandler__bbox2poly((longMin,latMin,longMax,latMax),
+        fpHandler._FootprintHandler__bbox2poly((longMin,latMin,longMax,latMax),
                                           outfile = outputfile)
     else:
-        invGenerator = fpHandler._FootprintHandler__fetch_roi(locationStr, outfile = outputfile)        
+        fpHandler._FootprintHandler__fetch_roi(locationStr, outfile = outputfile)        
 
 # Define a way to collect GUI input:
 def main(args):
