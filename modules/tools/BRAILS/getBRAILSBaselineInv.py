@@ -65,31 +65,38 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc,
 
     if invInp=="NSI":
         nsiParser = NSIParser()
+        # Format location input based on the GUI input:
+        if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
+            location = fpSrc
+            fpSrc = 'osm'
+            fpUserSpecified = True
+        elif locationStr=="":
+            location = (longMin,latMin,longMax,latMax)
+            fpUserSpecified = False
+        else:
+            location = locationStr
+            fpUserSpecified = False
 
         # Get raw NSI data:
         if outputDataType=='raw':
-            # Run FootprintHandler to generate the boundary polygon for the entered location:
-            if locationStr=="":
-                bpoly, _, _ = fpHandler._FootprintHandler__bbox2poly(location)
+            if not fpUserSpecified:
+                # Run FootprintHandler to generate the boundary polygon for the entered location:
+                if locationStr=="":
+                    bpoly, _, = fpHandler._FootprintHandler__bbox2poly(location)
+                else:
+                    bpoly, _, _ = fpHandler._FootprintHandler__fetch_roi(location) 
+                nsiParser.GetRawDataROI(bpoly,outputfile)
             else:
-                bpoly, _, _ = fpHandler._FootprintHandler__fetch_roi(location) 
-            nsiParser.GetRawDataROI(bpoly,outputfile)
+                fpHandler.fetch_footprint_data(location, fpSource=fpSrc, lengthUnit=lengthunit)
+                footprints = fpHandler.footprints.copy()
+                nsiParser.GetRawDataROI(footprints,outputfile)
 
         # Get footprint-merged NSI data:
         elif outputDataType=='processed': 
-            # Format location input based on the GUI input:
-            if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
-                location = fpSrc
-                fpSrc = 'osm'
-            elif locationStr=="":
-                location = (longMin,latMin,longMax,latMax)
-            else:
-                location = locationStr
-            
             # Run FootprintHandler to get the footprints for the entered location:
             fpHandler.fetch_footprint_data(location, fpSource=fpSrc, lengthUnit=lengthunit)
             footprints = fpHandler.footprints.copy()
-            nsiParser.GetNSIData(footprints, outfile=outputfile)
+            nsiParser.GetNSIData(footprints, outfile=outputfile, lengthUnit=lengthunit)
     else:
         # Only applicable to processed inventory data. Raw data gets handled in the widget:
         fpHandler.fetch_footprint_data(invInp, attrmap=invAttrMap, fpSource=fpSrc,
