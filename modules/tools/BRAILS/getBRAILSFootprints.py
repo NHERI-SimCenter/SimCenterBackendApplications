@@ -70,7 +70,6 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc, fpSourceAttr
     else:
         location = locationStr
 
-    print(location)
     # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
     if fpSourceAttrMap=='':
         fpHandler.fetch_footprint_data(location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile)
