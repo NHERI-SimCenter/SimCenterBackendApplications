@@ -37,17 +37,7 @@
 # Contributors:
 # Adam Zsarnóczay
 
-name = "pelicunPBE"
+from pelicun.tools.DL_calculation import main
 
-__version__ = '2.6.2'
-
-__copyright__ = """Copyright (c) 2018 Leland Stanford Junior University and 
-The Regents of the University of California"""
-
-__license__ = "BSD 3-Clause License"
-
-
-
-
-
-
+if __name__ == '__main__':
+    main()
