@@ -38,54 +38,9 @@
 #
 # Last updated:
 # 03-27-2024 
-
-# Import packages needed for setting up required packages:
-import sys
-import subprocess
-from importlib import metadata as importlib_metadata
-
-# If not installed, install BRAILS, argparse, and requests:
-required = {'BRAILS', 'argparse', 'requests'}
-installed = set()
-
-# Detect installed packages using Python-provided importlib.metadata:
-for x in importlib_metadata.distributions():
-    try:
-        installed.add(x.name)
-    except:
-        pass
-
-# If installed packages could not be detected, use importlib_metadata backport:
-if not installed:
-    import importlib_metadata
-    for x in importlib_metadata.distributions():
-        try:
-            installed.add(x.name)
-        except:
-            pass
-missing = required - installed
-
-# Install missing packages:
-python = sys.executable
-if missing:
-    print('\nInstalling packages required for running this widget...')
-    subprocess.check_call([python, '-m', 'pip', 'install', *missing], 
-                          stdout=subprocess.DEVNULL)
-    print('Successfully installed the required packages')
-
-# If requests and BRAILS were previously installed ensure they are at their latest versions:
-subprocess.check_call([python, '-m', 'pip', 'install', 'requests','-U'],
-                      stdout=subprocess.DEVNULL)
- 
-import requests
-latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()['info']['version']
-if  importlib_metadata.version('BRAILS')!=latestBrailsVersion:
-    print('\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..')    
-    subprocess.check_call([python, '-m', 'pip', 'install', 'BRAILS','-U'],
-                          stdout=subprocess.DEVNULL)
-    print('Successfully installed the latest version of BRAILS')   
  
 # Import packages required for running the latest version of BRAILS:
+import sys
 import argparse
 import os
 from time import gmtime, strftime

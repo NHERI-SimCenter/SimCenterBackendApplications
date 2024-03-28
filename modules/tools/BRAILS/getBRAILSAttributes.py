@@ -44,6 +44,8 @@ import sys
 import subprocess
 from importlib import metadata as importlib_metadata
 
+print('Initializing BRAILS...')
+
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
 installed = set()
@@ -117,7 +119,7 @@ def main(args):
     # Run BRAILS  with the user-defined arguments:
     runBrails(args.outputFile)
 
-    log_msg('BRAILS successfully communicated its enabled attributes')
+    log_msg('BRAILS was successfully initialized')
     
 # Run main:
 if __name__ == '__main__':
