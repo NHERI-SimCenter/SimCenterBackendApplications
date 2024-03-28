@@ -894,6 +894,8 @@ def main(args):
 
     #print("--- %s seconds ---" % (time.time() - start_time))
 
+# python3 DL_visuals.py repair /Users/adamzs/SimCenter/applications/performDL/pelicun3/pelicun/resources/SimCenterDBDL/loss_repair_DB_FEMA_P58_2nd.csv
+
 if __name__ == '__main__':
 
     main(sys.argv[1:])
