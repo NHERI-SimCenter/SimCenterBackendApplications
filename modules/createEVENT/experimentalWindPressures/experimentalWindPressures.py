@@ -18,10 +18,11 @@ except:
     error_tag = True
 
 from convertWindMat import *
+
 errPath = "./workflow.err"
+sys.stderr = open(errPath,'w')
 
 def main(aimName,evtName, getRV):
-
 
     with open(aimName, 'r') as f:
         aim_data = json.load(f)
@@ -52,7 +53,7 @@ def main(aimName,evtName, getRV):
 
     l_mo = int(np.ceil(tap*perc_mod))      # number of modes included in the simulation
     if l_mo>100 or l_mo<0:
-        err_exit('Error: Number of modes should be equal or less than the number of components')
+        err_exit('Number of modes should be equal or less than the number of components')
 
     print('Number of modes = '+ str(l_mo))
 
@@ -222,64 +223,6 @@ def main(aimName,evtName, getRV):
 
         unitLength = aim_data["GeneralInformation"]["units"]["length"]
         unitTime = aim_data["GeneralInformation"]["units"]["time"]
-        # TODO: save S target
-
-        #
-        # Save dataset
-        #
-
-        # iterm_json = {}
-        # iterm_json["selected_taps"] = selected_taps
-        # iterm_json["ms"] = ms
-        # iterm_json["V_H"] = V_H
-        # iterm_json["T_full"] = T_full
-        # iterm_json["Cp_norm"] = Cp_norm
-        # iterm_json["Tw"] = Tw
-        # iterm_json["overlap"] = overlap
-        # iterm_json["nover"] = nover
-        # iterm_json["dt"] = dt
-        # iterm_json["fs"] = fs
-        # iterm_json["N_t"] = N_t
-        # iterm_json["fcut_sc"] = fcut_sc
-        # iterm_json["Vref"] = Vref
-        # iterm_json["Cp_std"] = Cp_std
-        # iterm_json["Cp_mean"] = Cp_mean
-        # iterm_json["s_target"] = s_target
-        # iterm_json["f_target"] = f_target
-        # iterm_json["pressureData"] = pressure_data
-        # iterm_json["length"] = unitLength
-        # iterm_json["time"] = unitTime
-        #
-        # save into a file
-        #
-
-        # if not os.path.exists("../input_File"):
-        #     os.makedirs("../input_File")
-        # sio.savemat('../input_File/POD_Cp.mat', iterm_json)
-
-        # else:
-        #
-        #     iterm_json =  sio.loadmat('../input_File/POD_Cp.mat')
-        #     selected_taps =np.squeeze(iterm_json["selected_taps"])
-        #     ms =np.squeeze(iterm_json["ms"])
-        #     V_H =np.squeeze(iterm_json["V_H"])
-        #     T_full =np.squeeze(iterm_json["T_full"])
-        #     Cp_norm =np.squeeze(iterm_json["Cp_norm"])
-        #     Tw =np.squeeze(iterm_json["Tw"])
-        #     overlap =np.squeeze(iterm_json["overlap"])
-        #     nover =np.squeeze(iterm_json["nover"])
-        #     dt =np.squeeze(iterm_json["dt"])
-        #     fs =np.squeeze(iterm_json["fs"])
-        #     N_t =np.squeeze(iterm_json["N_t"])
-        #     fcut_sc =np.squeeze(iterm_json["fcut_sc"])
-        #     s_target =np.squeeze(iterm_json["s_target"])
-        #     f_target =np.squeeze(iterm_json["f_target"])
-        #     Vref =np.squeeze(iterm_json["Vref"])
-        #     Cp_std=np.squeeze(iterm_json["Cp_std"])
-        #     Cp_mean=np.squeeze(iterm_json["Cp_mean"])
-        #     unitLength = np.squeeze(iterm_json["length"])
-        #     unitTime = np.squeeze(iterm_json["time"] )
-
 
         print("Performing POD..");
         t_init = time.time()
@@ -374,7 +317,6 @@ def main(aimName,evtName, getRV):
         file_loaded = False
 
     else:
-
         iterm_json =  sio.loadmat('../input_File/POD_Cp.mat')
         selected_taps =np.squeeze(iterm_json["selected_taps"])
         ms =np.squeeze(iterm_json["ms"])
@@ -411,13 +353,12 @@ def main(aimName,evtName, getRV):
     D_vH = (V_H / Vref) ** 3 * D1  # scaled eigenvalues
     theta_vH = np.arctan2(np.imag(V_vH), np.real(V_vH))  # scaled theta
 
-
     f_inc = 1 / T_full  # freq.increment(Hz)
     N_f = round(T_full * np.squeeze(fcut_sc)) + 1  # number of time points
 
     N_t = round(T_full / dt)  # number of time points
     fvec = np.arange(0, f_inc * (N_f), f_inc)  # frequency line
-    t_vec_sc = np.arange(0, dt * (N_t), dt)  # time line
+    t_vec_sc = np.linspace(0,dt*N_t,N_t)  # time line
     f = f_vH[0:SpeN]  # frequencies from the decomposition upto SpeN points(Hz)
     nf_dir = np.arange(tap)  # vector number of components
 
@@ -468,35 +409,7 @@ def main(aimName,evtName, getRV):
         for seed_num in range(len(seeds)): # always 1
             for i in range(tap):
                 Cp_nongauss_kernel[i, :, seed_num] = genCP(Cp_norm[:, selected_taps[i]], CP_sim[seed_num, i, :],nl,nu,my_cdf_vects[:,i],my_cdf_x_range[:,i])
-                '''
-                #
-                # combining the loops to directly send temp instead of dist_kde
-                #
-    
-                #x_max = np.max(Cp_norm[:, selected_taps[i]])
-                #x_min = np.min(Cp_norm[:, selected_taps[i]])
-                #x_target = np.linspace(x_min, x_max, 1000)
-                # TODO; why double?
-                temp = Cp_norm[:, selected_taps[i]]
-    
-                #
-                #
-                #
-                meanCp = np.mean(CP_sim[seed_num,i,:])
-                stdCp = np.std(CP_sim[seed_num,i,:])
-                F_vvv = (CP_sim[seed_num,i,:] - meanCp)/stdCp
-    
-                # cdf points from gaussian distribuition
-                cdf_vvv = norm.cdf(F_vvv, 0, 1)
-                # force the data being bounded in due to numerical errors that can happen in Matlab when CDF ~0 or ~1;
-    
-                cdf_vvv[cdf_vvv<0.00001] = 0.00001
-                cdf_vvv[cdf_vvv>0.99999] = 0.99999
-    
-                # map F_vvv into F_nongauss through inverse cdf of the mix distribution
-                # TODO why single precision for cdf_vv?
-                Cp_nongauss_kernel[i, :, seed_num] = paretotails_icdf(cdf_vvv, nl,nu, temp)
-                '''
+
         print(" - Elapsed time: {:.3f} seconds.\n".format(time.time() - tmp))
 
     Cp_std_tmp = Cp_std[selected_taps][:,np.newaxis,np.newaxis]
@@ -522,14 +435,9 @@ def main(aimName,evtName, getRV):
     #new_json["period"] = Td*ms*Vref/V_H
     new_json["period"] = t_vec_sc[-1]
     new_json["frequency"] = 1/(t_vec_sc[1]-t_vec_sc[0])
-    new_json["breadth"] =float(pressure_data["breadth"][0]*ms)
-    new_json["depth"] =float(pressure_data["depth"][0]*ms)
-    new_json["height"] =float(pressure_data["height"][0]*ms)
-    new_json["pitch"] =float(pressure_data["pitch"][0])
+
     #new_json["windSpeed"] =float(pressure_data["windSpeed"])
     new_json["windSpeed"] = float(evt_data["windSpeed"])
-
-    new_json["incidenceAngle"] =float(pressure_data["incidenceAngle"][0])
 
     new_json["units"]={}
     new_json["units"]["length"] =str(np.squeeze(unitLength))
@@ -537,26 +445,36 @@ def main(aimName,evtName, getRV):
 
     if file_loaded:
         new_json["roofType"] =str(pressure_data["roofType"][0][0][0])
+        new_json["breadth"] = float(pressure_data["breadth"][0][0][0][0] * ms)
+        new_json["depth"] = float(pressure_data["depth"][0][0][0][0] * ms)
+        new_json["height"] = float(pressure_data["height"][0][0][0][0] * ms)
+        new_json["pitch"] = float(pressure_data["pitch"][0][0][0][0])
+        new_json["incidenceAngle"] =float(pressure_data["incidenceAngle"][0][0][0][0])
         new_taps=[]
         for taps in pressure_data["tapLocations"][0][0][0]:
            if taps["id"][0][0] in selected_taps:
                 tmp = {}
                 tmp["id"] = int(taps["id"][0][0])
-                tmp["xLoc"] = float(taps["xLoc"])*ms
-                tmp["yLoc"] = float(taps["yLoc"])*ms
-                tmp["face"] = int(taps["face"])
-                new_taps += [tmp];
+                tmp["xLoc"] = float(taps["xLoc"][0][0])*ms
+                tmp["yLoc"] = float(taps["yLoc"][0][0])*ms
+                tmp["face"] = int(taps["face"][0][0])
+                new_taps += [tmp]
 
     else:
         new_json["roofType"] =str(pressure_data["roofType"])
+        new_json["breadth"] = float(pressure_data["breadth"][0] * ms)
+        new_json["depth"] = float(pressure_data["depth"][0] * ms)
+        new_json["height"] = float(pressure_data["height"][0] * ms)
+        new_json["pitch"] = float(pressure_data["pitch"][0])
+        new_json["incidenceAngle"] =float(pressure_data["incidenceAngle"][0])
         new_taps=[]
         for taps in pressure_data["tapLocations"]:
            if taps["id"] in selected_taps:
                 tmp = {}
-                tmp["id"] = int(taps["id"][0])
-                tmp["xLoc"] = float(taps["xLoc"][0])*ms
-                tmp["yLoc"] = float(taps["yLoc"][0])*ms
-                tmp["face"] = int(taps["face"][0])
+                tmp["id"] = int(taps["id"][0][0])
+                tmp["xLoc"] = float(taps["xLoc"][0][0])*ms
+                tmp["yLoc"] = float(taps["yLoc"][0][0])*ms
+                tmp["face"] = int(taps["face"][0][0])
                 new_taps += [tmp];
 
 
@@ -589,7 +507,7 @@ def main(aimName,evtName, getRV):
     try:
         os.system(command_line)
     except:
-        err_exit('ERROR: failed to convert pressure to force.')
+        err_exit('Failed to convert pressure to force.')
 
 
     #t_sc = ms*(Vref/V_H);   #scale wind tunnel time series to compare
@@ -805,6 +723,9 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):
     iterables = ((S_F[:, :, ii],) for ii in range(SpeN))
     try:
         result_objs = list(pool.starmap( np.linalg.eig, iterables))
+    except MemoryError:
+        err_exit("Low memory performing POD")
+
     except KeyboardInterrupt:
         print("Ctrl+c received, terminating and joining pool.")
         try:
@@ -820,11 +741,6 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):
         Ds[:, :, ii] = np.real(np.diag(D_all[ind]))
         Vs[:, :, ii] = V_all[:, ind]
 
-    # for ii in range(SpeN):  # eigen - decomposition at every frequency of CPSD matrix and sort them
-    #     [D_all, V_all] = np.linalg.eig()
-    #     ind = np.argsort(D_all)
-    #     Ds[:, :, ii] = np.real(np.diag(D_all[ind]))
-    #     Vs[:, :, ii] = V_all[:, ind]
 
     # Truncation
     V = np.zeros((ncomp, l_mo, SpeN), dtype='complex_')
@@ -838,67 +754,6 @@ def perform_POD(s_target, f_target, ncomp, l_mo, pool):
         D1[:, 0, ii] = np.diag(D0[:, :, ii])
 
     return V, D1, SpeN
-
-
-# def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full, fs, Tw, overlap, fp, V_H, fcut,
-#                T_full):
-#     Fx_full = ms ** 2 * Fx  # full scale Fx(N)
-#     Fy_full = ms ** 2 * Fy  # full scale  Fy(N)
-#     Tz_full = ms ** 3 * Tz  # full scale Tz(N.m)
-#
-#     # Force Coefficients (unitless)
-#     CFx = Fx_full / (0.5 * air_dens * vRef ** 2 * H_full * B_full)
-#     CFy = Fy_full / (0.5 * air_dens * vRef ** 2 * H_full * D_full)
-#     CTz = Tz_full / (0.5 * air_dens * vRef ** 2 * H_full * MaxD_full ** 2 / 2)
-#
-#     # Mean Force Coefficients
-#     CFx_mean = np.mean(CFx, axis=1)
-#     CFy_mean = np.mean(CFy, axis=1)
-#     CTz_mean = np.mean(CTz, axis=1)
-#
-#     comp_CFmean = np.concatenate([CFx_mean, CFy_mean, CTz_mean])
-#
-#     RF = 3.5  # Reduction Factor
-#
-#     # Normalization factor
-#     xnorm = np.std(CFx - CFx_mean[np.newaxis].T, axis=1) * RF
-#     ynorm = np.std(CFy - CFy_mean[np.newaxis].T, axis=1) * RF
-#     tornorm = np.std(CTz - CTz_mean[np.newaxis].T, axis=1) * RF
-#     norm_all = np.concatenate([xnorm, ynorm, tornorm])
-#
-#     # Standardazation of Forces (force coeff have about the same range)
-#     CFx_norm = (CFx - np.mean(CFx, axis=1)[np.newaxis].T) / xnorm[np.newaxis].T
-#     CFy_norm = (CFy - np.mean(CFy, axis=1)[np.newaxis].T) / ynorm[np.newaxis].T
-#     CTz_norm = (CTz - np.mean(CTz, axis=1)[np.newaxis].T) / tornorm[np.newaxis].T
-#     Components = np.vstack([CFx_norm, CFy_norm, CTz_norm]).T
-#
-#     # Smoothed target CPSD
-#     wind_size = fs * Tw;
-#     nover = round(overlap * wind_size)
-#
-#     # nfft = int(wind_size)
-#     fcut_sc = (V_H / vRef) * fcut
-#     dt = 1 / (2 * fcut_sc)  # max.time incremen to avoid aliasing(s)
-#     N_t = round(T_full / dt)  # number of time points
-#     nfft = N_t
-#
-#     window = windows.hann(int(wind_size))
-#
-#     ncombs = Components.shape[1]
-#     nSampPoints = int(nfft / 2 + 1)
-#     s_target = np.zeros((ncombs, ncombs, nSampPoints), dtype='complex_')
-#
-#     print("Training cross power spectrum density..");
-#     t_init = time.time()
-#     for nc1 in range(ncombs):
-#         for nc2 in range(ncombs):
-#             [f_target, s_tmp] = csd(Components[:, nc2], Components[:, nc1], window=window, noverlap=nover, nfft=nfft,
-#                                     fs=fp)
-#             s_target[nc2, nc1, :] = s_tmp  # *4/np.pi
-#
-#     print(" - Elapsed time: {:.3} seconds.\n".format(time.time() - t_init))
-#
-#     return s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full
 
 
 def simulation_gaussian(ncomp , N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f, l_mo, tvec, SpeN, V_H, vRef, seed,
@@ -963,10 +818,12 @@ def simulation_gaussian(ncomp , N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f
 
 
 def err_exit(msg):
-    print(msg)
-    with open(errPath, "w") as f:
-        f.write(msg)
+    print("Failed in wind load generator: "+ msg)
+    print("Failed in wind load generator: "+ msg, file=sys.stderr)
     exit(-1)
+
+    #with open(errPath, "w") as f:
+    #    f.write("Failed in wind load generator: "+ msg)
 
 
 if __name__ == '__main__':
@@ -984,11 +841,7 @@ if __name__ == '__main__':
 
 
     if error_tag and getRV:
-        err_exit("Failed to import module " + moduleName + ". Please check the python path in the preference")
-        #with open(errPath,"w") as f:
-        #    print("Failed to import module " + moduleName)
-        #    f.write("Failed to import module " + moduleName + ". Please check python path in the preference")
-        #exit(-1)
+        err_exit("Failed to import module " + moduleName + " for wind load generator. Please check the python path in the preference")
 
     # if getRV:
     #     aimName = aimName + ".sc"
@@ -998,14 +851,7 @@ if __name__ == '__main__':
     except Exception as err:
         import traceback
         if getRV:
-            err_exit("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
-            #with open(errPath,"w") as f:
-            #    f.write("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
-            #    print("Failed in wind load generator preprocessor:" + str(err) + "..." + str(traceback.format_exc()))
-            #exit(-1)
+            err_exit(str(err) + "..." + str(traceback.format_exc()))
+
         else:
-            err_exit("Failed to generate wind load:" + str(err) + "..." + str(traceback.format_exc()))
-            #with open(errPath,"w") as f:
-            #    f.write("Failed to generate wind load: " + str(err) + "..." + str(traceback.format_exc()))
-            #    print("Failed to generate wind load:" + str(err) + "..." + str(traceback.format_exc()))
-            #exit(-1)
+            err_exit(str(err) + "..." + str(traceback.format_exc()))
