@@ -516,6 +516,7 @@ class WorkflowApplication(object):
         #print('APP_TYPE', app_type)
         #print('APP_INFO', app_info)
         #print('API_INFO', api_info)
+        #print('APP_RELPATH', app_info['ExecutablePath'])        
         
         self.name = app_info['Name']
         self.app_type = app_type
@@ -1091,10 +1092,12 @@ class Workflow(object):
            # Check to make sure the required app type is in the list of requested apps
            # i.e., the apps in provided in the input.json file
             if app_type in requested_apps:
+
                 self._register_app_type(app_type, requested_apps[app_type])
                 
 
         for app_type in self.optional_apps:
+
             if (app_type not in self.app_registry) and (app_type in self.app_type_list):
                 self.app_type_list.remove(app_type)
                 
@@ -1406,7 +1409,74 @@ class Workflow(object):
     
         return assetFilesList    
 
+    def perform_system_performance_assessment(self, asset_type):
+
+        """
+        For an asset type run the system level performance assesment application
+
+        Longer description
+
+        Parameters
+        ----------
+        asset_type: string
+           Asset type to run perform system assessment of
+
+        """        
+
+        if 'SystemPerformance' in self.workflow_apps.keys():
+            performance_app = self.workflow_apps['SystemPerformance'][asset_type]
+        else:
+            log_msg('No Performance application to run for asset.', prepend_timestamp=False)
+            log_div()
+            return;
+
+        if performance_app.rel_path == None:
+            log_msg('No Performance Application to run for asset type: '+asset_type, prepend_timestamp=False)
+            log_div()            
+            return;
+
+        app_command_list = performance_app.get_command_list(app_path = self.app_dir_local)
+
+        #
+        # defaults added to a system performance app are asset_type, input_dir and running_parallel (default False)
+        #
+        
+        app_command_list.append('--asset_type')
+        app_command_list.append(asset_type)
+        app_command_list.append('--input_file')
+        app_command_list.append(self.input_file)                
+        app_command_list.append('--working_dir')
+        app_command_list.append(self.working_dir)        
+        
+        command = create_command(app_command_list)
+
+        if (self.parType == 'parSETUP'):
+
+            log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)                
+            self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
+
+            if performance_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
+
+        else:
+        
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
+
+            result, returncode = run_command(command)        
+
+            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
+            
+        log_div()
+
+        
     def perform_regional_event(self):
+        
         """
         Run an application to simulate a regional-scale hazard event.
 
@@ -1435,6 +1505,15 @@ class Workflow(object):
 
         command = create_command(reg_event_command_list)
 
+        #
+        # defaults added to a system performance app are asset list , input_dir and running_parallel (default False)
+        #
+        
+        app_command_list.append('--assets')
+        app_command_list.append(asset_keys)
+        app_command_list.append('--input_dir')
+        app_command_list.append(self.working_dir)        
+        
         if (self.parType == 'parSETUP'):
 
             log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
@@ -1458,6 +1537,59 @@ class Workflow(object):
             log_msg('Regional event successfully simulated.', prepend_timestamp=False)
         log_div()
 
+    def perform_regional_recovery(self, asset_keys):
+        """
+        Run an application to simulate regional recovery
+
+        Longer description
+
+        Parameters
+        ----------
+
+        """
+
+        log_msg('Simulating Regional Recovery ...')
+
+        if 'Recovery' in self.workflow_apps.keys():
+            reg_recovery_app = self.workflow_apps['Recovery']
+        else:
+            log_msg('No Recovery Application to run.', prepend_timestamp=False)
+            log_div()
+            return;
+
+        if reg_recovery_app.rel_path == None:
+            log_msg('No regional Event Application to run.', prepend_timestamp=False)
+            log_div()            
+            return;
+
+        reg_recovery_command_list = reg_recovery_app.get_command_list(app_path = self.app_dir_local)
+
+        command = create_command(reg_recovery_command_list)
+
+        if (self.parType == 'parSETUP'):
+
+            log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
+            self.parCommandFile.write("\n# Perform Regional Recovery Simulation\n")
+
+            if reg_recovery_app.runsParallel == False:
+                self.parCommandFile.write(command + "\n")
+            else:
+                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + "\n")
+
+        else:
+        
+            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+                    prepend_blank_space=False)
+
+            result, returncode = run_command(command)        
+
+            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+            log_msg('Regional Recovery Successfully Simulated.', prepend_timestamp=False)
+        log_div()
+
+        
     def perform_regional_mapping(self, AIM_file_path, assetType, doParallel=True):
         
         """
@@ -2112,7 +2244,15 @@ class Workflow(object):
 
             log_div()
 
+    def perform_asset_performance(asset_type):
+        
+        performanceWfapps = self.workflow_apps.get('Performance', None)
+        performance_app = performanceWfapps[asset_type]
+        app_command_list = performance_app.get_command_list(app_path = self.app_dir_local)
+        command = create_command(app_command_list)
+        result, returncode = run_command(command)        
 
+            
     def estimate_losses(self, AIM_file_path = 'AIM.json', asst_id = None,
         asset_type = None, input_file = None, copy_resources=False):
         """
