@@ -1220,7 +1220,7 @@ class Workflow(object):
                 log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
-
+                
         log_div()
     
         return assetFilesList
@@ -1503,8 +1503,8 @@ class Workflow(object):
 
         reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list)    
-        
+        command = create_command(reg_event_command_list)
+
         if (self.parType == 'parSETUP'):
 
             log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
@@ -2019,7 +2019,7 @@ class Workflow(object):
             # print('FMK- gather command:', command)
 
             result, returncode = run_command(command)
-            
+
             log_msg('Output: ', prepend_timestamp=False,
                     prepend_blank_space=False)
             log_msg('\n{}\n'.format(result), prepend_timestamp=False,
@@ -2728,7 +2728,7 @@ class Workflow(object):
 
                 if 'DV' in out_types:
 
-                    dv_out_file_i = 'DV_bldg_repair_grp.json'
+                    dv_out_file_i = 'DV_repair_grp.json'
 
                     if dv_out_file_i not in os.listdir(asset_dir):
 
