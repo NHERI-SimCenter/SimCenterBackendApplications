@@ -1,5 +1,4 @@
 
-
 import json
 import math
 import time
@@ -29,7 +28,7 @@ def main(aimName,evtName,getRV):
     filename = evt_data["filename"]
     # from UI
 
-    V_H = evt_data["fullScaleSpeed"]           # wind speed at full scale (vel)
+    V_H = evt_data["windSpeed"]           # wind speed at full scale (vel)
     T_full = evt_data["fullScaleDuration"]       # Duration of wind load at full scale (time)
     perc_mod = evt_data["modePercent"] # percentage of modes to include in the simulation
     seed = evt_data["seed"]
@@ -235,7 +234,8 @@ def main(aimName,evtName,getRV):
     
     CF_sim0 = np.zeros((len(seeds),ncomp,N_t))
     for seed_num in range(len(seeds)):
-        print("Creating Realization # {} among {} ".format(seed_num+1,len(seeds))); t_init=time.time()
+        print("Creating Realization # {} among {} ".format(seed_num+1,len(seeds))); 
+        t_init=time.time()
 
         F_jzm = simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f, l_mo, tvec, SpeN, V_H, vRef, seeds, seed_num);
         CF_sim0[seed_num,:,:] = F_jzm  # zero-mean force coefficient time series (simulation)
@@ -448,22 +448,31 @@ def learn_CPSD(Fx, Fy, Tz, ms, air_dens, vRef, H_full, B_full, D_full, MaxD_full
     N_t = round(T_full / dt) # number of time points
     nfft = N_t
 
-    window = windows.hann(int(wind_size))
-
-    ncombs = Components.shape[1]
-    nSampPoints = int(nfft/2+1)
-    s_target = np.zeros((ncombs,ncombs,nSampPoints),dtype = 'complex_')
-
-    print("Training cross power spectrum density.."); t_init = time.time()
-    for nc1 in range(ncombs):
-        for nc2 in range(ncombs):
-            [f_target,s_tmp] = csd(Components[:,nc2],Components[:,nc1],window=window,noverlap = nover,nfft = nfft,fs = fp)
-            s_target[nc2,nc1,:] = s_tmp #*4/np.pi
+    t_init=time.time()
+    # [s_target,f_target] = cpsd(Components,Components,hanning(wind_size),nover,nfft,fp,'mimo'); 
+    s_target, f_target = cpsd_matlab(Components,Components,wind_size,nover,nfft,fp)
 
     print(" - Elapsed time: {:.3} seconds.\n".format( time.time() - t_init))
 
-
     return s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full
+
+def cpsd_matlab(Components1,Components2,wind_size,nover,nfft,fp):
+
+    window = windows.hann(int(wind_size))
+
+    ncombs1 = Components1.shape[1]
+    ncombs2 = Components2.shape[1]
+    nSampPoints = int(nfft/2+1)
+    s_target = np.zeros((ncombs1,ncombs2,nSampPoints),dtype = 'complex_')
+
+    print("Training cross power spectrum density.."); 
+
+    for nc2 in range(ncombs2):
+        for nc1 in range(ncombs1):
+            [f_target,s_tmp] = csd(Components1[:,nc1],Components2[:,nc2],window=window,noverlap = nover,nfft = nfft,fs = fp)
+            s_target[nc1,nc2,:] = s_tmp #*4/np.pi
+
+    return s_target, f_target
 
 def simulation_gaussian(ncomp, N_t, V_vH, D_vH, theta_vH, nf_dir,N_f,f_inc,f,l_mo,tvec,SpeN,V_H,vRef,seed,seed_num):
 

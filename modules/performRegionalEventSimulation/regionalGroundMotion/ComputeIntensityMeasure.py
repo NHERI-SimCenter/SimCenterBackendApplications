@@ -43,6 +43,8 @@
 # Kuanshi Zhong
 # Jinyan Zhao
 
+import warnings
+
 LOCAL_IM_GMPE = {"DS575H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
                  "DS595H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
 				 "DS2080H": ["Afshari & Stewart (2016)"],
@@ -872,7 +874,11 @@ class GM_Simulator:
 			rho = self.compute_inter_event_residual_ij(\
 				self.inter_cm, self.im_name_list, self.im_name_list)
 		# Simulating residuals
-		residuals = np.random.multivariate_normal(np.zeros(self.num_im), rho, self.num_simu).T
+		with warnings.catch_warnings():
+			# The intra-event models produce rho with tiny negative eigen values
+			# This warning is suppressed
+			warnings.filterwarnings("ignore", message="covariance is not symmetric positive-semidefinite.")
+			residuals = np.random.multivariate_normal(np.zeros(self.num_im), rho, self.num_simu).T
 		# return
 		return residuals
 	def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):
@@ -912,7 +918,7 @@ class GM_Simulator:
 				if item not in cm_groups.keys():
 					cm_groups.update({item:[key]})
 				else:
-					cm_groups['item'].append(key)	
+					cm_groups[item].append(key)	
 			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
 			for cm, im_types in cm_groups.items():
 				# im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]
@@ -931,162 +937,201 @@ class GM_Simulator:
 		return residuals
 
 
-def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_flag):
-
+def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_flag,\
+			  gf_im_list):
+	# Rename SA(xxx) to SA_xxx
+	for i, im in enumerate(im_list):
+		if im.startswith('SA'):
+			im_list[i] = im_list[i].split('(')[0] + '_' + im_list[i].split('(')[1][:-1]
 	#try:
-		# Station number
-		num_stations = len(stations)
-		# Scenario number
-		num_scenarios = len(eq_data)
-		# Saving large files to HDF while small files to JSON
-		if num_scenarios > 100000:
-			# Pandas DataFrame
-			h_scenarios = ['Scenario-'+str(x) for x in range(1, num_scenarios + 1)]
-			h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate','SiteSourceDistance','SiteRuptureDistance']
-			for x in range(1, im_data[0][0, :, :].shape[1]+1):
-				for y in im_list:
-					h_eq.append('Record-'+str(x)+'-{}'.format(y))
-			index = pd.MultiIndex.from_product([h_scenarios, h_eq])
-			columns = ['Site-'+str(x) for x in range(1, num_stations + 1)]
-			df = pd.DataFrame(index=index, columns=columns, dtype=float)
-			# Data
-			for i in range(num_stations):
-				tmp = []
-				for j in range(num_scenarios):
-					tmp.append(stations[i]['lat'])
-					tmp.append(stations[i]['lon'])
-					tmp.append(int(stations[i]['vs30']))
-					tmp.append(eq_data[j][0])
-					tmp.append(eq_data[j][1])
-					tmp.append(eq_data[j][2])
-					tmp.append(eq_data[j][3])
-					for x in np.ndarray.tolist(im_data[j][i, :, :].T):
-						for y in x:
-							tmp.append(y)
-				df['Site-'+str(i+1)] = tmp
-			# HDF output
-			try:
-				os.remove(os.path.join(output_dir, filename.replace('.json', '.h5')))
-			except:
-				pass
-			hdf = pd.HDFStore(os.path.join(output_dir, filename.replace('.json', '.h5')))
-			hdf.put('SiteIM', df, format='table', complib='zlib')
-			hdf.close()
-		else:
-			res = []
-			for i in range(num_stations):
-				tmp = {'Location': {
-						   'Latitude': stations[i]['lat'],
-						   'Longitude': stations[i]['lon']
-						   },
-					   'Vs30': int(stations[i]['vs30'])
-					  }
-				tmp.update({'IMS': im_list})
-				tmp_im = []
-				for j in range(num_scenarios):
-					tmp_im.append(np.ndarray.tolist(im_data[j][i, :, :]))
-				if len(tmp_im) == 1:
-					# Simplifying the data structure if only one scenario exists
-					tmp_im = tmp_im[0]
-				tmp.update({'lnIM': tmp_im})
-				res.append(tmp)
-			maf_out = []
-			for cur_eq in eq_data:
-				if cur_eq[1]:
-					mar = cur_eq[1]
-				else:
-					mar = 'N/A'
-				if cur_eq[2]:
-					ssd = cur_eq[2]
-				else:
-					ssd = 'N/A'
-				if len(cur_eq)>3 and cur_eq[3]:
-					srd = cur_eq[3]
-				else:
-					srd = 'N/A'
-				tmp = {'Magnitude': float(cur_eq[0]),
-					   'MeanAnnualRate': mar,
-					   'SiteSourceDistance': ssd,
-					   'SiteRuputureDistance': srd}
-				maf_out.append(tmp)
-			res = {'Station_lnIM': res,
-				   'Earthquake_MAF': maf_out}
-			# save SiteIM.json
-			with open(os.path.join(output_dir, filename), "w") as f:
-				json.dump(res, f, indent=2)
-
-		# export the event grid and station csv files
-		if csv_flag:
-			# output EventGrid.csv
-			station_name = ['site'+str(j)+'.csv' for j in range(len(stations))]
-			lat = [stations[j]['lat'] for j in range(len(stations))]
-			lon = [stations[j]['lon'] for j in range(len(stations))]
-			# vs30 = [stations[j]['vs30'] for j in range(len(stations))]
-			# zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
-			df = pd.DataFrame({
-				'GP_file': station_name,
-				'Longitude': lon,
-				'Latitude': lat,
-				# 'Vs30': vs30,
-				# 'DepthToRock': zTR
-			})
-			# if cur_eq[2]:
-			# 	df['SiteSourceDistance'] = cur_eq[2]
-			output_dir = os.path.join(os.path.dirname(Path(output_dir)),
-									os.path.basename(Path(output_dir)))
-			# seperate directory for IM
-			output_dir = os.path.join(output_dir, 'IMs')
-			try:
-				os.makedirs(output_dir)
-			except:
-				print('HazardSimulation: output folder already exists.')
-			# save the csv
-			df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index = False)
-			# output station#.csv
-			# csv header
-			csvHeader = im_list
-			for cur_scen in range(len(im_data)):
-				if len(im_data) > 1:
-					cur_scen_folder = 'scenario'+str(cur_scen+1)
-					try:
-						os.mkdir(os.path.join(output_dir, cur_scen_folder))
-					except:
-						pass
-						# print('ComputeIntensityMeasure: scenario folder already exists.')
-					cur_output_dir = os.path.join(output_dir, cur_scen_folder)
-				else:
-					cur_output_dir = output_dir
-				# current IM data
-				cur_im_data = im_data[cur_scen]
-				for i, site_id in enumerate(station_name):
-					df = dict()
-					# Loop over all intensity measures
-					for cur_im_tag in range(len(csvHeader)):
+	# Station number
+	num_stations = len(stations)
+	# Scenario number
+	num_scenarios = len(eq_data)
+	# Saving large files to HDF while small files to JSON
+	if num_scenarios > 100000:
+		# Pandas DataFrame
+		h_scenarios = ['Scenario-'+str(x) for x in range(1, num_scenarios + 1)]
+		h_eq = ['Latitude', 'Longitude', 'Vs30', 'Magnitude', 'MeanAnnualRate','SiteSourceDistance','SiteRuptureDistance']
+		for x in range(1, im_data[0][0, :, :].shape[1]+1):
+			for y in im_list:
+				h_eq.append('Record-'+str(x)+'-{}'.format(y))
+		index = pd.MultiIndex.from_product([h_scenarios, h_eq])
+		columns = ['Site-'+str(x) for x in range(1, num_stations + 1)]
+		df = pd.DataFrame(index=index, columns=columns, dtype=float)
+		# Data
+		for i in range(num_stations):
+			tmp = []
+			for j in range(num_scenarios):
+				tmp.append(stations[i]['lat'])
+				tmp.append(stations[i]['lon'])
+				tmp.append(int(stations[i]['vs30']))
+				tmp.append(eq_data[j][0])
+				tmp.append(eq_data[j][1])
+				tmp.append(eq_data[j][2])
+				tmp.append(eq_data[j][3])
+				for x in np.ndarray.tolist(im_data[j][i, :, :].T):
+					for y in x:
+						tmp.append(y)
+			df['Site-'+str(i+1)] = tmp
+		# HDF output
+		try:
+			os.remove(os.path.join(output_dir, filename.replace('.json', '.h5')))
+		except:
+			pass
+		hdf = pd.HDFStore(os.path.join(output_dir, filename.replace('.json', '.h5')))
+		hdf.put('SiteIM', df, format='table', complib='zlib')
+		hdf.close()
+	else:
+		res = []
+		for i in range(num_stations):
+			tmp = {'Location': {
+					   'Latitude': stations[i]['lat'],
+					   'Longitude': stations[i]['lon']
+					   },
+				   'Vs30': int(stations[i]['vs30'])
+				  }
+			tmp.update({'IMS': im_list})
+			tmp_im = []
+			for j in range(num_scenarios):
+				tmp_im.append(np.ndarray.tolist(im_data[j][i, :, :]))
+			if len(tmp_im) == 1:
+				# Simplifying the data structure if only one scenario exists
+				tmp_im = tmp_im[0]
+			tmp.update({'lnIM': tmp_im})
+			res.append(tmp)
+		maf_out = []
+		for cur_eq in eq_data:
+			if cur_eq[1]:
+				mar = cur_eq[1]
+			else:
+				mar = 'N/A'
+			if cur_eq[2]:
+				ssd = cur_eq[2]
+			else:
+				ssd = 'N/A'
+			if len(cur_eq)>3 and cur_eq[3]:
+				srd = cur_eq[3]
+			else:
+				srd = 'N/A'
+			tmp = {'Magnitude': float(cur_eq[0]),
+				   'MeanAnnualRate': mar,
+				   'SiteSourceDistance': ssd,
+				   'SiteRuputureDistance': srd}
+			maf_out.append(tmp)
+		res = {'Station_lnIM': res,
+			   'Earthquake_MAF': maf_out}
+		# save SiteIM.json
+		with open(os.path.join(output_dir, filename), "w") as f:
+			json.dump(res, f, indent=2)
+	# export the event grid and station csv files
+	if csv_flag:
+		# output EventGrid.csv
+		station_name = ['site'+str(stations[j]['ID'])+'.csv' for\
+				   j in range(len(stations))]
+		lat = [stations[j]['lat'] for j in range(len(stations))]
+		lon = [stations[j]['lon'] for j in range(len(stations))]
+		# vs30 = [stations[j]['vs30'] for j in range(len(stations))]
+		# zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
+		df = pd.DataFrame({
+			'GP_file': station_name,
+			'Longitude': lon,
+			'Latitude': lat,
+			# 'Vs30': vs30,
+			# 'DepthToRock': zTR
+		})
+		# if cur_eq[2]:
+		# 	df['SiteSourceDistance'] = cur_eq[2]
+		output_dir = os.path.join(os.path.dirname(Path(output_dir)),
+								os.path.basename(Path(output_dir)))
+		# seperate directory for IM
+		output_dir = os.path.join(output_dir, 'IMs')
+		try:
+			os.makedirs(output_dir)
+		except:
+			print('HazardSimulation: output folder already exists.')
+		# save the csv
+		df.to_csv(os.path.join(output_dir, 'EventGrid.csv'), index = False)
+		# output station#.csv
+		# csv header
+		csvHeader = im_list
+		for cur_scen in range(len(im_data)):
+			if len(im_data) > 1:
+				cur_scen_folder = 'scenario'+str(cur_scen+1)
+				try:
+					os.mkdir(os.path.join(output_dir, cur_scen_folder))
+				except:
+					pass
+					# print('ComputeIntensityMeasure: scenario folder already exists.')
+				cur_output_dir = os.path.join(output_dir, cur_scen_folder)
+			else:
+				cur_output_dir = output_dir
+			# current IM data
+			cur_im_data = im_data[cur_scen]
+			for i, site_id in enumerate(station_name):
+				df = dict()
+				# Loop over all intensity measures
+				for cur_im_tag in range(len(csvHeader)):
+					if (csvHeader[cur_im_tag].startswith('SA')) or \
+						(csvHeader[cur_im_tag] in ['PGA', 'PGV']):
 						df.update({
 							csvHeader[cur_im_tag]: np.exp(cur_im_data[i, cur_im_tag, :])
 						})
-					df = pd.DataFrame(df)
-					df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
-			
-			# output the site#.csv file including all scenarios
-			if len(im_data) > 1:
-				print('ComputeIntensityMeasure: saving all selected scenarios.')
-				# lopp over sites
-				for i, site_id in enumerate(station_name):
-					df = dict()
-					for cur_im_tag in range(len(csvHeader)):
-						tmp_list = []
-						# loop over all scenarios
-						for cur_scen in range(len(im_data)):
-							tmp_list = tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
+					else:
 						df.update({
-							csvHeader[cur_im_tag]: np.exp(tmp_list)
+							csvHeader[cur_im_tag]: cur_im_data[i, cur_im_tag, :]
 						})
-					df = pd.DataFrame(df)
-					df.to_csv(os.path.join(output_dir, site_id), index = False)
+				df = pd.DataFrame(df)
+				# Combine PGD from liquefaction, landslide and fault
+				if 'liq_PGD_h' in df.columns or 'ls_PGD_h'in df.columns or 'fd_PGD_h' in df.columns:
+					PGD_h = np.zeros(df.shape[0])
+					if 'liq_PGD_h' in df.columns:
+						PGD_h += df['liq_PGD_h'].to_numpy()
+					if 'ls_PGD_h' in df.columns:
+						PGD_h += df['ls_PGD_h'].to_numpy()
+					if 'fd_PGD_h' in df.columns:
+						PGD_h += df['fd_PGD_h'].to_numpy()
+					df['PGD_h'] = PGD_h
+				if 'liq_PGD_v' in df.columns or 'ls_PGD_v'in df.columns or 'fd_PGD_v' in df.columns:
+					PGD_v = np.zeros(df.shape[0])
+					if 'liq_PGD_v' in df.columns:
+						PGD_v += df['liq_PGD_v'].to_numpy()
+					if 'ls_PGD_v' in df.columns:
+						PGD_v += df['ls_PGD_v'].to_numpy()
+					if 'fd_PGD_v' in df.columns:
+						PGD_v += df['fd_PGD_v'].to_numpy()
+					df['PGD_v'] = PGD_v
+				colToDrop = []
+				for col in df.columns:
+					if (not col.startswith('SA')) and (col not in ['PGA', 'PGV',\
+						'PGD_h', 'PGD_v']) and (col not in gf_im_list):
+						colToDrop.append(col)
+				df.drop(columns=colToDrop, inplace=True)
+				# if 'liq_prob' in df.columns:
+				# 	df.drop(columns=['liq_prob'], inplace=True)
+				# if 'liq_susc' in df.columns:
+				# 	df.drop(columns=['liq_susc'], inplace=True)
+				df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
 
-		# return
-		return 0
+		
+		# output the site#.csv file including all scenarios
+		if len(im_data) > 1:
+			print('ComputeIntensityMeasure: saving all selected scenarios.')
+			# lopp over sites
+			for i, site_id in enumerate(station_name):
+				df = dict()
+				for cur_im_tag in range(len(csvHeader)):
+					tmp_list = []
+					# loop over all scenarios
+					for cur_scen in range(len(im_data)):
+						tmp_list = tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
+					df.update({
+						csvHeader[cur_im_tag]: np.exp(tmp_list)
+					})
+				df = pd.DataFrame(df)
+				df.to_csv(os.path.join(output_dir, site_id), index = False)
+	# return
+	return 0
 	#except:
 		# return
 		#return 1

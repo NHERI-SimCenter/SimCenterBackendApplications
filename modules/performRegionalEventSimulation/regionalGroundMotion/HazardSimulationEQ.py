@@ -235,13 +235,13 @@ def hazard_job(hazard_info):
             ln_im_mr = ln_im_mr_sampled
             mag_maf = [[0,0,0,0]]
             
-        if event_info['SaveIM'] and ln_im_mr:
-            print('HazardSimulation: saving simulated intensity measures.')
-            _ = export_im(stations, im_list,
-                          ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1)
-            print('HazardSimulation: simulated intensity measures saved.')
-        else:
-            print('HazardSimulation: IM is not required to saved or no IM is found.')
+        # if event_info['SaveIM'] and ln_im_mr:
+        #     print('HazardSimulation: saving simulated intensity measures.')
+        #     _ = export_im(stations, im_list,
+        #                   ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1)
+        #     print('HazardSimulation: simulated intensity measures saved.')
+        # else:
+        #     print('HazardSimulation: IM is not required to saved or no IM is found.')
         #print(np.exp(ln_im_mr[0][0, :, 1]))
         #print(np.exp(ln_im_mr[0][1, :, 1]))
     else:
@@ -289,6 +289,53 @@ def hazard_job(hazard_info):
         else:
             print('HazardSimulation: ground motion selection is not requested.')
 
+    gf_im_list = []
+    if "GroundFailure" in hazard_info['Event'].keys():
+        ground_failure_info = hazard_info['Event']["GroundFailure"]
+        if "Liquefaction" in ground_failure_info.keys():
+            import liquefaction
+            trigging_info = ground_failure_info['Liquefaction']['Triggering']
+            trigging_model = getattr(liquefaction, trigging_info['Model'])(\
+                trigging_info["Parameters"], stations)
+            trigging_output_keys = ["liq_prob", "liq_susc"]
+            additional_output_required_keys = liquefaction.find_additional_output_req(
+                ground_failure_info['Liquefaction'], "Triggering"
+            )
+            ln_im_mr, mag_maf, im_list, addtional_output = trigging_model.run(
+                ln_im_mr, mag_maf, im_list,
+                trigging_output_keys, additional_output_required_keys)
+            del trigging_model
+            gf_im_list += trigging_info['Output']
+            if 'LateralSpreading' in ground_failure_info['Liquefaction'].keys():
+                lat_spread_info = ground_failure_info['Liquefaction']['LateralSpreading']
+                lat_spread_para = lat_spread_info['Parameters']
+                if (lat_spread_info['Model'] == 'Hazus2020Lateral') and \
+                    addtional_output.get('dist_to_water', None) is not None:
+                    lat_spread_para.update("DistWater", addtional_output["dist_to_water"])
+                lat_spread_model = getattr(liquefaction, lat_spread_info['Model'])(
+                    stations, lat_spread_para
+                )
+                ln_im_mr, mag_maf, im_list = lat_spread_model.run(
+                        ln_im_mr, mag_maf, im_list
+                    )
+                gf_im_list += lat_spread_info['Output']
+            if 'Settlement' in ground_failure_info['Liquefaction'].keys():
+                settlement_info = ground_failure_info['Liquefaction']['Settlement']
+                settlement_model = getattr(liquefaction, settlement_info['Model'])()
+                ln_im_mr, mag_maf, im_list = settlement_model.run(
+                        ln_im_mr, mag_maf, im_list
+                    )
+                gf_im_list += settlement_info['Output']
+
+
+
+    if event_info['SaveIM'] and ln_im_mr:
+        print('HazardSimulation: saving simulated intensity measures.')
+        _ = export_im(stations, im_list,
+                      ln_im_mr, mag_maf, output_dir, 'SiteIM.json', 1, gf_im_list)
+        print('HazardSimulation: simulated intensity measures saved.')
+    else:
+        print('HazardSimulation: IM is not required to saved or no IM is found.')
 
 if __name__ == '__main__':
 

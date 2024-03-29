@@ -250,7 +250,7 @@ int main(int argc, const char **argv) {
     }
   }
 
-  workflowDriverFile << " 1> ops.out 2>&1\n"; 
+  workflowDriverFile << " 1> workflow.err 2>&1\n"; 
 
   workflowDriverFile.close();
   
