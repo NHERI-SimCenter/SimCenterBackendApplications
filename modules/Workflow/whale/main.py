@@ -1220,7 +1220,7 @@ class Workflow(object):
                 log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
-                
+
         log_div()
     
         return assetFilesList
@@ -1857,7 +1857,13 @@ class Workflow(object):
                             log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                             log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-                            log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                            if returncode==0:
+                                log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                            else:
+                                log_msg('Error in the preprocessor.', prepend_timestamp=False)
+                                exit(-1)
+
+
                             log_div()
                             
                     else:
@@ -1877,11 +1883,15 @@ class Workflow(object):
                         log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                         log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
         
-                        log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                        if returncode==0:
+                            log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                        else:
+                            log_msg('Error in the preprocessor.', prepend_timestamp=False)
+                            exit(-1)
+
                         log_div()
 
             else:
-
                 old_command_list = workflow_app.get_command_list(app_path = self.app_dir_local)
                 old_command_list.append('--appKey')                        
                 old_command_list.append('FEM')                
@@ -1937,6 +1947,16 @@ class Workflow(object):
                         prepend_blank_space=False)
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False,
                         prepend_blank_space=False)
+
+                # sy - trying adding exit command
+                if platform.system() == 'Windows':
+                    with open("driver.bat","r") as f:
+                        lines = f.readlines()
+                    lines.append(r'if %errorlevel% neq 0 exit /b -1')
+                    with open("driver.bat","w") as f:
+                        f.writelines(lines)
+                else:
+                    pass
                 
                 log_msg('Successfully Created Driver File for Workflow.',
                         prepend_timestamp=False)
@@ -2078,6 +2098,13 @@ class Workflow(object):
 
                         driver_script += create_command(command_list) + u'\n'
 
+                # sy - trying adding exit command
+                
+                if platform.system() == 'Windows':
+                   driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                else: 
+                   pass
+
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
             
@@ -2214,8 +2241,8 @@ class Workflow(object):
                     
                     dakota_out.to_csv('response.csv')
 
-                    log_msg('Response simulation finished successfully.',
-                        prepend_timestamp=False)
+                    #log_msg('Response simulation finished successfully.', prepend_timestamp=False)# sy - this message was showing up when quoFEM analysis failed
+
                 except:
                     log_msg('dakotaTab.out not found. Response.csv not created.',
                             prepend_timestamp=False)
@@ -3000,7 +3027,11 @@ class Workflow(object):
                             asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
                             asst_GI.pop("Footprint")
                         else:
-                            raise ValueError("No valid geometric information in GI.")
+                            #raise ValueError("No valid geometric information in GI.")
+                            asst_lat = asst_GI['location']['latitude']
+                            asst_lon = asst_GI['location']['longitude']
+                            asst_geom = { "type": "Point", "coordinates": [\
+                                asst_lon, asst_lat]}
                     except:
                         asst_lat = asst_GI['location']['latitude']
                         asst_lon = asst_GI['location']['longitude']
