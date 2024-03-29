@@ -555,6 +555,10 @@
         "ExecutablePath": "applications/createEVENT/experimentalWindForces/experimentalWindForces.py"
       },
       {
+        "Name": "ExperimentalWindPressures",
+        "ExecutablePath": "applications/createEVENT/experimentalWindPressures/experimentalWindPressures.py"
+      },
+      {
         "Name": "WindForceSpectrum",
         "ExecutablePath": "applications/createEVENT/experimentalWindForces/experimentalWindForces.py"
       }
