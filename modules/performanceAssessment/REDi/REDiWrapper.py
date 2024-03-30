@@ -187,8 +187,8 @@ def main(args):
         if "Units" in CMP_DMG:
             del CMP_DMG['Units']
 
-    # Get the DV_bldg_repair_sample json from Pelicun
-    pathComponentDV = pelicun_results_dir/'DV_bldg_repair_sample.json'
+    # Get the DV_repair_sample json from Pelicun
+    pathComponentDV = pelicun_results_dir/'DV_repair_sample.json'
     with open(pathComponentDV) as f:
         CMP_DV = json.load(f)
 
@@ -197,9 +197,9 @@ def main(args):
             del CMP_DV['Units']
 
     # Load the csv version of the decision vars
-    with zipfile.ZipFile(pelicun_results_dir/'DV_bldg_repair_sample.zip', 'r') as zip_ref:
+    with zipfile.ZipFile(pelicun_results_dir/'DV_repair_sample.zip', 'r') as zip_ref:
         # Read the CSV file inside the zip file into memory
-        with zip_ref.open('DV_bldg_repair_sample.csv') as csv_file:
+        with zip_ref.open('DV_repair_sample.csv') as csv_file:
             # Load the CSV data into a pandas DataFrame
             data = pd.read_csv(io.TextIOWrapper(csv_file, encoding='utf-8'), index_col=0)
             # Drop Units row for now to avoid breaking the code - would be good to use this info in the future
@@ -258,7 +258,7 @@ def main(args):
     num_workers = max(int(total_building_area/1000), 1)
     
     # Get the replacement cost and time
-    DL_info =  AIM['DL']['Losses']['BldgRepair']
+    DL_info =  AIM['DL']['Losses']['Repair']
     
     # Note these are not the random
     replacementCost = DL_info['ReplacementCost']['Median']
