@@ -21,6 +21,7 @@ add_subdirectory(experimentalWindPressures)
 add_subdirectory(EmptyDomainCFD)
 add_subdirectory(IsolatedBuildingCFD)
 add_subdirectory(coupledDigitalTwin)
+add_subdirectory(MPM)
 
 
 
