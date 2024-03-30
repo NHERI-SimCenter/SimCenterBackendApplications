@@ -51,6 +51,7 @@ import pandas as pd
 
 import colorlover as cl
 
+from pelicun.base import pelicun_path
 from pelicun.base import convert_to_MultiIndex
 
 from plotly import graph_objects as go
@@ -352,6 +353,12 @@ def plot_fragility(comp_db_path, output_path, create_zip="0"):
 
         with open(f'{output_path}/{comp_id}.html', "w") as f:
             f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+
+    # store the source database file(s) in the output directory for future reference
+    shutil.copy(comp_db_path, Path(output_path)/Path(comp_db_path).name)
+
+    if frag_meta is not None:
+        shutil.copy(comp_db_meta, Path(output_path)/Path(comp_db_meta).name)
 
     if create_zip == "1":
 
@@ -863,6 +870,12 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
                 # internet connection is required to view the figure.
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
 
+    # store the source database file(s) in the output directory for future reference
+    shutil.copy(comp_db_path, Path(output_path)/Path(comp_db_path).name)
+
+    if repair_meta is not None:
+        shutil.copy(comp_db_meta, Path(output_path)/Path(comp_db_meta).name)
+
     if create_zip == "1":
 
         files = [f"{output_path}/{file}" for file in os.listdir(output_path)]
@@ -875,6 +888,67 @@ def plot_repair(comp_db_path, output_path, create_zip="0"):
 
     print("Successfully generated component repair consequence figures.")
 
+
+def check_diff(comp_db_path, output_path):
+
+    # if the output path already exists
+    if os.path.exists(output_path):
+
+        # check for both the csv and json files
+        for ext in ['csv', 'json']:
+
+            comp_db = comp_db_path[:-3]+ext
+
+            if not Path(comp_db).is_file():
+                continue
+
+            # get the name of the db file
+            source_path = Path(comp_db).parents[0]
+            comp_db = Path(comp_db).name
+
+            # check if a file with the same name exists in the output dir
+            if comp_db in os.listdir(output_path):
+
+                # open the two files and compare them
+                with open(Path(source_path)/comp_db, 'r') as f1, open(Path(output_path)/comp_db, 'r') as f2:
+
+                    if ext == 'csv':
+                        new_file = f1.readlines()
+                        old_file = f2.readlines()
+
+                        # compare every line in the new file with the old file
+                        # if every line exists in the old file, continue with the next file
+                        if new_file == old_file:
+                            continue
+
+                        # if at least one line does not match, we need to generate
+                        else:
+                            return True
+
+                    elif ext == 'json':
+
+                        new_file = json.load(f1)
+                        old_file = json.load(f2)
+
+                        # if the two dicts are identical, continue with the next file
+                        if sorted(new_file.items()) == sorted(old_file.items()):
+                            continue
+
+                        # otherwise, we need to generate
+                        else:
+                            return True
+
+            # if there is no db file in the output dir, we need to generate
+            else:
+                return True
+
+        # if both files were identical, there is no need to generate
+        return False
+
+    # if the output path does not exist, we need to generate
+    else:
+        return True
+
 def main(args):
 
     parser = argparse.ArgumentParser()
@@ -886,11 +960,34 @@ def main(args):
 
     args = parser.parse_args(args)
 
-    if args.viz_type == 'fragility':
-        plot_fragility(args.comp_db_path, args.output_path, args.zip)
+    if args.viz_type in ['fragility', 'repair']:
 
-    elif args.viz_type == 'repair':
-        plot_repair(args.comp_db_path, args.output_path, args.zip)        
+        comp_db_path = args.comp_db_path
+        output_path = args.output_path
+
+        # verify that comp_db_path points to a file
+        if not Path(comp_db_path).is_file():
+            raise FileNotFoundError("comp_db_path does not point to a file.")
+
+        if check_diff(comp_db_path, output_path):
+
+            if args.viz_type == 'fragility':
+
+                plot_fragility(comp_db_path, output_path, args.zip)
+
+            elif args.viz_type == 'repair':
+
+                plot_repair(comp_db_path, output_path, args.zip) 
+
+        else:
+
+            print("No need to generate, figures already exist in the output folder.")  
+
+    elif args.viz_type == 'query':
+
+        if args.comp_db_path == 'default_db':
+
+            print(pelicun_path)     
 
     #print("--- %s seconds ---" % (time.time() - start_time))
 
