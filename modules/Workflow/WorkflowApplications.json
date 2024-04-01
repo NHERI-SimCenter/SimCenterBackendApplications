@@ -1,3 +1,4 @@
+
 {
   "DefaultValues": {
       "workflowInput": "scInput.json",
@@ -373,6 +374,12 @@
         "ApplicationSpecificInputs": [
   ]
       },
+    {
+        "Name": "PhysicsBasedMotion",
+        "ExecutablePath": "applications/createEVENT/physicsBasedMotion/PhysicsBasedMotion",
+        "ApplicationSpecificInputs": [
+  ]
+      },	
       {
         "Name": "ExistingPEER_Events",
         "ExecutablePath": "applications/createEVENT/multiplePEER/MultiplePEER",
