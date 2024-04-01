@@ -492,6 +492,17 @@
         ]
       },  
       {
+        "Name": "MPM",
+        "ExecutablePath": "applications/createEVENT/MPM/MPM.py",
+        "ApplicationSpecificInputs":[
+          {
+            "id":"publicDirectory",
+            "type":"string",
+            "description": "Remote directory hosting ClaymoreUW MPM assets (e.g. geometries, checkpoints, motion-paths) for the application for any user to access on the HPC system."
+          }
+        ]
+      },  
+      {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
         "ApplicationSpecificInputs":[
@@ -817,6 +828,21 @@
       {
         "Name": "SurrogateEDP",
         "ExecutablePath": "applications/createEDP/surrogateEDP/surrogateEDP.py",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardHydroEDP",
+        "ExecutablePath": "applications/createEDP/standardHydroEDP/StandardHydroEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardTsunamiEDP",
+        "ExecutablePath": "applications/createEDP/standardTsunamiEDP/StandardTsunamiEDP",
+        "ApplicationSpecificInputs": []
+      },
+      {
+        "Name": "StandardStormSurgeEDP",
+        "ExecutablePath": "applications/createEDP/standardStormSurgeEDP/StandardStormSurgeEDP",
         "ApplicationSpecificInputs": []
       }
     ]
