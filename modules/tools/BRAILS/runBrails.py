@@ -37,7 +37,7 @@
 # Barbaros Cetiner
 #
 # Last updated:
-# 03-28-2024 
+# 04-01-2024 
 
 # Import packages required for running the latest version of BRAILS:
 import argparse
@@ -55,7 +55,35 @@ def log_msg(msg):
 def runBrails(latMin, latMax, longMin, longMax, locationStr, lengthUnit, 
               fpSource, fpAttrMap, invInput, invAttributeMap, attrRequested, 
               outputFile, seed, numBuildings, getAllBuildings, gKey):    
+            
+    # Format location input based on the GUI input:
+    if 'geojson' in fpSource.lower():
+        locationInp = fpSource
+        fpSource = 'osm'
+    elif locationStr=="":
+        locationInp = (longMin,latMin,longMax,latMax)
+    else:
+        locationInp = locationStr
     
+    # Parse baseline inventory input from GUI collected values:
+    if invInput=='None':
+        baselineInvInp = ''
+    elif invInput=='NSI':
+        baselineInvInp = 'nsi'
+    else:
+        baselineInvInp = invInput
+       
+    # Get attribute map input by processing the GUI input:        
+    if baselineInvInp and invAttributeMap:
+        attrmapInp = invAttributeMap
+    else:
+        if fpAttrMap:
+            attrmapInp = fpAttrMap
+        else:
+            attrmapInp = ""
+        
+    # Format number of buildings and requested attributes inputs by parsing the
+    # GUI input:
     if getAllBuildings:
         numBuildings = 'all'
 
@@ -63,19 +91,18 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, lengthUnit,
         attrRequested = attrRequested.split(',')
 
     # Initialize InventoryGenerator:
-    if locationStr=="":
-        invGenerator = InventoryGenerator(location=(longMin,latMin,longMax,latMax),
-                                          nbldgs=numBuildings, randomSelection=seed,
-                                          GoogleAPIKey=gKey)
-    else:
-        invGenerator = InventoryGenerator(location=locationStr,
-                                          nbldgs=numBuildings, randomSelection=seed,
-                                          GoogleAPIKey=gKey)
-    
+    invGenerator = InventoryGenerator(location=locationInp,
+                                      fpSource=fpSource,
+                                      baselineInv=baselineInvInp,
+                                      attrmap=attrmapInp,
+                                      lengthUnit=lengthUnit)
 
     # Run InventoryGenerator to generate an inventory for the entered location:
-    invGenerator.generate(attributes=attrRequested, outFile=outputFile, 
-                          lengthUnit=lengthUnit)
+    invGenerator.generate(attributes=attrRequested, 
+                          GoogleAPIKey=gKey,
+                          nbldgs=numBuildings,
+                          outputFile=outputFile, 
+                          randomSelection=seed)
 
 # Define a way to collect GUI input:
 def main(args):
