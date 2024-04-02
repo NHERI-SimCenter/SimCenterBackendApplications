@@ -196,7 +196,7 @@ def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata.items()[0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
@@ -206,7 +206,7 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata.items()[0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
@@ -215,7 +215,7 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
     for j in tqdm(range(len(IMdata)), desc="Calculate "\
                   f"Hazard Contribution of {len(IMdata)} scenarios"):
         c_j = 0
-        scenario = IMdata.items()[j]
+        scenario = IMdata[list(IMdata.keys())[j]]
         mar = scenario['MeanAnnualRate']
         for r in range(len(targetReturnPeriods)):
             for i in range(len(site_config)):
@@ -230,8 +230,8 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
                 p_exceed = 1 - norm.cdf(np.log(y_ir), lnIM_mean, lnIM_std)
                 normConstant = 0
                 for j2 in range(len(IMdata)):
-                    pj = IMdata.items()[j2]['MeanAnnualRate']
-                    lnIM2 = IMdata.items()[j2]['GroundMotions'][i][im_name] 
+                    pj = IMdata[list(IMdata.keys())[j2]]['MeanAnnualRate']
+                    lnIM2 = IMdata[list(IMdata.keys())[j2]]['GroundMotions'][i][im_name] 
                     lnIM_mean2 = lnIM2['Mean'][im_ind]
                     lnIM_std2 = lnIM2['TotalStdDev'][im_ind]
                     p_exceed2 = 1 - norm.cdf(np.log(y_ir), lnIM_mean2, lnIM_std2)
@@ -245,7 +245,7 @@ def calc_hazard_curves(IMdata, site_config, im):
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata.items()[0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
