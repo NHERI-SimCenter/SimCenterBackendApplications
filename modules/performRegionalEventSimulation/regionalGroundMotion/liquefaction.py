@@ -248,17 +248,17 @@ class ZhuEtal2017(Liquefaction):
         if ('PGA' in im_list) and ('PGV' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGV_col_id = [i for i, x in enumerate(im_list) if x == 'PGV'][0]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
                 for rlz_id in range(num_rlzs):
                     pgv = np.exp(ln_im_data[scenario_id][:,PGV_col_id,rlz_id])
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][0])
+                    mag = float(eq_data[scenario_id][1])
                     model_output = self.model(pgv, pga, mag)
                     for i, key in enumerate(output_keys):
                         im_data_scen[:,len(im_list)+i,rlz_id] = model_output[key]
@@ -438,15 +438,15 @@ class Hazus2020(Liquefaction):
         if ('PGA' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
                 for rlz_id in range(num_rlzs):
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][0])
+                    mag = float(eq_data[scenario_id][1])
                     model_output = self.model(pga, mag, self.gw_depth, self.liq_susc)
                     for i, key in enumerate(output_keys):
                         im_data_scen[:,len(im_list)+i,rlz_id] = model_output[key]
@@ -722,13 +722,13 @@ class Hazus2020Lateral(LateralSpread):
             ('liq_susc' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             liq_prob_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_prob'][0]
             liq_susc_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_susc'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
@@ -736,7 +736,7 @@ class Hazus2020Lateral(LateralSpread):
                     liq_prob = ln_im_data[scenario_id][:,liq_prob_col_id,rlz_id]
                     liq_susc = ln_im_data[scenario_id][:,liq_susc_col_id,rlz_id]
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][0])
+                    mag = float(eq_data[scenario_id][1])
                     model_output = self.model(pga, mag, liq_prob, \
                         self.dist_to_water, liq_susc)
                     for i, key in enumerate(output_keys):
@@ -885,12 +885,12 @@ class Hazus2020Vertical(GroundSettlement):
         if ('liq_susc' in im_list)  and ('liq_prob' in im_list):
             num_stations = ln_im_data[0].shape[0]
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             liq_prob_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_prob'][0]
             liq_susc_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_susc'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]

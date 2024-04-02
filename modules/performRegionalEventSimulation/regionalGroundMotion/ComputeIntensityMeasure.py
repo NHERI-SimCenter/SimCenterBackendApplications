@@ -498,7 +498,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generator_info, output_dir, filename='IntensityMeasureMeanStd.json', mth_flag=True):
 
 	# Calling OpenSHA to compute median PSA
-	im_raw = []
+	im_raw = {}
 	# Loading ERF model (if exists)
 	# erf = None
 	# if scenarios[0].get('RuptureForecast', None):
@@ -574,7 +574,7 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 		# for i, key in enumerate(scenarios.keys()):
 			# print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(scenarios)))
 			# Rupture
-			key = list(scenarios.keys())[i]
+			key = int(list(scenarios.keys())[i])
 			source_info = scenarios[key]
 			im_calculator.set_source(source_info)
 			# Computing IM
@@ -585,7 +585,8 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 			# Collecting outputs
 			collectedResult = collect_multi_im_res(res_list)
 			collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
-			im_raw.append(collectedResult)
+			# im_raw.append(collectedResult)
+			im_raw.update({key:collectedResult})
 			# im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
 
 	if mth_flag:
@@ -615,9 +616,9 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
 
 	# save im_raw comment out for debug
-	im_raw_preview = {"IntensityMeasures": im_raw}
+	# im_raw_preview = {"IntensityMeasures": im_raw}
 	with open(os.path.join(output_dir, filename), "w") as f:
-		json.dump(im_raw_preview, f, indent=2)
+		json.dump(im_raw, f, indent=2)
 
 	# return
 	return im_raw, im_info
@@ -948,6 +949,9 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 	num_stations = len(stations)
 	# Scenario number
 	num_scenarios = len(eq_data)
+	eq_data = np.array(eq_data)
+	scenario_ids = eq_data[:,0]
+	eq_data = eq_data[:,1:]
 	# Saving large files to HDF while small files to JSON
 	if num_scenarios > 100000:
 		# Pandas DataFrame
@@ -1001,7 +1005,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 			tmp.update({'lnIM': tmp_im})
 			res.append(tmp)
 		maf_out = []
-		for cur_eq in eq_data:
+		for ind, cur_eq in enumerate(eq_data):
 			if cur_eq[1]:
 				mar = cur_eq[1]
 			else:
@@ -1017,7 +1021,8 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 			tmp = {'Magnitude': float(cur_eq[0]),
 				   'MeanAnnualRate': mar,
 				   'SiteSourceDistance': ssd,
-				   'SiteRuputureDistance': srd}
+				   'SiteRuputureDistance': srd,
+				   'ScenarioIndex': int(scenario_ids[ind])}
 			maf_out.append(tmp)
 		res = {'Station_lnIM': res,
 			   'Earthquake_MAF': maf_out}
@@ -1057,7 +1062,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 		csvHeader = im_list
 		for cur_scen in range(len(im_data)):
 			if len(im_data) > 1:
-				cur_scen_folder = 'scenario'+str(cur_scen+1)
+				cur_scen_folder = 'scenario'+str(int(scenario_ids[cur_scen]))
 				try:
 					os.mkdir(os.path.join(output_dir, cur_scen_folder))
 				except:
@@ -1111,6 +1116,7 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 				# 	df.drop(columns=['liq_prob'], inplace=True)
 				# if 'liq_susc' in df.columns:
 				# 	df.drop(columns=['liq_susc'], inplace=True)
+				df.fillna('NaN', inplace=True)
 				df.to_csv(os.path.join(cur_output_dir, site_id), index = False)
 
 		
@@ -1125,10 +1131,17 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 					# loop over all scenarios
 					for cur_scen in range(len(im_data)):
 						tmp_list = tmp_list + im_data[cur_scen][i, cur_im_tag, :].tolist()
-					df.update({
-						csvHeader[cur_im_tag]: np.exp(tmp_list)
-					})
+					if (csvHeader[cur_im_tag].startswith('SA')) or \
+						(csvHeader[cur_im_tag] in ['PGA', 'PGV']):
+						df.update({
+							csvHeader[cur_im_tag]: np.exp(tmp_list)
+						})
+					else:
+						df.update({
+							csvHeader[cur_im_tag]: tmp_list
+						})
 				df = pd.DataFrame(df)
+				df.fillna('NaN', inplace=True)
 				df.to_csv(os.path.join(output_dir, site_id), index = False)
 	# return
 	return 0
@@ -1145,10 +1158,11 @@ def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info
 	ln_im_mr = []
 	mag_maf = []
 	t_start = time.time()
-	for i in tqdm(range(len(im_raw)), desc=f"ComputeIntensityMeasure for {len(im_raw)} scenarios"):
+	scenario_ids = list(im_raw.keys())
+	for scen_i in tqdm(range(len(scenario_ids)), desc=f"ComputeIntensityMeasure for {len(scenario_ids)} scenarios"):
 	# for i, cur_im_raw in enumerate(im_raw):
 		# print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(im_raw)))
-		cur_im_raw = im_raw[i]
+		cur_im_raw = im_raw[scenario_ids[scen_i]]
 		# set im_raw
 		gm_simulator.set_im_raw(cur_im_raw)
 		# Computing inter event residuals
@@ -1167,7 +1181,7 @@ def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info
 								 gm_simulator.get_intra_sigma_im() * eta[:, :, i]
 
 		ln_im_mr.append(ln_im_all)
-		mag_maf.append([cur_im_raw['Magnitude'], cur_im_raw.get('MeanAnnualRate',None), 
+		mag_maf.append([scenario_ids[scen_i], cur_im_raw['Magnitude'], cur_im_raw.get('MeanAnnualRate',None), 
 		                cur_im_raw.get('SiteSourceDistance',None), cur_im_raw.get('SiteRuptureDistance',None)])
 	
 	print('ComputeIntensityMeasure: all inter- and intra-event correlation {0} sec'.format(time.time() - t_start))
