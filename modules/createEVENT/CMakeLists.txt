@@ -17,9 +17,13 @@ add_subdirectory(stochasticWind)
 add_subdirectory(groundMotionIM)
 add_subdirectory(uniformPEER)
 add_subdirectory(experimentalWindForces)
+add_subdirectory(experimentalWindPressures)
 add_subdirectory(EmptyDomainCFD)
 add_subdirectory(IsolatedBuildingCFD)
 add_subdirectory(coupledDigitalTwin)
+add_subdirectory(physicsBasedMotion)
+add_subdirectory(M9)
+add_subdirectory(MPM)
 
 
 
