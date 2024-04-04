@@ -84,7 +84,7 @@ def hazard_job(hazard_info):
         print('HazardSimulation: currently only supports EQ and Wind simulations.')
     #print(scenarios)
     print('HazardSimulation: scenarios loaded.')
-
+    selected_scen_ids = sorted(list(scenarios.keys()))
     # Computing intensity measures
     print('HazardSimulation: computing intensity measures.')
     if scenario_info['Type'] == 'Earthquake':
@@ -161,14 +161,13 @@ def hazard_job(hazard_info):
             period = occ_dict.get('Period')
             hc_curves = occ_dict.get('HazardCurves')
             # get im exceedance probabilities
-            scenario_idx = list(im_raw.keys())
-            im_exceedance_prob = get_im_exceedance_probility(im_raw, im_type, period, hc_curves)
+            im_exceedance_prob = get_im_exceedance_probility(im_raw, im_type, period, hc_curves, selected_scen_ids)
             # sample the earthquake scenario occurrence
             # if reweight_only:
             #     occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
             # else:
             #     occurrence_rate_origin = None
-            occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in scenario_idx]
+            occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in selected_scen_ids]
             occurrence_model = sample_earthquake_occurrence(model_type,num_target_eqs,return_periods,im_exceedance_prob,reweight_only,occurrence_rate_origin)
             #print(occurrence_model)
             P, Z = occurrence_model.get_selected_earthquake()
@@ -176,14 +175,15 @@ def hazard_job(hazard_info):
             id_selected_eqs = []
             for i in range(len(Z)):
                 if P[i] > 0:
-                    id_selected_eqs.append(scenario_idx[i])
+                    id_selected_eqs.append(selected_scen_ids[i])
             im_raw_sampled = {}
             for i in id_selected_eqs:
                 im_raw_sampled.update({i: im_raw[i]})
             im_raw = im_raw_sampled
-            num_per_eq_avg = int(np.ceil(num_target_gmms/len(id_selected_eqs)))
+            selected_scen_ids = id_selected_eqs
+            num_per_eq_avg = int(np.ceil(num_target_gmms/len(selected_scen_ids)))
             # export sampled earthquakes
-            _ = export_sampled_earthquakes(id_selected_eqs, scenarios, P, output_dir)
+            _ = export_sampled_earthquakes(selected_scen_ids, scenarios, P, output_dir)
         
         # Updating station information
         #stations['Stations'] = stn_new
@@ -200,7 +200,8 @@ def hazard_job(hazard_info):
             ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations, im_raw,
                                                                 num_gm_per_site,
                                                                 event_info['CorrelationModel'],
-                                                                event_info['IntensityMeasure'])
+                                                                event_info['IntensityMeasure'],
+                                                                selected_scen_ids)
             print('HazardSimulation: correlated response spectra computed.')
         # KZ-08/23/22: adding method to do hazard occurrence model
         if occurrence_sampling and sampling_gmms:
@@ -212,8 +213,7 @@ def hazard_job(hazard_info):
             #     occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
             # else:
             #     occurrence_rate_origin = None
-            selected_scen_step_1 = np.array(mag_maf)[:,0]
-            occurrence_rate_origin = [scenarios[int(i)].get('MeanAnnualRate') for i in selected_scen_step_1]
+            occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in selected_scen_ids]
             occurrence_model_gmm = sample_earthquake_occurrence(model_type,num_target_gmms,return_periods,im_exceedance_prob_gmm, reweight_only, occurrence_rate_origin)
             #print(occurrence_model)
             P_gmm, Z_gmm = occurrence_model_gmm.get_selected_earthquake()
@@ -222,22 +222,22 @@ def hazard_job(hazard_info):
             for i in range(len(Z_gmm)):
                 if P_gmm[i] > 0:
                     id_selected_gmms.append(i)
-            id_selected_scens = np.array([selected_scen_step_1[int(x/num_gm_per_site)]\
-                                           for x in id_selected_gmms])
+            id_selected_scens = np.array([selected_scen_ids[int(x/num_gm_per_site)] for x in id_selected_gmms])
             id_selected_simus = np.array([x%num_gm_per_site for x in id_selected_gmms])
             # export sampled earthquakes
             _ = export_sampled_gmms(id_selected_gmms, id_selected_scens, P_gmm, output_dir)
 
-            selected_scen_step_2 = list(set(id_selected_scens))
-            sampled_ln_im_mr = [None]*len(selected_scen_step_2)
-            sampled_mag_maf = [None]*len(selected_scen_step_2)
+            selected_scen_ids_step2 = sorted(list(set(id_selected_scens)))
+            sampled_ln_im_mr = [None]*len(selected_scen_ids_step2)
+            sampled_mag_maf = [None]*len(selected_scen_ids_step2)
 
-            for ind, selected_scen in enumerate(selected_scen_step_2):
-                selected_simus_in_scen_i = list(set(
-                    id_selected_simus[id_selected_scens==selected_scen]))
-                sampled_ln_im_mr[ind] = ln_im_mr[ind]\
+            for i, selected_scen in enumerate(selected_scen_ids_step2):
+                scen_ind = selected_scen_ids.index(selected_scen)
+                selected_simus_in_scen_i = sorted(list(set(
+                    id_selected_simus[id_selected_scens==selected_scen])))
+                sampled_ln_im_mr[i] = ln_im_mr[scen_ind]\
                         [:,:,selected_simus_in_scen_i]
-                sampled_mag_maf[ind] = mag_maf[ind]
+                sampled_mag_maf[i] = mag_maf[scen_ind]
             ln_im_mr = sampled_ln_im_mr
             mag_maf = sampled_mag_maf
 
@@ -267,7 +267,7 @@ def hazard_job(hazard_info):
             start_time = time.time()
             gm_id, gm_file = select_ground_motion(im_list, ln_im_mr, data_source,
                                                   sf_max, sf_min, output_dir, 'EventGrid.csv',
-                                                  stations)
+                                                  stations, selected_scen_ids)
             print('HazardSimulation: ground motion records selected  ({0} s).'.format(time.time() - start_time))
             #print(gm_id)
             gm_id = [int(i) for i in np.unique(gm_id)]
@@ -340,7 +340,7 @@ def hazard_job(hazard_info):
     if event_info['SaveIM'] and ln_im_mr:
         print('HazardSimulation: saving simulated intensity measures.')
         _ = export_im(stations, im_list, ln_im_mr, mag_maf, output_dir,\
-                      'SiteIM.json', 1, gf_im_list)
+                      'SiteIM.json', 1, gf_im_list, selected_scen_ids)
         print('HazardSimulation: simulated intensity measures saved.')
     else:
         print('HazardSimulation: IM is not required to saved or no IM is found.')

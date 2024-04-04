@@ -258,7 +258,7 @@ class ZhuEtal2017(Liquefaction):
                 for rlz_id in range(num_rlzs):
                     pgv = np.exp(ln_im_data[scenario_id][:,PGV_col_id,rlz_id])
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][1])
+                    mag = float(eq_data[scenario_id][0])
                     model_output = self.model(pgv, pga, mag)
                     for i, key in enumerate(output_keys):
                         im_data_scen[:,len(im_list)+i,rlz_id] = model_output[key]
@@ -446,7 +446,7 @@ class Hazus2020(Liquefaction):
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
                 for rlz_id in range(num_rlzs):
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][1])
+                    mag = float(eq_data[scenario_id][0])
                     model_output = self.model(pga, mag, self.gw_depth, self.liq_susc)
                     for i, key in enumerate(output_keys):
                         im_data_scen[:,len(im_list)+i,rlz_id] = model_output[key]
@@ -736,7 +736,7 @@ class Hazus2020Lateral(LateralSpread):
                     liq_prob = ln_im_data[scenario_id][:,liq_prob_col_id,rlz_id]
                     liq_susc = ln_im_data[scenario_id][:,liq_susc_col_id,rlz_id]
                     pga = np.exp(ln_im_data[scenario_id][:,PGA_col_id,rlz_id])
-                    mag = float(eq_data[scenario_id][1])
+                    mag = float(eq_data[scenario_id][0])
                     model_output = self.model(pga, mag, liq_prob, \
                         self.dist_to_water, liq_susc)
                     for i, key in enumerate(output_keys):

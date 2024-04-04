@@ -43,6 +43,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from gmpe import SignificantDurationModel
+import ujson
 
 from java.io import *
 from java.lang import *
@@ -505,13 +506,13 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     # else:
     #     preview_erf_data = erf_data
     # Output
-    import time
-    startTime = time.process_time_ns()
+    # import time
+    # startTime = time.process_time_ns()
     if outfile is not None:
         print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
-            json.dump(erf_data, f, indent=2)
-    print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
+            ujson.dump(erf_data, f, indent=2)
+    # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
 
     # del preview_erf_data
     # return

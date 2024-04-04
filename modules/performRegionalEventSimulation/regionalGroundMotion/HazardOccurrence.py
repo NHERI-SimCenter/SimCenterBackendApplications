@@ -306,10 +306,10 @@ def get_hazard_curves(input_dir=None,
 def get_im_exceedance_probility(im_raw, 
                                 im_type, 
                                 period, 
-                                im_level):
+                                im_level,
+                                scenario_idx):
 
     # number of scenarios
-    scenario_idx = list(im_raw.keys())
     num_scen = len(scenario_idx)
 
     # number of intensity levels
