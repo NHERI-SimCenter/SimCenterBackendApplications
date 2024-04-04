@@ -1441,6 +1441,6 @@ def get_site_rup_info_oq(source_info, siteList):
         "width" : float(rup.surface.get_width()),
         "zTop" : float(rup.rake),
         "zHyp" : float(rup.hypocenter.depth),
-        "aveRake" : source_info['rup'].surface.mesh[0:1].depths[0]
+        "aveRake" : float(rup.rake)
         } 
     return site_rup_info, siteList
