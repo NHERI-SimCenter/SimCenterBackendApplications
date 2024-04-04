@@ -325,9 +325,6 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
       output_file.write(line)
   output_file.close()
 
-
-
-
 def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
@@ -412,7 +409,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     ###################### Edit Geometry Section ##############################
     
-    #Add refinment box geometry
+    #Add refinement box geometry
     start_index = foam.find_keyword_line(dict_lines, "geometry") + 2 
     added_part = ""
     n_boxes  = len(refinement_boxes)
@@ -453,12 +450,12 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     dict_lines[start_index] = "    insidePoint ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
 
 
-    #For compatability with OpenFOAM-9 and older
+    #For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, "locationInMesh")
     dict_lines[start_index] = "    locationInMesh ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
 
 
-    #Add refinment edge 
+    #Add refinement edge 
     if add_edge_refinement: 
         start_index = foam.find_keyword_line(dict_lines, "features") + 2 
         added_part  = ""

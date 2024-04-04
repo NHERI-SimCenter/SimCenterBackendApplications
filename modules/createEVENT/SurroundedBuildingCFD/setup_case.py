@@ -321,9 +321,22 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["snappyHexMeshParameters"]
-
+    add_surface_refinement = mesh_data['addSurfaceRefinements']
+    building_stl_name = mesh_data['buildingSTLName']
+    surrounding_stl_name = mesh_data['surroundingsSTLName']
+    add_edge_refinement = mesh_data['addEdgeRefinements']
+    surface_refinements = mesh_data['surfaceRefinements']
+    edge_refinements = mesh_data['edgeRefinements']
     geom_data = json_data['GeometricData']
    
+    add_prism_layers = mesh_data['addPrismLayers']
+    number_of_prism_layers = mesh_data['numberOfPrismLayers']
+    prism_layer_expansion_ratio = mesh_data['prismLayerExpansionRatio']
+    final_prism_layer_thickness = mesh_data['finalPrismLayerThickness']
+    prism_layer_surface_name = mesh_data['prismLayerSurfaceName']
+    prism_layer_relative_size = "on"  
+
+
     Lx = geom_data['domainLength']
     Ly = geom_data['domainWidth']
     Lz = geom_data['domainHeight']
@@ -373,9 +386,23 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         added_part += "         min ({:.4f} {:.4f} {:.4f});\n".format(refinement_boxes[i][2], refinement_boxes[i][3], refinement_boxes[i][4])
         added_part += "         max ({:.4f} {:.4f} {:.4f});\n".format(refinement_boxes[i][5], refinement_boxes[i][6], refinement_boxes[i][7])
         added_part += "    }\n"
-        
     dict_lines.insert(start_index, added_part)
-           
+
+    #Add building and surrounding stl geometry
+    start_index = foam.find_keyword_line(dict_lines, "geometry") + 2 
+    added_part = ""
+    added_part += "    {}\n".format(building_stl_name)
+    added_part += "    {\n"
+    added_part += "         type triSurfaceMesh;\n"
+    added_part += "         file \"{}.stl\";\n".format(building_stl_name)
+    added_part += "    }\n"
+
+    added_part += "    {}\n".format(surrounding_stl_name)
+    added_part += "    {\n"
+    added_part += "         type triSurfaceMesh;\n"
+    added_part += "         file \"{}.stl\";\n".format(surrounding_stl_name)
+    added_part += "    }\n"
+    dict_lines.insert(start_index, added_part)  
     
     ################# Edit castellatedMeshControls Section ####################
 
@@ -398,9 +425,50 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword    
     start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
     dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e-20)
+  
 
+    #Add refinement edge 
+    if add_edge_refinement:             
+        start_index = foam.find_keyword_line(dict_lines, "features") + 2             
+        added_part  = ""
 
-    
+        for edge in edge_refinements: 
+            added_part += "         {\n"
+            added_part += "             file \"{}.eMesh\";\n".format(edge["name"])
+            added_part += "             level {};\n".format(edge["level"])
+            added_part += "         }\n"
+            
+        dict_lines.insert(start_index, added_part)
+        
+    #Add refinement surface
+    if add_surface_refinement:         
+        start_index = foam.find_keyword_line(dict_lines, "refinementSurfaces") + 2 
+        added_part = ""
+
+        for surf in surface_refinements:
+            added_part += "         {}\n".format(surf["name"])
+            added_part += "         {\n"
+            added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
+            added_part += "             patchInfo\n"
+            added_part += "             {\n"
+            added_part += "                 type wall;\n"
+            added_part += "             }\n"
+            added_part += "         }\n"
+        
+        dict_lines.insert(start_index, added_part)
+        
+    # #Add surface refinement around the building as a refinement region
+    # if surface_refinements[-1]["minLevel"] > refinement_boxes[-1][1]:
+    #     added_part = ""
+    #     added_part += "         {}\n".format(refinement_surface_name)
+    #     added_part += "         {\n"
+    #     added_part += "             mode   distance;\n"
+    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)
+    #     added_part += "         }\n"
+                    
+    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
+    #     dict_lines.insert(start_index, added_part)
+
     #Add box refinements 
     added_part = ""
     for i in range(n_boxes):
@@ -412,8 +480,33 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
                 
     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
     dict_lines.insert(start_index, added_part)
-       
-    
+         
+
+    ####################### Edit PrismLayer Section ##########################
+    if add_prism_layers:
+        #Add surface layers (prism layers)
+        added_part = ""
+        added_part += "         \"{}\"\n".format(prism_layer_surface_name)
+        added_part += "         {\n"
+        added_part += "             nSurfaceLayers {};\n".format(number_of_prism_layers)
+        added_part += "         }\n"
+        
+        start_index = foam.find_keyword_line(dict_lines, "layers") + 2 
+        dict_lines.insert(start_index, added_part)
+
+        #Write 'relativeSizes'     
+        start_index = foam.find_keyword_line(dict_lines, "relativeSizes")
+        dict_lines[start_index] = "    relativeSizes {};\n".format(prism_layer_relative_size)
+
+        #Write 'expansionRatio'     
+        start_index = foam.find_keyword_line(dict_lines, "expansionRatio")
+        dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expansion_ratio)
+        
+        #Write 'finalLayerThickness'     
+        start_index = foam.find_keyword_line(dict_lines, "finalLayerThickness")
+        dict_lines[start_index] = "    finalLayerThickness {:.4f};\n".format(final_prism_layer_thickness)    
+
+
     #Write edited dict to file
     write_file_name = case_path + "/system/snappyHexMeshDict"
     
@@ -424,6 +517,41 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     for line in dict_lines:
         output_file.write(line)
     output_file.close()
+
+def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
+    
+  #Read JSON data    
+  with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+      json_data =  json.load(json_file)
+    
+  # Returns JSON object as a dictionary
+  domain_data = json_data["snappyHexMeshParameters"]
+  building_stl_name = domain_data['buildingSTLName']
+  surroundings_stl_name = domain_data['surroundingsSTLName']
+
+  #Open the template blockMeshDict (OpenFOAM file) for manipulation
+  dict_file = open(template_dict_path + "/surfaceFeaturesDictTemplate", "r")
+
+  #Export to OpenFOAM probe format
+  dict_lines = dict_file.readlines()
+  dict_file.close()
+  
+  
+  #Write main building and surrounding buildings surface names    
+  start_index = foam.find_keyword_line(dict_lines, "surfaces")
+  dict_lines[start_index] = "surfaces  (\"{}.stl\" \"{}.stl\");\n".format(building_stl_name, surroundings_stl_name)
+  
+  
+  #Write edited dict to file
+  write_file_name = case_path + "/system/surfaceFeaturesDict"
+  
+  if os.path.exists(write_file_name):
+      os.remove(write_file_name)
+  
+  output_file = open(write_file_name, "w+")
+  for line in dict_lines:
+      output_file.write(line)
+  output_file.close()
 
 
 def write_boundary_data_files(input_json_path, case_path):
@@ -1745,9 +1873,13 @@ if __name__ == '__main__':
     #Write surrounding building STL file
     write_surrounding_buildings_stl_file(input_json_path, case_path)
 
+    #Write surfaceFeaturesDict file
+    write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path)
+
     #Create and write the SnappyHexMeshDict file
     write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
     
+
     #Write files in "0" directory
     write_U_file(input_json_path, template_dict_path, case_path)
     write_p_file(input_json_path, template_dict_path, case_path)

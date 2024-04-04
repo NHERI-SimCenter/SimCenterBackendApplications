@@ -7,51 +7,14 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-    version     2.0;
-    format      ascii;    
-    location    "0";
-    class       volScalarField;
-    object      nut;
+    format      ascii;
+    class       dictionary;
+    object      surfaceFeaturesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -1 0 0 0 0 ];
+surfaces ("building.stl" "surroundings.stl");
 
-internalField   uniform 0.0;
-
-boundaryField
-{
-    inlet
-    {
-    }
-
-    outlet
-    {
-    }
-
-    ground 
-    {
-    }
-    
-    top    
-    {
-    }
-
-    front    
-    {
-    }
-    
-    back    
-    {
-    }
-
-    building    
-    {
-    }
-
-    surroundings    
-    {
-    }
-}
+#includeEtc "caseDicts/surface/surfaceFeaturesDict.cfg"
 
 // ************************************************************************* //
