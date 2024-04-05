@@ -402,8 +402,9 @@ createSimCenterEvent(const char *eventName, const char *fileType) {
     } else {
       
       std::string fileName("sc"); fileName.append(eventName);
-      newFilePath.append(fileName);      
-      const char *charPath = newFilePath.c_str();
+      newFilePath.append(fileName);
+      std::string newFilePath_str; newFilePath_str = newFilePath.string();
+      const char *charPath = newFilePath_str.c_str();
       
       json_dump_file(outputObj, charPath, JSON_COMPACT);
     }
