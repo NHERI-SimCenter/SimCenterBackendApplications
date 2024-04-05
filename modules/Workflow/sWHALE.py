@@ -63,7 +63,7 @@ def runSWhale(inputs,
               force_cleanup = False) :
 
     # update the runDir, if needed
-    #    with open(input_file, 'r') as f:
+    #    with open(input_file, 'r', encoding="utf-8") as f:
     #        inputs = json.load(f)
     #    runDir = inputs['runDir']
     #
@@ -144,7 +144,7 @@ def runSWhale(inputs,
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
     # update the runDir, if needed
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding="utf-8") as f:
         inputs = json.load(f)
     runDir = inputs['runDir']
 

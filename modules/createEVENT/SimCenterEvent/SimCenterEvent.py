@@ -53,7 +53,7 @@ from simcenter_common import get_scale_factors, get_unit_bases
 def write_RV(AIM_file, EVENT_file):
 
     # load the AIM file to get information about the assigned events
-    with open(AIM_file, 'r') as f:
+    with open(AIM_file, 'r', encoding="utf-8") as f:
         aim_file = json.load(f)
 
     input_units = None
@@ -140,7 +140,7 @@ def write_RV(AIM_file, EVENT_file):
             #, event_class = event_class))
 
     # save the EVENT dictionary to a json file
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w', encoding="utf-8") as f:
         json.dump(event_file, f, indent=2)
 
 def load_record(file_name, data_dir, f_scale_user=1.0,
@@ -155,7 +155,7 @@ def load_record(file_name, data_dir, f_scale_user=1.0,
 
     # open the input event data file
     # (SimCenter json format is assumed here)
-    with open(data_dir / '{}.json'.format(file_name), 'r') as f:
+    with open(data_dir / '{}.json'.format(file_name), 'r', encoding="utf-8") as f:
         event_data = json.load(f)
 
     # check if Event File is already in EVENT format
@@ -228,11 +228,11 @@ def get_records(AIM_file, EVENT_file):
     """
 
     # load the AIM file
-    with open(AIM_file, 'r') as f:
+    with open(AIM_file, 'r', encoding="utf-8") as f:
         AIM_file = json.load(f)
 
     # load the EVENT file
-    with open(EVENT_file, 'r') as f:
+    with open(EVENT_file, 'r', encoding="utf-8") as f:
         event_file = json.load(f)
 
     #event_class = AIM_file['Events']['Events'][0]['EventClassification']
@@ -261,7 +261,7 @@ def get_records(AIM_file, EVENT_file):
         load_record(event_id, data_dir, f_scale_user, f_scale_units)) #, event_class = event_class))
 
     # save the updated EVENT file
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w', encoding="utf-8") as f:
         json.dump(event_file, f, indent=2)
 
 if __name__ == '__main__':

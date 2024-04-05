@@ -159,19 +159,19 @@ def main(args):
 
     # load the risk parameters
     pathRiskParams = Path(args.riskParametersPath)
-    with open(pathRiskParams) as f:
+    with open(pathRiskParams, encoding="utf-8") as f:
         risk_param_dict = json.load(f)
 
     rediInputDict['risk_parameters']=risk_param_dict
 
     # import SimCenter's AIM.json file
     pathAim = pelicun_results_dir/'AIM.json'
-    with open(pathAim) as f:
+    with open(pathAim, encoding="utf-8") as f:
         AIM = json.load(f)
 
     # Get the CMP_sample json from Pelicun
     pathComponent = pelicun_results_dir/'CMP_sample.json'
-    with open(pathComponent) as f:
+    with open(pathComponent, encoding="utf-8") as f:
         CMP = json.load(f)
 
         # remove Units information - for now
@@ -180,7 +180,7 @@ def main(args):
 
     # Get the DMG_sample json from Pelicun
     pathComponentDmg = pelicun_results_dir/'DMG_sample.json'
-    with open(pathComponentDmg) as f:
+    with open(pathComponentDmg, encoding="utf-8") as f:
         CMP_DMG = json.load(f)
 
         # remove Units information - for now
@@ -189,7 +189,7 @@ def main(args):
 
     # Get the DV_repair_sample json from Pelicun
     pathComponentDV = pelicun_results_dir/'DV_repair_sample.json'
-    with open(pathComponentDV) as f:
+    with open(pathComponentDV, encoding="utf-8") as f:
         CMP_DV = json.load(f)
 
         # remove Units information - for now
@@ -471,7 +471,7 @@ def main(args):
         rediInputDict['_id'] = f'SimCenter_{sample}'
 
         # Save the dictionary to a JSON file
-        with open(redi_input_dir/f'redi_{sample}.json', 'w') as f:
+        with open(redi_input_dir/f'redi_{sample}.json', 'w', encoding="utf-8") as f:
             json.dump(this_it_input, f, indent=4, cls=NumpyEncoder)
 
         # Create a StringIO object to capture the stdout
@@ -496,7 +496,7 @@ def main(args):
 
     # Create a high-level json with detailed results
     print(f'Saving all samples to: {redi_output_dir}/redi_results_all_samples.json')
-    with open(redi_output_dir/f'redi_results_all_samples.json', 'w') as f:
+    with open(redi_output_dir/f'redi_results_all_samples.json', 'w', encoding="utf-8") as f:
         json.dump(final_results_dict, f, cls=NumpyEncoder)
 
     # Create a smaller summary stats json for recovery time and max delay
@@ -523,12 +523,12 @@ def main(args):
                      }
 
     print(f'Saving all samples to: {redi_output_dir}/redi_summary_stats.json')
-    with open(redi_output_dir/f'redi_summary_stats.json', 'w') as f:
+    with open(redi_output_dir/f'redi_summary_stats.json', 'w', encoding="utf-8") as f:
         json.dump(summary_stats, f, indent=4, cls=NumpyEncoder)
 
     # Write the log file
     print(f'Saving REDi log file at: {redi_output_dir}/redi_log.txt')
-    with open(redi_output_dir/f'redi_log.txt', 'w') as file:
+    with open(redi_output_dir/f'redi_log.txt', 'w', encoding="utf-8") as file:
         # Iterate through the list of strings and write each one to the file
         for string in log_output:
             file.write(string + '\n')
