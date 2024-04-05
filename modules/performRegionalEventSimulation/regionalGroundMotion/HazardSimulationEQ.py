@@ -207,14 +207,17 @@ def hazard_job(hazard_info):
         if occurrence_sampling and sampling_gmms:
             # get im exceedance probabilities for individual ground motions
             #print('im_list = ',im_list)
-            im_exceedance_prob_gmm = get_im_exceedance_probability_gm(np.exp(ln_im_mr), im_list, im_type, period, hc_curves)
+            im_exceedance_prob_gmm, occur_rate_origin = get_im_exceedance_probability_gm(\
+                np.exp(ln_im_mr), im_list, im_type, period, hc_curves,\
+                     np.array(mag_maf)[:,1])
             # sample the earthquake scenario occurrence
             # if reweight_only:
             #     occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
             # else:
             #     occurrence_rate_origin = None
-            occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in selected_scen_ids]
-            occurrence_model_gmm = sample_earthquake_occurrence(model_type,num_target_gmms,return_periods,im_exceedance_prob_gmm, reweight_only, occurrence_rate_origin)
+            occurrence_model_gmm = sample_earthquake_occurrence(model_type,\
+                num_target_gmms,return_periods,im_exceedance_prob_gmm,\
+                    reweight_only, occur_rate_origin)
             #print(occurrence_model)
             P_gmm, Z_gmm = occurrence_model_gmm.get_selected_earthquake()
             # now update the im_raw with selected eqs with Z > 0

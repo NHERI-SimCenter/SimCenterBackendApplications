@@ -357,7 +357,8 @@ def get_im_exceedance_probability_gm(im_raw,
                                      im_list,
                                      im_type,
                                      period, 
-                                     im_level):
+                                     im_level,
+                                     mar_scen):
 
     # get periodID
     for i in range(len(im_list)):
@@ -377,14 +378,15 @@ def get_im_exceedance_probability_gm(im_raw,
     num_simu = im_raw[0].shape[-1]
     im_exceedance_prob = np.zeros((num_site,num_simu*num_scen,num_rps))
     #print('im_exceedance_prob_gm.shape=',im_exceedance_prob)
+    occurrence_rate = [None] * num_simu*num_scen
     for i in range(num_scen):
         for j in range(num_site):
             curIM = im_raw[i][j,periodID,:]
             for k in range(num_simu):
                 im_exceedance_prob[j,i*num_simu+k,:] = [int(x) for x in curIM[k]>im_level[j,:]]
-
+                occurrence_rate[i*num_simu+k] = mar_scen[i]/num_simu
     # return
-    return im_exceedance_prob
+    return im_exceedance_prob, occurrence_rate
 
 
 def sample_earthquake_occurrence(model_type,
@@ -662,7 +664,7 @@ class OccurrenceModel_Wangetal2023:
         """
         # define X
         self.X_P = self.im_exceedance_probs.transpose(1,0,2).reshape(self.im_exceedance_probs.shape[1],-1).T
-        self.y = np.tile(self.return_periods,self.im_exceedance_probs.shape[0])
+        self.y = 1/np.tile(self.return_periods,self.im_exceedance_probs.shape[0])
 
         # define weights
         self.W = np.diag(np.sqrt(1 / self.y))
@@ -670,10 +672,13 @@ class OccurrenceModel_Wangetal2023:
         # convert from prob X to rate by Poisson assumption
         # P = 1- P(k=0) = 1 - exp(-lambda)
         # -> lambda = -ln(1 - P)
-        self.X_rate = -np.log(1 - self.X_P)
+        # self.X_rate = -np.log(1 - self.X_P)
+        self.X_rate = self.X_P
 
         # rate matrix for events
-        self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)
+        # self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)
+        self.occurence_rate_origin_mat = np.vstack(
+            [np.array(self.occurence_rate_origin)]*self.X_P.shape[0])
 
         # hazard by each event
         self.X = self.X_rate * self.occurence_rate_origin_mat
@@ -688,7 +693,6 @@ class OccurrenceModel_Wangetal2023:
         LASSO regression
         """
         self.alphas,self.coefs,_ = lasso_path(X=self.X_weighted, y=self.y_weighted, eps=1e-4, n_alphas=1000, alphas=None, positive=True)
-
         # re-regression may be needed here !!!
 
     def get_selected_earthquake(self):
@@ -698,12 +702,12 @@ class OccurrenceModel_Wangetal2023:
 
         # find the selection such that the number of selected events is closest to the user defined target number of scenarios
         # the flip() is used to find the last one which has the closest number of selected events to the target value.
-        self.Z_selected = self.num_selected.__len__() - 1 - np.abs(np.flip(self.num_selected) - self.num_scenarios).argmin()
+        self.selected_alpha_ind = self.num_selected.__len__() - 1 - np.abs(np.flip(self.num_selected) - self.num_scenarios).argmin()
 
-        self.Rate_selected = self.coefs[:,self.Z_selected] * self.occurence_rate_origin
-
-        return True
+        self.Rate_selected = self.coefs[:,self.selected_alpha_ind] * self.occurence_rate_origin
+        self.Z_selected = self.coefs[:,self.selected_alpha_ind]>0
+        return self.Rate_selected, self.Z_selected
 
     def get_error_vector(self):
 
-        self.e_selected = self.y - np.dot(self.X_P, self.coefs[:,self.Z_selected])
+        self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
