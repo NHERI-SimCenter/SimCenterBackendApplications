@@ -1443,36 +1443,53 @@ class Workflow(object):
         # defaults added to a system performance app are asset_type, input_dir and running_parallel (default False)
         #
         
-        app_command_list.append('--asset_type')
-        app_command_list.append(asset_type)
-        app_command_list.append('--input_file')
+        #app_command_list.append('--asset_type')
+        #app_command_list.append(asset_type)
+        app_command_list.append('--input')
         app_command_list.append(self.input_file)                
-        app_command_list.append('--working_dir')
-        app_command_list.append(self.working_dir)        
+        #app_command_list.append('--working_dir')
+        #app_command_list.append(self.working_dir)        
+        
+        
+        # Sina added this part for parallel run in REWET
+        if (self.parType == 'parSETUP'):
+            log_msg('\nParallel settings for System Performance for asset type:' + asset_type, prepend_timestamp=False)                
+            app_command_list.append('--par')
         
         command = create_command(app_command_list)
-
-        if (self.parType == 'parSETUP'):
-
-            log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)                
-            self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
-
-            if performance_app.runsParallel == False:
-                self.parCommandFile.write(command + "\n")
-            else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
-
-        else:
         
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                    prepend_blank_space=False)
+        result, returncode = run_command(command)        
 
-            result, returncode = run_command(command)        
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
+            
+        
+        #  end of Sina's odifications for parallel run   
+        
+        
+        # if (self.parType == 'parSETUP'):
 
-            log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
+        #     log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)                
+        #     self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
+
+        #     if performance_app.runsParallel == False:
+        #         self.parCommandFile.write(command + "\n")
+        #     else:
+        #         self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
+
+        # else:
+        
+        #     log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+        #             prepend_blank_space=False)
+
+        #     result, returncode = run_command(command)        
+
+        #     log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        #     log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+        #     log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
             
         log_div()
 

@@ -1,0 +1,87 @@
+[FILES]
+Net3RA 		Crew_Data/Net3RA.txt
+Net3DA		Crew_Data/Net3DA.txt
+
+[SHIFTS]
+;name	begining	end
+D		8			20
+N		20			8
+
+
+[ENTITIES]
+;entity_name	type		Condition		Condition Value
+trunk			PIPE
+distr			DISTNODE	Number_of_damages	BG:0	
+	
+pipe_break	PIPE			damage_type		EQ:break
+pipe_leak	PIPE			damage_type		EQ:leak
+
+[SEQUENCES]
+;element_name	action1		action2 	action3
+PIPE			inspect		reroute		repair
+DISTNODE		inspect		isolate		repair
+
+[AGENTS]
+;agent_type
+RepairAgent	FILE		Net3RA		;G1:DistYardID
+DistrAgent	FILE		Net3DA		;G3:DistYardID
+
+[POINTS]
+EPICENTERDIST	100.00:100.00
+WaterSource     8.00:27.53		24.15:31.06		32.99:32.990
+
+[PRIORITIES]
+;agent_type	priority	step 1					step 2					step 3					step 4					step 5					step 6
+
+RepairAgent		1		inspect:trunk			reroute:pipe_break		reroute:pipe_leak		repair:pipe_break	    repair:pipe_leak	
+RepairAgent		2		EPICENTERDIST			EPICENTERDIST			EPICENTERDIST			EPICENTERDIST		    EPICENTERDIST
+
+DistrAgent		1		inspect:distr			isolate:distr			repair:distr
+DistrAgent		2		EPICENTERDIST			EPICENTERDIST			EPICENTERDIST	
+
+[JOBS]
+;agent_type		action:entity		time		EDN
+;---------- Inspection Phase ----------
+RepairAgent		inspect:trunk		FIXED:1800	CHECK
+RepairAgent		inspect:distr		FIXED:1800	CHECK
+DistrAgent		inspect:distr		FIXED:1800	CHECK
+
+;---------- Reroute Phase ---------- 
+RepairAgent		reroute:pipe_break	FIXED:14400	MJTRreroute
+RepairAgent		reroute:pipe_leak	FIXED:14400	MJTRreroute
+
+;---------- Isolation Phase ----------
+;RepairAgent		isolate:distr		FIXED:72000	DistrIsolate
+DistrAgent		isolate:distr		FIXED:72000	DistrIsolate
+
+
+;---------- Repair Phase ----------
+RepairAgent		repair:pipe_break	FIXED:144000	trunk_break_repair
+RepairAgent		repair:pipe_leak	FIXED:144000	trunk_leak_repair
+
+DistrAgent		repair:distr		FIXED:144000	DN_repair		
+
+
+[DEFINE]
+;EDN
+;---------- Reroute for Major-Trunkline Definition ----------
+MJTRreroute 		DEFAULT	METHOD_PROBABILITY:1:1
+MJTRreroute 		1 		RECONNECT:PIPESIZEFACTOR:0.05  	REMOVE_LEAK:LEAKFACTOR:1
+MJTRreroute 		2 		REMOVE_LEAK:LEAKFACTOR:1
+
+;---------- Reroute for Minor-Trunkline Definition ----------
+DistrIsolate 		DEFAULT	METHOD_PROBABILITY:2:1; 		METHOD_PROBABILITY:2:1 PIDR_TYPE:1:ASSIGNED_DEMAND ; PIDR_TYPE:1:Demand10000
+DistrIsolate		1		ISOLATE_DN:PIDR:(BG-EQ,3)
+DistrIsolate		2		FASTCHECK
+
+;---------- Repair for Trunkline Break Definition ----------
+trunk_break_repair	DEFAULT	METHOD_PROBABILITY:1:1
+trunk_break_repair	1		REPAIR		
+
+;---------- Repair for Trunkline Leak Definition ----------
+trunk_leak_repair	DEFAULT	METHOD_PROBABILITY:1:1
+trunk_leak_repair	1		REPAIR		
+
+;---------- Reroute for Distribution Node Definition ----------
+DN_repair			DEFAULT	METHOD_PROBABILITY:1:1
+DN_repair			1		REPAIR		

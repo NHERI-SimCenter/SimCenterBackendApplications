@@ -1,0 +1,3 @@
+﻿DistYardID,Curr.-X-Coord,Curr.-Y-Coord,Home-X-Coord,Home-Y-Coord,Number,Shift
+Northern,10,10,10,10,1,D
+Northern,10,10,10,10,1,N
