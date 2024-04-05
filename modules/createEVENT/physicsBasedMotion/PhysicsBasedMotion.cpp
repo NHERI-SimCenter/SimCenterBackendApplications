@@ -243,8 +243,9 @@ int addEvent(const char *eventName, json_t *obj) {
   } else {
     
     std::string fileName("sc"); fileName.append(eventName);
-    newFilePath.append(fileName);      
-    const char *charPath = newFilePath.c_str();
+    newFilePath.append(fileName);
+    std::string newFilePath_str; newFilePath_str = newFilePath.string();
+    const char *charPath = newFilePath_str.c_str();
     rootEVENT = json_load_file(charPath, 0, &error);      
     
   }
@@ -280,8 +281,9 @@ createSimCenterEvent(const char *eventName, const char *fileType) {
     std::filesystem::path currentDir; currentDir = std::filesystem::current_path();
     std::filesystem::path jsonFilePath; jsonFilePath = currentDir.parent_path();
     jsonFilePath.append("input_data");
-    jsonFilePath.append(eventName);    
-    const char *filePath = jsonFilePath.c_str();
+    jsonFilePath.append(eventName);
+    std::string jsonFilePath_str; jsonFilePath_str = jsonFilePath.string();    
+    const char *filePath = jsonFilePath_str.c_str();
     std::cerr << "jsonFilePath: " << jsonFilePath << "\n";
     
     //
@@ -400,8 +402,9 @@ createSimCenterEvent(const char *eventName, const char *fileType) {
     } else {
       
       std::string fileName("sc"); fileName.append(eventName);
-      newFilePath.append(fileName);      
-      const char *charPath = newFilePath.c_str();
+      newFilePath.append(fileName);
+      std::string newFilePath_str; newFilePath_str = newFilePath.string();
+      const char *charPath = newFilePath_str.c_str();
       
       json_dump_file(outputObj, charPath, JSON_COMPACT);
     }

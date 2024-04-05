@@ -89,7 +89,7 @@ def main(run_type, input_file, app_registry,
             doParallel = True;
 
     # save the reference dir in the input file
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding="utf-8") as f:
         inputs = json.load(f)
 
     # TODO: if the ref dir is needed, do NOT save it to the input file, store it
@@ -192,7 +192,7 @@ def main(run_type, input_file, app_registry,
         # WF.perform_regional_mapping(assetIt, asset_type)
 
         # TODO: not elegant code, fix later
-        with open(assetIt, 'r') as f:
+        with open(assetIt, 'r', encoding="utf-8") as f:
             asst_data = json.load(f)
         
         # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network

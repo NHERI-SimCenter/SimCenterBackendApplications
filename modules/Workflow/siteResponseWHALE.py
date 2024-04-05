@@ -84,7 +84,7 @@ def main(run_type, input_file, app_registry,
     print('siteResponse (doParallel, procID, numP):', doParallel, procID, numP, mpiExec, numPROC)
 
     # save the reference dir in the input file
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding="utf-8") as f:
         inputs = json.load(f)
 
     print('WORKING_DIR', working_dir)
@@ -277,7 +277,7 @@ def main(run_type, input_file, app_registry,
     for asset_type, assetIt in asset_files.items() :
         
         # TODO: not elegant code, fix later
-        with open(assetIt, 'r') as f:
+        with open(assetIt, 'r', encoding="utf-8") as f:
             asst_data = json.load(f)
         
         # The preprocess app sequence (previously get_RV)
