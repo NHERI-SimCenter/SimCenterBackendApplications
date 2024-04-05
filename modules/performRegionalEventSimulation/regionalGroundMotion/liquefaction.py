@@ -248,10 +248,10 @@ class ZhuEtal2017(Liquefaction):
         if ('PGA' in im_list) and ('PGV' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGV_col_id = [i for i, x in enumerate(im_list) if x == 'PGV'][0]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
@@ -438,9 +438,9 @@ class Hazus2020(Liquefaction):
         if ('PGA' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
@@ -722,13 +722,13 @@ class Hazus2020Lateral(LateralSpread):
             ('liq_susc' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             PGA_col_id = [i for i, x in enumerate(im_list) if x == 'PGA'][0]
             liq_prob_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_prob'][0]
             liq_susc_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_susc'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
@@ -885,12 +885,12 @@ class Hazus2020Vertical(GroundSettlement):
         if ('liq_susc' in im_list)  and ('liq_prob' in im_list):
             num_stations = ln_im_data[0].shape[0]
             num_scenarios = len(eq_data)
-            num_rlzs = ln_im_data[0].shape[2]
             liq_prob_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_prob'][0]
             liq_susc_col_id = [i for i, x in enumerate(im_list) if \
                                x == 'liq_susc'][0]
             for scenario_id in range(num_scenarios):
+                num_rlzs = ln_im_data[scenario_id].shape[2]
                 im_data_scen = np.zeros([num_stations,\
                                     len(im_list)+len(output_keys), num_rlzs])
                 im_data_scen[:,0:len(im_list),:] = ln_im_data[scenario_id]
