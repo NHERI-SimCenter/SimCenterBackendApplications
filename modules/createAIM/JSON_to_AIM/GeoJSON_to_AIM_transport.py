@@ -270,7 +270,7 @@ def create_asset_files(output_file, asset_source_road,
         
             AIM_file_name = os.path.join(outDir,AIM_file_name)
             
-            with open(AIM_file_name, 'w') as f:
+            with open(AIM_file_name, 'w', encoding="utf-8") as f:
                 json.dump(AIM_i, f, indent=2)
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
@@ -304,7 +304,7 @@ def create_asset_files(output_file, asset_source_road,
         
             AIM_file_name = os.path.join(outDir,AIM_file_name)
             
-            with open(AIM_file_name, 'w') as f:
+            with open(AIM_file_name, 'w', encoding="utf-8") as f:
                 json.dump(AIM_i, f, indent=2)
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
@@ -336,7 +336,7 @@ def create_asset_files(output_file, asset_source_road,
         
             AIM_file_name = os.path.join(outDir,AIM_file_name)
             
-            with open(AIM_file_name, 'w') as f:
+            with open(AIM_file_name, 'w', encoding="utf-8") as f:
                 json.dump(AIM_i, f, indent=2)
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
@@ -349,7 +349,7 @@ def create_asset_files(output_file, asset_source_road,
 
         output_file = os.path.join(outDir,f'tmp_{procID}.json')
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding="utf-8") as f:
             json.dump(assets_array, f, indent=0)
     
         comm.Barrier()        
@@ -363,12 +363,12 @@ def create_asset_files(output_file, asset_source_road,
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                with open(fileToAppend, 'r') as data_file:
+                with open(fileToAppend, 'r', encoding="utf-8") as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend
 
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding="utf-8") as f:
             json.dump(assets_array, f, indent=2)
 
 

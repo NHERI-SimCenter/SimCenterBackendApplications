@@ -43,7 +43,7 @@ import sys, argparse,json
 def create_SAM(BIM_file, EVENT_file, SAM_file,
     model_script, model_path, ndm, dof_map, column_line, getRV):
 
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file, 'r', encoding="utf-8") as f:
         root_BIM = json.load(f)['GeneralInformation']
 
     try:
@@ -78,7 +78,7 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
         'randomVar': []
     }
 
-    with open(SAM_file, 'w') as f:
+    with open(SAM_file, 'w', encoding="utf-8") as f:
         json.dump(root_SAM, f, indent=2)
 
 if __name__ == '__main__':

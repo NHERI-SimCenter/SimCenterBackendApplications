@@ -44,7 +44,7 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
     model_script, model_path, ndm, dof_map, column_line, getRV):
 
     # KZ: modifying BIM to AIM
-    with open(AIM_file, 'r') as f:
+    with open(AIM_file, 'r', encoding="utf-8") as f:
         root_AIM = json.load(f)
     root_GI = root_AIM['GeneralInformation']
 
@@ -94,7 +94,7 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
         else:
             root_SAM[cur_key] = cur_item
 
-    with open(SAM_file, 'w') as f:
+    with open(SAM_file, 'w', encoding="utf-8") as f:
         json.dump(root_SAM, f, indent=2)
 
 if __name__ == '__main__':
