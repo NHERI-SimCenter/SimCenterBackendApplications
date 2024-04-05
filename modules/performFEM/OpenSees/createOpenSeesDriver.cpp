@@ -202,7 +202,7 @@ int main(int argc, const char **argv) {
       }
   }
   else {
-      workflowDriverFile << openSeesCommand <<  " " << templateFileNameStem << ".tcl 1> ops.out 2>&1\n";
+      workflowDriverFile << openSeesCommand <<  " " << templateFileNameStem << ".tcl 1> workflow.err 2>&1\n";
   }
 
   // depending on script type do something
@@ -228,7 +228,7 @@ int main(int argc, const char **argv) {
     for(std::vector<std::string>::iterator itEDP = edpList.begin(); itEDP != edpList.end(); ++itEDP) {
       workflowDriverFile << " " << *itEDP;
     }
-    workflowDriverFile << " >> ops.out 2>&1";
+    workflowDriverFile << " >> workflow.err 2>&1";
   } 
 
   else if (scriptType == 2) { // tcl script
@@ -250,6 +250,7 @@ int main(int argc, const char **argv) {
   }
   catch (std::exception& e) {
     std::cerr << "createOpenSeesDriver - failed in setting permissions\n";
+    exit(-1);
   }
     
   //

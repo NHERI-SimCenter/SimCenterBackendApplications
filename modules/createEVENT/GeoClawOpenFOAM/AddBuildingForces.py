@@ -75,7 +75,6 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
         controlDictLines.insert(lineIndex, "\t\t\t" + key + "\t" + str(value)+ ";\n")
         lineIndex += 1
 
-#def AddBuildingsForces(caseDir, floorsCount, patches):
 def AddBuildingsForces(floorsCount, patches):
     """
     First, we need to validate the case directory structure
@@ -124,7 +123,10 @@ if __name__ == "__main__":
     arguments, unknowns = parser.parse_known_args()
     floors = arguments.floors
     if not floors:
-        floors = GetFloorsCount(arguments.bim)
+        if arguments.bim:
+            floors = GetFloorsCount(arguments.bim)
+        else: 
+            floors = 1
 
     patches = arguments.patches
     if not patches:
