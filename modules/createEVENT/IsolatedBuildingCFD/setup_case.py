@@ -1283,7 +1283,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     #Write pressure sampling points 
     if monitor_surface_pressure:
-        added_part = "    #includeFunc  generatedPressureSamplingPoints\n"
+        added_part  = "    #includeFunc  generatedPressureSamplingPoints\n"
         added_part += "    #includeFunc  importedPressureSamplingPoints\n"
         dict_lines.insert(start_index, added_part)
     
