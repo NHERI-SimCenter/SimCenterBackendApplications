@@ -1220,7 +1220,6 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     story_load_write_interval = rm_data['storyLoadWriteInterval']
     monitor_base_load = rm_data['monitorBaseLoad']
     monitor_surface_pressure = rm_data['monitorSurfacePressure']
-    pressure_sampling_points = rm_data['pressureSamplingPoints']
     pressure_write_interval = rm_data['pressureWriteInterval']
     
     # Need to change this for      
@@ -1284,7 +1283,8 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     
     #Write pressure sampling points 
     if monitor_surface_pressure:
-        added_part = "    #includeFunc  pressureSamplingPoints\n"
+        added_part = "    #includeFunc  generatedPressureSamplingPoints\n"
+        added_part += "    #includeFunc  importedPressureSamplingPoints\n"
         dict_lines.insert(start_index, added_part)
     
 
@@ -1357,7 +1357,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
     output_file.close()    
 
 
-def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
+def write_generated_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
     with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
@@ -1367,7 +1367,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
     rm_data = json_data["resultMonitoring"]
       
 
-    pressure_sampling_points = rm_data['pressureSamplingPoints']
+    generated_sampling_points = rm_data['generatedPressureSamplingPoints']
     pressure_write_interval = rm_data['pressureWriteInterval']
 
     
@@ -1391,13 +1391,13 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     added_part = ""
     
-    for i in range(len(pressure_sampling_points)):
-        added_part += " ({:.6f} {:.6f} {:.6f})\n".format(pressure_sampling_points[i][0], pressure_sampling_points[i][1], pressure_sampling_points[i][2])
+    for i in range(len(generated_sampling_points)):
+        added_part += " ({:.6f} {:.6f} {:.6f})\n".format(generated_sampling_points[i][0], generated_sampling_points[i][1], generated_sampling_points[i][2])
     
     dict_lines.insert(start_index, added_part)
 
     #Write edited dict to file
-    write_file_name = case_path + "/system/pressureSamplingPoints"
+    write_file_name = case_path + "/system/generatedSamplingPoints"
     
     if os.path.exists(write_file_name):
         os.remove(write_file_name)
@@ -1407,7 +1407,57 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
         output_file.write(line)
     output_file.close()
     
+
+def write_imported_pressure_probes_file(input_json_path, template_dict_path, case_path):
+
+    #Read JSON data
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+        json_data = json.load(json_file)
+
+    # Returns JSON object as a dictionary
+    rm_data = json_data["resultMonitoring"]
+      
+
+    imported_sampling_points = rm_data['importedPressureSamplingPoints']
+    pressure_write_interval = rm_data['pressureWriteInterval']
+
     
+    #Open the template file (OpenFOAM file) for manipulation
+    dict_file = open(template_dict_path + "/probeTemplate", "r")
+
+    dict_lines = dict_file.readlines()
+    dict_file.close()
+    
+
+    #Write writeInterval 
+    start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
+    dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
+    
+    
+    #Write fields to be montored 
+    start_index = foam.find_keyword_line(dict_lines, "fields") 
+    dict_lines[start_index] = "fields \t\t(p);\n"
+    
+    start_index = foam.find_keyword_line(dict_lines, "probeLocations") + 2
+
+    added_part = ""
+    
+    for i in range(len(imported_sampling_points)):
+        added_part += " ({:.6f} {:.6f} {:.6f})\n".format(imported_sampling_points[i][0], imported_sampling_points[i][1], imported_sampling_points[i][2])
+    
+    dict_lines.insert(start_index, added_part)
+
+    #Write edited dict to file
+    write_file_name = case_path + "/system/importedSamplingPoints"
+    
+    if os.path.exists(write_file_name):
+        os.remove(write_file_name)
+    
+    output_file = open(write_file_name, "w+")
+    for line in dict_lines:
+        output_file.write(line)
+    output_file.close()
+
   
 def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
@@ -1842,8 +1892,9 @@ if __name__ == '__main__':
     #Write results to be monitored
     write_base_forces_file(input_json_path, template_dict_path, case_path)
     write_story_forces_file(input_json_path, template_dict_path, case_path)
-    write_pressure_probes_file(input_json_path, template_dict_path, case_path)
-    
+    write_generated_pressure_probes_file(input_json_path, template_dict_path, case_path)
+    write_imported_pressure_probes_file(input_json_path, template_dict_path, case_path)
+
     #Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
 
