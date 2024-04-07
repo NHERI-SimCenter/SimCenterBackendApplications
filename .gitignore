@@ -20,7 +20,7 @@ moc*
 
 # Compiled Dynamic libraries
 *.so
-*.dylib
+# *.dylib
 *.dll
 !epanet22_mod.dll
 
