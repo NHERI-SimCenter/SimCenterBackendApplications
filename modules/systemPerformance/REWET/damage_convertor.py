@@ -264,7 +264,7 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
 
     """
 
-    file_path = Path(run_dir, asset_type, f"{asset_id}-AIM.json")
+    file_path = Path(run_dir, asset_type, str(asset_id), "templatedir", f"{asset_id}-AIM.json")
     aim_file_data = preprocessorIO.readJSONFile(str(file_path) )
     return aim_file_data
        

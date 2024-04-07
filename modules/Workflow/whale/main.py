@@ -2583,7 +2583,7 @@ class Workflow(object):
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
         if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
-
+            initialize_dicts = True
             for a_i, asst in enumerate(asst_data):
 
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
@@ -2609,7 +2609,7 @@ class Workflow(object):
                 else:
                     # skip this asset if there is no AIM file available
                     show_warning(
-                        "Couldn't find AIM file for building {asset_id}")
+                        f"Couldn't find AIM file for {assetTypeHierarchy[-1]} {asset_id}")
                     continue
 
                 with open(AIM_file, 'r', encoding="utf-8") as f:
@@ -2618,7 +2618,7 @@ class Workflow(object):
                 sample_size = AIM_data_i['Applications']['DL']['ApplicationData']['Realizations']
 
                 # initialize the output dict if this is the first asset
-                if a_i == 0:
+                if initialize_dicts:
 
                     # We assume all assets have the same output sample size
                     # Variable sample size doesn't seem to make sense
@@ -2628,6 +2628,7 @@ class Workflow(object):
                     # We also create a dict to collect deterministic info, i.e.,
                     # data that is identical for all realizations
                     deterministic = {asset_type: {}}
+                    initialize_dicts = False
 
                 # Check if the asset type hierarchy exist in deterministic and 
                 # realizations. Create a hierarchy if it doesn't exist.
@@ -3037,7 +3038,7 @@ class Workflow(object):
                     else:
                         # skip this asset if there is no AIM file available
                         show_warning(
-                            "Couldn't find AIM file for building {asset_id}")
+                            f"Couldn't find AIM file for building {asset_id}")
                     with open(AIM_file, 'r', encoding="utf-8") as f:
                         asst_aim = json.load(f)
                     ft = {"type":"Feature"}
