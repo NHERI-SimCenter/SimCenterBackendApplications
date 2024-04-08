@@ -449,6 +449,9 @@ if __name__ == '__main__':
                 
                 cur_junction["SystemPerformance"] = cur_junction_SP
                 junction_json_data[junction_name] = cur_junction
+            
+            json_data["WaterDistributionNetwork"]["Junction"] = junction_json_data
+            
                 
         with open(cur_json_file_path, "wt") as f:
             json_data = json.dump(json_data, f, indent = 2)
