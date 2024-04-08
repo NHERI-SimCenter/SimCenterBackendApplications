@@ -34,7 +34,7 @@ class ENepanet(wntr.epanet.toolkit.ENepanet):
                      #cannot load the umodified DLLs for any reason
                  
             if float(version) != 2.2:
-                raise ValueError("EPANET version must be 2.2 when using tegh changed version")
+                raise ValueError("EPANET version must be 2.2 when using the changed version")
         
             elif float(version) == 2.2:
                 libnames = ["epanet22_mod", "epanet22_win32_mod"]
