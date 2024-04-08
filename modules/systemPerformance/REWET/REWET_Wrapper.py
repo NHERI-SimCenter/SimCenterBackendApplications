@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import subprocess
+import sys
 
 
 import damage_convertor
@@ -24,7 +25,6 @@ try:
     import REWET
 except:
     # This is only for now
-    import sys
     this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
     #main_dir = this_dir.parent
     sys.path.insert(0, str(this_dir / 'REWET'))
@@ -401,60 +401,69 @@ if __name__ == '__main__':
     create_path(REWET_input_data["settings"]["result_directory"])
     create_path(REWET_input_data["settings"]["temp_directory"])
     
-    REWET_starter = Starter()
-    REWET_starter.run(settings_json_file_path)
+    rewet_log_path = \
+        Path(run_directory) /"Results" / "WaterDistributionNetwork" / "rewet_log.txt"
     
-    p = Project_Result(Path(REWET_input_data["settings"]["result_directory"]) / "project.prj")
+    system_std_out = sys.stdout
+    with open(rewet_log_path, "wt") as log_file: 
+        
+        sys.stdout = log_file
+        REWET_starter = Starter()
+        REWET_starter.run(settings_json_file_path)
+        
+        p = Project_Result(Path(REWET_input_data["settings"]["result_directory"]) / "project.prj")
+        
+        # these are the input for result section. They are not include in the 
+        requested_result = ["DL", "QN"]
+        substitute_ft = {"DL":"Delivery", "QN":"Quantity"}
+        consistency_time_window = 0 # 7200
+        iConsider_leak = False # True
+        # the following does not matter if iConsider_leak is false
+        leak_ratio = {"DL":0.75, "QN":0}
     
-    # these are the input for result section. They are not include in the 
-    requested_result = ["DL", "QN"]
-    substitute_ft = {"DL":"Delivery", "QN":"Quantity"}
-    consistency_time_window = 0 # 7200
-    iConsider_leak = False # True
-    # the following does not matter if iConsider_leak is false
-    leak_ratio = {"DL":0.75, "QN":0}
-    
-    res = {}
-    for scn_name, row in p.project.scenario_list.iterrows():
-        for single_requested_result in requested_result:
-            if single_requested_result == "DL" or single_requested_result == "QN":
-                res[single_requested_result] = p.getOutageTimeGeoPandas_5(
-                    scn_name,
-                    bsc=single_requested_result ,
-                    iConsider_leak=False,
-                    leak_ratio=leak_ratio,
-                    consistency_time_window=consistency_time_window, sum_time=True)
-        
-        realization_number = scn_name.strip("SCN_")
-        cur_json_file_name = f"WaterDistributionNetwork_{realization_number}.json"
-        cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / cur_json_file_name
-        
-        with open(cur_json_file_path, "rt") as f:
-            json_data = json.load(f)
-        
-        #print(res[single_requested_result])
-        #raise
-        #print(type(res["DL"]))
-        for single_requested_result in requested_result:
-            req_result = res[single_requested_result]
-            result_key = f"{substitute_ft[single_requested_result]}Outage"
+        res = {}
+        for scn_name, row in p.project.scenario_list.iterrows():
+            for single_requested_result in requested_result:
+                if single_requested_result == "DL" or single_requested_result == "QN":
+                    res[single_requested_result] = p.getOutageTimeGeoPandas_5(
+                        scn_name,
+                        bsc=single_requested_result ,
+                        iConsider_leak=False,
+                        leak_ratio=leak_ratio,
+                        consistency_time_window=consistency_time_window, sum_time=True)
             
+            realization_number = scn_name.strip("SCN_")
+            cur_json_file_name = f"WaterDistributionNetwork_{realization_number}.json"
+            cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / cur_json_file_name
             
-            junction_json_data = json_data["WaterDistributionNetwork"].get("Junction", {})
+            with open(cur_json_file_path, "rt") as f:
+                json_data = json.load(f)
             
-            for junction_name in req_result.keys():
-                cur_junction = junction_json_data.get(junction_name, {})
-                cur_junction_SP = cur_junction.get("SystemPerformance", {})
-                cur_junction_SP[result_key] = str( req_result[junction_name] )
+            #print(res[single_requested_result])
+            #raise
+            #print(type(res["DL"]))
+            for single_requested_result in requested_result:
+                req_result = res[single_requested_result]
+                result_key = f"{substitute_ft[single_requested_result]}Outage"
                 
-                cur_junction["SystemPerformance"] = cur_junction_SP
-                junction_json_data[junction_name] = cur_junction
-            
-            json_data["WaterDistributionNetwork"]["Junction"] = junction_json_data
-            
                 
-        with open(cur_json_file_path, "wt") as f:
-            json_data = json.dump(json_data, f, indent = 2)
+                junction_json_data = json_data["WaterDistributionNetwork"].get("Junction", {})
+                
+                for junction_name in req_result.keys():
+                    cur_junction = junction_json_data.get(junction_name, {})
+                    cur_junction_SP = cur_junction.get("SystemPerformance", {})
+                    cur_junction_SP[result_key] = str( req_result[junction_name] )
+                    
+                    cur_junction["SystemPerformance"] = cur_junction_SP
+                    junction_json_data[junction_name] = cur_junction
+                
+                json_data["WaterDistributionNetwork"]["Junction"] = junction_json_data
+                
+                    
+            with open(cur_json_file_path, "wt") as f:
+                json_data = json.dump(json_data, f, indent = 2)
+    
+    sys.stdout = system_std_out
 
     
 
