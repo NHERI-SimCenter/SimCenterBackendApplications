@@ -439,7 +439,8 @@ if __name__ == '__main__':
             req_result = res[single_requested_result]
             result_key = f"{substitute_ft[single_requested_result]}Outage"
             
-            junction_json_data = json_data["WaterDistributionNetwork"]["Junction"]
+            
+            junction_json_data = json_data["WaterDistributionNetwork"].get("Junction", {})
             
             for junction_name in req_result.keys():
                 cur_junction = junction_json_data.get(junction_name, {})

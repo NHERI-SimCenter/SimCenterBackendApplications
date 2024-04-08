@@ -118,7 +118,7 @@ class Timeline():
         """
         if type(event_distinct_time)!=pd.core.series.Series:
             if type(event_distinct_time) == numpy.float64 or type(event_distinct_time) == int or type(event_distinct_time) == float or type(event_distinct_time) == list:
-                event_distinct_time = pd.Series(data=event_distinct_time, dtype="int64')
+                event_distinct_time = pd.Series(data=event_distinct_time, dtype="int64")
             else:
                 print(type(event_distinct_time))
                 raise ValueError('event_distinct_time must be pandas.Series type')
