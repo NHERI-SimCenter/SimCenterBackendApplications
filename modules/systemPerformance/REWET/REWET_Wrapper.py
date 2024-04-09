@@ -421,6 +421,14 @@ if __name__ == '__main__':
         # the following does not matter if iConsider_leak is false
         leak_ratio = {"DL":0.75, "QN":0}
     
+        
+        sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
+        junction_data = [ss for ss in sc_geojson_file["features"] if ss["properties"]["type"]=="Junction"]
+        junction_id = [str(ss["id"]) for ss in junction_data]
+        junction_name = [ss["properties"]["id"] for ss in junction_data]
+        junction_name_to_id = dict(zip(junction_name, junction_id))
+        
+       
         res = {}
         for scn_name, row in p.project.scenario_list.iterrows():
             for single_requested_result in requested_result:
@@ -450,12 +458,13 @@ if __name__ == '__main__':
                 junction_json_data = json_data["WaterDistributionNetwork"].get("Junction", {})
                 
                 for junction_name in req_result.keys():
-                    cur_junction = junction_json_data.get(junction_name, {})
+                    junction_id = junction_name_to_id[junction_name]
+                    cur_junction = junction_json_data.get(junction_id, {})
                     cur_junction_SP = cur_junction.get("SystemPerformance", {})
                     cur_junction_SP[result_key] = str( req_result[junction_name] )
                     
                     cur_junction["SystemPerformance"] = cur_junction_SP
-                    junction_json_data[junction_name] = cur_junction
+                    junction_json_data[junction_id] = cur_junction
                 
                 json_data["WaterDistributionNetwork"]["Junction"] = junction_json_data
                 
