@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import subprocess
+from shapely import geometry
 
 
 import damage_convertor
@@ -320,6 +321,8 @@ if __name__ == '__main__':
     inp_file_addr = water_asset_data["ApplicationData"]["inpFile"]
     if '{Current_Dir}' in inp_file_addr:
         inp_file_addr = inp_file_addr.replace("{Current_Dir}", ".")
+    sc_geojson = rwhale_input_Data["Applications"]["Assets"]\
+        ["WaterDistributionNetwork"]["ApplicationData"]["assetSourceFile"] 
     
     run_directory = rwhale_input_Data["runDir"]
     number_of_realization = rwhale_input_Data["Applications"]\
@@ -370,7 +373,6 @@ if __name__ == '__main__':
             dl_file_path, dl_file_dir = getDLFileName(run_directory, parser_data.dir,
                                          scn_number)
             
-            sc_geojson = rwhale_input_Data["Applications"]["Assets"]["WaterDistributionNetwork"]["ApplicationData"]["assetSourceFile"] 
             damage_data = damage_convertor.readDamagefile(
                 dl_file_path,  run_directory, event_time , sc_geojson)
             #damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
@@ -455,6 +457,35 @@ if __name__ == '__main__':
                 
         with open(cur_json_file_path, "wt") as f:
             json_data = json.dump(json_data, f, indent = 2)
+
+    # Append junction geometry to WaterDistributionNetwork_det
+    det_json_path = cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "WaterDistributionNetwork_det.json"
+    with open(det_json_path ,'r') as f:
+            det_json = json.load(f)
+    with open(sc_geojson, 'r') as f:
+        inp_json = json.load(f)
+        inp_json = inp_json['features']
+    for WDNtype in ['Reservoir', 'Junction']:    
+        json_to_attach = dict()
+        for ft in inp_json:
+            prop = ft['properties']
+            if prop['type'] == WDNtype:
+                id = ft['id']
+                generalInfo = dict()
+                json_geometry = ft['geometry']
+                shapely_geometry = geometry.shape(json_geometry)
+                wkt_geometry = shapely_geometry.wkt
+                generalInfo.update({'geometry':wkt_geometry})
+                # location = dict()
+                # location.update({'latitude':ft['geometry']['coordinates'][1],\
+                #                 'longitude':ft['geometry']['coordinates'][0]})
+                # generalInfo.update({'location':location})
+                json_to_attach.update({id:{'GeneralInformation': generalInfo}})
+        det_json['WaterDistributionNetwork'].update({WDNtype:json_to_attach})
+    with open(det_json_path ,'w') as f:
+        json.dump(det_json, f, indent=2)
+
+    
 
     
 

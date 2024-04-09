@@ -1428,12 +1428,12 @@ class Workflow(object):
         else:
             log_msg('No Performance application to run for asset.', prepend_timestamp=False)
             log_div()
-            return;
+            return False
 
         if performance_app.rel_path == None:
             log_msg('No Performance Application to run for asset type: '+asset_type, prepend_timestamp=False)
             log_div()            
-            return;
+            return False
 
         app_command_list = performance_app.get_command_list(app_path = self.app_dir_local)
 
@@ -1490,6 +1490,7 @@ class Workflow(object):
         #     log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
             
         log_div()
+        return True
 
         
     def perform_regional_event(self):
@@ -2665,7 +2666,7 @@ class Workflow(object):
                     if edp_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find EDP file for building {asset_id}")
+                            f"Couldn't find EDP file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
@@ -2708,7 +2709,7 @@ class Workflow(object):
                     if dmg_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find DMG file for building {asset_id}")
+                            f"Couldn't find DMG file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
@@ -2751,7 +2752,7 @@ class Workflow(object):
                     if dv_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find DV file for building {asset_id}")
+                            f"Couldn't find DV file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
@@ -2978,148 +2979,161 @@ class Workflow(object):
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
 
-    def combine_assets_results(self, asset_files):
+    def compile_r2d_results_geojson(self, asset_files):
         run_path = self.run_dir
-        isPelicun3 = True
+        with open(self.input_file, 'r', encoding="utf-8") as f:
+            input_data = json.load(f)
+        metadata = {"Name": input_data["Name"],
+                    "Units": input_data["units"],
+                    "Author": input_data["Author"],
+                    "WorkflowType": input_data["WorkflowType"],
+                    "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+        ## create the geojson for R2D visualization
+        geojson_result = {
+            "type": "FeatureCollection",
+            "crs": {
+                "type": "name",
+                "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+                }
+            },
+            "metadata":metadata,
+            "features":[]
+        }
+        for asset_type, assetIt in asset_files.items():
+            with open(assetIt, 'r', encoding="utf-8") as f:
+                asst_data = json.load(f)
+            for asst in asst_data:
+                bldg_dir = Path(os.path.dirname(asst['file'])).resolve()
+                asset_id = asst['id']
+                main_dir = bldg_dir
+                assetTypeHierarchy = [bldg_dir.name]
+                while main_dir.parent.name != 'Results':
+                    main_dir = bldg_dir.parent
+                    assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
+                
+                # The damagefor Junctions and Reservoirs of WaterDistributionNetwork is
+                # not modeled. So it should be skipped 
+                if "WaterDistributionNetwork" in assetTypeHierarchy and\
+                    ("Junction" in assetTypeHierarchy or\
+                     "Reservoir" in assetTypeHierarchy):
+                        continue
+                    
+                asset_dir = bldg_dir/asset_id
+                AIM_file = None
+                if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
+                    AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
+                elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
+                    AIM_file = asset_dir / f"{asset_id}-AIM.json"
+                else:
+                    # skip this asset if there is no AIM file available
+                    show_warning(
+                        f"Couldn't find AIM file for building {asset_id}")
+                with open(AIM_file, 'r', encoding="utf-8") as f:
+                    asst_aim = json.load(f)
+                ft = {"type":"Feature"}
+                asst_GI = asst_aim['GeneralInformation'].copy()
+                asst_GI.update({"assetType":asset_type})
+                try:
+                    if "geometry" in asst_GI:
+                        asst_geom = shapely.wkt.loads(asst_GI["geometry"])
+                        asst_geom = shapely.geometry.mapping(asst_geom)
+                        asst_GI.pop("geometry")
+                    elif "Footprint" in asst_GI:
+                        asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
+                        asst_GI.pop("Footprint")
+                    else:
+                        #raise ValueError("No valid geometric information in GI.")
+                        asst_lat = asst_GI['location']['latitude']
+                        asst_lon = asst_GI['location']['longitude']
+                        asst_geom = { "type": "Point", "coordinates": [\
+                            asst_lon, asst_lat]}
+                except:
+                    asst_lat = asst_GI['location']['latitude']
+                    asst_lon = asst_GI['location']['longitude']
+                    asst_geom = { "type": "Point", "coordinates": [\
+                        asst_lon, asst_lat]}
+                asst_GI.pop("units")
+                DL_summary_file = asset_dir/"DL_summary_stats.json"
+                with open(DL_summary_file, 'r', encoding="utf-8") as f:
+                    DL_summary = json.load(f)
+                DL_results = {}
+                pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
+                                      'repair_cost': 'RepairCost',  
+                                      'repair_time-parallel':'RepairTimeParallel',
+                                      'repair_time-sequential':'RepairTimeSequential',
+                                      'collapse':'Collapse',
+                                      'irreparable':'Irreparable'}
+                for key, value in DL_summary.items():
+                    DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
+                                       :value["mean"]})
+                    DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
+                                       :value["std"]})
+                if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
+                    if DL_results['R2Dres_mean_RepairTimeParallel'] == \
+                    DL_results.get('R2Dres_mean_RepairTimeSequential', None):
+                        mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
+                        DL_results.pop('R2Dres_mean_RepairTimeParallel')
+                        DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
+                        std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
+                        DL_results.pop('R2Dres_std_RepairTimeParallel')
+                        DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
+                
+                DMG_grp_file = asset_dir/"DMG_grp.json"
+                with open(DMG_grp_file, 'r', encoding="utf-8") as f:
+                    DMG_grp = json.load(f)
+                # remove units
+                del DMG_grp['Units']
+                DMG_results = {}
+                all_DMG = []
+                for key, value in DMG_grp.items():
+                    valueList = value #[float(v) for k, v in value.items()]
+                    all_DMG.append(valueList)
+                    DMG_results.update({
+                        f'R2Dres_MostLikelyDamageState_{key}': max(set(valueList), 
+                                                                   key=valueList.count)})
+                
+                highest_DMG = np.amax(np.array(all_DMG), axis = 0)
+                
+                DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
+                                    :int(max(set(highest_DMG),\
+                                    key=list(highest_DMG).count))})
+                
+                ft.update({"geometry":asst_geom})
+                ft.update({"properties":asst_GI})
+                ft["properties"].update(DL_results)
+                ft["properties"].update(DMG_results)
+                geojson_result["features"].append(ft)
+        
+            if asset_type == 'WaterDistributionNetwork':
+                WDNDetFile = run_path/"WaterDistributionNetwork"/"WaterDistributionNetwork_det.json"
+                with open(WDNDetFile, 'r') as f:
+                    WDNDet = json.load(WDNDetFile)
+                for it in ['Reservoir', 'Junction']:
+                    it_json = WDNDet.get(it, None)
+                    if it_json is None:
+                        continue
+                    for id, item in it_json.items():
+                        ft = {"type":"Feature"}
+                        ft.update()
+                
+            with open(run_path/"R2D_results.geojson", 'w', encoding="utf-8") as f:
+                json.dump(geojson_result, f, indent=2)
+
+
+    def combine_assets_results(self, asset_files):
         asset_types = list(asset_files.keys())
         for asset_type in asset_types:
             if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
                 # isPelicun3 = False
                 asset_files.pop(asset_type)
         if asset_files: # If any asset_type uses Pelicun3 as DL app
-            # get metadata
             with open(self.input_file, 'r', encoding="utf-8") as f:
                 input_data = json.load(f)
-            metadata = {"Name": input_data["Name"],
-                        "Units": input_data["units"],
-                        "Author": input_data["Author"],
-                        "WorkflowType": input_data["WorkflowType"],
-                        "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
             sample_size = []
-            ## create the geojson for R2D visualization
-            geojson_result = {
-                "type": "FeatureCollection",
-                "crs": {
-                    "type": "name",
-                    "properties": {
-                    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-                    }
-                },
-                "metadata":metadata,
-                "features":[]
-            }
             for asset_type, assetIt in asset_files.items():
                 sample_size.append(input_data['Applications']['DL'][asset_type]\
                                    ["ApplicationData"]['Realizations'])
-                with open(assetIt, 'r', encoding="utf-8") as f:
-                    asst_data = json.load(f)
-                for asst in asst_data:
-                    bldg_dir = Path(os.path.dirname(asst['file'])).resolve()
-                    asset_id = asst['id']
-                    main_dir = bldg_dir
-                    assetTypeHierarchy = [bldg_dir.name]
-                    while main_dir.parent.name != 'Results':
-                        main_dir = bldg_dir.parent
-                        assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
-                    
-                    # The damagefor Junctions and Reservoirs of WaterDistributionNetwork is
-                    # not modeled. So it should be skipped 
-                    if "WaterDistributionNetwork" in assetTypeHierarchy and\
-                        ("Junction" in assetTypeHierarchy or\
-                         "Reservoir" in assetTypeHierarchy):
-                            continue
-                        
-                    asset_dir = bldg_dir/asset_id
-                    AIM_file = None
-                    if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
-                        AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
-                    elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
-                        AIM_file = asset_dir / f"{asset_id}-AIM.json"
-                    else:
-                        # skip this asset if there is no AIM file available
-                        show_warning(
-                            f"Couldn't find AIM file for building {asset_id}")
-                    with open(AIM_file, 'r', encoding="utf-8") as f:
-                        asst_aim = json.load(f)
-                    ft = {"type":"Feature"}
-                    asst_GI = asst_aim['GeneralInformation'].copy()
-                    asst_GI.update({"assetType":asset_type})
-                    try:
-                        if "geometry" in asst_GI:
-                            asst_geom = shapely.wkt.loads(asst_GI["geometry"])
-                            asst_geom = shapely.geometry.mapping(asst_geom)
-                            asst_GI.pop("geometry")
-                        elif "Footprint" in asst_GI:
-                            asst_geom = json.loads(asst_GI["Footprint"])["geometry"]
-                            asst_GI.pop("Footprint")
-                        else:
-                            #raise ValueError("No valid geometric information in GI.")
-                            asst_lat = asst_GI['location']['latitude']
-                            asst_lon = asst_GI['location']['longitude']
-                            asst_geom = { "type": "Point", "coordinates": [\
-                                asst_lon, asst_lat]}
-                    except:
-                        asst_lat = asst_GI['location']['latitude']
-                        asst_lon = asst_GI['location']['longitude']
-                        asst_geom = { "type": "Point", "coordinates": [\
-                            asst_lon, asst_lat]}
-                    asst_GI.pop("units")
-                    DL_summary_file = asset_dir/"DL_summary_stats.json"
-                    with open(DL_summary_file, 'r', encoding="utf-8") as f:
-                        DL_summary = json.load(f)
-                    DL_results = {}
-                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
-                                          'repair_cost': 'RepairCost',  
-                                          'repair_time-parallel':'RepairTimeParallel',
-                                          'repair_time-sequential':'RepairTimeSequential',
-                                          'collapse':'Collapse',
-                                          'irreparable':'Irreparable'}
-                    for key, value in DL_summary.items():
-                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
-                                           :value["mean"]})
-                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
-                                           :value["std"]})
-                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
-                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
-                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
-                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
-                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
-                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
-                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
-                            DL_results.pop('R2Dres_std_RepairTimeParallel')
-                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
-                    
-
-                    DMG_grp_file = asset_dir/"DMG_grp.json"
-                    with open(DMG_grp_file, 'r', encoding="utf-8") as f:
-                        DMG_grp = json.load(f)
-
-                    # remove units
-                    del DMG_grp['Units']
-
-                    DMG_results = {}
-                    all_DMG = []
-                    for key, value in DMG_grp.items():
-                        valueList = value #[float(v) for k, v in value.items()]
-                        all_DMG.append(valueList)
-                        DMG_results.update({
-                            f'R2Dres_MostLikelyDamageState_{key}': max(set(valueList), 
-                                                                       key=valueList.count)})
-                    
-                    highest_DMG = np.amax(np.array(all_DMG), axis = 0)
-                    
-                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
-                                        :int(max(set(highest_DMG),\
-                                        key=list(highest_DMG).count))})
-                    
-                    ft.update({"geometry":asst_geom})
-                    ft.update({"properties":asst_GI})
-                    ft["properties"].update(DL_results)
-                    ft["properties"].update(DMG_results)
-                    geojson_result["features"].append(ft)
-                
-                with open(run_path/"R2D_results.geojson", 'w', encoding="utf-8") as f:
-                    json.dump(geojson_result, f, indent=2)
             sample_size = min(sample_size)
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
