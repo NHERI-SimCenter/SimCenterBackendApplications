@@ -22,6 +22,7 @@ moc*
 *.so
 *.dylib
 *.dll
+!epanet22_mod.dll
 
 # Fortran module files
 *.mod

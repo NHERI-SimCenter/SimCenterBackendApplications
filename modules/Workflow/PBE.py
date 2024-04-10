@@ -135,8 +135,29 @@ def main(run_type, inputFile, applicationsRegistry):
 
                         else:
                             raise WorkFlowInputError('Need an EventApplication section')
+                    # TODO: Fully implement HydroUQ's waterborne events into PBE 
+                    elif eventClassification == 'Tsunami' or eventClassification == 'Surge' or eventClassification == 'StormSurge' or eventClassification == 'Hydro':
+                        is_hydrouq_implemented = False # To be set to True when HydroUQ is in PBE
+                        if (is_hydrouq_implemented):
+                            if 'Application' in event:
+                                eventApplication = event['Application']
+                                eventAppData = event['ApplicationData']
+                                eventData = event['ApplicationData']
 
+                                if eventApplication in Applications['EventApplications'].keys():
+                                    eventAppExe = Applications['EventApplications'].get(eventApplication)
+                                    workflow_log(remoteAppDir)
+                                    workflow_log(eventAppExe)
+                                    eventAppExeLocal = posixpath.join(localAppDir,eventAppExe)
+                                    eventAppExeRemote = posixpath.join(remoteAppDir,eventAppExe)
+                                    workflow_log(eventAppExeRemote)
+                                else:
+                                    raise WorkFlowInputError('Event application %s not in registry' % eventApplication)
 
+                            else:
+                                raise WorkFlowInputError('Need an EventApplication section')
+                        else:
+                            raise WorkFlowInputError('HydroUQ waterborne events are not implemented in PBE yet. Please use different workflow for now...')
                     else:
                         raise WorkFlowInputError('Event classification must be Earthquake, not %s' % eventClassification)
 
