@@ -303,8 +303,6 @@ if __name__ == '__main__':
             doParallel = True;
     
     # Setting up run settings
-
-    event_time = 2 * 3600 # this is the time of the event # TODO: Add it to teh front end
     
     REWET_input_data = {}
     REWET_input_data["settings"] = {}
@@ -312,6 +310,7 @@ if __name__ == '__main__':
     #print(parser_data.input)
     rwhale_input_Data = preprocessorIO.readJSONFile(parser_data.input)
     setSettingsData(rwhale_input_Data, REWET_input_data)
+    event_time = rwhale_input_Data["SystemPerformance"]["WaterDistributionNetwork"]["eventTime"]
     
     
     # Set R2D enviroment and parameters
