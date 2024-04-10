@@ -423,15 +423,20 @@ if __name__ == '__main__':
         # the following does not matter if iConsider_leak is false
         leak_ratio = {"DL":0.75, "QN":0}
     
+        sub_asset_list = ["Junction", "Pipe", "Reservoir"]
+        sub_asset_name_to_id = dict()
+        sub_asset_id_to_name = dict()
+        for sub_asset in sub_asset_list:
+            sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
+            sub_asset_data = [ss for ss in sc_geojson_file["features"] if ss["properties"]["type"]==sub_asset]
+            sub_asset_id = [str(ss["id"]) for ss in sub_asset_data]
+            sub_asset_name = [ss["properties"]["id"] for ss in sub_asset_data]
+            sub_asset_name_to_id.update({sub_asset : dict(zip(sub_asset_name, sub_asset_id))})
+            sub_asset_id_to_name.update({sub_asset : dict(zip(sub_asset_id, sub_asset_name))})
         
-        sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
-        junction_data = [ss for ss in sc_geojson_file["features"] if ss["properties"]["type"]=="Junction"]
-        junction_id = [str(ss["id"]) for ss in junction_data]
-        junction_name = [ss["properties"]["id"] for ss in junction_data]
-        junction_name_to_id = dict(zip(junction_name, junction_id))
-        
-       
+
         res = {}
+        res_agg = {}
         for scn_name, row in p.project.scenario_list.iterrows():
             for single_requested_result in requested_result:
                 if single_requested_result == "DL" or single_requested_result == "QN":
@@ -441,7 +446,16 @@ if __name__ == '__main__':
                         iConsider_leak=False,
                         leak_ratio=leak_ratio,
                         consistency_time_window=consistency_time_window, sum_time=True)
-            
+                    if res_agg.get(single_requested_result, None) is None:
+                        res_agg[single_requested_result] = res[single_requested_result].to_dict()
+                        for key in res_agg[single_requested_result].keys():
+                            res_agg[single_requested_result][key] = \
+                                [res_agg[single_requested_result][key]]
+                    else:
+                        for key in res_agg[single_requested_result].keys():
+                            res_agg[single_requested_result][key].append(
+                                res[single_requested_result][key]
+                            )
             realization_number = scn_name.strip("SCN_")
             cur_json_file_name = f"WaterDistributionNetwork_{realization_number}.json"
             cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / cur_json_file_name
@@ -456,11 +470,11 @@ if __name__ == '__main__':
                 req_result = res[single_requested_result]
                 result_key = f"{substitute_ft[single_requested_result]}Outage"
                 
-                
+                # Only Junction needs to be added to rlz json
                 junction_json_data = json_data["WaterDistributionNetwork"].get("Junction", {})
                 
                 for junction_name in req_result.keys():
-                    junction_id = junction_name_to_id[junction_name]
+                    junction_id = sub_asset_name_to_id['Junction'][junction_name]
                     cur_junction = junction_json_data.get(junction_id, {})
                     cur_junction_SP = cur_junction.get("SystemPerformance", {})
                     cur_junction_SP[result_key] = str( req_result[junction_name] )
@@ -473,32 +487,52 @@ if __name__ == '__main__':
                     
             with open(cur_json_file_path, "wt") as f:
                 json_data = json.dump(json_data, f, indent = 2)
-    
+        
+        res_agg_mean = dict()
+        res_agg_std = dict()
+        for single_requested_result in requested_result:
+            res_agg[single_requested_result] = pd.DataFrame(res_agg[single_requested_result]) 
+            res_agg_mean[single_requested_result] = res_agg[single_requested_result].mean()
+            res_agg_std[single_requested_result] = res_agg[single_requested_result].std()
     sys.stdout = system_std_out
 
-    # Append junction geometry to WaterDistributionNetwork_det
+    # Append junction and reservior general information to WaterDistributionNetwork_det
     det_json_path = cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "WaterDistributionNetwork_det.json"
-    with open(det_json_path ,'r') as f:
-            det_json = json.load(f)
-    with open(sc_geojson, 'r') as f:
-        inp_json = json.load(f)
-        inp_json = inp_json['features']
+    det_json = preprocessorIO.readJSONFile(det_json_path)
+    inp_json = preprocessorIO.readJSONFile(sc_geojson)
+    inp_json = inp_json['features']
     for WDNtype in ['Reservoir', 'Junction']:    
         json_to_attach = dict()
         for ft in inp_json:
             prop = ft['properties']
             if prop['type'] == WDNtype:
-                id = ft['id']
+                id = str(ft['id'])
                 generalInfo = dict()
                 json_geometry = ft['geometry']
                 shapely_geometry = geometry.shape(json_geometry)
                 wkt_geometry = shapely_geometry.wkt
                 generalInfo.update({'geometry':wkt_geometry})
+                asset_name = sub_asset_id_to_name[WDNtype][id]
+                generalInfo.update({'REWET_id':asset_name})
+                for key, item in prop.items():
+                    if key == 'id':
+                        continue
+                    generalInfo.update({key:item})
+                R2Dres = dict()
+                asset_name = sub_asset_id_to_name[WDNtype][id]
+                for single_requested_result in requested_result:
+                    if not asset_name in res_agg_mean[single_requested_result].index:
+                        continue
+                    R2Dres_key_mean = f"R2Dres_mean_{single_requested_result}"
+                    R2Dres_key_std = f"R2Dres_std_{single_requested_result}"
+                    R2Dres.update({R2Dres_key_mean:res_agg_mean[single_requested_result][asset_name],
+                                   R2Dres_key_std:res_agg_std[single_requested_result][asset_name]})
                 # location = dict()
                 # location.update({'latitude':ft['geometry']['coordinates'][1],\
                 #                 'longitude':ft['geometry']['coordinates'][0]})
                 # generalInfo.update({'location':location})
-                json_to_attach.update({id:{'GeneralInformation': generalInfo}})
+                json_to_attach.update({id:{'GeneralInformation': generalInfo,
+                                           'R2Dres':R2Dres}})
         det_json['WaterDistributionNetwork'].update({WDNtype:json_to_attach})
     with open(det_json_path ,'w') as f:
         json.dump(det_json, f, indent=2)

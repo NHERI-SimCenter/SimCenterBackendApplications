@@ -42,6 +42,7 @@
 # Chaofeng Wang
 # Kuanshi Zhong
 # Stevan Gavrilovic
+# Jinyan Zhao
 
 import sys, os, json
 import argparse
