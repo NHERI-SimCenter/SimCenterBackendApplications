@@ -429,7 +429,7 @@ if __name__ == '__main__':
             sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
             sub_asset_data = [ss for ss in sc_geojson_file["features"] if ss["properties"]["type"]==sub_asset]
             sub_asset_id = [str(ss["id"]) for ss in sub_asset_data]
-            sub_asset_name = [ss["properties"]["id"] for ss in sub_asset_data]
+            sub_asset_name = [ss["properties"]["InpID"] for ss in sub_asset_data]
             sub_asset_name_to_id.update({sub_asset : dict(zip(sub_asset_name, sub_asset_id))})
             sub_asset_id_to_name.update({sub_asset : dict(zip(sub_asset_id, sub_asset_name))})
         

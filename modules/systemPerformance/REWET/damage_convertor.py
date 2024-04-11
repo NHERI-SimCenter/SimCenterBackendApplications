@@ -44,7 +44,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
     sc_geojson_file = preprocessorIO.readJSONFile(sc_geojson)
     pipe_data = [ss for ss in sc_geojson_file["features"] if ss["properties"]["type"]=="Pipe"]
     pipe_index = [str(ss["id"]) for ss in pipe_data]
-    pipe_id = [ss["properties"]["id"] for ss in pipe_data]
+    pipe_id = [ss["properties"]["InpID"] for ss in pipe_data]
     pipe_index_to_id = dict(zip(pipe_index, pipe_id))
     
     for pipe_id in pipe_id_list:
