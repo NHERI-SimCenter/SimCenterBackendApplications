@@ -42,6 +42,7 @@
 # Chaofeng Wang
 # Kuanshi Zhong
 # Stevan Gavrilovic
+# Jinyan Zhao
 
 import sys, os, json
 import argparse
@@ -267,15 +268,20 @@ def main(run_type, input_file, app_registry,
     #
     # add system performance
     #
-    
+    system_performance_performed = False
     for asset_type in asset_files.keys() :
-        WF.perform_system_performance_assessment(asset_type)
-
+        performed = WF.perform_system_performance_assessment(asset_type)
+        if performed:
+            system_performance_performed = True
+    if system_performance_performed:
+        WF.combine_assets_results(asset_files)
     #
     # add recovery
     #
 
     # WF.perform_recovery_simulation(asset_files.keys())
+
+    WF.compile_r2d_results_geojson(asset_files)
     
     
     if force_cleanup:
