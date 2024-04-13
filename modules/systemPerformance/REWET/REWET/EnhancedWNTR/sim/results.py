@@ -1,4 +1,4 @@
-from wntr.sim.results import SimulationResults
+from wntrfr.sim.results import SimulationResults
 
 
 class SimulationResults(SimulationResults):

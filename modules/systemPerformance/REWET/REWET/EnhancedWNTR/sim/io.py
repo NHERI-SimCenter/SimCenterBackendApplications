@@ -1,5 +1,5 @@
 """
-The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
+The wntrfr.epanet.io module contains methods for reading/writing EPANET input and output files.
 
 .. rubric:: Contents
 
@@ -29,15 +29,15 @@ from collections import OrderedDict
 #from .time_utils import run_lineprofile
 
 import wntr
-import wntr.network
-import wntr.sim
-from wntr.network.base import Link
-from wntr.network.model import WaterNetworkModel
-from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
-from wntr.network.options import WaterNetworkOptions
-from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
-from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
+import wntrfr.network
+import wntrfr.sim
+from wntrfr.network.base import Link
+from wntrfr.network.model import WaterNetworkModel
+from wntrfr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntrfr.network.options import WaterNetworkOptions
+from wntrfr.network.model import Pattern, LinkStatus, Curve, Demands, Source
+from wntrfr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
+from wntrfr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
@@ -222,7 +222,7 @@ def _sec_to_string(sec):
     return (hours, mm, int(sec))
 
 
-class InpFile(wntr.epanet.InpFile):
+class InpFile(wntrfr.epanet.InpFile):
     """
 	EPANET INP file reader and writer class.
 
@@ -438,7 +438,7 @@ class InpFile(wntr.epanet.InpFile):
             if link.initial_status in (LinkStatus.Closed,):
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.initial_status).name).encode('ascii'))
-            if isinstance(link, wntr.network.Valve) and link.initial_status in (LinkStatus.Open, LinkStatus.Opened):
+            if isinstance(link, wntrfr.network.Valve) and link.initial_status in (LinkStatus.Open, LinkStatus.Opened):
 #           if link.initial_status in (LinkStatus.Closed,):
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.initial_status).name).encode('ascii'))
@@ -453,7 +453,7 @@ class InpFile(wntr.epanet.InpFile):
 #                    else:
 #                        continue
 #                    continue
-#                elif isinstance(link, wntr.network.Pump):
+#                elif isinstance(link, wntrfr.network.Pump):
 #                    setting = link.initial_setting
 #                else: continue
 #                f.write('{:10s} {:10.10g}\n'.format(link_name,
@@ -887,7 +887,7 @@ class InpFile(wntr.epanet.InpFile):
 
     ### End of File
 
-class BinFile(wntr.epanet.io.BinFile):
+class BinFile(wntrfr.epanet.io.BinFile):
     """
     EPANET binary output file reader class.
     
@@ -895,7 +895,7 @@ class BinFile(wntr.epanet.io.BinFile):
     
     Parameters
     ----------
-    results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
+    results_type : list of :class:`~wntrfr.epanet.util.ResultType`, default=None
         This parameter is *only* active when using a subclass of the BinFile that implements
 	a custom reader or writer.
         If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
@@ -915,7 +915,7 @@ class BinFile(wntr.epanet.io.BinFile):
 
     Returns
     ----------
-    :class:`~wntr.sim.results.SimulationResults`
+    :class:`~wntrfr.sim.results.SimulationResults`
         A WNTR results object will be created and added to the instance after read.
 
     """
@@ -949,7 +949,7 @@ class BinFile(wntr.epanet.io.BinFile):
             simulation results in a different format (such as directly to a file or database).
             
         """
-        self.results = wntr.sim.SimulationResults()
+        self.results = wntrfr.sim.SimulationResults()
         logger.debug(start_time)
         if start_time == None:
             start_time = 0

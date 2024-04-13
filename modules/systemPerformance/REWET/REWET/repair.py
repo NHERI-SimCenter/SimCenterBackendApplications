@@ -5,7 +5,7 @@ Created on Tue Feb  2 20:22:09 2021
 @author: snaeimi
 """
 
-from wntr.network.model import LinkStatus
+from wntrfr.network.model import LinkStatus
 from collections        import OrderedDict
 
 LINK_TYPE_COLLECTIVES = {"BYPASS_PIPE", "ADDED_PIPE_A", "ADDED_PIPE_B", "ADDED_PIPE_C", "ADDED_PIPE_D", "ADDED_PUMP_A", "ADDED_PUMP_B", "PIPE_CLOSED_FROM_OPEN", "PIPE_CLOSED_FROM_CV"}

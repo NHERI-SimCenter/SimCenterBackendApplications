@@ -239,11 +239,11 @@ class Hydraulic_Simulation():
         rr.link = {'status': result_link_status, 'setting': result_link_setting, 'flowrate': result_link_flowrate}
         return rr, True
     
-    def updateTankHeadsAndPressure(self, demand, head, pressure, sim_time, time_step): # Addapted from the latest version of WNTR. Courtessy of WNTR: https://github.com/USEPA/WNTR
+    def updateTankHeadsAndPressure(self, demand, head, pressure, sim_time, time_step): # Addapted from the latest version of wntrfr. Courtessy of WNTR: https://github.com/USEPA/WNTR
         """
         Parameters
         ----------
-        wn: wntr.network.WaterNetworkModel
+        wn: wntrfr.network.WaterNetworkModel
         """
         dt = time_step
         #print(sim_time)

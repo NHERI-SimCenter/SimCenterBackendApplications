@@ -4,7 +4,7 @@ Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
 """
-import wntr.epanet.toolkit
+import wntrfr.epanet.toolkit
 import numpy as np
 import ctypes
 import os, sys
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class EpanetException(Exception):
     pass
 
-class ENepanet(wntr.epanet.toolkit.ENepanet):
+class ENepanet(wntrfr.epanet.toolkit.ENepanet):
     def __init__(self, inpfile='', rptfile='', binfile='', changed_epanet=False, version=2.2):
         if changed_epanet==False or changed_epanet==True:
             self.changed_epanet=changed_epanet

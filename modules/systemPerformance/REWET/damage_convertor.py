@@ -356,7 +356,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
     """
     # TODO: Make reading once for each scneario
         
-    #wn = wntr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
+    #wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
     
     damage_data = preprocessorIO.readJSONFile(file_addr)
     

@@ -5,7 +5,7 @@ Created on Sun Oct 23 15:00:31 2022
 @author: snaeimi
 """
 
-import wntr
+import wntrfr
 import pandas as pd
 import numpy as np
 import os
@@ -60,7 +60,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         self._RequiredDemandForAllNodesandtime = {}
         self.demand_ratio             = self.project.project_settings.process['demand_ratio']
         self.scn_name_list_that_result_file_not_found = []
-        self.wn = wntr.network.WaterNetworkModel(self.project.project_settings.process['WN_INP']    )    
+        self.wn = wntrfr.network.WaterNetworkModel(self.project.project_settings.process['WN_INP']    )    
         
         self.result_directory            = self.project.project_settings.process['result_directory']
         

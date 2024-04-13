@@ -17,7 +17,7 @@ import logging
 import Input.Input_IO as io
 from Input.Settings             import Settings
 from EnhancedWNTR.network.model import WaterNetworkModel
-#from wntr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility
+#from wntrfr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility
 from restoration.registry       import Registry
 from restoration.model          import Restoration
 from Project                    import Project

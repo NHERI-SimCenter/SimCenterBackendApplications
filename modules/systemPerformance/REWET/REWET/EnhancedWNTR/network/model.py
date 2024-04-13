@@ -1,5 +1,5 @@
 """
-The wntr.network.model module includes methods to build a water network
+The wntrfr.network.model module includes methods to build a water network
 model.
 
 .. rubric:: Contents
@@ -18,12 +18,12 @@ import logging
 import pandas as pd
 import numpy  as np
 from collections           import OrderedDict
-from wntr.network.base     import LinkStatus
-from wntr.network.elements import Pump
-from wntr.network.elements import Valve
+from wntrfr.network.base     import LinkStatus
+from wntrfr.network.elements import Pump
+from wntrfr.network.elements import Valve
 from ..epanet.io           import InpFile
 
-from wntr.network          import WaterNetworkModel
+from wntrfr.network          import WaterNetworkModel
 
 
 logger = logging.getLogger(__name__)

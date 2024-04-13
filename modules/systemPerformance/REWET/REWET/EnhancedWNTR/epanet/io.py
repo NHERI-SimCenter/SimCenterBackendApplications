@@ -1,5 +1,5 @@
 """
-The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
+The wntrfr.epanet.io module contains methods for reading/writing EPANET input and output files.
 
 .. rubric:: Contents
 
@@ -25,18 +25,18 @@ import numpy as np
 import pandas as pd
 import six
 import wntr
-import wntr.network
-from wntr.network.base import Link
-from wntr.network.controls import (AndCondition, Comparison, Control,
+import wntrfr.network
+from wntrfr.network.base import Link
+from wntrfr.network.controls import (AndCondition, Comparison, Control,
                                    ControlAction, OrCondition, Rule,
                                    SimTimeCondition, TimeOfDayCondition,
                                    ValueCondition, _ControlType)
-from wntr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
-from wntr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
+from wntrfr.network.elements import Junction, Pipe, Pump, Reservoir, Tank, Valve
+from wntrfr.network.model import (Curve, Demands, LinkStatus, Pattern, Source,
                                 WaterNetworkModel)
-from wntr.network.options import Options
+from wntrfr.network.options import Options
 
-from wntr.epanet.util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
+from wntrfr.epanet.util import (EN, FlowUnits, HydParam, MassUnits, MixType, PressureUnits,
                    QualParam, QualType, ResultType, StatisticsType, from_si,
                    to_si)
 
@@ -259,7 +259,7 @@ class InpFile(object):
 
         Returns
         -------
-        :class:`~wntr.network.model.WaterNetworkModel`
+        :class:`~wntrfr.network.model.WaterNetworkModel`
             A water network model object
 
         """
@@ -414,7 +414,7 @@ class InpFile(object):
 
         .. note::
 
-            Please note that by default, an EPANET 2.2 formatted file is written by WNTR. An INP file
+            Please note that by default, an EPANET 2.2 formatted file is written by wntrfr. An INP file
             with version 2.2 options *will not* work with EPANET 2.0 (neither command line nor GUI). 
             By default, WNTR will use the EPANET 2.2 toolkit.
         
@@ -505,7 +505,7 @@ class InpFile(object):
     def _write_title(self, f, wn):
         if wn.name is not None:
             f.write('; Filename: {0}\n'.format(wn.name).encode(sys_default_enc))
-            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode(sys_default_enc))
+            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntrfr.__version__, datetime.datetime.now()).encode(sys_default_enc))
         f.write('[TITLE]\n'.encode(sys_default_enc))
         if hasattr(wn, 'title'):
             for line in wn.title:
@@ -1121,7 +1121,7 @@ class InpFile(object):
                 link.initial_status = new_status
                 link._user_status = new_status
             else:
-                if isinstance(link, wntr.network.Valve):
+                if isinstance(link, wntrfr.network.Valve):
                     new_status = LinkStatus.Active
                     valve_type = link.valve_type
                     if valve_type in ['PRV', 'PSV', 'PBV']:
@@ -2452,9 +2452,9 @@ class _EpanetRule(object):
                     value = to_si(self.inp_units, value, HydParam.Pressure)
                 elif attr.lower() in ['setting']:
                     link = model.get_link(words[2])
-                    if isinstance(link, wntr.network.Pump):
+                    if isinstance(link, wntrfr.network.Pump):
                         value = value
-                    elif isinstance(link, wntr.network.Valve):
+                    elif isinstance(link, wntrfr.network.Valve):
                         if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                             value = to_si(self.inp_units, value, HydParam.Pressure)
                         elif link.valve_type.upper() in ['FCV']:
@@ -2544,7 +2544,7 @@ class BinFile(object):
     
     Parameters
     ----------
-    results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
+    results_type : list of :class:`~wntrfr.epanet.util.ResultType`, default=None
         This parameter is *only* active when using a subclass of the BinFile that implements
 	    a custom reader or writer.
         If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
@@ -2564,7 +2564,7 @@ class BinFile(object):
 
     Returns
     ----------
-    :class:`~wntr.sim.results.SimulationResults`
+    :class:`~wntrfr.sim.results.SimulationResults`
         A WNTR results object will be created and added to the instance after read.
 
     """
@@ -2597,7 +2597,7 @@ class BinFile(object):
         self.chem_units = None
         self.inp_file = None
         self.report_file = None
-        self.results = wntr.sim.SimulationResults()
+        self.results = wntrfr.sim.SimulationResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
         else:
@@ -2685,7 +2685,7 @@ class BinFile(object):
         object
             returns a WaterNetworkResults object    
         """
-        self.results = wntr.sim.SimulationResults()
+        self.results = wntrfr.sim.SimulationResults()
         
         logger.debug('Read binary EPANET data from %s',filename)
         dt_str = 'u1'  #.format(self.idlen)
@@ -2855,7 +2855,7 @@ class BinFile(object):
                     data = np.reshape(data, (N, (4*nnodes+8*nlinks)))
                     reporttimes = reporttimes[0:N]
                     warnings.warn('Simulation did not converge at time ' + self._get_time(t) + '.')
-                    self.results.error_code = wntr.sim.results.ResultsStatus.error
+                    self.results.error_code = wntrfr.sim.results.ResultsStatus.error
             else:
                 data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
                 self.results.error_code = None
@@ -3094,7 +3094,7 @@ def _clean_line(wn, sec, line):  # pragma: no cover
     """
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
+    wn: wntrfr.network.WaterNetworkModel
     sec: str
     line: list of str
 
@@ -3121,7 +3121,7 @@ def _read_control_line(line, wn, flow_units, control_name):
     Parameters
     ----------
     line: str
-    wn: wntr.network.WaterNetworkModel
+    wn: wntrfr.network.WaterNetworkModel
     flow_units: str
     control_name: str
 
@@ -3146,11 +3146,11 @@ def _read_control_line(line, wn, flow_units, control_name):
     status = current[2].upper()
     if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
         setting = LinkStatus[status].value
-        action_obj = wntr.network.ControlAction(link, 'status', setting)
+        action_obj = wntrfr.network.ControlAction(link, 'status', setting)
     else:
-        if isinstance(link, wntr.network.Pump):
-            action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
-        elif isinstance(link, wntr.network.Valve):
+        if isinstance(link, wntrfr.network.Pump):
+            action_obj = wntrfr.network.ControlAction(link, 'base_speed', float(current[2]))
+        elif isinstance(link, wntrfr.network.Valve):
             if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
                 setting = to_si(flow_units, float(current[2]), HydParam.Pressure)
             elif link.valve_type == 'FCV':
@@ -3161,7 +3161,7 @@ def _read_control_line(line, wn, flow_units, control_name):
                 setting = current[2]
             else:
                 raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
-            action_obj = wntr.network.ControlAction(link, 'setting', setting)
+            action_obj = wntrfr.network.ControlAction(link, 'setting', setting)
         else:
             raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
                                 'the link status. Control: {0}'.format(line)))

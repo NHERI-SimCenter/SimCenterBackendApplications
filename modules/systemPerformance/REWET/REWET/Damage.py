@@ -12,7 +12,7 @@ import logging
 import pickle
 import random
 import numpy as np
-from wntr.network.model import LinkStatus
+from wntrfr.network.model import LinkStatus
 from EnhancedWNTR.morph.link import split_pipe, break_pipe
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class EarthquakeScenario():
         self.time=abs(eq_time)
         
     def getWNTREarthquakeObject(self):
-        return wntr.scenario.Earthquake((self.coordinate['X'] , self.coordinate['Y']), self.M, self.depth)
+        return wntrfr.scenario.Earthquake((self.coordinate['X'] , self.coordinate['Y']), self.M, self.depth)
 
 class Damage:
     def __init__(self, registry, scenario_set):
@@ -532,7 +532,7 @@ class Damage:
         
         Parameters
         ----------
-        WaterNetwork : wntr.network.model.WaterNetworkModel
+        WaterNetwork : wntrfr.network.model.WaterNetworkModel
             water network model ro be modified accroding to the damage
         
         registry : Registry object
@@ -786,7 +786,7 @@ class Damage:
         This function predict the water network model damage based on  probabilistic method.
         Parameters
         ----------
-        wn : wntr.network.model.WaterNetworkModel
+        wn : wntrfr.network.model.WaterNetworkModel
             Water Netwrok Model to be used to model the damages
         clear : TYPE, optional
             Boolian value, determining if the leak and break list must be
@@ -804,11 +804,11 @@ class Damage:
         
         for eq_in, eq in self._earthquake.items():
             wntr_eq = eq.getWNTREarthquakeObject()
-            distance_to_pipes = wntr_eq.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
+            distance_to_pipes = wntr_eq.distance_to_epicenter(wn, element_type=wntrfr.network.Pipe)
             pga = wntr_eq.pga_attenuation_model(distance_to_pipes)
             pgv = wntr_eq.pgv_attenuation_model(distance_to_pipes)
             repair_rate = wntr_eq.repair_rate_model(pgv)
-            fc = wntr.scenario.FragilityCurve()
+            fc = wntrfr.scenario.FragilityCurve()
             fc.add_state('leak' , 1 , {'Default': lognorm(0.5 , scale=0.2)})
             fc.add_state('break' , 2 , {'Default': lognorm(0.5, scale=0.5)})
             failure_probability = fc.cdf_probability(pga)

@@ -6,25 +6,25 @@ Created on Wed Apr  8 20:19:10 2020
 """
 import os
 import pickle
-import wntr
+import wntrfr
 import Damage
 import pandas as pd
 import logging
 from timeline import Timeline
 import sys
 #from wntrplus import WNTRPlus
-from wntr.utils.ordered_set import OrderedSet
+from wntrfr.utils.ordered_set import OrderedSet
 from Sim.Simulation import Hydraulic_Simulation
 import EnhancedWNTR.network.model
 from EnhancedWNTR.sim.results import SimulationResults
-from wntr.network.model import LinkStatus
+from wntrfr.network.model import LinkStatus
 
 
 logger = logging.getLogger(__name__)
 
 class StochasticModel():
     def __init__(self, water_network, damage_model , registry,  simulation_end_time, restoration, mode='PDD', i_restoration=True):
-        if type(water_network) != wntr.network.model.WaterNetworkModel and type(water_network) != EnhancedWNTR.network.model.WaterNetworkModel:
+        if type(water_network) != wntrfr.network.model.WaterNetworkModel and type(water_network) != EnhancedWNTR.network.model.WaterNetworkModel:
             raise ValueError('Water_network model is not legitimate water Network Model')
         if type(damage_model) != Damage.Damage:
             raise ValueError('damage_model is not a ligitimate Damage Model')

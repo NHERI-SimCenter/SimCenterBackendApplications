@@ -9,15 +9,15 @@ import itertools
 import numpy as np
 import scipy.sparse.csr
 from collections import OrderedDict
-from wntr.sim.core import WaterNetworkSimulator
-import wntr.epanet.io
+from wntrfr.sim.core import WaterNetworkSimulator
+import wntrfr.epanet.io
 from ..epanet import toolkit
-from wntr.network.io import write_inpfile
-from wntr.sim.epanet import EpanetSimulator
-from wntr.sim.network_isolation import check_for_isolated_junctions, get_long_size
-from wntr.sim.core import _get_csr_data_index
-from wntr.utils.ordered_set import OrderedSet
-from wntr.network.model import LinkStatus
+from wntrfr.network.io import write_inpfile
+from wntrfr.sim.epanet import EpanetSimulator
+from wntrfr.sim.network_isolation import check_for_isolated_junctions, get_long_size
+from wntrfr.sim.core import _get_csr_data_index
+from wntrfr.utils.ordered_set import OrderedSet
+from wntrfr.network.model import LinkStatus
 from Report_Reading import Report_Reading
 
 logger = logging.getLogger(__name__)    
@@ -43,8 +43,8 @@ class EpanetSimulator(EpanetSimulator):
     mode: DD or PDD with default None value(read mode from InpFile, if there is no mode
         provided in inpdile wither, it will be DD) If there is a condlict between mode in
         the class aregument and inpfile, the agument will supperseed the InpFile
-    reader : wntr.epanet.io.BinFile derived object
-        Defaults to None, which will create a new wntr.epanet.io.BinFile object with
+    reader : wntrfr.epanet.io.BinFile derived object
+        Defaults to None, which will create a new wntrfr.epanet.io.BinFile object with
         the results_types specified as an init option. Otherwise, a fully
     result_types : dict
         Defaults to None, or all results. Otherwise, is a keyword dictionary to pass to
@@ -53,7 +53,7 @@ class EpanetSimulator(EpanetSimulator):
 
     .. seealso::
 
-        wntr.epanet.io.BinFile
+        wntrfr.epanet.io.BinFile
 
     """
     def __init__(self, wn):
@@ -285,7 +285,7 @@ class EpanetSimulator(EpanetSimulator):
             cols.append(to_node_id)
             rows.append(to_node_id)
             cols.append(from_node_id)
-            if link.initial_status == wntr.network.LinkStatus.closed:
+            if link.initial_status == wntrfr.network.LinkStatus.closed:
                 vals.append(0)
                 vals.append(0)
                 #sina remove comment amrks
@@ -342,7 +342,7 @@ class EpanetSimulator(EpanetSimulator):
                     link = self._wn.get_link(link_name)
                     if link.start_node_name == to_node_name or link.end_node_name == to_node_name:
                         tmp_list.append(link)
-                        if link.initial_status != wntr.network.LinkStatus.closed:
+                        if link.initial_status != wntrfr.network.LinkStatus.closed:
                             ndx1, ndx2 = ndx_map[link]
                             self._internal_graph.data[ndx1] = 1
                             self._internal_graph.data[ndx2] = 1
@@ -372,7 +372,7 @@ class EpanetSimulator(EpanetSimulator):
         for mgr in [self._presolve_controls, self._rules, self._postsolve_controls]:
             for obj, attr in mgr.get_changes():
                 if 'status' == attr:
-                    if obj.status == wntr.network.LinkStatus.closed:
+                    if obj.status == wntrfr.network.LinkStatus.closed:
                         ndx1, ndx2 = ndx_map[obj]
                         data[ndx1] = 0
                         data[ndx2] = 0
@@ -387,7 +387,7 @@ class EpanetSimulator(EpanetSimulator):
             data[ndx1] = 0
             data[ndx2] = 0
             for link in link_list:
-                if link.status != wntr.network.LinkStatus.closed:
+                if link.status != wntrfr.network.LinkStatus.closed:
                     ndx1, ndx2 = ndx_map[link]
                     data[ndx1] = 1
                     data[ndx2] = 1

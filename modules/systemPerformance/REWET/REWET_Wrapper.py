@@ -22,15 +22,21 @@ import sys
 import damage_convertor
 import preprocessorIO
 
-try:
-    import REWET
-except:
+#try:
+    #import REWET
+    #print("Imported")
+#except:
     # This is only for now
-    this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
-    #main_dir = this_dir.parent
-    sys.path.insert(0, str(this_dir / 'REWET'))
-    import Input.Settings as Settings
-    from Result_Project import Project_Result
+#print("HERE")
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+#main_dir = this_dir.parent
+
+import wntrfr
+
+sys.path.insert(0, str(this_dir / 'REWET'))
+import Input.Settings as Settings
+from Result_Project import Project_Result
+
 from initial import Starter
 
 def createScnearioList(run_directory, scn_number):
@@ -279,6 +285,8 @@ if __name__ == '__main__':
                            help="if speciied, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.")
     
     parser_data = argParser.parse_args()
+
+    
     
     # learnign about paralell or serial settings
     
