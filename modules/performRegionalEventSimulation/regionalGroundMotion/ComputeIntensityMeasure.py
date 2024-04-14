@@ -363,9 +363,12 @@ class IM_Calculator:
 				else:
 					print('ComputeIntensityMeasure.get_im_from_local: gmpe_name {} is not supported.'.format(cur_gmpe))
 				# collect sites
+				# gm_collector.append({
+				# 	"Location": {'Latitude':cur_site['lat'], 'Longitude':cur_site['lon']},
+				#              "SiteData": {key: cur_site[key] for key in cur_site if key not in ['lat','lon']},
+				# 			 'ln'+im_type: tmpResult
+				# 			 })
 				gm_collector.append({
-					"Location": {'Latitude':cur_site['lat'], 'Longitude':cur_site['lon']},
-				             "SiteData": {key: cur_site[key] for key in cur_site if key not in ['lat','lon']},
 							 'ln'+im_type: tmpResult
 							 })
 
@@ -588,6 +591,8 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 			collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
 			# im_raw.append(collectedResult)
 			im_raw.update({key:collectedResult})
+			if (i % 250 == 0):
+				print(f"Size of im_raw for {i} scenario is {sys.getsizeof(im_raw)}")
 			# im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
 
 	if mth_flag:
@@ -619,7 +624,7 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 	# save im_raw comment out for debug
 	# im_raw_preview = {"IntensityMeasures": im_raw}
 	with open(os.path.join(output_dir, filename), "w") as f:
-		ujson.dump(im_raw, f, indent=2)
+		ujson.dump(im_raw, f)
 
 	# return
 	return im_raw, im_info

@@ -183,7 +183,11 @@ def hazard_job(hazard_info):
             selected_scen_ids = id_selected_eqs
             num_per_eq_avg = int(np.ceil(num_target_gmms/len(selected_scen_ids)))
             # export sampled earthquakes
-            _ = export_sampled_earthquakes(selected_scen_ids, scenarios, P, output_dir)
+            # compute error from hazard curve
+            # _ = export_sampled_earthquakes(occ_dict, im_raw, stations, selected_scen_ids, scenarios, P, output_dir)
+            # compute error from optimization residual
+            error = occurrence_model.get_error_vector()
+            _ = export_sampled_earthquakes(error, selected_scen_ids, scenarios, P, output_dir)
         
         # Updating station information
         #stations['Stations'] = stn_new
@@ -228,7 +232,7 @@ def hazard_job(hazard_info):
             id_selected_scens = np.array([selected_scen_ids[int(x/num_gm_per_site)] for x in id_selected_gmms])
             id_selected_simus = np.array([x%num_gm_per_site for x in id_selected_gmms])
             # export sampled earthquakes
-            _ = export_sampled_gmms(id_selected_gmms, id_selected_scens, P_gmm, output_dir)
+            occurrence_model_gmm.export_sampled_gmms(id_selected_gmms, id_selected_scens, P_gmm, output_dir)
 
             selected_scen_ids_step2 = sorted(list(set(id_selected_scens)))
             sampled_ln_im_mr = [None]*len(selected_scen_ids_step2)
@@ -347,6 +351,8 @@ def hazard_job(hazard_info):
         print('HazardSimulation: simulated intensity measures saved.')
     else:
         print('HazardSimulation: IM is not required to saved or no IM is found.')
+
+    # If hazard downsampling algorithm is used. Save the errors.
 
 if __name__ == '__main__':
 

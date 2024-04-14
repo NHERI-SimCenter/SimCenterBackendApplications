@@ -420,10 +420,8 @@ def sample_earthquake_occurrence(model_type,
         return None
 
     return om
-
-
-def export_sampled_earthquakes(id_selected_eqs, eqdata, P, output_dir=None):
-
+def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=None):
+    probabilityWeight = [P[x] for x in id_selected_eqs]
     selected_eqs = []
     for i in id_selected_eqs:
         selected_eqs.append(eqdata[i])
@@ -431,23 +429,54 @@ def export_sampled_earthquakes(id_selected_eqs, eqdata, P, output_dir=None):
         'EarthquakeNumber': len(id_selected_eqs),
         'EarthquakeID': id_selected_eqs,
         'EarthquakeInfo': selected_eqs,
-        'ProbabilityWeight': [P[x] for x in id_selected_eqs],
+        'ProbabilityWeight': probabilityWeight,
+        'MeanSquareError':error.tolist()
     }
 
     if output_dir is not None:
         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
             json.dump(dict_selected_eqs, f, indent=2)
 
-def export_sampled_gmms(id_selected_gmms, id_selected_scens, P, output_dir=None):
+# def export_sampled_earthquakes(occ_dict, im_raw, site_config, id_selected_eqs, eqdata, P, output_dir=None):
+#     probabilityWeight = [P[x] for x in id_selected_eqs]
+#     period = occ_dict.get('Period',0.0)
+#     im_type = occ_dict.get('IntensityMeasure')
+#     if im_type == 'SA':
+#         cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
+#     else:
+#         cur_imt = im_type
+#     sampleIM = {}
+#     for i in range(len(id_selected_eqs)):
+#         rup_ind = (id_selected_eqs[i])
+#         scenario = (im_raw[rup_ind]).copy()
+#         scenario['MeanAnnualRate'] =  probabilityWeight[i]
+#         sampleIM.update({rup_ind:scenario})
+#     sampled_hc = calc_hazard_curves(sampleIM, site_config, cur_imt)
+#     # interpolate the hazard curve with the return periods
+#     num_sites = len(sampled_hc)
+#     num_rps = len(occ_dict['ReturnPeriods'])
+#     hc_interp = np.zeros((num_sites,num_rps))
+#     ln_maf = [np.log(x) for x in occ_dict['ReturnPeriods']]
+#     for i in range(num_sites):
+#         ln_cur_maf = [np.log(x) for x in sampled_hc[i].get('ReturnPeriod')]
+#         ln_cur_sa = np.log(sampled_hc[i].get('IM')).tolist()
+#         hc_interp[i,:] = np.exp(np.interp(ln_maf,ln_cur_maf,ln_cur_sa,left=ln_cur_sa[0],right=ln_cur_sa[-1]))
+#     error = ((occ_dict['HazardCurves']-hc_interp)**2).sum(axis = 1)/num_rps
 
-    dict_selected_gmms = {
-        'EarthquakeID': id_selected_scens.astype(int).tolist(),
-        'ProbabilityWeight': [P[x] for x in id_selected_gmms]
-    }
+#     selected_eqs = []
+#     for i in id_selected_eqs:
+#         selected_eqs.append(eqdata[i])
+#     dict_selected_eqs = {
+#         'EarthquakeNumber': len(id_selected_eqs),
+#         'EarthquakeID': id_selected_eqs,
+#         'EarthquakeInfo': selected_eqs,
+#         'ProbabilityWeight': probabilityWeight,
+#         'MeanSquareError':error.tolist()
+#     }
 
-    if output_dir is not None:
-        with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
-            json.dump(dict_selected_gmms, f, indent=2)
+#     if output_dir is not None:
+#         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
+#             json.dump(dict_selected_eqs, f, indent=2)
     
 
 class OccurrenceModel_ManzourDavidson2016:
@@ -585,12 +614,26 @@ class OccurrenceModel_ManzourDavidson2016:
 
     def get_error_vector(self):
 
-        e_plus_selected = {}
-        e_minus_selected = {}
+        e_plus_selected = np.zeros([self.num_sites, self.num_return_periods])
+        e_minus_selected = np.zeros([self.num_sites, self.num_return_periods])
         for i in range(self.num_sites):
             for j in range(self.num_return_periods):
-                e_plus_selected[i,j] = self.e_plus[i,j].varValue
-                e_minus_selected[i,j] = self.e_minus[i,j].varValue
+                e_plus_selected[i, j] = self.e_plus[i,j].varValue
+                e_minus_selected[i, j] = self.e_minus[i,j].varValue
+        error = ((e_plus_selected-e_minus_selected)**2).sum(axis = 1)/self.num_return_periods
+        return error
+
+    def export_sampled_gmms(self, id_selected_gmms, id_selected_scens, P, output_dir=None):
+
+        dict_selected_gmms = {
+            'EarthquakeID': id_selected_scens.astype(int).tolist(),
+            'ProbabilityWeight': [P[x] for x in id_selected_gmms],
+            'MeanSquareError': self.get_error_vector().tolist()
+        }
+
+        if output_dir is not None:
+            with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
+                json.dump(dict_selected_gmms, f, indent=2)
 
 
 class OccurrenceModel_Wangetal2023:
@@ -669,19 +712,13 @@ class OccurrenceModel_Wangetal2023:
         # define weights
         self.W = np.diag(np.sqrt(1 / self.y))
 
-        # convert from prob X to rate by Poisson assumption
-        # P = 1- P(k=0) = 1 - exp(-lambda)
-        # -> lambda = -ln(1 - P)
-        # self.X_rate = -np.log(1 - self.X_P)
-        self.X_rate = self.X_P
-
         # rate matrix for events
         # self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)
         self.occurence_rate_origin_mat = np.vstack(
             [np.array(self.occurence_rate_origin)]*self.X_P.shape[0])
 
         # hazard by each event
-        self.X = self.X_rate * self.occurence_rate_origin_mat
+        self.X = self.X_P * self.occurence_rate_origin_mat
 
         self.X_weighted = np.dot(self.W, self.X)
         self.y_weighted = np.dot(self.W, self.y)
@@ -710,4 +747,21 @@ class OccurrenceModel_Wangetal2023:
 
     def get_error_vector(self):
 
-        self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
+        # self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
+        error = self.y - self.X.sum(axis = 1)
+        error = error.reshape(self.num_sites, self.num_return_periods)
+        error = (error**2).sum(axis = 1)/self.num_return_periods
+        return error
+
+    def export_sampled_gmms(self, id_selected_gmms, id_selected_scens, P, output_dir=None):
+
+        dict_selected_gmms = {
+            'EarthquakeID': id_selected_scens.astype(int).tolist(),
+            'ProbabilityWeight': [P[x] for x in id_selected_gmms],
+            'LassoTuningParameter':self.alphas[self.selected_alpha_ind],
+            'MeanSquareError': self.get_error_vector().tolist()
+        }
+
+        if output_dir is not None:
+            with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
+                json.dump(dict_selected_gmms, f, indent=2)
