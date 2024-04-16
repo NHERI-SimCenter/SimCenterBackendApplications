@@ -1,3 +1,3 @@
-add_subdirectory(ReWet)
+add_subdirectory(REWET)
 
 
