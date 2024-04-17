@@ -360,11 +360,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     added_part = ""
     added_part += "\t type \t inletOutlet;\n"
     added_part += "\t inletValue \t uniform (0 0 0);\n"
-    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
     added_part += "\t value \t uniform (0 0 0);\n"
-    
-    # added_part += "\t type    zeroGradient;\n"
-
 
     dict_lines.insert(start_index, added_part)
     
@@ -908,7 +904,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Write writeControl         
     start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-    if solver_type=="pimpleFoam":
+    if solver_type=="pimpleFoam" and adjust_time_step:
         dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
     else:
         dict_lines[start_index] = "writeControl \t\t{};\n".format("timeStep")
@@ -919,7 +915,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
  
     #Write writeInterval  
     start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
-    if solver_type=="pimpleFoam":
+    if solver_type=="pimpleFoam" and adjust_time_step:
         dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval*time_step)
     else:
         dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
