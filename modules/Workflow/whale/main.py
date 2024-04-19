@@ -1184,7 +1184,7 @@ class Workflow(object):
             # The GEOJSON_TO_ASSET application is special because it can be used
             # for multiple asset types. "asset_type" needs to be added so the app
             # knows which asset_type it's processing.  
-            if asset_app.name == 'GEOJSON_TO_ASSET':
+            if asset_app.name == 'GEOJSON_TO_ASSET' or asset_app.name == 'INP_FILE':
                 asset_command_list = asset_command_list + [u'--assetType',\
                                 asset_type, u'--inputJsonFile', self.input_file]
 
