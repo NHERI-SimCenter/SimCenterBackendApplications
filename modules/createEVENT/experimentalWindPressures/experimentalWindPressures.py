@@ -398,7 +398,6 @@ def main(aimName,evtName, getRV):
     # TODO: parfor
 
     print("Creating NonGaussian Realizations");
-    do_parallel = True
     if do_parallel:
         Cp_nongauss_kernel = np.zeros((tap,CP_sim.shape[2],len(seeds)))
         print("Running {} simulations in parallel".format(tap))
