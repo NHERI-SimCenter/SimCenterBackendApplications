@@ -24,7 +24,7 @@ sys.stderr = open(errPath,'w')
 
 def main(aimName,evtName, getRV):
 
-    with open(aimName, 'r') as f:
+    with open(aimName, 'r', encoding='utf-8') as f:
         aim_data = json.load(f)
 
     evt_data = aim_data["Events"][0]
@@ -98,7 +98,7 @@ def main(aimName,evtName, getRV):
                     pressure_data[key] = pressure_data[key][0]
 
         elif filename.endswith('.json'):
-            with open(filename,'r') as jsonFile:
+            with open(filename,'r', encoding='utf-8') as jsonFile:
                 pressure_data = json.load(jsonFile)
 
         fs = np.squeeze(pressure_data["frequency"])
@@ -490,7 +490,7 @@ def main(aimName,evtName, getRV):
     # %% Plots for verification of code
     #
 
-    with open('tmpSimCenterLowRiseTPU.json', 'w') as f:
+    with open('tmpSimCenterLowRiseTPU.json', 'w', encoding='utf-8') as f:
         json.dump(new_json, f)
 
     #curScriptPath = abspath(getsourcefile(lambda:0))
