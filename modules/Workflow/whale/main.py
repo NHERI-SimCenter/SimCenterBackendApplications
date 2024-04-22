@@ -41,6 +41,7 @@
 # Michael Gardner
 # Chaofeng Wang
 # Stevan Gavrilovic
+# Jinyan Zhao
 
 """
 This module has classes and methods that handle everything at the moment.
@@ -146,7 +147,7 @@ class Options(object):
             try:
                 globals()['log_file'] = str(filepath)
 
-                with open(filepath, 'w') as f:
+                with open(filepath, 'w', encoding="utf-8") as f:
                     f.write('')
 
             except:
@@ -252,7 +253,7 @@ def log_msg(msg='', prepend_timestamp=True, prepend_blank_space=True):
             print(formatted_msg)
 
         if globals()['log_file'] is not None:
-            with open(globals()['log_file'], 'a') as f:
+            with open(globals()['log_file'], 'a', encoding="utf-8") as f:
                 f.write('\n'+formatted_msg)
 
 def log_error(msg):
@@ -439,7 +440,7 @@ def _parse_app_registry(registry_path, app_types, list_available_apps=False):
 
     # open the registry file
     log_msg('Loading the json file...', prepend_timestamp=False)
-    with open(registry_path, 'r') as f:
+    with open(registry_path, 'r', encoding="utf-8") as f:
         app_registry_data = json.load(f)
     log_msg('  OK', prepend_timestamp=False)
 
@@ -924,7 +925,7 @@ class Workflow(object):
 
         # open input file
         log_msg('Loading the json file...', prepend_timestamp=False)
-        with open(self.input_file, 'r') as f:
+        with open(self.input_file, 'r', encoding="utf-8") as f:
             input_data = json.load(f)
         log_msg('  OK', prepend_timestamp=False)
 
@@ -1048,7 +1049,7 @@ class Workflow(object):
             for event in requested_apps['Events'][:1]: #this limitation can be relaxed in the future
                 if 'EventClassification' in event:
                     eventClassification = event['EventClassification']
-                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood','Hydro', 'Tsunami'] :
+                    if eventClassification in ['Earthquake', 'Wind', 'Hurricane', 'Flood', 'Hydro', 'Tsunami', 'Surge', 'Lahar'] :
 
                         app_object = deepcopy(self.app_registry['Event'].get(event['Application']))
 
@@ -1134,7 +1135,7 @@ class Workflow(object):
         log_msg('Creating files for individual assets')
         
         # Open the input file - we'll need it later
-        with open(self.input_file, 'r') as f:
+        with open(self.input_file, 'r', encoding="utf-8") as f:
             input_data = json.load(f)
 
         # Get the workflow assets
@@ -1220,7 +1221,7 @@ class Workflow(object):
                 log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
                 log_msg('\nAsset Information Model (AIM) files successfully created.', prepend_timestamp=False)
-
+                
         log_div()
     
         return assetFilesList
@@ -1243,7 +1244,7 @@ class Workflow(object):
         # print('INPUT FILE:', self.input_file)
 
         # Open the input file - we'll need it later
-        with open(self.input_file, 'r') as f:
+        with open(self.input_file, 'r', encoding="utf-8") as f:
             input_data = json.load(f)
 
         # Get the workflow assets
@@ -1289,7 +1290,7 @@ class Workflow(object):
             # Append workflow settings to the BIM file
             log_msg('Appending additional settings to the AIM files...\n')
             
-            with open(asset_file, 'r') as f:
+            with open(asset_file, 'r', encoding="utf-8") as f:
                 asset_data = json.load(f)
 
             # extract the extra information from the input file for this asset type
@@ -1363,7 +1364,7 @@ class Workflow(object):
                     # Open the AIM file and add the unit information to it
                     # print(count, self.numP, self.procID, AIM_file)
                     
-                    with open(AIM_file, 'r') as f:
+                    with open(AIM_file, 'r', encoding="utf-8") as f:
                         AIM_data = json.load(f)
 
                     if 'DefaultValues' in input_data.keys():
@@ -1399,7 +1400,7 @@ class Workflow(object):
 
                     AIM_data.update(extra_input)
  
-                    with open(AIM_file, 'w') as f:
+                    with open(AIM_file, 'w', encoding="utf-8") as f:
                         json.dump(AIM_data, f, indent=2)
     
                 count = count + 1
@@ -1426,14 +1427,17 @@ class Workflow(object):
         if 'SystemPerformance' in self.workflow_apps.keys():
             performance_app = self.workflow_apps['SystemPerformance'][asset_type]
         else:
-            log_msg('No Performance application to run for asset.', prepend_timestamp=False)
+            log_msg(f'No Performance application to run for asset type: {asset_type}.', prepend_timestamp=False)
             log_div()
-            return;
+            return False
 
         if performance_app.rel_path == None:
-            log_msg('No Performance Application to run for asset type: '+asset_type, prepend_timestamp=False)
+            log_msg(f'No Performance application to run for asset type: {asset_type}.', prepend_timestamp=False)
             log_div()            
-            return;
+            return False
+
+        log_msg('Performing System Performance Application for asset type: ' + asset_type, prepend_timestamp=False)
+        log_div()
 
         app_command_list = performance_app.get_command_list(app_path = self.app_dir_local)
 
@@ -1441,38 +1445,56 @@ class Workflow(object):
         # defaults added to a system performance app are asset_type, input_dir and running_parallel (default False)
         #
         
-        app_command_list.append('--asset_type')
-        app_command_list.append(asset_type)
-        app_command_list.append('--input_file')
+        #app_command_list.append('--asset_type')
+        #app_command_list.append(asset_type)
+        app_command_list.append('--input')
         app_command_list.append(self.input_file)                
-        app_command_list.append('--working_dir')
-        app_command_list.append(self.working_dir)        
+        #app_command_list.append('--working_dir')
+        #app_command_list.append(self.working_dir)        
+        
+        
+        # Sina added this part for parallel run in REWET
+        if (self.parType == 'parSETUP'):
+            log_msg('\nParallel settings for System Performance for asset type:' + asset_type, prepend_timestamp=False)                
+            app_command_list.append('--par')
         
         command = create_command(app_command_list)
-
-        if (self.parType == 'parSETUP'):
-
-            log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)                
-            self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
-
-            if performance_app.runsParallel == False:
-                self.parCommandFile.write(command + "\n")
-            else:
-                self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
-
-        else:
         
-            log_msg('\n{}\n'.format(command), prepend_timestamp=False,
-                    prepend_blank_space=False)
+        result, returncode = run_command(command)        
 
-            result, returncode = run_command(command)        
+        log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-            log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
-            log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
+            
+        
+        #  end of Sina's odifications for parallel run   
+        
+        
+        # if (self.parType == 'parSETUP'):
 
-            log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
+        #     log_msg('\nWriting System Performance application for asset type:' + asset_type, prepend_timestamp=False)                
+        #     self.parCommandFile.write("\n# Writing System Performance application for asset type:" + asset_type +"\n")
+
+        #     if performance_app.runsParallel == False:
+        #         self.parCommandFile.write(command + "\n")
+        #     else:
+        #         self.parCommandFile.write(self.mpiExec + " -n " + str(self.numProc) + " " + command + " --running_parallel True\n")
+
+        # else:
+        
+        #     log_msg('\n{}\n'.format(command), prepend_timestamp=False,
+        #             prepend_blank_space=False)
+
+        #     result, returncode = run_command(command)        
+
+        #     log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        #     log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
+
+        #     log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
             
         log_div()
+        return True
 
         
     def perform_regional_event(self):
@@ -1503,8 +1525,8 @@ class Workflow(object):
 
         reg_event_command_list = reg_event_app.get_command_list(app_path = self.app_dir_local)
 
-        command = create_command(reg_event_command_list)    
-        
+        command = create_command(reg_event_command_list)
+
         if (self.parType == 'parSETUP'):
 
             log_msg('\nWriting Regional Event Command to script', prepend_timestamp=False)                
@@ -1950,10 +1972,10 @@ class Workflow(object):
 
                 # sy - trying adding exit command
                 if platform.system() == 'Windows':
-                    with open("driver.bat","r") as f:
+                    with open("driver.bat","r", encoding="utf-8") as f:
                         lines = f.readlines()
                     lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                    with open("driver.bat","w") as f:
+                    with open("driver.bat","w", encoding="utf-8") as f:
                         f.writelines(lines)
                 else:
                     pass
@@ -2019,7 +2041,7 @@ class Workflow(object):
             # print('FMK- gather command:', command)
 
             result, returncode = run_command(command)
-            
+
             log_msg('Output: ', prepend_timestamp=False,
                     prepend_blank_space=False)
             log_msg('\n{}\n'.format(result), prepend_timestamp=False,
@@ -2114,7 +2136,7 @@ class Workflow(object):
             if platform.system() == 'Windows':
                 driverFile = driverFile+'.bat'
             log_msg(driverFile)
-            with open(driverFile,'w', newline='\n') as f:
+            with open(driverFile,'w', newline='\n', encoding="utf-8") as f:
                 f.write(driver_script)
 
             log_msg('Workflow driver file successfully created.',prepend_timestamp=False)
@@ -2553,6 +2575,14 @@ class Workflow(object):
 
         log_msg('Collecting '+asset_type+' damage and loss results')
 
+        R2D_res_out_types = []
+        with open(self.input_file, 'r') as f:
+            input_data = json.load(f)
+        requested_output = input_data['outputs']
+        for key, item in requested_output.items():
+            if item:
+                R2D_res_out_types.append(key)
+
         run_path = self.run_dir
                 
         if asset_type != '' :
@@ -2566,7 +2596,7 @@ class Workflow(object):
         #TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
         if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
-
+            initialize_dicts = True
             for a_i, asst in enumerate(asst_data):
 
                 bldg_dir = Path(os.path.dirname(asst_data[a_i]['file'])).resolve()
@@ -2592,16 +2622,16 @@ class Workflow(object):
                 else:
                     # skip this asset if there is no AIM file available
                     show_warning(
-                        "Couldn't find AIM file for building {asset_id}")
+                        f"Couldn't find AIM file for {assetTypeHierarchy[-1]} {asset_id}")
                     continue
 
-                with open(AIM_file, 'r') as f:
+                with open(AIM_file, 'r', encoding="utf-8") as f:
                     AIM_data_i = json.load(f)
 
                 sample_size = AIM_data_i['Applications']['DL']['ApplicationData']['Realizations']
 
                 # initialize the output dict if this is the first asset
-                if a_i == 0:
+                if initialize_dicts:
 
                     # We assume all assets have the same output sample size
                     # Variable sample size doesn't seem to make sense
@@ -2611,6 +2641,7 @@ class Workflow(object):
                     # We also create a dict to collect deterministic info, i.e.,
                     # data that is identical for all realizations
                     deterministic = {asset_type: {}}
+                    initialize_dicts = False
 
                 # Check if the asset type hierarchy exist in deterministic and 
                 # realizations. Create a hierarchy if it doesn't exist.
@@ -2647,11 +2678,11 @@ class Workflow(object):
                     if edp_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find EDP file for building {asset_id}")
+                            f"Couldn't find EDP file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
-                        with open(asset_dir/edp_out_file_i, 'r') as f:
+                        with open(asset_dir/edp_out_file_i, 'r', encoding="utf-8") as f:
                             edp_data_i = json.load(f)
 
                         # remove the ONE demand
@@ -2682,7 +2713,20 @@ class Workflow(object):
                         deter_pointer[asset_id].update({
                             "Demand": {"Units": edp_units}
                             })
-
+                        if 'EDP' in R2D_res_out_types:
+                            meanValues = edp_data_i.mean()
+                            stdValues = edp_data_i.std()
+                            r2d_res_edp = dict()
+                            for key in edp_data_i.columns:
+                                meanKey = f'R2Dres_mean_{key}_{edp_units[key]}'
+                                stdKey = f'R2Dres_std_{key}_{edp_units[key]}'
+                                r2d_res_edp.update({meanKey:meanValues[key],\
+                                                    stdKey:stdValues[key]})
+                            r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
+                            r2d_res_i.update(r2d_res_edp)
+                            deter_pointer[asset_id].update({
+                                "R2Dres":r2d_res_i
+                            })
                 if 'DMG' in out_types:
 
                     dmg_out_file_i = 'DMG_grp.json'
@@ -2690,11 +2734,11 @@ class Workflow(object):
                     if dmg_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find DMG file for building {asset_id}")
+                            f"Couldn't find DMG file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
-                        with open(asset_dir/dmg_out_file_i, 'r') as f:
+                        with open(asset_dir/dmg_out_file_i, 'r', encoding="utf-8") as f:
                             dmg_data_i = json.load(f)
 
                         # remove damage unit info                        
@@ -2702,10 +2746,6 @@ class Workflow(object):
 
                         # parse damage data into a DataFrame
                         dmg_data_i = pd.DataFrame(dmg_data_i)
-
-                        # JZ: Temporary for json dmg_grp.json format                        
-                        #dmg_data_i = dmg_data_i.set_index(dmg_data_i.index.astype(int))
-                        #dmg_data_i = dmg_data_i.astype(float)
 
                         # convert to realization-by-realization format
                         dmg_output = {}
@@ -2725,19 +2765,38 @@ class Workflow(object):
                         for rlz_i in range(sample_size):
                             rlzn_pointer[rlz_i][asset_id].update(
                                 {'Damage':dmg_output[rlz_i]})
+                        if 'DM' in R2D_res_out_types:
+                            # use forward fill in case of multiple modes
+                            meanValues = dmg_data_i.mode().ffill().mean()
+                            stdValues = dmg_data_i.std()
+                            r2d_res_dmg = dict()
+                            for key in dmg_data_i.columns:
+                                meanKey = f'R2Dres_mode_{key}'
+                                stdKey = f'R2Dres_std_{key}'
+                                r2d_res_dmg.update({meanKey:meanValues[key],\
+                                                    stdKey:stdValues[key]})
+                            r2d_res_dmg.update({
+                                "R2Dres_MostLikelyCriticalDamageState":\
+                                    dmg_data_i.max(axis = 1).mode().mean()})
+                            r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
+                            r2d_res_i.update(r2d_res_dmg)
+                            deter_pointer[asset_id].update({
+                                "R2Dres":r2d_res_i
+                            })
+
 
                 if 'DV' in out_types:
 
-                    dv_out_file_i = 'DV_bldg_repair_grp.json'
+                    dv_out_file_i = 'DV_repair_grp.json'
 
                     if dv_out_file_i not in os.listdir(asset_dir):
 
                         show_warning(
-                            f"Couldn't find DV file for building {asset_id}")
+                            f"Couldn't find DV file for {assetTypeHierarchy[-1]} {asset_id}")
 
                     else:
 
-                        with open(asset_dir/dv_out_file_i, 'r') as f:
+                        with open(asset_dir/dv_out_file_i, 'r', encoding="utf-8") as f:
                             dv_data_i = json.load(f)
 
                         # extract DV unit info
@@ -2746,9 +2805,6 @@ class Workflow(object):
 
                         # parse decision variable data into a DataFrame
                         dv_data_i = pd.DataFrame(dv_data_i)
-
-                        # JZ: Temporary for json dmg_grp.json format 
-                        #dv_data_i = dv_data_i.set_index(dv_data_i.index.astype(int))
                         
                         # get a list of dv types
                         dv_types = np.unique(
@@ -2777,6 +2833,21 @@ class Workflow(object):
                         deter_pointer[asset_id].update({
                             "Loss": {"Units": dv_units}
                             })
+                        
+                        if 'DV' in R2D_res_out_types:
+                            meanValues = dv_data_i.mean()
+                            stdValues = dv_data_i.std()
+                            r2d_res_dv = dict()
+                            for key in dv_data_i.columns:
+                                meanKey = f'R2Dres_mean_{key}_{dv_units[key]}'
+                                stdKey = f'R2Dres_std_{key}_{dv_units[key]}'
+                                r2d_res_dv.update({meanKey:meanValues[key],\
+                                                    stdKey:stdValues[key]})
+                            r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
+                            r2d_res_i.update(r2d_res_dv)
+                            deter_pointer[asset_id].update({
+                                "R2Dres":r2d_res_i
+                            })
 
             # This is also ugly but necessary for backward compatibility so that 
             # file structure created from apps other than GeoJSON_TO_ASSET can be
@@ -2794,10 +2865,10 @@ class Workflow(object):
             # save outputs to JSON files
             for rlz_i, rlz_data in realizations.items():
 
-                with open(main_dir/f"{asset_type}_{rlz_i}.json", 'w') as f:
+                with open(main_dir/f"{asset_type}_{rlz_i}.json", 'w', encoding="utf-8") as f:
                     json.dump(rlz_data, f, indent=2)
 
-            with open(main_dir/f"{asset_type}_det.json", 'w') as f:
+            with open(main_dir/f"{asset_type}_det.json", 'w', encoding="utf-8") as f:
                 json.dump(deterministic, f, indent=2)
 
         else:
@@ -2960,63 +3031,35 @@ class Workflow(object):
         log_msg('Damage and loss results collected successfully.', prepend_timestamp=False)
         log_div()
 
-    def combine_assets_results(self, asset_files):
+    def compile_r2d_results_geojson(self, asset_files):
         run_path = self.run_dir
-        isPelicun3 = True
-        asset_types = list(asset_files.keys())
-        for asset_type in asset_types:
-            if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
-                # isPelicun3 = False
-                asset_files.pop(asset_type)
-        if asset_files: # If any asset_type uses Pelicun3 as DL app
-            # get metadata
-            with open(self.input_file, 'r') as f:
-                input_data = json.load(f)
-            metadata = {"Name": input_data["Name"],
-                        "Units": input_data["units"],
-                        "Author": input_data["Author"],
-                        "WorkflowType": input_data["WorkflowType"],
-                        "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
-            sample_size = []
-            ## create the geojson for R2D visualization
-            geojson_result = {
-                "type": "FeatureCollection",
-                "crs": {
-                    "type": "name",
-                    "properties": {
-                    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-                    }
-                },
-                "metadata":metadata,
-                "features":[]
-            }
-            for asset_type, assetIt in asset_files.items():
-                sample_size.append(input_data['Applications']['DL'][asset_type]\
-                                   ["ApplicationData"]['Realizations'])
-                with open(assetIt, 'r') as f:
-                    asst_data = json.load(f)
-                for asst in asst_data:
-                    bldg_dir = Path(os.path.dirname(asst['file'])).resolve()
-                    asset_id = asst['id']
-                    main_dir = bldg_dir
-                    assetTypeHierarchy = [bldg_dir.name]
-                    while main_dir.parent.name != 'Results':
-                        main_dir = bldg_dir.parent
-                        assetTypeHierarchy = [main_dir.name] + assetTypeHierarchy
-                    asset_dir = bldg_dir/asset_id
-                    AIM_file = None
-                    if f"{asset_id}-AIM_ap.json" in os.listdir(asset_dir):
-                        AIM_file = asset_dir / f"{asset_id}-AIM_ap.json"
-                    elif f"{asset_id}-AIM.json" in os.listdir(asset_dir):
-                        AIM_file = asset_dir / f"{asset_id}-AIM.json"
-                    else:
-                        # skip this asset if there is no AIM file available
-                        show_warning(
-                            "Couldn't find AIM file for building {asset_id}")
-                    with open(AIM_file, 'r') as f:
-                        asst_aim = json.load(f)
+        with open(self.input_file, 'r', encoding="utf-8") as f:
+            input_data = json.load(f)
+        with open(run_path/'Results_det.json', encoding="utf-8") as f:
+            res_det = json.load(f)
+        metadata = {"Name": input_data["Name"],
+                    "Units": input_data["units"],
+                    "Author": input_data["Author"],
+                    "WorkflowType": input_data["WorkflowType"],
+                    "Time": datetime.now().strftime('%m-%d-%Y %H:%M:%S')}
+        ## create the geojson for R2D visualization
+        geojson_result = {
+            "type": "FeatureCollection",
+            "crs": {
+                "type": "name",
+                "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+                }
+            },
+            "metadata":metadata,
+            "features":[]
+        }
+        for asset_type in asset_files.keys():
+            for assetSubtype, subtypeResult in res_det[asset_type].items():
+                allAssetIds = sorted([int(x) for x in subtypeResult.keys()])
+                for asset_id in allAssetIds:
                     ft = {"type":"Feature"}
-                    asst_GI = asst_aim['GeneralInformation'].copy()
+                    asst_GI = subtypeResult[str(asset_id)]['GeneralInformation'].copy()
                     asst_GI.update({"assetType":asset_type})
                     try:
                         if "geometry" in asst_GI:
@@ -3032,68 +3075,34 @@ class Workflow(object):
                             asst_lon = asst_GI['location']['longitude']
                             asst_geom = { "type": "Point", "coordinates": [\
                                 asst_lon, asst_lat]}
+                            asst_GI.pop("location")
                     except:
-                        asst_lat = asst_GI['location']['latitude']
-                        asst_lon = asst_GI['location']['longitude']
-                        asst_geom = { "type": "Point", "coordinates": [\
-                            asst_lon, asst_lat]}
-                    asst_GI.pop("units")
-                    DL_summary_file = asset_dir/"DL_summary_stats.json"
-                    with open(DL_summary_file, 'r') as f:
-                        DL_summary = json.load(f)
-                    DL_results = {}
-                    pelicun_key_to_R2D = {'repair_cost-': 'RepairCost',
-                                          'repair_cost': 'RepairCost',  
-                                          'repair_time-parallel':'RepairTimeParallel',
-                                          'repair_time-sequential':'RepairTimeSequential',
-                                          'collapse':'Collapse',
-                                          'irreparable':'Irreparable'}
-                    for key, value in DL_summary.items():
-                        DL_results.update({f"R2Dres_mean_{pelicun_key_to_R2D[key]}"\
-                                           :value["mean"]})
-                        DL_results.update({f"R2Dres_std_{pelicun_key_to_R2D[key]}"\
-                                           :value["std"]})
-                    if DL_results.get('R2Dres_mean_RepairTimeParallel', None) is not None:
-                        if DL_results['R2Dres_mean_RepairTimeParallel'] == \
-                        DL_results.get('R2Dres_mean_RepairTimeSequential', None):
-                            mean_repair_time = DL_results.pop('R2Dres_mean_RepairTimeSequential')
-                            DL_results.pop('R2Dres_mean_RepairTimeParallel')
-                            DL_results.update({'R2Dres_mean_RepairTime':mean_repair_time})
-                            std_repair_time = DL_results.pop('R2Dres_std_RepairTimeSequential')
-                            DL_results.pop('R2Dres_std_RepairTimeParallel')
-                            DL_results.update({'R2Dres_std_RepairTime':std_repair_time})
-                    
-
-                    DMG_grp_file = asset_dir/"DMG_grp.json"
-                    with open(DMG_grp_file, 'r') as f:
-                        DMG_grp = json.load(f)
-
-                    # remove units
-                    del DMG_grp['Units']
-
-                    DMG_results = {}
-                    all_DMG = []
-                    for key, value in DMG_grp.items():
-                        valueList = value #[float(v) for k, v in value.items()]
-                        all_DMG.append(valueList)
-                        DMG_results.update({
-                            f'R2Dres_MostLikelyDamageState_{key}': max(set(valueList), 
-                                                                       key=valueList.count)})
-                    
-                    highest_DMG = np.amax(np.array(all_DMG), axis = 0)
-                    
-                    DMG_results.update({"R2Dres_MostLikelyCriticalDamageState"\
-                                        :int(max(set(highest_DMG),\
-                                        key=list(highest_DMG).count))})
-                    
+                        warnings.warn(UserWarning(
+                            f"Geospatial info is missing in {assetSubtype} {asset_id}"))
+                        continue
+                    if asst_GI.get("units", None) is not None:
+                        asst_GI.pop("units")
                     ft.update({"geometry":asst_geom})
                     ft.update({"properties":asst_GI})
-                    ft["properties"].update(DL_results)
-                    ft["properties"].update(DMG_results)
+                    ft["properties"].update(subtypeResult[str(asset_id)]['R2Dres'])
                     geojson_result["features"].append(ft)
-                
-                with open(run_path/"R2D_results.geojson", 'w') as f:
-                    json.dump(geojson_result, f, indent=2)
+        with open(run_path/"R2D_results.geojson", 'w', encoding="utf-8") as f:
+            json.dump(geojson_result, f, indent=2)
+
+
+    def combine_assets_results(self, asset_files):
+        asset_types = list(asset_files.keys())
+        for asset_type in asset_types:
+            if self.workflow_apps['DL'][asset_type].name != 'Pelicun3':
+                # isPelicun3 = False
+                asset_files.pop(asset_type)
+        if asset_files: # If any asset_type uses Pelicun3 as DL app
+            with open(self.input_file, 'r', encoding="utf-8") as f:
+                input_data = json.load(f)
+            sample_size = []
+            for asset_type, assetIt in asset_files.items():
+                sample_size.append(input_data['Applications']['DL'][asset_type]\
+                                   ["ApplicationData"]['Realizations'])
             sample_size = min(sample_size)
             ## Create the Results_det.json and Results_rlz_i.json for recoverary
             deterministic = {}
@@ -3101,20 +3110,20 @@ class Workflow(object):
             for asset_type in asset_files.keys():
                 asset_dir = self.run_dir/asset_type
                 determine_file = asset_dir/f"{asset_type}_det.json"
-                with open(determine_file, 'r') as f:
+                with open(determine_file, 'r', encoding="utf-8") as f:
                     determ_i = json.load(f)
                 deterministic.update(determ_i)
                 for rlz_i in range(sample_size):
                     rlz_i_file = asset_dir/f"{asset_type}_{rlz_i}.json"
-                    with open(rlz_i_file, 'r') as f:
+                    with open(rlz_i_file, 'r', encoding="utf-8") as f:
                         rlz_i_i = json.load(f)
                     realizations[rlz_i].update(rlz_i_i)
             
             determine_file = self.run_dir/"Results_det.json"
-            with open (determine_file, 'w') as f:
+            with open (determine_file, 'w', encoding="utf-8") as f:
                 json.dump(deterministic, f, indent=2)
             for rlz_i, rlz_data in realizations.items():
-                with open(self.run_dir/f"Results_{rlz_i}.json", 'w') as f:
+                with open(self.run_dir/f"Results_{rlz_i}.json", 'w', encoding="utf-8") as f:
                     json.dump(rlz_data, f, indent=2)
         else:
             pass

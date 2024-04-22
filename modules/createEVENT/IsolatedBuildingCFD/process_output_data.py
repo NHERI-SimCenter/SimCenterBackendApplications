@@ -36,7 +36,7 @@ def write_wind_profiles(case_path):
     wc_json_file = open(case_path + "/constant/simCenter/windCharacteristics.json")
     
     # Returns JSON object as a dictionary
-    wind_data = json.load(wc_json_file)
+    wind_data = json.load(wc_json_file, 'r', encoding='utf-8')
     wc_json_file.close()
       
     building_height = wind_data['buildingHeight']

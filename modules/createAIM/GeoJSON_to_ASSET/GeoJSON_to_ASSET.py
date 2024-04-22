@@ -86,7 +86,7 @@ class generalAIMGenerator:
         asset_id = AIM_i["GeneralInformation"]["AIM_id"]
         AIM_file_name = "{}-AIM.json".format(asset_id)
         AIM_file_name = os.path.join(outDir,AIM_file_name)
-        with open(AIM_file_name, 'w') as f:
+        with open(AIM_file_name, 'w', encoding="utf-8") as f:
             json.dump(AIM_i, f, indent=2, cls=NpEncoder)
         return AIM_file_name
 
@@ -196,7 +196,7 @@ class lineAIMGenerator(generalAIMGenerator):
 def split_and_select_components(input_config):
     component_dict = dict()
     asset_source_file = input_config["assetSourceFile"]
-    with open(asset_source_file, 'r') as f:
+    with open(asset_source_file, 'r', encoding="utf-8") as f:
         source_data = json.load(f)
     crs = source_data["crs"]
     featureList = source_data["features"]
@@ -225,8 +225,10 @@ def split_and_select_components(input_config):
         component_type = feat["properties"].get("type", None)
         if (component_type in component_dict.keys()):
             feat_id = int(feat["id"])
-            if (feat_id in requested_dict[component_type]) or \
-                (requested_dict[component_type].size == 0):
+            if requested_dict[component_type].size == 0:
+                component_dict.pop(component_type)
+                continue
+            if (feat_id in requested_dict[component_type]):
                 feat["properties"].update({"id":feat_id})
                 component_dict[component_type].append(feat)
     for component in component_dict.keys():
@@ -273,7 +275,7 @@ def create_asset_files(output_file,
                 procID = 0
     outDir = os.path.dirname(output_file)
                 
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding="utf-8") as f:
         input_data = json.load(f)
     input_config = input_data["Applications"]["Assets"][asset_type]\
         ["ApplicationData"]
@@ -316,7 +318,7 @@ def create_asset_files(output_file,
     if procID != 0:
     # if not P0, write data to output file with procID in name and barrier
         output_file_p = os.path.join(outDir,f'tmp_{procID}.json')
-        with open(output_file_p, 'w') as f:
+        with open(output_file_p, 'w', encoding="utf-8") as f:
             json.dump(assets_array, f, indent=0)
         comm.Barrier() 
     else:
@@ -325,11 +327,11 @@ def create_asset_files(output_file,
             comm.Barrier()        
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                with open(fileToAppend, 'r') as data_file:
+                with open(fileToAppend, 'r', encoding="utf-8") as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding="utf-8") as f:
             json.dump(assets_array, f, indent=2, cls=NpEncoder)
     # else:
     #     print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")

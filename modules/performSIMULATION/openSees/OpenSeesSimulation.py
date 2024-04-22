@@ -33,15 +33,16 @@ def main(args):
 
         #Run OpenSees
         exit_code = subprocess.Popen("OpenSees example.tcl >> workflow.err 2>&1", shell=True).wait()
-        if os.path.isfile("./workflow.err"):
-            with open("./workflow.err", 'r') as file:   
-                lines = file.readlines()
-                # Iterate through each line
-                for line in lines:
-                    # Check if the keyword exists in the line
-                    if "error" in line.lower():
-                        exit_code = -1
-                        exit(exit_code)
+        
+        #if os.path.isfile("./workflow.err"):
+        #    with open("./workflow.err", 'r') as file:   
+        #        lines = file.readlines()
+        #        # Iterate through each line
+        #        for line in lines:
+        #            # Check if the keyword exists in the line
+        #            if "error" in line.lower():
+        #                exit_code = -1
+        #                exit(exit_code)
 
         #Run postprocessor
         postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, edpName)

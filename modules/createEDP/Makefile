@@ -6,6 +6,7 @@ all:
 	(cd userEDP; make all)
 	(cd dummyEDP; make all)
 	(cd gmtEDP; make all)
+	(cd standardHydroEDP; make all)
 
 clean: 
 	rm -f *~ *.o
@@ -16,6 +17,7 @@ clean:
 	(cd userEDP; make clean)
 	(cd dummyEDP; make clean)
 	(cd gmtEDP; make clean)
+	(cd standardHydroEDP; make clean)
 
 distclean: 
 	(cd standardEarthquakeEDP; make distclean)
@@ -24,5 +26,6 @@ distclean:
 	(cd userEDP; make distclean)
 	(cd dummyEDP; make distclean)
 	(cd gmtEDP; make distclean)
+	(cd standardHydroEDP; make distclean)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
