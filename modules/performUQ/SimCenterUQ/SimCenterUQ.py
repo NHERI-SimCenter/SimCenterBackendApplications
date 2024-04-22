@@ -36,7 +36,7 @@ def main(args):
     workflowDriver = args.driverFile
     outputFile = args.workflowOutput
     
-    with open(inputFile, 'r') as f:
+    with open(inputFile, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     
@@ -69,7 +69,7 @@ def main(args):
         print('work_dir: ' + workdir_main)
         
         # open the input json file
-        with open(inputFile) as data_file:    
+        with open(inputFile, 'r', encoding='utf-8') as data_file:
             data = json.load(data_file)
 
         uq_data = data["UQ"]
