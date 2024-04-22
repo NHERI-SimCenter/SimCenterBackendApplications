@@ -37,7 +37,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     rootSIM = {}
 
     # Try to open the BIM json
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file, 'r', encoding='utf-8') as f:
         rootBIM = json.load(f)
     try:
         rootSIM = rootBIM['Modeling']
