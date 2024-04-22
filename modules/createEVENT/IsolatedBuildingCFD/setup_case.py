@@ -1835,12 +1835,15 @@ def write_boundary_data_files(input_json_path, case_path):
     if TInf options are used for the simulation.  
     """
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
     boundary_data = json_data["boundaryConditions"]    
     geom_data = json_data['GeometricData']
+    scale = 1.0/float(geom_data['geometricScale'])
+    norm_type = geom_data['normalizationType']
+    building_height = scale*geom_data['buildingHeight']
 
     wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
 
@@ -1855,6 +1858,10 @@ def write_boundary_data_files(input_json_path, case_path):
     
     Ly = geom_data['domainWidth']
     Lf = geom_data['fetchLength']
+
+    if norm_type=="Relative":
+        Ly *= building_height 
+        Lf *= building_height 
     
     x_min = -Lf - origin[0]
     y_min = -Ly/2.0 - origin[1]
