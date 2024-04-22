@@ -207,7 +207,7 @@ class PLoM:
                     self.X0 = pd.DataFrame(X, columns=var_names)
             else:
                 import json
-                with open(filename) as f:
+                with open(filename, 'r', encoding='utf-8') as f:
                     jsondata = json.load(f)
                 var_names = list(jsondata.keys())
                 # multiple columns

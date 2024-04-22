@@ -11,7 +11,7 @@ import argparse, posixpath, ntpath, json
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     
     # load the AIM file
-    with open(AIM_input_path, 'r') as f:
+    with open(AIM_input_path, 'r', encoding='utf-8') as f:
         AIM_in = json.load(f)
 
     EDP_list = []
