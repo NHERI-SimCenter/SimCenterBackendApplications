@@ -1879,11 +1879,11 @@ class Workflow(object):
                             log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                             log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
-                            if returncode==0:
-                                log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
-                            else:
-                                log_msg('Error in the preprocessor.', prepend_timestamp=False)
-                                exit(-1)
+                            #if returncode==0:
+                            #    log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                            #else:
+                            #    log_msg('Error in the preprocessor.', prepend_timestamp=False)
+                            #    exit(-1)
 
 
                             log_div()
@@ -1905,11 +1905,11 @@ class Workflow(object):
                         log_msg('Output: '+str(returncode), prepend_timestamp=False, prepend_blank_space=False)
                         log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
         
-                        if returncode==0:
-                            log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
-                        else:
-                            log_msg('Error in the preprocessor.', prepend_timestamp=False)
-                            exit(-1)
+                        #if returncode==0:
+                        #    log_msg('Preprocessing successfully completed.', prepend_timestamp=False)
+                        #else:
+                        #    log_msg('Error in the preprocessor.', prepend_timestamp=False)
+                        #    exit(-1)
 
                         log_div()
 

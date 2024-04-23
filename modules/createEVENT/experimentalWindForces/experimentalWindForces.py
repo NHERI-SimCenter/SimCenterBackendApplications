@@ -281,7 +281,11 @@ def main(aimName,evtName,getRV):
         for nf in range(nfloors):
             id_timeseries +=1
             my_pattern = {}
-            my_pattern["dof"]=nd+1 # TODO: is it x,y,z?
+            if nd==0 or nd==1:
+                my_pattern["dof"]=nd+1 # x and y dir
+            elif nd==2:
+                my_pattern["dof"]=6 # moments
+
             my_pattern["floor"]=str(nf+1)
             my_pattern["name"]=str(id_timeseries)
             my_pattern["staticWindLoad"]=0.0
