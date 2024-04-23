@@ -5,7 +5,7 @@ This module is responsble for calculating damage to t=different componenst of
 teh system, including pipe lines. pupmo and so.
 @author: snaeimi
 """
-import wntr
+import wntrfr
 import pandas as pd
 from scipy.stats import lognorm
 import logging
