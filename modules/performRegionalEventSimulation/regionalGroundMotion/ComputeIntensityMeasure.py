@@ -43,7 +43,8 @@
 # Kuanshi Zhong
 # Jinyan Zhao
 
-import warnings
+import warnings, h5py, re
+import numpy as np
 
 LOCAL_IM_GMPE = {"DS575H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
                  "DS595H": ["Bommer, Stafford & Alarcon (2009)", "Afshari & Stewart (2016)"],
@@ -65,17 +66,6 @@ OPENSHA_IM_GMPE = {"SA": ["Abrahamson, Silva & Kamai (2014)", "Boore, Stewart, S
 IM_GMPE = {"LOCAL": LOCAL_IM_GMPE,
            "OPENSHA": OPENSHA_IM_GMPE}
 
-IM_CORR_INTER = {"Baker & Jayaram (2008)": ["SA"], 
-                 "Baker & Bradley (2017)": ["SA", "PGA", "PGV", "DS575H", "DS595H"]}
-
-IM_CORR_INTRA = {"Jayaram & Baker (2009)": ["SA"],
-                 "Loth & Baker (2013)": ["SA"],
-				 "Markhvida et al. (2017)": ["SA"],
-				 "Du & Ning (2021)": ["SA", "PGA", "PGV", "Ia", "CAV", "DS575H", "DS595H"]}
-
-IM_CORR = {"INTER": IM_CORR_INTER,
-           "INTRA": IM_CORR_INTRA}
-
 import os
 import subprocess
 import sys
@@ -83,11 +73,10 @@ import json
 import numpy as np
 from numpy.lib.utils import source
 import pandas as pd
-from gmpe import CorrelationModel, SignificantDurationModel, openSHAGMPE
+from gmpe import SignificantDurationModel, openSHAGMPE
 from tqdm import tqdm
 import time
 from pathlib import Path
-import copy
 import socket
 import collections
 if 'stampede2' not in socket.gethostname():
@@ -113,18 +102,43 @@ class IM_Calculator:
 	             gmpe_weights_dict=dict(), im_type=None, site_info=dict()):
 
 		# basic set-ups
-		self.set_source(source_info)
 		self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
 		self.set_im_type(im_type)
 		self.set_sites(site_info)
+		# self.set_source(source_info)
+		
 	
 	def set_source(self, source_info):
 		# set seismic source
 		self.source_info = source_info.copy()
-		# earthquake rupture forecast model (if any)
-		# self.erf = None
-		# if source_info.get('RuptureForecast', None):
-		# 	self.erf = getERF(source_info['RuptureForecast'], True)
+		gmpe_list = set()
+		for _, item in self.gmpe_dict.items():
+			gmpe_list = gmpe_list.union(set(item))
+		if source_info['Type']=='ERF':
+			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
+				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
+				'Campbell & Bozorgnia (2014)' in gmpe_list:
+				source_index = source_info.get('SourceIndex', None)
+				rupture_index = source_info.get('RuptureIndex', None)
+				# start = time.process_time_ns()
+				site_rup_dict, station_info = get_rupture_info_CY2014(self.erf, source_index, rupture_index, self.site_info)
+				# self.timeGetRuptureInfo += time.process_time_ns() - start
+		elif source_info['Type']=='PointSource':
+			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
+				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
+				'Campbell & Bozorgnia (2014)' in gmpe_list:
+				# start = time.process_time_ns()
+				site_rup_dict, station_info = get_PointSource_info_CY2014(source_info, self.site_info)
+				# self.timeGetRuptureInfo += time.process_time_ns() - start
+		elif source_info['Type'] == 'oqSourceXML':
+			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
+				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
+				'Campbell & Bozorgnia (2014)' in gmpe_list:
+				# start = time.process_time_ns()
+				site_rup_dict, station_info = get_site_rup_info_oq(source_info, self.site_info)
+				# self.timeGetRuptureInfo += time.process_time_ns() - start
+		self.site_rup_dict = site_rup_dict
+		self.site_info = station_info
 
 	def set_im_gmpe(self, im_dict, gmpe_dict, gmpe_weights_dict):
 		# set im and gmpe information
@@ -185,8 +199,7 @@ class IM_Calculator:
 				return
 		# now compute im values
 		if len(gmpe_list_local) > 0:
-			res_local = self.get_im_from_local(self.source_info, gmpe_list_local, im_type, cur_im_dict, self.erf, 
-			                                   self.site_info, gmpe_weights=gmpe_weights_list_local)
+			res_local = self.get_im_from_local(self.source_info, gmpe_list_local, im_type, cur_im_dict, gmpe_weights=gmpe_weights_list_local)
 		else:
 			res_local = dict()
 		if len(gmpe_list_opensha) > 0:
@@ -233,8 +246,7 @@ class IM_Calculator:
 		# return
 		return res
 
-	def get_im_from_local(self, source_info, gmpe_list, im_type, im_info, erf, station_info, gmpe_weights=None):
-
+	def get_im_from_local(self, source_info, gmpe_list, im_type, im_info, gmpe_weights=None):
 		# initiate
 		res_list = []
 		res = dict()
@@ -281,48 +293,12 @@ class IM_Calculator:
 		else:
 			print('ComputeIntensityMeasure.get_im_from_local: error - source type {} not supported'.format(source_info['Type']))
 			return res
-		# sites
-		site_rup_dist = []
-		for cur_site in station_info:
-			cur_lat = cur_site['lat']
-			cur_lon = cur_site['lon']
-			# get distance
-			if source_info['Type'] == 'PointSource':
-				# no earth curvature is considered
-				site_rup_dist.append(np.sqrt((eq_loc[0]-cur_lat)**2+(eq_loc[1]-cur_lon)**2+eq_loc[2]**2))
-			elif source_info['Type'] == 'ERF':
-				site_rup_dist.append(get_rupture_distance(erf, source_index, rupture_index, [cur_lat], [cur_lon])[0])
-			elif source_info['Type'] == 'oqSourceXML':
-				pass
-		# evaluate gmpe
-		site_rup_dist = []
-		if source_info['Type']=='ERF':
-			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
-				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
-				'Campbell & Bozorgnia (2014)' in gmpe_list:
-				start = time.process_time_ns()
-				site_rup_dict, station_info = get_rupture_info_CY2014(erf, source_index, rupture_index, station_info)
-				self.timeGetRuptureInfo += time.process_time_ns() - start
-		elif source_info['Type']=='PointSource':
-			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
-				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
-				'Campbell & Bozorgnia (2014)' in gmpe_list:
-				start = time.process_time_ns()
-				site_rup_dict, station_info = get_PointSource_info_CY2014(source_info, station_info)
-				self.timeGetRuptureInfo += time.process_time_ns() - start
-		elif source_info['Type'] == 'oqSourceXML':
-			if 'Chiou & Youngs (2014)' in gmpe_list or 'Abrahamson, Silva & Kamai (2014)' in gmpe_list or\
-				'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list or\
-				'Campbell & Bozorgnia (2014)' in gmpe_list:
-				start = time.process_time_ns()
-				site_rup_dict, station_info = get_site_rup_info_oq(source_info, station_info)
-				self.timeGetRuptureInfo += time.process_time_ns() - start
 		for cur_gmpe in gmpe_list:
 			gm_collector = []
 			if cur_gmpe not in avail_gmpe:
 				print('ComputeIntensityMeasure.get_im_from_local: warning - {} is not available.'.format(cur_gmpe))
 				continue
-			for cur_site in station_info:
+			for cur_site in self.site_info:
 				# current site-rupture distance
 				cur_dist = cur_site["rRup"]
 				cur_vs30 = cur_site['vs30']
@@ -345,21 +321,21 @@ class IM_Calculator:
 					tmpResult['InterEvStdDev'].append(float(interEvStdDev))
 					tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
 				elif cur_gmpe == 'Chiou & Youngs (2014)':
-					start = time.process_time_ns()
-					tmpResult = self.CY.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
-					self.timeGetIM += time.process_time_ns() - start
+					# start = time.process_time_ns()
+					tmpResult = self.CY.get_IM(eq_magnitude, self.site_rup_dict, cur_site, im_info)
+					# self.timeGetIM += time.process_time_ns() - start
 				elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
-					start = time.process_time_ns()
-					tmpResult = self.ASK.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
-					self.timeGetIM += time.process_time_ns() - start
+					# start = time.process_time_ns()
+					tmpResult = self.ASK.get_IM(eq_magnitude, self.site_rup_dict, cur_site, im_info)
+					# self.timeGetIM += time.process_time_ns() - start
 				elif cur_gmpe == 'Boore, Stewart, Seyhan & Atkinson (2014)':
-					start = time.process_time_ns()
-					tmpResult = self.BSSA.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
-					self.timeGetIM += time.process_time_ns() - start
+					# start = time.process_time_ns()
+					tmpResult = self.BSSA.get_IM(eq_magnitude, self.site_rup_dict, cur_site, im_info)
+					# self.timeGetIM += time.process_time_ns() - start
 				elif cur_gmpe == 'Campbell & Bozorgnia (2014)':
-					start = time.process_time_ns()
-					tmpResult = self.CB.get_IM(eq_magnitude, site_rup_dict, cur_site, im_info)
-					self.timeGetIM += time.process_time_ns() - start
+					# start = time.process_time_ns()
+					tmpResult = self.CB.get_IM(eq_magnitude, self.site_rup_dict, cur_site, im_info)
+					# self.timeGetIM += time.process_time_ns() - start
 				else:
 					print('ComputeIntensityMeasure.get_im_from_local: gmpe_name {} is not supported.'.format(cur_gmpe))
 				# collect sites
@@ -391,8 +367,14 @@ class IM_Calculator:
 		# return
 		return res
 
-def collect_multi_im_res(res_list):
-
+def collect_multi_im_res(res_dict):
+	res_list = []
+	if 'PGA' in res_dict.keys():
+		res_list.append(res_dict['PGA'])
+	if 'SA' in res_dict.keys():
+		res_list.append(res_dict['SA'])
+	if 'PGV' in res_dict.keys():
+		res_list.append(res_dict['PGV'])
 	res = dict()
 	num_res = len(res_list)
 	if num_res == 0:
@@ -421,6 +403,37 @@ def collect_multi_im_res(res_list):
 				tmp_res = cur_res['GroundMotions'][j].get('ln{}'.format(cur_res['IM']))
 				res['GroundMotions'][j].update({'ln{}'.format(cur_res['IM']): tmp_res})
 
+	# return
+	return res
+
+def collect_multi_im_res_hdf5(res_list, im_list):
+	res = dict()
+	num_res = len(res_list)
+	if num_res == 0:
+		print('IM_Calculator._collect_res: error - the res_list is empty')
+		return res
+	num_sites = len(res_list[list(res_list.keys())[0]]['GroundMotions'])
+	collected_mean = np.zeros([num_sites, len(im_list)])
+	collected_intraStd = np.zeros([num_sites, len(im_list)])
+	collected_interStd = np.zeros([num_sites, len(im_list)])
+	for i, im in enumerate(im_list):
+		if im.startswith('PGA'):
+			collected_mean[:,i] = np.array([x['lnPGA']['Mean'][0] for x in res_list['PGA']['GroundMotions']])
+			collected_interStd[:,i] = np.array([x['lnPGA']['InterEvStdDev'][0] for x in res_list['PGA']['GroundMotions']])
+			collected_intraStd[:,i] = np.array([x['lnPGA']['IntraEvStdDev'][0] for x in res_list['PGA']['GroundMotions']])
+		if im.startswith('SA'):
+			period = float(re.search(r'\((.*?)\)', im).group(1))
+			period_i = res_list['SA']['Periods'].index(period)
+			collected_mean[:,i] = np.array([x['lnSA']['Mean'][period_i] for x in res_list['SA']['GroundMotions']])
+			collected_interStd[:,i] = np.array([x['lnSA']['InterEvStdDev'][period_i] for x in res_list['SA']['GroundMotions']])
+			collected_intraStd[:,i] = np.array([x['lnSA']['IntraEvStdDev'][period_i] for x in res_list['SA']['GroundMotions']])
+		if im.startswith('PGV'):
+			collected_mean[:,i] = np.array([x['lnPGV']['Mean'][0] for x in res_list['PGV']['GroundMotions']])
+			collected_interStd[:,i] = np.array([x['lnPGV']['InterEvStdDev'][0] for x in res_list['PGV']['GroundMotions']])
+			collected_intraStd[:,i] = np.array([x['lnPGV']['IntraEvStdDev'][0] for x in res_list['PGV']['GroundMotions']])
+	res.update({'Mean':collected_mean})
+	res.update({'InterEvStdDev':collected_interStd})
+	res.update({'IntraEvStdDev':collected_intraStd})
 	# return
 	return res
 
@@ -499,14 +512,24 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):
 	return gmpe_dict, gmpe_weights_dict
 
 
-def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generator_info, output_dir, filename='IntensityMeasureMeanStd.json', mth_flag=True):
+def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generator_info, output_dir, filename='IntensityMeasureMeanStd.hdf5', mth_flag=True):
 
 	# Calling OpenSHA to compute median PSA
-	im_raw = {}
-	# Loading ERF model (if exists)
-	# erf = None
-	# if scenarios[0].get('RuptureForecast', None):
-	# 	erf = getERF(scenarios[0]['RuptureForecast'], True)
+	if len(scenarios) < 10:
+		filename = 'IntensityMeasureMeanStd.json'
+		saveInJson = True
+		im_raw = {}
+	else:
+		saveInJson = False
+	filename = os.path.join(output_dir, filename)
+	im_list = []
+	if 'PGA' in im_info.keys():
+		im_list.append('PGA')
+	if 'SA' in im_info.keys():
+		for cur_period in im_info['SA']['Periods']:
+			im_list.append('SA({})'.format(str(cur_period)))
+	if 'PGV' in im_info.keys():
+		im_list.append('PGV')
 	# Stations
 	station_list = [{
 		'Location': {
@@ -541,10 +564,6 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 					tmp_periods = im_info['SA']['Periods']+[ho_period]
 					tmp_periods.sort()
 					im_info['SA']['Periods'] = tmp_periods
-	# Configuring site properties
-	siteSpec = []
-	sites = []
-	site_prop = []
 	# prepare gmpe list for intensity measure
 	if gmpe_info['Type'] in ['Vector']:
 		gmpe_dict, gmpe_weights_dict = get_gmpe_from_im_vector(im_info, gmpe_info)
@@ -563,17 +582,22 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 			im_calculator.erf = getERF(EqRupture_info)
 		else:
 			im_calculator.erf = None
-		for key in im_dict.keys():
-			for gmpe in gmpe_dict[key]:
-				if gmpe == "Chiou & Youngs (2014)":
-					im_calculator.CY = openSHAGMPE.chiou_youngs_2013()
-				if gmpe == 'Abrahamson, Silva & Kamai (2014)':
-					im_calculator.ASK = openSHAGMPE.abrahamson_silva_kamai_2014()
-				if gmpe == 'Boore, Stewart, Seyhan & Atkinson (2014)':
-					im_calculator.BSSA = openSHAGMPE.boore_etal_2014()
-				if gmpe == 'Campbell & Bozorgnia (2014)':
-					im_calculator.CB = openSHAGMPE.campbell_bozorgnia_2014()
-		# im_calculator.erf = getERF([elem for elem in scenarios.values()][0]['RuptureForecast'], True)
+		gmpe_set = set()
+		for _, item in gmpe_dict.items():
+			gmpe_set = gmpe_set.union(set(item))
+		for gmpe in gmpe_set:
+			if gmpe == "Chiou & Youngs (2014)":
+				im_calculator.CY = openSHAGMPE.chiou_youngs_2013()
+			if gmpe == 'Abrahamson, Silva & Kamai (2014)':
+				im_calculator.ASK = openSHAGMPE.abrahamson_silva_kamai_2014()
+			if gmpe == 'Boore, Stewart, Seyhan & Atkinson (2014)':
+				im_calculator.BSSA = openSHAGMPE.boore_etal_2014()
+			if gmpe == 'Campbell & Bozorgnia (2014)':
+				im_calculator.CB = openSHAGMPE.campbell_bozorgnia_2014()
+		# for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
+		# Initialize an hdf5 file for IMmeanStd
+		if os.path.exists(filename):
+			os.remove(filename)
 		for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
 		# for i, key in enumerate(scenarios.keys()):
 			# print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(scenarios)))
@@ -582,19 +606,30 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 			source_info = scenarios[key]
 			im_calculator.set_source(source_info)
 			# Computing IM
-			res_list = []
+			res_list = dict()
 			for cur_im_type in list(im_dict.keys()):
 				im_calculator.set_im_type(cur_im_type)
-				res_list.append(im_calculator.calculate_im())
+				res_list.update({cur_im_type:im_calculator.calculate_im()})
 			# Collecting outputs
-			collectedResult = collect_multi_im_res(res_list)
-			collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
-			# im_raw.append(collectedResult)
-			im_raw.update({key:collectedResult})
-			if (i % 250 == 0):
-				print(f"Size of im_raw for {i} scenario is {sys.getsizeof(im_raw)}")
-			# im_raw.append(copy.deepcopy(collect_multi_im_res(res_list)))
-
+			# collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
+			if saveInJson:
+				collectedResult = collect_multi_im_res(res_list)
+				im_raw.update({key:collectedResult})
+			else:
+				collectedResult = collect_multi_im_res_hdf5(res_list, im_list)
+				with h5py.File(filename, 'a') as f:
+					# Add a group named by the scenario index and has four dataset 
+   					# mean, totalSTd, interStd,itrastd
+					grp = f.create_group(str(i))
+					grp.create_dataset("Mean", data=collectedResult['Mean'])
+					grp.create_dataset("InterEvStdDev", data=collectedResult['InterEvStdDev'])
+					grp.create_dataset("IntraEvStdDev", data=collectedResult['IntraEvStdDev'])
+			# if (i % 250 == 0):
+			# 	if saveInJson:
+			# 		print(f"Size of im_raw for {i} scenario is {sys.getsizeof(im_raw)}")
+			# 	else:
+			# 		print(f"Another 250 scenarios computed")
+			
 	if mth_flag:
 		res_dict = {}
 		sub_ths = []
@@ -621,13 +656,11 @@ def compute_im(scenarios, stations, EqRupture_info, gmpe_info, im_info, generato
 
 	print('ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(time.time() - t_start))
 
-	# save im_raw comment out for debug
-	# im_raw_preview = {"IntensityMeasures": im_raw}
-	with open(os.path.join(output_dir, filename), "w") as f:
-		ujson.dump(im_raw, f)
-
+	if saveInJson:
+		with open(filename, "w") as f:
+			ujson.dump(im_raw, f, indent=1)
 	# return
-	return im_raw, im_info
+	return filename, im_list
 
 
 def compute_im_para(ids, scenario_infos, im_dict, gmpe_dict, gmpe_weights_dict, station_info, res_dict):
@@ -653,295 +686,6 @@ def compute_im_para(ids, scenario_infos, im_dict, gmpe_dict, gmpe_weights_dict, 
 		res_dict[id] = res
 	# return
 	return
-
-
-class GM_Simulator:
-
-	def __init__(self, site_info = [], im_raw=dict(), num_simu=0,\
-			  correlation_info=None,im_info = None):
-
-		self.set_sites(site_info)
-		self.set_num_simu(num_simu)
-		self.parse_correlation_info(correlation_info, im_info)
-		self.set_im_raw(im_raw)
-		self.cross_check_im_correlation()
-
-	def set_sites(self, site_info):
-		# set sites
-		self.sites = site_info.copy()
-		self.num_sites = len(self.sites)
-		if self.num_sites < 2:
-			self.stn_dist = None
-			print('GM_Simulator: Only one site is defined, spatial correlation models ignored.')
-			return
-		self._compute_distance_matrix()
-
-	def _compute_distance_matrix(self):
-
-		# site number check
-		if self.num_sites < 2:
-			print('GM_Simulator: error - please give at least two sites.')
-			self.stn_dist = None
-			return
-		# compute the distance matrix
-		tmp = np.zeros((self.num_sites, self.num_sites))
-		for i in range(self.num_sites):
-			loc_i = np.array([self.sites[i]['lat'],
-							  self.sites[i]['lon']])
-			for j in range(self.num_sites):
-				loc_j = np.array([self.sites[j]['lat'],
-								  self.sites[j]['lon']])
-				# Computing station-wise distances
-				tmp[i,j] = CorrelationModel.get_distance_from_lat_lon(loc_i, loc_j)
-		self.stn_dist = tmp
-	
-	def set_num_simu(self, num_simu):
-		# set simulation number
-		self.num_simu = num_simu
-
-	def set_im_raw(self, im_raw):
-		# set up raw intensity measure data (mean/standard devs)
-		self.im_raw = im_raw
-		# get IM type list
-		self.im_type_list = self.im_raw.get('IM',[])
-		# get im_data
-		self.im_data = self.im_raw.get('GroundMotions',[])
-		# get period
-		self.periods = [x for x in self.im_raw.get('Periods',[]) if x is not None]
-		# im name list
-		tmp_name = []
-		for i in range(len(self.im_type_list)):
-			if self.im_type_list[i] == 'SA':
-				for cur_period in self.periods:
-					tmp_name.append('SA({})'.format(str(cur_period)))
-			else:
-				tmp_name.append(self.im_type_list[i])
-		self.im_name_list = tmp_name
-		# set IM size
-		self.num_im = len(self.im_name_list)
-
-	def get_ln_im(self):
-		ln_im = []
-		for i in range(self.num_sites):
-			tmp_im_data = []
-			for cur_im_type in self.im_type_list:
-				tmp_im_data = tmp_im_data+self.im_data[i]['ln{}'.format(cur_im_type)]['Mean']
-			ln_im.append(tmp_im_data)
-		return ln_im
-
-	def get_inter_sigma_im(self):
-		inter_sigma_im = []
-		for i in range(self.num_sites):
-			tmp_im_data = []
-			for cur_im_type in self.im_type_list:
-				tmp_im_data = tmp_im_data+self.im_data[i]['ln{}'.format(cur_im_type)]['InterEvStdDev']
-			inter_sigma_im.append(tmp_im_data)
-		return inter_sigma_im
-
-	def get_intra_sigma_im(self):
-		intra_sigma_im = []
-		for i in range(self.num_sites):
-			tmp_im_data = []
-			for cur_im_type in self.im_type_list:
-				tmp_im_data = tmp_im_data+self.im_data[i]['ln{}'.format(cur_im_type)]['IntraEvStdDev']
-			intra_sigma_im.append(tmp_im_data)
-		return intra_sigma_im
-
-	def parse_correlation_info(self, correlation_info, im_info):
-
-		# default is no correlation model and uncorrelated motions if generated
-		self.inter_cm = None
-		self.intra_cm = None
-		# parse correlation infomation if any
-		if correlation_info is None:
-			print('GM_Simulator: warning - correlation information not found - results will be uncorrelated motions.')
-			return
-		if correlation_info.get('Type', None) == 'Vector':
-			inter_cm = dict()
-			im_info.pop('Type')
-			for im, item in im_info.items():
-			# for im in self.im_type_list:	
-				inter_cm.update({im:item['InterEventCorr']})
-			inter_cm_unique = list(set([item for _, item in inter_cm.items()]))
-			if len(inter_cm_unique) == 1:
-				inter_cm = inter_cm_unique[0]
-			self.inter_cm = inter_cm
-			intra_cm = dict()
-			for im, item in im_info.items():
-			# for im in self.im_type_list:
-				intra_cm.update({im:item['IntraEventCorr']})
-			intra_cm_unique = list(set([item for _, item in intra_cm.items()]))
-			if len(intra_cm_unique) == 1:
-				intra_cm = intra_cm_unique[0]
-			self.intra_cm = intra_cm
-			return
-		
-		# inter-event model
-		if correlation_info.get('InterEvent', None):
-			self.inter_cm = correlation_info['InterEvent']
-		elif correlation_info.get('SaInterEvent', None):
-			# back compatibility
-			self.inter_cm = correlation_info['SaInterEvent']
-		else:
-			print('GM_Simulator: no inter-event correlation information not found - results will be uncorrelated motions.')
-		# intra-event model
-		if correlation_info.get('IntraEvent', None):
-			self.intra_cm = correlation_info['IntraEvent']
-		if correlation_info.get('SaIntraEvent', None):
-			# back compatibility
-			self.intra_cm = correlation_info['SaIntraEvent']
-		else:
-			print('GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.')	
-
-	def cross_check_im_correlation(self):
-		# because each correlation model only applies to certain intensity measure
-		# so hear we check if the correlation models are applicable for the required intensity measures
-		self.im_cm_inter_flag = True
-		self.im_cm_intra_flag = True
-		if type(self.inter_cm)==dict:
-			for cur_im in self.im_type_list:
-				avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm[cur_im])
-				if cur_im not in avail_im_inter_cm:
-					print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.inter_cm))
-					self.im_cm_inter_flag = False
-					continue
-		else:
-			avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm)
-			if avail_im_inter_cm is not None:
-				for cur_im in self.im_type_list:
-					if cur_im not in avail_im_inter_cm:
-						print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.inter_cm))
-						self.im_cm_inter_flag = False
-						continue
-		if type(self.intra_cm) ==dict:			
-			for cur_im in self.im_type_list:
-				avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm[cur_im])
-				if cur_im not in avail_im_intra_cm:
-					print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.intra_cm))
-					self.im_cm_intra_flag = False
-					continue
-		else:
-			avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm)
-			if avail_im_intra_cm is not None:
-				for cur_im in self.im_type_list:
-					if cur_im not in avail_im_intra_cm:
-						print('GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(cur_im, self.intra_cm))
-						self.im_cm_intra_flag = False
-						continue
-
-	def compute_inter_event_residual_ij(self, cm, im_name_list_1, im_name_list_2):
-		if cm == 'Baker & Jayaram (2008)':
-			rho = np.array([CorrelationModel.baker_jayaram_correlation_2008(im1, im2)
-								for im1 in im_name_list_1 for im2 in im_name_list_2]).\
-									reshape([len(im_name_list_1),\
-				  							len(im_name_list_2)])
-		elif cm == 'Baker & Bradley (2017)':
-			rho = np.array([CorrelationModel.baker_bradley_correlation_2017(im1, im2)
-								for im1 in im_name_list_1 for im2 in im_name_list_2]).\
-									reshape([len(im_name_list_1),\
-				  							len(im_name_list_2)])
-		else:
-				# TODO: extending this to more inter-event correlation models
-			sys.exit('GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)')
-		return rho
-
-	def replace_submatrix(self, mat, ind1, ind2, mat_replace):
-		for i, index in enumerate(ind1):
-			mat[index, ind2] = mat_replace[i, :]
-		return mat
-	def compute_inter_event_residual(self):
-		if type(self.inter_cm) == dict:
-			rho = np.zeros([self.num_im, self.num_im])
-			im_types = list(self.inter_cm.keys())
-			for i in range(len(im_types)):
-				for j in range(0,i+1):
-					im_type_i = im_types[i]
-					im_type_j = im_types[j]
-					im_name_list_i = [im_name for im_name in self.im_name_list\
-					   if im_name.startswith(im_type_i)]
-					im_indices_i = [index for index, element in enumerate(self.im_name_list)\
-					   if element.startswith(im_type_i)]
-					im_name_list_j = [im_name for im_name in self.im_name_list\
-					   if im_name.startswith(im_type_j)]
-					im_indices_j = [index for index, element in enumerate(self.im_name_list)\
-					   if element.startswith(im_type_j)]
-					# In R2D, use SA(0.01) to approximate PGA
-					im_name_list_i = ['SA(0.01)' if x == 'PGA' else x\
-					    for x in im_name_list_i]
-					im_name_list_j = ['SA(0.01)' if x == 'PGA' else x\
-					    for x in im_name_list_j]
-					rho_ij = self.compute_inter_event_residual_ij(\
-						self.inter_cm[im_types[i]],im_name_list_i, im_name_list_j)
-					rho = self.replace_submatrix(rho, im_indices_i, im_indices_j,\
-									rho_ij)
-					if i!=j:
-						rho = self.replace_submatrix(rho, im_indices_j, im_indices_i,\
-									rho_ij.T)
-		else:
-			rho = self.compute_inter_event_residual_ij(\
-				self.inter_cm, self.im_name_list, self.im_name_list)
-		# Simulating residuals
-		with warnings.catch_warnings():
-			# The intra-event models produce rho with tiny negative eigen values
-			# This warning is suppressed
-			warnings.filterwarnings("ignore", message="covariance is not symmetric positive-semidefinite.")
-			residuals = np.random.multivariate_normal(np.zeros(self.num_im), rho, self.num_simu).T
-		# return
-		return residuals
-	def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):
-		if cm == 'Jayaram & Baker (2009)':
-			rho = np.zeros((self.num_sites, self.num_sites, len(im_name_list)))
-			for i in range(self.num_sites):
-				for j in range(self.num_sites):
-					cur_stn_dist = self.stn_dist[i, j]
-					for k in range(len(im_name_list)):
-						rho[i, j, k] = CorrelationModel.jayaram_baker_correlation_2009(im_name_list[k], cur_stn_dist, 
-						                                                               flag_clustering = False)
-			# Simulating residuals
-			residuals = np.zeros((self.num_sites, len(im_name_list), num_simu))
-			for k in range(self.num_im):
-				residuals[:, k, :] = np.random.multivariate_normal(np.zeros(self.num_sites), rho[:, :, k], num_simu).T
-		elif cm == 'Loth & Baker (2013)':
-			residuals = CorrelationModel.loth_baker_correlation_2013(self.sites,\
-															im_name_list, num_simu)
-		elif cm == 'Markhvida et al. (2017)':
-			num_pc = 19
-			residuals = CorrelationModel.markhvida_ceferino_baker_correlation_2017(\
-				self.sites, im_name_list, num_simu, num_pc)
-		elif cm == 'Du & Ning (2021)':
-			num_pc = 23
-			residuals = CorrelationModel.du_ning_correlation_2021(self.sites,\
-												im_name_list, num_simu, num_pc)
-		else:
-				# TODO: extending this to more inter-event correlation models
-			sys.exit('GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)')
-		return residuals
-
-	def compute_intra_event_residual(self):
-		if type(self.intra_cm) == dict:
-			cm_groups = dict()
-			# Group the IMs using the same cm
-			for key, item in self.intra_cm.items():
-				if item not in cm_groups.keys():
-					cm_groups.update({item:[key]})
-				else:
-					cm_groups[item].append(key)	
-			residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
-			for cm, im_types in cm_groups.items():
-				# im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]
-				im_name_list = [im_name for im_name in self.im_name_list\
-				   if im_name.split('(')[0] in im_types]
-				im_indices = [index for index, element in enumerate(self.im_name_list)\
-				   if element.split('(')[0] in im_types]
-				residuals_i = self.compute_intra_event_residual_i(cm,\
-													im_name_list, self.num_simu)
-				for i, ind in enumerate(im_indices):
-					residuals[:,ind,:] = residuals_i[:,i,:]
-		else:
-			residuals = self.compute_intra_event_residual_i(self.intra_cm,
-											self.im_name_list, self.num_simu)
-		# return
-		return residuals
 
 
 def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_flag,\
@@ -1178,45 +922,6 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 	#except:
 		# return
 		#return 1
-
-
-def simulate_ground_motion(stations, im_raw, num_simu, correlation_info, im_info, eq_ids):
-
-	# create a ground motion simulator
-	gm_simulator = GM_Simulator(site_info=stations, num_simu=num_simu,\
-							 correlation_info=correlation_info, im_info=im_info)
-	ln_im_mr = []
-	mag_maf = []
-	t_start = time.time()
-	for scen_i in tqdm(range(len(eq_ids)), desc=f"ComputeIntensityMeasure for {len(eq_ids)} scenarios"):
-	# for i, cur_im_raw in enumerate(im_raw):
-		# print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(im_raw)))
-		cur_im_raw = im_raw[eq_ids[scen_i]]
-		# set im_raw
-		gm_simulator.set_im_raw(cur_im_raw)
-		# Computing inter event residuals
-		#t_start = time.time()
-		epsilon = gm_simulator.compute_inter_event_residual()
-		#print('ComputeIntensityMeasure: inter-event correlation {0} sec'.format(time.time() - t_start))
-		# Computing intra event residuals
-		#t_start = time.time()
-		eta = gm_simulator.compute_intra_event_residual()
-		#print('ComputeIntensityMeasure: intra-event correlation {0} sec'.format(time.time() - t_start))
-		ln_im_all = np.zeros((gm_simulator.num_sites, gm_simulator.num_im, num_simu))
-		for i in range(num_simu):
-			epsilon_m = np.array([epsilon[:, i] for j in range(gm_simulator.num_sites)])
-			ln_im_all[:, :, i] = gm_simulator.get_ln_im() + \
-			                     gm_simulator.get_inter_sigma_im() * epsilon_m + \
-								 gm_simulator.get_intra_sigma_im() * eta[:, :, i]
-
-		ln_im_mr.append(ln_im_all)
-		mag_maf.append([cur_im_raw['Magnitude'], cur_im_raw.get('MeanAnnualRate',None), 
-		                cur_im_raw.get('SiteSourceDistance',None), cur_im_raw.get('SiteRuptureDistance',None)])
-	
-	print('ComputeIntensityMeasure: all inter- and intra-event correlation {0} sec'.format(time.time() - t_start))
-	im_list = copy.copy(gm_simulator.im_name_list)
-	# return
-	return ln_im_mr, mag_maf, im_list
 
 
 def compute_weighted_res(res_list, gmpe_weights):
