@@ -511,14 +511,14 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
 
     # load AIM file
     try:
-        with open(AIM_file, 'r') as f:
+        with open(AIM_file, 'r', encoding='utf-8') as f:
             AIM_file = json.load(f)
     except:
         raise ValueError(f"IntensityMeasureComputer: cannot load AIM file {AIM_file}")
     
     # load EVENT file
     try:
-        with open(EVENT_file, 'r') as f:
+        with open(EVENT_file, 'r', encoding='utf-8') as f:
             event_file = json.load(f)
     except:
         raise ValueError(f"IntensityMeasureComputer: cannot load EVENT file {EVENT_file}")
@@ -612,7 +612,7 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
 
     # save a IM.json
     out_data = {'IntensityMeasure': im_computer.intensity_measures}
-    with open(IM_file, 'w') as f:
+    with open(IM_file, 'w', encoding='utf-8') as f:
         json.dump(out_data, f, indent=2)
 
     # save a csv file

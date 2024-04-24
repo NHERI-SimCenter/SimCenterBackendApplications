@@ -192,7 +192,7 @@ class surrogate(UQengine):
             if not os.path.isabs(jsonPath):
                 jsonPath = self.work_dir + "/templatedir/" + self.inputFile # for quoFEM
 
-            with open(jsonPath) as f:
+            with open(jsonPath, 'r', encoding='utf-8') as f:
                 dakotaJson = json.load(f)
 
         except ValueError:
@@ -1881,19 +1881,19 @@ class surrogate(UQengine):
             # read SAM.json
             SAMpath = self.work_dir + "/templatedir/SAM.json"
             try:
-                with open(SAMpath) as f:
+                with open(SAMpath, 'r', encoding='utf-8') as f:
                     SAMjson = json.load(f)
             except Exception as e:
-                with open(SAMpath+".sc") as f:
+                with open(SAMpath+".sc", 'r', encoding='utf-8') as f:
                     SAMjson = json.load(f)
 
             EDPpath = self.work_dir + "/templatedir/EDP.json"
-            with open(EDPpath) as f:
+            with open(EDPpath, 'r', encoding='utf-8') as f:
                 EDPjson = json.load(f)
             results["SAM"] = SAMjson
             results["EDP"] = EDPjson
 
-        with open(self.work_dir + "/dakota.out", "w") as fp:
+        with open(self.work_dir + "/dakota.out", "w", encoding='utf-8') as fp:
             json.dump(results, fp, indent=1)
 
         with open(self.work_dir + "/GPresults.out", "w") as file:

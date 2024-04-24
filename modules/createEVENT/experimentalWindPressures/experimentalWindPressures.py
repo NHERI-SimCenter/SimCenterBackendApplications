@@ -19,12 +19,17 @@ except:
 
 from convertWindMat import *
 
-errPath = "./workflow.err"
-sys.stderr = open(errPath,'w')
+errPath = "./workflow.err"          # error file name
+sys.stderr = open(errPath,'w')      # redirecting stderr (this way we can capture all sorts of python errors)
+def err_exit(msg):
+    print("Failed in wind load generator: "+ msg)                   # display in stdout
+    print("Failed in wind load generator: "+ msg, file=sys.stderr)  # display in stderr
+    exit(-1)                                                        # exit with non-zero exit code
+
 
 def main(aimName,evtName, getRV):
 
-    with open(aimName, 'r') as f:
+    with open(aimName, 'r', encoding='utf-8') as f:
         aim_data = json.load(f)
 
     evt_data = aim_data["Events"][0]
@@ -98,7 +103,7 @@ def main(aimName,evtName, getRV):
                     pressure_data[key] = pressure_data[key][0]
 
         elif filename.endswith('.json'):
-            with open(filename,'r') as jsonFile:
+            with open(filename,'r', encoding='utf-8') as jsonFile:
                 pressure_data = json.load(jsonFile)
 
         fs = np.squeeze(pressure_data["frequency"])
@@ -116,6 +121,19 @@ def main(aimName,evtName, getRV):
             Cp_pf[:,id-1] = data
             id_list.add(int(id))
         ang = pressure_data["incidenceAngle"]          # Wind Direction (angle)
+        
+        '''
+        
+        import matplotlib.pyplot as plt
+        myx = np.array([np.squeeze(a).item() for a in np.squeeze(pressure_data["tapLocations"]["xLoc"])])[selected_taps-1]
+        myy = np.array([np.squeeze(a).item() for a in np.squeeze(pressure_data["tapLocations"]["yLoc"])])[selected_taps-1]
+        myf = np.array([np.squeeze(a).item() for a in np.squeeze(pressure_data["tapLocations"]["face"])])[selected_taps-1]
+        myMean = np.mean(Cp_pf,axis=0)[selected_taps-1]
+        id = np.where(np.array(myf)==1)[0]
+        plt.scatter(myx[id],myy[id],20,c=myMean[id])
+        plt.show()
+        
+        '''
 
         if ms==0: # when mat file is imported, model scale is not precalculated
                 print("Model scale not found. Calculating the unified model scale..")
@@ -131,7 +149,7 @@ def main(aimName,evtName, getRV):
                     print("Warning: target-data geometry scaling ratio is inconsistent: H={:.2}, B={:.2}, D={:.2}".format(H_full/H,B_full/B,D_full/D))
 
         if len(set(selected_taps.flatten()).difference(id_list)) > 0:
-            msg = "ERROR - the selected taps are not a subset of your original set: following tabs are not found"
+            msg = "The selected taps are not a subset of your original set: following tabs are not found"
             msg += set(selected_taps.flatten()).difference(set(id_list))
             err_exit(msg)
 
@@ -237,7 +255,7 @@ def main(aimName,evtName, getRV):
         if do_parallel:
             print("Computing nonGaussian CDF in parallel")
             tmp = time.time()
-            iterables = ((Cp_norm[:, selected_taps[i]],) for i in range(tap))
+            iterables = ((Cp_norm[:, selected_taps[i]-1],) for i in range(tap))
             try:
                 result_objs = list(pool.starmap(getCDF, iterables))
                 print(" - Elapsed time: {:.3f} seconds.\n".format(time.time() - tmp))
@@ -270,7 +288,7 @@ def main(aimName,evtName, getRV):
                 my_cdf_vects[:, i] = kernel_cdf(my_cdf_x)  # Takes too long to evaluate
                 my_cdf_x_range[:, i] = [min(Cp_temp), max(Cp_temp)]
                 '''
-                my_cdf_vects[:, i], my_cdf_x_range[:, i] = getCDF(Cp_norm[:, selected_taps[i]])
+                my_cdf_vects[:, i], my_cdf_x_range[:, i] = getCDF(Cp_norm[:, selected_taps[i]-1])
 
             print(" - Elapsed time: {:.1f} seconds.\n".format(time.time() - t_init))
 
@@ -380,13 +398,12 @@ def main(aimName,evtName, getRV):
     # TODO: parfor
 
     print("Creating NonGaussian Realizations");
-
     if do_parallel:
         Cp_nongauss_kernel = np.zeros((tap,CP_sim.shape[2],len(seeds)))
         print("Running {} simulations in parallel".format(tap))
 
         tmp = time.time()
-        iterables = ((Cp_norm[:, selected_taps[i]], CP_sim[seed_num, i, :],nl,nu,my_cdf_vects[:,i],my_cdf_x_range[:,i]) for i in range(tap))
+        iterables = ((Cp_norm[:, selected_taps[i]-1], CP_sim[seed_num, i, :],nl,nu,my_cdf_vects[:,i],my_cdf_x_range[:,i]) for i in range(tap))
         try:
             result_objs = list(pool.starmap(genCP, iterables))
             print(" - Elapsed time: {:.3f} seconds.\n".format(time.time() - tmp))
@@ -408,12 +425,12 @@ def main(aimName,evtName, getRV):
         tmp = time.time()
         for seed_num in range(len(seeds)): # always 1
             for i in range(tap):
-                Cp_nongauss_kernel[i, :, seed_num] = genCP(Cp_norm[:, selected_taps[i]], CP_sim[seed_num, i, :],nl,nu,my_cdf_vects[:,i],my_cdf_x_range[:,i])
+                Cp_nongauss_kernel[i, :, seed_num] = genCP(Cp_norm[:, selected_taps[i]-1], CP_sim[seed_num, i, :],nl,nu,my_cdf_vects[:,i],my_cdf_x_range[:,i])
 
         print(" - Elapsed time: {:.3f} seconds.\n".format(time.time() - tmp))
 
-    Cp_std_tmp = Cp_std[selected_taps][:,np.newaxis,np.newaxis]
-    Cp_mean_tmp = Cp_mean[selected_taps][:,np.newaxis,np.newaxis]
+    Cp_std_tmp = Cp_std[selected_taps-1][:,np.newaxis,np.newaxis]
+    Cp_mean_tmp = Cp_mean[selected_taps-1][:,np.newaxis,np.newaxis]
     Cp_nongauss = np.transpose(Cp_nongauss_kernel,(0, 2, 1))*np.tile(Cp_std_tmp,(1,len(seeds),N_t))+ np.tile(Cp_mean_tmp,(1,len(seeds),N_t))  # destandardize the time series
 
     # Convert to Full Scale Pressure time series
@@ -490,7 +507,7 @@ def main(aimName,evtName, getRV):
     # %% Plots for verification of code
     #
 
-    with open('tmpSimCenterLowRiseTPU.json', 'w') as f:
+    with open('tmpSimCenterLowRiseTPU.json', 'w', encoding='utf-8') as f:
         json.dump(new_json, f)
 
     #curScriptPath = abspath(getsourcefile(lambda:0))
@@ -616,7 +633,11 @@ def paretotails_icdf(pf, nl,nu, temp, my_cdf_vect, my_cdf_x):
 
     my_cdf_x = np.linspace(my_cdf_x[0],my_cdf_x[1],my_cdf_vect.shape[0])
     idx2 = np.where((pf>=nl)* (pf<nu))
-    kernel_icdf = interpolate.interp1d(my_cdf_vect, my_cdf_x, kind='cubic', bounds_error=False)
+    # not to have duplicates in x
+
+    unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)
+
+    kernel_icdf = interpolate.interp1d(my_cdf_vect[unique_id], my_cdf_x[unique_id], kind='cubic', bounds_error=False)
 
     
     icdf_vals[idx2] = kernel_icdf(pf[idx2])
@@ -817,10 +838,6 @@ def simulation_gaussian(ncomp , N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f
     return F_jzm
 
 
-def err_exit(msg):
-    print("Failed in wind load generator: "+ msg)
-    print("Failed in wind load generator: "+ msg, file=sys.stderr)
-    exit(-1)
 
     #with open(errPath, "w") as f:
     #    f.write("Failed in wind load generator: "+ msg)

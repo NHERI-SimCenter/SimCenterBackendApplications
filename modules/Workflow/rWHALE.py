@@ -42,6 +42,7 @@
 # Chaofeng Wang
 # Kuanshi Zhong
 # Stevan Gavrilovic
+# Jinyan Zhao
 
 import sys, os, json
 import argparse
@@ -217,7 +218,6 @@ def main(run_type, input_file, app_registry,
             
         # SG: OpenSRA does not use swhale, it runs in its own backend
         if run_individual_assets :
-        
             # The preprocess app sequence (previously get_RV)
             preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
                 
@@ -225,7 +225,7 @@ def main(run_type, input_file, app_registry,
             WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
             # For each asset
             for asst in asst_data:
-            
+
                 if count % numP == procID:
                     
                     log_msg('', prepend_timestamp=False)
@@ -252,27 +252,68 @@ def main(run_type, input_file, app_registry,
                 comm.Barrier()
                     
             # aggregate results
-            if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
+            if asset_type == 'Buildings' or asset_type == 'TransportationNetwork'\
+            or asset_type == 'WaterDistributionNetwork':
 
                 WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
                 
             elif asset_type == 'WaterNetworkPipelines' :
             
-                # Provide the headers and out types
-                headers = dict(DV = [0])
+                # The preprocess app sequence (previously get_RV)
+                preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
                     
-                out_types = ['DV']
-
-                if procID == 0:
-                    WF.aggregate_results(asst_data = asst_data,
-                                         asset_type = asset_type,
-                                         out_types = out_types,
-                                         headers = headers)
-
-            if doParallel == True:
-                comm.Barrier()
+                # The workflow app sequence
+                WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
+                # For each asset
+                for asst in asst_data:
                 
-            WF.combine_assets_results(asset_files)
+                    if count % numP == procID:
+                        
+                        log_msg('', prepend_timestamp=False)
+                        log_div(prepend_blank_space=False)
+                        log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
+                        log_div()
+
+                        # Run sWhale
+                        runSWhale(
+                            inputs = None,
+                            WF = WF,
+                            assetID = asst['id'],
+                            assetAIM = asst['file'],
+                            prep_app_sequence = preprocess_app_sequence,
+                            WF_app_sequence = WF_app_sequence,
+                            asset_type = run_asset_type,
+                            copy_resources = True,
+                            force_cleanup = force_cleanup)
+
+                    count = count + 1
+
+                # wait for every process to finish
+                if doParallel == True:
+                    comm.Barrier()
+                        
+                # aggregate results
+                if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
+
+                    WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
+                    
+                elif asset_type == 'WaterNetworkPipelines' :
+                
+                    # Provide the headers and out types
+                    headers = dict(DV = [0])
+                        
+                    out_types = ['DV']
+
+                    if procID == 0:
+                        WF.aggregate_results(asst_data = asst_data,
+                                             asset_type = asset_type,
+                                             out_types = out_types,
+                                             headers = headers)
+
+                if doParallel == True:
+                    comm.Barrier()
+                    
+                WF.combine_assets_results(asset_files)
             
         else :
             
@@ -329,15 +370,20 @@ def main(run_type, input_file, app_registry,
     #
     # add system performance
     #
-    
+    system_performance_performed = False
     for asset_type in asset_files.keys() :
-        WF.perform_system_performance_assessment(asset_type)
-
+        performed = WF.perform_system_performance_assessment(asset_type)
+        if performed:
+            system_performance_performed = True
+    if system_performance_performed:
+        WF.combine_assets_results(asset_files)
     #
     # add recovery
     #
 
     # WF.perform_recovery_simulation(asset_files.keys())
+
+    WF.compile_r2d_results_geojson(asset_files)
     
     
     if force_cleanup:

@@ -190,7 +190,7 @@ class runPLoM:
 
         # write a new dakota.json for forward propogation
         ## KZ modified 0331
-        with open(self.input_file,'r') as f:
+        with open(self.input_file, 'r', encoding='utf-8') as f:
             tmp = json.load(f)
         tmp['UQ']['uqType'] = 'Forward Propagation'
         tmp['UQ']['parallelExecution'] = True
@@ -201,7 +201,7 @@ class runPLoM:
         tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
             tmp['UQ']['samplingMethodData'][key] = item
-        with open('sc_dakota_plom.json','w') as f:
+        with open('sc_dakota_plom.json','w', encoding='utf-8') as f:
             json.dump(tmp, f, indent=2)
 
         # command line
@@ -275,7 +275,7 @@ class runPLoM:
 
         # read BIM to get RV names
         # KZ modified 0331
-        with open(os.path.join(run_dir, 'templatedir', self.input_file)) as f:
+        with open(os.path.join(run_dir, 'templatedir', self.input_file), 'r', encoding='utf-8') as f:
             tmp = json.load(f)
         rVs = tmp.get('randomVariables', None)
         if rVs is None:
@@ -715,7 +715,7 @@ class runPLoM:
         if os.path.exists('dakota.out'):
             os.remove('dakota.out')
 
-        with open('dakota.out', 'w') as fp:
+        with open('dakota.out', 'w', encoding='utf-8') as fp:
             json.dump(results, fp, indent=2)
 
         print("Results Saved")

@@ -225,8 +225,10 @@ def split_and_select_components(input_config):
         component_type = feat["properties"].get("type", None)
         if (component_type in component_dict.keys()):
             feat_id = int(feat["id"])
-            if (feat_id in requested_dict[component_type]) or \
-                (requested_dict[component_type].size == 0):
+            if requested_dict[component_type].size == 0:
+                component_dict.pop(component_type)
+                continue
+            if (feat_id in requested_dict[component_type]):
                 feat["properties"].update({"id":feat_id})
                 component_dict[component_type].append(feat)
     for component in component_dict.keys():

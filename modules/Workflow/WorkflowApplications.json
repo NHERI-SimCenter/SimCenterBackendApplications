@@ -1131,8 +1131,8 @@
 	},
 	"Applications": [
 	    {
-		"Name": "ReWet",
-		"ExecutablePath": "applications/systemPerformance/ReWet/ReWetWrapper.py",
+		"Name": "REWETRecovery",
+		"ExecutablePath": "applications/systemPerformance/REWEt/REWET_Wrapper.py",
 		"ApplicationSpecificInputs": [		    
 		]
 	    }
