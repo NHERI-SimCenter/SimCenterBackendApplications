@@ -346,6 +346,8 @@ def main(run_type, input_file, app_registry,
             
             if returncode != 0 :
                 raise ValueError(f'OpenSRA failed with return code {returncode} in pre-processing step with output: {result}')
+            
+            print('OpenSRA preprocessing ouput:', result, returncode)
                     
             log_msg(result, prepend_timestamp=False)
             
@@ -361,7 +363,7 @@ def main(run_type, input_file, app_registry,
             
             result, returncode = whale.run_command(command)
             
-            print('****', result, returncode)
+            print('OpenSRA anlysis ouput:', result, returncode)
             
             log_msg(result, prepend_timestamp=False)
             log_msg('Done running the analysis step in OpenSRA.')

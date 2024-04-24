@@ -3040,6 +3040,10 @@ class Workflow(object):
         run_path = self.run_dir
         with open(self.input_file, 'r', encoding="utf-8") as f:
             input_data = json.load(f)
+        
+        if not Path(run_path/'Results_det.json').exists() :
+            return
+            
         with open(run_path/'Results_det.json', encoding="utf-8") as f:
             res_det = json.load(f)
         metadata = {"Name": input_data["Name"],
