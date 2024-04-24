@@ -538,7 +538,7 @@ def main(aimName,evtName, getRV):
     import matplotlib.pyplot as plt
 
     plt.plot(t_vec_sc,np.squeeze(Cp_nongauss[9,0,:]))
-    plt.plot(t_sc*tvec,Cp[:,selected_taps[9]])
+    plt.plot(t_sc*tvec,Cp[:,selected_taps[9]-1])
     plt.xlabel('t(s)')
     plt.ylabel('Cp')
     plt.title('Cp - Tap 10 - Full Scale')
@@ -548,7 +548,7 @@ def main(aimName,evtName, getRV):
 
 
     plt.hist(np.squeeze(Cp_nongauss[9,0,:]),bins=100, density=True, fc=(0, 0, 1, 0.5), log=True)
-    plt.hist(Cp[:,selected_taps[9]],bins=100,density=True, fc=(1, 0, 0, 0.5), log=True)
+    plt.hist(Cp[:,selected_taps[9]-1],bins=100,density=True, fc=(1, 0, 0, 0.5), log=True)
     plt.legend(['Sim','Wind Tunnel Data'])
     plt.xlabel('Cp')
     plt.ylabel('PDF')
