@@ -1,0 +1,1 @@
+simcenter_add_python_script(SCRIPT GIS_to_AIM.py)

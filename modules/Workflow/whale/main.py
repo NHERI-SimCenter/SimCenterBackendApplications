@@ -705,7 +705,7 @@ class Workflow(object):
         self.optional_apps = ['RegionalEvent', 'Modeling', 'EDP', 'UQ', 'DL', 'FEM']
         
         # Create the asset registry
-        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork', 'TransportationNetwork']
+        self.asset_type_list = ['Buildings', 'WaterDistributionNetwork', 'TransportationNetwork', 'GasNetwork']
         self.asset_registry = dict([(a, dict()) for a in self.asset_type_list])
 
         self.run_type = run_type
@@ -1594,6 +1594,11 @@ class Workflow(object):
         
         log_msg('', prepend_timestamp=False, prepend_blank_space=False)
         log_msg('Creating regional mapping...')
+        
+        # SG: For the case where regional mapping is None, e.g., OpenSRA which handles that itself
+        if not 'RegionalMapping' in self.workflow_apps :
+            log_div()
+            return
 
         reg_mapping_app = self.workflow_apps['RegionalMapping'][assetType]
 

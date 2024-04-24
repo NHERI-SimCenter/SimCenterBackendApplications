@@ -127,7 +127,7 @@
       },
       {
         "Name": "GIS_to_AIM",
-        "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",
+        "ExecutablePath": "applications/createAIM/GIS_to_AIM/GIS_to_AIM.py",
         "ApplicationSpecificInputs": [
           {
             "id": "Min",
@@ -148,7 +148,7 @@
             "default": ""
           },
           {
-            "id": "assetSourceFile",
+            "id": "assetGISFile",
             "type": "path",
             "description": "path to asset database file",
             "default": ""
@@ -258,6 +258,12 @@
         ]
       },
       {
+        "Name": "UserInputGISHazard",
+        "ExecutablePath": null,
+        "ApplicationSpecificInputs": [
+        ]
+      },
+      {
         "Name": "EQSS",
         "ExecutablePath": null,
         "ApplicationSpecificInputs": [
@@ -346,6 +352,13 @@
             "type": "path",
             "description": "Path to file containing location information on each event file"
           }
+        ]
+      },
+      {
+        "Name": "GISSpecifiedEvents",
+        "ExecutablePath": "applications/performRegionalMapping/SiteSpecifiedEvents/SSE.py",
+        "RunsParallel": true,
+        "ApplicationSpecificInputs": [
         ]
       }
     ]

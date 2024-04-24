@@ -67,6 +67,10 @@ def write_RV(AIM_file, EVENT_file):
 
     # get input unit bases
     input_unit_bases = get_unit_bases(input_units)
+    
+    # SG: Skip events if none are found (this happens when RegionalMapping is None, e.g., OpenSRA handles regional mapping on its own)
+    if 'Events' not in aim_file :
+        return
 
     # get the location of the event input files
     # TODO: assuming a single event for now

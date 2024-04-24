@@ -11,6 +11,7 @@ simcenter_add_python_script(SCRIPT RegionalEarthquakeSimulation.py)
 simcenter_add_python_script(SCRIPT WorkflowUtils.py)
 simcenter_add_python_script(SCRIPT MultiModelApplication.py)
 simcenter_add_python_script(SCRIPT MultiModelDriver.py)
+simcenter_add_python_script(SCRIPT OpenSRAWrapper.py)
 
 simcenter_add_file(NAME WorkflowApplications.json)
 

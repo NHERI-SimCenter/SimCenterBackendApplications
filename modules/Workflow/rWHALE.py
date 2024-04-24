@@ -53,7 +53,8 @@ import whale.main as whale
 from whale.main import log_msg, log_div
 from sWHALE import runSWhale
 import importlib
-    
+from OpenSRAWrapper import convertToOSRAFile
+
 def main(run_type, input_file, app_registry,
          force_cleanup, bldg_id_filter, reference_dir,
          working_dir, app_dir, log_file, site_response,
@@ -183,13 +184,15 @@ def main(run_type, input_file, app_registry,
         
     if parallelType == 'parSETUP':
         return
-    
+        
     # now for each asset run dl workflow .. in parallel if requested
     count = 0
     for asset_type, assetIt in asset_files.items() :
 
         # perform the regional mapping
         # WF.perform_regional_mapping(assetIt, asset_type)
+        
+        print('***',asset_type)
 
         # TODO: not elegant code, fix later
         with open(assetIt, 'r', encoding="utf-8") as f:
@@ -204,64 +207,124 @@ def main(run_type, input_file, app_registry,
             continue # Run the nodes with the pipelines, i.e., the water distribution network
         elif asset_type == 'WaterNetworkPipelines' :
             run_asset_type = 'WaterDistributionNetwork' # Run the pipelines with the entire water distribution network
+        elif asset_type == 'NaturalGasPipelines' :
+            if 'GasNetwork' in inputs['Applications']['DL'] and 'OpenSRA' in inputs['Applications']['DL']['GasNetwork'] :
+                run_individual_assets = False
+            else :
+                run_individual_assets = True
         else :
             print("No support for asset type: ",asset_type)
             
-        # The preprocess app sequence (previously get_RV)
-        preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
-            
-        # The workflow app sequence
-        WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']        
-        # For each asset
-        for asst in asst_data:
-
-            if count % numP == procID:
-                
-                log_msg('', prepend_timestamp=False)
-                log_div(prepend_blank_space=False)
-                log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
-                log_div()
-
-                # Run sWhale
-                runSWhale(
-                    inputs = None, 
-                    WF = WF, 
-                    assetID = asst['id'], 
-                    assetAIM = asst['file'], 
-                    prep_app_sequence = preprocess_app_sequence,  
-                    WF_app_sequence = WF_app_sequence, 
-                    asset_type = run_asset_type, 
-                    copy_resources = True, 
-                    force_cleanup = force_cleanup)
-
-            count = count + 1
-
-        # wait for every process to finish
-        if doParallel == True:
-            comm.Barrier()
-                
-        # aggregate results
-        if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
-
-            WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
-            
-        elif asset_type == 'WaterNetworkPipelines' :
+        # SG: OpenSRA does not use swhale, it runs in its own backend
+        if run_individual_assets :
         
-            # Provide the headers and out types
-            headers = dict(DV = [0])
+            # The preprocess app sequence (previously get_RV)
+            preprocess_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
                 
-            out_types = ['DV']
+            # The workflow app sequence
+            WF_app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation']
+            # For each asset
+            for asst in asst_data:
+            
+                if count % numP == procID:
+                    
+                    log_msg('', prepend_timestamp=False)
+                    log_div(prepend_blank_space=False)
+                    log_msg(f"{asset_type} id {asst['id']} in file {asst['file']}")
+                    log_div()
 
-            if procID == 0:            
-                WF.aggregate_results(asst_data = asst_data,
-                                     asset_type = asset_type,
-                                     out_types = out_types,
-                                     headers = headers)
+                    # Run sWhale
+                    runSWhale(
+                        inputs = None,
+                        WF = WF,
+                        assetID = asst['id'],
+                        assetAIM = asst['file'],
+                        prep_app_sequence = preprocess_app_sequence,
+                        WF_app_sequence = WF_app_sequence,
+                        asset_type = run_asset_type,
+                        copy_resources = True,
+                        force_cleanup = force_cleanup)
 
-        if doParallel == True:
-            comm.Barrier()
+                count = count + 1
+
+            # wait for every process to finish
+            if doParallel == True:
+                comm.Barrier()
+                    
+            # aggregate results
+            if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':
+
+                WF.aggregate_results(asst_data = asst_data, asset_type = asset_type)
+                
+            elif asset_type == 'WaterNetworkPipelines' :
+            
+                # Provide the headers and out types
+                headers = dict(DV = [0])
+                    
+                out_types = ['DV']
+
+                if procID == 0:
+                    WF.aggregate_results(asst_data = asst_data,
+                                         asset_type = asset_type,
+                                         out_types = out_types,
+                                         headers = headers)
+
+            if doParallel == True:
+                comm.Barrier()
+                
+            WF.combine_assets_results(asset_files)
+            
+        else :
+            
+            log_msg('Skipping individual asset runs for NaturalGasPipelines.  Running the OpenSRA backend...')
+            log_div(prepend_blank_space=False)
+            
+            openSRA_dir = os.getenv('OPENSRA_BACKEND_DIR', None)
+            
+            if not openSRA_dir :
+                raise ValueError('Error, could not find the OPENSRA_BACKEND_DIR environment var')
+            
+            log_msg('Creating OpenSRA Input file.')
+            
+            try :
+                convertToOSRAFile(inputs=inputs)
+            except Exception as e :
+                raise ValueError(f'Failed to create the OpenSRA input file with error {e}')
+            
+            log_msg('Running the preprocessing step in OpenSRA.')
+            command_list = ['python']
+            command_list.append(f'{openSRA_dir}/Preprocess.py')
+            command_list.append('-w')
+            command_list.append(inputs["runDir"])
+            command_list.append('-i')
+            command_list.append("input_data")
+
+            command = whale.create_command(command_list)
+            
+            result, returncode = whale.run_command(command)
+            
+            if returncode != 0 :
+                raise ValueError(f'OpenSRA failed with return code {returncode} in pre-processing step with output: {result}')
+                    
+            log_msg(result, prepend_timestamp=False)
+            
+            log_msg('Running the analysis step in OpenSRA.')
+            command_list = ['python']
+            command_list.append(f'{openSRA_dir}/OpenSRA.py')
+            command_list.append('-w')
+            command_list.append(inputs["runDir"])
+            command_list.append('-i')
+            command_list.append("input_data")
+
+            command = whale.create_command(command_list)
+            
+            result, returncode = whale.run_command(command)
+            
+            print('****', result, returncode)
+            
+            log_msg(result, prepend_timestamp=False)
+            log_msg('Done running the analysis step in OpenSRA.')
     
-    WF.combine_assets_results(asset_files)                
 
     #
     # add system performance
