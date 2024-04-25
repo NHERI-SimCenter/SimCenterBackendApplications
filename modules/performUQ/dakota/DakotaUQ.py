@@ -41,7 +41,7 @@ def main(args):
     #  - need to know in case need to modify driver file
     #
     
-    with open(inputFile, 'r') as f:
+    with open(inputFile, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     workflow_driver1 = 'blank'
@@ -70,7 +70,7 @@ def main(args):
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
     
-    preprocessorCommand = '"{}/preprocessDakota" {} {} {} {} {} '.format(thisScriptDir,
+    preprocessorCommand = '"{}/preprocessDakota" "{}" "{}" "{}" "{}" "{}" '.format(thisScriptDir,
                                                                         inputFile,
                                                                         workflow_driver,
                                                                         workflow_driver1,

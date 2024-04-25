@@ -249,7 +249,7 @@ class DBServer:
         if file_format == 'csv' or 'txt':
             d.to_csv(filename, header=True, index=True)
         elif file_format == 'json':
-            with open(filename, 'w') as f:
+            with open(filename, 'w', encoding='utf-8') as f:
                 json.dump(d, f)
         else:
             return 2

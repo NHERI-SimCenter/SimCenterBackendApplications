@@ -67,12 +67,12 @@ def writeEVENT(forces, eventFilePath):
         addFloorForceToEvent(patternsArray, floorForces.X, "X", floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, "Y", floor)
 
-    with open(eventFilePath, "w") as eventsFile:
+    with open(eventFilePath, "w", encoding='utf-8') as eventsFile:
         json.dump(eventDict, eventsFile)
 
 
 def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath,'r') as BIMFile:
+    with open(BIMFilePath,'r', encoding='utf-8') as BIMFile:
 	    bim = json.load(BIMFile)
 
     return int(bim["GeneralInformation"]["stories"])

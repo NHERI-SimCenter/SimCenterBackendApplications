@@ -64,7 +64,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):
     # the -getRV flag
     #import openseespy.opensees as ops
 
-    with open(AIM_input_path, 'r') as f:
+    with open(AIM_input_path, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
     #root_GI = root_AIM['GeneralInformation']
 
@@ -106,7 +106,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):
 
 def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
 
-    with open(AIM_input_path, 'r') as f:
+    with open(AIM_input_path, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
 
     if newEDP_input_path ==None:
@@ -117,7 +117,7 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
     #surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
     surrogate_path = os.path.join(curpath,root_SAM['ApplicationData']['mainScript'])
 
-    with open(surrogate_path, 'r') as f:
+    with open(surrogate_path, 'r', encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
     #
@@ -143,7 +143,7 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
     # Read EDP file, mapping between EDPnames and EDP.json and write scalar_data 
     #
 
-    with open(EDP_input_path, 'r') as f:
+    with open(EDP_input_path, 'r', encoding='utf-8') as f:
         rootEDP = json.load(f)
 
 
@@ -208,7 +208,7 @@ def write_EDP(AIM_input_path,EDP_input_path, newEDP_input_path=None):
     rootEDP['EngineeringDemandParameters'][0]["responses"] = eventEDPs
 
 
-    with open(newEDP_input_path, 'w') as f:
+    with open(newEDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(rootEDP, f, indent=2)
 
 
