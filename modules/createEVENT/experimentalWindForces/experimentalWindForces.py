@@ -19,8 +19,7 @@ from convertWindMat import *
 def main(aimName,evtName,getRV):
 
 
-    # THIS IS PERFORMED ONLY ONCE
-    with open(aimName, 'r') as f:
+    # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
         aim_data = json.load(f)
 
     evt_data = aim_data["Events"][0]
@@ -49,7 +48,7 @@ def main(aimName,evtName,getRV):
 
         filename = json_filename
 
-    with open(filename,'r') as jsonFile:
+    with open(filename,'r', encoding='utf-8') as jsonFile:
         data = json.load(jsonFile)
 
 
@@ -282,7 +281,11 @@ def main(aimName,evtName,getRV):
         for nf in range(nfloors):
             id_timeseries +=1
             my_pattern = {}
-            my_pattern["dof"]=nd+1 # TODO: is it x,y,z?
+            if nd==0 or nd==1:
+                my_pattern["dof"]=nd+1 # x and y dir
+            elif nd==2:
+                my_pattern["dof"]=6 # moments
+
             my_pattern["floor"]=str(nf+1)
             my_pattern["name"]=str(id_timeseries)
             my_pattern["staticWindLoad"]=0.0
@@ -313,7 +316,7 @@ def main(aimName,evtName,getRV):
 
     evtInfo["timeSeries"] = timeSeries
 
-    with open(evtName, "w") as fp:
+    with open(evtName, "w", encoding='utf-8') as fp:
         json.dump({"Events":[evtInfo]} , fp) 
 
 
