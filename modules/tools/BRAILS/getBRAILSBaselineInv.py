@@ -58,6 +58,8 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc,
 
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()
+    if locationStr == "\"\"":
+        locationStr = ""
 
     if invInp=="NSI":
         nsiParser = NSIParser()
