@@ -70,7 +70,7 @@ def main(args):
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
     
-    preprocessorCommand = '"{}/preprocessDakota" {} {} {} {} {} '.format(thisScriptDir,
+    preprocessorCommand = '"{}/preprocessDakota" "{}" "{}" "{}" "{}" "{}" '.format(thisScriptDir,
                                                                         inputFile,
                                                                         workflow_driver,
                                                                         workflow_driver1,

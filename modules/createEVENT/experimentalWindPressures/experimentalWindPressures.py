@@ -244,6 +244,7 @@ def main(aimName,evtName, getRV):
 
         print("Performing POD..");
         t_init = time.time()
+
         # Spectral Proper Orthogonal Decomposition
         V, D1, SpeN = perform_POD(s_target, f_target, tap, l_mo, pool)
         print(" - Elapsed time: {:.1f} seconds.\n".format(time.time() - t_init))
@@ -324,6 +325,7 @@ def main(aimName,evtName, getRV):
         iterm_json["SpeN"] = SpeN
         iterm_json["my_cdf_vects"] = my_cdf_vects
         iterm_json["my_cdf_x_range"] = my_cdf_x_range
+
         #
         # save into a file
         #
@@ -384,6 +386,10 @@ def main(aimName,evtName, getRV):
     Nsim = 1  # Number of realizations to be generated
     seeds = np.arange(seed, Nsim + seed)  # Set seeds for reproducibility
 
+    #
+    # Creating Gaussian Relizations
+    #
+
     print("Creating Gaussian Realizations");
     t_init = time.time()
 
@@ -395,7 +401,9 @@ def main(aimName,evtName, getRV):
 
     print(" - Elapsed time: {:.1f} seconds.\n".format(time.time() - t_init))
 
-    # TODO: parfor
+    #
+    # Creating Non-Gaussian Relizations
+    #
 
     print("Creating NonGaussian Realizations");
     if do_parallel:
@@ -434,16 +442,16 @@ def main(aimName,evtName, getRV):
     Cp_nongauss = np.transpose(Cp_nongauss_kernel,(0, 2, 1))*np.tile(Cp_std_tmp,(1,len(seeds),N_t))+ np.tile(Cp_mean_tmp,(1,len(seeds),N_t))  # destandardize the time series
 
     # Convert to Full Scale Pressure time series
-    #P_full=Cp_nongauss*(1/2)*air_dens*V_H**2  # Net Pressure values in full scale (Pa)
+    # P_full=Cp_nongauss*(1/2)*air_dens*V_H**2  # Net Pressure values in full scale (Pa)
 
     # Obs: Ps is the static pressure. Some wind tunnel datasets do not provide this
     # value. Not included in this calculation.
 
 
-
     #
     # Save Results
     #
+
     print("Saving results")
 
     pressure_data = iterm_json["pressureData"]
@@ -504,6 +512,8 @@ def main(aimName,evtName, getRV):
 
     new_json["pressureCoefficients"] = new_pressures
     new_json["tapLocations"] = new_taps
+
+    #
     # %% Plots for verification of code
     #
 
@@ -538,7 +548,7 @@ def main(aimName,evtName, getRV):
     import matplotlib.pyplot as plt
 
     plt.plot(t_vec_sc,np.squeeze(Cp_nongauss[9,0,:]))
-    plt.plot(t_sc*tvec,Cp[:,selected_taps[9]])
+    plt.plot(t_sc*tvec,Cp[:,selected_taps[9]-1])
     plt.xlabel('t(s)')
     plt.ylabel('Cp')
     plt.title('Cp - Tap 10 - Full Scale')
@@ -548,7 +558,7 @@ def main(aimName,evtName, getRV):
 
 
     plt.hist(np.squeeze(Cp_nongauss[9,0,:]),bins=100, density=True, fc=(0, 0, 1, 0.5), log=True)
-    plt.hist(Cp[:,selected_taps[9]],bins=100,density=True, fc=(1, 0, 0, 0.5), log=True)
+    plt.hist(Cp[:,selected_taps[9]-1],bins=100,density=True, fc=(1, 0, 0, 0.5), log=True)
     plt.legend(['Sim','Wind Tunnel Data'])
     plt.xlabel('Cp')
     plt.ylabel('PDF')
@@ -599,13 +609,9 @@ def getCDF(Cp_temp):
 def paretotails_icdf(pf, nl,nu, temp, my_cdf_vect, my_cdf_x):
 
     #
-    # Learning KDE
+    # Pareto percentile
     #
-    #kernel = gaussian_kde(temp)
-    #
-    #
-    # pareto parts - quick stuff
-    #
+
     lower_temp = temp[temp<np.quantile(temp,nl)]
     upper_temp = temp[temp>np.quantile(temp,nu)]
     #gpareto_param_lower = genpareto.fit(-lower_temp, loc=np.min(-lower_temp))
@@ -632,14 +638,12 @@ def paretotails_icdf(pf, nl,nu, temp, my_cdf_vect, my_cdf_x):
     #
 
     my_cdf_x = np.linspace(my_cdf_x[0],my_cdf_x[1],my_cdf_vect.shape[0])
-    idx2 = np.where((pf>=nl)* (pf<nu))
-    # not to have duplicates in x
+    idx2 = np.where((pf>=nl)* (pf<nu))  # not to have duplicates in x
 
     unique_val, unique_id = np.unique(my_cdf_vect, return_index=True)
 
     kernel_icdf = interpolate.interp1d(my_cdf_vect[unique_id], my_cdf_x[unique_id], kind='cubic', bounds_error=False)
 
-    
     icdf_vals[idx2] = kernel_icdf(pf[idx2])
 
     #
@@ -656,26 +660,8 @@ def paretotails_icdf(pf, nl,nu, temp, my_cdf_vect, my_cdf_x):
     return icdf_vals
 
 
-
     '''
-    def paretotails(temp,nl,nu):
-    
-        # KDE part
-        kernel = gaussian_kde(temp)
-        #cdf = np.vectorize(lambda x: kernel.integrate_box_1d(-np.inf, x))
-    
-        # pareto parts
-        lower_temp = temp[temp<np.quantile(temp,nl)]
-        upper_temp = temp[temp>np.quantile(temp,nu)]
-        gpareto_param_lower = genpareto.fit(-lower_temp, loc=np.min(-lower_temp))
-        gpareto_param_upper = genpareto.fit(upper_temp, loc=np.min(upper_temp))
-        #f_low=genpareto.cdf(x_target,gpareto_param_lower[0],gpareto_param_lower[1],gpareto_param_lower[2])
-        #f_upp=genpareto.cdf(x_target,gpareto_param_upper[0],gpareto_param_upper[1],gpareto_param_upper[2])
-        #tt=genpareto.isf(1-0.025,gpareto_param_lower[0],gpareto_param_lower[1],gpareto_param_lower[2])
-        #genpareto.cdf(tt, gpareto_param_lower[0], gpareto_param_lower[1], gpareto_param_lower[2])
-        #f_upp=genpareto.cdf(x_target,gpareto_param_upper[0],gpareto_param_upper[1],gpareto_param_upper[2])
-    
-    
+        # for verification
         c = 0.1
         r = genpareto.rvs(c, size=1000)
         
@@ -791,6 +777,10 @@ def simulation_gaussian(ncomp , N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f
     else:
         np.random.seed(seed[seed_num] + int(sampNum))
 
+    #
+    # Start the loop
+    #
+
     F_jzm = np.zeros((ncomp, N_t))  # force coefficients initialize matrix
     f_tmp = np.linspace(0, (N_f - 1) * f_inc, N_f)
 
@@ -836,8 +826,6 @@ def simulation_gaussian(ncomp , N_t, V_vH, D_vH, theta_vH, nf_dir, N_f, f_inc, f
         F_jzm = F_jzm + F_jm  # sum up F from different modes (zero - mean)
 
     return F_jzm
-
-
 
     #with open(errPath, "w") as f:
     #    f.write("Failed in wind load generator: "+ msg)
