@@ -2714,19 +2714,20 @@ class Workflow(object):
                             "Demand": {"Units": edp_units}
                             })
                         if 'EDP' in R2D_res_out_types:
-                            meanValues = edp_data_i.mean()
-                            stdValues = edp_data_i.std()
-                            r2d_res_edp = dict()
-                            for key in edp_data_i.columns:
-                                meanKey = f'R2Dres_mean_{key}_{edp_units[key]}'
-                                stdKey = f'R2Dres_std_{key}_{edp_units[key]}'
-                                r2d_res_edp.update({meanKey:meanValues[key],\
-                                                    stdKey:stdValues[key]})
-                            r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
-                            r2d_res_i.update(r2d_res_edp)
-                            deter_pointer[asset_id].update({
-                                "R2Dres":r2d_res_i
-                            })
+                            pass
+                            # meanValues = edp_data_i.mean()
+                            # stdValues = edp_data_i.std()
+                            # r2d_res_edp = dict()
+                            # for key in edp_data_i.columns:
+                            #     meanKey = f'R2Dres_mean_{key}_{edp_units[key]}'
+                            #     stdKey = f'R2Dres_std_{key}_{edp_units[key]}'
+                            #     r2d_res_edp.update({meanKey:meanValues[key],\
+                            #                         stdKey:stdValues[key]})
+                            # r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
+                            # r2d_res_i.update(r2d_res_edp)
+                            # deter_pointer[asset_id].update({
+                            #     "R2Dres":r2d_res_i
+                            # })
                 if 'DMG' in out_types:
 
                     dmg_out_file_i = 'DMG_grp.json'
@@ -2770,11 +2771,11 @@ class Workflow(object):
                             meanValues = dmg_data_i.mode().ffill().mean()
                             stdValues = dmg_data_i.std()
                             r2d_res_dmg = dict()
-                            for key in dmg_data_i.columns:
-                                meanKey = f'R2Dres_mode_{key}'
-                                stdKey = f'R2Dres_std_{key}'
-                                r2d_res_dmg.update({meanKey:meanValues[key],\
-                                                    stdKey:stdValues[key]})
+                            # for key in dmg_data_i.columns:
+                            #     meanKey = f'R2Dres_mode_{key}'
+                            #     stdKey = f'R2Dres_std_{key}'
+                            #     r2d_res_dmg.update({meanKey:meanValues[key],\
+                            #                         stdKey:stdValues[key]})
                             r2d_res_dmg.update({
                                 "R2Dres_MostLikelyCriticalDamageState":\
                                     dmg_data_i.max(axis = 1).mode().mean()})
@@ -2835,14 +2836,26 @@ class Workflow(object):
                             })
                         
                         if 'DV' in R2D_res_out_types:
-                            meanValues = dv_data_i.mean()
-                            stdValues = dv_data_i.std()
                             r2d_res_dv = dict()
-                            for key in dv_data_i.columns:
-                                meanKey = f'R2Dres_mean_{key}_{dv_units[key]}'
-                                stdKey = f'R2Dres_std_{key}_{dv_units[key]}'
-                                r2d_res_dv.update({meanKey:meanValues[key],\
-                                                    stdKey:stdValues[key]})
+                            cost_columns = [col for col in dv_data_i.columns if col.startswith('Cost')]
+                            if len(cost_columns) !=0:
+                                cost_data = dv_data_i[cost_columns].mean()
+                                cost_data_std = dv_data_i[cost_columns].std()
+                                cost_key = cost_data.idxmax()
+                                meanKey = f'R2Dres_mean_RepairCost_{dv_units[cost_key]}'
+                                stdKey = f'R2Dres_std_RepairCost_{dv_units[cost_key]}'
+                                r2d_res_dv.update({meanKey:cost_data[cost_key],\
+                                                    stdKey:cost_data_std[cost_key]})
+                            time_columns = [col for col in dv_data_i.columns if col.startswith('Time')]
+                            if len(time_columns) !=0:
+                                time_data = dv_data_i[time_columns].mean()
+                                time_data_std = dv_data_i[time_columns].std()
+                                time_key = time_data.idxmax()
+                                meanKey = f'R2Dres_mean_RepairTime_{dv_units[time_key]}'
+                                stdKey = f'R2Dres_std_RepairTime_{dv_units[time_key]}'
+                                r2d_res_dv.update({meanKey:time_data[time_key],\
+                                                    stdKey:time_data_std[time_key]})
+
                             r2d_res_i =  deter_pointer[asset_id].get('R2Dres', {})
                             r2d_res_i.update(r2d_res_dv)
                             deter_pointer[asset_id].update({
