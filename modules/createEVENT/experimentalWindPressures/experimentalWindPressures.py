@@ -367,6 +367,9 @@ def main(aimName,evtName, getRV):
         file_loaded = True
 
 
+    if selected_taps.shape[0] == 0:
+        selected_taps = np.arange(0,Cp_norm.shape[0])
+
     f_full = f_target[0:]  # don't exclude freq = 0 Hz
     f_vH = (V_H / Vref) * f_full  # scaledfreq.(Hz)
     V_vH = V  # scaled eigenmodes
