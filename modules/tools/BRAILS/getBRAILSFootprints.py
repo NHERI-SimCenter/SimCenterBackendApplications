@@ -56,6 +56,8 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, fpSrc, fpSourceAttr
               outputfile, lengthunit):      
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()
+    if locationStr == "\"\"":
+        locationStr = ""
 
     # Format location input based on the GUI input:
     if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
