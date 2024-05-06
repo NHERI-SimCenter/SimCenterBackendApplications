@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from EnhancedWNTR.sim.epanet import EpanetSimulator
 from EnhancedWNTR.sim.results import SimulationResults
-import wntr
+import wntrfr
 
 
 class Hydraulic_Simulation():
