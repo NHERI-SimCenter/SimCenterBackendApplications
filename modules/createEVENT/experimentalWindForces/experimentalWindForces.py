@@ -20,6 +20,7 @@ def main(aimName,evtName,getRV):
 
 
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
+    with open(aimName,'r') as f:
         aim_data = json.load(f)
 
     evt_data = aim_data["Events"][0]
