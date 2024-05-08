@@ -57,6 +57,8 @@ def runBrails(latMin, latMax, longMin, longMax, locationStr, lengthUnit,
               outputFile, seed, numBuildings, getAllBuildings, gKey):    
             
     # Format location input based on the GUI input:
+    if locationStr == "\"\"":
+        locationStr = ""
     if 'geojson' in fpSource.lower():
         locationInp = fpSource
         fpSource = 'osm'

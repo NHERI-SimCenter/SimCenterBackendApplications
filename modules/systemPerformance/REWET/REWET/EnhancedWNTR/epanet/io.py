@@ -24,7 +24,7 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 import six
-import wntr
+import wntrfr
 import wntrfr.network
 from wntrfr.network.base import Link
 from wntrfr.network.controls import (AndCondition, Comparison, Control,
