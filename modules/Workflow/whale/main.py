@@ -2670,6 +2670,9 @@ class Workflow(object):
 
                 deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
+                deter_pointer[asset_id].update({
+                                "R2Dres":{}
+                            })                            
 
                 if 'EDP' in out_types:
 
