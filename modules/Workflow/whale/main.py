@@ -360,7 +360,7 @@ def run_command(command):
     else:
 
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
