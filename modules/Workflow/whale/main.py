@@ -360,7 +360,7 @@ def run_command(command):
     else:
 
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
@@ -2670,6 +2670,9 @@ class Workflow(object):
 
                 deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
+                deter_pointer[asset_id].update({
+                                "R2Dres":{}
+                            })                            
 
                 if 'EDP' in out_types:
 

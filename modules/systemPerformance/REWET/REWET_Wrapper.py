@@ -521,6 +521,7 @@ if __name__ == '__main__':
                 generalInfo.update({'geometry':wkt_geometry})
                 asset_name = sub_asset_id_to_name[WDNtype][id]
                 generalInfo.update({'REWET_id':asset_name})
+                generalInfo.update({'AIM_id': id})
                 for key, item in prop.items():
                     if key == 'id':
                         continue

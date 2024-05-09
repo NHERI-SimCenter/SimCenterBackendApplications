@@ -51,6 +51,7 @@ R2D = True
 
 def hazard_job(hazard_info):
     from CreateScenario import load_ruptures_openquake
+    from GMSimulators import simulate_ground_motion
     try:
         # oq_flag = hazard_info['Scenario']['EqRupture']['Type'] in ['oqSourceXML']
         oq_flag = 'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type'] 
@@ -98,7 +99,7 @@ def hazard_job(hazard_info):
             event_info['IntensityMeasure'] = im_info
 
         if opensha_flag or hazard_info['Scenario']['EqRupture']['Type'] == 'oqSourceXML':
-            im_raw, im_info = compute_im(scenarios, stations, scenario_info,
+            im_raw_path, im_list = compute_im(scenarios, stations, scenario_info,
                                 event_info.get('GMPE',None), event_info['IntensityMeasure'],
                                 scenario_info['Generator'], output_dir, mth_flag=False)
             # update the im_info
@@ -144,6 +145,7 @@ def hazard_job(hazard_info):
         #im_type = 'SA'
         #period = 1.0
         #im_level = 0.2*np.ones((len(im_raw[0].get('GroundMotions')),1))
+        hc_curves = None
         occurrence_sampling = scenario_info['Generator']["method"]=='Subsampling'
         if occurrence_sampling:
             # read all configurations
@@ -151,7 +153,8 @@ def hazard_job(hazard_info):
             reweight_only = occurrence_info.get('ReweightOnly',False)
             # KZ-10/31/22: adding a flag for whether to re-sample ground motion maps or just monte-carlo
             sampling_gmms = occurrence_info.get('SamplingGMMs', True)
-            occ_dict = configure_hazard_occurrence(input_dir, output_dir, hzo_config=occurrence_info, site_config=stations)
+            occ_dict = configure_hazard_occurrence(input_dir, output_dir, im_raw_path, \
+                im_list, scenarios, hzo_config=occurrence_info,site_config=stations)
             model_type = occ_dict.get('Model')
             num_target_eqs = occ_dict.get('NumTargetEQs')
             num_target_gmms = occ_dict.get('NumTargetGMMs')
@@ -161,14 +164,17 @@ def hazard_job(hazard_info):
             period = occ_dict.get('Period')
             hc_curves = occ_dict.get('HazardCurves')
             # get im exceedance probabilities
-            im_exceedance_prob = get_im_exceedance_probility(im_raw, im_type, period, hc_curves, selected_scen_ids)
+            im_exceedance_prob = get_im_exceedance_probility(im_raw_path, im_list, 
+                im_type, period, hc_curves, selected_scen_ids)
             # sample the earthquake scenario occurrence
             # if reweight_only:
             #     occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
             # else:
             #     occurrence_rate_origin = None
             occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in selected_scen_ids]
-            occurrence_model = sample_earthquake_occurrence(model_type,num_target_eqs,return_periods,im_exceedance_prob,reweight_only,occurrence_rate_origin)
+            occurrence_model = sample_earthquake_occurrence(model_type,num_target_eqs,
+                return_periods,im_exceedance_prob,reweight_only,occurrence_rate_origin,
+                occurrence_info)
             #print(occurrence_model)
             P, Z = occurrence_model.get_selected_earthquake()
             # now update the im_raw with selected eqs with Z > 0
@@ -176,14 +182,12 @@ def hazard_job(hazard_info):
             for i in range(len(Z)):
                 if P[i] > 0:
                     id_selected_eqs.append(selected_scen_ids[i])
-            im_raw_sampled = {}
-            for i in id_selected_eqs:
-                im_raw_sampled.update({i: im_raw[i]})
-            im_raw = im_raw_sampled
             selected_scen_ids = id_selected_eqs
             num_per_eq_avg = int(np.ceil(num_target_gmms/len(selected_scen_ids)))
+            # compute error from optimization residual
+            error = occurrence_model.get_error_vector()
             # export sampled earthquakes
-            _ = export_sampled_earthquakes(selected_scen_ids, scenarios, P, output_dir)
+            _ = export_sampled_earthquakes(error, selected_scen_ids, scenarios, P, output_dir)
         
         # Updating station information
         #stations['Stations'] = stn_new
@@ -197,24 +201,28 @@ def hazard_job(hazard_info):
         print('num_gm_per_site = ',num_gm_per_site)
         if not scenario_info['EqRupture']['Type'] in ['OpenQuakeClassicalPSHA','OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
             # Computing correlated IMs
-            ln_im_mr, mag_maf, im_list = simulate_ground_motion(stations, im_raw,
-                                                                num_gm_per_site,
-                                                                event_info['CorrelationModel'],
-                                                                event_info['IntensityMeasure'],
-                                                                selected_scen_ids)
+            ln_im_mr, mag_maf = simulate_ground_motion(stations, im_raw_path,
+                            im_list, scenarios,
+                            num_gm_per_site,
+                            event_info['CorrelationModel'],
+                            event_info['IntensityMeasure'],
+                            selected_scen_ids)
             print('HazardSimulation: correlated response spectra computed.')
         # KZ-08/23/22: adding method to do hazard occurrence model
         if occurrence_sampling and sampling_gmms:
             # get im exceedance probabilities for individual ground motions
             #print('im_list = ',im_list)
-            im_exceedance_prob_gmm = get_im_exceedance_probability_gm(np.exp(ln_im_mr), im_list, im_type, period, hc_curves)
+            im_exceedance_prob_gmm, occur_rate_origin = get_im_exceedance_probability_gm(\
+                np.exp(ln_im_mr), im_list, im_type, period, hc_curves,\
+                     np.array(mag_maf)[:,1])
             # sample the earthquake scenario occurrence
             # if reweight_only:
             #     occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in range(len(scenarios))]
             # else:
             #     occurrence_rate_origin = None
-            occurrence_rate_origin = [scenarios[i].get('MeanAnnualRate') for i in selected_scen_ids]
-            occurrence_model_gmm = sample_earthquake_occurrence(model_type,num_target_gmms,return_periods,im_exceedance_prob_gmm, reweight_only, occurrence_rate_origin)
+            occurrence_model_gmm = sample_earthquake_occurrence(model_type,\
+                num_target_gmms,return_periods,im_exceedance_prob_gmm,\
+                    reweight_only, occur_rate_origin, occurrence_info)
             #print(occurrence_model)
             P_gmm, Z_gmm = occurrence_model_gmm.get_selected_earthquake()
             # now update the im_raw with selected eqs with Z > 0
@@ -225,7 +233,7 @@ def hazard_job(hazard_info):
             id_selected_scens = np.array([selected_scen_ids[int(x/num_gm_per_site)] for x in id_selected_gmms])
             id_selected_simus = np.array([x%num_gm_per_site for x in id_selected_gmms])
             # export sampled earthquakes
-            _ = export_sampled_gmms(id_selected_gmms, id_selected_scens, P_gmm, output_dir)
+            occurrence_model_gmm.export_sampled_gmms(id_selected_gmms, id_selected_scens, P_gmm, output_dir)
 
             selected_scen_ids_step2 = sorted(list(set(id_selected_scens)))
             sampled_ln_im_mr = [None]*len(selected_scen_ids_step2)
@@ -344,6 +352,8 @@ def hazard_job(hazard_info):
         print('HazardSimulation: simulated intensity measures saved.')
     else:
         print('HazardSimulation: IM is not required to saved or no IM is found.')
+
+    # If hazard downsampling algorithm is used. Save the errors.
 
 if __name__ == '__main__':
 
