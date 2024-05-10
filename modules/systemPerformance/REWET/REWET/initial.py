@@ -51,7 +51,7 @@ class Starter():
         settings = Settings()
         if type(project_file) != type(None):
             project_file = str(project_file)
-        
+
         if type(project_file) == str:
             if project_file.split(".")[-1].lower() == "prj":
                 settings.importProject(project_file)

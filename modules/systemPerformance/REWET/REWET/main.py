@@ -24,7 +24,7 @@ if __name__ == "__main__":
     argParser.add_argument("--json", "-j",  default=None, 
                            help="json settings file")
     
-    argParser.add_argument("-p", default=None, 
+    argParser.add_argument("--project", "-p", default=None, 
                            help="REWET project file")
     
     parse_namespace = argParser.parse_args()
@@ -33,10 +33,10 @@ if __name__ == "__main__":
     # No file is pecified, so the default values in settinsg file is going to
     # be ran.
     
-    if parse_namespace.json == None and parse_namespace.p == None: 
+    if parse_namespace.json == None and parse_namespace.project == None: 
         starter.run()
         sys.exit(0)
-    elif parse_namespace.json != None and parse_namespace.p == None:
+    elif parse_namespace.json != None and parse_namespace.project == None:
         if parse_namespace.json.split(".")[-1].upper() != "JSON":
             print("ERROR in json file name: ", parse_namespace.json,
                   "The json file must have json extention")
@@ -47,16 +47,16 @@ if __name__ == "__main__":
         else:
             starter.run(parse_namespace.json)
             
-    elif parse_namespace.json == None and parse_namespace.p != None:
-        if parse_namespace.p.split(".")[-1].upper() != "PRJ":
-            print("ERROR in project file name: ", parse_namespace.json,
+    elif parse_namespace.json == None and parse_namespace.project != None:
+        if parse_namespace.project.split(".")[-1].upper() != "PRJ":
+            print("ERROR in project file name: ", parse_namespace.project,
                   "The project file must have PRJ extention")
             sys.exit(0)
-        elif not os.path.exists(parse_namespace.p):
-            print("ERROR in project file: ", parse_namespace.p,
+        elif not os.path.exists(parse_namespace.project):
+            print("ERROR in project file: ", parse_namespace.project,
                   "does not exist")
         else:
-            starter.run(parse_namespace.json)
+            starter.run(parse_namespace.project)
     
     else:
         print("ERROR in arguments\n",
