@@ -1974,7 +1974,7 @@ class Workflow(object):
                 if platform.system() == 'Windows':
                     with open("driver.bat","r", encoding="utf-8") as f:
                         lines = f.readlines()
-                    lines.append(r'if %errorlevel% neq 0 exit /b -1')
+                    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
                     with open("driver.bat","w", encoding="utf-8") as f:
                         f.writelines(lines)
                 else:
@@ -2123,7 +2123,8 @@ class Workflow(object):
                 # sy - trying adding exit command
                 
                 if platform.system() == 'Windows':
-                   driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                   pass
                 else: 
                    pass
 
