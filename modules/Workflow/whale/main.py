@@ -1971,14 +1971,14 @@ class Workflow(object):
                         prepend_blank_space=False)
 
                 # sy - trying adding exit command
-                if platform.system() == 'Windows':
-                    with open("driver.bat","r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                    with open("driver.bat","w", encoding="utf-8") as f:
-                        f.writelines(lines)
-                else:
-                    pass
+                #if platform.system() == 'Windows':
+                #    with open("driver.bat","r", encoding="utf-8") as f:
+                #        lines = f.readlines()
+                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
+                #    with open("driver.bat","w", encoding="utf-8") as f:
+                #        f.writelines(lines)
+                #else:
+                #    pass
                 
                 log_msg('Successfully Created Driver File for Workflow.',
                         prepend_timestamp=False)
@@ -2122,11 +2122,11 @@ class Workflow(object):
 
                 # sy - trying adding exit command
                 
-                if platform.system() == 'Windows':
-                   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                   pass
-                else: 
-                   pass
+                #if platform.system() == 'Windows':
+                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                #   pass
+                #else: 
+                #   pass
 
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
