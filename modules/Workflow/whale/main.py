@@ -61,6 +61,7 @@ import argparse
 import importlib
 
 import pprint
+import shlex
 
 import shutil
 import subprocess
@@ -358,8 +359,12 @@ def run_command(command):
         return "", ""
 
     else:
-
+        
+        # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
+        command = shlex.split(command)
+              
         try:
+
             result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
