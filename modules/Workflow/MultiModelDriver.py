@@ -154,10 +154,13 @@ def main(inputFile,
         exeFileName = exeFileName + ".exe"
         with open(driverFileBat, "wb") as f:
             f.write(bytes(os.path.join(appDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFileBat} {multiModelString}", "UTF-8"))
+    elif osType == "Windows" and runType == "runningRemote":
+        with open(driverFile, "wb") as f:
+            f.write(appDir+ "/applications/Workflow/"+ exeFileName + f" {paramsFileName} {driverFile} {multiModelString}", "UTF-8")
     else:
         with open(driverFile, "wb") as f:
             f.write(bytes(os.path.join(appDir, "applications", "Workflow", exeFileName) + f" {paramsFileName} {driverFile} {multiModelString}", "UTF-8"))
-
+            
     for modelToRun in range(numModels):
 
         #

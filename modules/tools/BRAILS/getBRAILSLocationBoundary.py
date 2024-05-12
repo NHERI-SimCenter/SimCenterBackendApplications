@@ -55,7 +55,8 @@ def log_msg(msg):
 def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):      
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()
-
+    if locationStr == "\"\"":
+        locationStr = ""
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
     if locationStr=="":
         fpHandler._FootprintHandler__bbox2poly((longMin,latMin,longMax,latMax),
