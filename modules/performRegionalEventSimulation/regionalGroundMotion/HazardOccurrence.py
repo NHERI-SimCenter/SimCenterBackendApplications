@@ -394,7 +394,7 @@ def get_im_exceedance_probility(IMfile,
         if im_type == 'PGA':
             im_name = 'PGA'
         elif im_type == 'SA':
-            if period.is_integer():
+            if isinstance(period, int) or period.is_integer():
                 im_name = 'SA({})'.format(str(int(period)))
             else:
                 im_name = 'SA({})'.format(str(period))
