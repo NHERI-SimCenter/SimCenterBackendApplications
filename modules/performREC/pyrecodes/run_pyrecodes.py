@@ -1,4 +1,4 @@
-import json, os, shapely, argparse, sys
+import json, os, shapely, argparse, sys, ujson
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -27,7 +27,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
         cmp_lib_name = cmp_lib.split('/')[1]
         cmp_lib_dir = os.path.dirname(os.path.realpath(__file__))
         cmp_lib = os.path.join(cmp_lib_dir, cmp_lib_name)
-    rec_config["ComponentLibrary"] = cmp_lib
+        rec_config["ComponentLibrary"] = cmp_lib
     # loop through each realizations. Needs to be parallelized
     # Create the base of system configuration json
     system_configuration = create_system_configuration(rec_config)
@@ -75,7 +75,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
         system_configuration_file = os.path.join(rlz_dir, \
                                                  "SystemConfiguration.json")
         with open(system_configuration_file, 'w') as f:
-            json.dump(system_configuration, f)
+            ujson.dump(system_configuration, f)
         
         # Update the main json
         main_json.update({"System": {
@@ -87,7 +87,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
         # Write the main json to a file
         main_file = os.path.join(rlz_dir, "main.json")
         with open(main_file, 'w') as f:
-            json.dump(main_json, f)
+            ujson.dump(main_json, f)
 
         system = main.run(main_file)
 
@@ -127,7 +127,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
                 system.resilience_calculators[resilience_calculator_id].system_consumption[resource_name][:system.time_step+1]
         resilience_result_rlz_i_file = os.path.join(rlz_dir, "ResilienceResult.json")
         with open(resilience_result_rlz_i_file, 'w') as f:
-            json.dump(resilience_result_rlz_i_file, f)
+            ujson.dump(resilience_result_rlz_i, f)
         result_file_name = os.path.join(inputRWHALE['runDir'],"Results", 
                                         f"Results_{rlz_ind}.json")
         with open(result_file_name, 'r') as f:
@@ -143,7 +143,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
                 result_agg[comp.asset_type][comp.asset_subtype][comp.aim_id]\
                     ['RecoveryDuration'][ind] = recovery_duration
         with open(result_file_name, 'w') as f:
-            json.dump(results, f)
+            ujson.dump(results, f)
     
         
     # Calculate stats of the results and add to results_det.json
@@ -152,12 +152,14 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
     for asset_type, item in result_agg.items():
         for asset_subtype, asset_subtype_item in item.items():
             for aim_id, aim in asset_subtype_item.items():
+                if 'R2Dres' not in results_det[asset_type][asset_subtype][aim_id].keys():
+                    results_det[asset_type][asset_subtype][aim_id].update({'R2Dres':{}})
                 results_det[asset_type][asset_subtype][aim_id]['R2Dres'].update({
                     "R2Dres_mean_RecoveryDuration":aim['RecoveryDuration'].mean(),
                     "R2Dres_std_RecoveryDuration":aim['RecoveryDuration'].std()
                 })
     with open(result_det_path, 'w') as f:
-        json.dump(results_det, f)
+        ujson.dump(results_det, f)
     
     recovery_result_path = os.path.join(rec_ouput_dir, "ResilienceResult.json")
     for resource_name in resources_to_plot: 
@@ -175,7 +177,7 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
 
        
     with open(recovery_result_path, 'w') as f:
-        json.dump(resilience_results, f)
+        ujson.dump(resilience_results, f)
 
     # Below are for development use
     from pyrecodes import GeoVisualizer as gvis
