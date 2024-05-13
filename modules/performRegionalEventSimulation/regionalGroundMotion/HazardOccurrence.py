@@ -74,18 +74,17 @@ def configure_hazard_occurrence(input_dir,
     im_type = hzo_config.get('IntensityMeasure',None)
     if im_type is None:
         return {}
-    # period (if any)
-    period = hzo_config.get('Period',0.0)
-    if im_type == 'SA':
-        cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
-    else:
-        cur_imt = im_type
     # get hazard curve input
     hc_input = hzo_config.get('HazardCurveInput',None)
     # return periods
     if hc_input is None:
         return {}
     elif hc_input == 'Inferred_NSHMP':
+        period = hzo_config.get('Period',0.0)
+        if im_type == 'SA':
+            cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
+        else:
+            cur_imt = im_type
         # fecthing hazard curve from usgs
         cur_edition = hzo_config.get('Edition','E2014')
         hazard_curve_collector = []
@@ -135,6 +134,11 @@ def configure_hazard_occurrence(input_dir,
 
         print('HazardOCcurrence: all hazard curves fetched {0} sec.'.format(time.time()-t_start))
     elif hc_input == 'Inferred_sourceFile':
+        period = hzo_config.get('Period',0.0)
+        if im_type == 'SA':
+            cur_imt = 'SA({})'.format(str(period))
+        else:
+            cur_imt = im_type
         if IMfile.lower().endswith('.json'):
             with open(IMfile, 'r') as f:
                 IMdata = json.load(f)
@@ -361,12 +365,6 @@ def get_im_exceedance_probility(IMfile,
             num_sites = f[str(scenario_idx[0])]['Mean'].shape[0]
     
     im_exceedance_prob = np.zeros((num_sites,num_scen,num_rps))
-
-    # check IM type first
-    if im_type not in im_list:
-        print('IM_Calculator.get_im_exceedance_probility: error - intensity measure {} type does not match to {}.'.\
-              format(im_type,im_list))
-        return im_exceedance_prob
         
     if IMfile.lower().endswith('.json'):
         if im_type == 'PGA':
@@ -402,6 +400,10 @@ def get_im_exceedance_probility(IMfile,
                 im_name = 'SA({})'.format(str(period))
         else:
             SystemExit(f'{im_type} is not supported in hazard downsampling')
+        if im_name not in im_list:
+            print('IM_Calculator.get_im_exceedance_probility: error - intensity measure {} does not match to {}.'.\
+                format(im_name,im_list))
+            return im_exceedance_prob
         im_ind = im_list.index(im_name)
         with h5py.File(IMfile, 'r') as im_raw:
             for k in range(num_scen):
