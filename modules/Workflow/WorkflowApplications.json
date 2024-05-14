@@ -98,6 +98,27 @@
           }
         ]
       },
+	  {
+        "Name": "INP_FILE",
+          "ExecutablePath": "applications/createAIM/INP_FILE/INP_FILE.py",
+        "ApplicationSpecificInputs": [
+          {
+            "id": "assetFile",
+            "type": "path",
+            "description": "path to asset database file"
+          },
+          {
+            "id": "assetType",
+            "type": "string",
+            "description": "name of the asset type e.g., Building, Transportation Network"
+          },
+          {
+            "id": "inputJsonFile",
+            "type": "path",
+            "description": "path to the rWHALE.json"
+          }
+        ]
+      },
       {
         "Name": "CSV_to_AIM",
         "ExecutablePath": "applications/createAIM/CSV_to_AIM/CSV_to_AIM.py",  

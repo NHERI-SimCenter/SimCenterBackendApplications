@@ -61,6 +61,7 @@ import argparse
 import importlib
 
 import pprint
+import shlex
 
 import shutil
 import subprocess
@@ -358,9 +359,13 @@ def run_command(command):
         return "", ""
 
     else:
-
+        
+        # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
+        command = shlex.split(command)
+              
         try:
-            result = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, text=True)
+
+            result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
             result = e.output
@@ -1184,7 +1189,7 @@ class Workflow(object):
             # The GEOJSON_TO_ASSET application is special because it can be used
             # for multiple asset types. "asset_type" needs to be added so the app
             # knows which asset_type it's processing.  
-            if asset_app.name == 'GEOJSON_TO_ASSET':
+            if asset_app.name == 'GEOJSON_TO_ASSET' or asset_app.name == 'INP_FILE':
                 asset_command_list = asset_command_list + [u'--assetType',\
                                 asset_type, u'--inputJsonFile', self.input_file]
 
@@ -1971,14 +1976,14 @@ class Workflow(object):
                         prepend_blank_space=False)
 
                 # sy - trying adding exit command
-                if platform.system() == 'Windows':
-                    with open("driver.bat","r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                    with open("driver.bat","w", encoding="utf-8") as f:
-                        f.writelines(lines)
-                else:
-                    pass
+                #if platform.system() == 'Windows':
+                #    with open("driver.bat","r", encoding="utf-8") as f:
+                #        lines = f.readlines()
+                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
+                #    with open("driver.bat","w", encoding="utf-8") as f:
+                #        f.writelines(lines)
+                #else:
+                #    pass
                 
                 log_msg('Successfully Created Driver File for Workflow.',
                         prepend_timestamp=False)
@@ -2122,10 +2127,11 @@ class Workflow(object):
 
                 # sy - trying adding exit command
                 
-                if platform.system() == 'Windows':
-                   driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                else: 
-                   pass
+                #if platform.system() == 'Windows':
+                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                #   pass
+                #else: 
+                #   pass
 
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
@@ -2670,6 +2676,9 @@ class Workflow(object):
 
                 deter_pointer.update({asset_id:
                     {'GeneralInformation':GI_data_i_det}})
+                deter_pointer[asset_id].update({
+                                "R2Dres":{}
+                            })                            
 
                 if 'EDP' in out_types:
 

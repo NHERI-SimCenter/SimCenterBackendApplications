@@ -484,7 +484,7 @@ if __name__ == '__main__':
                     junction_id = sub_asset_name_to_id['Junction'][junction_name]
                     cur_junction = junction_json_data.get(junction_id, {})
                     cur_junction_SP = cur_junction.get("SystemPerformance", {})
-                    cur_junction_SP[result_key] = str( req_result[junction_name] )
+                    cur_junction_SP[result_key] = float(req_result[junction_name] ) 
                     
                     cur_junction["SystemPerformance"] = cur_junction_SP
                     junction_json_data[junction_id] = cur_junction
@@ -521,6 +521,7 @@ if __name__ == '__main__':
                 generalInfo.update({'geometry':wkt_geometry})
                 asset_name = sub_asset_id_to_name[WDNtype][id]
                 generalInfo.update({'REWET_id':asset_name})
+                generalInfo.update({'AIM_id': id})
                 for key, item in prop.items():
                     if key == 'id':
                         continue

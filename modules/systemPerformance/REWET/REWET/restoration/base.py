@@ -267,32 +267,32 @@ class Agents():
     
     def setChangeShift(self, time, working_check = True):
         for name, agent in self._agents.iterrows():
-            if agent['data'].isOnShift(time):
+            if self._agents.loc[name, "data"].isOnShift(time):
                 
-                if agent['active']==False: #if agent is active already and is on shift, it means that the agent has been active before teh shift change event
-                    if agent['available']==True:
-                        agent['active'] = True
-                        agent['ready']  = True
+                if self._agents.loc[name, "active"]==False: #if agent is active already and is on shift, it means that the agent has been active before teh shift change event
+                    if self._agents.loc[name, "available"]==True:
+                        self._agents.loc[name, "active"] = True
+                        self._agents.loc[name, "ready"]  = True
 
             else:
-                if agent['ready'] == True and agent['data'].isWorking == True:
+                if self._agents.loc[name, "ready"] == True and self._agents.loc[name, "data"].isWorking == True:
                     raise RuntimeError(name + ' is working')
-                agent['active'] = False
-                agent['ready']  = False
+                self._agents.loc[name, "active"] = False
+                self._agents.loc[name, "ready"]  = False
         
     def initializeActiveAgents(self, time):
         for name, agent in self._agents.iterrows():
-            if agent['data'].isOnShift(time):
-                agent['active']=True
+            if self._agents.loc[name, 'data'].isOnShift(time):
+                self._agents.loc[name, 'active']=True
             else:
-                agent['active']=False
+                self._agents.loc[name, 'active']=False
     
     def initializeReadyAgents(self):
         for name, agent in self._agents.iterrows():
-            if agent['active'] == True:
-                agent['ready'] = True
+            if self._agents.loc[name, 'active'] == True:
+                self._agents.loc[name, 'ready'] = True
             else:
-                agent['ready'] = False
+                self._agents.loc[name, 'ready'] = False
                 
     def getReadyAgents(self):
         temp = self._agents[(self._agents['ready']==True) & (self._agents['available']==True)]

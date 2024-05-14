@@ -73,7 +73,7 @@ def write_RV():
     # TODO: check simulation data exists and contains all important fields
     # TODO: get simulation data & write to SIM file
 
-def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
+def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
                    EDP_input_path):
 
     # these imports are here to save time when the app is called without
@@ -86,9 +86,9 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
 
     sys.path.insert(0, os.getcwd())
 
-    # load the BIM file
-    with open(BIM_input_path, 'r', encoding="utf-8") as f:
-        BIM_in = json.load(f)
+    # load the AIM file
+    with open(AIM_input_path, 'r', encoding="utf-8") as f:
+        AIM_in = json.load(f)
 
     # load the SAM file
     with open(SAM_input_path, 'r', encoding="utf-8") as f:
@@ -127,7 +127,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
     custom_analysis = custom_script.custom_analysis
 
     # run the analysis
-    EDP_res = custom_analysis(BIM=BIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)
+    EDP_res = custom_analysis(AIM=AIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)
 
     os.chdir(working_dir)
     results_txt = ""
@@ -192,7 +192,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, BIM_input_path,
         f.write(results_txt)
 
     """
-    model_params = BIM_in['GeneralInformation']
+    model_params = AIM_in['GeneralInformation']
 
     dof_map = [int(dof) for dof in SAM_in['dofMap'].split(',')]
 
