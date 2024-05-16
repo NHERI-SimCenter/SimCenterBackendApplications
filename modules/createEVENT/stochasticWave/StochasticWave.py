@@ -4,6 +4,11 @@ import re
 import json
 import argparse
 
+import Ex1_WaveKinematics
+import Ex2_Jonswap_spectrum
+import Ex3_WaveTimeSeries
+import Ex4_WaveLoads
+
 class FloorForces:
     def __init__(self):
         self.X = [0]
@@ -27,12 +32,12 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):
     """
     Add force (one component) time series and pattern in the event file
     """
-    seriesName = "WindForceSeries_" + str(floor) + direction
-    patternName = "WindForcePattern_" + str(floor) + direction
+    seriesName = "HydroForceSeries_" + str(floor) + direction
+    patternName = "HydroForcePattern_" + str(floor) + direction
     pattern = {
         "name": patternName,
         "timeSeries": seriesName,
-        "type": "WindFloorLoad",
+        "type": "HydroFloorLoad",
         "floor": str(floor),
         "dof": directionToDof(direction)
     }
@@ -45,9 +50,9 @@ def writeEVENT(forces, eventFilePath):
     This method writes the EVENT.json file
     """
     patternsArray = []
-    windEventJson = {
+    hydroEventJson = {
         "type" : "Hydro",
-        "subtype": "CoupledDigitalTwin",
+        "subtype": "StochasticWave",
         "pattern": patternsArray,
         "pressure": [],
         "numSteps": len(forces[0].X),
@@ -59,7 +64,7 @@ def writeEVENT(forces, eventFilePath):
     }
 
     #Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {"randomVariables":[], "Events": [windEventJson]}
+    eventDict = {"randomVariables":[], "Events": [hydroEventJson]}
 
     #Adding floor forces
     for floorForces in forces:
@@ -82,13 +87,19 @@ if __name__ == "__main__":
     Entry point to generate event file using CFD
     """
     #CLI parser
-    parser = argparse.ArgumentParser(description="Get sample EVENT file produced by CFD")
+    parser = argparse.ArgumentParser(description="Get sample EVENT file produced by StochasticWave")
     parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True)
     parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True)
     parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
 
     #parsing arguments
     arguments, unknowns = parser.parse_known_args()
+
+    exec(open("Ex1_WaveKinematics.py").read())
+    exec(open("Ex2_Jonswap_Spectrum.py").read())
+    exec(open("Ex3_WaveTimeSeries.py").read())
+    exec(open("Ex4_WaveLoads.py").read())
+
 
     if arguments.getRV == True:
         #Read the number of floors
