@@ -86,6 +86,9 @@ except:
     error_tag = True
     print("Failed to import module:" + moduleName)
 
+errFileName = 'dakota.err'
+sys.stderr = open(errFileName, 'w')
+
 
 #
 # Modify GPy package
@@ -3057,10 +3060,9 @@ def read_txt(text_dir, exit_fun):
 
 
 if __name__ == "__main__":
-    errFileName = 'dakota.err'
-    sys.stderr = open(errFileName, 'w')
     main(sys.argv)
 
+    sys.stderr.close()
 
     
     # try:
