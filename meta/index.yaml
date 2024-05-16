@@ -57,6 +57,14 @@ EE-UQ:
     <<: *standardUQ
     <<: *performSIMULATION
 
+HydroUQ:
+  include-item:
+    <<: *createEDP
+    <<: *createSAM
+    <<: *createEVENT
+    <<: *standardUQ
+    <<: *performSIMULATION
+
 PBE:
   include-item:
     <<: *createEDP

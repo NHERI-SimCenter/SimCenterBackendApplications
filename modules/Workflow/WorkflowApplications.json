@@ -522,6 +522,11 @@
             "description": "Remote directory hosting ClaymoreUW MPM assets (e.g. geometries, checkpoints, motion-paths) for the application for any user to access on the HPC system."
           }
         ]
+      },
+      {
+        "Name": "StochasticWaveJonswap",
+        "ExecutablePath": "applications/createEVENT/stochasticWave/StochasticWave.py",
+        "ApplicationSpecificInputs":[]
       },  
       {
         "Name": "GeoClawOpenFOAM",
