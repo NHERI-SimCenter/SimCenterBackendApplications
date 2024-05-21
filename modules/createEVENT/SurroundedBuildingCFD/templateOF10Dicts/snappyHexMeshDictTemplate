@@ -117,7 +117,7 @@ castellatedMeshControls
     locationInMesh (0 0 0);
 
     //For some system not having 'outsidePoint' might make the snappy to fail
-    outsidePoint (0 0 0);
+    // outsidePoint (0 0 0);
     
     // Whether any faceZones (as specified in the refinementSurfaces)
     // are only on the boundary of corresponding cellZones or also allow

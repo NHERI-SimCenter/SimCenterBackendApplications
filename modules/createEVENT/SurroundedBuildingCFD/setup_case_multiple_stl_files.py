@@ -13,17 +13,17 @@ from stl import mesh
 
 def create_building_geometry(width, depth, height, center):
 
-    epsilon = 0.001*min(width, depth, height)
+    epsilon = 0.01*min(width, depth, height)
      
     # Define the 8 vertices of the building
     vertices = np.array([[-depth/2.0, -width/2.0, -epsilon],
                          [+depth/2.0, -width/2.0, -epsilon],
                          [+depth/2.0, +width/2.0, -epsilon],
                          [-depth/2.0, +width/2.0, -epsilon],
-                         [-depth/2.0, -width/2.0,  height],
-                         [+depth/2.0, -width/2.0,  height],
-                         [+depth/2.0, +width/2.0,  height],
-                         [-depth/2.0, +width/2.0,  height]])
+                         [-depth/2.0, -width/2.0, height],
+                         [+depth/2.0, -width/2.0, height],
+                         [+depth/2.0, +width/2.0, height],
+                         [-depth/2.0, +width/2.0, height]])
     
     vertices += center
 
@@ -47,7 +47,7 @@ def create_building_geometry(width, depth, height, center):
     for i, f in enumerate(faces):
         for j in range(3):
             bldg.vectors[i][j] = vertices[f[j],:]
-
+    
     return bldg
 
 
@@ -70,7 +70,7 @@ def create_surroundings_geometry(main_bldg_width, main_bldg_depth, sur_bldg_widt
     mid_ix = int(n_grid_x/2)
     mid_iy = int(n_grid_y/2)
 
-    copies = []
+    buildings = []
 
     min_h = 1.0 - randomness*0.95
     max_h = 1.0 + randomness*0.95
@@ -99,19 +99,73 @@ def create_surroundings_geometry(main_bldg_width, main_bldg_depth, sur_bldg_widt
                 bldg = create_building_geometry(sur_bldg_width, sur_bldg_depth, sur_bldg_height*rand_f[ix, iy], 
                                                 np.array([center_x, center_y, 0.0]))
 
-                copies.append(bldg)
+                buildings.append(bldg)
 
-    #Merge the buildings together into one geometric data
-    combined = mesh.Mesh(np.concatenate([copy.data for copy in copies]), remove_duplicate_polygons=True)
 
-    # vertices = combined.vectors.reshape(-1, 3)
-    # unique_vertices, indices = np.unique(np.round(vertices, decimals=int(-np.log10(1e-6))), return_inverse=True, axis=0)
-    # merged_mesh = mesh.Mesh(np.zeros(len(indices) // 3, dtype=combined.dtype))
-    # merged_mesh.vectors = unique_vertices[indices].reshape(-1, 3, 3)
+    # table = create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius)
+    # copies.append(table)
+
+    return buildings
+
+# def create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius):    
     
-    # print(combined.is_closed())
+#     table_radius = bound_radius + max(sur_bldg_width, sur_bldg_depth)/2.0
+    
+#     epsilon = 0.001*min(sur_bldg_width, sur_bldg_depth)
 
-    return combined
+#     table_h = 0.01*bound_radius
+
+#     n = 36
+#     vertices = np.zeros((n*2 + 2, 3))
+     
+#     # Define the sector as polygon vertices of around the turn table
+#     for i in range(n): 
+#         x = table_radius*np.cos(i*2.0*np.pi/n)
+#         y = table_radius*np.sin(i*2.0*np.pi/n)
+
+#         vertices[i, 0] = x 
+#         vertices[i, 1] = y 
+#         vertices[i, 2] = -2*epsilon - table_h
+    
+#         vertices[n + i, 0] = x 
+#         vertices[n + i, 1] = y 
+#         vertices[n + i, 2] = 0
+
+#     # bottom and top center 
+#     vertices[2*n, 2] = -2*epsilon - table_h
+#     vertices[2*n + 1, 2] = 0
+
+#     # Define triangles composing the turn table 
+#     faces = np.zeros((n*4, 3), dtype=int)
+    
+#     for i in range(n): 
+#         #triangle 1
+#         faces[i, 0] = i
+#         faces[i, 1] = i + 1
+#         faces[i, 2] = n + i
+
+#         #triangle 2
+#         faces[n + i, 0] = n + i
+#         faces[n + i, 1] = i + 1
+#         faces[n + i, 2] = n + i + 1
+
+#         #triangle 3
+#         faces[2*n + i, 0] = i
+#         faces[2*n + i, 1] = i + 1
+#         faces[2*n + i, 2] = 2*n
+
+#         #triangle 4
+#         faces[3*n + i, 0] = n + i
+#         faces[3*n + i, 1] = n + i + 1
+#         faces[3*n + i, 2] = 2*n + 1
+    
+#     # Create the mesh
+#     table = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+#     for i, f in enumerate(faces):
+#         for j in range(3):
+#             table.vectors[i][j] = vertices[f[j],:]
+    
+#     return table
 
 
 
@@ -206,13 +260,22 @@ def write_surrounding_buildings_stl_file(input_json_path, case_path):
 
     surroundings = create_surroundings_geometry(B, D, Sb, Sd, Sh, Swx, Swy, Rb, rand)
      
+    #Merge the buildings together into one geometric data
+    combined = mesh.Mesh(np.concatenate([copy.data for copy in surroundings]))
+
     #Account for wind direction 
-    surroundings.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
+    combined.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
     
     # Write the mesh to file "surroundings.stl"
     fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
-    surroundings.save(case_path + '/constant/geometry/surroundings.stl', mode=fmt)
+    combined.save(case_path + '/constant/geometry/surroundings.stl', mode=fmt)
 
+    bldg_count = 0
+    for sur in surroundings:
+        sur.save(case_path + '/constant/geometry/surr_bldg{}.stl'.format(bldg_count), mode=fmt)
+        bldg_count += 1
+
+    return len(surroundings)
 
 def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
@@ -324,7 +387,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
 
 
-def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
+def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path, n_surr_bldgs):
 
     #Read JSON data    
     with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
@@ -408,11 +471,13 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     added_part += "         file \"{}.stl\";\n".format(building_stl_name)
     added_part += "    }\n"
 
-    added_part += "    {}\n".format(surrounding_stl_name)
-    added_part += "    {\n"
-    added_part += "         type triSurfaceMesh;\n"
-    added_part += "         file \"{}.stl\";\n".format(surrounding_stl_name)
-    added_part += "    }\n"
+    for i in range(n_surr_bldgs):
+        added_part += "    {}\n".format("surr_bldg{}".format(i))
+        added_part += "    {\n"
+        added_part += "         type triSurfaceMesh;\n"
+        added_part += "         file \"surr_bldg{}.stl\";\n".format(i)
+        added_part += "    }\n"
+    
     dict_lines.insert(start_index, added_part)  
     
     ################# Edit castellatedMeshControls Section ####################
@@ -433,9 +498,10 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, "locationInMesh")
     dict_lines[start_index] = "    locationInMesh ({:.4f} {:.4f} {:.4f});\n".format(inside_point[0], inside_point[1], inside_point[2])
 
-    # #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword    
-    # start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
-    # dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e20)
+    #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword    
+    start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
+    dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e-20)
+  
 
     #Add refinement edge 
     if add_edge_refinement:             
@@ -443,10 +509,17 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         added_part  = ""
 
         for edge in edge_refinements: 
-            added_part += "         {\n"
-            added_part += "             file \"{}.eMesh\";\n".format(edge["name"])
-            added_part += "             level {};\n".format(edge["level"])
-            added_part += "         }\n"
+            if edge["name"] == "surroundings":
+                for i in range(n_surr_bldgs):
+                    added_part += "         {\n"
+                    added_part += "             file \"surr_bldg{}.eMesh\";\n".format(i)
+                    added_part += "             level {};\n".format(edge["level"])
+                    added_part += "         }\n"
+            else:
+                added_part += "         {\n"
+                added_part += "             file \"{}.eMesh\";\n".format(edge["name"])
+                added_part += "             level {};\n".format(edge["level"])
+                added_part += "         }\n"
             
         dict_lines.insert(start_index, added_part)
         
@@ -456,14 +529,25 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         added_part = ""
 
         for surf in surface_refinements:
-            added_part += "         {}\n".format(surf["name"])
-            added_part += "         {\n"
-            added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
-            added_part += "             patchInfo\n"
-            added_part += "             {\n"
-            added_part += "                 type wall;\n"
-            added_part += "             }\n"
-            added_part += "         }\n"
+            if surf["name"] == "surroundings":
+                for i in range(n_surr_bldgs):
+                    added_part += "         surr_bldg{}\n".format(i)
+                    added_part += "         {\n"
+                    added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
+                    added_part += "             patchInfo\n"
+                    added_part += "             {\n"
+                    added_part += "                 type wall;\n"
+                    added_part += "             }\n"
+                    added_part += "         }\n"
+            else:
+                added_part += "         {}\n".format(surf["name"])
+                added_part += "         {\n"
+                added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
+                added_part += "             patchInfo\n"
+                added_part += "             {\n"
+                added_part += "                 type wall;\n"
+                added_part += "             }\n"
+                added_part += "         }\n"
         
         dict_lines.insert(start_index, added_part)
         
@@ -528,7 +612,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         output_file.write(line)
     output_file.close()
 
-def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
+def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path, n_surr_bldgs):
     
   #Read JSON data    
   with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
@@ -546,12 +630,19 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
   dict_lines = dict_file.readlines()
   dict_file.close()
   
-  
   #Write main building and surrounding buildings surface names    
   start_index = foam.find_keyword_line(dict_lines, "surfaces")
-  dict_lines[start_index] = "surfaces  (\"{}.stl\" \"{}.stl\");\n".format(building_stl_name, surroundings_stl_name)
-  
-  
+
+  added_part = "surfaces  (\"{}.stl\"".format(building_stl_name)
+
+  for i in range(n_surr_bldgs):
+    added_part += " \"surr_bldg{}.stl\"".format(i)
+
+  added_part += ");\n".format(building_stl_name)
+
+  dict_lines[start_index] = added_part
+
+
   #Write edited dict to file
   write_file_name = case_path + "/system/surfaceFeaturesDict"
   
@@ -1881,15 +1972,14 @@ if __name__ == '__main__':
     write_main_building_stl_file(input_json_path, case_path)
     
     #Write surrounding building STL file
-    write_surrounding_buildings_stl_file(input_json_path, case_path)
+    n_surr_bldgs = write_surrounding_buildings_stl_file(input_json_path, case_path)
 
     #Write surfaceFeaturesDict file
-    write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path)
+    write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path, n_surr_bldgs)
 
     #Create and write the SnappyHexMeshDict file
-    write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
+    write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path, n_surr_bldgs)
     
-
     #Write files in "0" directory
     write_U_file(input_json_path, template_dict_path, case_path)
     write_p_file(input_json_path, template_dict_path, case_path)
