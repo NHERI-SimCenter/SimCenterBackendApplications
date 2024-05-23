@@ -11,11 +11,276 @@ import numpy as np
 import foam_file_processor as foam
 from stl import mesh
 
+def create_building_geometry(width, depth, height, center):
+
+    epsilon = 0.01*min(width, depth, height)
+     
+    # Define the 8 vertices of the building
+    vertices = np.array([[-depth/2.0, -width/2.0, -epsilon],
+                         [+depth/2.0, -width/2.0, -epsilon],
+                         [+depth/2.0, +width/2.0, -epsilon],
+                         [-depth/2.0, +width/2.0, -epsilon],
+                         [-depth/2.0, -width/2.0, height],
+                         [+depth/2.0, -width/2.0, height],
+                         [+depth/2.0, +width/2.0, height],
+                         [-depth/2.0, +width/2.0, height]])
+    
+    vertices += center
+
+    # Define the 12 triangles composing the rectangular building
+    faces = np.array([\
+        [0,3,1],
+        [1,3,2],
+        [0,4,7],
+        [0,7,3],
+        [4,5,6],
+        [4,6,7],
+        [5,1,2],
+        [5,2,6],
+        [2,3,6],
+        [3,7,6],
+        [0,1,5],
+        [0,5,4]])
+    
+    # Create the mesh
+    bldg = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+    for i, f in enumerate(faces):
+        for j in range(3):
+            bldg.vectors[i][j] = vertices[f[j],:]
+    
+    return bldg
+
+
+def create_surroundings_geometry(main_bldg_width, main_bldg_depth, sur_bldg_width, sur_bldg_depth, sur_bldg_height, 
+                                 street_width_x, street_width_y, bound_radius, randomness=0.0):    
+    
+    plan_x = max(main_bldg_depth, sur_bldg_depth)
+    plan_y = max(main_bldg_width, sur_bldg_width)
+    
+    n_grid_x = int(2.0*bound_radius/(plan_x + street_width_x)) + 1
+    n_grid_y = int(2.0*bound_radius/(plan_y + street_width_y)) + 1
+
+    if (n_grid_x % 2) == 0:
+        n_grid_x -=1
+
+    if (n_grid_y % 2) == 0:
+        n_grid_y -=1
+    
+
+    mid_ix = int(n_grid_x/2)
+    mid_iy = int(n_grid_y/2)
+
+    buildings = []
+
+    min_h = 1.0 - randomness*0.95
+    max_h = 1.0 + randomness*0.95
+
+    rand_f = np.random.uniform(min_h, max_h, (n_grid_x, n_grid_y))
+
+    x_max = (street_width_x + plan_x)*n_grid_x - street_width_x
+    y_max = (street_width_y + plan_y)*n_grid_y - street_width_y
+    
+    # bound_radius = max(x_max, y_max)/2.0
+
+    for ix in range(n_grid_x):
+        for iy in range(n_grid_y):
+            # skip the position where study building will be located
+            if ix == mid_ix and iy == mid_iy:
+                continue
+
+            center_x = -x_max/2.0 + ix*street_width_x + plan_x*(ix + 0.5)
+            center_y = -y_max/2.0 + iy*street_width_y + plan_y*(iy + 0.5)
+
+            # bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)
+            bldg_R = np.sqrt(center_x**2.0 + center_y**2.0)
+
+            #Add the building if it's within bounding radius
+            if bldg_R < bound_radius:
+                bldg = create_building_geometry(sur_bldg_width, sur_bldg_depth, sur_bldg_height*rand_f[ix, iy], 
+                                                np.array([center_x, center_y, 0.0]))
+
+                buildings.append(bldg)
+
+
+    # table = create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius)
+    # copies.append(table)
+
+    return buildings
+
+# def create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius):    
+    
+#     table_radius = bound_radius + max(sur_bldg_width, sur_bldg_depth)/2.0
+    
+#     epsilon = 0.001*min(sur_bldg_width, sur_bldg_depth)
+
+#     table_h = 0.01*bound_radius
+
+#     n = 36
+#     vertices = np.zeros((n*2 + 2, 3))
+     
+#     # Define the sector as polygon vertices of around the turn table
+#     for i in range(n): 
+#         x = table_radius*np.cos(i*2.0*np.pi/n)
+#         y = table_radius*np.sin(i*2.0*np.pi/n)
+
+#         vertices[i, 0] = x 
+#         vertices[i, 1] = y 
+#         vertices[i, 2] = -2*epsilon - table_h
+    
+#         vertices[n + i, 0] = x 
+#         vertices[n + i, 1] = y 
+#         vertices[n + i, 2] = 0
+
+#     # bottom and top center 
+#     vertices[2*n, 2] = -2*epsilon - table_h
+#     vertices[2*n + 1, 2] = 0
+
+#     # Define triangles composing the turn table 
+#     faces = np.zeros((n*4, 3), dtype=int)
+    
+#     for i in range(n): 
+#         #triangle 1
+#         faces[i, 0] = i
+#         faces[i, 1] = i + 1
+#         faces[i, 2] = n + i
+
+#         #triangle 2
+#         faces[n + i, 0] = n + i
+#         faces[n + i, 1] = i + 1
+#         faces[n + i, 2] = n + i + 1
+
+#         #triangle 3
+#         faces[2*n + i, 0] = i
+#         faces[2*n + i, 1] = i + 1
+#         faces[2*n + i, 2] = 2*n
+
+#         #triangle 4
+#         faces[3*n + i, 0] = n + i
+#         faces[3*n + i, 1] = n + i + 1
+#         faces[3*n + i, 2] = 2*n + 1
+    
+#     # Create the mesh
+#     table = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+#     for i, f in enumerate(faces):
+#         for j in range(3):
+#             table.vectors[i][j] = vertices[f[j],:]
+    
+#     return table
+
+
+
+def write_main_building_stl_file(input_json_path, case_path):
+    
+    #Read JSON data    
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+      
+    geom_data = json_data['GeometricData']
+
+    #Else create the STL file
+    scale =  geom_data['geometricScale']
+    length_unit =  json_data['lengthUnit']
+
+    convert_to_meters = 1.0
+
+    if length_unit=='m':
+        convert_to_meters = 1.0
+    elif length_unit=='cm':
+        convert_to_meters = 0.01
+    elif length_unit=='mm':
+        convert_to_meters = 0.001
+    elif length_unit=='ft':
+        convert_to_meters = 0.3048
+    elif length_unit=='in':
+        convert_to_meters = 0.0254
+    
+    #Convert from full-scale to model-scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    H = convert_to_meters*geom_data['buildingHeight']/scale
+    
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']   
+
+    wind_dxn_rad = np.deg2rad(wind_dxn)
+    
+    bldg = create_building_geometry(B, D, H, origin) 
+     
+    #Account for wind direction 
+    bldg.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
+    
+    # Write the mesh to file "building.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    bldg.save(case_path + '/constant/geometry/building.stl', mode=fmt)
+
+
+def write_surrounding_buildings_stl_file(input_json_path, case_path):
+    
+    #Read JSON data    
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+      
+    geom_data = json_data['GeometricData']
+    sur_data = geom_data['surroundingBuildingsInformation']
+
+    #Else create the STL file
+    scale =  geom_data['geometricScale']
+    length_unit =  json_data['lengthUnit']
+
+    convert_to_meters = 1.0
+
+    if length_unit=='m':
+        convert_to_meters = 1.0
+    elif length_unit=='cm':
+        convert_to_meters = 0.01
+    elif length_unit=='mm':
+        convert_to_meters = 0.001
+    elif length_unit=='ft':
+        convert_to_meters = 0.3048
+    elif length_unit=='in':
+        convert_to_meters = 0.0254
+    
+    #Convert from full-scale to model-scale
+    B = convert_to_meters*geom_data['buildingWidth']/scale
+    D = convert_to_meters*geom_data['buildingDepth']/scale
+    Sb = convert_to_meters*sur_data['surroundingBuildingsWidth']/scale
+    Sd = convert_to_meters*sur_data['surroundingBuildingsDepth']/scale
+    Sh = convert_to_meters*sur_data['surroundingBuildingsHeight']/scale
+    Swx = convert_to_meters*sur_data['streetWidthX']/scale
+    Swy = convert_to_meters*sur_data['streetWidthY']/scale
+    Rb = convert_to_meters*sur_data['boundingRadius']/scale
+    
+    #Normalize 0 to 1
+    rand = sur_data['randomness']/100.0
+    
+    origin = np.array(geom_data['origin'])
+    wind_dxn = geom_data['windDirection']   
+
+    wind_dxn_rad = np.deg2rad(wind_dxn)    
+
+    surroundings = create_surroundings_geometry(B, D, Sb, Sd, Sh, Swx, Swy, Rb, rand)
+     
+    #Merge the buildings together into one geometric data
+    combined = mesh.Mesh(np.concatenate([copy.data for copy in surroundings]))
+
+    #Account for wind direction 
+    combined.rotate([0.0, 0.0, 1.0], wind_dxn_rad)
+    
+    # Write the mesh to file "surroundings.stl"
+    fmt = mesh.stl.Mode.ASCII # binary or ASCII format 
+    combined.save(case_path + '/constant/geometry/surroundings.stl', mode=fmt)
+
+    bldg_count = 0
+    for sur in surroundings:
+        sur.save(case_path + '/constant/geometry/surr_bldg{}.stl'.format(bldg_count), mode=fmt)
+        bldg_count += 1
+
+    return len(surroundings)
 
 def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
@@ -122,17 +387,30 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
 
 
-def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
+def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path, n_surr_bldgs):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
     mesh_data = json_data["snappyHexMeshParameters"]
-
+    add_surface_refinement = mesh_data['addSurfaceRefinements']
+    building_stl_name = mesh_data['buildingSTLName']
+    surrounding_stl_name = mesh_data['surroundingsSTLName']
+    add_edge_refinement = mesh_data['addEdgeRefinements']
+    surface_refinements = mesh_data['surfaceRefinements']
+    edge_refinements = mesh_data['edgeRefinements']
     geom_data = json_data['GeometricData']
    
+    add_prism_layers = mesh_data['addPrismLayers']
+    number_of_prism_layers = mesh_data['numberOfPrismLayers']
+    prism_layer_expansion_ratio = mesh_data['prismLayerExpansionRatio']
+    final_prism_layer_thickness = mesh_data['finalPrismLayerThickness']
+    prism_layer_surface_name = mesh_data['prismLayerSurfaceName']
+    prism_layer_relative_size = "on"  
+
+
     Lx = geom_data['domainLength']
     Ly = geom_data['domainWidth']
     Lz = geom_data['domainHeight']
@@ -182,9 +460,25 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         added_part += "         min ({:.4f} {:.4f} {:.4f});\n".format(refinement_boxes[i][2], refinement_boxes[i][3], refinement_boxes[i][4])
         added_part += "         max ({:.4f} {:.4f} {:.4f});\n".format(refinement_boxes[i][5], refinement_boxes[i][6], refinement_boxes[i][7])
         added_part += "    }\n"
-        
     dict_lines.insert(start_index, added_part)
-           
+
+    #Add building and surrounding stl geometry
+    start_index = foam.find_keyword_line(dict_lines, "geometry") + 2 
+    added_part = ""
+    added_part += "    {}\n".format(building_stl_name)
+    added_part += "    {\n"
+    added_part += "         type triSurfaceMesh;\n"
+    added_part += "         file \"{}.stl\";\n".format(building_stl_name)
+    added_part += "    }\n"
+
+    for i in range(n_surr_bldgs):
+        added_part += "    {}\n".format("surr_bldg{}".format(i))
+        added_part += "    {\n"
+        added_part += "         type triSurfaceMesh;\n"
+        added_part += "         file \"surr_bldg{}.stl\";\n".format(i)
+        added_part += "    }\n"
+    
+    dict_lines.insert(start_index, added_part)  
     
     ################# Edit castellatedMeshControls Section ####################
 
@@ -207,9 +501,68 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword    
     start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
     dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e-20)
+  
 
+    #Add refinement edge 
+    if add_edge_refinement:             
+        start_index = foam.find_keyword_line(dict_lines, "features") + 2             
+        added_part  = ""
 
-    
+        for edge in edge_refinements: 
+            if edge["name"] == "surroundings":
+                for i in range(n_surr_bldgs):
+                    added_part += "         {\n"
+                    added_part += "             file \"surr_bldg{}.eMesh\";\n".format(i)
+                    added_part += "             level {};\n".format(edge["level"])
+                    added_part += "         }\n"
+            else:
+                added_part += "         {\n"
+                added_part += "             file \"{}.eMesh\";\n".format(edge["name"])
+                added_part += "             level {};\n".format(edge["level"])
+                added_part += "         }\n"
+            
+        dict_lines.insert(start_index, added_part)
+        
+    #Add refinement surface
+    if add_surface_refinement:         
+        start_index = foam.find_keyword_line(dict_lines, "refinementSurfaces") + 2 
+        added_part = ""
+
+        for surf in surface_refinements:
+            if surf["name"] == "surroundings":
+                for i in range(n_surr_bldgs):
+                    added_part += "         surr_bldg{}\n".format(i)
+                    added_part += "         {\n"
+                    added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
+                    added_part += "             patchInfo\n"
+                    added_part += "             {\n"
+                    added_part += "                 type wall;\n"
+                    added_part += "             }\n"
+                    added_part += "         }\n"
+            else:
+                added_part += "         {}\n".format(surf["name"])
+                added_part += "         {\n"
+                added_part += "             level ({} {});\n".format(surf["minLevel"], surf["maxLevel"])
+                added_part += "             patchInfo\n"
+                added_part += "             {\n"
+                added_part += "                 type wall;\n"
+                added_part += "             }\n"
+                added_part += "         }\n"
+        
+        dict_lines.insert(start_index, added_part)
+        
+    # #Add surface refinement around the building as a refinement region
+    # if surface_refinements[-1]["minLevel"] > refinement_boxes[-1][1]:
+    #     added_part = ""
+    #     added_part += "         {}\n".format(refinement_surface_name)
+    #     added_part += "         {\n"
+    #     added_part += "             mode   distance;\n"
+    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)
+    #     added_part += "         }\n"
+                    
+    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
+    #     dict_lines.insert(start_index, added_part)
+
     #Add box refinements 
     added_part = ""
     for i in range(n_boxes):
@@ -221,8 +574,33 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
                 
     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2 
     dict_lines.insert(start_index, added_part)
-       
-    
+         
+
+    ####################### Edit PrismLayer Section ##########################
+    if add_prism_layers:
+        #Add surface layers (prism layers)
+        added_part = ""
+        added_part += "         \"{}\"\n".format(prism_layer_surface_name)
+        added_part += "         {\n"
+        added_part += "             nSurfaceLayers {};\n".format(number_of_prism_layers)
+        added_part += "         }\n"
+        
+        start_index = foam.find_keyword_line(dict_lines, "layers") + 2 
+        dict_lines.insert(start_index, added_part)
+
+        #Write 'relativeSizes'     
+        start_index = foam.find_keyword_line(dict_lines, "relativeSizes")
+        dict_lines[start_index] = "    relativeSizes {};\n".format(prism_layer_relative_size)
+
+        #Write 'expansionRatio'     
+        start_index = foam.find_keyword_line(dict_lines, "expansionRatio")
+        dict_lines[start_index] = "    expansionRatio {:.4f};\n".format(prism_layer_expansion_ratio)
+        
+        #Write 'finalLayerThickness'     
+        start_index = foam.find_keyword_line(dict_lines, "finalLayerThickness")
+        dict_lines[start_index] = "    finalLayerThickness {:.4f};\n".format(final_prism_layer_thickness)    
+
+
     #Write edited dict to file
     write_file_name = case_path + "/system/snappyHexMeshDict"
     
@@ -234,6 +612,48 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         output_file.write(line)
     output_file.close()
 
+def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path, n_surr_bldgs):
+    
+  #Read JSON data    
+  with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+      json_data =  json.load(json_file)
+    
+  # Returns JSON object as a dictionary
+  domain_data = json_data["snappyHexMeshParameters"]
+  building_stl_name = domain_data['buildingSTLName']
+  surroundings_stl_name = domain_data['surroundingsSTLName']
+
+  #Open the template blockMeshDict (OpenFOAM file) for manipulation
+  dict_file = open(template_dict_path + "/surfaceFeaturesDictTemplate", "r")
+
+  #Export to OpenFOAM probe format
+  dict_lines = dict_file.readlines()
+  dict_file.close()
+  
+  #Write main building and surrounding buildings surface names    
+  start_index = foam.find_keyword_line(dict_lines, "surfaces")
+
+  added_part = "surfaces  (\"{}.stl\"".format(building_stl_name)
+
+  for i in range(n_surr_bldgs):
+    added_part += " \"surr_bldg{}.stl\"".format(i)
+
+  added_part += ");\n".format(building_stl_name)
+
+  dict_lines[start_index] = added_part
+
+
+  #Write edited dict to file
+  write_file_name = case_path + "/system/surfaceFeaturesDict"
+  
+  if os.path.exists(write_file_name):
+      os.remove(write_file_name)
+  
+  output_file = open(write_file_name, "w+")
+  for line in dict_lines:
+      output_file.write(line)
+  output_file.close()
+
 
 def write_boundary_data_files(input_json_path, case_path):
     """
@@ -241,57 +661,55 @@ def write_boundary_data_files(input_json_path, case_path):
     if TInf options are used for the simulation.  
     """
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
     boundary_data = json_data["boundaryConditions"]    
+    geom_data = json_data['GeometricData']
 
-    if boundary_data['inletBoundaryCondition']=="TInf":
-        geom_data = json_data['GeometricData']
+    wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
 
-        wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
+    bd_path = case_path + "/constant/boundaryData/inlet/"
 
-        bd_path = case_path + "/constant/boundaryData/inlet/"
-
-        #Write points file
-        n_pts = np.shape(wind_profiles)[0]
-        points  = np.zeros((n_pts, 3))
+    #Write points file
+    n_pts = np.shape(wind_profiles)[0]
+    points  = np.zeros((n_pts, 3))
 
 
-        origin = np.array(geom_data['origin'])
-        
-        Ly = geom_data['domainWidth']
-        Lf = geom_data['fetchLength']
-        
-        x_min = -Lf - origin[0]
-        y_min = -Ly/2.0 - origin[1]
-        y_max = y_min + Ly
+    origin = np.array(geom_data['origin'])
+    
+    Ly = geom_data['domainWidth']
+    Lf = geom_data['fetchLength']
+    
+    x_min = -Lf - origin[0]
+    y_min = -Ly/2.0 - origin[1]
+    y_max = y_min + Ly
 
-        points[:,0] = x_min
-        points[:,1] = (y_min + y_max)/2.0  
-        points[:,2] = wind_profiles[:, 0]
+    points[:,0] = x_min
+    points[:,1] = (y_min + y_max)/2.0  
+    points[:,2] = wind_profiles[:, 0]
 
-        #Shift the last element of the y coordinate 
-        #a bit to make planer interpolation easier
-        points[-1:, 1] = y_max
+    #Shift the last element of the y coordinate 
+    #a bit to make planer interpolation easier
+    points[-1:, 1] = y_max
 
-        foam.write_foam_field(points, bd_path + "points")
+    foam.write_foam_field(points, bd_path + "points")
 
-        #Write wind speed file as a scalar field 
-        foam.write_scalar_field(wind_profiles[:, 1], bd_path + "U")
+    #Write wind speed file as a scalar field 
+    foam.write_scalar_field(wind_profiles[:, 1], bd_path + "U")
 
-        #Write Reynolds stress profile (6 columns -> it's a symmetric tensor field) 
-        foam.write_foam_field(wind_profiles[:, 2:8], bd_path + "R")
+    #Write Reynolds stress profile (6 columns -> it's a symmetric tensor field) 
+    foam.write_foam_field(wind_profiles[:, 2:8], bd_path + "R")
 
-        #Write length scale file (8 columns -> it's a tensor field)
-        foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
+    #Write length scale file (8 columns -> it's a tensor field)
+    foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
 
 
 def write_U_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -362,7 +780,11 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     added_part = ""
     added_part += "\t type \t inletOutlet;\n"
     added_part += "\t inletValue \t uniform (0 0 0);\n"
+    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
     added_part += "\t value \t uniform (0 0 0);\n"
+    
+    # added_part += "\t type    zeroGradient;\n"
+
 
     dict_lines.insert(start_index, added_part)
     
@@ -417,7 +839,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 def write_p_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -509,7 +931,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 def write_nut_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -620,7 +1042,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 def write_epsilon_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -742,7 +1164,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 def write_k_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -861,7 +1283,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -874,10 +1296,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     max_courant_number = ns_data['maxCourantNumber']
     adjust_time_step = ns_data['adjustTimeStep']
     
-    monitor_wind_profiles = rm_data['monitorWindProfile']
-    monitor_vtk_planes = rm_data['monitorVTKPlane']
-    wind_profiles = rm_data['windProfiles']
-    vtk_planes = rm_data['vtkPlanes']
+    # monitor_wind_profiles = rm_data['monitorWindProfile']
+    # monitor_vtk_planes = rm_data['monitorVTKPlane']
+    # wind_profiles = rm_data['windProfiles']
+    # vtk_planes = rm_data['vtkPlanes']
 
     
     # Need to change this for      
@@ -906,7 +1328,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Write writeControl         
     start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-    if solver_type=="pimpleFoam" and adjust_time_step:
+    if solver_type=="pimpleFoam":
         dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
     else:
         dict_lines[start_index] = "writeControl \t\t{};\n".format("timeStep")
@@ -917,7 +1339,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
  
     #Write writeInterval  
     start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
-    if solver_type=="pimpleFoam" and adjust_time_step:
+    if solver_type=="pimpleFoam":
         dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval*time_step)
     else:
         dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
@@ -940,19 +1362,19 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     #Find function object location  
     start_index = foam.find_keyword_line(dict_lines, "functions") + 2
 
-    #Write wind profile monitoring functionObjects
-    if monitor_wind_profiles:
-        added_part = ""
-        for prof in wind_profiles:
-            added_part += "    #includeFunc  {}\n".format(prof["name"])
-        dict_lines.insert(start_index, added_part)
+    # #Write wind profile monitoring functionObjects
+    # if monitor_wind_profiles:
+    #     added_part = ""
+    #     for prof in wind_profiles:
+    #         added_part += "    #includeFunc  {}\n".format(prof["name"])
+    #     dict_lines.insert(start_index, added_part)
     
-    #Write VTK sampling sampling points 
-    if monitor_vtk_planes:
-        added_part = ""
-        for pln in vtk_planes:
-            added_part += "    #includeFunc  {}\n".format(pln["name"])
-        dict_lines.insert(start_index, added_part)
+    # #Write VTK sampling sampling points 
+    # if monitor_vtk_planes:
+    #     added_part = ""
+    #     for pln in vtk_planes:
+    #         added_part += "    #includeFunc  {}\n".format(pln["name"])
+    #     dict_lines.insert(start_index, added_part)
     
 
     #Write edited dict to file
@@ -969,7 +1391,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1027,7 +1449,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1076,7 +1498,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
 def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1173,7 +1595,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):
 def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1270,7 +1692,7 @@ def write_vtk_plane_file(input_json_path, template_dict_path, case_path):
 def write_momentumTransport_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1324,7 +1746,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 def write_physicalProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1361,7 +1783,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 def write_transportProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1397,7 +1819,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1428,7 +1850,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1470,7 +1892,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
 def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
     
     fmax = 200.0
@@ -1530,24 +1952,10 @@ if __name__ == '__main__':
     # Set filenames
     input_json_path = sys.argv[1]
     template_dict_path = sys.argv[2]
-    case_path = sys.argv[3]
-    
-    
-    # input_json_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD/constant/simCenter/input"
-    # template_dict_path = "/home/abiy/SimCenter/SourceCode/NHERI-SimCenter/SimCenterBackendApplications/applications/createEVENT/EmptyDomainCFD/templateOF10Dicts"
-    # case_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD"
-    
-    # data_path = os.getcwd()
-    # script_path = os.path.dirname(os.path.realpath(__file__))
-    
-    
-    #Create case director
-    # set up goes here 
-
-    
+    case_path = sys.argv[3]    
     
     #Read JSON data
-    with open(input_json_path + "/EmptyDomainCFD.json") as json_file:
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1560,8 +1968,17 @@ if __name__ == '__main__':
     #Write blockMesh
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
 
+    #Create and write the main building "*.stl" file
+    write_main_building_stl_file(input_json_path, case_path)
+    
+    #Write surrounding building STL file
+    n_surr_bldgs = write_surrounding_buildings_stl_file(input_json_path, case_path)
+
+    #Write surfaceFeaturesDict file
+    write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path, n_surr_bldgs)
+
     #Create and write the SnappyHexMeshDict file
-    write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path)
+    write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path, n_surr_bldgs)
     
     #Write files in "0" directory
     write_U_file(input_json_path, template_dict_path, case_path)
@@ -1576,9 +1993,9 @@ if __name__ == '__main__':
     write_controlDict_file(input_json_path, template_dict_path, case_path)
     
     #Write results to be monitored
-    write_wind_profiles_file(input_json_path, template_dict_path, case_path)
+    # write_wind_profiles_file(input_json_path, template_dict_path, case_path)
 
-    write_vtk_plane_file(input_json_path, template_dict_path, case_path)
+    # write_vtk_plane_file(input_json_path, template_dict_path, case_path)
     
     #Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
@@ -1602,4 +2019,4 @@ if __name__ == '__main__':
     # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
     
     #Write TInf files 
-    write_boundary_data_files(input_json_path, case_path)
+    # write_boundary_data_files(input_json_path, case_path)
