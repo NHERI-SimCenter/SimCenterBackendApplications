@@ -732,7 +732,21 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     
     dict_lines.insert(start_index, added_part)
 
+    ###################### Building BC ##############################  
+    start_index = foam.find_keyword_line(dict_lines, "building") + 2 
+    added_part = ""
+    added_part += "\t type \t {};\n".format("noSlip")
     
+    dict_lines.insert(start_index, added_part)
+
+    ###################### Surroundings BC ##############################  
+    start_index = foam.find_keyword_line(dict_lines, "surroundings") + 2 
+    added_part = ""
+    added_part += "\t type \t {};\n".format("noSlip")
+    
+    dict_lines.insert(start_index, added_part)
+
+
     #Write edited dict to file
     write_file_name = case_path + "/0/U"
     
@@ -825,7 +839,24 @@ def write_p_file(input_json_path, template_dict_path, case_path):
     
     dict_lines.insert(start_index, added_part)
     
+
+    ###################### Building BC ##############################  
     
+    start_index = foam.find_keyword_line(dict_lines, "building") + 2 
+    added_part = ""
+    added_part += "\t type  \t zeroGradient;\n"
+    
+    dict_lines.insert(start_index, added_part)
+
+
+    ###################### Surrounding BC ##############################  
+    
+    start_index = foam.find_keyword_line(dict_lines, "surroundings") + 2 
+    added_part = ""
+    added_part += "\t type  \t zeroGradient;\n"
+    
+    dict_lines.insert(start_index, added_part)
+
     #Write edited dict to file
     write_file_name = case_path + "/0/p"
     
@@ -850,7 +881,8 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     sides_BC_type = boundary_data['sidesBoundaryCondition']
     top_BC_type = boundary_data['topBoundaryCondition']
     ground_BC_type = boundary_data['groundBoundaryCondition']
-
+    building_BC_type = boundary_data['buildingBoundaryCondition']
+    surrounding_BC_type = boundary_data['surroundingBoundaryCondition']
 
     # wind_speed = wind_data['roofHeightWindSpeed']
     # building_height = wind_data['buildingHeight']
@@ -937,6 +969,51 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     dict_lines.insert(start_index, added_part)
     
     
+    ###################### Building BC ##############################  
+    start_index = foam.find_keyword_line(dict_lines, "building") + 2 
+    
+    if building_BC_type == "noSlip": 
+        added_part = ""
+        added_part += "\t type \t fixedValue;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    if building_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutUSpaldingWallFunction;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutkRoughWallFunction;\n"
+        added_part += "\t Ks \t uniform 1e-5;\n"
+        added_part += "\t Cs \t uniform 0.5;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    dict_lines.insert(start_index, added_part)
+
+    ###################### Surrounding BC ##############################  
+    start_index = foam.find_keyword_line(dict_lines, "surroundings") + 2 
+    
+    if surrounding_BC_type == "noSlip": 
+        added_part = ""
+        added_part += "\t type \t fixedValue;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    if surrounding_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutUSpaldingWallFunction;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    if surrounding_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t nutkRoughWallFunction;\n"
+        added_part += "\t Ks \t uniform 1e-5;\n"
+        added_part += "\t Cs \t uniform 0.5;\n"
+        added_part += "\t value \t uniform 0;\n"
+    
+    dict_lines.insert(start_index, added_part)
+
+
     #Write edited dict to file
     write_file_name = case_path + "/0/nut"
     
@@ -1084,6 +1161,8 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     sides_BC_type = boundary_data['sidesBoundaryCondition']
     top_BC_type = boundary_data['topBoundaryCondition']
     ground_BC_type = boundary_data['groundBoundaryCondition']
+    building_BC_type = boundary_data['buildingBoundaryCondition']
+    surrounding_BC_type = boundary_data['surroundingBoundaryCondition']
 
     wind_speed = wind_data['referenceWindSpeed']
     building_height = wind_data['referenceHeight']
@@ -1177,6 +1256,46 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     
     dict_lines.insert(start_index, added_part)
     
+
+    ###################### Building BC ##############################    
+    start_index = foam.find_keyword_line(dict_lines, "building") + 2 
+    
+    if building_BC_type == "noSlip": 
+        added_part = ""
+        added_part += "\t type \t zeroGradient;\n"
+    
+    if building_BC_type == "smoothWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
+    if building_BC_type == "roughWallFunction": 
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
+    dict_lines.insert(start_index, added_part)
+
+    ###################### Surroundings BC ##############################    
+    start_index = foam.find_keyword_line(dict_lines, "surroundings") + 2 
+    
+    if surrounding_BC_type == "noSlip":
+        added_part = ""
+        added_part += "\t type \t zeroGradient;\n"
+    
+    if surrounding_BC_type == "smoothWallFunction":
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
+    if surrounding_BC_type == "roughWallFunction":
+        added_part = ""
+        added_part += "\t type \t kqRWallFunction;\n"
+        added_part += "\t value \t uniform {:.4f};\n".format(0.0)
+
+    dict_lines.insert(start_index, added_part)
+
+
     #Write edited dict to file
     write_file_name = case_path + "/0/k"
     
@@ -1271,6 +1390,16 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     #Find function object location  
     start_index = foam.find_keyword_line(dict_lines, "functions") + 2
 
+
+    #Write story loads functionObjects  
+    added_part = "    #includeFunc  storyForces\n"
+    dict_lines.insert(start_index, added_part)
+
+    # #Write base loads functionObjects
+    # if monitor_base_load:
+    #     added_part = "    #includeFunc  baseForces\n"
+    #     dict_lines.insert(start_index, added_part)
+
     # #Write wind profile monitoring functionObjects
     # if monitor_wind_profiles:
     #     added_part = ""
@@ -1353,6 +1482,121 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
     for line in dict_lines:
         output_file.write(line)
     output_file.close()    
+
+
+def write_base_forces_file(input_json_path, template_dict_path, case_path):
+
+    #Read JSON data
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    air_density = 1.0
+
+    # Returns JSON object as a dictionary
+    rm_data = json_data["resultMonitoring"]   
+
+    num_stories = rm_data['numStories']
+    floor_height = rm_data['floorHeight']
+    center_of_rotation = rm_data['centerOfRotation']
+    base_load_write_interval = rm_data['baseLoadWriteInterval']
+    monitor_base_load = rm_data['monitorBaseLoad']
+
+    
+    #Open the template file (OpenFOAM file) for manipulation
+    dict_file = open(template_dict_path + "/baseForcesTemplate", "r")
+
+    dict_lines = dict_file.readlines()
+    dict_file.close()
+    
+
+    #Write writeInterval 
+    start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
+    dict_lines[start_index] = "writeInterval \t{};\n".format(base_load_write_interval)    
+    
+    #Write patch name to intergrate forces on 
+    start_index = foam.find_keyword_line(dict_lines, "patches") 
+    dict_lines[start_index] = "patches \t({});\n".format("building")
+    
+    #Write air density to rhoInf 
+    start_index = foam.find_keyword_line(dict_lines, "rhoInf") 
+    dict_lines[start_index] = "rhoInf \t\t{:.4f};\n".format(air_density)
+    
+    #Write center of rotation
+    start_index = foam.find_keyword_line(dict_lines, "CofR") 
+    dict_lines[start_index] = "CofR \t\t({:.4f} {:.4f} {:.4f});\n".format(center_of_rotation[0], center_of_rotation[1], center_of_rotation[2])
+    
+
+    #Write edited dict to file
+    write_file_name = case_path + "/system/baseForces"
+    
+    if os.path.exists(write_file_name):
+        os.remove(write_file_name)
+    
+    output_file = open(write_file_name, "w+")
+    for line in dict_lines:
+        output_file.write(line)
+    output_file.close()
+    
+def write_story_forces_file(input_json_path, template_dict_path, case_path):
+
+    #Read JSON data
+    with open(input_json_path + "/SurroundedBuildingCFD.json") as json_file:
+        json_data =  json.load(json_file)
+
+    air_density = 1.0
+
+    # Returns JSON object as a dictionary
+    rm_data = json_data["resultMonitoring"]    
+
+    num_stories = rm_data['numStories']
+    floor_height = rm_data['floorHeight']
+    center_of_rotation = rm_data['centerOfRotation']
+    story_load_write_interval = rm_data['storyLoadWriteInterval']
+    monitor_base_load = rm_data['monitorBaseLoad']
+
+    
+    #Open the template file (OpenFOAM file) for manipulation
+    dict_file = open(template_dict_path + "/storyForcesTemplate", "r")
+
+    dict_lines = dict_file.readlines()
+    dict_file.close()
+    
+
+    #Write writeInterval 
+    start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
+    dict_lines[start_index] = "writeInterval \t{};\n".format(story_load_write_interval)    
+    
+    #Write patch name to intergrate forces on 
+    start_index = foam.find_keyword_line(dict_lines, "patches") 
+    dict_lines[start_index] = "patches \t({});\n".format("building")
+    
+    #Write air density to rhoInf 
+    start_index = foam.find_keyword_line(dict_lines, "rhoInf") 
+    dict_lines[start_index] = "rhoInf \t\t{:.4f};\n".format(air_density)
+    
+    #Write center of rotation
+    start_index = foam.find_keyword_line(dict_lines, "CofR") 
+    dict_lines[start_index] = "CofR \t\t({:.4f} {:.4f} {:.4f});\n".format(center_of_rotation[0], center_of_rotation[1], center_of_rotation[2])
+    
+    #Number of stories  as nBins
+    start_index = foam.find_keyword_line(dict_lines, "nBin") 
+    dict_lines[start_index] = "    nBin \t{};\n".format(num_stories)
+    
+    #Write story direction
+    start_index = foam.find_keyword_line(dict_lines, "direction") 
+    dict_lines[start_index] = "    direction \t({:.4f} {:.4f} {:.4f});\n".format(0, 0, 1.0)
+
+    #Write edited dict to file
+    write_file_name = case_path + "/system/storyForces"
+    
+    if os.path.exists(write_file_name):
+        os.remove(write_file_name)
+    
+    output_file = open(write_file_name, "w+")
+    for line in dict_lines:
+        output_file.write(line)
+    output_file.close()
+
 
 
 def write_pressure_probes_file(input_json_path, template_dict_path, case_path):
@@ -1904,9 +2148,10 @@ if __name__ == '__main__':
     
     #Write results to be monitored
     # write_wind_profiles_file(input_json_path, template_dict_path, case_path)
-
     # write_vtk_plane_file(input_json_path, template_dict_path, case_path)
-    
+    write_base_forces_file(input_json_path, template_dict_path, case_path)
+    write_story_forces_file(input_json_path, template_dict_path, case_path)
+
     #Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
 
@@ -1929,4 +2174,4 @@ if __name__ == '__main__':
     # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
     
     #Write TInf files 
-    # write_boundary_data_files(input_json_path, case_path)
+    write_boundary_data_files(input_json_path, case_path)
