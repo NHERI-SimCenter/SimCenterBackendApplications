@@ -10,7 +10,7 @@ class simCenterBackendApps(ConanFile):
     url = "https://github.com/NHERI-SimCenter/SimCenterBackendApplications"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64","armv8"]}
     options = {"shared": [True, False]}
-    default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True}    
+    default_options = {"mkl-static:threaded": False, "ipp-static:simcenter_backend": True, "libcurl:with_ssl":"openssl"}    
     generators = "cmake"
     build_policy = "missing"
     requires = ["jansson/2.13.1",
@@ -19,9 +19,6 @@ class simCenterBackendApps(ConanFile):
                "eigen/3.3.7",
                "clara/1.1.5",
                "jsonformoderncpp/3.7.0",
-               "smelt/1.2.0@simcenter/stable",
-               "mkl-static/2019.4@simcenter/stable",
-               "ipp-static/2019.4@simcenter/stable",
                "nanoflann/1.3.2",
                "nlopt/2.7.1"]
                    

@@ -72,7 +72,7 @@ def writeEVENT(forces, eventFilePath):
 
 
 def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath,'r') as BIMFile:
+    with open(BIMFilePath,'r', encoding='utf-8') as BIMFile:
 	    bim = json.load(BIMFile)
 
     return int(bim["GeneralInformation"]["stories"])

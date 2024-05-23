@@ -39,16 +39,20 @@
 #
 
 import numpy as np
-import pulp
+import pulp, h5py, sys
 import pandas as pd
 import json, os, itertools, threading, collections, time
 from scipy.stats import norm
 from USGS_API import *
 from tqdm import tqdm
+from sklearn.linear_model import lasso_path
 
 
 def configure_hazard_occurrence(input_dir, 
                                 output_dir,
+                                IMfile,
+                                im_list,
+                                scenarios,
                                 hzo_config=None,
                                 site_config=None,
                                 mth_flag=True):
@@ -70,18 +74,17 @@ def configure_hazard_occurrence(input_dir,
     im_type = hzo_config.get('IntensityMeasure',None)
     if im_type is None:
         return {}
-    # period (if any)
-    period = hzo_config.get('Period',0.0)
-    if im_type == 'SA':
-        cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
-    else:
-        cur_imt = im_type
     # get hazard curve input
     hc_input = hzo_config.get('HazardCurveInput',None)
     # return periods
     if hc_input is None:
         return {}
     elif hc_input == 'Inferred_NSHMP':
+        period = hzo_config.get('Period',0.0)
+        if im_type == 'SA':
+            cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
+        else:
+            cur_imt = im_type
         # fecthing hazard curve from usgs
         cur_edition = hzo_config.get('Edition','E2014')
         hazard_curve_collector = []
@@ -131,10 +134,17 @@ def configure_hazard_occurrence(input_dir,
 
         print('HazardOCcurrence: all hazard curves fetched {0} sec.'.format(time.time()-t_start))
     elif hc_input == 'Inferred_sourceFile':
-        IMfile = os.path.join(output_dir, 'IntensityMeasureMeanStd.json')
-        with open(IMfile, 'r') as f:
-            IMdata = json.load(f)
-        hc_data = calc_hazard_curves(IMdata,site_config, cur_imt)
+        period = hzo_config.get('Period',0.0)
+        if im_type == 'SA':
+            cur_imt = 'SA({})'.format(str(period))
+        else:
+            cur_imt = im_type
+        if IMfile.lower().endswith('.json'):
+            with open(IMfile, 'r') as f:
+                IMdata = json.load(f)
+            hc_data = calc_hazard_curves(IMdata,site_config, cur_imt)
+        elif IMfile.lower().endswith('.hdf5'):
+            hc_data = calc_hazard_curves_hdf5(IMfile, im_list, site_config, cur_imt, scenarios)
         # c_vect = calc_hazard_contribution(IMdata, site_config,
         #                                   return_periods, hc_data, cur_imt)
     else:
@@ -195,7 +205,7 @@ def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata['IntensityMeasures'][0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
@@ -205,16 +215,16 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata['IntensityMeasures'][0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
         im_ind = 0
-    c_vect = np.zeros(len(IMdata['IntensityMeasures']))
-    for j in tqdm(range(len(IMdata['IntensityMeasures'])), desc="Calculate "\
-                  f"Hazard Contribution of {len(IMdata['IntensityMeasures'])} scenarios"):
+    c_vect = np.zeros(len(IMdata))
+    for j in tqdm(range(len(IMdata)), desc="Calculate "\
+                  f"Hazard Contribution of {len(IMdata)} scenarios"):
         c_j = 0
-        scenario = IMdata['IntensityMeasures'][j]
+        scenario = IMdata[list(IMdata.keys())[j]]
         mar = scenario['MeanAnnualRate']
         for r in range(len(targetReturnPeriods)):
             for i in range(len(site_config)):
@@ -228,9 +238,9 @@ def calc_hazard_contribution(IMdata, site_config, targetReturnPeriods, hc_data, 
                                  right=hc_data[i]['ReturnPeriod'][-1])
                 p_exceed = 1 - norm.cdf(np.log(y_ir), lnIM_mean, lnIM_std)
                 normConstant = 0
-                for j2 in range(len(IMdata['IntensityMeasures'])):
-                    pj = IMdata['IntensityMeasures'][j2]['MeanAnnualRate']
-                    lnIM2 = IMdata['IntensityMeasures'][j2]['GroundMotions'][i][im_name] 
+                for j2 in range(len(IMdata)):
+                    pj = IMdata[list(IMdata.keys())[j2]]['MeanAnnualRate']
+                    lnIM2 = IMdata[list(IMdata.keys())[j2]]['GroundMotions'][i][im_name] 
                     lnIM_mean2 = lnIM2['Mean'][im_ind]
                     lnIM_std2 = lnIM2['TotalStdDev'][im_ind]
                     p_exceed2 = 1 - norm.cdf(np.log(y_ir), lnIM_mean2, lnIM_std2)
@@ -244,7 +254,7 @@ def calc_hazard_curves(IMdata, site_config, im):
     if im[0:2] == 'SA':
         period = float(im[2:].replace('P','.'))
         im_name = 'lnSA'
-        periods = IMdata['IntensityMeasures'][0]['Periods']
+        periods = IMdata[list(IMdata.keys())[0]]['Periods']
         im_ind = np.where(np.array(periods)==period)[0][0]
     else:
         im_name = 'lnPGA'
@@ -254,9 +264,10 @@ def calc_hazard_curves(IMdata, site_config, im):
     hc_data = [{'siteID':0,
                 'ReturnPeriod':list(exceedRate),
                 'IM':list(exceedRate)}]*len(site_config)
-    for scenario_ind in tqdm(range(len(IMdata['IntensityMeasures'])), desc="Calculate "\
-                  f"Hazard Curves from {len(IMdata['IntensityMeasures'])} scenarios"):
-        scenario = IMdata['IntensityMeasures'][scenario_ind]
+    scenario_idx = list(IMdata.keys())
+    for scenario_ind in tqdm(range(len(scenario_idx)), desc="Calculate "\
+                  f"Hazard Curves from {len(scenario_idx)} scenarios"):
+        scenario = IMdata[scenario_idx[scenario_ind]]
         mar = scenario['MeanAnnualRate']
         for site_ind in range(len(site_config)):
             lnIM = scenario['GroundMotions'][site_ind][im_name] 
@@ -265,6 +276,36 @@ def calc_hazard_curves(IMdata, site_config, im):
             p_exceed = 1 - norm.cdf(np.log(IMRange), lnIM_mean, lnIM_std)
             rate_exceed = mar * p_exceed
             exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed
+    exceedRate[exceedRate<1e-20] = 1e-20
+    for site_ind, site in enumerate(site_config):
+        hc_data[site_ind] = {'SiteID': site['ID'],
+            "ReturnPeriod":list(1/exceedRate[:,site_ind]),
+            "IM":list(IMRange)
+        }
+    return hc_data
+
+def calc_hazard_curves_hdf5(IMfile, im_list, site_config, im, scenarios):
+    im_ind = im_list.index(im)
+    IMRange = np.power(10, np.linspace(-4, 2, 60))
+    exceedRate = np.zeros((len(IMRange), len(site_config)))
+    hc_data = [{'siteID':0,
+                'ReturnPeriod':list(exceedRate),
+                'IM':list(exceedRate)}]*len(site_config)
+    scenario_idx = list(scenarios.keys())
+    with h5py.File(IMfile, 'r') as IMdata:
+        for scenario_ind in tqdm(range(len(scenario_idx)), desc="Calculate "\
+                    f"Hazard Curves from {len(scenario_idx)} scenarios"):
+            scenario_im = IMdata[str(scenario_idx[scenario_ind])]
+            mar = scenarios[scenario_idx[scenario_ind]]['MeanAnnualRate']
+            lnIM_mean = scenario_im['Mean'][:,im_ind]
+            lnIM_interStd = scenario_im['InterEvStdDev'][:,im_ind]
+            lnIM_intraStd = scenario_im['IntraEvStdDev'][:,im_ind]
+            lnIM_std = np.sqrt(lnIM_intraStd**2 + lnIM_interStd**2)
+            for site_ind in range(len(site_config)):
+                p_exceed = 1 - norm.cdf(np.log(IMRange), lnIM_mean[site_ind],\
+                                        lnIM_std[site_ind])
+                rate_exceed = mar * p_exceed
+                exceedRate[:, site_ind] = exceedRate[:, site_ind] + rate_exceed
     exceedRate[exceedRate<1e-20] = 1e-20
     for site_ind, site in enumerate(site_config):
         hc_data[site_ind] = {'SiteID': site['ID'],
@@ -301,48 +342,79 @@ def get_hazard_curves(input_dir=None,
 
 
 # KZ-08/23/22: adding a function for computing exceeding probability at an im level
-def get_im_exceedance_probility(im_raw, 
+def get_im_exceedance_probility(IMfile,
+                                im_list, 
                                 im_type, 
                                 period, 
-                                im_level):
+                                im_level,
+                                scenario_idx):
 
     # number of scenarios
-    num_scen = len(im_raw)
+    num_scen = len(scenario_idx)
 
     # number of intensity levels
     num_rps = im_level.shape[1]
     
     # initialize output
-    num_sites = len(im_raw[0].get('GroundMotions'))
+    if IMfile.lower().endswith('.json'):
+        with open(IMfile, 'r') as f:
+            im_raw = json.load(f)
+        num_sites = len(im_raw[scenario_idx[0]].get('GroundMotions'))
+    elif IMfile.lower().endswith('.hdf5'):
+        with h5py.File(IMfile, 'r') as f:
+            num_sites = f[str(scenario_idx[0])]['Mean'].shape[0]
+    
     im_exceedance_prob = np.zeros((num_sites,num_scen,num_rps))
-
-    # check IM type first
-    if im_type not in im_raw[0].get('IM'):
-        print('IM_Calculator.get_im_exceedance_probility: error - intensity measure {} type does not match to {}.'.format(im_type,im_raw[0].get('IM')))
-        return im_exceedance_prob
         
-    # check period
-    if im_type == 'PGA':
-        if 'PGA' not in im_raw[0]['IM']:
-            print('IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.format(period,im_raw[0].get('IM')))
-            return im_exceedance_prob
+    if IMfile.lower().endswith('.json'):
+        if im_type == 'PGA':
+            if 'PGA' not in im_raw[scenario_idx[0]]['IM']:
+                print('IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.\
+                    format(period,im_raw[scenario_idx[0]].get('IM')))
+                return im_exceedance_prob
+            else:
+                periodID = 0
         else:
-            periodID = 0
-    else:
-        if period not in im_raw[0].get('Periods'):
-            print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(period,im_raw[0].get('Periods')))
-            return im_exceedance_prob
-        else:
-            periodID = im_raw[0].get('Periods').index(period)
+            if period not in im_raw[scenario_idx[0]].get('Periods'):
+                print('IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.\
+                    format(period,im_raw[scenario_idx[0]].get('Periods')))
+                return im_exceedance_prob
+            else:
+                periodID = im_raw[scenario_idx[0]].get('Periods').index(period)
 
-    # start to compute the exceedance probability
-    for k in range(num_scen):
-        allGM = im_raw[k].get('GroundMotions')
-        for i in range(num_sites):
-            curIM = allGM[i].get('ln{}'.format(im_type))
-            curMean = curIM.get('Mean')[periodID]
-            curStd = curIM.get('TotalStdDev')[periodID]
-            im_exceedance_prob[i,k,:] = 1.0-norm.cdf(np.log(im_level[i,:]),loc=curMean,scale=curStd)
+        # start to compute the exceedance probability
+        for k in range(num_scen):
+            allGM = im_raw[scenario_idx[k]].get('GroundMotions')
+            for i in range(num_sites):
+                curIM = allGM[i].get('ln{}'.format(im_type))
+                curMean = curIM.get('Mean')[periodID]
+                curStd = curIM.get('TotalStdDev')[periodID]
+                im_exceedance_prob[i,k,:] = 1.0-norm.cdf(np.log(im_level[i,:]),loc=curMean,scale=curStd)
+    elif IMfile.lower().endswith('.hdf5'):
+        if im_type == 'PGA':
+            im_name = 'PGA'
+        elif im_type == 'SA':
+            if isinstance(period, int) or period.is_integer():
+                im_name = 'SA({})'.format(str(int(period)))
+            else:
+                im_name = 'SA({})'.format(str(period))
+        else:
+            SystemExit(f'{im_type} is not supported in hazard downsampling')
+        if im_name not in im_list:
+            print('IM_Calculator.get_im_exceedance_probility: error - intensity measure {} does not match to {}.'.\
+                format(im_name,im_list))
+            return im_exceedance_prob
+        im_ind = im_list.index(im_name)
+        with h5py.File(IMfile, 'r') as im_raw:
+            for k in range(num_scen):
+                curIM = im_raw[str(scenario_idx[k])]
+                for i in range(num_sites):
+                    curMean = curIM['Mean'][i, im_ind]
+                    curInterStd = curIM['InterEvStdDev'][i, im_ind]
+                    curIntraStd = curIM['IntraEvStdDev'][i, im_ind]
+                    curStd = np.sqrt(curInterStd**2 + curIntraStd**2)
+                    im_exceedance_prob[i,k,:] = 1.0-norm.cdf(
+                        np.log(im_level[i,:]),loc=curMean,scale=curStd)
     # return
     return im_exceedance_prob
 
@@ -351,7 +423,8 @@ def get_im_exceedance_probability_gm(im_raw,
                                      im_list,
                                      im_type,
                                      period, 
-                                     im_level):
+                                     im_level,
+                                     mar_scen):
 
     # get periodID
     for i in range(len(im_list)):
@@ -371,14 +444,15 @@ def get_im_exceedance_probability_gm(im_raw,
     num_simu = im_raw[0].shape[-1]
     im_exceedance_prob = np.zeros((num_site,num_simu*num_scen,num_rps))
     #print('im_exceedance_prob_gm.shape=',im_exceedance_prob)
+    occurrence_rate = [None] * num_simu*num_scen
     for i in range(num_scen):
         for j in range(num_site):
             curIM = im_raw[i][j,periodID,:]
             for k in range(num_simu):
                 im_exceedance_prob[j,i*num_simu+k,:] = [int(x) for x in curIM[k]>im_level[j,:]]
-
+                occurrence_rate[i*num_simu+k] = mar_scen[i]/num_simu
     # return
-    return im_exceedance_prob
+    return im_exceedance_prob, occurrence_rate
 
 
 def sample_earthquake_occurrence(model_type,
@@ -386,7 +460,8 @@ def sample_earthquake_occurrence(model_type,
                                  return_periods,
                                  im_exceedance_prob,
                                  reweight_only,
-                                 occurence_rate_origin = None):
+                                 occurence_rate_origin,
+                                 hzo_config):
 
     # model type
     if model_type == 'Manzour & Davidson (2016)':
@@ -398,15 +473,23 @@ def sample_earthquake_occurrence(model_type,
                                                  occurence_rate_origin=occurence_rate_origin)
         # solve the optimiation
         om.solve_opt()
+    elif model_type == 'Wang et al. (2023)':
+        # create occurrence model
+        om = OccurrenceModel_Wangetal2023(return_periods=return_periods,
+                                          im_exceedance_probs=im_exceedance_prob,
+                                          num_scenarios=num_target_eqs,
+                                          reweight_only=reweight_only,
+                                          occurence_rate_origin=occurence_rate_origin,
+                                          hzo_config = hzo_config)
+        # solve the optimiation
+        om.solve_opt()
     else:
         print('HazardOccurrence.get_im_exceedance_probility: {} is not available yet.')
         return None
 
     return om
-
-
-def export_sampled_earthquakes(id_selected_eqs, eqdata, P, output_dir=None):
-
+def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=None):
+    probabilityWeight = [P[x] for x in id_selected_eqs]
     selected_eqs = []
     for i in id_selected_eqs:
         selected_eqs.append(eqdata[i])
@@ -414,23 +497,54 @@ def export_sampled_earthquakes(id_selected_eqs, eqdata, P, output_dir=None):
         'EarthquakeNumber': len(id_selected_eqs),
         'EarthquakeID': id_selected_eqs,
         'EarthquakeInfo': selected_eqs,
-        'ProbabilityWeight': [P[x] for x in id_selected_eqs],
+        'ProbabilityWeight': probabilityWeight,
+        'MeanSquareError':error.tolist()
     }
 
     if output_dir is not None:
         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
             json.dump(dict_selected_eqs, f, indent=2)
 
-def export_sampled_gmms(id_selected_gmms, id_selected_scens, P, output_dir=None):
+# def export_sampled_earthquakes(occ_dict, im_raw, site_config, id_selected_eqs, eqdata, P, output_dir=None):
+#     probabilityWeight = [P[x] for x in id_selected_eqs]
+#     period = occ_dict.get('Period',0.0)
+#     im_type = occ_dict.get('IntensityMeasure')
+#     if im_type == 'SA':
+#         cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
+#     else:
+#         cur_imt = im_type
+#     sampleIM = {}
+#     for i in range(len(id_selected_eqs)):
+#         rup_ind = (id_selected_eqs[i])
+#         scenario = (im_raw[rup_ind]).copy()
+#         scenario['MeanAnnualRate'] =  probabilityWeight[i]
+#         sampleIM.update({rup_ind:scenario})
+#     sampled_hc = calc_hazard_curves(sampleIM, site_config, cur_imt)
+#     # interpolate the hazard curve with the return periods
+#     num_sites = len(sampled_hc)
+#     num_rps = len(occ_dict['ReturnPeriods'])
+#     hc_interp = np.zeros((num_sites,num_rps))
+#     ln_maf = [np.log(x) for x in occ_dict['ReturnPeriods']]
+#     for i in range(num_sites):
+#         ln_cur_maf = [np.log(x) for x in sampled_hc[i].get('ReturnPeriod')]
+#         ln_cur_sa = np.log(sampled_hc[i].get('IM')).tolist()
+#         hc_interp[i,:] = np.exp(np.interp(ln_maf,ln_cur_maf,ln_cur_sa,left=ln_cur_sa[0],right=ln_cur_sa[-1]))
+#     error = ((occ_dict['HazardCurves']-hc_interp)**2).sum(axis = 1)/num_rps
 
-    dict_selected_gmms = {
-        'EarthquakeID': id_selected_scens,
-        'ProbabilityWeight': [P[x] for x in id_selected_gmms]
-    }
+#     selected_eqs = []
+#     for i in id_selected_eqs:
+#         selected_eqs.append(eqdata[i])
+#     dict_selected_eqs = {
+#         'EarthquakeNumber': len(id_selected_eqs),
+#         'EarthquakeID': id_selected_eqs,
+#         'EarthquakeInfo': selected_eqs,
+#         'ProbabilityWeight': probabilityWeight,
+#         'MeanSquareError':error.tolist()
+#     }
 
-    if output_dir is not None:
-        with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
-            json.dump(dict_selected_gmms, f, indent=2)
+#     if output_dir is not None:
+#         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
+#             json.dump(dict_selected_eqs, f, indent=2)
     
 
 class OccurrenceModel_ManzourDavidson2016:
@@ -568,9 +682,167 @@ class OccurrenceModel_ManzourDavidson2016:
 
     def get_error_vector(self):
 
-        e_plus_selected = {}
-        e_minus_selected = {}
+        e_plus_selected = np.zeros([self.num_sites, self.num_return_periods])
+        e_minus_selected = np.zeros([self.num_sites, self.num_return_periods])
         for i in range(self.num_sites):
             for j in range(self.num_return_periods):
-                e_plus_selected[i,j] = self.e_plus[i,j].varValue
-                e_minus_selected[i,j] = self.e_minus[i,j].varValue
+                e_plus_selected[i, j] = self.e_plus[i,j].varValue
+                e_minus_selected[i, j] = self.e_minus[i,j].varValue
+        error = ((e_plus_selected-e_minus_selected)**2).sum(axis = 1)/self.num_return_periods
+        return error
+
+    def export_sampled_gmms(self, id_selected_gmms, id_selected_scens, P, output_dir=None):
+
+        dict_selected_gmms = {
+            'EarthquakeID': id_selected_scens.astype(int).tolist(),
+            'ProbabilityWeight': [P[x] for x in id_selected_gmms],
+            'MeanSquareError': self.get_error_vector().tolist()
+        }
+
+        if output_dir is not None:
+            with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
+                json.dump(dict_selected_gmms, f, indent=2)
+
+
+class OccurrenceModel_Wangetal2023:
+
+    def __init__(self,
+                 return_periods = [],
+                 im_exceedance_probs = [],
+                 num_scenarios = -1,
+                 reweight_only = False,
+                 occurence_rate_origin = None,
+                 hzo_config = None):
+        """
+        __init__: initialization a hazard occurrence optimizer
+        :param return_periods: 1-D array of return periods, RP(r)
+        :param earthquake_mafs: 1-D array of annual occurrence probability, MAF(j)
+        :param im_exceedance_probs: 3-D array of exceedance probability of Sa, EP(i,j,r) for site #i, earthquake #j, return period #r
+        :param num_scenarios: integer for number of target scenarios
+        """
+        # read input parameters
+        self.return_periods = return_periods
+        self.im_exceedance_probs = im_exceedance_probs
+        self.num_eqs = self.im_exceedance_probs.shape[1]
+        self.num_scenarios = num_scenarios
+        self.reweight_only = reweight_only
+        self.occurence_rate_origin = occurence_rate_origin
+        if len(hzo_config['LassoTuningParameter']) > 0:
+            self.alpha_path = hzo_config['LassoTuningParameter']
+        else:
+            self.alpha_path = None
+        # check input parameters
+        self.input_valid = self._input_check()
+        if not self.input_valid:
+            print('OccurrenceModel_Wangetal2023.__init__: at least one input parameter invalid.')
+            return
+
+    def _input_check(self):
+        """
+        _input_check: check of input parameters
+        """
+        # number of return periods
+        if len(self.return_periods) > 0:
+            self.num_return_periods = len(self.return_periods)
+            print('OccurrenceModel_Wangetal2023._input_check: number of return periods = {}.'.format(self.num_return_periods))
+        else:
+            print('OccurrenceModel_Wangetal2023._input_check: no return period is defined.')
+            return False
+        # shape of exceedance probability
+        if len(self.im_exceedance_probs.shape) != 3:
+            print('OccurrenceModel_Wangetal2023._input_check: exceedance probability array should be 3-D.')
+            return False
+        else:
+            if self.im_exceedance_probs.shape[-1] != len(self.return_periods):
+                print('OccurrenceModel_Wangetal2023._input_check: exceedance probability array should have dimensions of (#site, #eq, #return_period).')
+                return False
+            else:
+                self.num_sites = self.im_exceedance_probs.shape[0]
+                print('OccurrenceModel_Wangetal2023._input_check: number of sites = {}.'.format(self.num_sites))
+        # number of target scenarios
+        if self.num_scenarios <= 0:
+            print('OccurrenceModel_Wangetal2023._input_check: number of target scenarios should be positive.')
+            return False
+        else:
+            # initialize outputs
+            init_flag = False
+            init_flag = self._opt_initialization()
+            if init_flag:
+                print('OccurrenceModel_Wangetal2023._input_check: initialization completed.')
+                return True
+            else:
+                print('OccurrenceModel_Wangetal2023._input_check: initialization errors.')
+                return False
+
+    def _opt_initialization(self):
+        """
+        _opt_initialization: intialization of LASSO regression
+        """
+        # define X
+        self.X_P = self.im_exceedance_probs.transpose(1,0,2).reshape(self.im_exceedance_probs.shape[1],-1).T
+        self.y = 1/np.tile(self.return_periods,self.im_exceedance_probs.shape[0])
+
+        # define weights
+        self.W = np.diag(np.sqrt(1 / self.y))
+
+        # rate matrix for events
+        # self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)
+        self.occurence_rate_origin_mat = np.vstack(
+            [np.array(self.occurence_rate_origin)]*self.X_P.shape[0])
+
+        # hazard by each event
+        self.X = self.X_P * self.occurence_rate_origin_mat
+
+        self.X_weighted = np.dot(self.W, self.X)
+        self.y_weighted = np.dot(self.W, self.y)
+
+        return True
+
+    def solve_opt(self):
+        """
+        LASSO regression
+        """
+        if self.alpha_path:
+            self.alphas,self.coefs,_ = lasso_path(X=self.X_weighted, y=self.y_weighted, alphas=self.alpha_path, positive=True)
+        else:    
+            self.alphas,self.coefs,_ = lasso_path(X=self.X_weighted, y=self.y_weighted, eps=1e-4, n_alphas=1000, alphas=None, positive=True)
+        
+        # re-regression may be needed here !!!
+
+    def get_selected_earthquake(self):
+
+        # calculate the number of selected events for each step
+        self.num_selected = [sum(x > 0 for x in self.coefs[:,i]) for i in range(self.coefs.shape[1])]
+
+        # find the selection such that the number of selected events is closest to the user defined target number of scenarios
+        # the flip() is used to find the last one which has the closest number of selected events to the target value.
+        self.selected_alpha_ind = self.num_selected.__len__() - 1 - np.abs(np.flip(self.num_selected) - self.num_scenarios).argmin()
+
+        if self.num_selected[self.selected_alpha_ind] == 0:
+            sys.exit("ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n"+
+                     f"The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n"+
+                     "Try using a smaller tunning parameter.")
+        self.Rate_selected = self.coefs[:,self.selected_alpha_ind] * self.occurence_rate_origin
+        self.Z_selected = self.coefs[:,self.selected_alpha_ind]>0
+        return self.Rate_selected, self.Z_selected
+
+    def get_error_vector(self):
+
+        # self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
+        error = self.y - self.X.sum(axis = 1)
+        error = error.reshape(self.num_sites, self.num_return_periods)
+        error = (error**2).sum(axis = 1)/self.num_return_periods
+        return error
+
+    def export_sampled_gmms(self, id_selected_gmms, id_selected_scens, P, output_dir=None):
+
+        dict_selected_gmms = {
+            'EarthquakeID': id_selected_scens.astype(int).tolist(),
+            'ProbabilityWeight': [P[x] for x in id_selected_gmms],
+            'LassoTuningParameter':self.alphas[self.selected_alpha_ind],
+            'MeanSquareError': self.get_error_vector().tolist()
+        }
+
+        if output_dir is not None:
+            with open(os.path.join(output_dir,'InfoSampledGM.json'), 'w') as f:
+                json.dump(dict_selected_gmms, f, indent=2)

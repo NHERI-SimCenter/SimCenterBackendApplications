@@ -158,7 +158,8 @@ int main(int argc, const char **argv) {
 
     dpreproCommand = remoteDir + std::string("/applications/performUQ/templateSub/simCenterSub");
     openSeesCommand = std::string("/home1/00477/tg457427/bin/OpenSees");
-    pythonCommand = std::string("/home1/00477/tg457427/python/python-3.8.10/bin/python3");
+    //pythonCommand = std::string("/home1/00477/tg457427/python/python-3.8.10/bin/python3");
+    pythonCommand = std::string("python3");    
     feapCommand = std::string("/home1/00477/tg457427/bin/feappv");
     moveCommand = std::string("mv ");
   }
@@ -250,7 +251,7 @@ int main(int argc, const char **argv) {
     }
   }
 
-  workflowDriverFile << " 1> ops.out 2>&1\n"; 
+  workflowDriverFile << " 1> workflow.err 2>&1\n"; 
 
   workflowDriverFile.close();
   

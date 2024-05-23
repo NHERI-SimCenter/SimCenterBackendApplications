@@ -135,6 +135,23 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
+
+
+    #
+    # FMK bug fix - have to copy AIM files back to the inputDir dir as code below assumes they are there
+    #
+    
+    extension ="AIM.json"
+    the_dir = os.path.abspath(inputDir)
+    for item in os.listdir(the_dir):
+        item_path = os.path.join(the_dir, item)
+        if os.path.isdir(item_path):
+            template_dir = os.path.join(item_path, 'templatedir')
+            for the_file in os.listdir(template_dir):
+                if the_file.endswith(extension):
+                    bim_path = os.path.join(template_dir, the_file)
+                    shutil.copy(bim_path, the_dir)
+        
     
     #siteFiles = glob(f"{inputDir}/*BIM.json")
     # KZ: changing BIM to AIM

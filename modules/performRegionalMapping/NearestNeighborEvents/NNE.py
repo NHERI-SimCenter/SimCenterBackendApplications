@@ -48,8 +48,10 @@ from pathlib import Path
 
 from sklearn.neighbors import NearestNeighbors
 
-def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label, seed, doParallel):
 
+def find_neighbors(
+    asset_file, event_grid_file, samples, neighbors, filter_label, seed, doParallel
+):
     # check if running parallel
     numP = 1
     procID = 0
@@ -61,10 +63,11 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
         if found:
             import mpi4py
             from mpi4py import MPI
+
             runParallel = True
             comm = MPI.COMM_WORLD
             numP = comm.Get_size()
-            procID = comm.Get_rank();
+            procID = comm.Get_rank()
             if numP < 2:
                 doParallel = "False"
                 runParallel = False
@@ -79,45 +82,51 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
-    lat_E = grid_df['Latitude']
-    lon_E = grid_df['Longitude']
+    lat_E = grid_df["Latitude"]
+    lon_E = grid_df["Longitude"]
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
 
-
     if filter_label == "":
-        grid_extra_keys = list(grid_df.drop(['GP_file','Longitude','Latitude'], axis = 1).columns)
-    
+        grid_extra_keys = list(
+            grid_df.drop(["GP_file", "Longitude", "Latitude"], axis=1).columns
+        )
+
     # prepare the tree for the nearest neighbor search
-    if filter_label != "" or len(grid_extra_keys)>0:
-        neighbors_to_get = min(neighbors*10, len(lon_E))
+    if filter_label != "" or len(grid_extra_keys) > 0:
+        neighbors_to_get = min(neighbors * 10, len(lon_E))
     else:
         neighbors_to_get = neighbors
-    nbrs = NearestNeighbors(n_neighbors = neighbors_to_get, algorithm='ball_tree').fit(X)
+    nbrs = NearestNeighbors(n_neighbors=neighbors_to_get, algorithm="ball_tree").fit(X)
 
     # load the building data file
-    with open(asset_file, 'r') as f:
+    with open(asset_file, "r", encoding="utf-8") as f:
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
-    AIM_df = pd.DataFrame(columns=['Latitude', 'Longitude', 'file'],
-                          index=np.arange(len(asset_dict)))
+    AIM_df = pd.DataFrame(
+        columns=["Latitude", "Longitude", "file"], index=np.arange(len(asset_dict))
+    )
 
     count = 0
     for i, asset in enumerate(asset_dict):
-
         if runParallel == False or (i % numP) == procID:
-
-            with open(asset['file'], 'r') as f:
+            with open(asset["file"], "r", encoding="utf-8") as f:
                 asset_data = json.load(f)
 
-            asset_loc = asset_data['GeneralInformation']['location']
-            AIM_df.iloc[count]['Longitude'] = asset_loc['longitude']
-            AIM_df.iloc[count]['Latitude'] = asset_loc['latitude']
-            AIM_df.iloc[count]['file'] = asset['file']
-            count = count+1;
+            asset_loc = asset_data["GeneralInformation"]["location"]
+            AIM_df.iloc[count]["Longitude"] = asset_loc["longitude"]
+            AIM_df.iloc[count]["Latitude"] = asset_loc["latitude"]
+            AIM_df.iloc[count]["file"] = asset["file"]
+            count = count + 1
 
     # store building locations in Y
-    Y = np.array([[lo, la] for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude']) if not np.isnan(lo) and not np.isnan(la)])
+    Y = np.array(
+        [
+            [lo, la]
+            for lo, la in zip(AIM_df["Longitude"], AIM_df["Latitude"])
+            if not np.isnan(lo) and not np.isnan(la)
+        ]
+    )
 
     # collect the neighbor indices and distances for every building
     distances, indices = nbrs.kneighbors(Y)
@@ -130,28 +139,27 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
         rng = np.random.default_rng()
 
     count = 0
-    
+
     # iterate through the buildings and store the selected events in the AIM
-    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(zip(AIM_df.index,
-                                                          distances,
-                                                          indices)):
-
+    for asset_i, (AIM_id, dist_list, ind_list) in enumerate(
+        zip(AIM_df.index, distances, indices)
+    ):
         # open the AIM file
-        asst_file = AIM_df.iloc[AIM_id]['file']
+        asst_file = AIM_df.iloc[AIM_id]["file"]
 
-        with open(asst_file, 'r') as f:
+        with open(asst_file, "r", encoding="utf-8") as f:
             asset_data = json.load(f)
 
-        if filter_label != '':
+        if filter_label != "":
             # soil type of building
-            asset_label = asset_data['GeneralInformation'][filter_label]
+            asset_label = asset_data["GeneralInformation"][filter_label]
             # soil types of all initial neighbors
             grid_label = grid_df[filter_label][ind_list]
 
             # only keep the distances and indices corresponding to neighbors
             # with the same soil type
-            dist_list  = dist_list[(grid_label==asset_label).values]
-            ind_list   = ind_list[(grid_label==asset_label).values]
+            dist_list = dist_list[(grid_label == asset_label).values]
+            ind_list = ind_list[(grid_label == asset_label).values]
 
             # return dist_list & ind_list with a length equals neighbors
             # assuming that at least neighbors grid points exist with
@@ -161,24 +169,24 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             # distance, just take the first neighbors grid points of each
             dist_list = dist_list[:neighbors]
             ind_list = ind_list[:neighbors]
-        
-        if len(grid_extra_keys)>0:
+
+        if len(grid_extra_keys) > 0:
             filter_labels = []
-            for key in asset_data['GeneralInformation'].keys():
+            for key in asset_data["GeneralInformation"].keys():
                 if key in grid_extra_keys:
                     filter_labels.append(key)
 
             filter_list = [True for i in dist_list]
             for filter_label in filter_labels:
-                asset_label = asset_data['GeneralInformation'][filter_label]
+                asset_label = asset_data["GeneralInformation"][filter_label]
                 grid_label = grid_df[filter_label][ind_list]
-                filter_list_i = (grid_label==asset_label).values
+                filter_list_i = (grid_label == asset_label).values
                 filter_list = filter_list and filter_list_i
-            
+
             # only keep the distances and indices corresponding to neighbors
             # with the same soil type
-            dist_list  = dist_list[filter_list]
-            ind_list   = ind_list[filter_list]
+            dist_list = dist_list[filter_list]
+            ind_list = ind_list[filter_list]
 
             # return dist_list & ind_list with a length equals neighbors
             # assuming that at least neighbors grid points exist with
@@ -189,17 +197,15 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             dist_list = dist_list[:neighbors]
             ind_list = ind_list[:neighbors]
 
-
         # calculate the weights for each neighbor based on their distance
-        dist_list = 1./(dist_list**2.0)
-        weights = np.array(dist_list)/np.sum(dist_list)
+        dist_list = 1.0 / (dist_list**2.0)
+        weights = np.array(dist_list) / np.sum(dist_list)
 
         # get the pre-defined number of samples for each neighbor
         nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
 
         # this is the preferred behavior, the else caluse is left for legacy inputs
-        if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
-
+        if grid_df.iloc[0]["GP_file"][-3:] == "csv":
             # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and
             # intensity measures and you cannot assign 10 records to one point
@@ -208,12 +214,11 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
             # Load the first file and identify if this is a grid of IM or GM
             # information. GM grids have GM record filenames defined in the
             # grid point files.
-            first_file = pd.read_csv(event_dir / grid_df.iloc[0]['GP_file'],
-                                     header=0)
-            if first_file.columns[0]=='TH_file':
-                event_type = 'timeHistory'
+            first_file = pd.read_csv(event_dir / grid_df.iloc[0]["GP_file"], header=0)
+            if first_file.columns[0] == "TH_file":
+                event_type = "timeHistory"
             else:
-                event_type = 'intensityMeasure'
+                event_type = "intensityMeasure"
             event_count = first_file.shape[0]
 
             # collect the list of events and scale factors
@@ -222,7 +227,6 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
 
             # for each neighbor
             for sample_j, nbr in enumerate(nbr_samples):
-
                 # make sure we resample events if samples > event_count
                 event_j = sample_j % event_count
 
@@ -230,27 +234,26 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
                 nbr_index = ind_list[nbr]
 
                 # if the grid has ground motion records...
-                if event_type == 'timeHistory':
-
+                if event_type == "timeHistory":
                     # load the file for the selected grid point
-                    event_collection_file = grid_df.iloc[nbr_index]['GP_file']
-                    event_df = pd.read_csv(event_dir / event_collection_file,
-                                           header=0)
+                    event_collection_file = grid_df.iloc[nbr_index]["GP_file"]
+                    event_df = pd.read_csv(event_dir / event_collection_file, header=0)
 
                     # append the GM record name to the event list
-                    event_list.append(event_df.iloc[event_j,0])
+                    event_list.append(event_df.iloc[event_j, 0])
 
                     # append the scale factor (or 1.0) to the scale list
                     if len(event_df.columns) > 1:
-                        scale_list.append(float(event_df.iloc[event_j,1]))
+                        scale_list.append(float(event_df.iloc[event_j, 1]))
                     else:
                         scale_list.append(1.0)
 
                 # if the grid has intensity measures
-                elif event_type == 'intensityMeasure':
-
+                elif event_type == "intensityMeasure":
                     # save the collection file name and the IM row id
-                    event_list.append(grid_df.iloc[nbr_index]['GP_file']+f'x{event_j}')
+                    event_list.append(
+                        grid_df.iloc[nbr_index]["GP_file"] + f"x{event_j}"
+                    )
 
                     # IM collections are not scaled
                     scale_list.append(1.0)
@@ -259,55 +262,65 @@ def find_neighbors(asset_file, event_grid_file, samples, neighbors, filter_label
         else:
             event_list = []
             for e, i in zip(nbr_samples, ind_list):
-                event_list += [grid_df.iloc[i]['GP_file'],]*e
+                event_list += [
+                    grid_df.iloc[i]["GP_file"],
+                ] * e
 
             scale_list = np.ones(len(event_list))
 
         # prepare a dictionary of events
         event_list_json = []
         for e_i, event in enumerate(event_list):
-            #event_list_json.append({
+            # event_list_json.append({
             #    #"EventClassification": "Earthquake",
             #    "fileName": f'{event}x{e_i:05d}',
             #    "factor": scale_list[e_i],
             #    #"type": event_type
             #    })
-            event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
+            event_list_json.append([f"{event}x{e_i:05d}", scale_list[e_i]])
 
         # save the event dictionary to the AIM
         # TODO: we assume there is only one event
         # handling multiple events will require more sophisticated inputs
 
-        if 'Events' not in asset_data:
-            asset_data['Events'] = [{}]
-        elif len(asset_data['Events'])==0:
-            asset_data['Events'].append({})
+        if "Events" not in asset_data:
+            asset_data["Events"] = [{}]
+        elif len(asset_data["Events"]) == 0:
+            asset_data["Events"].append({})
 
-        asset_data['Events'][0].update({
-            #"EventClassification": "Earthquake",
-            "EventFolderPath": str(event_dir),
-            "Events": event_list_json,
-            "type": event_type
-            #"type": "SimCenterEvents"
-        })
+        asset_data["Events"][0].update(
+            {
+                # "EventClassification": "Earthquake",
+                "EventFolderPath": str(event_dir),
+                "Events": event_list_json,
+                "type": event_type
+                # "type": "SimCenterEvents"
+            }
+        )
 
-        with open(asst_file, 'w') as f:
+        with open(asst_file, "w", encoding="utf-8") as f:
             json.dump(asset_data, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--assetFile')
-    parser.add_argument('--filenameEVENTgrid')
-    parser.add_argument('--samples', type=int)
-    parser.add_argument('--neighbors', type=int)
-    parser.add_argument('--filter_label', default="")
-    parser.add_argument('--doParallel', default="False")    
-    parser.add_argument("-n", "--numP", default='8')
-    parser.add_argument("-m", "--mpiExec", default='mpiexec')
-    parser.add_argument('--seed', type=int, default=None)
+    parser.add_argument("--assetFile")
+    parser.add_argument("--filenameEVENTgrid")
+    parser.add_argument("--samples", type=int)
+    parser.add_argument("--neighbors", type=int)
+    parser.add_argument("--filter_label", default="")
+    parser.add_argument("--doParallel", default="False")
+    parser.add_argument("-n", "--numP", default="8")
+    parser.add_argument("-m", "--mpiExec", default="mpiexec")
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
 
-    find_neighbors(args.assetFile, args.filenameEVENTgrid,
-                   args.samples,args.neighbors, args.filter_label,
-                   args.seed, args.doParallel)
+    find_neighbors(
+        args.assetFile,
+        args.filenameEVENTgrid,
+        args.samples,
+        args.neighbors,
+        args.filter_label,
+        args.seed,
+        args.doParallel,
+    )

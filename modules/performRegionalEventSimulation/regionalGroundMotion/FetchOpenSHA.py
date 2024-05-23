@@ -43,6 +43,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from gmpe import SignificantDurationModel
+import ujson
 
 from java.io import *
 from java.lang import *
@@ -293,17 +294,11 @@ def get_rupture_info_CY2014(erf, source_index, rupture_index, siteList):
     rupList = rupSource.getRuptureList()
     rupSurface = rupList.get(rupture_index).getRuptureSurface()
     if rupList.get(rupture_index).getHypocenterLocation() is None:
-        upperEdge = rupSurface.getEvenlyDiscritizedUpperEdge()
-        upperDepth = []
-        for i in range(upperEdge.size()):
-            upperDepth.append(upperEdge[i].getDepth())
-        upperDepth = np.mean(upperDepth)
-        lowerEdge = rupSurface.getEvenlyDiscritizedLowerEdge()
-        lowerDepth = []
-        for i in range(lowerEdge.size()):
-            lowerDepth.append(lowerEdge[i].getDepth())
-        lowerDepth = np.mean(lowerDepth)    
-        zHyp = (upperDepth + lowerDepth)/2
+        # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/nshmp2/imr/ngaw2/NSHMP14_WUS_CB.java#L242
+        dip = float(rupSurface.getAveDip())
+        width = float(rupSurface.getAveWidth())
+        zTop = float(rupSurface.getAveRupTopDepth())
+        zHyp = zTop + np.sin(dip/180.0*np.pi) * width / 2.0
     else:
         zHyp = rupList.get(rupture_index).getHypocenterLocation().getDepth()
     for i in range(len(siteList)):
@@ -505,13 +500,13 @@ def export_to_json(erf, site_loc, outfile = None, EqName = None, minMag = 0.0, m
     # else:
     #     preview_erf_data = erf_data
     # Output
-    import time
-    startTime = time.process_time_ns()
+    # import time
+    # startTime = time.process_time_ns()
     if outfile is not None:
         print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
         with open(outfile, 'w') as f:
-            json.dump(erf_data, f, indent=2)
-    print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
+            ujson.dump(erf_data, f, indent=2)
+    # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
 
     # del preview_erf_data
     # return

@@ -11,7 +11,7 @@ import argparse, posixpath, ntpath, json
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     
     # load the AIM file
-    with open(AIM_input_path, 'r') as f:
+    with open(AIM_input_path, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
 
     #
@@ -33,7 +33,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'], root_SAM['ApplicationData']['mainScript'])
     print(surrogate_path)
 
-    with open(surrogate_path, 'r') as f:
+    with open(surrogate_path, 'r', encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
     root_EDP = surrogate_model['EDP']
@@ -70,7 +70,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
         },]
     }
     '''
-    with open(EDP_input_path, 'w') as f:
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(root_EDP, f, indent=2)
 
 def create_EDP(AIM_input_path, EDP_input_path, EDP_type):

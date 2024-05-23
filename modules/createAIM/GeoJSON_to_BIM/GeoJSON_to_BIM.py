@@ -10,7 +10,7 @@ def create_building_files(output_file, building_source_file,
             min_id = max_id
             max_id = tmp
 
-    with open(building_source_file, 'r') as f:
+    with open(building_source_file, 'r', encoding="utf-8") as f:
         building_source_list = json.load(f)["features"]
 
     buildings_array = []
@@ -38,12 +38,12 @@ def create_building_files(output_file, building_source_file,
 
         BIM_file_name = "{}-BIM.json".format(bldg_id)
 
-        with open(BIM_file_name, 'w') as f:
+        with open(BIM_file_name, 'w', encoding="utf-8") as f:
             json.dump(BIM_i, f, indent=2)
 
         buildings_array.append(dict(id=str(bldg_id), file=BIM_file_name))
 
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding="utf-8") as f:
         json.dump(buildings_array, f, indent=2)
 
 if __name__ == '__main__':

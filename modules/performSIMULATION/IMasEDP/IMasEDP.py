@@ -47,7 +47,7 @@ from pathlib import Path, PurePath
 def write_RV(EVENT_input_path):
 
     # open the event file and get the list of events
-    with open(EVENT_input_path, 'r') as f:
+    with open(EVENT_input_path, 'r', encoding="utf-8") as f:
         EVENT_in = json.load(f)
 
     # if there is a list of possible events, load all of them
@@ -153,11 +153,11 @@ def write_RV(EVENT_input_path):
 def create_EDP(EVENT_input_path, EDP_input_path):
 
     # load the EDP file
-    with open(EDP_input_path, 'r') as f:
+    with open(EDP_input_path, 'r', encoding="utf-8") as f:
         EDP_in = json.load(f)
 
     # load the EVENT file
-    with open(EVENT_input_path, 'r') as f:
+    with open(EVENT_input_path, 'r', encoding="utf-8") as f:
         EVENT_in = json.load(f)
 
     # store the IM(s) in the EDP file
@@ -166,7 +166,7 @@ def create_EDP(EVENT_input_path, EDP_input_path):
             if edp["type"] in im.keys():
                 edp["scalar_data"] = [im[edp["type"]]]
 
-    with open(EDP_input_path, 'w') as f:
+    with open(EDP_input_path, 'w', encoding="utf-8") as f:
         json.dump(EDP_in, f, indent=2)
 
 if __name__ == '__main__':
