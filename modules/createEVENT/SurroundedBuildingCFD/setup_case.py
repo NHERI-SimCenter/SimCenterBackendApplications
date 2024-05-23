@@ -577,6 +577,7 @@ def write_boundary_data_files(input_json_path, case_path):
     boundary_data = json_data["boundaryConditions"]    
 
     if boundary_data['inletBoundaryCondition']=="TInf":
+        
         geom_data = json_data['GeometricData']
 
         wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
