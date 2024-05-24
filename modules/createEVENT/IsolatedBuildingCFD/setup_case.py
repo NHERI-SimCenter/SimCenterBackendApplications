@@ -1353,55 +1353,57 @@ def write_generated_pressure_probes_file(input_json_path, template_dict_path, ca
     solver_type = ns_data['solverType']
     time_step = ns_data['timeStep']
     adjust_time_step = ns_data['adjustTimeStep']
+    monitor_surface_pressure = rm_data['monitorSurfacePressure']
 
-    generated_sampling_points = rm_data['generatedPressureSamplingPoints']
-    pressure_write_interval = rm_data['pressureWriteInterval']
+    if monitor_surface_pressure:
+        generated_sampling_points = rm_data['generatedPressureSamplingPoints']
+        pressure_write_interval = rm_data['pressureWriteInterval']
 
-    #Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + "/probeTemplate", "r")
+        #Open the template file (OpenFOAM file) for manipulation
+        dict_file = open(template_dict_path + "/probeTemplate", "r")
 
-    dict_lines = dict_file.readlines()
-    dict_file.close()
+        dict_lines = dict_file.readlines()
+        dict_file.close()
 
-    #Write writeControl 
-    start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-    if solver_type=="pimpleFoam" and adjust_time_step:
-        dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
-    else:
-        dict_lines[start_index] = "writeControl \t{};\n".format("timeStep")  
+        #Write writeControl 
+        start_index = foam.find_keyword_line(dict_lines, "writeControl") 
+        if solver_type=="pimpleFoam" and adjust_time_step:
+            dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
+        else:
+            dict_lines[start_index] = "writeControl \t{};\n".format("timeStep")  
 
-    #Write writeInterval
-    start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
-    if solver_type=="pimpleFoam" and adjust_time_step:
-        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(pressure_write_interval*time_step)
-    else:
-        dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
+        #Write writeInterval
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        if solver_type=="pimpleFoam" and adjust_time_step:
+            dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(pressure_write_interval*time_step)
+        else:
+            dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
+            
+        #Write fields to be motored 
+        start_index = foam.find_keyword_line(dict_lines, "fields") 
+        dict_lines[start_index] = "fields \t\t(p);\n"
         
-    #Write fields to be motored 
-    start_index = foam.find_keyword_line(dict_lines, "fields") 
-    dict_lines[start_index] = "fields \t\t(p);\n"
-    
-    start_index = foam.find_keyword_line(dict_lines, "probeLocations") + 2
+        start_index = foam.find_keyword_line(dict_lines, "probeLocations") + 2
 
-    added_part = ""
-    
-    for i in range(len(generated_sampling_points)):
-        added_part += " ({:.6f} {:.6f} {:.6f})\n".format(generated_sampling_points[i][0], generated_sampling_points[i][1], generated_sampling_points[i][2])
-    
-    dict_lines.insert(start_index, added_part)
+        added_part = ""
+        
+        for i in range(len(generated_sampling_points)):
+            added_part += " ({:.6f} {:.6f} {:.6f})\n".format(generated_sampling_points[i][0], generated_sampling_points[i][1], generated_sampling_points[i][2])
+        
+        dict_lines.insert(start_index, added_part)
 
-    #Write edited dict to file
-    write_file_name = case_path + "/system/generatedPressureSamplingPoints"
-    
-    if os.path.exists(write_file_name):
-        os.remove(write_file_name)
-    
-    output_file = open(write_file_name, "w+")
-    for line in dict_lines:
-        output_file.write(line)
+        #Write edited dict to file
+        write_file_name = case_path + "/system/generatedPressureSamplingPoints"
+        
+        if os.path.exists(write_file_name):
+            os.remove(write_file_name)
+        
+        output_file = open(write_file_name, "w+")
+        for line in dict_lines:
+            output_file.write(line)
 
-    output_file.close()
-    
+        output_file.close()
+        
 
 def write_imported_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
@@ -1415,58 +1417,60 @@ def write_imported_pressure_probes_file(input_json_path, template_dict_path, cas
     solver_type = ns_data['solverType']
     time_step = ns_data['timeStep']
     adjust_time_step = ns_data['adjustTimeStep']
+    monitor_surface_pressure = rm_data['monitorSurfacePressure']
 
-    imported_sampling_points = rm_data['importedPressureSamplingPoints']
-    pressure_write_interval = rm_data['pressureWriteInterval']
+    if monitor_surface_pressure:
+        imported_sampling_points = rm_data['importedPressureSamplingPoints']
+        pressure_write_interval = rm_data['pressureWriteInterval']
 
-    #Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + "/probeTemplate", "r")
+        #Open the template file (OpenFOAM file) for manipulation
+        dict_file = open(template_dict_path + "/probeTemplate", "r")
 
-    dict_lines = dict_file.readlines()
-    dict_file.close()
-    
-    #Write writeInterval 
-    start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
-    dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
-    
-    #Write writeControl 
-    start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-    if solver_type=="pimpleFoam" and adjust_time_step:
-        dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
-    else:
-        dict_lines[start_index] = "writeControl \t{};\n".format("timeStep")  
-
-    #Write writeInterval
-    start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
-    if solver_type=="pimpleFoam" and adjust_time_step:
-        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(pressure_write_interval*time_step)
-    else:
+        dict_lines = dict_file.readlines()
+        dict_file.close()
+        
+        #Write writeInterval 
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval") 
         dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
+        
+        #Write writeControl 
+        start_index = foam.find_keyword_line(dict_lines, "writeControl") 
+        if solver_type=="pimpleFoam" and adjust_time_step:
+            dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
+        else:
+            dict_lines[start_index] = "writeControl \t{};\n".format("timeStep")  
 
-    #Write fields to be motored 
-    start_index = foam.find_keyword_line(dict_lines, "fields") 
-    dict_lines[start_index] = "fields \t\t(p);\n"
-    
-    start_index = foam.find_keyword_line(dict_lines, "probeLocations") + 2
+        #Write writeInterval
+        start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
+        if solver_type=="pimpleFoam" and adjust_time_step:
+            dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(pressure_write_interval*time_step)
+        else:
+            dict_lines[start_index] = "writeInterval \t{};\n".format(pressure_write_interval)
 
-    added_part = ""
-    
-    for i in range(len(imported_sampling_points)):
-        added_part += " ({:.6f} {:.6f} {:.6f})\n".format(imported_sampling_points[i][0], imported_sampling_points[i][1], imported_sampling_points[i][2])
-    
-    dict_lines.insert(start_index, added_part)
+        #Write fields to be motored 
+        start_index = foam.find_keyword_line(dict_lines, "fields") 
+        dict_lines[start_index] = "fields \t\t(p);\n"
+        
+        start_index = foam.find_keyword_line(dict_lines, "probeLocations") + 2
 
-    #Write edited dict to file
-    write_file_name = case_path + "/system/importedPressureSamplingPoints"
-    
-    if os.path.exists(write_file_name):
-        os.remove(write_file_name)
-    
-    output_file = open(write_file_name, "w+")
-    for line in dict_lines:
-        output_file.write(line)
-    
-    output_file.close()
+        added_part = ""
+        
+        for i in range(len(imported_sampling_points)):
+            added_part += " ({:.6f} {:.6f} {:.6f})\n".format(imported_sampling_points[i][0], imported_sampling_points[i][1], imported_sampling_points[i][2])
+        
+        dict_lines.insert(start_index, added_part)
+
+        #Write edited dict to file
+        write_file_name = case_path + "/system/importedPressureSamplingPoints"
+        
+        if os.path.exists(write_file_name):
+            os.remove(write_file_name)
+        
+        output_file = open(write_file_name, "w+")
+        for line in dict_lines:
+            output_file.write(line)
+        
+        output_file.close()
 
   
 def write_base_forces_file(input_json_path, template_dict_path, case_path):
