@@ -63,7 +63,7 @@ def runSWhale(inputs,
               force_cleanup = False) :
 
     # update the runDir, if needed
-    #    with open(input_file, 'r') as f:
+    #    with open(input_file, 'r', encoding="utf-8") as f:
     #        inputs = json.load(f)
     #    runDir = inputs['runDir']
     #
@@ -99,8 +99,6 @@ def runSWhale(inputs,
         #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
         WF.init_simdir(assetID, assetAIM)
 
-        #Delete the origional AIM and use the templatedir/AIM from here
-
         # prepare the input files for the simulation
         WF.preprocess_inputs(prep_app_sequence, assetAIM, assetID, asset_type)
         
@@ -130,7 +128,10 @@ def runSWhale(inputs,
                                 asset_type = asset_type,
                                 input_file = inputs,
                                 copy_resources=copy_resources)
-
+    
+    #When used in rWhale, delete the origional AIM since it is the same with asset_id/templatedir/AIM
+    if assetAIM != 'AIM.json':
+            os.remove(assetAIM)
     if force_cleanup:
         #clean up intermediate files from the simulation
         WF.cleanup_simdir(assetID)
@@ -143,7 +144,7 @@ def runSWhale(inputs,
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
 
     # update the runDir, if needed
-    with open(input_file, 'r') as f:
+    with open(input_file, 'r', encoding="utf-8") as f:
         inputs = json.load(f)
     runDir = inputs['runDir']
 

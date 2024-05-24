@@ -21,18 +21,35 @@ def main(args):
     #Otherwise, Run Opensees 
     if "--getRV" in args:
         getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, simName)
-        subprocess.Popen(getUncertaintyCommand, shell=True).wait()
+        exit_code = subprocess.Popen(getUncertaintyCommand, shell=True).wait()
+        #if not exit_code==0:
+        #    exit(exit_code)
     else:
         #Run preprocessor
         preprocessorCommand = '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(scriptDir, aimName, samName, evtName, edpName, simName)
-        subprocess.Popen(preprocessorCommand, shell=True).wait()        
+        exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()   
+        #if not exit_code==0:
+        #    exit(exit_code)
 
         #Run OpenSees
-        subprocess.Popen("OpenSees example.tcl >> ops.out 2>&1", shell=True).wait()
+        exit_code = subprocess.Popen("OpenSees example.tcl >> workflow.err 2>&1", shell=True).wait()
+        
+        #if os.path.isfile("./workflow.err"):
+        #    with open("./workflow.err", 'r') as file:   
+        #        lines = file.readlines()
+        #        # Iterate through each line
+        #        for line in lines:
+        #            # Check if the keyword exists in the line
+        #            if "error" in line.lower():
+        #                exit_code = -1
+        #                exit(exit_code)
 
         #Run postprocessor
         postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(scriptDir, aimName, samName, evtName, edpName)
-        subprocess.Popen(postprocessorCommand, shell=True).wait()
+        exit_code = subprocess.Popen(postprocessorCommand, shell=True).wait()
+        #if not exit_code==0:
+        #    exit(exit_code)
+
 
 if __name__ == '__main__':
 

@@ -284,10 +284,10 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
                     if cur_param in ['Longitude', 'Latitude', 'Vs30', 'DepthToRock', 'z1p0', 
                                      'z2p5', 'Model', 'Su_rat', 'Den', 'h/G', 'm', 'h0', 'chi']:
                         user_param_list.pop(user_param_list.index(cur_param))
-
+    ground_failure_input_keys = set()
     for ind in tqdm(range(selected_stn.shape[0]), desc='Stations'):
         stn = selected_stn.iloc[ind,:]
-        stn_id = stn.index
+        stn_id = selected_stn.index[ind]
     # for stn_id, stn in selected_stn.iterrows():
         # Creating a Station object
         STN.append(Station(
@@ -364,12 +364,17 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
             if stn.get('vsInferred') not in [0, 1]:
                 sys.exit("CreateStation: Only '0' or '1' can be assigned to the"+
                          " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true." )
-            print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+
-                " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")
+            # print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+
+            #     " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")
             tmp.update({'vsInferred': stn.get('vsInferred')})
         else:
             tmp.update({'vsInferred': (1 if vs30Config['Parameters']['vsInferred'] else 0) })
-        
+        for key in ['liqSusc', 'gwDepth', 'distWater', 'distCoast', 'distRiver',\
+                    'precipitation']:
+            if stn.get(key, None) is not None:
+                tmp.update({key:stn.get(key)})
+                ground_failure_input_keys.add(key)
+            
 
 
         stn_file['Stations'].append(tmp)
@@ -382,7 +387,7 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
         #})
     # Saving data to the output file
     df_csv = {
-                'ID': [id for id, _ in enumerate(stn_file['Stations'])],
+                'ID': [x['ID'] for x in stn_file['Stations']],
                 'lon': [x['Longitude'] for x in stn_file['Stations']],
                 'lat': [x['Latitude'] for x in stn_file['Stations']],
                 'vs30': [x.get('Vs30',760) for x in stn_file['Stations']],
@@ -393,6 +398,8 @@ def create_stations(input_file, output_file, filterIDs, vs30Config, z1Config, z2
                 # 'DepthToRock': [x.get('DepthToRock',0) for x in stn_file['Stations']]
             }
             # no backarc by default
+    for key in ground_failure_input_keys:
+        df_csv.update({key:[x[key] for x in stn_file['Stations']]}) 
     if stn_file['Stations'][0].get('backarc',None):
         df_csv.update({
             'backarc': [x.get('backarc') for x in stn_file['Stations']]

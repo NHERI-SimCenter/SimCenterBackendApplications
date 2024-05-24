@@ -1,0 +1,15 @@
+<RCC>
+  <qresource prefix="resources">
+    <file>resources/both_logos.jpg</file>
+    <file>resources/us_nsf.jpg</file>
+    <file>resources/UDPrimaryLogo2945web.jpg</file>
+    <file>resources/first_damage.png</file>
+    <file>resources/node_A.png</file>
+    <file>resources/node_B.png</file>
+    <file>resources/node_C.png</file>
+    <file>resources/node_D.png</file>
+    <file>resources/node_E.png</file>
+    <file>resources/node_F.png</file>
+    <file>resources/second_damage.png</file>
+  </qresource>
+</RCC>

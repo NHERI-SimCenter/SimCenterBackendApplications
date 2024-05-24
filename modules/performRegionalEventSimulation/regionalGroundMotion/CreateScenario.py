@@ -261,8 +261,9 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     maf_list_n = [-x for x in rups_df['MeanAnnualRate']]
     sort_ids = np.argsort(maf_list_n)
     rups_df = rups_df.iloc[sort_ids]
+    rups_df.reset_index(drop=True, inplace=True)
     # rups_df = rups_df = rups_df.sort_values(['MeanAnnualRate'], ascending = (False))
-    rups_df = rups_df.iloc[rups_to_run,:]
+    rups_df = rups_df.loc[rups_to_run,:]
     scenario_data = {}
     for ind in rups_df.index:
         src_id = int(rups_df.loc[ind,"rups_srcId"])

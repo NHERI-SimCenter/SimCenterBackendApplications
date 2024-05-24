@@ -13,7 +13,7 @@ def main(args):
 
     RFflag = False
 
-    with open(srtName) as json_file:
+    with open(srtName, 'r', encoding='utf-8') as json_file:
         data = json.load(json_file)
 
     for material in data["Events"][0]["materials"]:

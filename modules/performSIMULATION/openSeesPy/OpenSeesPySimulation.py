@@ -83,12 +83,12 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     sys.path.insert(0, os.getcwd())
 
     # load the model builder script
-    with open(BIM_input_path, 'r') as f:
+    with open(BIM_input_path, 'r', encoding="utf-8") as f:
         BIM_in = json.load(f)
 
     model_params = BIM_in['GeneralInformation']
 
-    with open(SAM_input_path, 'r') as f:
+    with open(SAM_input_path, 'r', encoding="utf-8") as f:
         SAM_in = json.load(f)
 
     sys.path.insert(0, SAM_in['modelPath'])
@@ -110,7 +110,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     build_model(model_params=model_params)
 
     # load the event file
-    with open(EVENT_input_path, 'r') as f:
+    with open(EVENT_input_path, 'r', encoding="utf-8") as f:
         EVENT_in = json.load(f)['Events'][0]
 
     event_list = EVENT_in['timeSeries']
@@ -142,7 +142,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
     # create the EDP specification
 
     # load the EDP file
-    with open(EDP_input_path, 'r') as f:
+    with open(EDP_input_path, 'r', encoding="utf-8") as f:
         EDP_in = json.load(f)
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
@@ -202,7 +202,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path,
         response['scalar_data'] = edp # [val for dof, val in edp.items()]
         #print(response)
 
-    with open(EDP_input_path, 'w') as f:
+    with open(EDP_input_path, 'w', encoding="utf-8") as f:
         json.dump(EDP_in, f, indent=2)
 
     log_msg('Simulation script finished.')

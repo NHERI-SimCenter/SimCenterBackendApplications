@@ -120,7 +120,7 @@ class GM_Selector:
 
 
 def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
-                         output_dir, output_file, stations):
+                         output_dir, output_file, stations, eq_ids):
 
     # Loading gmdb
     if gmdb_file == 'PEER NGA West 2':
@@ -160,10 +160,11 @@ def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
                 gmdb_im_dict.update({cur_im:[x[0] for x in gmdb.iloc[:, im_loc_tag].values.tolist()]})
         # ground motion database intensity measure data frame
         gmdb_im_df = pd.DataFrame.from_dict(gmdb_im_dict)
-        tmp_scen = 0
+        count = 0
         # Looping over all scenarios
         for cur_target in target_ln_im:
-            tmp_scen = tmp_scen + 1
+            tmp_scen = eq_ids[count] + 1
+            count = count + 1
             print('-Scenario #'+str(tmp_scen))
             num_stations, num_periods, num_simu = cur_target.shape
             tmp_id = np.zeros((num_stations, num_simu))
@@ -213,7 +214,7 @@ def select_ground_motion(im_list, target_ln_im, gmdb_file, sf_max, sf_min,
     df.to_csv(os.path.join(output_dir, output_file), index = False)
     for cur_scen in range(len(gm_id)):
         if len(gm_id) > 1:
-            cur_scen_folder = 'scenario'+str(cur_scen+1)
+            cur_scen_folder = 'scenario'+str(eq_ids[cur_scen]+1)
             try:
                 os.mkdir(os.path.join(output_dir, cur_scen_folder))
             except:

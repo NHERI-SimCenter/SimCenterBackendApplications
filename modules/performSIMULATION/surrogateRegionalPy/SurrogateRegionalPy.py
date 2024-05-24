@@ -59,11 +59,11 @@ def main(aimName,samName, evtName,
     # Find the GI and SAM files
     #
 
-    with open(aimName, 'r') as f:
+    with open(aimName, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
         GI = root_AIM['GeneralInformation']     
 
-    with open(samName, 'r') as f:
+    with open(samName, 'r', encoding='utf-8') as f:
         SAM = json.load(f)
 
     #
@@ -109,7 +109,7 @@ def runDefault(root_AIM, aimName,samName, evtName, edpName, simName, getRV=False
         currentDir = os.getcwd()
         newAimName = os.path.join(currentDir,os.path.basename(aimName))
         
-        with open(newAimName, 'w') as f:
+        with open(newAimName, 'w', encoding='utf-8') as f:
             json_object = json.dumps(root_AIM)
             f.write(json_object)
         #
@@ -117,7 +117,7 @@ def runDefault(root_AIM, aimName,samName, evtName, edpName, simName, getRV=False
         #
         s=[os.path.dirname( __file__ ),'..','..','Workflow','WorkflowApplications.json']
         workflowAppJsonPath = os.path.join(*s)
-        with open(workflowAppJsonPath) as f:
+        with open(workflowAppJsonPath, 'r', encoding='utf-8') as f:
             workflowAppDict = json.load(f)
             appList = workflowAppDict["SimulationApplications"]["Applications"]
             myApp = next(item for item in appList if item["Name"] == mySimAppName)
@@ -225,7 +225,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
 
         s=[os.path.dirname( __file__ ),'..','..','Workflow','WorkflowApplications.json']
         workflowAppJsonPath = os.path.join(*s)
-        with open(workflowAppJsonPath) as f:
+        with open(workflowAppJsonPath, 'r', encoding='utf-8') as f:
             workflowAppDict = json.load(f)
             appList = workflowAppDict["SimulationApplications"]["Applications"]
             simAppName = "SurrogateSimulation"
@@ -244,7 +244,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
         
         currentDir = os.getcwd()
         newAimName = os.path.join(currentDir,os.path.basename(aimName))
-        with open(newAimName, 'w') as f:
+        with open(newAimName, 'w', encoding='utf-8') as f:
             json_object = json.dumps(root_AIM)
             f.write(json_object)
 

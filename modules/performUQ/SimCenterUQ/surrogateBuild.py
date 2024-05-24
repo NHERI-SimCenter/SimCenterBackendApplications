@@ -86,6 +86,9 @@ except:
     error_tag = True
     print("Failed to import module:" + moduleName)
 
+errFileName = 'dakota.err'
+sys.stderr = open(errFileName, 'w')
+
 
 #
 # Modify GPy package
@@ -184,13 +187,15 @@ class surrogate(UQengine):
             self.exit(msg)
 
     def readJson(self):
+        #self.nopt = max([20, self.n_processor])
+        self.nopt = 1
 
         try:
             jsonPath = self.inputFile # for EEUQ
             if not os.path.isabs(jsonPath):
                 jsonPath = self.work_dir + "/templatedir/" + self.inputFile # for quoFEM
 
-            with open(jsonPath) as f:
+            with open(jsonPath, 'r', encoding='utf-8') as f:
                 dakotaJson = json.load(f)
 
         except ValueError:
@@ -587,7 +592,7 @@ class surrogate(UQengine):
             )
 
             for i in range(y_dim):
-                m_tmp = GPyMultiOutputWrapper(emf.models.GPyLinearMultiFidelityModel(X_list, Y_list, kernel=kr.copy(), n_fidelities=2),2,n_optimization_restarts=15,)
+                m_tmp = GPyMultiOutputWrapper(emf.models.GPyLinearMultiFidelityModel(X_list, Y_list, kernel=kr.copy(), n_fidelities=2),2,n_optimization_restarts=self.nopt,)
 
         return m_tmp
 
@@ -833,7 +838,7 @@ class surrogate(UQengine):
                     # TODO change the kernel
 
         m_var.optimize(max_f_eval=1000)
-        m_var.optimize_restarts(20, parallel=False, num_processes=self.n_processor,verbose=False)
+        m_var.optimize_restarts(self.nopt, parallel=True, num_processes=self.n_processor,verbose=False)
         print(m_var)
 
         log_var_pred, dum = m_var.predict(X_new)
@@ -882,7 +887,7 @@ class surrogate(UQengine):
 
         #m_mean.optimize(messages=True, max_f_eval=1000)
         #m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
-        m_mean.optimize_restarts(20, parallel=False, num_processes=self.n_processor,
+        m_mean.optimize_restarts(self.nopt, parallel=True, num_processes=self.n_processor,
                                  verbose=True)  # First calibrate parameters
 
        # m_mean.optimize(messages=True, max_f_eval=1000)
@@ -913,7 +918,7 @@ class surrogate(UQengine):
         warnings.filterwarnings("ignore")
         t_opt = time.time()
         nugget_opt_tmp = self.nugget_opt
-        nopt =max([20, self.n_processor])
+        nopt =self.nopt
 
         parallel_calib = False
         # parallel_calib = self.do_parallel
@@ -1879,19 +1884,19 @@ class surrogate(UQengine):
             # read SAM.json
             SAMpath = self.work_dir + "/templatedir/SAM.json"
             try:
-                with open(SAMpath) as f:
+                with open(SAMpath, 'r', encoding='utf-8') as f:
                     SAMjson = json.load(f)
             except Exception as e:
-                with open(SAMpath+".sc") as f:
+                with open(SAMpath+".sc", 'r', encoding='utf-8') as f:
                     SAMjson = json.load(f)
 
             EDPpath = self.work_dir + "/templatedir/EDP.json"
-            with open(EDPpath) as f:
+            with open(EDPpath, 'r', encoding='utf-8') as f:
                 EDPjson = json.load(f)
             results["SAM"] = SAMjson
             results["EDP"] = EDPjson
 
-        with open(self.work_dir + "/dakota.out", "w") as fp:
+        with open(self.work_dir + "/dakota.out", "w", encoding='utf-8') as fp:
             json.dump(results, fp, indent=1)
 
         with open(self.work_dir + "/GPresults.out", "w") as file:
@@ -2987,7 +2992,7 @@ def calibrating(m_tmp, nugget_opt_tmp, nuggetVal, normVar, do_mf, do_heterosceda
         #n=0;
         if not do_mf:
             
-            m_tmp.optimize_restarts(num_restarts=nopt, parallel=False, num_processes=n_processor,verbose=True)
+            m_tmp.optimize_restarts(num_restarts=nopt, parallel=True, num_processes=n_processor,verbose=True)
         else:
             m_tmp.gpy_model.optimize_restarts(num_restarts=nopt, parallel=True, num_processes=n_processor,verbose=False)
         print(m_tmp)
@@ -3055,10 +3060,9 @@ def read_txt(text_dir, exit_fun):
 
 
 if __name__ == "__main__":
-    errFileName = 'dakota.err'
-    sys.stderr = open(errFileName, 'w')
     main(sys.argv)
 
+    sys.stderr.close()
 
     
     # try:

@@ -84,7 +84,7 @@ def create_event(asset_file, event_grid_file, doParallel):
     X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
     
     # load the asset data file
-    with open(asset_file, 'r') as f:
+    with open(asset_file, 'r', encoding="utf-8") as f:
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
@@ -95,7 +95,7 @@ def create_event(asset_file, event_grid_file, doParallel):
 
         if runParallel == False or (i % numP) == procID:
 
-            with open(asset['file'], 'r') as f:
+            with open(asset['file'], 'r', encoding="utf-8") as f:
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
@@ -134,7 +134,7 @@ def create_event(asset_file, event_grid_file, doParallel):
         # open the AIM file
         asset_file = AIM_df.iloc[AIM_id]['file']
        
-        with open(asset_file, 'r') as f:
+        with open(asset_file, 'r', encoding="utf-8") as f:
             asset_data = json.load(f)
 
         # this is the preferred behavior, the else caluse is left for legacy inputs
@@ -222,7 +222,7 @@ def create_event(asset_file, event_grid_file, doParallel):
             #"type": "SimCenterEvents"                                          
         }
         
-        with open(asset_file, 'w') as f:
+        with open(asset_file, 'w', encoding="utf-8") as f:
             json.dump(asset_data, f, indent=2)
 
 if __name__ == '__main__':

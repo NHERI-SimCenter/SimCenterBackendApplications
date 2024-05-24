@@ -26,7 +26,7 @@ scriptDir = os.path.dirname(os.path.realpath(__file__))
 
 def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
 
-    file = open(windFileOutName,"w");
+    file = open(windFileOutName,"w", encoding='utf-8');
     file.write("{\n");
 
     mat_contents = sio.loadmat(matFileIn);

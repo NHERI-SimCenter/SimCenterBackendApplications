@@ -14,7 +14,7 @@ from stl import mesh
 def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
@@ -133,7 +133,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 
 def write_building_stl_file(input_json_path, case_path):    
     #Read JSON data    
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
       
     geom_data = json_data['GeometricData']
@@ -231,7 +231,7 @@ def write_building_stl_file(input_json_path, case_path):
 def import_building_stl_file(input_json_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     if json_data["GeometricData"]["buildingShape"] == "Simple":
@@ -272,7 +272,7 @@ def import_building_stl_file(input_json_path, case_path):
     json_object = json.dumps(stl_summary, indent=4)
     
     # Writing to sample.json
-    with open(input_json_path + "/stlGeometrySummary.json", "w") as outfile:
+    with open(input_json_path + "/stlGeometrySummary.json", "w", encoding='utf-8') as outfile:
         outfile.write(json_object)
     
     #Translate the bottom center to origin
@@ -295,7 +295,7 @@ def import_building_stl_file(input_json_path, case_path):
 def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
     
   #Read JSON data    
-  with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+  with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
       json_data =  json.load(json_file)
     
   # Returns JSON object as a dictionary
@@ -328,7 +328,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
 def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
       
     # Returns JSON object as a dictionary
@@ -540,7 +540,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 def write_U_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data    
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -660,8 +660,8 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     if os.path.exists(write_file_name):
         os.remove(write_file_name)
     
-    output_file = open(write_file_name, "w+")
-    
+    output_file = open(write_file_name, "w+", encoding='utf-8')
+
     for line in dict_lines:
         output_file.write(line)
     
@@ -670,7 +670,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 def write_p_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -767,7 +767,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 def write_nut_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -897,7 +897,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 def write_epsilon_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1045,7 +1045,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 def write_k_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1184,7 +1184,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1289,7 +1289,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1344,7 +1344,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
 def write_generated_pressure_probes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data = json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1476,7 +1476,7 @@ def write_imported_pressure_probes_file(input_json_path, template_dict_path, cas
 def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     air_density = 1.0
@@ -1528,7 +1528,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 def write_story_forces_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     air_density = 1.0
@@ -1589,7 +1589,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):
 def write_momentumTransport_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1643,7 +1643,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 def write_physicalProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1676,7 +1676,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 def write_transportProperties_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary
@@ -1709,7 +1709,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
 
     #Read JSON data
-    with open(input_json_path + "/IsolatedBuildingCFD.json") as json_file:
+    with open(input_json_path + "/IsolatedBuildingCFD.json", 'r', encoding='utf-8') as json_file:
         json_data =  json.load(json_file)
 
     # Returns JSON object as a dictionary

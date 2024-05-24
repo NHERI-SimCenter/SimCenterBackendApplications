@@ -28,7 +28,7 @@ def computeScenario(gmConfig, location):
 
     #Adding the required output
     gmConfig["IntensityMeasure"]["EnableJsonOutput"] = True
-    with open("./HazardWorkDir/Hazard_Scenario.json", 'w') as hazardFile:
+    with open("./HazardWorkDir/Hazard_Scenario.json", 'w', encoding='utf-8') as hazardFile:
         json.dump(gmConfig, hazardFile,  indent=4)
     
     #Now we need to run the EQHazard Process
@@ -43,7 +43,7 @@ def computeScenario(gmConfig, location):
     #First we create a simulation config
     simConfig = {"GroundMotions": {"File": "./HazardWorkDir/Hazard_Output.json"}, "NumSimulations": 1, "SpatialCorrelation": True}
 
-    with open("./HazardWorkDir/Sim_Config.json", 'w') as simConfigFile:
+    with open("./HazardWorkDir/Sim_Config.json", 'w', encoding='utf-8') as simConfigFile:
         json.dump(simConfig, simConfigFile,  indent=4)
     simulateCommand = [simulateIMPath, "./HazardWorkDir/Sim_Config.json", "./HazardWorkDir/Hazard_Sim.json"]
     simResult = subprocess.call(simulateCommand)
@@ -56,7 +56,7 @@ def computeScenario(gmConfig, location):
     #
     selectionConfig["Target"]["File"] = "./HazardWorkDir/Hazard_Sim.json"
     selectionConfig["Database"]["File"] = recordDatabasePath
-    with open("./HazardWorkDir/Selection_Config.json", 'w') as selectionConfigFile:
+    with open("./HazardWorkDir/Selection_Config.json", 'w', encoding='utf-8') as selectionConfigFile:
         json.dump(selectionConfig, selectionConfigFile,  indent=4)
     selectionCommand = [selectRecordPath, "./HazardWorkDir/Selection_Config.json", "./HazardWorkDir/Records_Selection.json"]
     simResult = subprocess.call(selectionCommand)
@@ -134,7 +134,7 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):
     eventsDict["Events"] = [event]
     eventsDict["RandomVariables"] = []
 
-    with open(eventFilePath, 'w') as eventFile:
+    with open(eventFilePath, 'w', encoding='utf-8') as eventFile:
         json.dump(eventsDict, eventFile,  indent=4)
 
 
@@ -155,7 +155,7 @@ def main():
     if not os.path.exists("./HazardWorkDir"):
         os.mkdir("./HazardWorkDir")
 
-    with open(bimFilePath, 'r') as bimFile:
+    with open(bimFilePath, 'r', encoding='utf-8') as bimFile:
         bim = json.load(bimFile)
         location = [bim["GeneralInformation"]["location"]["latitude"], bim["GeneralInformation"]["location"]["longitude"]]
     
