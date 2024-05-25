@@ -1,9 +1,28 @@
+#!/usr/bin/env python3
+
 """
 Plot the JONSWAP spectrum for a given sea state
 """
+
+from __future__ import print_function
 import numpy as np
-from welib.hydro.spectra import jonswap
+import pandas as pd
 import matplotlib.pyplot as plt
+from fractions import Fraction
+import matplotlib as mpl
+import os, sys
+import re
+import json
+import argparse
+
+# Local 
+from welib.tools.figure import defaultRC; defaultRC();
+from welib.tools.colors import python_colors
+from welib.hydro.wavekin import *
+from welib.hydro.morison import *
+from welib.hydro.spectra import jonswap
+
+
 
 # --- Parameters
 t  = np.arange(0,3600.1,1)    # time vector  [s]
@@ -32,11 +51,13 @@ ax.set_xlabel('Frequency [Hz]')
 ax.set_ylabel(r'Spectral density [m^2 s]')
 ax.set_title('Hydro - Jonswap spectrum')
 ax.tick_params(direction='in')
+# fig.savefig('JonswapSpectrum.png')
+# fig.savefig('JonswapSpectrum.webp')
 
-plt.show()
+# plt.show()
 
 if __name__=="__main__":
-    plt.show()
+    fig.show()
 if __name__=="__test__":
     np.testing.assert_almost_equal(S[iMax], 113.8770176)
 if __name__=="__export__":

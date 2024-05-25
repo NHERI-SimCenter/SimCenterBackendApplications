@@ -1,13 +1,27 @@
+#!/usr/bin/env python3
+
 """
 Plot the wave kinematics (elevation, velocity, acceleration) for linear waves
 Different locations, times and superposition of frequencies can be used.
 """
+from __future__ import print_function
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from fractions import Fraction
+import matplotlib as mpl
+import os, sys
+import re
+import json
+import argparse
+
+# Local 
 from welib.tools.figure import defaultRC; defaultRC();
 from welib.tools.colors import python_colors
 from welib.hydro.wavekin import elevation2d, wavenumber, kinematics2d
-
+from welib.hydro.wavekin import *
+from welib.hydro.morison import *
+    
 
 fig,axes = plt.subplots(2, 2, sharey=False, figsize=(6.4,4.8)) # (6.4,4.8)
 fig.subplots_adjust(left=0.10, right=0.95, top=0.91, bottom=0.09, hspace=0.29, wspace=0.46)
@@ -110,13 +124,20 @@ ax.legend(fontsize=8, loc='lower center', ncol=2)
 ax.set_ylim([-8,8])
 ax.tick_params(direction='in')
 
-plt.show()
+
+# fig.savefig('WaveKinematics.png')
+# fig.savefig('WaveKinematics.webp')
+
+
+# plt.show()
 
 
 if __name__=="__main__":
-    plt.show()
+    fig.show()
+    
 if __name__=="__test__":
     pass
 if __name__=="__export__":
+    # fig.close()
     from welib.tools.repo import export_figs_callback
     export_figs_callback(__file__)
