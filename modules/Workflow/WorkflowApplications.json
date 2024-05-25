@@ -502,7 +502,13 @@
         },
       {
         "Name": "IsolatedBuildingCFD",
-        "ExecutablePath": "applications/createEVENT/isolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ExecutablePath": "applications/createEVENT/IsolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },
+      {
+        "Name": "SurroundedBuildingCFD",
+        "ExecutablePath": "applications/createEVENT/SurroundedBuildingCFD/SurroundedBuildingCFD.py",
         "ApplicationSpecificInputs":[
         ]
       },
