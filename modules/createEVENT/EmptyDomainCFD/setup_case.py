@@ -883,7 +883,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     # Need to change this for      
     max_delta_t = 10*time_step
     
-    write_interval = 1000
+    #Write 10 times
+    write_frequency = 10.0
+    write_interval_time = duration/write_frequency 
+    write_interval_count = int(write_interval_time/time_step)
     purge_write =  3
     
     #Open the template file (OpenFOAM file) for manipulation
@@ -918,9 +921,9 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     #Write writeInterval  
     start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
     if solver_type=="pimpleFoam" and adjust_time_step:
-        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval*time_step)
+        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval_time)
     else:
-        dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
+        dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval_count)
 
     #Write maxCo  
     start_index = foam.find_keyword_line(dict_lines, "maxCo") 
