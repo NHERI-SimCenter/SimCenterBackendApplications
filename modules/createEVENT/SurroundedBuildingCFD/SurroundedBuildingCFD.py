@@ -47,7 +47,7 @@ def writeEVENT(forces, eventFilePath):
     patternsArray = []
     windEventJson = {
         "type" : "Wind",
-        "subtype": "IsolatedBuildingCFD",
+        "subtype": "SurroundedBuildingCFD",
         "pattern": patternsArray,
         "pressure": [],
         "numSteps": len(forces[0].X),
