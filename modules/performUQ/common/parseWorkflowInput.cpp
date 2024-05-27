@@ -345,6 +345,7 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
       }
 
       if (intSet == true) {
+	
 	struct discreteUncertainIntegerSetRV theRV;
 
 	theRandomVariables.theNames.insert(rvName);
@@ -386,17 +387,20 @@ parseInputForRV(json_t *root, struct randomVariables &theRandomVariables){
 	theRV.name = rvName;
 
 	json_t *elementsSet =  json_object_get(fileRandomVariable, "Values");
-	json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");	
+	json_t *weightsSet =  json_object_get(fileRandomVariable, "Weights");
+	 
 	if (elementsSet != NULL && weightsSet != NULL) {
+
+	  std::list<double> theValues;	  
 	  
-	  std::list<double> theValues;
 	  int numValues = json_array_size(elementsSet);
 	  for (int j=0; j<numValues; j++) {
 	    json_t *element = json_array_get(elementsSet, j);
-	    int value = json_real_value(element);
+	    char *json_string1 = json_dumps(element, JSON_INDENT(4));
+	    double value = json_number_value(element);
 	    theValues.push_back(value);
           }
-	  theRV.elements = theValues;
+	  theRV.elements = theValues;	  
 	  
 	  std::list<double> theWeights;
 	  int numWeights = json_array_size(weightsSet);

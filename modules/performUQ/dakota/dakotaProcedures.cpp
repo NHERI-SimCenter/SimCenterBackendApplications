@@ -259,11 +259,9 @@ writeRV(std::ostream &dakotaFile, struct randomVariables &theRandomVariables, st
     int numDiscreteString = theRandomVariables.discreteDesignSetRVs.size();
     int numDiscreteReal = theRandomVariables.discreteUncertainRealSetRVs.size();
 
+    // std::cerr << "DISCRETE: numInt: "  << numDiscreteInt << " numReal: " << numDiscreteReal << "\n";
+    
     if (numDiscreteInt != 0 || numDiscreteReal != 0 || numDiscreteString != 0) {
-      
-      if (numDiscreteReal != 0) {
-
-      }
       
       dakotaFile << "  discrete_uncertain_set";
       
