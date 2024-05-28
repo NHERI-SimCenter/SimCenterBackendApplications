@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-# jb - Above specifies the python interpreter to use, and is a portable way to specify the python version
-#      Relevant when calling scripts in a shell sub-process, may affect path resolution and environment variables
-# Note: Sometimes windows 10 struggles with evaluating the shebang (registry issue, or python launcher)
-#       Can try #!/usr/bin/env python in that case, or use the full path to the python interpreter
-
-
 import sys
 import os
 import subprocess
@@ -25,8 +19,6 @@ def main(args):
     aimName = os.path.basename(aimName)
     scriptDir = os.path.dirname(os.path.realpath(__file__))
 
-    # Use pathlib instead of os.path for portability? - jb
-    # might want to check use of backslashes in paths as there may be raw string requirements for windows 
     # aimName = Path(args[1]).name
     # scriptDir = Path(__file__).resolve().parent
 
@@ -48,10 +40,8 @@ def main(args):
 
         #Run OpenSees
         exit_code = subprocess.Popen("OpenSees example.tcl >> workflow.err 2>&1", shell=True).wait()
-        # Maybe better for compatibility, need to doublecheck the pipe behavior - jb
+        # Maybe better for compatibility, need to doublecheck - jb
         #exit_code = subprocess.run("OpenSees example.tcl >> workflow.err 2>&1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode 
-        # portability issue: the above may not be reliable on windows
-        # openSeesCommand = '"OpenSees example.tcl >> workflow.err 2>&1"'
         
         #if os.path.isfile("./workflow.err"):
         #    with open("./workflow.err", 'r') as file:   
