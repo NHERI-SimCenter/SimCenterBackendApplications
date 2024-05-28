@@ -110,7 +110,7 @@ axes1[1,3].set_xlabel('Inline force [kN/m]')
 
 fig1.savefig('forces.png')
 # fig1.savefig('forces.webp')
-fig1.show()
+# fig1.show()
 
 axes2[0,0].set_xlim(XLIMM)
 axes2[0,0].set_ylim([-h,a+1])
@@ -123,11 +123,11 @@ axes2[1,3].set_xlabel('Inline moment [kNm/m]')
 
 fig2.savefig('moments.png')
 # fig2.savefig('moments.webp')
-fig2.show()
+# fig2.show()
 # --------------------------------------------------------------------------------}
 # --- Integrated force and sea bed moment over a period
 # --------------------------------------------------------------------------------{
-time = np.linspace(0,T,1000)
+time = np.linspace(0,60.0,6001)
 
 veta = np.zeros(time.shape)
 vF   = np.zeros(time.shape)
@@ -188,7 +188,7 @@ axes[2].grid(True)
 # fig.savefig('IntegratedPileLoads.png')
 # fig.savefig('IntegratedPileLoads.webp')
 fig.savefig('IntegratedPileLoads.png')
-fig.show()
+#fig.show()
 
 # now save csv of the velocity, acceleration, force, and moment
 veta_df = pd.DataFrame()
@@ -233,6 +233,7 @@ for i in range(nz):
 (u_df.T).to_csv('vel.out', sep=' ', encoding='utf-8', index=False, header=False)
 (du_df.T).to_csv('accel.out', sep=' ', encoding='utf-8', index=False, header=False)
 (result_df.T).to_csv('forces.out', sep=' ', encoding='utf-8', index=False, header=False)
+(result_df.T).to_csv('node.out', sep=' ', encoding='utf-8', index=False, header=False)
 
 # make results.out dataframe with 3 columns and one row, no header. Each element is separated by a space
 
@@ -302,9 +303,9 @@ if __name__=="__test__":
     pass
 
 if __name__ == '__export__':
-    plt.close(fig1)
-    plt.close(fig2)
-    plt.close(fig)
+    # plt.close(fig1)
+    # plt.close(fig2)
+    # plt.close(fig)
     from welib.tools.repo import export_figs_callback
     export_figs_callback(__file__)
 
