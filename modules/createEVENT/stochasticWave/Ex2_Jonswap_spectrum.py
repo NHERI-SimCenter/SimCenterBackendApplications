@@ -57,7 +57,7 @@ ax.tick_params(direction='in')
 # plt.show()
 
 if __name__=="__main__":
-    fig.show()
+    pass
 if __name__=="__test__":
     np.testing.assert_almost_equal(S[iMax], 113.8770176)
 if __name__=="__export__":
