@@ -60,6 +60,7 @@ class FloorForces:
                         # Strip away leading / trailing white-space,
                         # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                         # Each value should be a number, rep. the force on recorder j at a time-step i
+                        # clean_line = re.split() # default is '\s+', which is any whitespace
                         clean_line = re.split(r';\s|;|,\s|,|\s+', strip_line)
                         # clean_line = re.split(r';|,\s', strip_line)
                         # clean_line = re.split("\s+", strip_line)
@@ -103,18 +104,18 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """
-    seriesName = "HydroForceSeries_" + str(floor) + direction
-    patternName = "HydroForcePattern_" + str(floor) + direction
     
     seriesName = "1"
     patternName = "1"
+    seriesName = "WindForceSeries_" + str(floor) + direction
+    patternName = "WindForcePattern_" + str(floor) + direction
     
     pattern = {
         "name": patternName,
         "timeSeries": seriesName,
         "numSteps": len(force.X),
         "dT": 0.01,
-        "type": "HydroFloorLoad",
+        "type": "WindFloorLoad",
         "floor": str(floor),
         "story": str(floor),
         "dof": directionToDof(direction),
@@ -132,6 +133,7 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
         "floor": str(floor),
         "story": str(floor),
         "dT": 0.01,
+        "dt": 0.01,
         "numSteps": len(force.X),
         "data": force.X
     }
@@ -201,6 +203,7 @@ def GetFloorsCount(BIMFilePath):
     return int(bim["GeneralInformation"]["stories"])
 	
 def main():
+    return 0
     # """
     # Entry point to generate event file using Stochastic Waves
     # """
@@ -258,7 +261,7 @@ if __name__ == "__main__":
 
 
     if arguments.getRV == True:
-        print("RVs requested in StoachasticWave.py")
+        print("RVs requested in StochasticWave.py")
         #Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)
         filenameEVENT = arguments.filenameEVENT
@@ -276,7 +279,7 @@ if __name__ == "__main__":
         writeEVENT(forces, filenameEVENT, floorsCount)
         
     else:
-        print("No RVs requested in StoachasticWave.py")
+        print("No RVs requested in StochasticWave.py")
         filenameEVENT = arguments.filenameEVENT
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex1_WaveKinematics.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex2_Jonswap_spectrum.py").read())
