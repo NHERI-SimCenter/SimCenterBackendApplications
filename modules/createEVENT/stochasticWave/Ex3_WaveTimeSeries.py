@@ -32,7 +32,7 @@ seed(None)
 
 # --- Parameters
 # t  = np.linspace(0,600,601) # time vector  [s]
-t  = np.linspace(0,3600,3601) # time vector  [s]
+t  = np.linspace(0,60.0, 6001) # time vector  [s]
 Hs = 8.1                   # Significant wave height [m]
 Tp = 12.7                  # Peak period [s]
 h  = 30.                   # Water depth [m]
@@ -83,11 +83,13 @@ fig.savefig('WaveTimeSeries.png')
 # plt.show()
 
 if __name__=="__main__":
-    fig.show()
+    pass
 if __name__=="__test__":
     pass
 if __name__=="__export__":
     from welib.tools.repo import export_figs_callback
     export_figs_callback(__file__)
+
+
 
 
