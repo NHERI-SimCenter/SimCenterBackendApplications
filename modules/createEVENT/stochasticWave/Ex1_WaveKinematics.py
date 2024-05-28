@@ -32,9 +32,9 @@ g = 9.81 # gravity [m/s^2]
 h = 30.  # water depth [m]
 
 # --- (Top Left) Example for one frequency, one point, multiple times
-a    = 3    # wave peak amplitude [m]
+a    = 8.1   # wave peak amplitude [m]
 x, z = 0, 0 # position where kinematics are evaluated [m]
-T    = 12.  # period [s]
+T    = 12.7  # period [s]
 eps  = 0    # phase shift [rad]
 f    = 1./T
 k    = wavenumber(f, h, g)
@@ -133,7 +133,7 @@ ax.tick_params(direction='in')
 
 
 if __name__=="__main__":
-    fig.show()
+    pass
     
 if __name__=="__test__":
     pass
