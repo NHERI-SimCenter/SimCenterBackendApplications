@@ -1,18 +1,38 @@
+#!/usr/bin/env python3
+    
 """
 Generate wave time series based on the Jonswap spectrum
 """
+
+from __future__ import print_function
 import numpy as np
+from numpy.random import uniform, seed
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+import pandas as pd
+from fractions import Fraction
+import os, sys
+import re
+import json
+import argparse
+
+# Local 
+from welib.tools.figure import defaultRC; defaultRC();
+from welib.tools.colors import python_colors
 from welib.hydro.spectra import jonswap
 from welib.hydro.wavekin import elevation2d, wavenumber
 from welib.tools.spectral import fft_wrap
-from numpy.random import uniform, seed
-seed(10)
+from welib.hydro.wavekin import *
+from welib.hydro.morison import *
 
+
+
+# --- Random seed
+seed(None)
 
 # --- Parameters
 # t  = np.linspace(0,600,601) # time vector  [s]
-t  = np.linspace(0,3600,3601) # time vector  [s]
+t  = np.linspace(0,60.0, 6001) # time vector  [s]
 Hs = 8.1                   # Significant wave height [m]
 Tp = 12.7                  # Peak period [s]
 h  = 30.                   # Water depth [m]
@@ -48,7 +68,7 @@ ax.tick_params(direction='in')
 ax.autoscale(enable=True, axis='both', tight=True)
 ax.set_xlabel('Time [s]')
 ax.set_ylabel(r'Wave elevation [m]')
-ax.set_title('Hydro - wave generation')
+ax.set_title('Wave Generation')
 
 ax=axes[1]
 ax.plot(f_fft, S_fft, '-', label='Generated')
@@ -58,15 +78,18 @@ ax.set_xlabel('Frequency [Hz]')
 ax.set_ylabel(r'Spectral density [m$^2$ s]')
 ax.tick_params(direction='in')
 ax.autoscale(enable=True, axis='both', tight=True)
-
-plt.show()
+fig.savefig('WaveTimeSeries.png')
+# fig.savefig('WaveTimeSeries.webp')
+# plt.show()
 
 if __name__=="__main__":
-    plt.show()
+    pass
 if __name__=="__test__":
     pass
 if __name__=="__export__":
     from welib.tools.repo import export_figs_callback
     export_figs_callback(__file__)
+
+
 
 
