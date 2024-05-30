@@ -526,7 +526,10 @@ int addEvent(json_t *generalInfo, json_t *currentEvent, json_t *outputEvent, boo
 
       // so instead invoke a process
       std::string pyArgs = "HighRiseTPU.py tmpSimCenterHighRiseTPU.mat tmpSimCenterHighRiseTPU.json";
-      std::string command = "python ";
+      std::string command = "python3 ";
+#ifdef _WIN32
+      command = "python "
+#endif
       command += pyArgs;
       system(command.c_str());
       //      std::cerr << "DONE PYTHON\n";
