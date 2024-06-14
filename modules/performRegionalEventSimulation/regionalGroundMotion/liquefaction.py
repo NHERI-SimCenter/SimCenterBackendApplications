@@ -242,7 +242,7 @@ class ZhuEtal2017(Liquefaction):
             self.precip = sampleRaster(parameters["Precipitation"], parameters["inputCRS"],\
                      lon_station, lat_station)
         self.vs30 = np.array([site['vs30'] for site in self.stations])
-        print("Sampling finished")
+        print("Initiation finished")
     
     def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):
         if ('PGA' in im_list) and ('PGV' in im_list):
@@ -431,7 +431,7 @@ class Hazus2020(Liquefaction):
         self.liq_susc = np.array(self.liq_susc)
         # liq_susc = liq_susc_samples[parameters["SusceptibilityKey"]].fillna("NaN")
         # self.liq_susc = liq_susc.to_numpy()
-        print("Sampling finished")
+        print("Initiation finished")
 
 
     def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):

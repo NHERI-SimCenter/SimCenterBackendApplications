@@ -342,6 +342,9 @@ def hazard_job(hazard_info):
                         ln_im_mr, mag_maf, im_list
                     )
                 gf_im_list += settlement_info['Output']
+        if "Liquefaction" in ground_failure_info.keys():
+            import landslide
+            
 
 
 
