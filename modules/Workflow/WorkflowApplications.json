@@ -1025,7 +1025,7 @@
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
       },
       {
-        "Name": "CustomUQ",
+        "Name": "Custom-UQ",
         "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]
