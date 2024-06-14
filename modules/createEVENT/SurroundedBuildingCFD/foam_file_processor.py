@@ -1,10 +1,8 @@
-"""
-This script contains functions for reading and writing OpenFoam dictionaries. 
-
-"""
+# This script contains functions for reading and writing 
+# OpenFoam dictionaries and filses. 
+#
 import numpy as np
 import os
-
 
 def find_keyword_line(dict_lines, keyword):
     

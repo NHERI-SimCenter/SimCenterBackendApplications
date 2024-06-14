@@ -502,7 +502,13 @@
         },
       {
         "Name": "IsolatedBuildingCFD",
-        "ExecutablePath": "applications/createEVENT/isolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ExecutablePath": "applications/createEVENT/IsolatedBuildingCFD/IsolatedBuildingCFD.py",
+        "ApplicationSpecificInputs":[
+        ]
+      },
+      {
+        "Name": "SurroundedBuildingCFD",
+        "ExecutablePath": "applications/createEVENT/SurroundedBuildingCFD/SurroundedBuildingCFD.py",
         "ApplicationSpecificInputs":[
         ]
       },
@@ -522,6 +528,11 @@
             "description": "Remote directory hosting ClaymoreUW MPM assets (e.g. geometries, checkpoints, motion-paths) for the application for any user to access on the HPC system."
           }
         ]
+      },
+      {
+        "Name": "StochasticWave",
+        "ExecutablePath": "applications/createEVENT/stochasticWave/StochasticWave.py",
+        "ApplicationSpecificInputs":[]
       },  
       {
         "Name": "GeoClawOpenFOAM",
@@ -854,17 +865,35 @@
       {
         "Name": "StandardHydroEDP",
         "ExecutablePath": "applications/createEDP/standardHydroEDP/StandardHydroEDP",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
       },
       {
         "Name": "StandardTsunamiEDP",
         "ExecutablePath": "applications/createEDP/standardTsunamiEDP/StandardTsunamiEDP",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
       },
       {
         "Name": "StandardStormSurgeEDP",
         "ExecutablePath": "applications/createEDP/standardStormSurgeEDP/StandardStormSurgeEDP",
-        "ApplicationSpecificInputs": []
+        "ApplicationSpecificInputs": [
+          {
+            "id": "EDPPath",
+            "type": "path",
+            "description": "Identifies the location of where the txt files with requested EDPs are stored."
+          }
+	]
       }
     ]
   },

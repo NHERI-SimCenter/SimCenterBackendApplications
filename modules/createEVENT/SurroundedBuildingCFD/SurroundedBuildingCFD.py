@@ -46,8 +46,8 @@ def writeEVENT(forces, eventFilePath):
     """
     patternsArray = []
     windEventJson = {
-        "type" : "Hydro",
-        "subtype": "CoupledDigitalTwin",
+        "type" : "Wind",
+        "subtype": "SurroundedBuildingCFD",
         "pattern": patternsArray,
         "pressure": [],
         "numSteps": len(forces[0].X),
@@ -67,14 +67,14 @@ def writeEVENT(forces, eventFilePath):
         addFloorForceToEvent(patternsArray, floorForces.X, "X", floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, "Y", floor)
 
-    with open(eventFilePath, "w", encoding='utf-8') as eventsFile:
+    with open(eventFilePath, "w") as eventsFile:
         json.dump(eventDict, eventsFile)
 
 
 def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath,'r', encoding='utf-8') as BIMFile:
-        bim = json.load(BIMFile) 
-    
+    with open(BIMFilePath,'r') as BIMFile:
+	    bim = json.load(BIMFile)
+
     return int(bim["GeneralInformation"]["stories"])
 	
 if __name__ == "__main__":
