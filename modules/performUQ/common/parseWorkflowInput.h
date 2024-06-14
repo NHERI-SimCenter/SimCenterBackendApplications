@@ -45,6 +45,12 @@ struct gammaRV {
   double betas;
 };
 
+
+struct exponentialRV {
+  std::string name;
+  double betas;
+};
+
 struct gumbellRV {
   std::string name;
   double alphas;
@@ -62,12 +68,18 @@ struct betaRV {
 struct discreteDesignSetRV {
   std::string name;
   std::list<std::string> elements;
-  // std::list<double> weights;
+  std::list<double> weights;
 };
 
 struct discreteUncertainIntegerSetRV {
   std::string name;
   std::list<int> elements;
+  std::list<double> weights;
+};
+
+struct discreteUncertainRealSetRV {
+  std::string name;
+  std::list<double> elements;
   std::list<double> weights;
 };
 
@@ -83,8 +95,10 @@ struct randomVariables {
   std::list<struct gammaRV> gammaRVs;
   std::list<struct gumbellRV> gumbellRVs;
   std::list<struct betaRV> betaRVs;
+  std::list<struct exponentialRV> exponentialRVs;  
   std::list<struct discreteDesignSetRV> discreteDesignSetRVs;
   std::list<struct discreteUncertainIntegerSetRV> discreteUncertainIntegerSetRVs;
+  std::list<struct discreteUncertainRealSetRV> discreteUncertainRealSetRVs;  
   std::vector<int> ordering;
   std::vector<double> corrMat;
 };

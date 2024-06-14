@@ -2599,9 +2599,13 @@ class Workflow(object):
         min_id = min([int(x['id']) for x in asst_data]) #min_id = int(asst_data[0]['id'])
         max_id = max([int(x['id']) for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
-        #TODO: ugly, ugly, I know. 
+        #
+        # TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
-        if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
+        # FMK - bug fix adding check on DL, not in siteResponse input file
+        #
+        
+        if 'DL' in self.workflow_apps and self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
             initialize_dicts = True
             for a_i, asst in enumerate(asst_data):
 
