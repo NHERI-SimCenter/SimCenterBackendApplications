@@ -616,7 +616,6 @@ class Damage:
                 if 'sub_type' in cur_damage:
                     sub_type = cur_damage['sub_type']
                 
-                print("SINA", pipe_id)
                 WaterNetwork = split_pipe(WaterNetwork, pipe_id, new_pipe_id, new_node_id, split_at_point=ratio, return_copy=False)
                 leak_node = WaterNetwork.get_node(new_node_id)
                 leak_node.add_leak(WaterNetwork, area=area, discharge_coeff=1, start_time=damage_time, end_time=self.end_time+1)
@@ -646,7 +645,6 @@ class Damage:
                 new_pipe_id = pipe_id + '_Break_' + repr(same_pipe_damage_cnt)
                 new_node_id = new_node_id_for_old_pipe
                 #breaking the node
-                print("SINA", pipe_id)
                 WaterNetwork = break_pipe(WaterNetwork, pipe_id, new_pipe_id, new_node_id_for_old_pipe, new_node_id_for_new_pipe, split_at_point=ratio, return_copy=False)
                     
                 diam=WaterNetwork.get_link(pipe_id).diameter

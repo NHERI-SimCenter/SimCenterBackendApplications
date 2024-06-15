@@ -415,7 +415,6 @@ if __name__ == '__main__':
     
     system_std_out = sys.stdout
     with open(rewet_log_path, "wt") as log_file: 
-        
         sys.stdout = log_file
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
@@ -441,12 +440,30 @@ if __name__ == '__main__':
             sub_asset_name_to_id.update({sub_asset : dict(zip(sub_asset_name, sub_asset_id))})
             sub_asset_id_to_name.update({sub_asset : dict(zip(sub_asset_id, sub_asset_name))})
         
-
         res = {}
         res_agg = {}
+        scneario_size = len(p.project.scenario_list.index)
+        # create a dictionary with keys for each scenario number (in int) and keys for a BSC metric (None)
+        temp_realization_in_each_time_series = dict(zip(range(0, scneario_size), [None] * scneario_size))
+        # create a dictionary for stroing tiems series, each BSC metric (requested_result) is a key and each key has the dictioanry created in line before 
+        time_series_result = dict(zip(requested_result, [temp_realization_in_each_time_series]*len(requested_result)))
+        
         for scn_name, row in p.project.scenario_list.iterrows():
+            realization_number = int(scn_name.strip("SCN_") )
             for single_requested_result in requested_result:
                 if single_requested_result == "DL" or single_requested_result == "QN":
+                    
+                    # Running Output module's method to get DL tiem series status
+                    time_series_result[single_requested_result][realization_number] = p.getBSCIndexPopulation_4(scn_name,
+                    bsc=single_requested_result,
+                    iPopulation=False,
+                    ratio= True,
+                    consider_leak=False,
+                    leak_ratio=1)
+                    time_series_result[single_requested_result][realization_number].index = \
+                    time_series_result[single_requested_result][realization_number].index / 3600
+                    
+                    # Running Output module's method to get BSC data for each junction (sum of outage)
                     res[single_requested_result] = p.getOutageTimeGeoPandas_5(
                         scn_name,
                         bsc=single_requested_result ,
@@ -463,16 +480,13 @@ if __name__ == '__main__':
                             res_agg[single_requested_result][key].append(
                                 res[single_requested_result][key]
                             )
-            realization_number = scn_name.strip("SCN_")
+            
             cur_json_file_name = f"WaterDistributionNetwork_{realization_number}.json"
             cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / cur_json_file_name
             
             with open(cur_json_file_path, "rt") as f:
                 json_data = json.load(f)
             
-            #print(res[single_requested_result])
-            #raise
-            #print(type(res["DL"]))
             for single_requested_result in requested_result:
                 req_result = res[single_requested_result]
                 result_key = f"{substitute_ft[single_requested_result]}Outage"
@@ -544,8 +558,25 @@ if __name__ == '__main__':
         det_json['WaterDistributionNetwork'].update({WDNtype:json_to_attach})
     with open(det_json_path ,'w') as f:
         json.dump(det_json, f, indent=2)
-
     
+    ts_result_json_path = cur_json_file_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "WaterDistributionNetwork_timeseries.json"
+    time_series_result_struc = {"Type":"TimeSeries",
+                          "Asset":"WaterDistributionNetwork",
+                          "Result":{
+                              "QN":{"Name":"Water Quantity", "Data":{}}, 
+                              "DL":{"Name":"Water Delivery", "Data":{}}
+                              }
+                          }
+    
+    for single_requested_result in requested_result:
+        for i in range(0, scneario_size):
+            time_series_result_struc["Result"]\
+            [single_requested_result]["Data"][i] =\
+            time_series_result[single_requested_result][i].to_dict()
+    
+    with open(ts_result_json_path ,'w') as f:
+        json.dump(time_series_result_struc, f, indent=2)
+    print("here")
 
     
 

@@ -1459,10 +1459,11 @@ class Workflow(object):
             app_command_list.append('--par')
         
         command = create_command(app_command_list)
-        
-        result, returncode = run_command(command)        
 
         log_msg('Output: ', prepend_timestamp=False, prepend_blank_space=False)
+        log_msg('\n{}\n'.format(command), prepend_timestamp=False, prepend_blank_space=False)
+        
+        result, returncode = run_command(command)
         log_msg('\n{}\n'.format(result), prepend_timestamp=False, prepend_blank_space=False)
 
         log_msg('System Performance Application Completed for asset type: ' + asset_type, prepend_timestamp=False)
