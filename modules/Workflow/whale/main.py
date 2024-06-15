@@ -42,6 +42,7 @@
 # Chaofeng Wang
 # Stevan Gavrilovic
 # Jinyan Zhao
+# Sina Naeimi
 
 """
 This module has classes and methods that handle everything at the moment.
