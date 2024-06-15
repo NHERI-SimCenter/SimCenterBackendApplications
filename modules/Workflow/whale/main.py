@@ -61,6 +61,7 @@ import argparse
 import importlib
 
 import pprint
+import shlex
 
 import shutil
 import subprocess
@@ -358,8 +359,12 @@ def run_command(command):
         return "", ""
 
     else:
-
+        
+        # fmk with Shell=True not working on older windows machines, new approach needed for quoted command .. turn into a list
+        command = shlex.split(command)
+              
         try:
+
             result = subprocess.check_output(command, stderr=subprocess.STDOUT, text=True)
             returncode = 0
         except subprocess.CalledProcessError as e:
@@ -1972,14 +1977,14 @@ class Workflow(object):
                         prepend_blank_space=False)
 
                 # sy - trying adding exit command
-                if platform.system() == 'Windows':
-                    with open("driver.bat","r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    lines.append(r'if %errorlevel% neq 0 exit /b -1')
-                    with open("driver.bat","w", encoding="utf-8") as f:
-                        f.writelines(lines)
-                else:
-                    pass
+                #if platform.system() == 'Windows':
+                #    with open("driver.bat","r", encoding="utf-8") as f:
+                #        lines = f.readlines()
+                #    #lines.append(r'if %errorlevel% neq 0 exit /b -1')
+                #    with open("driver.bat","w", encoding="utf-8") as f:
+                #        f.writelines(lines)
+                #else:
+                #    pass
                 
                 log_msg('Successfully Created Driver File for Workflow.',
                         prepend_timestamp=False)
@@ -2123,10 +2128,11 @@ class Workflow(object):
 
                 # sy - trying adding exit command
                 
-                if platform.system() == 'Windows':
-                   driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
-                else: 
-                   pass
+                #if platform.system() == 'Windows':
+                #   #driver_script += 'if %errorlevel% neq 0 exit /b -1 \n'
+                #   pass
+                #else: 
+                #   pass
 
             #log_msg('Workflow driver script:', prepend_timestamp=False)
             #log_msg('\n{}\n'.format(driver_script), prepend_timestamp=False, prepend_blank_space=False)
@@ -2594,9 +2600,13 @@ class Workflow(object):
         min_id = min([int(x['id']) for x in asst_data]) #min_id = int(asst_data[0]['id'])
         max_id = max([int(x['id']) for x in asst_data]) #max_id = int(asst_data[0]['id'])
 
-        #TODO: ugly, ugly, I know. 
+        #
+        # TODO: ugly, ugly, I know. 
         # Only temporary solution while we have both Pelicuns in parallel
-        if self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
+        # FMK - bug fix adding check on DL, not in siteResponse input file
+        #
+        
+        if 'DL' in self.workflow_apps and self.workflow_apps['DL'][asset_type].name == 'Pelicun3':
             initialize_dicts = True
             for a_i, asst in enumerate(asst_data):
 

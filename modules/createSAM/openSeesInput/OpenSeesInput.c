@@ -142,6 +142,8 @@ main(int argc, char **argv) {
     }
     
     json_object_set(rootSAM,"NodeMapping",mappingArray);
+
+    json_t *theDampingRatio = json_object_get(theSIM,"dampingRatio");
     
     // add #story and ndm
     int nStory = floor -1;
@@ -173,6 +175,8 @@ main(int argc, char **argv) {
       json_array_append(rvArray, rvObj);
     }
     json_object_set(rootSAM,"randomVar",rvArray);
+    if (theDampingRatio != NULL)
+      json_object_set(rootSAM,"dampingRatio",theDampingRatio);      
     
     //
     // dump json to file

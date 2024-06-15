@@ -246,44 +246,46 @@ def write_boundary_data_files(input_json_path, case_path):
 
     # Returns JSON object as a dictionary
     boundary_data = json_data["boundaryConditions"]    
-    geom_data = json_data['GeometricData']
 
-    wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
+    if boundary_data['inletBoundaryCondition']=="TInf":
+        geom_data = json_data['GeometricData']
 
-    bd_path = case_path + "/constant/boundaryData/inlet/"
+        wind_profiles =  np.array(boundary_data["inflowProperties"]['windProfiles'])
 
-    #Write points file
-    n_pts = np.shape(wind_profiles)[0]
-    points  = np.zeros((n_pts, 3))
+        bd_path = case_path + "/constant/boundaryData/inlet/"
+
+        #Write points file
+        n_pts = np.shape(wind_profiles)[0]
+        points  = np.zeros((n_pts, 3))
 
 
-    origin = np.array(geom_data['origin'])
-    
-    Ly = geom_data['domainWidth']
-    Lf = geom_data['fetchLength']
-    
-    x_min = -Lf - origin[0]
-    y_min = -Ly/2.0 - origin[1]
-    y_max = y_min + Ly
+        origin = np.array(geom_data['origin'])
+        
+        Ly = geom_data['domainWidth']
+        Lf = geom_data['fetchLength']
+        
+        x_min = -Lf - origin[0]
+        y_min = -Ly/2.0 - origin[1]
+        y_max = y_min + Ly
 
-    points[:,0] = x_min
-    points[:,1] = (y_min + y_max)/2.0  
-    points[:,2] = wind_profiles[:, 0]
+        points[:,0] = x_min
+        points[:,1] = (y_min + y_max)/2.0  
+        points[:,2] = wind_profiles[:, 0]
 
-    #Shift the last element of the y coordinate 
-    #a bit to make planer interpolation easier
-    points[-1:, 1] = y_max
+        #Shift the last element of the y coordinate 
+        #a bit to make planer interpolation easier
+        points[-1:, 1] = y_max
 
-    foam.write_foam_field(points, bd_path + "points")
+        foam.write_foam_field(points, bd_path + "points")
 
-    #Write wind speed file as a scalar field 
-    foam.write_scalar_field(wind_profiles[:, 1], bd_path + "U")
+        #Write wind speed file as a scalar field 
+        foam.write_scalar_field(wind_profiles[:, 1], bd_path + "U")
 
-    #Write Reynolds stress profile (6 columns -> it's a symmetric tensor field) 
-    foam.write_foam_field(wind_profiles[:, 2:8], bd_path + "R")
+        #Write Reynolds stress profile (6 columns -> it's a symmetric tensor field) 
+        foam.write_foam_field(wind_profiles[:, 2:8], bd_path + "R")
 
-    #Write length scale file (8 columns -> it's a tensor field)
-    foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
+        #Write length scale file (8 columns -> it's a tensor field)
+        foam.write_foam_field(wind_profiles[:, 8:17], bd_path + "L")
 
 
 def write_U_file(input_json_path, template_dict_path, case_path):
@@ -360,11 +362,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     added_part = ""
     added_part += "\t type \t inletOutlet;\n"
     added_part += "\t inletValue \t uniform (0 0 0);\n"
-    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
     added_part += "\t value \t uniform (0 0 0);\n"
-    
-    # added_part += "\t type    zeroGradient;\n"
-
 
     dict_lines.insert(start_index, added_part)
     
@@ -885,7 +883,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     # Need to change this for      
     max_delta_t = 10*time_step
     
-    write_interval = 1000
+    #Write 10 times
+    write_frequency = 10.0
+    write_interval_time = duration/write_frequency 
+    write_interval_count = int(write_interval_time/time_step)
     purge_write =  3
     
     #Open the template file (OpenFOAM file) for manipulation
@@ -908,7 +909,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 
     #Write writeControl         
     start_index = foam.find_keyword_line(dict_lines, "writeControl") 
-    if solver_type=="pimpleFoam":
+    if solver_type=="pimpleFoam" and adjust_time_step:
         dict_lines[start_index] = "writeControl \t{};\n".format("adjustableRunTime")
     else:
         dict_lines[start_index] = "writeControl \t\t{};\n".format("timeStep")
@@ -919,10 +920,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
  
     #Write writeInterval  
     start_index = foam.find_keyword_line(dict_lines, "writeInterval")     
-    if solver_type=="pimpleFoam":
-        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval*time_step)
+    if solver_type=="pimpleFoam" and adjust_time_step:
+        dict_lines[start_index] = "writeInterval \t{:.6f};\n".format(write_interval_time)
     else:
-        dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval)
+        dict_lines[start_index] = "writeInterval \t{};\n".format(write_interval_count)
 
     #Write maxCo  
     start_index = foam.find_keyword_line(dict_lines, "maxCo") 
