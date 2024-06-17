@@ -1,4 +1,5 @@
 # written: Michael Gardner @ UNR
+# updated Aakash Bangalore Satish, June 11 2024
 
 import os
 from uqRunner import UqRunnerFactory
@@ -8,14 +9,16 @@ from uqRunner import UqRunner
 # import sys
 # sys.path.append(os.path.abspath("/home/michael/UQpy/src"))
 
-from UQpy.SampleMethods import LHS
-from UQpy.RunModel import RunModel
-from UQpy import Distributions
+from UQpy.sampling.MonteCarloSampling import MonteCarloSampling as MCS
+from UQpy.run_model.RunModel import RunModel
+from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
+from UQpy.distributions.collection.Uniform import Uniform
 from createTemplate import createTemplate
 import time
 import csv
 import json
 import shutil
+
 
 class UQpyRunner(UqRunner):
     def runUQ(self, uqData, simulationData, randomVarsData, demandParams,
@@ -38,7 +41,7 @@ class UQpyRunner(UqRunner):
         remoteAppDir:   Directory containing apps for remote run
         """
     
-        # There is still plenty of configuration that can and should be added here. This currently does LHS sampling with Uniform
+        # There is still plenty of configuration that can and should be added here. This currently does MCS sampling with Uniform
         # distributions only, though this is easily expanded
         
         # Copy required python files to template directory
@@ -59,7 +62,8 @@ class UQpyRunner(UqRunner):
         numberOfSamples = 0
         modelScript = 'runWorkflowDriver.py'
         inputTemplate = 'params.template'
-        outputObjectName = 'OutputProcessor'
+        # outputObjectName = 'OutputProcessor'
+        outputObjectName = 'output_function'
         outputScript = 'processUQpyOutput.py'
         numberOfTasks = 1
         numberOfNodes = 1
@@ -103,16 +107,14 @@ class UQpyRunner(UqRunner):
 
         # Create distribution objects
         for index, val in enumerate(distributionNames, 0):
-            distributionObjects.append(Distributions.Uniform(distributionParams[index][0], distributionParams[index][1]))
+            distributionObjects.append(Uniform(distributionParams[index][0], distributionParams[index][1]-distributionParams[index][0]))
 
         createTemplate(variableNames, inputTemplate)
             
         # Generate samples
-        if samplingMethod == "LHS":
-            samples = LHS(dist_object=distributionObjects, lhs_criterion='random',\
-                          lhs_iter=None, nsamples=numberOfSamples, var_names=variableNames, random_state=seed)        
-            # samples = LHS(dist_name=distributionNames, dist_params=distributionParams, lhs_criterion='random',\
-                #               lhs_iter=None, nsamples=numberOfSamples, var_names=variableNames)
+        if samplingMethod == "MCS":
+            samples = MCS(distributionObjects,\
+                          nsamples=numberOfSamples, random_state=seed)   
         else:
             raise IOError("ERROR: You'll need to update UQpyRunner.py to run your specified" +\
                           " sampling method!")
@@ -122,12 +124,16 @@ class UQpyRunner(UqRunner):
     
         # Run model based on input config
         startTime = time.time()
-        model = RunModel(samples=samples.samples, model_script=modelScript,
-                         input_template=inputTemplate, var_names=variableNames,
-                         output_script=outputScript, output_object_name=outputObjectName,
-                         verbose=True, ntasks=numberOfTasks,
-                         nodes=numberOfNodes, cores_per_task=coresPerTask,
-                         cluster=clusterRun, resume=resumeRun)
+        # model = RunModel(samples=samples.samples, model_script=modelScript,
+        #                  input_template=inputTemplate, var_names=variableNames,
+        #                  output_script=outputScript, output_object_name=outputObjectName,
+        #                  verbose=True, ntasks=numberOfTasks,
+        #                  nodes=numberOfNodes, cores_per_task=coresPerTask,
+        #                  cluster=clusterRun, resume=resumeRun)
+        model = ThirdPartyModel(model_script=modelScript, input_template=inputTemplate, var_names=variableNames,
+                                output_script=outputScript, output_object_name=outputObjectName)
+        m = RunModel(ntasks=numberOfTasks, model=model)
+        m.run(samples.samples)
     
         runTime = time.time() - startTime
         print("\nTotal time for all experiments: ", runTime)
@@ -142,19 +148,16 @@ class UQpyRunner(UqRunner):
                 f.write("%s\t" % val["name"])
 
             f.write("\n")
-            
-            for index, experiment in enumerate(model.qoi_list, 0):
-                if len(experiment) != 0:
-                    for item in experiment:
-                        f.write("%s\t custom\t" % (index + 1))
-                        for sample in samples.samples[index]:
-                            f.write("%s\t" % sample)
 
-                        for result in item:
-                            f.write("%s\t" % result)
-                        
-                            f.write("\n")
-            f.close()
+            for i in range(numberOfSamples):
+                string = f"{i+1} \tcustom\t"
+                for sample in samples.samples[i]:
+                    string += f"{sample}\t"
+                for qoi in m.qoi_list[i]:
+                    for val in qoi:
+                        string += f"{val}\t"
+                string += "\n"
+                f.write(string)
             
     # Factory for creating UQpy runner
     class Factory:
