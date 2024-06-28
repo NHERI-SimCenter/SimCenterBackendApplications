@@ -395,6 +395,16 @@
         "ApplicationSpecificInputs": [
   ]
       },
+      {
+        "Name": "MultiModel",
+        "ExecutablePath": "applications/Workflow/MultiModelApplication.py",
+          "ApplicationSpecificInputs": [
+              {"id": "appKey",
+               "type": "string",
+               "description": "keyword of application data in input file"
+              }
+	  ]
+      },
     {
         "Name": "PhysicsBasedMotion",
         "ExecutablePath": "applications/createEVENT/physicsBasedMotion/PhysicsBasedMotion",
@@ -1025,7 +1035,7 @@
         "ExecutablePath": "applications/performUQ/dakota/DakotaFEM1.py"
       },
       {
-        "Name": "CustomUQ",
+        "Name": "Custom-UQ",
         "ExecutablePath": "applications/performUQ/other/runOtherUQ.py"
       }
     ]

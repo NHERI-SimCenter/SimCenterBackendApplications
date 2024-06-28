@@ -79,8 +79,15 @@ def main(inputFile,
         raise KeyError(f'No data for "{appKey}" application in the input file "{inputFile}"')
 
     eventApp = False;
+
     if appKey == "Events":
         eventApp = True;
+        appData = appData[0]
+
+
+    print('appKEY: ', appKey)
+    print('appDATA: ', appData)
+    print('HELLO ')        
     
     if 'models' not in appData:
         print('NO models in: ', appData)
@@ -94,6 +101,22 @@ def main(inputFile,
     modelToRun = appData['modelToRun']
 
     if not getRV:
+
+        #
+        # make sure not still a string, if so try reading from params.in
+        # 
+        
+        if isinstance(modelToRun, str):
+            rvName = "MultiModel-"+appKey
+            # if not here, try opening params.in and getting var from there
+            with open("params.in", 'r') as params:
+                # Read the file line by line
+                for line in params:
+                    values = line.strip().split()
+                    print(values)
+                    if values[0] == rvName:
+                        modelToRun = values[1]
+                        
         modelToRun = int(float(modelToRun))
     
     appsInMultiModel=[]
@@ -118,11 +141,29 @@ def main(inputFile,
 
     for i in range(0,numModels):
         beliefs[i] = beliefs[i]/sumBeliefs
-        
-    appTypes=[appKey]
+
+    #
+    # parse WorkflowApplications to get possible applications
+    # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!
+    #
     
+    if appKey == "Events":
+        appTypes=["Event"]
+    else:
+        appTypes=[appKey]
+
     parsedRegistry = (_parse_app_registry(registryFile, appTypes))
-    appsRegistry = parsedRegistry[0][appKey]
+    
+    if appKey == "Events":    
+        appsRegistry = parsedRegistry[0]["Event"]
+    else:
+        appsRegistry = parsedRegistry[0][appKey]        
+
+    #
+    # now we run the application
+    #   if getRV we have to run each & collect the RVs
+    #   if !getRV we run the single application chosen
+    #
     
     if getRV:
         
@@ -136,6 +177,7 @@ def main(inputFile,
 
         for i in range(0, numModels):
             appName = appsInMultiModel[i]
+            print('appsRegistry:', appsRegistry)
             application = appsRegistry[appName]
             application.set_pref(appDataInMultiModel[i], reference_dir)            
 
@@ -173,7 +215,6 @@ def main(inputFile,
         #
         # read corr and append row/cols
         #
-        
 
         # if 'correlationMatrix' in inputs:
         #     corrVec = inputs['correlationMatrix']
@@ -192,7 +233,8 @@ def main(inputFile,
         # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
         #
 
-        # create input file for application        
+        # create input file for application
+        
         tmpFile = "MultiModel." + appKey + ".json"
         inputs[appKey] =  appRunDataInMultiModel[numModels-1]
         
@@ -209,6 +251,7 @@ def main(inputFile,
         print('RUNNING --getRV:', command)
             
     else:
+        
         print("MultiModel - run")
         modelToRun = modelToRun - 1
         # get app data given model
@@ -218,12 +261,20 @@ def main(inputFile,
 
         # create modified input file for app
         tmpFile = "MultiModel." + appKey + ".json"
+
+        #if appKey == "Events":
+        #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]
+
+        #else:
+        #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]
         inputs[appKey] =  appRunDataInMultiModel[modelToRun]
 
         print('model to run:', modelToRun)
 
         with open(tmpFile, "w") as outfile:
             json.dump(inputs, outfile)
+
+        print("INPUTS", inputs)
         
         # run application
         asset_command_list = application.get_command_list(appDir)
@@ -263,6 +314,7 @@ if __name__ == '__main__':
 
     args, unknown  = parser.parse_known_args()        
     
+
     main(inputFile = args.filenameAIM,
          appKey = args.appKey,
          getRV = args.getRV,
