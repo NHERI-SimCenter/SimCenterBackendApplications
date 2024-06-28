@@ -13,6 +13,21 @@ mag  6.903245983350862e+00
 test 1.90 
 *********************************************/
 
+
+std::string replaceAllOccurrences(std::string str, const std::string& from, const std::string& to) {
+
+  // to replace all occrances of the string "from" in string "str" to string "to"
+    if (from.empty()) {
+        return str; // Avoid infinite loop if 'from' is empty
+    }
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Advance start_pos past the last replacement
+    }
+    return str;
+}
+
 int main(int argc, char **argv)
 {
   //
@@ -93,6 +108,10 @@ int main(int argc, char **argv)
 
       string &oldString = original.at(i);
       string &newString = replace.at(i);
+
+      // NEW CODE: line = replaceAllOccurrences(line, oldString, newString);
+      
+      /* ********************   OLD   *************************/
       int oldSize = originalLength.at(i);
       int newSize = replacementLength.at(i);
 
@@ -107,6 +126,7 @@ int main(int argc, char **argv)
 
 	      // if they're same size, use std::string::replace
 	      line.replace( pos, oldSize, newString );
+	      
 	    } else {
 
 	      // if not same size, replace by erasing and inserting (costly)
@@ -118,6 +138,7 @@ int main(int argc, char **argv)
 	  else 
 	    break;
         }
+      /******************************************************* */
     }
 
     // send line to output
