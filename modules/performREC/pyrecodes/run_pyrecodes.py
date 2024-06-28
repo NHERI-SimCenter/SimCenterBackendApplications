@@ -1,4 +1,4 @@
-import json, os, shapely, argparse, sys, ujson
+import json, os, shapely, argparse, sys, ujson, importlib
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -44,140 +44,215 @@ def run_pyrecodes(rec_config, inputRWHALE, parallelType, mpiExec, numPROC):
     with open(result_det_path, 'r') as f:
         results_det = json.load(f)
     result_agg = dict()
-    for asset_type, item in results_det.items():
-        asset_type_result = dict()
-        for asset_subtype, asset_subtype_item in item.items():
-            asset_subtype_result = dict()
-            for aim_id, aim in asset_subtype_item.items():
-                asset_subtype_result.update({aim_id:{
-                    "RecoveryDuration":np.zeros(len(realizations_to_run))
-                }})
-            asset_type_result.update({asset_subtype:asset_subtype_result})
-        result_agg.update({asset_type:asset_type_result})
-    del results_det
     resilience_results = dict()
 
     # Loop through realizations and run pyrecodes
+    numP = 1
+    procID = 0
+    doParallel = False
+    mpi_spec = importlib.util.find_spec("mpi4py")
+    found = mpi_spec is not None
+    if found and parallelType == 'parRUN':
+        import mpi4py
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        numP = comm.Get_size()
+        procID = comm.Get_rank()
+        if numP < 2:
+            doParallel = False
+            numP = 1
+            procID = 0
+        else:
+            doParallel = True
+    count = 0
+    needsInitiation = True
+    ind_in_rank = 0
     for ind, rlz_ind in enumerate(realizations_to_run):
         # Create a realization directory
-        rlz_dir =  os.path.join(rec_ouput_dir,str(rlz_ind))
-        if not os.path.exists(rlz_dir):
-            os.mkdir(rlz_dir)
+        if count % numP == procID:
+            rlz_dir =  os.path.join(rec_ouput_dir,str(rlz_ind))
+            if not os.path.exists(rlz_dir):
+                os.mkdir(rlz_dir)
 
-        # Update the system_configuration json
-        damage_rlz_file = os.path.join(inputRWHALE['runDir'],"Results",\
-                                  f"Results_{int(rlz_ind)}.json")
-        DamageInput = {"Type": "R2DDamageInput",
-            "Parameters": {"DamageFile": damage_rlz_file}}
-        system_configuration.update({"DamageInput":DamageInput})
+            # Update the system_configuration json
+            damage_rlz_file = os.path.join(inputRWHALE['runDir'],"Results",\
+                                    f"Results_{int(rlz_ind)}.json")
+            DamageInput = {"Type": "R2DDamageInput",
+                "Parameters": {"DamageFile": damage_rlz_file}}
+            system_configuration.update({"DamageInput":DamageInput})
 
-        # Write the system_configureation to a file
-        system_configuration_file = os.path.join(rlz_dir, \
-                                                 "SystemConfiguration.json")
-        with open(system_configuration_file, 'w') as f:
-            ujson.dump(system_configuration, f)
-        
-        # Update the main json
-        main_json.update({"System": {
-            "SystemCreatorClass": "ConcreteSystemCreator",
-            "SystemClass": "BuiltEnvironmentSystem",
-            "SystemConfigurationFile": system_configuration_file
-        }})
+            # Write the system_configureation to a file
+            system_configuration_file = os.path.join(rlz_dir, \
+                                                    "SystemConfiguration.json")
+            with open(system_configuration_file, 'w') as f:
+                ujson.dump(system_configuration, f)
+            
+            # Update the main json
+            main_json.update({"System": {
+                "SystemCreatorClass": "ConcreteSystemCreator",
+                "SystemClass": "BuiltEnvironmentSystem",
+                "SystemConfigurationFile": system_configuration_file
+            }})
 
-        # Write the main json to a file
-        main_file = os.path.join(rlz_dir, "main.json")
-        with open(main_file, 'w') as f:
-            ujson.dump(main_json, f)
+            # Write the main json to a file
+            main_file = os.path.join(rlz_dir, "main.json")
+            with open(main_file, 'w') as f:
+                ujson.dump(main_json, f)
 
-        system = main.run(main_file)
+            system = main.run(main_file)
 
-        system.calculate_resilience()
+            system.calculate_resilience()
 
-        # Append the recovery time to results_rlz 
-        if ind == 0:
-            resilience_calculator_id = 0
-            resilience_results.update({
-                    "time_steps": list(range(0, system.MAX_TIME_STEP+1))
-                })
-            resources_to_plot = system.resilience_calculators[resilience_calculator_id].system_supply.keys()
-            for resource_name in resources_to_plot: 
+            # Append the recovery time to results_rlz 
+            if needsInitiation:
+                needsInitiation = False
+                num_of_rlz_per_rank = int(np.floor(len(realizations_to_run)/numP))
+                if procID < len(realizations_to_run)%numP:
+                    num_of_rlz_per_rank += 1
+                # Initialize resilience_results
+                resilience_results_buffer = dict()
+                resilience_calculator_id = 0
                 resilience_results.update({
-                    resource_name: {
-                         "Supply": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1]),
-                         "Demand": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1]),
-                         "Consumption": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1])
+                        "time_steps": list(range(0, system.MAX_TIME_STEP+1))
+                    })
+                resources_to_plot = system.resilience_calculators[resilience_calculator_id].system_supply.keys()
+                for resource_name in resources_to_plot: 
+                    resilience_results_buffer.update({
+                        resource_name: {
+                            "Supply": np.zeros([num_of_rlz_per_rank, system.MAX_TIME_STEP+1]),
+                            "Demand": np.zeros([num_of_rlz_per_rank, system.MAX_TIME_STEP+1]),
+                            "Consumption": np.zeros([num_of_rlz_per_rank, system.MAX_TIME_STEP+1])
+                        }
+                    })
+                # Initialize result_agg
+                result_agg_buffer = dict()
+                for asset_type, item in results_det.items():
+                    asset_type_result = dict()
+                    for asset_subtype, asset_subtype_item in item.items():
+                        asset_subtype_result = dict()
+                        for aim_id, aim in asset_subtype_item.items():
+                            asset_subtype_result.update({aim_id:{
+                                "RecoveryDuration":np.zeros(num_of_rlz_per_rank)
+                            }})
+                        asset_type_result.update({asset_subtype:asset_subtype_result})
+                    result_agg_buffer.update({asset_type:asset_type_result})
+                del results_det
+                
+            resilience_result_rlz_i = dict()
+            for resource_name in resources_to_plot:
+                resilience_result_rlz_i.update({
+                        "time_steps": list(range(0, system.time_step+1)),
+                        resource_name: {
+                            "Supply": system.resilience_calculators[resilience_calculator_id].system_supply[resource_name][:system.time_step+1],
+                            "Demand": system.resilience_calculators[resilience_calculator_id].system_demand[resource_name][:system.time_step+1],
+                            "Consumption": system.resilience_calculators[resilience_calculator_id].system_consumption[resource_name][:system.time_step+1]
+                        }
                     }
-                })
-        resilience_result_rlz_i = dict()
-        for resource_name in resources_to_plot:
-            resilience_result_rlz_i.update({
-                    "time_steps": list(range(0, system.time_step+1)),
-                    resource_name: {
-                         "Supply": system.resilience_calculators[resilience_calculator_id].system_supply[resource_name][:system.time_step+1],
-                         "Demand": system.resilience_calculators[resilience_calculator_id].system_demand[resource_name][:system.time_step+1],
-                         "Consumption": system.resilience_calculators[resilience_calculator_id].system_consumption[resource_name][:system.time_step+1]
-                    }
-                }
-                )
-            resilience_results[resource_name]['Supply'][ind,:system.time_step+1] = \
-                system.resilience_calculators[resilience_calculator_id].system_supply[resource_name][:system.time_step+1]
-            resilience_results[resource_name]['Demand'][ind,:system.time_step+1] = \
-                system.resilience_calculators[resilience_calculator_id].system_demand[resource_name][:system.time_step+1]
-            resilience_results[resource_name]['Consumption'][ind,:system.time_step+1] = \
-                system.resilience_calculators[resilience_calculator_id].system_consumption[resource_name][:system.time_step+1]
-        resilience_result_rlz_i_file = os.path.join(rlz_dir, "ResilienceResult.json")
-        with open(resilience_result_rlz_i_file, 'w') as f:
-            ujson.dump(resilience_result_rlz_i, f)
-        result_file_name = os.path.join(inputRWHALE['runDir'],"Results", 
-                                        f"Results_{rlz_ind}.json")
-        with open(result_file_name, 'r') as f:
-            results = json.load(f)
-        for comp in system.components:
-            if getattr(comp, 'r2d_comp', False) is True:
-                recovery_duration = getattr(comp, 'recoverd_time_step',system.MAX_TIME_STEP) - \
-                    system.DISASTER_TIME_STEP
-                recovery_duration = max(0, recovery_duration)
-                results[comp.asset_type][comp.asset_subtype][comp.aim_id].update({
-                    "Recovery": {"Duration":recovery_duration}
-                })
-                result_agg[comp.asset_type][comp.asset_subtype][comp.aim_id]\
-                    ['RecoveryDuration'][ind] = recovery_duration
-        with open(result_file_name, 'w') as f:
-            ujson.dump(results, f)
-    
-        
-    # Calculate stats of the results and add to results_det.json
-    with open(result_det_path, 'r') as f:
-        results_det = json.load(f)
-    for asset_type, item in result_agg.items():
-        for asset_subtype, asset_subtype_item in item.items():
-            for aim_id, aim in asset_subtype_item.items():
-                if 'R2Dres' not in results_det[asset_type][asset_subtype][aim_id].keys():
-                    results_det[asset_type][asset_subtype][aim_id].update({'R2Dres':{}})
-                results_det[asset_type][asset_subtype][aim_id]['R2Dres'].update({
-                    "R2Dres_mean_RecoveryDuration":aim['RecoveryDuration'].mean(),
-                    "R2Dres_std_RecoveryDuration":aim['RecoveryDuration'].std()
-                })
-    with open(result_det_path, 'w') as f:
-        ujson.dump(results_det, f)
-    
-    recovery_result_path = os.path.join(rec_ouput_dir, "ResilienceResult.json")
-    for resource_name in resources_to_plot: 
-        resilience_results[resource_name].update({
-             'R2Dres_mean_Supply':resilience_results[resource_name]['Supply'].mean(axis=0).tolist(),
-             'R2Dres_std_Supply':resilience_results[resource_name]['Supply'].std(axis=0).tolist(),
-             'R2Dres_mean_Demand':resilience_results[resource_name]['Demand'].mean(axis=0).tolist(),
-             'R2Dres_std_Demand':resilience_results[resource_name]['Demand'].std(axis=0).tolist(),
-             'R2Dres_mean_Consumption':resilience_results[resource_name]['Consumption'].mean(axis=0).tolist(),
-             'R2Dres_std_Consumption':resilience_results[resource_name]['Consumption'].std(axis=0).tolist()
-        })
-        resilience_results[resource_name].pop("Supply")
-        resilience_results[resource_name].pop("Demand")
-        resilience_results[resource_name].pop("Consumption")
+                    )
+                resilience_results_buffer[resource_name]['Supply'][ind_in_rank,:system.time_step+1] = \
+                    system.resilience_calculators[resilience_calculator_id].system_supply[resource_name][:system.time_step+1]
+                resilience_results_buffer[resource_name]['Demand'][ind_in_rank,:system.time_step+1] = \
+                    system.resilience_calculators[resilience_calculator_id].system_demand[resource_name][:system.time_step+1]
+                resilience_results_buffer[resource_name]['Consumption'][ind_in_rank,:system.time_step+1] = \
+                    system.resilience_calculators[resilience_calculator_id].system_consumption[resource_name][:system.time_step+1]
+            resilience_result_rlz_i_file = os.path.join(rlz_dir, "ResilienceResult.json")
+            with open(resilience_result_rlz_i_file, 'w') as f:
+                ujson.dump(resilience_result_rlz_i, f)
+            result_file_name = os.path.join(inputRWHALE['runDir'],"Results", 
+                                            f"Results_{rlz_ind}.json")
+            with open(result_file_name, 'r') as f:
+                results = json.load(f)
+            for comp in system.components:
+                if getattr(comp, 'r2d_comp', False) is True:
+                    recovery_duration = getattr(comp, 'recoverd_time_step',system.MAX_TIME_STEP) - \
+                        system.DISASTER_TIME_STEP
+                    recovery_duration = max(0, recovery_duration)
+                    results[comp.asset_type][comp.asset_subtype][comp.aim_id].update({
+                        "Recovery": {"Duration":recovery_duration}
+                    })
+                    result_agg_buffer[comp.asset_type][comp.asset_subtype][comp.aim_id]\
+                        ['RecoveryDuration'][ind_in_rank] = recovery_duration
+            with open(result_file_name, 'w') as f:
+                ujson.dump(results, f)
 
-       
-    with open(recovery_result_path, 'w') as f:
-        ujson.dump(resilience_results, f)
+            ind_in_rank += 1
+        count = count + 1
+
+    # wait for all to finish
+    if doParallel:
+        comm.Barrier()
+
+    # if rank 0, gather result_agg and resilience_results, write to file
+    # note that the gathered results dosen't follow the order in realization_to_run
+    # but this order is not needed when calculating mean and std
+    if doParallel:
+        # gather results_agg
+        for asset_type, item in result_agg_buffer.items():
+            asset_type_result = dict()
+            for asset_subtype, asset_subtype_item in item.items():
+                asset_subtype_result = dict()
+                for aim_id, aim in asset_subtype_item.items():
+                    asset_subtype_result.update({aim_id:{
+                        "RecoveryDuration":comm.gather(result_agg_buffer[asset_type][asset_subtype], root=0)
+                    }})
+                asset_type_result.update({asset_subtype:asset_subtype_result})
+            result_agg.update({asset_type:asset_type_result})
+            # gather resilience_resutls
+        for resource_name in resources_to_plot:
+            if procID == 0:
+                resilience_results.update({
+                resource_name: {
+                    "Supply": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1]),
+                    "Demand": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1]),
+                    "Consumption": np.zeros([len(realizations_to_run), system.MAX_TIME_STEP+1])
+                    }
+                })
+            comm.gather(resilience_results_buffer[resource_name]["Supply"],
+                                          resilience_results[resource_name]["Supply"], root=0)
+            comm.gather(resilience_results_buffer[resource_name]["Demand"],
+                                          resilience_results[resource_name]["Demand"], root=0)
+            comm.gather(resilience_results_buffer[resource_name]["Consumption"],
+                                          resilience_results[resource_name]["Consumption"], root=0)
+    else:
+        for resource_name in resources_to_plot: 
+            resilience_results.update({
+                resource_name: resilience_results_buffer[resource_name]
+            })
+        result_agg = result_agg_buffer
+
+    if procID==0:
+    # Calculate stats of the results and add to results_det.json
+        with open(result_det_path, 'r') as f:
+            results_det = json.load(f)
+        for asset_type, item in result_agg.items():
+            for asset_subtype, asset_subtype_item in item.items():
+                for aim_id, aim in asset_subtype_item.items():
+                    if 'R2Dres' not in results_det[asset_type][asset_subtype][aim_id].keys():
+                        results_det[asset_type][asset_subtype][aim_id].update({'R2Dres':{}})
+                    results_det[asset_type][asset_subtype][aim_id]['R2Dres'].update({
+                        "R2Dres_mean_RecoveryDuration":aim['RecoveryDuration'].mean(),
+                        "R2Dres_std_RecoveryDuration":aim['RecoveryDuration'].std()
+                    })
+        with open(result_det_path, 'w') as f:
+            ujson.dump(results_det, f)
+    
+        recovery_result_path = os.path.join(rec_ouput_dir, "ResilienceResult.json")
+        for resource_name in resources_to_plot: 
+            resilience_results[resource_name].update({
+                'R2Dres_mean_Supply':resilience_results[resource_name]['Supply'].mean(axis=0).tolist(),
+                'R2Dres_std_Supply':resilience_results[resource_name]['Supply'].std(axis=0).tolist(),
+                'R2Dres_mean_Demand':resilience_results[resource_name]['Demand'].mean(axis=0).tolist(),
+                'R2Dres_std_Demand':resilience_results[resource_name]['Demand'].std(axis=0).tolist(),
+                'R2Dres_mean_Consumption':resilience_results[resource_name]['Consumption'].mean(axis=0).tolist(),
+                'R2Dres_std_Consumption':resilience_results[resource_name]['Consumption'].std(axis=0).tolist()
+            })
+            resilience_results[resource_name].pop("Supply")
+            resilience_results[resource_name].pop("Demand")
+            resilience_results[resource_name].pop("Consumption")
+
+        
+        with open(recovery_result_path, 'w') as f:
+            ujson.dump(resilience_results, f)
 
     # Below are for development use
     from pyrecodes import GeoVisualizer as gvis
