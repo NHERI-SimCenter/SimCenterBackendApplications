@@ -11,6 +11,7 @@ import sys
 
 import pdfs
 
+
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
 
@@ -23,7 +24,16 @@ class DataProcessingError(Exception):
 
 
 class CovarianceMatrixPreparer:
-    def __init__(self, calibrationData: np.ndarray, edpLengthsList: list[int], edpNamesList: list[str], workdirMain: str, numExperiments: int, logFile: TextIO, runType: str) -> None:
+    def __init__(
+        self,
+        calibrationData: np.ndarray,
+        edpLengthsList: list[int],
+        edpNamesList: list[str],
+        workdirMain: str,
+        numExperiments: int,
+        logFile: TextIO,
+        runType: str,
+    ) -> None:
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
         self.edpNamesList = edpNamesList
@@ -53,21 +63,34 @@ class CovarianceMatrixPreparer:
         # calibrated. There will be one such error variance value per response quantity. If there is only data from one
         # experiment,then the default error std.dev. value is assumed to be 5% of the absolute maximum value of the data
         # corresponding to that response quantity.
-        defaultErrorVariances = np.zeros_like(self.edpLengthsList, dtype=float)
-        if (np.shape(self.calibrationData)[0] > 1):  # if there are more than 1 rows of data, i.e. data from multiple experiments
+        defaultErrorVariances = 1e-12 * np.ones_like(
+            self.edpLengthsList, dtype=float
+        )
+        # defaultErrorVariances = np.zeros_like(self.edpLengthsList, dtype=float)
+        if (
+            np.shape(self.calibrationData)[0] > 1
+        ):  # if there are more than 1 rows of data, i.e. data from multiple experiments
             currentIndex = 0
             for i in range(len(self.edpLengthsList)):
-                dataSlice = self.calibrationData[:, currentIndex : currentIndex + self.edpLengthsList[i]]
-                defaultErrorVariances[i] = np.nanvar(dataSlice)
+                dataSlice = self.calibrationData[
+                    :, currentIndex : currentIndex + self.edpLengthsList[i]
+                ]
+                v = np.nanvar(dataSlice)
+                if v != 0:
+                    defaultErrorVariances[i] = v
                 currentIndex += self.edpLengthsList[i]
         else:
             currentIndex = 0
             for i in range(len(self.edpLengthsList)):
-                dataSlice = self.calibrationData[:, currentIndex : currentIndex + self.edpLengthsList[i]]
-                defaultErrorVariances[i] = (0.05 * np.max(np.absolute(dataSlice))) ** 2
+                dataSlice = self.calibrationData[
+                    :, currentIndex : currentIndex + self.edpLengthsList[i]
+                ]
+                v = np.max(np.absolute(dataSlice))
+                if v != 0:
+                    defaultErrorVariances[i] = (0.05 * v) ** 2
                 currentIndex += self.edpLengthsList[i]
         self.defaultErrorVariances = defaultErrorVariances
-    
+
     def createCovarianceMatrix(self):
         covarianceMatrixList = []
         covarianceTypeList = []
@@ -76,7 +99,7 @@ class CovarianceMatrixPreparer:
         edpNamesList = self.edpNamesList
         workdirMain = self.workdirMain
         numExperiments = self.numExperiments
-        
+
         logFile.write("\n\nLooping over the experiments and EDPs")
         # First, check if the user has passed in any covariance matrix data
         for expNum in range(1, numExperiments + 1):
@@ -108,7 +131,9 @@ class CovarianceMatrixPreparer:
                         )
                     )
                     # Check the data in the covariance matrix file
-                    tmpCovFile = os.path.join(workdirMain, "quoFEMTempCovMatrixFile.sigma")
+                    tmpCovFile = os.path.join(
+                        workdirMain, "quoFEMTempCovMatrixFile.sigma"
+                    )
                     numRows = 0
                     numCols = 0
                     linenum = 0
@@ -129,13 +154,17 @@ class CovarianceMatrixPreparer:
                                             logFile.write(
                                                 "\nERROR: The number of columns in line {} do not match the "
                                                 "number of columns in line {} of file {}.".format(
-                                                    numRows, numRows - 1, covarianceFile
+                                                    numRows,
+                                                    numRows - 1,
+                                                    covarianceFile,
                                                 )
                                             )
                                             raise DataProcessingError(
                                                 "ERROR: The number of columns in line {} do not match the "
                                                 "number of columns in line {} of file {}.".format(
-                                                    numRows, numRows - 1, covarianceFile
+                                                    numRows,
+                                                    numRows - 1,
+                                                    covarianceFile,
                                                 )
                                             )
                                     tempLine = ""
@@ -171,13 +200,17 @@ class CovarianceMatrixPreparer:
                             logFile.write(
                                 "\nERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, self.edpLengthsList[i], numCols
+                                    covarianceFile,
+                                    self.edpLengthsList[i],
+                                    numCols,
                                 )
                             )
                             raise DataProcessingError(
                                 "ERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, self.edpLengthsList[i], numCols
+                                    covarianceFile,
+                                    self.edpLengthsList[i],
+                                    numCols,
                                 )
                             )
                     elif numRows == self.edpLengthsList[i]:
@@ -189,18 +222,24 @@ class CovarianceMatrixPreparer:
                             )
                         elif numCols == self.edpLengthsList[i]:
                             covarianceTypeList.append("matrix")
-                            logFile.write("\n\t\tA full covariance matrix provided.")
+                            logFile.write(
+                                "\n\t\tA full covariance matrix provided."
+                            )
                         else:
                             logFile.write(
                                 "\nERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, self.edpLengthsList[i], numCols
+                                    covarianceFile,
+                                    self.edpLengthsList[i],
+                                    numCols,
                                 )
                             )
                             raise DataProcessingError(
                                 "ERROR: The number of columns of data in the covariance matrix file {}"
                                 " must be either 1 or {}. Found {} columns".format(
-                                    covarianceFile, self.edpLengthsList[i], numCols
+                                    covarianceFile,
+                                    self.edpLengthsList[i],
+                                    numCols,
                                 )
                             )
                     else:
@@ -216,7 +255,9 @@ class CovarianceMatrixPreparer:
                                 covarianceFile, self.edpLengthsList[i], numCols
                             )
                         )
-                    logFile.write("\n\t\tCovariance matrix: {}".format(covMatrix))
+                    logFile.write(
+                        "\n\t\tCovariance matrix: {}".format(covMatrix)
+                    )
                 else:
                     logFile.write(
                         "\n\t\tDid not find a user supplied file. Using the default variance value."
@@ -227,10 +268,14 @@ class CovarianceMatrixPreparer:
                     scalarVariance = np.array(self.defaultErrorVariances[i])
                     covarianceMatrixList.append(scalarVariance)
                     covarianceTypeList.append("scalar")
-                    logFile.write("\n\t\tCovariance matrix: {}".format(scalarVariance))
+                    logFile.write(
+                        "\n\t\tCovariance matrix: {}".format(scalarVariance)
+                    )
         self.covarianceMatrixList = covarianceMatrixList
         self.covarianceTypeList = covarianceTypeList
-        logFile.write(f"\n\nThe covariance matrix for prediction errors being used is:")
+        logFile.write(
+            f"\n\nThe covariance matrix for prediction errors being used is:"
+        )
         tmp = block_diag(*covarianceMatrixList)
         for row in tmp:
             rowString = " ".join([f"{col:14.8g}" for col in row])
@@ -238,9 +283,16 @@ class CovarianceMatrixPreparer:
         return self.covarianceMatrixList
 
 
-
 class CalDataPreparer:
-    def __init__(self, workdirMain: str, workdirTemplate: str, calDataFileName: str, edpNamesList: list[str], edpLengthsList: list[int], logFile: TextIO) -> None:
+    def __init__(
+        self,
+        workdirMain: str,
+        workdirTemplate: str,
+        calDataFileName: str,
+        edpNamesList: list[str],
+        edpLengthsList: list[int],
+        logFile: TextIO,
+    ) -> None:
         self.workdirMain = workdirMain
         self.workdirTemplate = workdirTemplate
         self.calDataFileName = calDataFileName
@@ -249,7 +301,7 @@ class CalDataPreparer:
         self.logFile = logFile
         self.lineLength = sum(edpLengthsList)
         self.moveCalDataFile(self.calDataFileName)
-    
+
     def moveCalDataFile(self, calDataFileName):
         os.rename(
             os.path.join(self.workdirTemplate, calDataFileName),
@@ -269,7 +321,9 @@ class CalDataPreparer:
         return headings
 
     def createTempCalDataFile(self, calDataFile):
-        self.tempCalDataFile = os.path.join(self.workdirMain, "quoFEMTempCalibrationDataFile.cal")
+        self.tempCalDataFile = os.path.join(
+            self.workdirMain, "quoFEMTempCalibrationDataFile.cal"
+        )
         f1 = open(self.tempCalDataFile, "w")
         headings = self.createHeadings()
         f1.write(headings)
@@ -287,7 +341,9 @@ class CalDataPreparer:
                     words = line.split()
                     if len(words) == self.lineLength:
                         self.numExperiments += 1
-                        tempLine = "{} {} ".format(self.numExperiments, interface)
+                        tempLine = "{} {} ".format(
+                            self.numExperiments, interface
+                        )
                         for w in words:
                             tempLine += "{} ".format(w)
                         self.logFile.write(
@@ -300,13 +356,19 @@ class CalDataPreparer:
                         self.logFile.write(
                             "\nERROR: The number of entries ({}) in line num {} of the file '{}' "
                             "does not match the expected length {}".format(
-                                len(words), linenum, calDataFile, self.lineLength
+                                len(words),
+                                linenum,
+                                calDataFile,
+                                self.lineLength,
                             )
                         )
                         raise DataProcessingError(
                             "ERROR: The number of entries ({}) in line num {} of the file '{}' "
                             "does not match the expected length {}".format(
-                                len(words), linenum, calDataFile, self.lineLength
+                                len(words),
+                                linenum,
+                                calDataFile,
+                                self.lineLength,
                             )
                         )
         f1.close()
@@ -314,27 +376,45 @@ class CalDataPreparer:
     def readCleanedCalData(self):
         self.calibrationData = np.atleast_2d(
             np.genfromtxt(
-                self.tempCalDataFile, skip_header=1, usecols=np.arange(2, 2 + self.lineLength).tolist()
+                self.tempCalDataFile,
+                skip_header=1,
+                usecols=np.arange(2, 2 + self.lineLength).tolist(),
             )
         )
-    
+
     def getCalibrationData(self):
         calDataFile = os.path.join(self.workdirMain, self.calDataFileName)
         self.logFile.write(
-            "\nCalibration data file being processed: \n\t{}\n".format(calDataFile)
+            "\nCalibration data file being processed: \n\t{}\n".format(
+                calDataFile
+            )
         )
         self.createTempCalDataFile(calDataFile)
         self.readCleanedCalData()
         return self.calibrationData, self.numExperiments
 
 
-def transform_data_function(data_to_transform: np.ndarray, list_of_data_segment_lengths: list[int], 
-                            list_of_scale_factors: list[float], list_of_shift_factors: list[float]):
+def transform_data_function(
+    data_to_transform: np.ndarray,
+    list_of_data_segment_lengths: list[int],
+    list_of_scale_factors: list[float],
+    list_of_shift_factors: list[float],
+):
     currentPosition = 0
     for j in range(len(list_of_data_segment_lengths)):
-        slice_of_data = data_to_transform[:, currentPosition : currentPosition + list_of_data_segment_lengths[j]]
+        slice_of_data = data_to_transform[
+            :,
+            currentPosition : currentPosition
+            + list_of_data_segment_lengths[j],
+        ]
         slice_of_data = slice_of_data + list_of_shift_factors[j]
-        data_to_transform[:, currentPosition : currentPosition + list_of_data_segment_lengths[j]] = (slice_of_data / list_of_scale_factors[j])
+        data_to_transform[
+            :,
+            currentPosition : currentPosition
+            + list_of_data_segment_lengths[j],
+        ] = (
+            slice_of_data / list_of_scale_factors[j]
+        )
         currentPosition += list_of_data_segment_lengths[j]
     return data_to_transform
 
@@ -348,7 +428,7 @@ class DataTransformer:
             raise ValueError(f"transform strategy must be one of {string}")
         else:
             self.transformStrategy = transformStrategy
-        
+
         logFile.write(
             "\n\nFor numerical convenience, a transformation is applied to the calibration data \nand model "
             "prediction corresponding to each response quantity. \nThe calibration data and model prediction for "
@@ -356,7 +436,9 @@ class DataTransformer:
             "prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value)."
         )
 
-    def computeScaleAndShiftFactors(self, calibrationData: np.ndarray, edpLengthsList: list[int]):
+    def computeScaleAndShiftFactors(
+        self, calibrationData: np.ndarray, edpLengthsList: list[int]
+    ):
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
 
@@ -374,9 +456,14 @@ class DataTransformer:
                 "\n\tthen the scale factor is set to 1.0, and the shift factor is set to 1.0."
             )
             for j in range(len(self.edpLengthsList)):
-                calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + self.edpLengthsList[j]]
+                calibrationDataSlice = calibrationData[
+                    :,
+                    currentPosition : currentPosition + self.edpLengthsList[j],
+                ]
                 absMax = np.absolute(np.max(calibrationDataSlice))
-                if absMax == 0:  # This is to handle the case if abs max of data = 0.
+                if (
+                    absMax == 0
+                ):  # This is to handle the case if abs max of data = 0.
                     locShift = 1.0
                     absMax = 1.0
                 shiftFactors.append(locShift)
@@ -384,20 +471,25 @@ class DataTransformer:
                 currentPosition += self.edpLengthsList[j]
         else:
             self.logFile.write(
-            "\n\nComputing scale and shift factors. "
-            "\n\tThe shift factors are set to the negative of the mean value for each response variable."
-            "\n\tThe scale factors used are the standard deviation of the data for each response variable."
-            "\n\tIf the standard deviation of the data for any response variable is 0.0, "
-            "\n\tthen the scale factor is set to 1.0."
+                "\n\nComputing scale and shift factors. "
+                "\n\tThe shift factors are set to the negative of the mean value for each response variable."
+                "\n\tThe scale factors used are the standard deviation of the data for each response variable."
+                "\n\tIf the standard deviation of the data for any response variable is 0.0, "
+                "\n\tthen the scale factor is set to 1.0."
             )
             for j in range(len(self.edpLengthsList)):
-                calibrationDataSlice = calibrationData[:, currentPosition : currentPosition + self.edpLengthsList[j]]
+                calibrationDataSlice = calibrationData[
+                    :,
+                    currentPosition : currentPosition + self.edpLengthsList[j],
+                ]
                 meanValue = np.nanmean(calibrationDataSlice)
                 stdValue = np.nanstd(calibrationDataSlice)
-                if stdValue == 0:  # This is to handle the case if stdev of data = 0.
+                if (
+                    stdValue == 0
+                ):  # This is to handle the case if stdev of data = 0.
                     stdValue = 1.0
-                shiftFactors.append(stdValue)
-                scaleFactors.append(-meanValue)
+                scaleFactors.append(stdValue)
+                shiftFactors.append(-meanValue)
                 currentPosition += self.edpLengthsList[j]
 
         self.scaleFactors = scaleFactors
@@ -405,8 +497,12 @@ class DataTransformer:
         return scaleFactors, shiftFactors
 
     def transformData(self):
-        return transform_data_function(self.calibrationData, self.edpLengthsList, self.scaleFactors, self.shiftFactors)
-
+        return transform_data_function(
+            self.calibrationData,
+            self.edpLengthsList,
+            self.scaleFactors,
+            self.shiftFactors,
+        )
 
 
 def createLogFile(where: str, logfile_name: str):
@@ -418,7 +514,7 @@ def createLogFile(where: str, logfile_name: str):
     )
     logfile.write("\nRunning quoFEM's UCSD_UQ engine workflow")
     logfile.write("\nCWD: {}".format(os.path.abspath(".")))
-    return logfile   
+    return logfile
 
 
 def syncLogFile(logFile: TextIO):
@@ -444,12 +540,16 @@ def make_distributions(variables):
             mean = float(variables["Par1"][i])
             standard_deviation = float(variables["Par2"][i])
 
-            all_distributions_list.append(pdfs.Normal(mu=mean, sig=standard_deviation))
+            all_distributions_list.append(
+                pdfs.Normal(mu=mean, sig=standard_deviation)
+            )
 
         if variables["distributions"][i] == "Half-Normal":
             standard_deviation = float(variables["Par1"][i])
 
-            all_distributions_list.append(pdfs.Halfnormal(sig=standard_deviation))
+            all_distributions_list.append(
+                pdfs.Halfnormal(sig=standard_deviation)
+            )
 
         if variables["distributions"][i] == "Truncated-Normal":
             mean = float(variables["Par1"][i])
@@ -550,35 +650,50 @@ def make_distributions(variables):
                 all_distributions_list.append(
                     pdfs.DiscreteDist(values=values, weights=weights)
                 )
-    
+
     return all_distributions_list
 
 
 class LogLikelihoodHandler:
-    def __init__(self, data: NDArray, covariance_matrix_blocks_list: list[NDArray], 
-                 list_of_data_segment_lengths: list[int], list_of_scale_factors: list[float], 
-                 list_of_shift_factors: list[float], workdir_main,
-                 full_path_to_tmcmc_code_directory: str,
-                 log_likelihood_file_name: str="") -> None:
+    def __init__(
+        self,
+        data: NDArray,
+        covariance_matrix_blocks_list: list[NDArray],
+        list_of_data_segment_lengths: list[int],
+        list_of_scale_factors: list[float],
+        list_of_shift_factors: list[float],
+        workdir_main,
+        full_path_to_tmcmc_code_directory: str,
+        log_likelihood_file_name: str = "",
+    ) -> None:
         self.data = data
         self.covariance_matrix_list = covariance_matrix_blocks_list
         self.list_of_data_segment_lengths = list_of_data_segment_lengths
         self.list_of_scale_factors = list_of_scale_factors
         self.list_of_shift_factors = list_of_shift_factors
         self.workdir_main = workdir_main
-        self.full_path_to_tmcmc_code_directory = full_path_to_tmcmc_code_directory
+        self.full_path_to_tmcmc_code_directory = (
+            full_path_to_tmcmc_code_directory
+        )
         self.log_likelihood_file_name = log_likelihood_file_name
         sys.path.append(self.workdir_main)
         self._copy_log_likelihood_module()
         self.num_experiments = self._get_num_experiments()
-        self.num_response_quantities = self. _get_num_response_quantities()
+        self.num_response_quantities = self._get_num_response_quantities()
         self.log_likelihood_function = self.get_log_likelihood_function()
-    
+
     def _copy_log_likelihood_module(self):
-        if len(self.log_likelihood_file_name) == 0:  # if the log-likelihood file is an empty string
+        if (
+            len(self.log_likelihood_file_name) == 0
+        ):  # if the log-likelihood file is an empty string
             self.log_likelihood_file_name = "defaultLogLikeScript.py"
-            src = os.path.join(self.full_path_to_tmcmc_code_directory, self.log_likelihood_file_name)
-            dst = os.path.join(self.workdir_main, self.log_likelihood_file_name)
+            src = os.path.join(
+                self.full_path_to_tmcmc_code_directory,
+                self.log_likelihood_file_name,
+            )
+            dst = os.path.join(
+                self.workdir_main, self.log_likelihood_file_name
+            )
             try:
                 shutil.copyfile(src, dst)
             except Exception:
@@ -587,39 +702,56 @@ class LogLikelihoodHandler:
 
     def _get_num_experiments(self) -> int:
         return np.shape(self.data)[0]
-    
+
     def _get_num_response_quantities(self) -> int:
         return len(self.list_of_data_segment_lengths)
 
-    def _import_log_likelihood_module(self, log_likelihood_module_name: str) -> Callable:
+    def _import_log_likelihood_module(
+        self, log_likelihood_module_name: str
+    ) -> Callable:
         try:
             module = import_module(log_likelihood_module_name)
         except:
-            msg = ("\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-                    os.path.join(self.workdir_main, self.log_likelihood_file_name)))
+            msg = "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
+                os.path.join(self.workdir_main, self.log_likelihood_file_name)
+            )
             raise ImportError(msg)
-        return module.log_likelihood
-    
+        return module # type: ignore
+
     def get_log_likelihood_function(self) -> Callable:
-        log_likelihood_module_name = os.path.splitext(self.log_likelihood_file_name)[0]
-        return self._import_log_likelihood_module(log_likelihood_module_name)
+        log_likelihood_module_name = os.path.splitext(
+            self.log_likelihood_file_name
+        )[0]
+        module = self._import_log_likelihood_module(log_likelihood_module_name)
+        return module.log_likelihood
 
     def _transform_prediction(self, prediction: NDArray) -> NDArray:
-        return transform_data_function(prediction, self.list_of_data_segment_lengths, self.list_of_scale_factors, self.list_of_shift_factors)
+        return transform_data_function(
+            prediction,
+            self.list_of_data_segment_lengths,
+            self.list_of_scale_factors,
+            self.list_of_shift_factors,
+        )
 
     def _compute_residuals(self, transformed_prediction: NDArray) -> NDArray:
         return transformed_prediction - self.data
-    
+
     def _make_mean(self, response_num: int) -> NDArray:
         return np.zeros((self.list_of_data_segment_lengths[response_num]))
-    
+
     def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
-        return cov_multiplier * self.covariance_matrix_list[response_num]
+        return cov_multiplier * np.atleast_2d(self.covariance_matrix_list[response_num])
 
     def _make_input_for_log_likelihood_function(self, prediction) -> list:
-        return [self._transform_prediction(prediction), ]
-    
-    def _loop_for_log_likelihood(self, log_likelihood_function, prediction, list_of_covariance_multipliers):
+        return [
+            self._transform_prediction(prediction),
+        ]
+
+    def _loop_for_log_likelihood(
+        self,
+        prediction,
+        list_of_covariance_multipliers,
+    ):
         transformed_prediction = self._transform_prediction(prediction)
         allResiduals = self._compute_residuals(transformed_prediction)
         loglike = 0
@@ -627,17 +759,25 @@ class LogLikelihoodHandler:
             currentPosition = 0
             for j in range(self.num_response_quantities):
                 length = self.list_of_data_segment_lengths[j]
-                residuals = allResiduals[i, currentPosition:currentPosition + length]
-                currentPosition =  currentPosition + length
-                cov = self._make_covariance(j, list_of_covariance_multipliers[j])
+                residuals = allResiduals[
+                    i, currentPosition : currentPosition + length
+                ]
+                currentPosition = currentPosition + length
+                cov = self._make_covariance(
+                    j, list_of_covariance_multipliers[j]
+                )
                 mean = self._make_mean(j)
-                ll = log_likelihood_function(residuals, mean, cov)
+                ll = self.log_likelihood_function(residuals, mean, cov)
                 if not np.isnan(ll):
                     loglike += ll
                 else:
                     loglike += -np.inf
         return loglike
 
-    def evaluate_log_likelihood(self, log_likelihood_function: Callable, iterable: tuple) -> float:
-        return self._loop_for_log_likelihood(log_likelihood_function, prediction=iterable[0], list_of_covariance_multipliers=iterable[1])
-
+    def evaluate_log_likelihood(
+        self, prediction: NDArray, list_of_covariance_multipliers: list[float]
+    ) -> float:
+        return self._loop_for_log_likelihood(
+            prediction=prediction,
+            list_of_covariance_multipliers=list_of_covariance_multipliers,
+        )

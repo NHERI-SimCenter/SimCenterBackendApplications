@@ -12,7 +12,7 @@ import numpy as np
 
 from parseData import parseDataFunction
 from runTMCMC import run_TMCMC
-from calibration_utilities import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions
+from calibration_utilities import CovarianceMatrixPreparer, CalDataPreparer, DataTransformer, createLogFile, syncLogFile, make_distributions, LogLikelihoodHandler
 
 # ======================================================================================================================
 
@@ -163,6 +163,18 @@ def main(input_args):
     covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
     # ======================================================================================================================
+    # Get log-likelihood function
+    LL_Handler = LogLikelihoodHandler(data=transformed_calibration_data, 
+                                      covariance_matrix_blocks_list=covariance_matrix_list, 
+                                      list_of_data_segment_lengths=edp_lengths_list,
+                                      list_of_scale_factors=scale_factors, 
+                                      list_of_shift_factors=shift_factors,
+                                      workdir_main=working_directory,
+                                      full_path_to_tmcmc_code_directory=mainscript_path,
+                                      log_likelihood_file_name="loglike_script.py")
+    log_likelihood_function = LL_Handler.evaluate_log_likelihood
+
+    # ======================================================================================================================
     # Start TMCMC workflow
     logfile.write("\n\n==========================")
     logfile.write("\nSetting up the TMCMC algorithm")
@@ -218,7 +230,8 @@ def main(input_args):
             all_distributions_list,
             number_of_MCMC_steps,
             max_number_of_MCMC_steps,
-            loglikelihood_module.log_likelihood,
+            # loglikelihood_module.log_likelihood,
+            log_likelihood_function,
             parameters_of_model,
             working_directory,
             tmcmc_data_instance.seedVal,
@@ -248,10 +261,12 @@ def main(input_args):
 
         # Compute model evidence
         logfile.write("\n\n\t\tComputing the model evidence")
-        evidence = 1
-        for i in range(len(mytrace)):
-            Wm = mytrace[i][2]
-            evidence *= np.mean(Wm)
+        # evidence = 1
+        # for i in range(len(mytrace)):
+        #     Wm = mytrace[i][2]
+        #     evidence *= np.mean(Wm)
+        # logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
+        evidence = np.exp(log_evidence)
         logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
         logfile.write("\n\t\t\tModel log_evidence: {:g}".format(log_evidence))
 

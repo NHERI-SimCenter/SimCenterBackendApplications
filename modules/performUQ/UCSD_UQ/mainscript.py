@@ -18,6 +18,14 @@ import uq_utilities
 # ======================================================================================================================
 def main(input_args):
 
+    # # Initialize analysis
+    # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent
+    # path_to_working_directory = Path(input_args[3]).resolve()
+    # path_to_template_directory = Path(input_args[4]).resolve()
+    # run_type = input_args[5]  # either "runningLocal" or "runningRemote"
+    # driver_file_name = input_args[6]
+    # input_file_name = input_args[7]
+
     # Initialize analysis
     path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent
     path_to_working_directory = Path(input_args[1]).resolve()
