@@ -272,7 +272,7 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):
 
 def save_single(settings, result, name, restoration_data):
     result_file_directory = settings.process['result_directory']
-    print(result_file_directory)
+    #print(result_file_directory)
     result_name   = name + '.res'
     settings_name = name + '.xlsx'    
     

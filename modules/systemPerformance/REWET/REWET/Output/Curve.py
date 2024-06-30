@@ -90,21 +90,7 @@ class Curve():
             time_action_done[time] = len(done_list) / len(tank_damage_time)
         
         return pd.Series(time_action_done)
-    
-    def temp(self, scn_name):
-        reservoir_name_list = self.wn.reservoir_name_list
-        res = self.data[scn_name]
-        our_res = set()
-        for reservoir_name in reservoir_name_list:
-            if reservoir_name in res.node['demand'].columns:
-                flow_in_time = res.node['demand'][reservoir_name]
-            else:
-                continue
-            for time, flow in flow_in_time.iteritems():
-                if abs(flow) > 1:
-                    our_res.add(reservoir_name)
-        return our_res
-    
+   
     def getInputWaterFlowCurve(self, scn_name, tank_name_list=None, reservoir_name_list = None, mode='all'):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
@@ -263,16 +249,32 @@ class Curve():
                 
         return s
     
-    def getDLIndexPopulation_4(self, scn_name , iPopulation="No", ratio= False, consider_leak=False, leak_ratio=1):
+    def getBSCIndexPopulation_4(self, scn_name, bsc="DL", iPopulation=False, ratio= False, consider_leak=False, leak_ratio=1):
+        if bsc == "DL":
+            return self.getDLIndexPopulation_4(scn_name,
+                                          iPopulation=iPopulation,
+                                          ratio= ratio,
+                                          consider_leak=consider_leak,
+                                          leak_ratio=leak_ratio)
+        elif bsc == "QN":
+            return self.getQNIndexPopulation_4(scn_name,
+                                          iPopulation=iPopulation,
+                                          ratio=ratio,
+                                          consider_leak=consider_leak,
+                                          leak_ratio=leak_ratio)
+        else:
+            raise ValueError(f"BSC input is not recognizable: {bsc}")
+    
+    def getDLIndexPopulation_4(self, scn_name , iPopulation="No",ratio= False, consider_leak=False, leak_ratio=1):
         if type(leak_ratio) != float:
             leak_ratio = float(leak_ratio)
         
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         
-        if type(self._population_data) == type(None) or iPopulation=="No":
+        if type(self._population_data) == type(None) or iPopulation==False:
             pop = pd.Series(index=self.demand_node_name_list, data=1)
-        elif type(self._population_data) == type(None) and iPopulation=="Yes":
+        elif type(self._population_data) == type(None) and iPopulation==True:
             raise ValueError("Population data is not available")
         else:
             pop = self._population_data
@@ -284,7 +286,8 @@ class Curve():
         demands = self.getRequiredDemandForAllNodesandtime(scn_name)
         demands = demands[self.demand_node_name_list]
         
-        union_ = set(res.node['leak'].columns).union(set(self.demand_node_name_list) -(set(res.node['leak'].columns) ) - set(self.demand_node_name_list)) - (set(self.demand_node_name_list) - set(res.node['leak'].columns))
+        union_ = set(res.node['leak'].columns).union(set(self.demand_node_name_list)) -(set(res.node['leak'].columns)  - set(self.demand_node_name_list)) - (set(self.demand_node_name_list) - set(res.node['leak'].columns))   
+        union_ = list(union_)
         leak_res    = res.node['leak'][union_]
         
         leak_data = []
@@ -320,22 +323,23 @@ class Curve():
         
         return result
     
-    def getQNIndexPopulation_4(self, scn_name, iPopulation="No", ratio=False, consider_leak=False, leak_ratio=0.75):
+    def getQNIndexPopulation_4(self, scn_name, iPopulation=False, ratio=False, consider_leak=False, leak_ratio=0.75):
         if type(leak_ratio) != float:
             leak_ratio = float(leak_ratio)
             
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
 
-        if type(self._population_data) == type(None) or iPopulation=="No":
+        if type(self._population_data) == type(None) or iPopulation==False:
             pop = pd.Series(index=self.demand_node_name_list, data=1)
-        elif type(self._population_data) == type(None) and iPopulation=="Yes":
+        elif type(self._population_data) == type(None) and iPopulation==True:
             raise ValueError("Population data is not available")
         else:
             pop = self._population_data
         
         result = []
-        union_ = set(res.node['leak'].columns).union(set(self.demand_node_name_list) -(set(res.node['leak'].columns) ) - set(self.demand_node_name_list)) - (set(self.demand_node_name_list) - set(res.node['leak'].columns))   
+        union_ = set(res.node['leak'].columns).union(set(self.demand_node_name_list)) -(set(res.node['leak'].columns)  - set(self.demand_node_name_list)) - (set(self.demand_node_name_list) - set(res.node['leak'].columns))   
+        union_ = list(union_)
         refined_result = res.node['demand'][self.demand_node_name_list]
         demands = self.getRequiredDemandForAllNodesandtime(scn_name)
         demands        = demands[self.demand_node_name_list]
