@@ -134,16 +134,16 @@ def find_additional_output_req(liq_info, current_step):
 
 def infer_from_geologic_map(map_path, map_crs, lon_station, lat_station):
     gdf_units = sampleVector(map_path, map_crs, lon_station, lat_station, dtype = None)
-    gdf_units = gdf_units['UnitAbbr', 'geometry']
+    gdf_units = gdf_units['PTYPE']
     gdf_units = gdf_units.fillna('water')
-    default_geo_prop_fpath = os.path.join(os.path.abspath(__file__), 'database',\
+    default_geo_prop_fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database',\
             'groundfailure', 'Wills_etal_2015_CA_Geologic_Properties.csv')
     default_geo_prop = pd.read_csv(default_geo_prop_fpath)
-    unique_geo_unit = np.unique(gdf_units['UnitAbbr'])
-    phi_mean = np.empty_like(gdf_units['UnitAbbr'])
-    coh_mean = np.empty_like(gdf_units['UnitAbbr'])
+    unique_geo_unit = np.unique(gdf_units)
+    phi_mean = np.empty_like(gdf_units)
+    coh_mean = np.empty_like(gdf_units)
     for each in unique_geo_unit:
-        rows_with_geo_unit = np.where(gdf_units['UnitAbbr'].values==each)[0]
+        rows_with_geo_unit = np.where(gdf_units.values==each)[0]
         rows_for_param = np.where(default_geo_prop['Unit Abbreviation'].values==each)[0][0]
         phi_mean[rows_with_geo_unit] = \
             default_geo_prop['Friction Angle - Median (degrees)'][rows_for_param]
@@ -331,36 +331,49 @@ class BrayMacedo2019(Landslide):
         if parameters["SlopeThickness"] == "Defined (\"SlopeThickness\") in Site File (.csv)":
             self.t_slope = np.array([site['SlopeThickness'] for site in self.stations])
         elif parameters["SlopeThickness"] == "Use constant value (m)":
-            self.t_slope = np.array(parameters["SlopeThicknessValue"])
+            self.t_slope = np.array([parameters["SlopeThicknessValue"]]*len(self.stations))
         else:
             self.t_slope = sampleRaster(parameters["SlopeThickness"], parameters["inputCRS"],\
                      lon_station, lat_station)
         # gamma_soil
         if parameters["GammaSoil"] == "Defined (\"GammaSoil\") in Site File (.csv)":
             self.gamma_soil = np.array([site['GammaSoil'] for site in self.stations])
-        elif parameters["GammaSoil"] == "Use constant value (m)":
-            self.gamma_soil = np.array(parameters["GammaSoilValue"])
-        elif parameters["GammaSoil"] == "Infer from Geologic Map":
-            self.gamma_soil = infer_from_geologic_map(parameters["GammaSoilGeoMap"],\
-                                parameters['inputCRS'], lon_station, lat_station)
+        elif parameters["GammaSoil"] == "Use constant value (kN/m^3)":
+            self.gamma_soil = np.array(parameters["GammaSoilValue"]*len(self.stations))
         else:
             self.gamma_soil = sampleRaster(parameters["GammaSoil"], parameters["inputCRS"],\
                      lon_station, lat_station)
-        # coh_soil
-        if parameters["CohesionSoil"] == "Defined (\"CohesionSoil\") in Site File (.csv)":
-            self.coh_soil = np.array([site['CohesionSoil'] for site in self.stations])
-        elif parameters["CohesionSoil"] == "Use constant value (m)":
-            self.coh_soil = np.array(parameters["CohesionSoilValue"])
-        elif parameters["CohesionSoil"] == "Infer from Geologic Map":
-            self.coh_soil = infer_from_geologic_map(parameters["CohesionSoilGeoMap"],\
-                                parameters['inputCRS'], lon_station, lat_station)
+        # phi_soil
+        if parameters["PhiSoil"] == "Defined (\"PhiSoil\") in Site File (.csv)":
+            self.phi_soil = np.array([site['PhiSoil'] for site in self.stations])
+        elif parameters["PhiSoil"] == "Use constant value (deg)":
+            self.phi_soil = np.array(parameters["PhiSoilValue"]*len(self.stations))
+        elif parameters["PhiSoil"] == "Infer from Geologic Map":
+            if parameters["CohesionSoil"] == "Infer from Geologic Map":
+                self.phi_soil, self.coh_soil = infer_from_geologic_map(parameters["GeologicMap"],\
+                                    parameters['inputCRS'], lon_station, lat_station)
+            else:
+                self.phi_soil, _ = infer_from_geologic_map(parameters["GeologicMap"],\
+                                    parameters['inputCRS'], lon_station, lat_station)
         else:
-            self.coh_soil = sampleRaster(parameters["CohesionSoil"], parameters["inputCRS"],\
+            self.phi_soil = sampleRaster(parameters["CohesionSoil"], parameters["inputCRS"],\
                      lon_station, lat_station)
+        # coh_soil
+        if self.coh_soil is None:
+            if parameters["CohesionSoil"] == "Defined (\"CohesionSoil\") in Site File (.csv)":
+                self.coh_soil = np.array([site['CohesionSoil'] for site in self.stations])
+            elif parameters["CohesionSoil"] == "Use constant value (kPa)":
+                self.coh_soil = np.array(parameters["CohesionSoilValue"]*len(self.stations))
+            elif parameters["CohesionSoil"] == "Infer from Geologic Map":
+                self.coh_soil = infer_from_geologic_map(parameters["GeologicMap"],\
+                                    parameters['inputCRS'], lon_station, lat_station)
+            else:
+                self.coh_soil = sampleRaster(parameters["CohesionSoil"], parameters["inputCRS"],\
+                        lon_station, lat_station)
 
         print("Initiation finished")
 
-    def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys = []):
+    def run(self, ln_im_data, eq_data, im_list, output_keys=['lsd_PGD_h'], additional_output_keys = []):
         if ('PGA' in im_list):
             num_stations = len(self.stations)
             num_scenarios = len(eq_data)
@@ -380,20 +393,13 @@ class BrayMacedo2019(Landslide):
                         im_data_scen[:,len(im_list)+i,rlz_id] = model_output[key]
                 ln_im_data[scenario_id] = im_data_scen
             im_list = im_list + output_keys
-            additional_output = dict()
-            for key in additional_output_keys:
-                item = getattr(self, key, None)
-                if item is None:
-                    warnings.warn(f"Additional output {key} is not avaliable in the landslide model 'BrayMacedo2019'.")
-                else:
-                    additional_output.update({key:item})
         else:
             sys.exit(f"'PGA' is missing in the selected intensity measures and the landslide model 'BrayMacedo2019' can not be computed.")
             # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
             #       , file=sys.stderr)
             # sys.stderr.write("test")
             # sys.exit(-1)
-        return ln_im_data, eq_data, im_list, additional_output
+        return ln_im_data, eq_data, im_list,
     
     def model(
         self,
@@ -422,8 +428,9 @@ class BrayMacedo2019(Landslide):
         nonzero_median_cdf = np.zeros(shape)
         
         # convert from deg to rad
-        slope_rad = slope*np.pi/180
-        phi_soil_rad = phi_soil*np.pi/180
+        slope_rad = (slope*np.pi/180).astype(np.float32)
+        phi_soil_rad = (phi_soil*np.pi/180).astype(np.float32)
+        coh_soil = coh_soil.astype(np.float32)
         
         # yield acceleration
         ky = np.tan(phi_soil_rad-slope_rad) + \

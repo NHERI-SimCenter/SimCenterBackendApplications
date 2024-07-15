@@ -123,7 +123,6 @@ def find_additional_output_req(liq_info, current_step):
         triger_dist_water = liq_info['Triggering']['Parameters'].get('DistWater', None)
         if triger_dist_water is None:
             return additional_output_keys
-        lat_dist_water = liq_info['LateralSpreading']['Parameters'].get('DistWater', None)
         if 'LateralSpreading' in liq_info.keys():
             lat_dist_water = liq_info['LateralSpreading']['Parameters'].get('DistWater', None)
             if (liq_info['LateralSpreading']['Model'] == 'Hazus2020')\

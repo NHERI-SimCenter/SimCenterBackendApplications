@@ -837,21 +837,21 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 						})
 				df = pd.DataFrame(df)
 				# Combine PGD from liquefaction, landslide and fault
-				if 'liq_PGD_h' in df.columns or 'ls_PGD_h'in df.columns or 'fd_PGD_h' in df.columns:
+				if 'liq_PGD_h' in df.columns or 'lsd_PGD_h'in df.columns or 'fd_PGD_h' in df.columns:
 					PGD_h = np.zeros(df.shape[0])
 					if 'liq_PGD_h' in df.columns:
 						PGD_h += df['liq_PGD_h'].to_numpy()
-					if 'ls_PGD_h' in df.columns:
-						PGD_h += df['ls_PGD_h'].to_numpy()
+					if 'lsd_PGD_h' in df.columns:
+						PGD_h += df['lsd_PGD_h'].to_numpy()
 					if 'fd_PGD_h' in df.columns:
 						PGD_h += df['fd_PGD_h'].to_numpy()
 					df['PGD_h'] = PGD_h
-				if 'liq_PGD_v' in df.columns or 'ls_PGD_v'in df.columns or 'fd_PGD_v' in df.columns:
+				if 'liq_PGD_v' in df.columns or 'lsd_PGD_v'in df.columns or 'fd_PGD_v' in df.columns:
 					PGD_v = np.zeros(df.shape[0])
 					if 'liq_PGD_v' in df.columns:
 						PGD_v += df['liq_PGD_v'].to_numpy()
-					if 'ls_PGD_v' in df.columns:
-						PGD_v += df['ls_PGD_v'].to_numpy()
+					if 'lsd_PGD_v' in df.columns:
+						PGD_v += df['lsd_PGD_v'].to_numpy()
 					if 'fd_PGD_v' in df.columns:
 						PGD_v += df['fd_PGD_v'].to_numpy()
 					df['PGD_v'] = PGD_v
@@ -891,21 +891,21 @@ def export_im(stations, im_list, im_data, eq_data, output_dir, filename, csv_fla
 						})
 				df = pd.DataFrame(df)
 				# Combine PGD from liquefaction, landslide and fault
-				if 'liq_PGD_h' in df.columns or 'ls_PGD_h'in df.columns or 'fd_PGD_h' in df.columns:
+				if 'liq_PGD_h' in df.columns or 'lsd_PGD_h'in df.columns or 'fd_PGD_h' in df.columns:
 					PGD_h = np.zeros(df.shape[0])
 					if 'liq_PGD_h' in df.columns:
 						PGD_h += df['liq_PGD_h'].to_numpy()
-					if 'ls_PGD_h' in df.columns:
-						PGD_h += df['ls_PGD_h'].to_numpy()
+					if 'lsd_PGD_h' in df.columns:
+						PGD_h += df['lsd_PGD_h'].to_numpy()
 					if 'fd_PGD_h' in df.columns:
 						PGD_h += df['fd_PGD_h'].to_numpy()
 					df['PGD_h'] = PGD_h
-				if 'liq_PGD_v' in df.columns or 'ls_PGD_v'in df.columns or 'fd_PGD_v' in df.columns:
+				if 'liq_PGD_v' in df.columns or 'lsd_PGD_v'in df.columns or 'fd_PGD_v' in df.columns:
 					PGD_v = np.zeros(df.shape[0])
 					if 'liq_PGD_v' in df.columns:
 						PGD_v += df['liq_PGD_v'].to_numpy()
-					if 'ls_PGD_v' in df.columns:
-						PGD_v += df['ls_PGD_v'].to_numpy()
+					if 'lsd_PGD_v' in df.columns:
+						PGD_v += df['lsd_PGD_v'].to_numpy()
 					if 'fd_PGD_v' in df.columns:
 						PGD_v += df['fd_PGD_v'].to_numpy()
 					df['PGD_v'] = PGD_v
