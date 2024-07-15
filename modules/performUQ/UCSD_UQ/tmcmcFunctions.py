@@ -341,19 +341,21 @@ def MCMC_MH(
 
 
 def get_weights(dBeta, log_likelihoods):
-    weights = np.exp(dBeta * log_likelihoods)
-    mean_weights = np.mean(weights)
-    std_weights = np.std(weights)
-    cov_weights = std_weights / mean_weights
-    return weights, mean_weights, std_weights, cov_weights
+    log_weights = dBeta * log_likelihoods
+    log_sum_weights = logsumexp(log_weights)
+    log_weights_normalized = log_weights - log_sum_weights
+    weights_normalized = np.exp(log_weights_normalized)
+    std_weights_normalized = np.std(weights_normalized)
+    cov_weights = np.std(weights_normalized) / np.mean(weights_normalized)
+
+    return weights_normalized, cov_weights, std_weights_normalized
 
 
 def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
     max_beta = 1.0
     dBeta = min(max_beta, 1.0 - beta)
-    max_loglike = max(log_likelihoods)
 
-    weights, mean_weights, std_weights, cov_weights = get_weights(
+    weights, cov_weights, std_weights = get_weights(
         dBeta, log_likelihoods
     )
 
@@ -382,18 +384,19 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
 
         if dBeta < 1e-3:
             dBeta = 1e-3
-            weights, mean_weights, std_weights, cov_weights = get_weights(
+            weights, cov_weights, std_weights = get_weights(
                 dBeta, log_likelihoods
             )
             break
-        weights, mean_weights, std_weights, cov_weights = get_weights(
+        weights, cov_weights, std_weights = get_weights(
             dBeta, log_likelihoods
         )
 
     beta = beta + dBeta
     if beta > 0.95:
         beta = 1
-    log_evidence = np.log(mean_weights)
+    log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))
+
     try:
         ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))
     except OverflowError as err:

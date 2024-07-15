@@ -29,7 +29,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
     return "0"
 
 
-def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood, calibrationData, numExperiments,
+def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_likelihood_function, calibrationData, numExperiments,
            covarianceMatrixList, edpNamesList, edpLengthsList, scaleFactors, shiftFactors, workflowDriver):
     """ 
     this function runs FE model (model.tcl) for each parameter value (par)
@@ -83,9 +83,10 @@ def runFEM(particleNumber, parameterSampleValues, variables, workdirMain, log_li
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         preds = prediction.copy()
         os.chdir("../")
-        return (log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList,
-                            edpLengthsList, covarianceMultiplierList, scaleFactors, shiftFactors), preds)
+        ll = log_likelihood_function(prediction, covarianceMultiplierList)
     else:
         os.chdir("../")
-        return (-np.inf, np.atleast_2d([-np.inf]*sum(edpLengthsList)).reshape((1, -1)))
-    
+        preds = np.atleast_2d([-np.inf]*sum(edpLengthsList)).reshape((1, -1))
+        ll = -np.inf
+
+    return (ll, preds)

@@ -93,13 +93,13 @@ def write_data_to_tab_files(logfile, working_directory, model_number, model_para
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
-            row_string = "{}\t{}\t".format(i + 1 + number_of_samples*model_number, model_number+1)
+            row_string = f"{i + 1 + number_of_samples*model_number}\t{model_number+1}\t"
             for j in range(len(model_parameters['names'])):
-                row_string += "{}\t".format(dataToWrite[i, j])
+                row_string += f"{dataToWrite[i, j]}\t"
             if write_outputs:  # write the output data
-                prediction = np.atleast_2d(predictions[i, :])
-                for pred in range(np.shape(prediction)[1]):
-                    row_string += "{}\t".format(prediction[0, pred])
+                prediction = predictions[i, :]
+                for pred in prediction:
+                    row_string += f"{pred}\t"
             row_string += "\n"
             f.write(row_string)
 
@@ -141,7 +141,7 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
     adaptively_calculate_num_MCMC_steps = True
     adaptively_scale_proposal_covariance = True  
     scale_factor_for_proposal_covariance = 1  # cov scale factor
-    model_evidence = 1  # model evidence
+    # model_evidence = 1  # model evidence
     stage_number = 0  # stage number of TMCMC
     log_evidence = 0
 
@@ -180,7 +180,7 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
             log_likelihoods_list.append(output[0])
             predictions_list.append(output[1])
     log_likelihood_values = np.array(log_likelihoods_list).squeeze()
-    prediction_values = np.array(predictions_list).squeeze()
+    prediction_values = np.array(predictions_list).reshape((number_of_samples, -1))
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write("\n\n\t\tTotal number of model evaluations so far: {}".format(total_number_of_model_evaluations))
@@ -200,6 +200,7 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
         # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)
         beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence(beta, log_likelihood_values, logfile, threshold=1.0)
+        # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)
 
         total_log_evidence = total_log_evidence + log_evidence
 
@@ -208,17 +209,17 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         child_seeds = ss.spawn(number_of_samples + 1)
 
         # update model evidence
-        model_evidence = model_evidence * (sum(weights) / number_of_samples)
+        # model_evidence = model_evidence * (sum(weights) / number_of_samples)
 
         # Calculate covariance matrix using Wm_n
-        weighted_sample_covariance_matrix = np.cov(sample_values, aweights=weights / sum(weights), rowvar=False)
+        weighted_sample_covariance_matrix = np.cov(sample_values, aweights=weights, rowvar=False)
         # logFile.write("\nCovariance matrix: {}".format(Cm))
 
         # Resample ###################################################
         # Resampling using plausible weights
         # SmcapIDs = np.random.choice(range(N), N, p=Wm / sum(Wm))
         rng = default_rng(child_seeds[-1])
-        resample_ids = rng.choice(range(number_of_samples), number_of_samples, p=weights/sum(weights))
+        resample_ids = rng.choice(range(number_of_samples), number_of_samples, p=weights)
 
         resampled_values = sample_values[resample_ids]
         resampled_log_likelihood_values = log_likelihood_values[resample_ids]
@@ -264,7 +265,7 @@ def run_TMCMC(number_of_samples, number_of_chains, all_distributions_list, numbe
         sample_values = np.asarray(samples_list)
         log_likelihood_values = np.asarray(loglikes_list)
         unnormalized_posterior_pdf_values = np.asarray(posterior_pdf_vals_list)
-        prediction_values = np.asarray(preds_list).squeeze()
+        prediction_values = np.asarray(preds_list).reshape((number_of_samples, -1))
 
         num_accepts = np.asarray(num_accepts)
         number_of_accepted_states_in_this_stage = sum(num_accepts)
