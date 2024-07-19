@@ -193,9 +193,8 @@ class lineAIMGenerator(generalAIMGenerator):
         self.gdf = edges
         return
 
-def split_and_select_components(input_config):
+def split_and_select_components(input_config, asset_source_file):
     component_dict = dict()
-    asset_source_file = input_config["assetSourceFile"]
     with open(asset_source_file, 'r', encoding="utf-8") as f:
         source_data = json.load(f)
     crs = source_data["crs"]
@@ -251,7 +250,7 @@ def init_workdir(component_dict, outDir):
         component_dir.update({comp:compDir})
     return component_dir
     
-def create_asset_files(output_file, 
+def create_asset_files(output_file, asset_source_file,
     asset_type, input_file, doParallel): 
     # check if running parallel
     numP = 1
@@ -281,7 +280,9 @@ def create_asset_files(output_file,
         ["ApplicationData"]
     # if input_config.get("Roadway", None):
     #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
-    component_dict = split_and_select_components(input_config)
+
+    # assetSourceFile passed through command may be different from input_config when run on designsafe
+    component_dict = split_and_select_components(input_config, asset_source_file)
     component_dir = init_workdir(component_dict, outDir)
     assets_array = []
     for component_type, component_data in component_dict.items():
@@ -341,6 +342,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
+    parser.add_argument('--assetSourceFile')
     parser.add_argument('--assetType')
     parser.add_argument('--inputJsonFile')
     parser.add_argument('--doParallel', default="False")    
@@ -350,7 +352,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(create_asset_files(args.assetFile, args.assetType,\
+        sys.exit(create_asset_files(args.assetFile, args.assetSourceFile,\
+                                    args.assetType,\
                                     args.inputJsonFile, args.doParallel))
     else:
         pass # not used
