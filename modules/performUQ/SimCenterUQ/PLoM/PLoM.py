@@ -630,7 +630,9 @@ class PLoM:
             self.C_h_hat_eta = plom.covariance(self.g_c(self.x_mean+(self.phi).dot(np.diag(self.mu)).dot(self.H)))
             
             #scaling beta
-            self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)
+            #self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)
+            # KZ, 07/24
+            self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.X)
             self.b_c, self.psi = plom.PCA2(self.C_h_hat_eta, self.beta_c_normalized, tol_PCA2)
             self.nu_c = len(self.b_c)
 
