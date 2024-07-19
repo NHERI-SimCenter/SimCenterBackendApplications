@@ -46,8 +46,9 @@ import numpy as np
 import pandas as pd
 from scipy.cluster.vq import vq
 import importlib
+import os
 
-def create_event(asset_file, event_grid_file, doParallel):
+def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
 
 
     # check if running parallel
@@ -172,13 +173,25 @@ def create_event(asset_file, event_grid_file, doParallel):
                 event_df = pd.read_csv(event_dir / event_collection_file, header=0)
 
                 # append the GM record name to the event list
-                event_list.append(event_df.iloc[idx,0])
+                event_list.append(event_df.iloc[0,0])
 
                 # append the scale factor (or 1.0) to the scale list
                 if len(event_df.columns) > 1:
-                    scale_list.append(float(event_df.iloc[idx,1]))
+                    scale_list.append(float(event_df.iloc[0,1]))
                 else:
                     scale_list.append(1.0)
+                
+                # If GP_file contains multiple events    
+                if multipleEvents:
+                    # Read the GP_file
+                    if event_df.shape[0] > 1:
+                        for row in range(1,event_df.shape[0]):
+                            event_list.append(event_df.iloc[row,0])
+                            # append the scale factor (or 1.0) to the scale list
+                            if len(event_df.columns) > 1:
+                                scale_list.append(float(event_df.iloc[row,1]))
+                            else:
+                                scale_list.append(1.0)
 
             # if the grid has intensity measures
             elif event_type == 'intensityMeasure':
@@ -188,6 +201,16 @@ def create_event(asset_file, event_grid_file, doParallel):
 
                 # IM collections are not scaled
                 scale_list.append(1.0)
+
+                # If GP_file contains multiple events  
+                if multipleEvents:
+                    # Read the GP_file
+                    GP_file = os.path.join(event_dir, closestPnt['GP_file'])
+                    GP_file_df = pd.read_csv(GP_file, header=0)
+                    if GP_file_df.shape[0] > 1:
+                        for row in range(1,GP_file_df.shape[0]):
+                            event_list.append(closestPnt['GP_file']+f'x{row}')
+                            scale_list.append(1.0)
 
         # TODO: update the LLNL input data and remove this clause
         else:
@@ -210,8 +233,7 @@ def create_event(asset_file, event_grid_file, doParallel):
 
         
         # save the event dictionary to the AIM
-        # TODO: we assume there is only one event
-        # handling multiple events will require more sophisticated inputs
+
         # save the event dictionary to the BIM                                          
         asset_data['Events'] = [{}]        
         asset_data['Events'][0] = {
@@ -230,9 +252,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--assetFile')
     parser.add_argument('--filenameEVENTgrid')
+    parser.add_argument('--multipleEvents', default="True")
     parser.add_argument('--doParallel', default="False")    
     parser.add_argument("-n", "--numP", default='8')
     parser.add_argument("-m", "--mpiExec", default='mpixece')
     args = parser.parse_args()
 
-    create_event(args.assetFile, args.filenameEVENTgrid, args.doParallel)
+    create_event(args.assetFile, args.filenameEVENTgrid, args.multipleEvents, args.doParallel)
