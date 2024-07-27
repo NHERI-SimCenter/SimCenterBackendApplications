@@ -26,7 +26,7 @@ for:
     install:
        - uname
        - rm -rf SimCenterBackendApplications
-       - git clone https://github.com/JustinBonus/SimCenterBackendApplications.git       
+       - git clone https://github.com/NHERI-SimCenter/SimCenterBackendApplications.git       
 
     build_script:
 
@@ -63,7 +63,7 @@ for:
        - conan user
        - conan remote add simcenter https://nherisimcenter.jfrog.io/artifactory/api/conan/simcenter
        - rm -rf SimCenterBackendApplications
-       - git clone https://github.com/JustinBonus/SimCenterBackendApplications.git
+       - git clone https://github.com/NHERI-SimCenter/SimCenterBackendApplications.git
        
     build_script:
        # build SimCenterBackendApplications
@@ -104,7 +104,7 @@ for:
 
     install:
        - cmd: rm -rf SimCenterBackendApplications
-       - cmd: git clone https://github.com/JustinBonus/SimCenterBackendApplications.git
+       - cmd: git clone https://github.com/NHERI-SimCenter/SimCenterBackendApplications.git
        - cmd: dir
 
     build_script:
