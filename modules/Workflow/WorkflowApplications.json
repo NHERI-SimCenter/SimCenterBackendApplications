@@ -545,6 +545,11 @@
         "ApplicationSpecificInputs":[]
       },  
       {
+        "Name": "TaichiEvent",
+        "ExecutablePath": "applications/createEVENT/TaichiEvent/TaichiEvent.py",
+        "ApplicationSpecificInputs":[]
+      },  
+      {
         "Name": "GeoClawOpenFOAM",
         "ExecutablePath": "applications/createEVENT/GeoClawOpenFOAM/GeoClawOpenFOAM.py",
         "ApplicationSpecificInputs":[

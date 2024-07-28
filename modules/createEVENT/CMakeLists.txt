@@ -27,6 +27,6 @@ add_subdirectory(M9)
 add_subdirectory(Istanbul)
 add_subdirectory(MPM)
 add_subdirectory(stochasticWave)
-
+add_subdirectory(TaichiEvent)
 
 
