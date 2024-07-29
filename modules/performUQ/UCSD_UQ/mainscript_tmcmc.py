@@ -156,8 +156,6 @@ def main(input_args):
         number_of_samples,
         seed_value,
         calibration_data_filename,
-        loglikelihood_module,
-        write_outputs,
         variables_list,
         edp_names_list,
         edp_lengths_list,
