@@ -14,6 +14,7 @@ from shutil import copyfile
 import numpy as np
 import itertools
 
+
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
 
@@ -58,7 +59,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write("\n\t\tProcessing UQ inputs")
     seedValue = uqInputs["seed"]
     nSamples = uqInputs["numParticles"]
-    #maxRunTime = uqInputs["maxRunTime"]
+    # maxRunTime = uqInputs["maxRunTime"]
     if "maxRunTime" in uqInputs.keys():
         maxRunTime = uqInputs["maxRunTime"]
     else:
@@ -72,7 +73,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
 
     logFile.write("\n\t\t\tProcessing the log-likelihood script options")
     # If log-likelihood script is provided, use that, otherwise, use default log-likelihood function
-    if len(logLikelihoodFile) > 0:  # if the log-likelihood file is not an empty string
+    if (
+        len(logLikelihoodFile) > 0
+    ):  # if the log-likelihood file is not an empty string
         logFile.write(
             "\n\t\t\t\tSearching for a user-defined log-likelihood script '{}'".format(
                 logLikelihoodFile
@@ -113,7 +116,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         logFile.write("\n\t\t\t\tLog-likelihood script not provided.")
         logFile.write(
             "\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{}".format(
-                os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)
+                os.path.join(
+                    defaultLogLikeDirectoryPath, defaultLogLikeFileName
+                )
             )
         )
         try:
@@ -153,7 +158,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     modelsDict = {}
     modelIndicesList = []
     modelRVNamesList = []
-    applications = jsonInputs["Applications"] 
+    applications = jsonInputs["Applications"]
     for app, appInputs in applications.items():
         logFile.write(f"\n\t\t\tApp: {app}")
         if app.lower() not in ["events"]:
@@ -162,24 +167,26 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
             appl = appInputs[0]["Application"].lower()
         if appl in ["multimodel"]:
             # runMultiModel = True
-            logFile.write(f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}')
+            logFile.write(
+                f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}'
+            )
             modelRVName = jsonInputs[app]["modelToRun"][3:]
             appModels = jsonInputs[app]["models"]
             nM = len(appModels)
-            logFile.write(f'\n\t\t\t\t\tThere are {nM} {app} models')
+            logFile.write(f"\n\t\t\t\t\tThere are {nM} {app} models")
             modelData = {}
             modelData["nModels"] = nM
-            modelData["values"] = [i+1 for i in range(nM)]
+            modelData["values"] = [i + 1 for i in range(nM)]
             modelData["weights"] = [model["belief"] for model in appModels]
             modelData["name"] = modelRVName
             modelsDict[app] = modelData
             modelIndicesList.append(modelData["values"])
             modelRVNamesList.append(modelRVName)
         else:
-            logFile.write('\n\t\t\t\tNot a multimodel application')
+            logFile.write("\n\t\t\t\tNot a multimodel application")
     nModels = 1
     for _, data in modelsDict.items():
-        nModels = nModels*data["nModels"]
+        nModels = nModels * data["nModels"]
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))
     # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
     # inputFileList = []
@@ -197,20 +204,24 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     # Variables
     variablesList = []
     for _ in range(nModels):
-        variablesList.append({
-            "names": [],
-            "distributions": [],
-            "Par1": [],
-            "Par2": [],
-            "Par3": [],
-            "Par4": [],
-        })
+        variablesList.append(
+            {
+                "names": [],
+                "distributions": [],
+                "Par1": [],
+                "Par2": [],
+                "Par3": [],
+                "Par4": [],
+            }
+        )
 
     logFile.write("\n\n\t\t\tLooping over the models")
     for ind in range(nModels):
         logFile.write("\n\t\t\t\tModel number: {}".format(ind))
         # Processing RV inputs
-        logFile.write("\n\t\t\t\t\tCreating priors for model number {}".format(ind))
+        logFile.write(
+            "\n\t\t\t\t\tCreating priors for model number {}".format(ind)
+        )
         logFile.write("\n\t\t\t\t\t\tProcessing RV inputs")
         for i, rv in enumerate(rvInputs):
             variablesList[ind]["names"].append(rv["name"])
@@ -252,7 +263,10 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 variablesList[ind]["Par3"].append(rv["lowerbound"])
                 variablesList[ind]["Par4"].append(rv["upperbound"])
                 paramString = "params: {}, {}, {}, {}".format(
-                    rv["alphas"], rv["betas"], rv["lowerbound"], rv["upperbound"]
+                    rv["alphas"],
+                    rv["betas"],
+                    rv["lowerbound"],
+                    rv["upperbound"],
                 )
             elif rv["distribution"] == "Lognormal":
                 # meanValue = rv["mean"]
@@ -273,7 +287,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 variablesList[ind]["Par2"].append(rv["betaparam"])
                 variablesList[ind]["Par3"].append(None)
                 variablesList[ind]["Par4"].append(None)
-                paramString = "params: {}, {}".format(rv["alphaparam"], rv["betaparam"])
+                paramString = "params: {}, {}".format(
+                    rv["alphaparam"], rv["betaparam"]
+                )
             elif rv["distribution"] == "Weibull":
                 variablesList[ind]["Par1"].append(rv["shapeparam"])
                 variablesList[ind]["Par2"].append(rv["scaleparam"])
@@ -312,7 +328,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 if "multimodel" in rv["name"].lower():
                     try:
                         index = modelRVNamesList.index(rv["name"])
-                        variablesList[ind]["Par1"].append(cartesianProductOfModelIndices[ind][index])
+                        variablesList[ind]["Par1"].append(
+                            cartesianProductOfModelIndices[ind][index]
+                        )
                         variablesList[ind]["Par2"].append(None)
                         variablesList[ind]["Par3"].append(None)
                         variablesList[ind]["Par4"].append(None)
@@ -320,8 +338,10 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                             cartesianProductOfModelIndices[ind][index]
                         )
                     except ValueError:
-                        logFile.write(f"{rv['name']} not found in list of model RV names")
-                    
+                        logFile.write(
+                            f"{rv['name']} not found in list of model RV names"
+                        )
+
                 else:
                     variablesList[ind]["Par1"].append(rv["Values"])
                     variablesList[ind]["Par2"].append(rv["Weights"])
@@ -366,7 +386,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                     i, name, "InvGamma", paramString
                 )
             )
-        
+
     logFile.write("\n\n\tCompleted parsing the inputs")
     logFile.write("\n\n==========================")
     logFile.flush()
@@ -381,5 +401,5 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         edpNamesList,
         edpLengthsList,
         modelsDict,
-        nModels
+        nModels,
     )

@@ -1,5 +1,5 @@
 """
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte 
+authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
 """
@@ -175,7 +175,7 @@ def MCMC_MH_old(
         else:
             likelihood_proposal = -np.Inf  # dont run the FE model
             posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf*np.ones_like(prediction_current)
+            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
@@ -268,7 +268,7 @@ def MCMC_MH(
         else:
             likelihood_proposal = -np.Inf  # dont run the FE model
             posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf*np.ones_like(prediction_current)
+            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
@@ -355,9 +355,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
     max_beta = 1.0
     dBeta = min(max_beta, 1.0 - beta)
 
-    weights, cov_weights, std_weights = get_weights(
-        dBeta, log_likelihoods
-    )
+    weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     while cov_weights > (threshold) or (std_weights == 0):
         dBeta = dBeta * 0.99
@@ -388,14 +386,14 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
                 dBeta, log_likelihoods
             )
             break
-        weights, cov_weights, std_weights = get_weights(
-            dBeta, log_likelihoods
-        )
+        weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     beta = beta + dBeta
     if beta > 0.95:
         beta = 1
-    log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(len(log_likelihoods))
+    log_evidence = logsumexp(dBeta * log_likelihoods) - np.log(
+        len(log_likelihoods)
+    )
 
     try:
         ESS = int(1 / np.sum((weights / np.sum(weights)) ** 2))

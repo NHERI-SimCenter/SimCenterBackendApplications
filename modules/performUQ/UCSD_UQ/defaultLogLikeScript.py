@@ -12,9 +12,18 @@ class CovError(Exception):
         self.message = message
 
 
-def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrixList, edpNamesList, edpLengthsList,
-                   covarianceMultiplierList, scaleFactors, shiftFactors):
-    """ Compute the log-likelihood
+def log_likelihood(
+    calibrationData,
+    prediction,
+    numExperiments,
+    covarianceMatrixList,
+    edpNamesList,
+    edpLengthsList,
+    covarianceMultiplierList,
+    scaleFactors,
+    shiftFactors,
+):
+    """Compute the log-likelihood
 
     :param calibrationData: Calibration data consisting of the measured values of response. Each row contains the data
     from one experiment. The length of each row equals the sum of the lengths of all response quantities.
@@ -60,16 +69,38 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
     # Check if the correct number of covariance terms has been passed in
     numResponses = len(edpLengthsList)
     if len(covarianceMatrixList) != numExperiments * numResponses:
-        print("ERROR: The expected number of covariance matrices is {}, but only {} were passed "
-              "in.".format(numExperiments * numResponses, len(covarianceMatrixList)))
-        raise CovError("ERROR: The expected number of covariance matrices is {}, but only {} were passed "
-                       "in.".format(numExperiments * numResponses, len(covarianceMatrixList)))
+        print(
+            "ERROR: The expected number of covariance matrices is {}, but only {} were passed "
+            "in.".format(
+                numExperiments * numResponses, len(covarianceMatrixList)
+            )
+        )
+        raise CovError(
+            "ERROR: The expected number of covariance matrices is {}, but only {} were passed "
+            "in.".format(
+                numExperiments * numResponses, len(covarianceMatrixList)
+            )
+        )
 
     # Shift and normalize the prediction
     currentPosition = 0
     for j in range(len(edpLengthsList)):
-        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] = prediction[:, currentPosition:currentPosition + edpLengthsList[j]] + shiftFactors[j]
-        prediction[:, currentPosition:currentPosition + edpLengthsList[j]] = prediction[:, currentPosition:currentPosition + edpLengthsList[j]] / scaleFactors[j]
+        prediction[
+            :, currentPosition : currentPosition + edpLengthsList[j]
+        ] = (
+            prediction[
+                :, currentPosition : currentPosition + edpLengthsList[j]
+            ]
+            + shiftFactors[j]
+        )
+        prediction[
+            :, currentPosition : currentPosition + edpLengthsList[j]
+        ] = (
+            prediction[
+                :, currentPosition : currentPosition + edpLengthsList[j]
+            ]
+            / scaleFactors[j]
+        )
         currentPosition = currentPosition + edpLengthsList[j]
 
     # Compute the normalized residuals
@@ -83,8 +114,10 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
         for j in range(numResponses):
             # Get the residuals corresponding to this response variable
             length = edpLengthsList[j]
-            residuals = allResiduals[i, currentPosition:currentPosition + length]
-            currentPosition =  currentPosition + length
+            residuals = allResiduals[
+                i, currentPosition : currentPosition + length
+            ]
+            currentPosition = currentPosition + length
 
             # Get the covariance matrix corresponding to this response variable
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
@@ -98,7 +131,11 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
                 # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be
                 # computed more efficiently
                 var = cov[0][0]
-                ll = - length / 2 * np.log(var) - length / 2 * np.log(2 * np.pi) - 1 / (2 * var) * np.sum(residuals ** 2)
+                ll = (
+                    -length / 2 * np.log(var)
+                    - length / 2 * np.log(2 * np.pi)
+                    - 1 / (2 * var) * np.sum(residuals**2)
+                )
             else:
                 if np.shape(cov)[0] != np.shape(cov)[1]:
                     cov = np.diag(cov.flatten())
@@ -109,7 +146,7 @@ def log_likelihood(calibrationData, prediction, numExperiments, covarianceMatrix
                 t1 = length * np.log(2 * np.pi)
                 eigenValues, eigenVectors = np.linalg.eigh(cov)
                 logdet = np.sum(np.log(eigenValues))
-                eigenValuesReciprocal = 1. / eigenValues
+                eigenValuesReciprocal = 1.0 / eigenValues
                 z = eigenVectors * np.sqrt(eigenValuesReciprocal)
                 mahalanobisDistance = np.square(np.dot(residuals, z)).sum()
                 ll = -0.5 * (t1 + logdet + mahalanobisDistance)

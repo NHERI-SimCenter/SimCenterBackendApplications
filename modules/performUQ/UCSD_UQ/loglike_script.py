@@ -5,6 +5,7 @@
 
 import numpy as np
 
+
 def log_likelihood(residuals, mean, cov):
     length = len(residuals)
     if np.shape(cov)[0] == np.shape(cov)[1] == 1:
@@ -12,7 +13,11 @@ def log_likelihood(residuals, mean, cov):
         # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be
         # computed more efficiently
         var = cov[0][0]
-        ll = - length / 2 * np.log(var) - length / 2 * np.log(2 * np.pi) - 1 / (2 * var) * np.sum(residuals ** 2)
+        ll = (
+            -length / 2 * np.log(var)
+            - length / 2 * np.log(2 * np.pi)
+            - 1 / (2 * var) * np.sum(residuals**2)
+        )
     else:
         if np.shape(cov)[0] != np.shape(cov)[1]:
             cov = np.diag(cov.flatten())
@@ -23,9 +28,9 @@ def log_likelihood(residuals, mean, cov):
         t1 = length * np.log(2 * np.pi)
         eigenValues, eigenVectors = np.linalg.eigh(cov)
         logdet = np.sum(np.log(eigenValues))
-        eigenValuesReciprocal = 1. / eigenValues
+        eigenValuesReciprocal = 1.0 / eigenValues
         z = eigenVectors * np.sqrt(eigenValuesReciprocal)
         mahalanobisDistance = np.square(np.dot(residuals, z)).sum()
         ll = -0.5 * (t1 + logdet + mahalanobisDistance)
-    
+
     return ll

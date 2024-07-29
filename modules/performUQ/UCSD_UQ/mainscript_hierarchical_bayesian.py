@@ -31,7 +31,7 @@ def generate_initial_states(
 
     if restart_file is not None:
         restart_file_path = Path(restart_file)
-        with restart_file_path.open(mode='r', encoding='utf-8') as f:
+        with restart_file_path.open(mode="r", encoding="utf-8") as f:
             restart_data = json.load(f)
         if "new_states" in restart_data:
             list_of_initial_states_of_model_parameters = []
@@ -79,7 +79,7 @@ def main(input_args):
 
     # input_file_full_path = template_directory / input_file
 
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, "r", encoding="utf-8") as f:
         inputs = json.load(f)
 
     uq_inputs = inputs["UQ"]
@@ -250,7 +250,9 @@ def main(input_args):
         list_of_initial_states_of_error_variance_per_dataset
     )
 
-    with open(results_directory_path / f"sample_0.json", "w", encoding='utf-8') as f:
+    with open(
+        results_directory_path / f"sample_0.json", "w", encoding="utf-8"
+    ) as f:
         json.dump(results_to_write, f, indent=4)
 
     adaptivity_results = {}
@@ -265,7 +267,9 @@ def main(input_args):
         cov_kernels_list
     )
     with open(
-            results_directory_path.parent / f"adaptivity_results_{0}.json", "w", encoding='utf-8'
+        results_directory_path.parent / f"adaptivity_results_{0}.json",
+        "w",
+        encoding="utf-8",
     ) as f:
         json.dump(adaptivity_results, f, indent=4)
 
@@ -302,6 +306,7 @@ def main(input_args):
 
     if run_type == "runningRemote":
         from mpi4py import MPI
+
         MPI.COMM_WORLD.Abort(0)
 
 

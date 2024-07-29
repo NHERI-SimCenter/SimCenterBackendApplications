@@ -39,7 +39,7 @@ def main(input_args):
 
     input_file_full_path = path_to_template_directory / input_file_name
 
-    with open(input_file_full_path, 'r', encoding='utf-8') as f:
+    with open(input_file_full_path, "r", encoding="utf-8") as f:
         inputs = json.load(f)
 
     uq_inputs = inputs["UQ"]

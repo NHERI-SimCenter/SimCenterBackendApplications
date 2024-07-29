@@ -716,7 +716,7 @@ class LogLikelihoodHandler:
                 os.path.join(self.workdir_main, self.log_likelihood_file_name)
             )
             raise ImportError(msg)
-        return module # type: ignore
+        return module  # type: ignore
 
     def get_log_likelihood_function(self) -> Callable:
         log_likelihood_module_name = os.path.splitext(
@@ -740,7 +740,9 @@ class LogLikelihoodHandler:
         return np.zeros((self.list_of_data_segment_lengths[response_num]))
 
     def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
-        return cov_multiplier * np.atleast_2d(self.covariance_matrix_list[response_num])
+        return cov_multiplier * np.atleast_2d(
+            self.covariance_matrix_list[response_num]
+        )
 
     def _make_input_for_log_likelihood_function(self, prediction) -> list:
         return [
