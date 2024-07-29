@@ -38,7 +38,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     applications = jsonInputs["Applications"]
     edpInputs = jsonInputs["EDP"]
     uqInputs = jsonInputs["UQ"]
-    femInputs = jsonInputs["FEM"]
+    # femInputs = jsonInputs["FEM"]
     rvInputs = jsonInputs["randomVariables"]
     # localAppDirInputs = jsonInputs['localAppDir']
     # pythonInputs = jsonInputs['python']
