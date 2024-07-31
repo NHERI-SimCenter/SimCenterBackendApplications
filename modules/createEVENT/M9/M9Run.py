@@ -1,8 +1,9 @@
-import os
-import M9Stations
-import M9App2
-import M9API
 import argparse
+import os
+
+import M9API
+import M9App2
+import M9Stations
 
 if __name__ == '__main__':
     information = {

@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  1 20:36:29 2022
+"""Created on Tue Nov  1 20:36:29 2022
 
 @author: snaeimi
 """
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from .Node_Damage_Model_Window import Ui_Node_Damage_Model
+from PyQt5 import QtGui, QtWidgets
+
 from .Node_Damage_Model_Help_Designer import Node_Damage_Model_Help_Designer
+from .Node_Damage_Model_Window import Ui_Node_Damage_Model
 
 
 class Node_Damage_Model_Designer(Ui_Node_Damage_Model):

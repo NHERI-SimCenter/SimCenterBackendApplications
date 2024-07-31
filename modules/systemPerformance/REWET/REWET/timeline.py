@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec 26 02:00:40 2020
+"""Created on Sat Dec 26 02:00:40 2020
 
 @author: snaeimi
 """
 
-import pandas as pd
-import numpy
 import logging
+
+import numpy
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -117,12 +116,12 @@ class Timeline:
         return self._event_time_register['dmg'].loc[self._current_time]
 
     def addEventTime(self, event_distinct_time, event_type='dmg'):
-        """
-        This function is a low-level function to add event type in an already-
+        """This function is a low-level function to add event type in an already-
         existing event_time in event_time_register. FOR NOW TEH DISTICT TIMES
         CAN BE A LIST OR A LIST. MAYBE IN THE FUTURE WE CAN DECIDE WETHER IT
         SHOULD BE LEFT THE WAY IT IS OR IT SHOULD BE MODIFIED IN A SINGLE
         VARIABLE OR LIST VARIABLE.
+
         Parameters
         ----------
         event_distinct_time : numpy.float64 or int or float or list
@@ -187,8 +186,7 @@ class Timeline:
             self.checkAndAmendTime()
 
     def iEventTypeAt(self, begin_time, event_type):
-        """
-        Checks if an event type is in event registry at the time of begin_time
+        """Checks if an event type is in event registry at the time of begin_time
         ----------
         begin_time : int
             begining time
@@ -201,8 +199,7 @@ class Timeline:
             rResult if such data exist or not
 
         """
-
-        if not begin_time in self._event_time_register.index:
+        if begin_time not in self._event_time_register.index:
             return False
         if self._event_time_register[event_type].loc[begin_time]:
             return True
@@ -210,8 +207,7 @@ class Timeline:
             return False
 
     def checkAndAmendTime(self):
-        """
-        Checks if the time of event is higher than the sim time.Also checks
+        """Checks if the time of event is higher than the sim time.Also checks
         if the the ending event has any thing event(nothings must be true).
 
         Parameters
@@ -223,7 +219,6 @@ class Timeline:
         None.
 
         """
-
         first_length = len(self._event_time_register.index)
         self._event_time_register = self._event_time_register[
             self._event_time_register.index <= self._simulation_end_time
@@ -289,7 +284,7 @@ class Timeline:
                 for node_name in self.registry.demand_node_name_list
             ]
 
-            if type(default_pattern) != type(None):
+            if default_pattern is not None:
                 node_pattern_list = [
                     (node.name, node.demand_timeseries_list.pattern_list()[0])
                     if node.demand_timeseries_list.pattern_list()[0] != None

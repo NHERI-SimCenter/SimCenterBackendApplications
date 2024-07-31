@@ -1,15 +1,14 @@
 import json
-import math
-import time
 import os
+import time
 
 try:
     moduleName = 'numpy'
     import numpy as np
 
     moduleName = 'scipy'
-    from scipy.signal import csd, windows
     from scipy.interpolate import interp1d
+    from scipy.signal import csd, windows
 
     error_tag = False  # global variable
 except:
@@ -20,7 +19,7 @@ from convertWindMat import *
 
 def main(aimName, evtName, getRV):
     # THIS IS PERFORMED ONLY ONCE with open(aimName, 'r', encoding='utf-8') as f:
-    with open(aimName, 'r') as f:
+    with open(aimName) as f:
         aim_data = json.load(f)
 
     evt_data = aim_data['Events'][0]
@@ -53,14 +52,14 @@ def main(aimName, evtName, getRV):
 
         filename = json_filename
 
-    with open(filename, 'r', encoding='utf-8') as jsonFile:
+    with open(filename, encoding='utf-8') as jsonFile:
         data = json.load(jsonFile)
 
     if not getRV:
         case = 'PODmodes'
 
     elif evt_data['type'] == 'WindForceSpectrum':  # creates {forceSpectra}.json
-        if (not ('s_target_real' in data)) or (not ('s_target_imag' in data)):
+        if ('s_target_real' not in data) or ('s_target_imag' not in data):
             raise Exception(
                 'Target Spectrum info not found in ' + evt_data['filename'] + '.'
             )
@@ -70,7 +69,7 @@ def main(aimName, evtName, getRV):
     elif (
         evt_data['type'] == 'ExperimentalWindForces'
     ):  # creates {forceTimehistory}.json here and later overwrites it with {forceSpectra}.json
-        if (not ('Fx' in data)) or (not ('Fy' in data)) or (not ('Tz' in data)):
+        if ('Fx' not in data) or ('Fy' not in data) or ('Tz' not in data):
             raise Exception(
                 'Force time histories not found in ' + evt_data['filename'] + '.'
             )
@@ -103,12 +102,10 @@ def main(aimName, evtName, getRV):
         H_full = aim_data['GeneralInformation']['height']
         B_full = aim_data['GeneralInformation']['width']
         ms = H_full / H
-        print('Model scaling factor of {:.2} is used'.format(ms))
-        if ((not ms == D_full / D) or (not ms == B_full / B)) and getRV:
+        print(f'Model scaling factor of {ms:.2} is used')
+        if ((ms != D_full / D) or (ms != B_full / B)) and getRV:
             print(
-                'Warning: target-data geometry scaling ratio is inconsistent: H={:.2}, B={:.2}, D={:.2}'.format(
-                    H_full / H, B_full / B, D_full / D
-                )
+                f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'
             )
 
     if case == 'timeHistory':
@@ -126,11 +123,9 @@ def main(aimName, evtName, getRV):
         nfloors = Fx.shape[0]
         nfloors_GI = aim_data['GeneralInformation']['NumberOfStories']
 
-        if not nfloors == nfloors_GI:
+        if nfloors != nfloors_GI:
             err_exit(
-                'Number of floors does not match - input file has {} floors, GI tab defines {} floors'.format(
-                    nfloors, nfloors_GI
-                )
+                f'Number of floors does not match - input file has {nfloors} floors, GI tab defines {nfloors_GI} floors'
             )
 
     elif case == 'spectra':
@@ -264,16 +259,12 @@ def main(aimName, evtName, getRV):
     f = f_vH[0:SpeN]  # frequencies from the decomposition upto SpeN points(Hz)
     nf_dir = np.arange(ncomp)  # vector number of components
 
-    #
-    #
-    #
-
     Nsim = 1  # Number of realizations to be generated
     seeds = np.arange(seed, Nsim + seed)  # Set seeds for reproducibility
 
     CF_sim0 = np.zeros((len(seeds), ncomp, N_t))
     for seed_num in range(len(seeds)):
-        print('Creating Realization # {} among {} '.format(seed_num + 1, len(seeds)))
+        print(f'Creating Realization # {seed_num + 1} among {len(seeds)} ')
         t_init = time.time()
 
         F_jzm = simulation_gaussian(
@@ -298,7 +289,7 @@ def main(aimName, evtName, getRV):
             F_jzm  # zero-mean force coefficient time series (simulation)
         )
 
-        print(' - Elapsed time: {:.3} seconds.\n'.format(time.time() - t_init))
+        print(f' - Elapsed time: {time.time() - t_init:.3} seconds.\n')
 
     #
     # Destandardize force coefficients
@@ -538,7 +529,7 @@ def learn_CPSD(
         Components, Components, wind_size, nover, nfft, fp
     )
 
-    print(' - Elapsed time: {:.3} seconds.\n'.format(time.time() - t_init))
+    print(f' - Elapsed time: {time.time() - t_init:.3} seconds.\n')
 
     return s_target, f_target, norm_all, comp_CFmean, Fx_full, Fy_full, Tz_full
 

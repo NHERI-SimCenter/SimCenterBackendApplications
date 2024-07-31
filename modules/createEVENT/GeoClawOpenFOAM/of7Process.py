@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,6 +32,7 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
+
 import numpy as np
 
 # Other custom modules
@@ -44,25 +44,24 @@ from of7Solve import of7Solve
 # OpenFOAM7 solver class
 ####################################################################
 class of7Process:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     post-processing for openfoam7.
 
     Methods
-    --------
+    -------
             pprocesstext: Get all the text for the post-processing
+
     """
 
     #############################################################
     def pprocesstext(self, data, path):
-        """
-        Creates the necessary files for post-processing for openfoam7
+        """Creates the necessary files for post-processing for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -137,14 +136,13 @@ class of7Process:
 
     #############################################################
     def pprocesscdict(self, data, path):
-        """
-        Creates the necessary files for new controldict for post-processing for openfoam7
+        """Creates the necessary files for new controldict for post-processing for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
         solver = of7Solve()
@@ -281,14 +279,13 @@ class of7Process:
 
     #############################################################
     def scripts(self, data, path):
-        """
-        Creates the necessary postprocessing in scripts
+        """Creates the necessary postprocessing in scripts
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -337,14 +334,13 @@ class of7Process:
 
     #############################################################
     def pprocesscheck(self, data, path):
-        """
-        Checks for material properties for openfoam7
+        """Checks for material properties for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

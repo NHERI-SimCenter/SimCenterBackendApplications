@@ -1,7 +1,8 @@
-import os
-import IstanbulStations
-import IstanbulApp2
 import argparse
+import os
+
+import IstanbulApp2
+import IstanbulStations
 
 if __name__ == '__main__':
     information = {

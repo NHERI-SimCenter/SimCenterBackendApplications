@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -42,10 +41,15 @@
 # Anne Husley
 # Kuanshi Zhong
 # Jinyan Zhao
-import warnings, h5py, time, ujson, copy, sys
+import sys
+import time
+import warnings
+
+import h5py
 import numpy as np
-from tqdm import tqdm
+import ujson
 from gmpe import CorrelationModel
+from tqdm import tqdm
 
 IM_CORR_INTER = {
     'Baker & Jayaram (2008)': ['SA', 'PGA'],
@@ -78,7 +82,7 @@ def simulate_ground_motion(
     t_start = time.time()
     im_sampled = dict()
     if im_raw_path.endswith('.json'):
-        with open(im_raw_path, 'r') as f:
+        with open(im_raw_path) as f:
             im_raw = ujson.load(f)
         for i in eq_ids:
             im_sampled.update({i: im_raw[str(i)]})
@@ -147,9 +151,7 @@ def simulate_ground_motion(
         )
 
     print(
-        'ComputeIntensityMeasure: all inter- and intra-event correlation {0} sec'.format(
-            time.time() - t_start
-        )
+        f'ComputeIntensityMeasure: all inter- and intra-event correlation {time.time() - t_start} sec'
     )
     # return
     return ln_im_mr, mag_maf
@@ -221,7 +223,7 @@ class GM_Simulator:
             tmp_im_data = []
             for cur_im_type in self.im_type_list:
                 tmp_im_data = (
-                    tmp_im_data + self.im_data[i]['ln{}'.format(cur_im_type)]['Mean']
+                    tmp_im_data + self.im_data[i][f'ln{cur_im_type}']['Mean']
                 )
             ln_im.append(tmp_im_data)
         return ln_im
@@ -233,7 +235,7 @@ class GM_Simulator:
             for cur_im_type in self.im_type_list:
                 tmp_im_data = (
                     tmp_im_data
-                    + self.im_data[i]['ln{}'.format(cur_im_type)]['InterEvStdDev']
+                    + self.im_data[i][f'ln{cur_im_type}']['InterEvStdDev']
                 )
             inter_sigma_im.append(tmp_im_data)
         return inter_sigma_im
@@ -245,7 +247,7 @@ class GM_Simulator:
             for cur_im_type in self.im_type_list:
                 tmp_im_data = (
                     tmp_im_data
-                    + self.im_data[i]['ln{}'.format(cur_im_type)]['IntraEvStdDev']
+                    + self.im_data[i][f'ln{cur_im_type}']['IntraEvStdDev']
                 )
             intra_sigma_im.append(tmp_im_data)
         return intra_sigma_im
@@ -311,9 +313,7 @@ class GM_Simulator:
                 avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm[cur_im])
                 if cur_im not in avail_im_inter_cm:
                     print(
-                        'GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(
-                            cur_im, self.inter_cm
-                        )
+                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'
                     )
                     self.im_cm_inter_flag = False
                     continue
@@ -323,9 +323,7 @@ class GM_Simulator:
                 for cur_im in self.im_type_list:
                     if cur_im not in avail_im_inter_cm:
                         print(
-                            'GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(
-                                cur_im, self.inter_cm
-                            )
+                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'
                         )
                         self.im_cm_inter_flag = False
                         continue
@@ -334,9 +332,7 @@ class GM_Simulator:
                 avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm[cur_im])
                 if cur_im not in avail_im_intra_cm:
                     print(
-                        'GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(
-                            cur_im, self.intra_cm
-                        )
+                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'
                     )
                     self.im_cm_intra_flag = False
                     continue
@@ -346,9 +342,7 @@ class GM_Simulator:
                 for cur_im in self.im_type_list:
                     if cur_im not in avail_im_intra_cm:
                         print(
-                            'GM_Simulator.cross_check_im_correlation: warning - {} is not available in {}'.format(
-                                cur_im, self.intra_cm
-                            )
+                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'
                         )
                         self.im_cm_intra_flag = False
                         continue
@@ -387,7 +381,7 @@ class GM_Simulator:
             rho = np.zeros([self.num_im, self.num_im])
             im_types = list(self.inter_cm.keys())
             for i in range(len(im_types)):
-                for j in range(0, i + 1):
+                for j in range(i + 1):
                     im_type_i = im_types[i]
                     im_type_j = im_types[j]
                     im_name_list_i = [
@@ -489,7 +483,7 @@ class GM_Simulator:
             cm_groups = dict()
             # Group the IMs using the same cm
             for key, item in self.intra_cm.items():
-                if item not in cm_groups.keys():
+                if item not in cm_groups:
                     cm_groups.update({item: [key]})
                 else:
                     cm_groups[item].append(key)

@@ -1,6 +1,6 @@
-from cmath import pi, exp, sqrt
+from cmath import exp, pi, sqrt
+
 import numpy as np
-import sys
 
 
 class gauss1D:
@@ -40,14 +40,14 @@ class gauss1D:
         f2 = f4 = np.zeros(self.My, dtype=complex)
         part1 = part2 = np.zeros(self.Mx)
 
-        for pp in range(0, self.Mx):
+        for pp in range(self.Mx):
             xp = pp * self.dx
-            for qq in range(0, self.My):
+            for qq in range(self.My):
                 yq = qq * self.dy
-                for kk in range(0, self.Mx):
+                for kk in range(self.Mx):
                     kxk = kk * self.dkx
                     f1[kk] = exp(1j * kxk * xp)
-                    for ll in range(0, self.My):
+                    for ll in range(self.My):
                         kyl = ll * self.dky
                         kappa = sqrt(kxk**2 + kyl**2)
                         Sgg = (
@@ -62,10 +62,10 @@ class gauss1D:
                     f2sum = np.sum(f2)
                     part1[kk] = np.real(sqrt(2) * np.sum(f2sum * f1[kk]))
 
-                for kk in range(0, self.Mx):
+                for kk in range(self.Mx):
                     kxk = kk * self.dkx
                     f3[kk] = exp(1j * kxk * xp)
-                    for ll in range(0, self.My):
+                    for ll in range(self.My):
                         kyl = ll * self.dky
                         kappa = sqrt(kxk**2 + kyl**2)
                         Sgg = (

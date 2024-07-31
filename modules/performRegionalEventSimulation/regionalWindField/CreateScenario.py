@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,10 +37,9 @@
 # Kuanshi Zhong
 #
 
-import os
-import subprocess
 import json
-import random
+import os
+
 import numpy as np
 import pandas as pd
 

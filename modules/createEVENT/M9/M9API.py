@@ -1,7 +1,7 @@
 # %%
 
-import sys
 import subprocess
+import sys
 from importlib import metadata as importlib_metadata
 
 #
@@ -41,24 +41,23 @@ if missing:
 # now import our packages
 #
 
-import os
-import numpy as np
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Polygon, Point
-import requests
 import json
 import math
+import os
+
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+import requests
+from shapely.geometry import Point, Polygon
 
 
 # %%
 def M9(information):
-    """
-    the default is to select sites from all M9 sites, but
+    """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
     """
-
     site_location = information['LocationFlag']
 
     if site_location:
@@ -155,7 +154,7 @@ def M9(information):
             print(
                 'Please select a location in the region or change the grid type to "All"'
             )
-            return None
+            return
         else:
             # find the nearest site to the location
             gdf['distance'] = gdf.distance(Point(lon, lat))
@@ -182,7 +181,7 @@ def M9(information):
                 print(
                     'Please select a region in in the or change the grid type to "All"'
                 )
-                return None
+                return
             else:
                 # Check if the RegionofInterset is in the region
                 if not region.contains(RegionofInterset):
@@ -314,8 +313,7 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):
 
 
 def haversine(lat1, lon1, lat2, lon2):
-    """
-    Calculate the great circle distance between two points
+    """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
     """
     # Convert decimal degrees to radians

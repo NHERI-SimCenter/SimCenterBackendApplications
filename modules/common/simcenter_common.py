@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -49,7 +48,7 @@ def _warning(message, category, filename, lineno, file=None, line=None):
     elif '/' in filename:
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
-    print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+    print(f'WARNING in {python_file} at line {lineno}\n{message}\n')
 
 
 warnings.showwarning = _warning
@@ -60,8 +59,7 @@ def show_warning(warning_msg):
 
 
 def log_msg(msg='', prepend_timestamp=True):
-    """
-    Print a message to the screen with the current time as prefix
+    """Print a message to the screen with the current time as prefix
 
     The time is in ISO-8601 format, e.g. 2018-06-16T20:24:04Z
 
@@ -218,11 +216,7 @@ unit_decoupling_type_list = ['TH_file']
 
 
 def get_scale_factors(input_units, output_units):
-    """
-    Determine the scale factor to convert input event to internal event data
-
-    """
-
+    """Determine the scale factor to convert input event to internal event data"""
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -294,11 +288,7 @@ def get_scale_factors(input_units, output_units):
 
 
 def get_unit_bases(input_units):
-    """
-    Decouple input units
-
-    """
-
+    """Decouple input units"""
     # special case: if the input unit is not specified then do nothing
     if input_units is None:
         input_unit_bases = {}

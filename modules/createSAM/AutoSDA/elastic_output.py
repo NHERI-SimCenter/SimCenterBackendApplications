@@ -6,8 +6,9 @@
 # Last revision: 09/2020
 
 import os
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 # #########################################################################
 #           Define a list of load sequence as global constant             #
@@ -22,9 +23,8 @@ LOAD_TYPE = ['DeadLoad', 'LiveLoad', 'EarthquakeLoad']
 # #########################################################################
 
 
-class ElasticOutput(object):
-    """
-    This class is used to the following jobs:
+class ElasticOutput:
+    """This class is used to the following jobs:
     (1) Read load from OpenSees output files
     (2) Extract axial force, shear force, and moment for columns from matrix read in method (1)
     (3) Extract shear force and moment for beams from matrix read in method (1)
@@ -61,8 +61,7 @@ class ElasticOutput(object):
         self.determine_dominate_load()
 
     def read_raw_load(self, building):
-        """
-        This method is used to read the load demand for the structure subjected to certain type of load:
+        """This method is used to read the load demand for the structure subjected to certain type of load:
         dead load, live load or earthquake load
         :param building: user-defined class in "building_information.py" file
         :return: a dictionary which contains load demands under three load scenarios
@@ -88,7 +87,7 @@ class ElasticOutput(object):
                 ]
             )
             # Read output txt files
-            for story in range(0, building.geometry['number of story']):
+            for story in range(building.geometry['number of story']):
                 # Define the output txt file name
                 file_name = 'GlobalColumnForcesStory' + str(story + 1) + '.out'
                 read_data = np.loadtxt(file_name)
@@ -112,7 +111,7 @@ class ElasticOutput(object):
                 ]
             )
             # Read beam load from output txt files
-            for story in range(0, building.geometry['number of story']):
+            for story in range(building.geometry['number of story']):
                 # Define output txt file name
                 file_name = 'GlobalXBeamForcesLevel' + str(story + 2) + '.out'
                 read_data = np.loadtxt(file_name)
@@ -189,8 +188,7 @@ class ElasticOutput(object):
                 self.earthquake_load_case['beam moment'] = moment
 
     def perform_load_combination(self, building):
-        """
-        This method is used to perform the load combinations, which will be used to extract the dominate load.
+        """This method is used to perform the load combinations, which will be used to extract the dominate load.
         There are six load combinations in total according to ASCE 7-10.
         :param building: user-defined class in "building_information.py" file
         :return: six dictionaries which individually represents a single load combination result.
@@ -270,8 +268,7 @@ class ElasticOutput(object):
                 ]
 
     def determine_dominate_load(self):
-        """
-        This method is used to determine the governing load for beam and column components.
+        """This method is used to determine the governing load for beam and column components.
         :return: a dictionary which includes all six keys and associated matrices.
                  six keys: column axial, column shear, column moment, beam axial, beam shear, beam moment
         """

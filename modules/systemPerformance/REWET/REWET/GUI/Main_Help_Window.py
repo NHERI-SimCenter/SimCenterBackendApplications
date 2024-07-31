@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Main_Help_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -10,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Main_Help_Window(object):
+class Ui_Main_Help_Window:
     def setupUi(self, Main_Help_Window):
         Main_Help_Window.setObjectName('Main_Help_Window')
         Main_Help_Window.resize(680, 320)
@@ -76,9 +74,6 @@ class Ui_Main_Help_Window(object):
                 'REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.',
             )
         )
-
-
-from . import REWET_Resource_rc
 
 
 if __name__ == '__main__':

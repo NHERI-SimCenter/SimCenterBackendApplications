@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,30 +37,21 @@
 # Kuanshi Zhong
 #
 
-import json
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
-from gmpe import SignificantDurationModel
 import ujson
-
 from java.io import *
 from java.lang import *
 from java.lang.reflect import *
 from java.util import *
-
 from org.opensha.commons.data import *
-from org.opensha.commons.data.siteData import *
 from org.opensha.commons.data.function import *
-from org.opensha.commons.exceptions import ParameterException
+from org.opensha.commons.data.siteData import *
 from org.opensha.commons.geo import *
 from org.opensha.commons.param import *
-from org.opensha.commons.param.event import *
 from org.opensha.commons.param.constraint import *
-from org.opensha.commons.util import ServerPrefUtils
-from org.opensha.commons.param.impl import DoubleParameter
-from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
-
+from org.opensha.commons.param.event import *
+from org.opensha.sha.calc import *
 from org.opensha.sha.earthquake import *
 from org.opensha.sha.earthquake.param import *
 from org.opensha.sha.earthquake.rupForecastImpl.Frankel02 import (
@@ -75,25 +65,25 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 i
     MeanUCERF2,
 )
 from org.opensha.sha.faultSurface import *
+from org.opensha.sha.faultSurface.utils import PtSrcDistCorr
 from org.opensha.sha.imr import *
 from org.opensha.sha.imr.attenRelImpl import *
 from org.opensha.sha.imr.attenRelImpl.ngaw2 import *
 from org.opensha.sha.imr.attenRelImpl.ngaw2.NGAW2_Wrappers import *
 from org.opensha.sha.imr.param.IntensityMeasureParams import *
 from org.opensha.sha.imr.param.OtherParams import *
-from org.opensha.sha.imr.param.SiteParams import Vs30_Param
-from org.opensha.sha.calc import *
 from org.opensha.sha.util import *
+from tqdm import tqdm
 
 try:
     from scratch.UCERF3.erf.mean import MeanUCERF3
 except ModuleNotFoundError:
     MeanUCERF3 = jpype.JClass('scratch.UCERF3.erf.mean.MeanUCERF3')
 
-from org.opensha.sha.gcim.imr.attenRelImpl import *
-from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
-from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
 from org.opensha.sha.gcim.calc import *
+from org.opensha.sha.gcim.imr.attenRelImpl import *
+from org.opensha.sha.gcim.imr.param.EqkRuptureParams import *
+from org.opensha.sha.gcim.imr.param.IntensityMeasureParams import *
 
 
 def getERF(scenario_info, update_flag=True):
@@ -623,9 +613,7 @@ def export_to_json(
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print(
-        'FetchOpenSHA: total {} ruptures are collected.'.format(
-            len(feature_collection_sorted)
-        )
+        f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'
     )
     # num_preview = 1000
     # if len(feature_collection_sorted) > num_preview:
@@ -637,9 +625,7 @@ def export_to_json(
     # startTime = time.process_time_ns()
     if outfile is not None:
         print(
-            'The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(
-                outfile
-            )
+            f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
         with open(outfile, 'w') as f:
             ujson.dump(erf_data, f, indent=2)
@@ -666,7 +652,7 @@ def CreateIMRInstance(gmpe_name):
         ): AfshariStewart_2016_AttenRel.class_.getName(),
     }
     # Mapping GMPE name
-    imrClassName = gmpe_map.get(gmpe_name, None)
+    imrClassName = gmpe_map.get(gmpe_name)
     if imrClassName is None:
         return imrClassName
     # Getting the java class

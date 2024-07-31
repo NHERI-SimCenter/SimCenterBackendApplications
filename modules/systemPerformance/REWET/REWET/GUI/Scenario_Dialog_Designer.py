@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 28 14:09:49 2022
+"""Created on Fri Oct 28 14:09:49 2022
 
 @author: snaeimi
 """
 
-import os
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets
+
 from .Scenario_Dialog_Window import Ui_Scenario_Dialog
 
 

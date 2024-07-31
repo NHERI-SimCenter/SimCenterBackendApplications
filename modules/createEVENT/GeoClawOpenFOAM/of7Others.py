@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -32,7 +31,6 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -42,33 +40,31 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Others:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     auxillary files for openfoam7.
 
     Methods
-    --------
+    -------
             gfiletext: Get all the text for the gravity file
+
     """
 
     #############################################################
     def othersheader(self, fileclas, fileloc, fileobjec):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the other-files
         """
-
         header = (
-            """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+            """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\t"""
             + fileclas
@@ -86,14 +82,13 @@ FoamFile
 
     #############################################################
     def gfiletext(self, data):
-        """
-        Creates the necessary text for gravity file for openfoam7
+        """Creates the necessary text for gravity file for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

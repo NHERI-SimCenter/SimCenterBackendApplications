@@ -11,18 +11,16 @@
 
 # Modified by Dr. Stevan Gavrilovic @ SimCenter, UC Berkeley
 
-import sys, os
-import argparse, json
-
-from math import pi, sqrt, ceil, floor
-from scipy import interpolate
-
-import openseespy.opensees as op
-import numpy as np  # load the numpy module, calling it np
-
-import pandas as pd
+import argparse
+import json
 import os
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import sys
+from math import ceil, floor, pi, sqrt
+
+import numpy as np  # load the numpy module, calling it np
+import openseespy.opensees as op
+import pandas as pd
+from scipy import interpolate
 
 # Definition of units
 m = 1.0  # define basic units -- output units
@@ -264,7 +262,7 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
     rootSIM = {}
 
     # Try to open the BIM json
-    with open(BIM_file, 'r', encoding='utf-8') as f:
+    with open(BIM_file, encoding='utf-8') as f:
         rootBIM = json.load(f)
     try:
         # rootSIM = rootBIM['StructuralInformation']
@@ -390,21 +388,21 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):
     node_map = []
 
     # Using nodes on column #1 to calculate story drift
-    for i in range(0, numStories + 1):
+    for i in range(numStories + 1):
         nodeTag = i * (numSpans + 1)
 
         # Create the node and add it to the node mapping array
         node_entry = {}
         node_entry['node'] = nodeTag
         node_entry['cline'] = 'response'
-        node_entry['floor'] = '{}'.format(i)
+        node_entry['floor'] = f'{i}'
         node_map.append(node_entry)
 
         ## KZ & AZ: Add centroid for roof drift
         node_entry_c = {}
         node_entry_c['node'] = nodeTag + clineOffset
         node_entry_c['cline'] = 'centroid'
-        node_entry_c['floor'] = '{}'.format(i)
+        node_entry_c['floor'] = f'{i}'
         node_map.append(node_entry_c)
 
     root_SAM['NodeMapping'] = node_map
@@ -2771,17 +2769,13 @@ class RCFIAP:
         for Ele in EleCol:
             outputLogger.add_array(
                 [
-                    'eleLoad -ele {} -type -beamUniform 0 {}'.format(
-                        Ele.EleTag, -Ele.AEle * GConc
-                    )
+                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform 0 {-Ele.AEle * GConc}'
                 ]
             )
         for Ele in EleBeam:
             outputLogger.add_array(
                 [
-                    'eleLoad -ele {} -type -beamUniform {}'.format(
-                        Ele.EleTag, -Ele.AEle * GConc - WDL
-                    )
+                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform {-Ele.AEle * GConc - WDL}'
                 ]
             )
         outputLogger.add_array(['}'])
@@ -2806,8 +2800,8 @@ class RCFIAP:
         else:
             mode1 = 1
             mode2 = 3
-        outputLogger.add_array(['set nEigenI {}'.format(mode1)])
-        outputLogger.add_array(['set nEigenJ {}'.format(mode2)])
+        outputLogger.add_array([f'set nEigenI {mode1}'])
+        outputLogger.add_array([f'set nEigenJ {mode2}'])
         outputLogger.add_array(['set lambdaN [eigen [expr $nEigenJ]]'])
         outputLogger.add_array(['set lambdaI [lindex $lambdaN [expr $nEigenI-1]]'])
         outputLogger.add_array(['set lambdaJ [lindex $lambdaN [expr $nEigenJ-1]]'])
@@ -2816,11 +2810,9 @@ class RCFIAP:
         outputLogger.add_array(['set T1 [expr 2.0*3.14/$lambda1]'])
         outputLogger.add_array(['puts "T1 = $T1"'])
         outputLogger.add_array(
-            ['set a0 [expr {}*2.0*$lambda1*$lambda2/($lambda1+$lambda2)]'.format(xi)]
+            [f'set a0 [expr {xi}*2.0*$lambda1*$lambda2/($lambda1+$lambda2)]']
         )
-        outputLogger.add_array(
-            ['set a1 [expr {}*2.0/($lambda1+$lambda2)]'.format(xi)]
-        )
+        outputLogger.add_array([f'set a1 [expr {xi}*2.0/($lambda1+$lambda2)]'])
         outputLogger.add_array(['rayleigh $a0 0.0 $a1 0.0'])
 
         if preparePushover == False:

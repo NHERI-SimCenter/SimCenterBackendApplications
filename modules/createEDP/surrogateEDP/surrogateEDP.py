@@ -1,5 +1,5 @@
-from __future__ import division, print_function
-import os, sys
+import os
+import sys
 
 if sys.version.startswith('2'):
     range = xrange
@@ -7,12 +7,13 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import argparse, posixpath, ntpath, json
+import argparse
+import json
 
 
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     # load the AIM file
-    with open(AIM_input_path, 'r', encoding='utf-8') as f:
+    with open(AIM_input_path, encoding='utf-8') as f:
         root_AIM = json.load(f)
 
     #
@@ -42,7 +43,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     )
     print(surrogate_path)
 
-    with open(surrogate_path, 'r', encoding='utf-8') as f:
+    with open(surrogate_path, encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
     root_EDP = surrogate_model['EDP']

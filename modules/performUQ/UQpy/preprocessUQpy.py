@@ -1,6 +1,4 @@
 import click
-import os
-
 from src.quofemDTOs import Model
 from src.runmodel.RunModelDTOs import RunModelDTO
 

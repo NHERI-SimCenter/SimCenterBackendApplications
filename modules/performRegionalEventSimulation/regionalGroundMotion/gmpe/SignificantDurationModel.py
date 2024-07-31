@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -44,8 +43,7 @@ import numpy as np
 def abrahamson_silva_ds_1999(
     magnitude=7.0, distance=10.0, soil=True, duration_type='DS575H'
 ):
-    """
-    Significant duration model by Abrahamson and Silva (1996) Empirical ground motion
+    """Significant duration model by Abrahamson and Silva (1996) Empirical ground motion
     models, report prepared for Brookhaven National Laboratory.
     Input
     magnitude: earthquake magnitude
@@ -57,7 +55,6 @@ def abrahamson_silva_ds_1999(
     log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
     """
-
     # map the duration_type to integer key
     dur_map = {'DS575H': 0, 'DS575V': 1, 'DS595H': 2, 'DS595V': 3}
     dur_tag = dur_map.get(duration_type.upper(), None)
@@ -114,8 +111,7 @@ def abrahamson_silva_ds_1999(
 def bommer_stafford_alarcon_ds_2009(
     magnitude=7.0, distance=10.0, vs30=760.0, ztor=0.0, duration_type='DS575H'
 ):
-    """
-    Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical
+    """Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical
     Equations for the Prediction of the Significant, Bracketed, and Uniform
     Duration of Earthquake Ground Motion
     Input
@@ -130,7 +126,6 @@ def bommer_stafford_alarcon_ds_2009(
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
     """
-
     # duration type map
     dur_map = {'DS575H': 0, 'DS595H': 1}
     dur_tag = dur_map.get(duration_type.upper(), None)
@@ -180,8 +175,7 @@ def afshari_stewart_ds_2016(
     region='california',
     duration_type='DS575H',
 ):
-    """
-    Significant duration model by Afshari and Stewart (2016) hysically Parameterized
+    """Significant duration model by Afshari and Stewart (2016) hysically Parameterized
     Prediction Equations for Significant Duration in Active Crustal Regions
     Input
     magnitude: earthquake magnitude
@@ -197,7 +191,6 @@ def afshari_stewart_ds_2016(
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
     """
-
     # mechanism map
     mech_map = {'unknown': 0, 'normal': 1, 'reverse': 2, 'strike-slip': 3}
     mech_tag = mech_map.get(mechanism.lower(), None)

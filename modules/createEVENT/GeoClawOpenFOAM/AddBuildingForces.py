@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-from __future__ import print_function
-import os, sys
 import argparse
 import json
+import os
 
 
 def validateCaseDirectoryStructure(caseDir):
-    """
-    This method validates that the provided case directory is valid and contains the 0, constant and system directory
+    """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
     """
     if not os.path.isdir(caseDir):
@@ -15,7 +13,7 @@ def validateCaseDirectoryStructure(caseDir):
 
     caseDirList = os.listdir(caseDir)
     necessaryDirs = ['0', 'constant', 'system']
-    if any(not aDir in caseDirList for aDir in necessaryDirs):
+    if any(aDir not in caseDirList for aDir in necessaryDirs):
         return False
 
     controlDictPath = os.path.join(caseDir, 'system/controlDict')
@@ -26,9 +24,7 @@ def validateCaseDirectoryStructure(caseDir):
 
 
 def findFunctionsDictionary(controlDictLines):
-    """
-    This method will find functions dictionary in the controlDict
-    """
+    """This method will find functions dictionary in the controlDict"""
     for line in controlDictLines:
         if line.startswith('functions'):
             return (True, controlDictLines.index(line) + 2)
@@ -37,10 +33,7 @@ def findFunctionsDictionary(controlDictLines):
 
 
 def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
-    """
-    This method will write the force dictionary
-    """
-
+    """This method will write the force dictionary"""
     for line in ['\t\n', '\tbuildingsForces\n', '\t{\n', '\t}\n', '\n']:
         controlDictLines.insert(lineIndex, line)
         lineIndex += 1
@@ -50,7 +43,7 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
         'libs': '("libforces.so")',
         'writeControl': 'timeStep',
         'writeInterval': 1,
-        'patches': '({})'.format(patches),
+        'patches': f'({patches})',
         'rho': 'rhoInf',
         'log': 'true',
         'rhoInf': 1,
@@ -81,16 +74,14 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):
 
 
 def AddBuildingsForces(floorsCount, patches):
-    """
-    First, we need to validate the case directory structure
-    """
+    """First, we need to validate the case directory structure"""
     # if not validateCaseDirectoryStructure(caseDir):
     #     print("Invalid OpenFOAM Case Directory!")
     #     sys.exit(-1)
 
     # controlDictPath = os.path.join(caseDir, "system/controlDict")
     controlDictPath = 'system/controlDict'
-    with open(controlDictPath, 'r') as controlDict:
+    with open(controlDictPath) as controlDict:
         controlDictLines = controlDict.readlines()
 
     [isFound, lineIndex] = findFunctionsDictionary(controlDictLines)
@@ -110,7 +101,7 @@ def AddBuildingsForces(floorsCount, patches):
 
 
 def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath, 'r') as BIMFile:
+    with open(BIMFilePath) as BIMFile:
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

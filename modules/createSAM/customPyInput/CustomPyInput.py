@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,7 +37,9 @@
 # Adam Zsarnóczay
 #
 
-import sys, argparse, json
+import argparse
+import json
+import sys
 
 
 def create_SAM(
@@ -53,7 +54,7 @@ def create_SAM(
     getRV,
 ):
     # KZ: modifying BIM to AIM
-    with open(AIM_file, 'r', encoding='utf-8') as f:
+    with open(AIM_file, encoding='utf-8') as f:
         root_AIM = json.load(f)
     root_GI = root_AIM['GeneralInformation']
 

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  1 23:25:30 2022
+"""Created on Tue Nov  1 23:25:30 2022
 
 @author: snaeimi
 """

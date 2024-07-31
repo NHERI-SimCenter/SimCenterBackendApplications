@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -30,9 +29,9 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import argparse
+import datetime
 import json
 import sys
-import datetime
 from pathlib import Path
 
 # Other custom modules
@@ -44,8 +43,7 @@ from openfoam7 import openfoam7
 # Main function
 ####################################################################
 def main():
-    """
-    This is the primary function
+    """This is the primary function
 
     Objects:
             h2oparser: Parser for CLI arguments
@@ -56,7 +54,6 @@ def main():
     Variables:
             fipath: Path to dakota.json
     """
-
     # Get the system argument
     # Create a parser Object
     h2oparser = argparse.ArgumentParser(description='Get the Dakota.json file')

@@ -11,26 +11,19 @@
 # nonlinear structural model construction and analysis of steel moment
 # resisting frames.” Engineering Structures. (Under Review)
 
-import argparse, posixpath, ntpath, json
-
+import argparse
+import json
+import os
+import shutil
 import sys
 import time
-import os
-import sys
-import shutil
-import pathlib
-import subprocess
-import pickle
 
-from global_variables import baseDirectory
-from seismic_design import seismic_design
 from global_variables import (
-    SECTION_DATABASE,
-    COLUMN_DATABASE,
-    BEAM_DATABASE,
     RV_ARRAY,
+    baseDirectory,
 )
 from model_generation import model_generation
+from seismic_design import seismic_design
 
 
 def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
@@ -42,7 +35,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     rootSIM = {}
 
     # Try to open the BIM json
-    with open(BIM_file, 'r', encoding='utf-8') as f:
+    with open(BIM_file, encoding='utf-8') as f:
         rootBIM = json.load(f)
     try:
         rootSIM = rootBIM['Modeling']
@@ -139,25 +132,23 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
         if i == 1:
             # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)
             nodeTagBot = 1010 + 100 * i
+        elif i > 9:
+            nodeTagBot = 10011 + 100 * i
         else:
-            # KZ & AZ: minor patch for story numbers greater than 10
-            if i > 9:
-                nodeTagBot = 10011 + 100 * i
-            else:
-                nodeTagBot = 1011 + 100 * i
+            nodeTagBot = 1011 + 100 * i
 
         # Create the node and add it to the node mapping array
         node_entry = {}
         node_entry['node'] = nodeTagBot
         node_entry['cline'] = 'response'
-        node_entry['floor'] = '{}'.format(i - 1)
+        node_entry['floor'] = f'{i - 1}'
         node_map.append(node_entry)
 
         ## KZ & AZ: Add centroid for roof drift
         node_entry_c = {}
         node_entry_c['node'] = nodeTagBot
         node_entry_c['cline'] = 'centroid'
-        node_entry_c['floor'] = '{}'.format(i - 1)
+        node_entry_c['floor'] = f'{i - 1}'
         node_map.append(node_entry_c)
 
     root_SAM['NodeMapping'] = node_map

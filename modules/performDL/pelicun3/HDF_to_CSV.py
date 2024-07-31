@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -37,10 +36,11 @@
 # Contributors:
 # Adam Zsarnóczay
 
-import pandas as pd
-import sys
 import argparse
+import sys
 from pathlib import Path
+
+import pandas as pd
 
 
 def convert_HDF(HDF_path):

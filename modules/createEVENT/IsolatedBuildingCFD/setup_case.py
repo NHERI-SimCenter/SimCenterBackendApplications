@@ -1,21 +1,21 @@
-"""
-This script writes BC and initial condition, and setups the OpenFoam case
+"""This script writes BC and initial condition, and setups the OpenFoam case
 directory.
 
 """
 
-import numpy as np
-import sys
-import os
 import json
+import os
+import sys
+
 import foam_dict_reader as foam
+import numpy as np
 from stl import mesh
 
 
 def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -81,27 +81,27 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     z_max = z_min + Lz
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/blockMeshDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/blockMeshDictTemplate')
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
     dict_file.close()
 
-    dict_lines[17] = '\txMin\t\t{:.4f};\n'.format(x_min)
-    dict_lines[18] = '\tyMin\t\t{:.4f};\n'.format(y_min)
-    dict_lines[19] = '\tzMin\t\t{:.4f};\n'.format(z_min)
+    dict_lines[17] = f'\txMin\t\t{x_min:.4f};\n'
+    dict_lines[18] = f'\tyMin\t\t{y_min:.4f};\n'
+    dict_lines[19] = f'\tzMin\t\t{z_min:.4f};\n'
 
-    dict_lines[20] = '\txMax\t\t{:.4f};\n'.format(x_max)
-    dict_lines[21] = '\tyMax\t\t{:.4f};\n'.format(y_max)
-    dict_lines[22] = '\tzMax\t\t{:.4f};\n'.format(z_max)
+    dict_lines[20] = f'\txMax\t\t{x_max:.4f};\n'
+    dict_lines[21] = f'\tyMax\t\t{y_max:.4f};\n'
+    dict_lines[22] = f'\tzMax\t\t{z_max:.4f};\n'
 
-    dict_lines[23] = '\txCells\t\t{:d};\n'.format(x_cells)
-    dict_lines[24] = '\tyCells\t\t{:d};\n'.format(y_cells)
-    dict_lines[25] = '\tzCells\t\t{:d};\n'.format(z_cells)
+    dict_lines[23] = f'\txCells\t\t{x_cells:d};\n'
+    dict_lines[24] = f'\tyCells\t\t{y_cells:d};\n'
+    dict_lines[25] = f'\tzCells\t\t{z_cells:d};\n'
 
-    dict_lines[26] = '\txGrading\t{:.4f};\n'.format(x_grading)
-    dict_lines[27] = '\tyGrading\t{:.4f};\n'.format(y_grading)
-    dict_lines[28] = '\tzGrading\t{:.4f};\n'.format(z_grading)
+    dict_lines[26] = f'\txGrading\t{x_grading:.4f};\n'
+    dict_lines[27] = f'\tyGrading\t{y_grading:.4f};\n'
+    dict_lines[28] = f'\tzGrading\t{z_grading:.4f};\n'
 
     convert_to_meters = 1.0
 
@@ -116,13 +116,13 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
     elif length_unit == 'in':
         convert_to_meters = 0.0254
 
-    dict_lines[31] = 'convertToMeters {:.4f};\n'.format(convert_to_meters)
-    dict_lines[61] = '        type {};\n'.format(inlet_type)
-    dict_lines[70] = '        type {};\n'.format(outlet_type)
-    dict_lines[79] = '        type {};\n'.format(ground_type)
-    dict_lines[88] = '        type {};\n'.format(top_type)
-    dict_lines[97] = '        type {};\n'.format(front_type)
-    dict_lines[106] = '        type {};\n'.format(back_type)
+    dict_lines[31] = f'convertToMeters {convert_to_meters:.4f};\n'
+    dict_lines[61] = f'        type {inlet_type};\n'
+    dict_lines[70] = f'        type {outlet_type};\n'
+    dict_lines[79] = f'        type {ground_type};\n'
+    dict_lines[88] = f'        type {top_type};\n'
+    dict_lines[97] = f'        type {front_type};\n'
+    dict_lines[106] = f'        type {back_type};\n'
 
     write_file_name = case_path + '/system/blockMeshDict'
 
@@ -139,7 +139,7 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):
 def write_building_stl_file(input_json_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -248,7 +248,7 @@ def write_building_stl_file(input_json_path, case_path):
 def import_building_stl_file(input_json_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -325,7 +325,7 @@ def import_building_stl_file(input_json_path, case_path):
 def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -334,7 +334,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
     building_stl_name = domain_data['buildingSTLName']
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/surfaceFeaturesDictTemplate')
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -342,7 +342,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
 
     # Write 'addLayers' switch
     start_index = foam.find_keyword_line(dict_lines, 'surfaces')
-    dict_lines[start_index] = 'surfaces  ("{}.stl");\n'.format(building_stl_name)
+    dict_lines[start_index] = f'surfaces  ("{building_stl_name}.stl");\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/system/surfaceFeaturesDict'
@@ -360,7 +360,7 @@ def write_surfaceFeaturesDict_file(input_json_path, template_dict_path, case_pat
 def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -427,7 +427,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     inside_point = [x_min + Lf / 2.0, (y_min + y_max) / 2.0, H]
 
     # Open the template blockMeshDict (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/snappyHexMeshDictTemplate')
 
     # Export to OpenFOAM probe format
     dict_lines = dict_file.readlines()
@@ -446,15 +446,11 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     added_part = ''
     n_boxes = len(refinement_boxes)
     for i in range(n_boxes):
-        added_part += '    {}\n'.format(refinement_boxes[i][0])
+        added_part += f'    {refinement_boxes[i][0]}\n'
         added_part += '    {\n'
         added_part += '         type searchableBox;\n'
-        added_part += '         min ({:.4f} {:.4f} {:.4f});\n'.format(
-            refinement_boxes[i][2], refinement_boxes[i][3], refinement_boxes[i][4]
-        )
-        added_part += '         max ({:.4f} {:.4f} {:.4f});\n'.format(
-            refinement_boxes[i][5], refinement_boxes[i][6], refinement_boxes[i][7]
-        )
+        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'
+        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'
         added_part += '    }\n'
 
     dict_lines.insert(start_index, added_part)
@@ -462,10 +458,10 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     # Add building stl geometry
     start_index = foam.find_keyword_line(dict_lines, 'geometry') + 2
     added_part = ''
-    added_part += '    {}\n'.format(building_stl_name)
+    added_part += f'    {building_stl_name}\n'
     added_part += '    {\n'
     added_part += '         type triSurfaceMesh;\n'
-    added_part += '         file "{}.stl";\n'.format(building_stl_name)
+    added_part += f'         file "{building_stl_name}.stl";\n'
     added_part += '    }\n'
 
     dict_lines.insert(start_index, added_part)
@@ -474,26 +470,24 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     # Write 'nCellsBetweenLevels'
     start_index = foam.find_keyword_line(dict_lines, 'nCellsBetweenLevels')
-    dict_lines[start_index] = '    nCellsBetweenLevels {:d};\n'.format(
-        num_cells_between_levels
+    dict_lines[start_index] = (
+        f'    nCellsBetweenLevels {num_cells_between_levels:d};\n'
     )
 
     # Write 'resolveFeatureAngle'
     start_index = foam.find_keyword_line(dict_lines, 'resolveFeatureAngle')
-    dict_lines[start_index] = '    resolveFeatureAngle {:d};\n'.format(
-        resolve_feature_angle
-    )
+    dict_lines[start_index] = f'    resolveFeatureAngle {resolve_feature_angle:d};\n'
 
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
-    dict_lines[start_index] = '    insidePoint ({:.4f} {:.4f} {:.4f});\n'.format(
-        inside_point[0], inside_point[1], inside_point[2]
+    dict_lines[start_index] = (
+        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, 'locationInMesh')
-    dict_lines[start_index] = '    locationInMesh ({:.4f} {:.4f} {:.4f});\n'.format(
-        inside_point[0], inside_point[1], inside_point[2]
+    dict_lines[start_index] = (
+        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # Add refinement edge
@@ -501,8 +495,8 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
         start_index = foam.find_keyword_line(dict_lines, 'features') + 2
         added_part = ''
         added_part += '         {\n'
-        added_part += '             file "{}.eMesh";\n'.format(refinement_edge_name)
-        added_part += '             level {};\n'.format(edge_refinement_level)
+        added_part += f'             file "{refinement_edge_name}.eMesh";\n'
+        added_part += f'             level {edge_refinement_level};\n'
         added_part += '         }\n'
 
         dict_lines.insert(start_index, added_part)
@@ -511,11 +505,9 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     if add_surface_refinement:
         start_index = foam.find_keyword_line(dict_lines, 'refinementSurfaces') + 2
         added_part = ''
-        added_part += '         {}\n'.format(refinement_surface_name)
+        added_part += f'         {refinement_surface_name}\n'
         added_part += '         {\n'
-        added_part += '             level ({} {});\n'.format(
-            surface_refinement_level, surface_refinement_level
-        )
+        added_part += f'             level ({surface_refinement_level} {surface_refinement_level});\n'
         added_part += '             patchInfo\n'
         added_part += '             {\n'
         added_part += '                 type wall;\n'
@@ -527,12 +519,10 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     # Add surface refinement around the building as a refinement region
     # if surface_refinement_level > refinement_boxes[-1][1]:
     added_part = ''
-    added_part += '         {}\n'.format(refinement_surface_name)
+    added_part += f'         {refinement_surface_name}\n'
     added_part += '         {\n'
     added_part += '             mode   distance;\n'
-    added_part += '             levels  (({:.4f} {}));\n'.format(
-        surface_refinement_distance, refinement_boxes[-1][1] + 1
-    )
+    added_part += f'             levels  (({surface_refinement_distance:.4f} {refinement_boxes[-1][1] + 1}));\n'
     added_part += '         }\n'
 
     start_index = foam.find_keyword_line(dict_lines, 'refinementRegions') + 2
@@ -541,10 +531,10 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     # Add box refinements
     added_part = ''
     for i in range(n_boxes):
-        added_part += '         {}\n'.format(refinement_boxes[i][0])
+        added_part += f'         {refinement_boxes[i][0]}\n'
         added_part += '         {\n'
         added_part += '             mode   inside;\n'
-        added_part += '             level  {};\n'.format(refinement_boxes[i][1])
+        added_part += f'             level  {refinement_boxes[i][1]};\n'
         added_part += '         }\n'
 
     start_index = foam.find_keyword_line(dict_lines, 'refinementRegions') + 2
@@ -553,9 +543,9 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
     ####################### Edit PrismLayer Section ##########################
     # Add surface layers (prism layers)
     added_part = ''
-    added_part += '         "{}"\n'.format(prism_layer_surface_name)
+    added_part += f'         "{prism_layer_surface_name}"\n'
     added_part += '         {\n'
-    added_part += '             nSurfaceLayers {};\n'.format(number_of_prism_layers)
+    added_part += f'             nSurfaceLayers {number_of_prism_layers};\n'
     added_part += '         }\n'
 
     start_index = foam.find_keyword_line(dict_lines, 'layers') + 2
@@ -563,20 +553,18 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 
     # Write 'relativeSizes'
     start_index = foam.find_keyword_line(dict_lines, 'relativeSizes')
-    dict_lines[start_index] = '    relativeSizes {};\n'.format(
-        prism_layer_relative_size
-    )
+    dict_lines[start_index] = f'    relativeSizes {prism_layer_relative_size};\n'
 
     # Write 'expansionRatio'
     start_index = foam.find_keyword_line(dict_lines, 'expansionRatio')
-    dict_lines[start_index] = '    expansionRatio {:.4f};\n'.format(
-        prism_layer_expansion_ratio
+    dict_lines[start_index] = (
+        f'    expansionRatio {prism_layer_expansion_ratio:.4f};\n'
     )
 
     # Write 'finalLayerThickness'
     start_index = foam.find_keyword_line(dict_lines, 'finalLayerThickness')
-    dict_lines[start_index] = '    finalLayerThickness {:.4f};\n'.format(
-        final_prism_layer_thickness
+    dict_lines[start_index] = (
+        f'    finalLayerThickness {final_prism_layer_thickness:.4f};\n'
     )
 
     # Write edited dict to file
@@ -595,7 +583,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path):
 def write_U_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -613,7 +601,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/UFileTemplate', 'r')
+    dict_file = open(template_dict_path + '/UFileTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -631,28 +619,28 @@ def write_U_file(input_json_path, template_dict_path, case_path):
     if inlet_BC_type == 'Uniform':
         added_part = ''
         added_part += '\t type \t fixedValue;\n'
-        added_part += '\t value \t uniform ({:.4f} 0 0);\n'.format(wind_speed)
+        added_part += f'\t value \t uniform ({wind_speed:.4f} 0 0);\n'
 
     if inlet_BC_type == 'MeanABL':
         added_part = ''
         added_part += '\t type \t atmBoundaryLayerInletVelocity;\n'
-        added_part += '\t Uref \t {:.4f};\n'.format(wind_speed)
-        added_part += '\t Zref \t {:.4f};\n'.format(building_height)
+        added_part += f'\t Uref \t {wind_speed:.4f};\n'
+        added_part += f'\t Zref \t {building_height:.4f};\n'
         added_part += '\t zDir \t (0.0 0.0 1.0);\n'
         added_part += '\t flowDir \t (1.0 0.0 0.0);\n'
-        added_part += '\t z0 uniform \t {:.4e};\n'.format(roughness_length)
+        added_part += f'\t z0 uniform \t {roughness_length:.4e};\n'
         added_part += '\t zGround \t uniform 0.0;\n'
 
     if inlet_BC_type == 'TInf':
         added_part = ''
         added_part += '\t type \t turbulentDFMInlet;\n'
         added_part += '\t filterType \t exponential;\n'
-        added_part += '\t filterFactor \t {};\n'.format(4)
-        added_part += '\t value \t uniform ({:.4f} 0 0);\n'.format(wind_speed)
+        added_part += f'\t filterFactor \t {4};\n'
+        added_part += f'\t value \t uniform ({wind_speed:.4f} 0 0);\n'
         added_part += '\t periodicInY \t {};\n'.format('true')
         added_part += '\t periodicInZ \t {};\n'.format('false')
         added_part += '\t constMeanU \t {};\n'.format('true')
-        added_part += '\t Uref \t {:.4f};\n'.format(wind_speed)
+        added_part += f'\t Uref \t {wind_speed:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -680,7 +668,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
-    added_part += '\t type    {};\n'.format(top_BC_type)
+    added_part += f'\t type    {top_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -688,7 +676,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -696,7 +684,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
-    added_part += '\t type    {};\n'.format(sides_BC_type)
+    added_part += f'\t type    {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -725,7 +713,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):
 def write_p_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -736,7 +724,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
     top_BC_type = boundary_data['topBoundaryCondition']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/pFileTemplate', 'r')
+    dict_file = open(template_dict_path + '/pFileTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -746,7 +734,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
     ##################### Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    dict_lines[start_index] = 'internalField   uniform {:.4f};\n'.format(p0)
+    dict_lines[start_index] = f'internalField   uniform {p0:.4f};\n'
 
     ###################### Inlet BC ##############################
     # Write uniform
@@ -761,7 +749,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
     added_part += '\t type \t  uniformFixedValue;\n'
-    added_part += '\t uniformValue \t constant {:.4f};\n'.format(p0)
+    added_part += f'\t uniformValue \t constant {p0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -777,7 +765,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(top_BC_type)
+    added_part += f'\t type \t {top_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -785,7 +773,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -793,7 +781,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -821,7 +809,7 @@ def write_p_file(input_json_path, template_dict_path, case_path):
 def write_nut_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -839,7 +827,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/nutFileTemplate', 'r')
+    dict_file = open(template_dict_path + '/nutFileTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -850,7 +838,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     ##################### Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    dict_lines[start_index] = 'internalField   uniform {:.4f};\n'.format(nut0)
+    dict_lines[start_index] = f'internalField   uniform {nut0:.4f};\n'
 
     ###################### Inlet BC ##############################
     # Write uniform
@@ -865,7 +853,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
     added_part += '\t type \t uniformFixedValue;\n'
-    added_part += '\t uniformValue \t constant {:.4f};\n'.format(nut0)
+    added_part += f'\t uniformValue \t constant {nut0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -880,7 +868,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
     if ground_BC_type == 'roughWallFunction':
         added_part = ''
         added_part += '\t type \t nutkAtmRoughWallFunction;\n'
-        added_part += '\t z0  \t  uniform {:.4e};\n'.format(roughness_length)
+        added_part += f'\t z0  \t  uniform {roughness_length:.4e};\n'
         added_part += '\t value \t uniform 0.0;\n'
 
     if ground_BC_type == 'smoothWallFunction':
@@ -894,7 +882,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(top_BC_type)
+    added_part += f'\t type \t {top_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -902,7 +890,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -910,7 +898,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -952,7 +940,7 @@ def write_nut_file(input_json_path, template_dict_path, case_path):
 def write_epsilon_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -970,7 +958,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/epsilonFileTemplate', 'r')
+    dict_file = open(template_dict_path + '/epsilonFileTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -981,18 +969,18 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     ##################### Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    dict_lines[start_index] = 'internalField   uniform {:.4f};\n'.format(epsilon0)
+    dict_lines[start_index] = f'internalField   uniform {epsilon0:.4f};\n'
 
     ###################### Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
     added_part += '\t type \t atmBoundaryLayerInletEpsilon;\n'
-    added_part += '\t Uref \t {:.4f};\n'.format(wind_speed)
-    added_part += '\t Zref \t {:.4f};\n'.format(building_height)
+    added_part += f'\t Uref \t {wind_speed:.4f};\n'
+    added_part += f'\t Zref \t {building_height:.4f};\n'
     added_part += '\t zDir \t (0.0 0.0 1.0);\n'
     added_part += '\t flowDir \t (1.0 0.0 0.0);\n'
-    added_part += '\t z0 \t  uniform {:.4e};\n'.format(roughness_length)
+    added_part += f'\t z0 \t  uniform {roughness_length:.4e};\n'
     added_part += '\t zGround \t uniform 0.0;\n'
 
     dict_lines.insert(start_index, added_part)
@@ -1002,8 +990,8 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
     added_part += '\t type \t inletOutlet;\n'
-    added_part += '\t inletValue \t uniform {:.4f};\n'.format(epsilon0)
-    added_part += '\t value \t uniform {:.4f};\n'.format(epsilon0)
+    added_part += f'\t inletValue \t uniform {epsilon0:.4f};\n'
+    added_part += f'\t value \t uniform {epsilon0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1018,27 +1006,27 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     if ground_BC_type == 'roughWallFunction':
         added_part = ''
         added_part += '\t type \t epsilonWallFunction;\n'
-        added_part += '\t Cmu \t {:.4f};\n'.format(0.09)
-        added_part += '\t kappa \t {:.4f};\n'.format(0.41)
-        added_part += '\t E \t {:.4f};\n'.format(9.8)
-        added_part += '\t value \t uniform {:.4f};\n'.format(epsilon0)
+        added_part += f'\t Cmu \t {0.09:.4f};\n'
+        added_part += f'\t kappa \t {0.41:.4f};\n'
+        added_part += f'\t E \t {9.8:.4f};\n'
+        added_part += f'\t value \t uniform {epsilon0:.4f};\n'
 
     # Note:  Should be replaced with smooth wall function for epsilon,
     #       now the same with rough wall function.
     if ground_BC_type == 'smoothWallFunction':
         added_part = ''
         added_part += '\t type \t epsilonWallFunction;\n'
-        added_part += '\t Cmu \t {:.4f};\n'.format(0.09)
-        added_part += '\t kappa \t {:.4f};\n'.format(0.41)
-        added_part += '\t E \t {:.4f};\n'.format(9.8)
-        added_part += '\t value \t uniform {:.4f};\n'.format(epsilon0)
+        added_part += f'\t Cmu \t {0.09:.4f};\n'
+        added_part += f'\t kappa \t {0.41:.4f};\n'
+        added_part += f'\t E \t {9.8:.4f};\n'
+        added_part += f'\t value \t uniform {epsilon0:.4f};\n'
     dict_lines.insert(start_index, added_part)
 
     ###################### Top BC ##############################
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
-    added_part += '\t type  \t  {};\n'.format(top_BC_type)
+    added_part += f'\t type  \t  {top_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1046,7 +1034,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
-    added_part += '\t type  \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type  \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1054,7 +1042,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1069,18 +1057,18 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
     if building_BC_type == 'roughWallFunction':
         added_part = ''
         added_part += '\t type \t epsilonWallFunction;\n'
-        added_part += '\t Cmu \t {:.4f};\n'.format(0.09)
-        added_part += '\t kappa \t {:.4f};\n'.format(0.4)
-        added_part += '\t E \t {:.4f};\n'.format(9.8)
-        added_part += '\t value \t uniform {:.4f};\n'.format(epsilon0)
+        added_part += f'\t Cmu \t {0.09:.4f};\n'
+        added_part += f'\t kappa \t {0.4:.4f};\n'
+        added_part += f'\t E \t {9.8:.4f};\n'
+        added_part += f'\t value \t uniform {epsilon0:.4f};\n'
 
     if building_BC_type == 'smoothWallFunction':
         added_part = ''
         added_part += '\t type \t epsilonWallFunction;\n'
-        added_part += '\t Cmu \t {:.4f};\n'.format(0.09)
-        added_part += '\t kappa \t {:.4f};\n'.format(0.4)
-        added_part += '\t E \t {:.4f};\n'.format(9.8)
-        added_part += '\t value \t uniform {:.4f};\n'.format(epsilon0)
+        added_part += f'\t Cmu \t {0.09:.4f};\n'
+        added_part += f'\t kappa \t {0.4:.4f};\n'
+        added_part += f'\t E \t {9.8:.4f};\n'
+        added_part += f'\t value \t uniform {epsilon0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1101,7 +1089,7 @@ def write_epsilon_file(input_json_path, template_dict_path, case_path):
 def write_k_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1119,7 +1107,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/kFileTemplate', 'r')
+    dict_file = open(template_dict_path + '/kFileTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1133,18 +1121,18 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     ##################### Internal Field #########################
 
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    dict_lines[start_index] = 'internalField \t uniform {:.4f};\n'.format(k0)
+    dict_lines[start_index] = f'internalField \t uniform {k0:.4f};\n'
 
     ###################### Inlet BC ##############################
     # Write uniform
     start_index = foam.find_keyword_line(dict_lines, 'inlet') + 2
     added_part = ''
     added_part += '\t type \t atmBoundaryLayerInletK;\n'
-    added_part += '\t Uref \t {:.4f};\n'.format(wind_speed)
-    added_part += '\t Zref \t {:.4f};\n'.format(building_height)
+    added_part += f'\t Uref \t {wind_speed:.4f};\n'
+    added_part += f'\t Zref \t {building_height:.4f};\n'
     added_part += '\t zDir \t (0.0 0.0 1.0);\n'
     added_part += '\t flowDir \t (1.0 0.0 0.0);\n'
-    added_part += '\t z0 \t uniform {:.4e};\n'.format(roughness_length)
+    added_part += f'\t z0 \t uniform {roughness_length:.4e};\n'
     added_part += '\t zGround \t uniform 0.0;\n'
 
     dict_lines.insert(start_index, added_part)
@@ -1154,8 +1142,8 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'outlet') + 2
     added_part = ''
     added_part += '\t type \t inletOutlet;\n'
-    added_part += '\t inletValue \t uniform {:.4f};\n'.format(k0)
-    added_part += '\t value \t uniform {:.4f};\n'.format(k0)
+    added_part += f'\t inletValue \t uniform {k0:.4f};\n'
+    added_part += f'\t value \t uniform {k0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1170,12 +1158,12 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     if ground_BC_type == 'smoothWallFunction':
         added_part = ''
         added_part += '\t type \t kqRWallFunction;\n'
-        added_part += '\t value \t uniform {:.4f};\n'.format(0.0)
+        added_part += f'\t value \t uniform {0.0:.4f};\n'
 
     if ground_BC_type == 'roughWallFunction':
         added_part = ''
         added_part += '\t type \t kqRWallFunction;\n'
-        added_part += '\t value \t uniform {:.4f};\n'.format(0.0)
+        added_part += f'\t value \t uniform {0.0:.4f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1183,7 +1171,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'top') + 2
     added_part = ''
-    added_part += '\t type  \t {};\n'.format(top_BC_type)
+    added_part += f'\t type  \t {top_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1191,7 +1179,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'front') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1199,7 +1187,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 
     start_index = foam.find_keyword_line(dict_lines, 'back') + 2
     added_part = ''
-    added_part += '\t type \t {};\n'.format(sides_BC_type)
+    added_part += f'\t type \t {sides_BC_type};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1214,14 +1202,14 @@ def write_k_file(input_json_path, template_dict_path, case_path):
     if building_BC_type == 'smoothWallFunction':
         added_part = ''
         added_part += '\t type \t kqRWallFunction;\n'
-        added_part += '\t value \t uniform {:.6f};\n'.format(k0)
+        added_part += f'\t value \t uniform {k0:.6f};\n'
 
     # Note:  should be replaced with k wall function for rough walls
     #       now it's the same with smooth wall function.
     if building_BC_type == 'roughWallFunction':
         added_part = ''
         added_part += '\t type \t kqRWallFunction;\n'
-        added_part += '\t value \t uniform {:.6f};\n'.format(k0)
+        added_part += f'\t value \t uniform {k0:.6f};\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1241,7 +1229,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):
 def write_controlDict_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1268,22 +1256,22 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     purge_write = 3
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/controlDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/controlDictTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write application type
     start_index = foam.find_keyword_line(dict_lines, 'application')
-    dict_lines[start_index] = 'application \t{};\n'.format(solver_type)
+    dict_lines[start_index] = f'application \t{solver_type};\n'
 
     # Write end time
     start_index = foam.find_keyword_line(dict_lines, 'endTime')
-    dict_lines[start_index] = 'endTime \t{:.6f};\n'.format(duration)
+    dict_lines[start_index] = f'endTime \t{duration:.6f};\n'
 
     # Write time step time
     start_index = foam.find_keyword_line(dict_lines, 'deltaT')
-    dict_lines[start_index] = 'deltaT \t{:.6f};\n'.format(time_step)
+    dict_lines[start_index] = f'deltaT \t{time_step:.6f};\n'
 
     # Write writeControl
     start_index = foam.find_keyword_line(dict_lines, 'writeControl')
@@ -1301,25 +1289,21 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     if solver_type == 'pimpleFoam' and adjust_time_step:
-        dict_lines[start_index] = 'writeInterval \t{:.6f};\n'.format(
-            write_interval_time
-        )
+        dict_lines[start_index] = f'writeInterval \t{write_interval_time:.6f};\n'
     else:
-        dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-            write_interval_count
-        )
+        dict_lines[start_index] = f'writeInterval \t{write_interval_count};\n'
 
     # Write maxCo
     start_index = foam.find_keyword_line(dict_lines, 'maxCo')
-    dict_lines[start_index] = 'maxCo \t{:.2f};\n'.format(max_courant_number)
+    dict_lines[start_index] = f'maxCo \t{max_courant_number:.2f};\n'
 
     # Write maximum time step
     start_index = foam.find_keyword_line(dict_lines, 'maxDeltaT')
-    dict_lines[start_index] = 'maxDeltaT \t{:.6f};\n'.format(max_delta_t)
+    dict_lines[start_index] = f'maxDeltaT \t{max_delta_t:.6f};\n'
 
     # Write purge write interval
     start_index = foam.find_keyword_line(dict_lines, 'purgeWrite')
-    dict_lines[start_index] = 'purgeWrite \t{};\n'.format(purge_write)
+    dict_lines[start_index] = f'purgeWrite \t{purge_write};\n'
 
     ########################### Function Objects ##############################
 
@@ -1357,7 +1341,7 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):
 def write_fvSolution_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1371,7 +1355,7 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
     num_outer_correctors = ns_data['numOuterCorrectors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/fvSolutionTemplate', 'r')
+    dict_file = open(template_dict_path + '/fvSolutionTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1379,27 +1363,27 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):
     # Write simpleFoam options
     start_index = foam.find_keyword_line(dict_lines, 'SIMPLE') + 2
     added_part = ''
-    added_part += '    nNonOrthogonalCorrectors \t{};\n'.format(
-        num_non_orthogonal_correctors
+    added_part += (
+        f'    nNonOrthogonalCorrectors \t{num_non_orthogonal_correctors};\n'
     )
     dict_lines.insert(start_index, added_part)
 
     # Write pimpleFoam options
     start_index = foam.find_keyword_line(dict_lines, 'PIMPLE') + 2
     added_part = ''
-    added_part += '    nOuterCorrectors \t{};\n'.format(num_outer_correctors)
-    added_part += '    nCorrectors \t{};\n'.format(num_correctors)
-    added_part += '    nNonOrthogonalCorrectors \t{};\n'.format(
-        num_non_orthogonal_correctors
+    added_part += f'    nOuterCorrectors \t{num_outer_correctors};\n'
+    added_part += f'    nCorrectors \t{num_correctors};\n'
+    added_part += (
+        f'    nNonOrthogonalCorrectors \t{num_non_orthogonal_correctors};\n'
     )
     dict_lines.insert(start_index, added_part)
 
     # Write pisoFoam options
     start_index = foam.find_keyword_line(dict_lines, 'PISO') + 2
     added_part = ''
-    added_part += '    nCorrectors \t{};\n'.format(num_correctors)
-    added_part += '    nNonOrthogonalCorrectors \t{};\n'.format(
-        num_non_orthogonal_correctors
+    added_part += f'    nCorrectors \t{num_correctors};\n'
+    added_part += (
+        f'    nNonOrthogonalCorrectors \t{num_non_orthogonal_correctors};\n'
     )
     dict_lines.insert(start_index, added_part)
 
@@ -1421,7 +1405,7 @@ def write_generated_pressure_probes_file(
 ):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1438,7 +1422,7 @@ def write_generated_pressure_probes_file(
         pressure_write_interval = rm_data['pressureWriteInterval']
 
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/probeTemplate', 'r')
+        dict_file = open(template_dict_path + '/probeTemplate')
 
         dict_lines = dict_file.readlines()
         dict_file.close()
@@ -1455,13 +1439,11 @@ def write_generated_pressure_probes_file(
         # Write writeInterval
         start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
         if solver_type == 'pimpleFoam' and adjust_time_step:
-            dict_lines[start_index] = 'writeInterval \t{:.6f};\n'.format(
-                pressure_write_interval * time_step
+            dict_lines[start_index] = (
+                f'writeInterval \t{pressure_write_interval * time_step:.6f};\n'
             )
         else:
-            dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-                pressure_write_interval
-            )
+            dict_lines[start_index] = f'writeInterval \t{pressure_write_interval};\n'
 
         # Write fields to be motored
         start_index = foam.find_keyword_line(dict_lines, 'fields')
@@ -1472,11 +1454,7 @@ def write_generated_pressure_probes_file(
         added_part = ''
 
         for i in range(len(generated_sampling_points)):
-            added_part += ' ({:.6f} {:.6f} {:.6f})\n'.format(
-                generated_sampling_points[i][0],
-                generated_sampling_points[i][1],
-                generated_sampling_points[i][2],
-            )
+            added_part += f' ({generated_sampling_points[i][0]:.6f} {generated_sampling_points[i][1]:.6f} {generated_sampling_points[i][2]:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1513,16 +1491,14 @@ def write_imported_pressure_probes_file(
         pressure_write_interval = rm_data['pressureWriteInterval']
 
         # Open the template file (OpenFOAM file) for manipulation
-        dict_file = open(template_dict_path + '/probeTemplate', 'r')
+        dict_file = open(template_dict_path + '/probeTemplate')
 
         dict_lines = dict_file.readlines()
         dict_file.close()
 
         # Write writeInterval
         start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
-        dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-            pressure_write_interval
-        )
+        dict_lines[start_index] = f'writeInterval \t{pressure_write_interval};\n'
 
         # Write writeControl
         start_index = foam.find_keyword_line(dict_lines, 'writeControl')
@@ -1536,13 +1512,11 @@ def write_imported_pressure_probes_file(
         # Write writeInterval
         start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
         if solver_type == 'pimpleFoam' and adjust_time_step:
-            dict_lines[start_index] = 'writeInterval \t{:.6f};\n'.format(
-                pressure_write_interval * time_step
+            dict_lines[start_index] = (
+                f'writeInterval \t{pressure_write_interval * time_step:.6f};\n'
             )
         else:
-            dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-                pressure_write_interval
-            )
+            dict_lines[start_index] = f'writeInterval \t{pressure_write_interval};\n'
 
         # Write fields to be motored
         start_index = foam.find_keyword_line(dict_lines, 'fields')
@@ -1553,11 +1527,7 @@ def write_imported_pressure_probes_file(
         added_part = ''
 
         for i in range(len(imported_sampling_points)):
-            added_part += ' ({:.6f} {:.6f} {:.6f})\n'.format(
-                imported_sampling_points[i][0],
-                imported_sampling_points[i][1],
-                imported_sampling_points[i][2],
-            )
+            added_part += f' ({imported_sampling_points[i][0]:.6f} {imported_sampling_points[i][1]:.6f} {imported_sampling_points[i][2]:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1577,7 +1547,7 @@ def write_imported_pressure_probes_file(
 def write_base_forces_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1593,16 +1563,14 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
     monitor_base_load = rm_data['monitorBaseLoad']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/baseForcesTemplate', 'r')
+    dict_file = open(template_dict_path + '/baseForcesTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
-    dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-        base_load_write_interval
-    )
+    dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
@@ -1610,12 +1578,12 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 
     # Write air density to rhoInf
     start_index = foam.find_keyword_line(dict_lines, 'rhoInf')
-    dict_lines[start_index] = 'rhoInf \t\t{:.4f};\n'.format(air_density)
+    dict_lines[start_index] = f'rhoInf \t\t{air_density:.4f};\n'
 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
-    dict_lines[start_index] = 'CofR \t\t({:.4f} {:.4f} {:.4f});\n'.format(
-        center_of_rotation[0], center_of_rotation[1], center_of_rotation[2]
+    dict_lines[start_index] = (
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Write edited dict to file
@@ -1635,7 +1603,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):
 def write_story_forces_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1651,16 +1619,14 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):
     monitor_base_load = rm_data['monitorBaseLoad']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/storyForcesTemplate', 'r')
+    dict_file = open(template_dict_path + '/storyForcesTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write writeInterval
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
-    dict_lines[start_index] = 'writeInterval \t{};\n'.format(
-        story_load_write_interval
-    )
+    dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
 
     # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
@@ -1668,23 +1634,21 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):
 
     # Write air density to rhoInf
     start_index = foam.find_keyword_line(dict_lines, 'rhoInf')
-    dict_lines[start_index] = 'rhoInf \t\t{:.4f};\n'.format(air_density)
+    dict_lines[start_index] = f'rhoInf \t\t{air_density:.4f};\n'
 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
-    dict_lines[start_index] = 'CofR \t\t({:.4f} {:.4f} {:.4f});\n'.format(
-        center_of_rotation[0], center_of_rotation[1], center_of_rotation[2]
+    dict_lines[start_index] = (
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Number of stories  as nBins
     start_index = foam.find_keyword_line(dict_lines, 'nBin')
-    dict_lines[start_index] = '    nBin \t{};\n'.format(num_stories)
+    dict_lines[start_index] = f'    nBin \t{num_stories};\n'
 
     # Write story direction
     start_index = foam.find_keyword_line(dict_lines, 'direction')
-    dict_lines[start_index] = '    direction \t({:.4f} {:.4f} {:.4f});\n'.format(
-        0, 0, 1.0
-    )
+    dict_lines[start_index] = f'    direction \t({0:.4f} {0:.4f} {1.0:.4f});\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/system/storyForces'
@@ -1703,7 +1667,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):
 def write_momentumTransport_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1716,7 +1680,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     DES_type = turb_data['DESModelType']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/momentumTransportTemplate', 'r')
+    dict_file = open(template_dict_path + '/momentumTransportTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1730,19 +1694,19 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
     if simulation_type == 'RANS':
         # Write RANS model type
         start_index = foam.find_keyword_line(dict_lines, 'RAS') + 2
-        added_part = '    model \t{};\n'.format(RANS_type)
+        added_part = f'    model \t{RANS_type};\n'
         dict_lines.insert(start_index, added_part)
 
     elif simulation_type == 'LES':
         # Write LES SGS model type
         start_index = foam.find_keyword_line(dict_lines, 'LES') + 2
-        added_part = '    model \t{};\n'.format(LES_type)
+        added_part = f'    model \t{LES_type};\n'
         dict_lines.insert(start_index, added_part)
 
     elif simulation_type == 'DES':
         # Write DES model type
         start_index = foam.find_keyword_line(dict_lines, 'LES') + 2
-        added_part = '    model \t{};\n'.format(DES_type)
+        added_part = f'    model \t{DES_type};\n'
         dict_lines.insert(start_index, added_part)
 
     # Write edited dict to file
@@ -1761,7 +1725,7 @@ def write_momentumTransport_file(input_json_path, template_dict_path, case_path)
 def write_physicalProperties_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1771,16 +1735,14 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/physicalPropertiesTemplate', 'r')
+    dict_file = open(template_dict_path + '/physicalPropertiesTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write type of the simulation
     start_index = foam.find_keyword_line(dict_lines, 'nu')
-    dict_lines[start_index] = 'nu\t\t[0 2 -1 0 0 0 0] {:.4e};\n'.format(
-        kinematic_viscosity
-    )
+    dict_lines[start_index] = f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.4e};\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/constant/physicalProperties'
@@ -1797,7 +1759,7 @@ def write_physicalProperties_file(input_json_path, template_dict_path, case_path
 def write_transportProperties_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1807,16 +1769,14 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
     kinematic_viscosity = wc_data['kinematicViscosity']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/transportPropertiesTemplate', 'r')
+    dict_file = open(template_dict_path + '/transportPropertiesTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write type of the simulation
     start_index = foam.find_keyword_line(dict_lines, 'nu')
-    dict_lines[start_index] = 'nu\t\t[0 2 -1 0 0 0 0] {:.3e};\n'.format(
-        kinematic_viscosity
-    )
+    dict_lines[start_index] = f'nu\t\t[0 2 -1 0 0 0 0] {kinematic_viscosity:.3e};\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/constant/transportProperties'
@@ -1834,7 +1794,7 @@ def write_transportProperties_file(input_json_path, template_dict_path, case_pat
 def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
     # Read JSON data
     with open(
-        input_json_path + '/IsolatedBuildingCFD.json', 'r', encoding='utf-8'
+        input_json_path + '/IsolatedBuildingCFD.json', encoding='utf-8'
     ) as json_file:
         json_data = json.load(json_file)
 
@@ -1844,9 +1804,7 @@ def write_fvSchemes_file(input_json_path, template_dict_path, case_path):
     simulation_type = turb_data['simulationType']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(
-        template_dict_path + '/fvSchemesTemplate{}'.format(simulation_type), 'r'
-    )
+    dict_file = open(template_dict_path + f'/fvSchemesTemplate{simulation_type}')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
@@ -1875,14 +1833,14 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     num_processors = ns_data['numProcessors']
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/decomposeParDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/decomposeParDictTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write number of sub-domains
     start_index = foam.find_keyword_line(dict_lines, 'numberOfSubdomains')
-    dict_lines[start_index] = 'numberOfSubdomains\t{};\n'.format(num_processors)
+    dict_lines[start_index] = f'numberOfSubdomains\t{num_processors};\n'
 
     # Write method of decomposition
     start_index = foam.find_keyword_line(dict_lines, 'decomposer')
@@ -1923,14 +1881,14 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
     duration = duration * 1.010
 
     # Open the template file (OpenFOAM file) for manipulation
-    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate', 'r')
+    dict_file = open(template_dict_path + '/DFSRTurbDictTemplate')
 
     dict_lines = dict_file.readlines()
     dict_file.close()
 
     # Write the end time
     start_index = foam.find_keyword_line(dict_lines, 'endTime')
-    dict_lines[start_index] = 'endTime\t\t\t{:.4f};\n'.format(duration)
+    dict_lines[start_index] = f'endTime\t\t\t{duration:.4f};\n'
 
     # Write patch name
     start_index = foam.find_keyword_line(dict_lines, 'patchName')
@@ -1938,15 +1896,15 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
 
     # Write cohUav
     start_index = foam.find_keyword_line(dict_lines, 'cohUav')
-    dict_lines[start_index] = 'cohUav\t\t\t{:.4f};\n'.format(wind_speed)
+    dict_lines[start_index] = f'cohUav\t\t\t{wind_speed:.4f};\n'
 
     # Write fMax
     start_index = foam.find_keyword_line(dict_lines, 'fMax')
-    dict_lines[start_index] = 'fMax\t\t\t{:.4f};\n'.format(fMax)
+    dict_lines[start_index] = f'fMax\t\t\t{fMax:.4f};\n'
 
     # Write time step
     start_index = foam.find_keyword_line(dict_lines, 'timeStep')
-    dict_lines[start_index] = 'timeStep\t\t{:.4f};\n'.format(1.0 / fMax)
+    dict_lines[start_index] = f'timeStep\t\t{1.0 / fMax:.4f};\n'
 
     # Write edited dict to file
     write_file_name = case_path + '/constant/DFSRTurbDict'
@@ -1962,8 +1920,7 @@ def write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path):
 
 
 def write_boundary_data_files(input_json_path, case_path):
-    """
-    This functions writes wind profile files in "constant/boundaryData/inlet"
+    """This functions writes wind profile files in "constant/boundaryData/inlet"
     if TInf options are used for the simulation.
     """
     # Read JSON data

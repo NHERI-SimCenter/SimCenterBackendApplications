@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -43,7 +42,9 @@
 # Kuanshi Zhong
 # Jinyan Zhao
 
-import warnings, h5py, re
+import re
+
+import h5py
 import numpy as np
 
 LOCAL_IM_GMPE = {
@@ -93,24 +94,23 @@ OPENSHA_IM_GMPE = {
 
 IM_GMPE = {'LOCAL': LOCAL_IM_GMPE, 'OPENSHA': OPENSHA_IM_GMPE}
 
-import os
-import subprocess
-import sys
+import collections
 import json
-import numpy as np
-from numpy.lib.utils import source
+import os
+import socket
+import sys
+import time
+from pathlib import Path
+
 import pandas as pd
 from gmpe import SignificantDurationModel, openSHAGMPE
 from tqdm import tqdm
-import time
-from pathlib import Path
-import socket
-import collections
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import *
     from FetchOpenQuake import get_site_rup_info_oq
+    from FetchOpenSHA import *
 import threading
+
 import ujson
 
 
@@ -204,9 +204,7 @@ class IM_Calculator:
             im_type not in list(self.im_dict.keys())
         ):
             print(
-                'IM_Calculator.set_im_type: warning - {} is not in the defined IM lists.'.format(
-                    im_type
-                )
+                f'IM_Calculator.set_im_type: warning - {im_type} is not in the defined IM lists.'
             )
             self.im_type = None
         else:
@@ -222,18 +220,16 @@ class IM_Calculator:
         im_type = self.im_type
         if im_type is None:
             print('IM_Calculator.calculate_im: error - no IM type found.')
-            return
+            return None
         # get current im dict
         cur_im_dict = self.im_dict.get(im_type)
         # get gmpe list
         gmpe_list = self.gmpe_dict.get(im_type, None)
         if gmpe_list is None:
             print(
-                'IM_Calculator.calculate_im: error - no GMPE list found for {}.'.format(
-                    im_type
-                )
+                f'IM_Calculator.calculate_im: error - no GMPE list found for {im_type}.'
             )
-            return
+            return None
         # get gmpe weights
         gmpe_weights_list = self.gmpe_weights_dict.get(im_type, None)
         # parse the gmpe list (split the list to two - local and opensha)
@@ -256,11 +252,9 @@ class IM_Calculator:
                     gmpe_weights_list_opensha = None
             else:
                 print(
-                    'IM_Calculator.calculate_im: error - {} is not supported.'.format(
-                        cur_gmpe
-                    )
+                    f'IM_Calculator.calculate_im: error - {cur_gmpe} is not supported.'
                 )
-                return
+                return None
         # now compute im values
         if len(gmpe_list_local) > 0:
             res_local = self.get_im_from_local(
@@ -356,9 +350,7 @@ class IM_Calculator:
         # check IM type
         if im_type not in list(LOCAL_IM_GMPE.keys()):
             print(
-                'ComputeIntensityMeasure.get_im_from_local: error - IM type {} not supported'.format(
-                    im_type
-                )
+                f'ComputeIntensityMeasure.get_im_from_local: error - IM type {im_type} not supported'
             )
             return res
         # get availabel gmpe list
@@ -414,9 +406,7 @@ class IM_Calculator:
             gm_collector = []
             if cur_gmpe not in avail_gmpe:
                 print(
-                    'ComputeIntensityMeasure.get_im_from_local: warning - {} is not available.'.format(
-                        cur_gmpe
-                    )
+                    f'ComputeIntensityMeasure.get_im_from_local: warning - {cur_gmpe} is not available.'
                 )
                 continue
             for cur_site in self.site_info:
@@ -481,9 +471,7 @@ class IM_Calculator:
                     # self.timeGetIM += time.process_time_ns() - start
                 else:
                     print(
-                        'ComputeIntensityMeasure.get_im_from_local: gmpe_name {} is not supported.'.format(
-                            cur_gmpe
-                        )
+                        f'ComputeIntensityMeasure.get_im_from_local: gmpe_name {cur_gmpe} is not supported.'
                     )
                 # collect sites
                 # gm_collector.append({
@@ -649,7 +637,7 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):
     gmpe_dict = dict()
     gmpe_weights_dict = dict()
     # check IM info type
-    if not (im_info.get('Type', None) == 'Vector'):
+    if im_info.get('Type', None) != 'Vector':
         print(
             'ComputeIntensityMeasure.get_gmpe_from_im_vector: error: IntensityMeasure Type should be Vector.'
         )
@@ -662,24 +650,20 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):
             cur_weights = im_info[cur_im].get('GMPEWeights', None)
             if cur_gmpe is None:
                 print(
-                    'ComputeIntensityMeasure.get_gmpe_from_im_vector: warning: GMPE not found for {}'.format(
-                        cur_im
-                    )
+                    f'ComputeIntensityMeasure.get_gmpe_from_im_vector: warning: GMPE not found for {cur_im}'
                 )
-            else:
-                # back compatibility
-                if type(cur_gmpe) == str:
-                    if cur_gmpe == 'NGAWest2 2014 Averaged':
-                        cur_gmpe = [
-                            'Abrahamson, Silva & Kamai (2014)',
-                            'Boore, Stewart, Seyhan & Atkinson (2014)',
-                            'Campbell & Bozorgnia (2014)',
-                            'Chiou & Youngs (2014)',
-                        ]
-                        cur_weights = [0.25, 0.25, 0.25, 0.25]
-                    else:
-                        cur_gmpe = [cur_gmpe]
-                        cur_weights = None
+            elif type(cur_gmpe) == str:
+                if cur_gmpe == 'NGAWest2 2014 Averaged':
+                    cur_gmpe = [
+                        'Abrahamson, Silva & Kamai (2014)',
+                        'Boore, Stewart, Seyhan & Atkinson (2014)',
+                        'Campbell & Bozorgnia (2014)',
+                        'Chiou & Youngs (2014)',
+                    ]
+                    cur_weights = [0.25, 0.25, 0.25, 0.25]
+                else:
+                    cur_gmpe = [cur_gmpe]
+                    cur_weights = None
             gmpe_dict.update({cur_im: cur_gmpe})
             gmpe_weights_dict.update({cur_im: cur_weights})
     # global parameters if any
@@ -740,7 +724,7 @@ def compute_im(
         im_list.append('PGA')
     if 'SA' in im_info.keys():
         for cur_period in im_info['SA']['Periods']:
-            im_list.append('SA({})'.format(str(cur_period)))
+            im_list.append(f'SA({cur_period!s})')
     if 'PGV' in im_info.keys():
         im_list.append('PGV')
     # Stations
@@ -767,20 +751,18 @@ def compute_im(
                     sys.exit(
                         'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
-                else:
-                    if ho_period in im_info['SA'].get('Periods'):
-                        pass
-                    else:
-                        tmp_periods = im_info['SA']['Periods'] + [ho_period]
-                        tmp_periods.sort()
-                        im_info['SA']['Periods'] = tmp_periods
-            else:
-                if ho_period in im_info['SA'].get('Periods'):
+                elif ho_period in im_info['SA'].get('Periods'):
                     pass
                 else:
                     tmp_periods = im_info['SA']['Periods'] + [ho_period]
                     tmp_periods.sort()
                     im_info['SA']['Periods'] = tmp_periods
+            elif ho_period in im_info['SA'].get('Periods'):
+                pass
+            else:
+                tmp_periods = im_info['SA']['Periods'] + [ho_period]
+                tmp_periods.sort()
+                im_info['SA']['Periods'] = tmp_periods
     # prepare gmpe list for intensity measure
     if gmpe_info['Type'] in ['Vector']:
         gmpe_dict, gmpe_weights_dict = get_gmpe_from_im_vector(im_info, gmpe_info)
@@ -896,9 +878,7 @@ def compute_im(
             im_raw.append(cur_res)
 
     print(
-        'ComputeIntensityMeasure: mean and standard deviation of intensity measures {0} sec'.format(
-            time.time() - t_start
-        )
+        f'ComputeIntensityMeasure: mean and standard deviation of intensity measures {time.time() - t_start} sec'
     )
 
     if saveInJson:
@@ -918,7 +898,7 @@ def compute_im_para(
     res_dict,
 ):
     for i, id in enumerate(ids):
-        print('ComputeIntensityMeasure: Scenario #{}.'.format(id + 1))
+        print(f'ComputeIntensityMeasure: Scenario #{id + 1}.')
         scenario_info = scenario_infos[i]
         # create a IM calculator
         im_calculator = IM_Calculator(
@@ -941,7 +921,6 @@ def compute_im_para(
         # append res to res_dcit
         res_dict[id] = res
     # return
-    return
 
 
 def export_im(
@@ -982,7 +961,7 @@ def export_im(
         ]
         for x in range(1, im_data[0][0, :, :].shape[1] + 1):
             for y in im_list:
-                h_eq.append('Record-' + str(x) + '-{}'.format(y))
+                h_eq.append('Record-' + str(x) + f'-{y}')
         index = pd.MultiIndex.from_product([h_scenarios, h_eq])
         columns = ['Site-' + str(x) for x in range(1, num_stations + 1)]
         df = pd.DataFrame(index=index, columns=columns, dtype=float)
@@ -1243,7 +1222,7 @@ def compute_weighted_res(res_list, gmpe_weights):
     # number of gmpe
     num_gmpe = len(res_list)
     # check number of weights
-    if not (num_gmpe == len(gmpe_weights)):
+    if num_gmpe != len(gmpe_weights):
         print(
             'ComputeIntensityMeasure: please check the weights of different GMPEs.'
         )
@@ -1260,17 +1239,17 @@ def compute_weighted_res(res_list, gmpe_weights):
             # get keys
             im_keys = list(cur_gmResults.keys())
             for cur_im in im_keys:
-                if not (cur_im in list(tmp_res.keys())):
+                if cur_im not in list(tmp_res.keys()):
                     if cur_im in ['Location', 'SiteData']:
                         tmp_res.update({cur_im: cur_gmResults[cur_im]})
                     else:
                         tmp_res.update({cur_im: {}})
-                if not (cur_im in ['Location', 'SiteData']):
+                if cur_im not in ['Location', 'SiteData']:
                     # get components
                     comp_keys = list(cur_gmResults[cur_im].keys())
                     # loop over differen components
                     for cur_comp in comp_keys:
-                        if not (cur_comp in list(tmp_res[cur_im].keys())):
+                        if cur_comp not in list(tmp_res[cur_im].keys()):
                             tmp_res[cur_im].update({cur_comp: []})
                             for cur_value in cur_gmResults[cur_im][cur_comp]:
                                 if 'StdDev' in cur_comp:

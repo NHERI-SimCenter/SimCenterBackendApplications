@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,15 +37,15 @@
 # Kuanshi Zhong
 # Jinyan Zhao
 
-import os, shutil, psutil
-import sys
-import subprocess
-import argparse, posixpath, json
-import numpy as np
-import pandas as pd
-import time
+import argparse
 import importlib
+import json
+import os
+import subprocess
+import sys
 import tarfile
+
+import psutil
 
 if __name__ == '__main__':
     # parse arguments
@@ -100,19 +99,18 @@ if __name__ == '__main__':
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])
         import jpype
-        from jpype import imports
         from jpype.types import *
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
-        jpype.startJVM('-Xmx{}G'.format(memory_request), convertStrings=False)
-    from CreateStation import create_stations
+        jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
     from CreateScenario import (
-        load_earthquake_scenarios,
         create_earthquake_scenarios,
         create_wind_scenarios,
+        load_earthquake_scenarios,
     )
+    from CreateStation import create_stations
     # if oq_flag:
     #     # clear up old db.sqlite3 if any
     #     if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):

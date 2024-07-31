@@ -1,7 +1,6 @@
 # written: Michael Gardner @ UNR
 
 # import sys
-import preProcessUQ
 
 
 def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):
@@ -28,7 +27,7 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):
     rvSettings = []
 
     try:
-        with open(paramsFile, 'r') as params:
+        with open(paramsFile) as params:
             for line in params:
                 if lineCount == 0:
                     rvNames = [i.strip() for i in line.split(',')]
@@ -42,22 +41,22 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):
 
                 lineCount = lineCount + 1
 
-    except IOError:
+    except OSError:
         print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)
 
     # Next, open input file and search for random variables that need to be replaced by parameter realizations
     inputTemplate = 'inputTemplate'
     realizationOutput = 'outputFile'
     try:
-        inputTemplate = open(inputFile, 'r')
-    except IOError:
+        inputTemplate = open(inputFile)
+    except OSError:
         print(
             'ERROR: preProcessUQ.py could not open input template file: ' + inputFile
         )
 
     try:
         realizationOutput = open(outputFile, 'w')
-    except IOError:
+    except OSError:
         print('ERROR: preProcessUQ.py could not open output file: ' + outputFile)
 
     # Iterate over all lines in input template

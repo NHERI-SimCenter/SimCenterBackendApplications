@@ -4,8 +4,10 @@ import numpy as np
 class CovError(Exception):
     """Raised when the number of covariance matrix terms are incorrect.
 
-    Attributes:
+    Attributes
+    ----------
         message -- explanation of the error
+
     """
 
     def __init__(self, message):
@@ -70,12 +72,12 @@ def log_likelihood(
     numResponses = len(edpLengthsList)
     if len(covarianceMatrixList) != numExperiments * numResponses:
         print(
-            'ERROR: The expected number of covariance matrices is {}, but only {} were passed '
-            'in.'.format(numExperiments * numResponses, len(covarianceMatrixList))
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
+            'in.'
         )
         raise CovError(
-            'ERROR: The expected number of covariance matrices is {}, but only {} were passed '
-            'in.'.format(numExperiments * numResponses, len(covarianceMatrixList))
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
+            'in.'
         )
 
     # Shift and normalize the prediction

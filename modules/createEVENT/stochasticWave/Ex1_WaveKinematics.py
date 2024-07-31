@@ -1,30 +1,20 @@
 #!/usr/bin/env python3
 
-"""
-Plot the wave kinematics (elevation, velocity, acceleration) for linear waves
+"""Plot the wave kinematics (elevation, velocity, acceleration) for linear waves
 Different locations, times and superposition of frequencies can be used.
 """
 
-from __future__ import print_function
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from fractions import Fraction
-import matplotlib as mpl
-import os, sys
-import re
-import json
-import argparse
+import numpy as np
 
 # Local
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.tools.colors import python_colors
-from welib.hydro.wavekin import elevation2d, wavenumber, kinematics2d
-from welib.hydro.wavekin import *
 from welib.hydro.morison import *
-
+from welib.hydro.wavekin import *
+from welib.hydro.wavekin import elevation2d, kinematics2d, wavenumber
+from welib.tools.colors import python_colors
 
 fig, axes = plt.subplots(2, 2, sharey=False, figsize=(6.4, 4.8))  # (6.4,4.8)
 fig.subplots_adjust(
@@ -82,7 +72,7 @@ for it, t in enumerate(time[:-1]):
         z,
         ['-', '-', '-', '--'][it],
         c=python_colors(it),
-        label='vel, t={:}'.format(sT[it]),
+        label=f'vel, t={sT[it]}',
     )
 for it, t in enumerate(time[:-1]):
     ax.plot(
@@ -90,7 +80,7 @@ for it, t in enumerate(time[:-1]):
         z,
         ['o', '.', '.', '.'][it],
         c=python_colors(it),
-        label='acc, t={:}'.format(sT[it]),
+        label=f'acc, t={sT[it]}',
     )
 ax.set_ylabel('Water depth [m]')
 ax.set_xlabel('Velocity and acceleration')
@@ -143,7 +133,7 @@ for i, z in enumerate(vz):
             vel[i, j, :],
             ['--', '-', ':'][j],
             c=python_colors(i),
-            label='z={:.0f} x={:.0f}'.format(z, x),
+            label=f'z={z:.0f} x={x:.0f}',
         )
 ax.set_ylabel('Velocity [m/s]')
 ax.set_xlabel('Time [s]')

@@ -3,15 +3,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import preprocess_hierarchical_bayesian
 import scipy.linalg
 import scipy.stats
 
-import preprocess_hierarchical_bayesian
-
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import uq_utilities
 import mwg_sampler
+import uq_utilities
 
 
 def generate_initial_states(
@@ -79,7 +78,7 @@ def main(input_args):
 
     # input_file_full_path = template_directory / input_file
 
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']
@@ -238,7 +237,7 @@ def main(input_args):
         list_of_initial_states_of_error_variance_per_dataset
     )
 
-    with open(results_directory_path / f'sample_0.json', 'w', encoding='utf-8') as f:
+    with open(results_directory_path / 'sample_0.json', 'w', encoding='utf-8') as f:
         json.dump(results_to_write, f, indent=4)
 
     adaptivity_results = {}

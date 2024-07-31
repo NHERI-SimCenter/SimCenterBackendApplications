@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 27 15:45:10 2022
+"""Created on Thu Oct 27 15:45:10 2022
 
 @author: snaeimi
 """
@@ -28,7 +26,7 @@ class Crew_Report:
         crew_table = reg.restoration_log_book.crew_history[time]
         typed_crew_table = crew_table[crew_table['type'] == crew_type_name]
 
-        if type(crew_zone) != type(None):
+        if crew_zone is not None:
             if type(crew_zone) == str:
                 typed_crew_table = typed_crew_table[
                     typed_crew_table['group'] == crew_zone

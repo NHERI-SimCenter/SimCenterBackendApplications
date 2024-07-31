@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dec 29 15:41:03 2022
+"""Created on Thu Dec 29 15:41:03 2022
 
 @author: snaeimi
 """
 
 import os
-from PyQt5 import QtWidgets
+
 import pandas as pd
+from PyQt5 import QtWidgets
 from Result_Project import Project_Result
 
 

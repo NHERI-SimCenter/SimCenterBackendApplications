@@ -1,11 +1,15 @@
-import numpy as np
-import rasterio as rio
-from scipy.interpolate import interp2d
-import sys, warnings, shapely, pandas, os
-from pyproj import Transformer
-from pyproj import CRS
+import os
+import sys
+import warnings
 from enum import Enum
+
 import geopandas as gpd
+import numpy as np
+import pandas
+import rasterio as rio
+import shapely
+from pyproj import CRS, Transformer
+from scipy.interpolate import interp2d
 from scipy.spatial import ConvexHull
 
 
@@ -13,7 +17,7 @@ from scipy.spatial import ConvexHull
 def sampleRaster(
     raster_file_path, raster_crs, x, y, interp_scheme='nearest', dtype=None
 ):
-    """performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""
+    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""
     print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
@@ -77,7 +81,7 @@ def sampleRaster(
 
 ## Helper functions
 def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):
-    """performs spatial join of vector_file with xy'"""
+    """Performs spatial join of vector_file with xy'"""
     print(f'Sampling from the Vector File: {os.path.basename(vector_file_path)}...')
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
@@ -186,8 +190,7 @@ class Liquefaction:
 
 # -----------------------------------------------------------
 class ZhuEtal2017(Liquefaction):
-    """
-    A map-based procedure to quantify liquefaction at a given location using logistic models by Zhu et al. (2017). Two models are provided:
+    """A map-based procedure to quantify liquefaction at a given location using logistic models by Zhu et al. (2017). Two models are provided:
 
     1. For distance to coast < cutoff, **prob_liq** = f(**pgv**, **vs30**, **precip**, **dist_coast**, **dist_river**)
     2. For distance to coast >= cutoff, **prob_liq** = f(**pgv**, **vs30**, **precip**, **dist_coast**, **dist_river**, **gw_depth**)
@@ -345,7 +348,7 @@ class ZhuEtal2017(Liquefaction):
                     additional_output.update({key: item})
         else:
             sys.exit(
-                f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
+                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
             # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
             #       , file=sys.stderr)
@@ -444,8 +447,7 @@ class ZhuEtal2017(Liquefaction):
 
 # -----------------------------------------------------------
 class Hazus2020(Liquefaction):
-    """
-    Compute probability of liquefaction at a given location using a simplified method after Liao et al. (1988).
+    """Compute probability of liquefaction at a given location using a simplified method after Liao et al. (1988).
     Also called Youd and Perkins (1978) with Hazus (2020)
 
     Parameters
@@ -511,7 +513,7 @@ class Hazus2020(Liquefaction):
             SusceptibilityKey = parameters['SusceptibilityKey']
         self.liq_susc = []
         for susc in liq_susc_samples[SusceptibilityKey].unique():
-            if not susc in list(liq_susc_enum.__members__.keys()):
+            if susc not in list(liq_susc_enum.__members__.keys()):
                 warnings.warn(
                     f'Unkown susceptibility "{susc}" defined, and is treated as "none".'
                 )
@@ -563,7 +565,7 @@ class Hazus2020(Liquefaction):
                     additional_output.update({key: item})
         else:
             sys.exit(
-                f"'PGA'is missing in the selected intensity measures and the liquefaction trigging model 'Hazus2020' can not be computed."
+                "'PGA'is missing in the selected intensity measures and the liquefaction trigging model 'Hazus2020' can not be computed."
             )
         return ln_im_data, eq_data, im_list, additional_output
 
@@ -648,8 +650,7 @@ class Hazus2020(Liquefaction):
 
 # -----------------------------------------------------------
 class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):
-    """
-    Compute probability of liquefaction using Hazus (FEMA, 2020), with liq. susc. category from Zhu et al. (2017).
+    """Compute probability of liquefaction using Hazus (FEMA, 2020), with liq. susc. category from Zhu et al. (2017).
 
     Parameters
     ----------
@@ -818,8 +819,7 @@ class LateralSpread:
 
 # -----------------------------------------------------------
 class Hazus2020Lateral(LateralSpread):
-    """
-    Compute lateral spreading, same methodology as Grant et al. (2016).
+    """Compute lateral spreading, same methodology as Grant et al. (2016).
 
     Parameters
     ----------
@@ -907,7 +907,7 @@ class Hazus2020Lateral(LateralSpread):
             im_list = im_list + output_keys
         else:
             sys.exit(
-                f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
+                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list
 
@@ -922,7 +922,6 @@ class Hazus2020Lateral(LateralSpread):
         extrapolate_expected_pgdef=True,
     ):
         """Model"""
-
         # initialize arrays
 
         # get threshold pga against liquefaction
@@ -985,8 +984,7 @@ class GroundSettlement:
 
 
 class Hazus2020Vertical(GroundSettlement):
-    """
-    Compute volumetric settlement at a given location using a simplified deterministic approach (after Tokimatsu and Seed, 1987).
+    """Compute volumetric settlement at a given location using a simplified deterministic approach (after Tokimatsu and Seed, 1987).
 
     Parameters
     ----------
@@ -1023,7 +1021,6 @@ class Hazus2020Vertical(GroundSettlement):
         return_inter_params=False,  # to get intermediate params
     ):
         """Model"""
-
         # initialize arrays
         # get threshold pga against liquefaction, in cm
         pgdef = np.ones(liq_susc.shape) * np.nan
@@ -1079,6 +1076,6 @@ class Hazus2020Vertical(GroundSettlement):
             im_list = im_list + output_keys
         else:
             sys.exit(
-                f"At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
+                "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list

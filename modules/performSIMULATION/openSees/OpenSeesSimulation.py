@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import sys
 import os
 import subprocess
+import sys
+
 # from pathlib import Path
 
 
@@ -25,20 +26,14 @@ def main(args):
     # If requesting random variables run getUncertainty
     # Otherwise, Run Opensees
     if '--getRV' in args:
-        getUncertaintyCommand = '"{}/OpenSeesPreprocessor" {} {} {} {}'.format(
-            scriptDir, aimName, samName, evtName, simName
-        )
+        getUncertaintyCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {simName}'
         exit_code = subprocess.Popen(getUncertaintyCommand, shell=True).wait()
         # exit_code = subprocess.run(getUncertaintyCommand, shell=True).returncode
         # if not exit_code==0:
         #    exit(exit_code)
     else:
         # Run preprocessor
-        preprocessorCommand = (
-            '"{}/OpenSeesPreprocessor" {} {} {} {} {} example.tcl'.format(
-                scriptDir, aimName, samName, evtName, edpName, simName
-            )
-        )
+        preprocessorCommand = f'"{scriptDir}/OpenSeesPreprocessor" {aimName} {samName} {evtName} {edpName} {simName} example.tcl'
         exit_code = subprocess.Popen(preprocessorCommand, shell=True).wait()
         # exit_code = subprocess.run(preprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:
@@ -62,9 +57,7 @@ def main(args):
         #                exit(exit_code)
 
         # Run postprocessor
-        postprocessorCommand = '"{}/OpenSeesPostprocessor" {} {} {} {}'.format(
-            scriptDir, aimName, samName, evtName, edpName
-        )
+        postprocessorCommand = f'"{scriptDir}/OpenSeesPostprocessor" {aimName} {samName} {evtName} {edpName}'
         exit_code = subprocess.Popen(postprocessorCommand, shell=True).wait()
         # exit_code = subprocess.run(postprocessorCommand, shell=True).returncode # Maybe better for compatibility - jb
         # if not exit_code==0:

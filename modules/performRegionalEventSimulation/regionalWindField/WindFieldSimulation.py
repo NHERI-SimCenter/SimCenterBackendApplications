@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -56,8 +55,7 @@ from shapely.geometry import Point, Polygon
 
 class LinearAnalyticalModel_SnaikiWu_2017:
     def __init__(self, cyclone_param=[], storm_track=[]):
-        """
-        __init__: initializing the tropical cyclone
+        """__init__: initializing the tropical cyclone
         cyclone_param: 6-dimensional array
         - cyclone_param[0]: landfall Latitude
         - cyclone_param[1]: landfall Longitude
@@ -128,9 +126,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         self.mesh_info = []
 
     def set_delta_path(self, delta_path):
-        """
-        set_delta_path: perturbing the path coordiates and heading angle of the storm track
-        """
+        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""
         if len(delta_path) == 3:
             self.delta_path = delta_path
         else:
@@ -139,9 +135,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             )
 
     def set_delta_feat(self, delta_feat):
-        """
-        set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius
-        """
+        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""
         if len(delta_feat) == 3:
             self.cyclone_pres = delta_feat[0] * 100.0
             self.cyclone_sped = delta_feat[1] * 1000.0 / 3600.0
@@ -158,9 +152,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             )
 
     def __interp_z0(self, lat, lon):
-        """
-        __interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons
-        """
+        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""
         z0 = []
         if not self.terrain_z0:
             # no reference terrain provided, using default reference z0 = 0.03
@@ -177,8 +169,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         return z0
 
     def add_reference_terrain(self, terrain_info):
-        """
-        add_reference_terrainL specifying reference z0 values for a set of polygons
+        """add_reference_terrainL specifying reference z0 values for a set of polygons
         terrain_info: geojson formatted polygon and z0 data
         """
         for p in terrain_info['features']:
@@ -190,8 +181,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 self.terrain_num += 1
 
     def set_cyclone_mesh(self, mesh_info):
-        """
-        set_cyclone_meesh: meshing the cyclone in radius and cycle
+        """set_cyclone_meesh: meshing the cyclone in radius and cycle
         mesh_info[0]: interal R
         mesh_info[1]: interval delta_R
         mesh_info[2]: external R
@@ -212,8 +202,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             print('WindFieldSimulation: input format error in set_cyclone_mesh.')
 
     def set_track_mesh(self, mesh_lat):
-        """
-        set_track_meesh: meshing the storm track
+        """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
@@ -245,13 +234,11 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         print('WindFieldSimulation: track meshed.')
 
     def define_track(self, track_lat):
-        """
-        set_track_meesh: meshing the storm track
+        """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
         """
-
         # computing meshed track's Latitude and Longitude values
         self.track_lat_m = track_lat
         self.track_lon_m = np.abs(
@@ -260,9 +247,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         print('WindFieldSimulation: track defined.')
 
     def set_measure_height(self, measure_info):
-        """
-        set_measure_height: defining the height for calculating wind speed
-        """
+        """set_measure_height: defining the height for calculating wind speed"""
         try:
             self.zp = np.arange(
                 measure_info[0], measure_info[2] + measure_info[1], measure_info[1]
@@ -272,8 +257,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             print('WindFieldSimulation: input format error in set_measure_height.')
 
     def add_stations(self, station_list):
-        """
-        add_stations: adding stations to the model
+        """add_stations: adding stations to the model
         station_list:
         - station_list['Latitude']: latitude values of stations
         - station_list['Longitude']: longitude values of stations
@@ -299,9 +283,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             self.station_num += 1
 
     def __calculate_heading(self):
-        """
-        __calculate_heading: computing the heading path
-        """
+        """__calculate_heading: computing the heading path"""
         self.beta_c = np.zeros(len(self.track_lat_m))
         for i in range(len(self.track_lat_m) - 1):
             Delta = self.track_lon_m[i + 1] - self.track_lon_m[i] + self.EPS**2
@@ -325,9 +307,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         self.beta_c[-1] = self.beta_c[-2]
 
     def compute_wind_field(self):
-        """
-        compute_wind_field: computing the peak wind speed (10-min gust duraiton)
-        """
+        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""
         print('WindFieldSimulation: running linear analytical model.')
         # checking if all parameters are defined
 
@@ -383,7 +363,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 d = 0.75 * h
                 kappa = 0.40
                 Cd = kappa**2 / (np.log((z10 + h - d) / z0)) ** 2
-                #
                 der_p = (
                     self.Holland_B
                     * self.cyclone_radm**self.Holland_B
@@ -399,7 +378,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     * self.cyclone_radm**self.Holland_B
                     * (self.r ** (-self.Holland_B - 1))
                 ) * der_p
-                #
                 vg1[j, :] = (
                     0.5 * (Ctheta - f * self.r)
                     + (
@@ -449,7 +427,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 BETA = np.array(
                     [complex(x, y) for x, y in zip(np.real(BETA), np.imag(BETA))]
                 )
-                #
                 XXX = -((ALPHA * BETA) ** 0.25)
                 YYY = -((ALPHA * BETA) ** 0.25)
                 PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])
@@ -459,7 +436,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 PP_minus_one = -complex(1, 1) * (
                     (-GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
-                #
                 X1 = (
                     PP_zero
                     + f * self.r * Cd / self.EDDY_VISCOCITY
@@ -561,7 +537,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                             - complex(0, 1) * self.theta[j] / self.RA
                         )
                     )
-                    #
                     for tmptag in range(u.shape[1]):
                         u[j, tmptag, ii] = (
                             np.real(u_zero)[tmptag]
@@ -616,8 +591,6 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         print('WindFieldSimulation: linear analytical simulation completed.')
 
     def get_station_data(self):
-        """
-        get_station_data: returning station data
-        """
+        """get_station_data: returning station data"""
         # return station dictionary
         return self.station

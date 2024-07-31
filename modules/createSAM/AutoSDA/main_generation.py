@@ -16,15 +16,8 @@
 #                       Load Necessary Packages                          #
 ##########################################################################
 
-import os
-import pickle
-import time
-
 
 from global_variables import baseDirectory
-from global_variables import SECTION_DATABASE
-from global_variables import COLUMN_DATABASE
-from global_variables import BEAM_DATABASE
 from model_generation import model_generation
 
 ##########################################################################

@@ -2,9 +2,7 @@ from wntrfr.sim.results import SimulationResults
 
 
 class SimulationResults(SimulationResults):
-    """
-    Water network simulation results class.
-    """
+    """Water network simulation results class."""
 
     def __init__(self):
         super().__init__()

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 10 15:04:40 2022
+"""Created on Mon Oct 10 15:04:40 2022
 
 This is the input module, an interface between all inputs from GUI, TEXT-based
 inputs and the mail code.

@@ -1,8 +1,8 @@
 import json
+from pathlib import Path
+
 import numpy as np
 import scipy
-
-from pathlib import Path
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 import sys
@@ -316,8 +316,7 @@ def get_states_from_samples_list(samples_list, dataset_number):
 
 
 def tune(scale, acc_rate):
-    """
-    Tunes the scaling parameter for the proposal distribution
+    """Tunes the scaling parameter for the proposal distribution
     according to the acceptance rate over the last tune_interval:
     Rate    Variance adaptation
     ----    -------------------
@@ -616,7 +615,7 @@ def metropolis_within_gibbs_sampler(
         - n_samples_for_mean_of_updated_predictive_distribution_parameters,
         num_samples,
     ):
-        with open(results_directory_path / f'sample_{i+1}.json', 'r') as f:
+        with open(results_directory_path / f'sample_{i+1}.json') as f:
             data = json.load(f)
             updated_parameters = data[
                 'updated_parameters_of_normal_inverse_wishart_distribution'

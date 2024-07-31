@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
 from typing import Literal, Union
-from typing_extensions import Annotated
+
+from pydantic import BaseModel, Field
 from src.reliability.ReliabilityMethodsDTOs import ReliabilityMethod
+from typing_extensions import Annotated
 
 
 class ModuleBaseDTO(BaseModel):

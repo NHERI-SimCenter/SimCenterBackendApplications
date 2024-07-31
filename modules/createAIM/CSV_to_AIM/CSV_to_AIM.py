@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -40,16 +39,19 @@
 # Wael Elhaddad
 # Stevan Gavrilovic
 
-import argparse, sys, os
+import argparse
+import os
+import sys
 
 
 def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):
     # these imports are here to save time when the app is called without
     # the -getRV flag
+    import importlib
     import json
+
     import numpy as np
     import pandas as pd
-    import importlib
 
     # check if running parallel
     numP = 1
@@ -60,7 +62,6 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            import mpi4py
             from mpi4py import MPI
 
             runParallel = True
@@ -94,7 +95,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
     if asset_filter is not None:
         assets_available = assets_df.index.values
         assets_to_run = assets_requested[
-            np.where(np.in1d(assets_requested, assets_available))[0]
+            np.where(np.isin(assets_requested, assets_available))[0]
         ]
         selected_assets = assets_df.loc[assets_to_run]
     else:
@@ -125,7 +126,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
             for label in labels:
                 AIM_i['GeneralInformation'].update({label: asset[label]})
 
-            AIM_file_name = '{}-AIM.json'.format(asset_id)
+            AIM_file_name = f'{asset_id}-AIM.json'
 
             AIM_file_name = os.path.join(outDir, AIM_file_name)
 
@@ -153,7 +154,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, 'r', encoding='utf-8') as data_file:
+                with open(fileToAppend, encoding='utf-8') as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend

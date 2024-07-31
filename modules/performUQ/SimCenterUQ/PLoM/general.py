@@ -1,11 +1,10 @@
 # Constants, variables, and methods that are commonly used
 
 import os
-from datetime import datetime
-import numpy as np
-import pandas as pd
 from collections import Counter
+from datetime import datetime
 
+import pandas as pd
 
 ITEM_LIST_DATANORM = ['X_range', 'X_min', 'X_scaled', 'X_scaled_mean']
 ITEM_LIST_RUNPCA = [
@@ -78,8 +77,7 @@ TASK_ITEM_MAP = {
 
 class Logfile:
     def __init__(self, logfile_dir='./', logfile_name='plom.log', screen_msg=True):
-        """
-        Initializing the logfile
+        """Initializing the logfile
         - logfile_dir: default is the same path of the PLoM package
         - logfile_name: default is the "plom.log"
         - screen_msg: default is to show message on screen
@@ -92,35 +90,29 @@ class Logfile:
         self.write_msg(msg='--NEW LOG STARTING FROM THIS LINE--', mode='w')
 
     def write_msg(self, msg='', msg_type='RUNNING', msg_level=0, mode='a'):
-        """
-        Writing running messages
+        """Writing running messages
         - msg: the message
         - msg_type: the type of message 'RUNNING', 'WARNING', 'ERROR'
         - msg_level: how many indent tags
         """
         indent_tabs = ''.join(['\t'] * msg_level)
-        decorated_msg = '{} {} {}-MSG {} '.format(
-            datetime.utcnow(), indent_tabs, msg_type, msg
-        )
+        decorated_msg = f'{datetime.utcnow()} {indent_tabs} {msg_type}-MSG {msg} '
         if self.screen_msg:
             print(decorated_msg)
         with open(self.logfile_path, mode) as f:
             f.write('\n' + decorated_msg)
 
     def delete_logfile(self):
-        """
-        Deleting the log file
-        """
+        """Deleting the log file"""
         if os.path.exists(self.logfile_path):
             os.remove(self.logfile_path)
         else:
-            print('The logfile {} does not exist.'.format(self.logfile_path))
+            print(f'The logfile {self.logfile_path} does not exist.')
 
 
 class DBServer:
     def __init__(self, db_dir='./', db_name='plom.h5'):
-        """
-        Initializing the database
+        """Initializing the database
         - db_dir: default is the same path of the PLoM package
         - db_name: default is "plom.h5"
         """
@@ -138,9 +130,7 @@ class DBServer:
         self._item_adds = ITEM_ADDS
 
     def basic(self):
-        """
-        Writing basic info
-        """
+        """Writing basic info"""
         df = pd.DataFrame.from_dict(
             {
                 'InitializedTime': [self.init_time],
@@ -155,9 +145,7 @@ class DBServer:
         self.add_item(item=[''], data_type='ConstraintsFile')
 
     def _create_export_dir(self):
-        """
-        Creating a export folder
-        """
+        """Creating a export folder"""
         dir_export = os.path.join(self.db_dir, 'DataOut')
         try:
             os.makedirs(dir_export, exist_ok=True)
@@ -166,9 +154,7 @@ class DBServer:
             return None
 
     def get_item_adds(self):
-        """
-        Returning the full list of data items
-        """
+        """Returning the full list of data items"""
         return self._item_adds
 
     def add_item(
@@ -179,9 +165,7 @@ class DBServer:
         data_shape=None,
         data_type='Data',
     ):
-        """
-        Adding a new data item into database
-        """
+        """Adding a new data item into database"""
         if data_type == 'Data':
             if item.size > 1:
                 df = pd.DataFrame(item, columns=col_names)
@@ -209,9 +193,7 @@ class DBServer:
             return False
 
     def get_item(self, item_name=None, table_like=False, data_type='Data'):
-        """
-        Getting a specific data item
-        """
+        """Getting a specific data item"""
         if data_type == 'Data':
             if item_name is not None:
                 store = pd.HDFStore(self.db_path, 'r')
@@ -245,9 +227,7 @@ class DBServer:
             return item.values.tolist()[0][0]
 
     def remove_item(self, item_name=None):
-        """
-        Removing an item
-        """
+        """Removing an item"""
         if item_name is not None:
             store = pd.HDFStore(self.db_path, 'r')
             try:
@@ -258,10 +238,7 @@ class DBServer:
                 store.close()
 
     def get_item_shape(self, item_name=None):
-        """
-        Getting the shape of a specific data item
-        """
-
+        """Getting the shape of a specific data item"""
         if item_name is not None:
             store = pd.HDFStore(self.db_path, 'r')
             try:
@@ -273,9 +250,7 @@ class DBServer:
             return item_shape
 
     def get_name_list(self):
-        """
-        Returning the keys of the database
-        """
+        """Returning the keys of the database"""
         store = pd.HDFStore(self.db_path, 'r')
         try:
             name_list = store.keys()
@@ -285,8 +260,7 @@ class DBServer:
         return name_list
 
     def export(self, data_name=None, filename=None, file_format='csv'):
-        """
-        Exporting the specific data item
+        """Exporting the specific data item
         - data_name: data tag
         - format: data format
         """
@@ -312,14 +286,12 @@ class DBServer:
 
 
 class Task:
-    """
-    This is a class for managering an individual task in
+    """This is a class for managering an individual task in
     the PLoM running process
     """
 
     def __init__(self, task_name=None):
-        """
-        Initialization
+        """Initialization
         - task_name: name of the task
         """
         self.task_name = task_name  # task name
@@ -330,8 +302,7 @@ class Task:
         self.status = False  # task status
 
     def refresh_status(self):
-        """
-        Refreshing the current status of the task
+        """Refreshing the current status of the task
         If any of the previous tasks is not completed, the current task is also not reliable
         """
         # check the previous task if any
@@ -354,8 +325,7 @@ class Task:
 
 
 class TaskList:
-    """
-    This is a class for managering a set of tasks
+    """This is a class for managering a set of tasks
     in a specific order
     """
 
@@ -368,21 +338,18 @@ class TaskList:
         if new_task is None:
             self.head_task = None
             return
+        elif self.head_task is None:
+            # first task
+            self.head_task = new_task
+            self.tail_task = new_task
         else:
-            if self.head_task is None:
-                # first task
-                self.head_task = new_task
-                self.tail_task = new_task
-            else:
-                # adding a new to the current list
-                new_task.pre_task = self.tail_task
-                self.tail_task.next_task = new_task
-                self.tail_task = new_task
+            # adding a new to the current list
+            new_task.pre_task = self.tail_task
+            self.tail_task.next_task = new_task
+            self.tail_task = new_task
 
     def refresh_status(self):
-        """
-        Refreshing the tasks' status
-        """
+        """Refreshing the tasks' status"""
         if self.head_task:
             cur_task = self.head_task
             if not cur_task.status:

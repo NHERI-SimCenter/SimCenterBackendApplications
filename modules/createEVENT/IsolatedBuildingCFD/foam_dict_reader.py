@@ -1,10 +1,8 @@
-"""
-This script contains functions for reading and writing OpenFoam dictionaries.
+"""This script contains functions for reading and writing OpenFoam dictionaries."""
 
-"""
+import os
 
 import numpy as np
-import os
 
 
 def find_keyword_line(dict_lines, keyword):
@@ -24,8 +22,7 @@ def find_keyword_line(dict_lines, keyword):
 
 
 def write_foam_field(field, file_name):
-    """
-    Writes a given numpy two dimensional array to OpenFOAM
+    """Writes a given numpy two dimensional array to OpenFOAM
     field format. It can handel the following formats:
         pointField,
         vectorField,
@@ -39,13 +36,13 @@ def write_foam_field(field, file_name):
 
     size = np.shape(field)
 
-    foam_file.write('{}'.format(size[0]))
+    foam_file.write(f'{size[0]}')
     foam_file.write('\n(')
 
     for i in range(size[0]):
         line = '\n('
         for j in range(size[1]):
-            line += ' {:.6e}'.format(field[i, j])
+            line += f' {field[i, j]:.6e}'
         line += ')'
         foam_file.write(line)
 
@@ -54,8 +51,7 @@ def write_foam_field(field, file_name):
 
 
 def write_scalar_field(field, file_name):
-    """
-    Writes a given one dimensional numpy array to OpenFOAM
+    """Writes a given one dimensional numpy array to OpenFOAM
     scalar field format.
     """
     if os.path.exists(file_name):
@@ -65,11 +61,11 @@ def write_scalar_field(field, file_name):
 
     size = np.shape(field)
 
-    foam_file.write('{}'.format(size[0]))
+    foam_file.write(f'{size[0]}')
     foam_file.write('\n(')
 
     for i in range(size[0]):
-        foam_file.write('\n {:.6e}'.format(field.flatten()[i]))
+        foam_file.write(f'\n {field.flatten()[i]:.6e}')
 
     foam_file.write('\n);')
     foam_file.close()

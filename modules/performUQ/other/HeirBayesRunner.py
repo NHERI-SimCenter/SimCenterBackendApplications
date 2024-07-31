@@ -1,10 +1,10 @@
 # written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley
 
+import importlib
 import json
 import os
 import sys
 import time
-import importlib
 
 from uqRunner import UqRunner
 
@@ -134,7 +134,7 @@ class HeirBayesRunner(UqRunner):
 
     def printTimeElapsed(self):
         self.computeTimeElapsed()
-        print('Time elapsed: {:0.2f} minutes'.format(self.timeElapsed / 60))
+        print(f'Time elapsed: {self.timeElapsed / 60:0.2f} minutes')
 
     def startSectionTimer(self):
         self.sectionStartingTime = time.time()
@@ -147,7 +147,7 @@ class HeirBayesRunner(UqRunner):
 
     def printSectionTimeElapsed(self):
         self.computeSectionTimeElapsed()
-        print('Time elapsed: {:0.2f} minutes'.format(self.sectionTimeElapsed / 60))
+        print(f'Time elapsed: {self.sectionTimeElapsed / 60:0.2f} minutes')
 
     @staticmethod
     def printEndMessages():
@@ -164,8 +164,7 @@ class HeirBayesRunner(UqRunner):
         localAppDir,
         remoteAppDir,
     ):
-        """
-        This function configures and runs hierarchical Bayesian estimation based on the
+        """This function configures and runs hierarchical Bayesian estimation based on the
         input UQ configuration, simulation configuration, random variables,
         and requested demand parameters
 
@@ -199,7 +198,7 @@ class testRunUQ:
         self.runTest()
 
     def getUQData(self):
-        with open(os.path.abspath(self.json_file_path_string), 'r') as f:
+        with open(os.path.abspath(self.json_file_path_string)) as f:
             input_data = json.load(f)
 
         self.ApplicationData = input_data['Applications']

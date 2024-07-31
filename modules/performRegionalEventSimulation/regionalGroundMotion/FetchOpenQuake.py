@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,20 +37,17 @@
 # Kuanshi Zhong
 #
 
-import numpy as np
-import pandas as pd
-import os
 import getpass
 import logging
-from os.path import getsize
-import sys
+import os
 import shutil
-import stat
-import subprocess
-import time
-import importlib
 import socket
+import subprocess
+import sys
+import time
 
+import numpy as np
+import pandas as pd
 
 install_requires = []
 default_oq_version = '3.17.1'
@@ -220,11 +216,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                             imt
                             + '"SA('
                             + str(curT)
-                            + ')": logscale({}, {}, {}), '.format(
-                                float(imt_levels[0]),
-                                float(imt_levels[1]),
-                                int(imt_levels[2]),
-                            )
+                            + f')": logscale({float(imt_levels[0])}, {float(imt_levels[1])}, {int(imt_levels[2])}), '
                         )
                     else:
                         imt_values = np.linspace(
@@ -236,20 +228,11 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                         for imt_v in imt_values:
                             imt_strings = imt_strings + str(imt_v) + ', '
                         imt_strings = imt_strings[:-2]
-                        imt = (
-                            imt
-                            + '"SA('
-                            + str(curT)
-                            + ')": [{}], '.format(imt_strings)
-                        )
+                        imt = imt + '"SA(' + str(curT) + f')": [{imt_strings}], '
                 imt = imt[:-2]
             elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = '"PGA": logscale({}, {}, {}), '.format(
-                        float(imt_levels[0]),
-                        float(imt_levels[1]),
-                        int(imt_levels[2]),
-                    )
+                    imt = f'"PGA": logscale({float(imt_levels[0])}, {float(imt_levels[1])}, {int(imt_levels[2])}), '
                 else:
                     imt_values = np.linspace(
                         float(imt_levels[0]),
@@ -260,7 +243,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                     for imt_v in imt_values:
                         imt_strings = imt_strings + str(imt_v) + ', '
                     imt_strings = imt_strings[:-2]
-                    imt = 'PGA": [{}], '.format(imt_strings)
+                    imt = f'PGA": [{imt_strings}], '
             else:
                 imt = (
                     event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
@@ -291,11 +274,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                             imt
                             + '"SA('
                             + str(curT)
-                            + ')": logscale({}, {}, {}), '.format(
-                                float(imt_levels[0]),
-                                float(imt_levels[1]),
-                                int(imt_levels[2]),
-                            )
+                            + f')": logscale({float(imt_levels[0])}, {float(imt_levels[1])}, {int(imt_levels[2])}), '
                         )
                     else:
                         imt_values = np.linspace(
@@ -307,20 +286,11 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                         for imt_v in imt_values:
                             imt_strings = imt_strings + str(imt_v) + ', '
                         imt_strings = imt_strings[:-2]
-                        imt = (
-                            imt
-                            + '"SA('
-                            + str(curT)
-                            + ')": [{}], '.format(imt_strings)
-                        )
+                        imt = imt + '"SA(' + str(curT) + f')": [{imt_strings}], '
                 imt = imt[:-2]
             elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = '"PGA": logscale({}, {}, {}), '.format(
-                        float(imt_levels[0]),
-                        float(imt_levels[1]),
-                        int(imt_levels[2]),
-                    )
+                    imt = f'"PGA": logscale({float(imt_levels[0])}, {float(imt_levels[1])}, {int(imt_levels[2])}), '
                 else:
                     imt_values = np.linspace(
                         float(imt_levels[0]),
@@ -331,7 +301,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                     for imt_v in imt_values:
                         imt_strings = imt_strings + str(imt_v) + ', '
                     imt_strings = imt_strings[:-2]
-                    imt = '"PGA": [{}], '.format(imt_strings)
+                    imt = f'"PGA": [{imt_strings}], '
             else:
                 imt = (
                     event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
@@ -406,9 +376,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                 oq_ver = version('openquake.engine')
                 if oq_ver:
                     print(
-                        'FetchOpenQuake: Removing previous installation of OpenQuake {}.'.format(
-                            oq_ver
-                        )
+                        f'FetchOpenQuake: Removing previous installation of OpenQuake {oq_ver}.'
                     )
                     sys.modules.pop('openquake')
                     subprocess.check_call(
@@ -577,8 +545,7 @@ def get_cfg(job_ini):
 def oq_run_classical_psha(
     job_ini, exports='csv', oq_version=default_oq_version, dir_info=None
 ):
-    """
-    Run a classical PSHA by OpenQuake
+    """Run a classical PSHA by OpenQuake
 
     :param job_ini:
         Path to configuration file/archive or
@@ -591,18 +558,16 @@ def oq_run_classical_psha(
     vtag = int(oq_version.split('.')[1])
     if vtag <= 10:
         try:
-            print('FetchOpenQuake: running Version {}.'.format(oq_version))
+            print(f'FetchOpenQuake: running Version {oq_version}.')
             # reloading
-            from openquake.commands.run import run
-            from openquake.calculators.export.hazard import export_realizations
-
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import datastore, performance, general
-            from openquake.server import dbserver
+            from openquake.baselib import datastore, general, performance
             from openquake.calculators import base
-            from openquake.commonlib import readinput, logs
+            from openquake.calculators.export.hazard import export_realizations
+            from openquake.commonlib import logs, readinput
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path
@@ -654,18 +619,16 @@ def oq_run_classical_psha(
             return 1
     elif vtag == 11:
         try:
-            print('FetchOpenQuake: running Version {}.'.format(oq_version))
+            print(f'FetchOpenQuake: running Version {oq_version}.')
             # reloading
-            from openquake.commands import run
-            from openquake.calculators.export.hazard import export_realizations
-
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import datastore, performance, general
-            from openquake.server import dbserver
+            from openquake.baselib import datastore, general, performance
             from openquake.calculators import base
-            from openquake.commonlib import readinput, logs
+            from openquake.calculators.export.hazard import export_realizations
+            from openquake.commonlib import logs, readinput
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path
@@ -716,18 +679,16 @@ def oq_run_classical_psha(
             return 1
     else:
         try:
-            print('FetchOpenQuake: running Version {}.'.format(oq_version))
+            print(f'FetchOpenQuake: running Version {oq_version}.')
             # reloading
-            from openquake.commands import run
-            from openquake.commonlib import logs, datastore
-            from openquake.calculators.export.hazard import export_realizations
-
             # run.main([job_ini], exports=exports)
             # invoke/modify deeper openquake commands here to make it compatible with
             # the pylauncher on stampede2 for parallel runs...
-            from openquake.baselib import performance, general
-            from openquake.server import dbserver
+            from openquake.baselib import general, performance
             from openquake.calculators import base
+            from openquake.calculators.export.hazard import export_realizations
+            from openquake.commonlib import datastore, logs
+            from openquake.server import dbserver
 
             dbserver.ensure_on()
             global calc_path
@@ -794,17 +755,15 @@ def oq_h5clear(hdf5_file):
     # print(h5clear)
     print(hdf5_file)
     # subprocess.run(["chmod", "a+rx", h5clear])
-    subprocess.run(['chmod', 'a+rx', hdf5_file])
-    tmp = subprocess.run(['h5clear', '-s', hdf5_file])
+    subprocess.run(['chmod', 'a+rx', hdf5_file], check=False)
+    tmp = subprocess.run(['h5clear', '-s', hdf5_file], check=False)
     print(tmp)
     run_flag = tmp.returncode
     return run_flag
 
 
 def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
-    """
-    Collect the UHS from a classical PSHA by OpenQuake
-    """
+    """Collect the UHS from a classical PSHA by OpenQuake"""
     import glob
     import random
 
@@ -871,28 +830,19 @@ class OpenQuakeHazardCalc:
     def __init__(
         self, job_ini, event_info, oq_version, dir_info=None, no_distribute=False
     ):
-        """
-        Initialize a calculation (reinvented from openquake.engine.engine)
+        """Initialize a calculation (reinvented from openquake.engine.engine)
 
         :param job_ini:
             Path to configuration file/archive or
             dictionary of parameters with at least a key "calculation_mode"
         """
-
         self.vtag = int(oq_version.split('.')[1])
         self.dir_info = dir_info
 
         from openquake.baselib import (
             config,
-            performance,
-            general,
-            zeromq,
-            hdf5,
-            parallel,
         )
-        from openquake.hazardlib import const, calc, gsim
-        from openquake import commonlib
-        from openquake.commonlib import readinput, logictree, logs
+        from openquake.commonlib import logs, readinput
 
         if self.vtag >= 12:
             from openquake.commonlib import datastore
@@ -900,7 +850,6 @@ class OpenQuakeHazardCalc:
             from openquake.baselib import datastore
         from openquake.calculators import base
         from openquake.server import dbserver
-        from openquake.commands import dbserver as cdbs
 
         user_name = getpass.getuser()
 
@@ -980,12 +929,9 @@ class OpenQuakeHazardCalc:
         print('FetchOpenQuake: OpenQuake Hazard Calculator initiated.')
 
     def run_calc(self):
-        """
-        Run a calculation and return results (reinvented from openquake.calculators.base)
-        """
-
-        from openquake.calculators import base, getters
+        """Run a calculation and return results (reinvented from openquake.calculators.base)"""
         from openquake.baselib import config, performance, zeromq
+        from openquake.calculators import base, getters
 
         if self.vtag >= 11:
             from openquake.baselib import version
@@ -1069,7 +1015,7 @@ class OpenQuakeHazardCalc:
 
                 # Prepare inputs for GmfGetter
                 nr = len(dstore['ruptures'])
-                logging.info('Reading {:_d} ruptures'.format(nr))
+                logging.info(f'Reading {nr:_d} ruptures')
                 if self.vtag >= 12:
                     rgetters = getters.get_rupture_getters(
                         dstore,
@@ -1112,19 +1058,16 @@ class OpenQuakeHazardCalc:
                 # parallel.Starmap.shutdown()
 
     def eval_calc(self):
-        """
-        Evaluate each calculators for different IMs
-        """
-
+        """Evaluate each calculators for different IMs"""
         # Define the GmfGetter
 
         # for args_tag in range(len(self.args)-1):
         # Looping over all source models (Note: the last attribute in self.args is a monitor - so skipping it)
 
-        from openquake.calculators import getters
         from openquake.baselib import general
-        from openquake.hazardlib import const, calc, gsim
+        from openquake.calculators import getters
         from openquake.commands import dbserver as cdbs
+        from openquake.hazardlib import calc, const, gsim
 
         if self.vtag >= 12:
             from openquake.hazardlib.const import StdDev
@@ -1317,9 +1260,9 @@ class OpenQuakeHazardCalc:
                                     stddev_types=[],
                                 )
                             num_sids = len(computer.sids)
-                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {
+                            if {
                                 const.StdDev.TOTAL
-                            }:
+                            } == cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES:
                                 # If the GSIM provides only total standard deviation, we need
                                 # to compute mean and total standard deviation at the sites
                                 # of interest.
@@ -1413,9 +1356,9 @@ class OpenQuakeHazardCalc:
                                     stddev_types=[],
                                 )
                             num_sids = len(computer.sids)
-                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {
+                            if {
                                 const.StdDev.TOTAL
-                            }:
+                            } == cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES:
                                 # If the GSIM provides only total standard deviation, we need
                                 # to compute mean and total standard deviation at the sites
                                 # of interest.
@@ -1583,9 +1526,7 @@ class OpenQuakeHazardCalc:
         return res
 
     def calculator_build_events_from_sources(self):
-        """
-        Prefilter the composite source model and store the source_info
-        """
+        """Prefilter the composite source model and store the source_info"""
         gsims_by_trt = self.calculator.csm.full_lt.get_gsims_by_trt()
         print('FetchOpenQuake: self.calculator.csm.src_groups = ')
         print(self.calculator.csm.src_groups)
@@ -1692,21 +1633,20 @@ class CorrelationButNoInterIntraStdDevs(Exception):
 
 
 def to_imt_unit_values(vals, imt):
-    """
-    Exponentiate the values unless the IMT is MMI
-    """
+    """Exponentiate the values unless the IMT is MMI"""
     if str(imt) == 'MMI':
         return vals
     return np.exp(vals)
 
 
 def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
-    from openquake.hazardlib import nrml, sourceconverter, site
-    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
-    from openquake.hazardlib.geo.surface.base import BaseSurface
-    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
-    from openquake.commonlib import readinput
     import json
+
+    from openquake.commonlib import readinput
+    from openquake.hazardlib import nrml, site, sourceconverter
+    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
+    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
+    from openquake.hazardlib.geo.surface.base import BaseSurface
 
     in_dir = os.path.join(work_dir, 'Input')
     outfile = os.path.join(work_dir, 'Output', 'RupFile.geojson')
@@ -1905,16 +1845,12 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print(
-        'FetchOpenquake: total {} ruptures are collected.'.format(
-            len(feature_collection_sorted)
-        )
+        f'FetchOpenquake: total {len(feature_collection_sorted)} ruptures are collected.'
     )
     # Output
     if outfile is not None:
         print(
-            'The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(
-                outfile
-            )
+            f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
         with open(outfile, 'w') as f:
             json.dump(erf_data, f, indent=2)

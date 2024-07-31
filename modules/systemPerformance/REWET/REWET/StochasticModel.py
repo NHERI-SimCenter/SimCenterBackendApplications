@@ -1,26 +1,24 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Apr  8 20:19:10 2020
+"""Created on Wed Apr  8 20:19:10 2020
 
 @author: snaeimi
 """
 
+import logging
 import os
 import pickle
-import wntrfr
-import Damage
-import pandas as pd
-import logging
-from timeline import Timeline
 import sys
+
+import Damage
+import EnhancedWNTR.network.model
+import pandas as pd
+import wntrfr
+from EnhancedWNTR.sim.results import SimulationResults
+from Sim.Simulation import Hydraulic_Simulation
+from timeline import Timeline
+from wntrfr.network.model import LinkStatus
 
 # from wntrplus import WNTRPlus
 from wntrfr.utils.ordered_set import OrderedSet
-from Sim.Simulation import Hydraulic_Simulation
-import EnhancedWNTR.network.model
-from EnhancedWNTR.sim.results import SimulationResults
-from wntrfr.network.model import LinkStatus
-
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +69,7 @@ class StochasticModel:
         self.first_leak_flag = True
 
     def runLinearScenario(self, damage, settings, worker_rank=None):
-        """
-        Runs a simple linear analysis of water damage scenario
+        """Runs a simple linear analysis of water damage scenario
         Parameters
 
         Water Network object (WN) shall not be altered in any object except restoration
@@ -84,7 +81,6 @@ class StochasticModel:
         Result.
 
         """
-
         while self.timeline.iContinue():
             sys.stdout.flush()
             current_stop_time = self.timeline.getCurrentStopTime()
@@ -115,7 +111,7 @@ class StochasticModel:
                     last_demand_node_pressure = None
                     pipe_list = damage.getPipeDamageListAt(current_stop_time)
                     for pipe_name in pipe_list:
-                        if type(last_demand_node_pressure) == type(None):
+                        if last_demand_node_pressure is None:
                             time_index = self.registry.result.node['pressure'].index
                             time_index = list(
                                 set(time_index)

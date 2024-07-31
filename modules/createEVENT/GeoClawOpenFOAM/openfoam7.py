@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -37,46 +36,45 @@ import shutil
 
 # Other custom modules
 from hydroUtils import hydroUtils
-from of7Geometry import of7Geometry
-from of7Building import of7Building
-from of7Meshing import of7Meshing
-from of7Materials import of7Materials
-from of7Initial import of7Initial
-from of7Uboundary import of7Uboundary
-from of7Prboundary import of7Prboundary
 from of7Alpboundary import of7Alpboundary
-from of7PtDboundary import of7PtDboundary
-from of7Turbulence import of7Turbulence
-from of7Decomp import of7Decomp
-from of7Solve import of7Solve
-from of7Others import of7Others
+from of7Building import of7Building
 from of7Dakota import of7Dakota
+from of7Decomp import of7Decomp
+from of7Geometry import of7Geometry
+from of7Initial import of7Initial
+from of7Materials import of7Materials
+from of7Meshing import of7Meshing
+from of7Others import of7Others
+from of7Prboundary import of7Prboundary
 from of7Process import of7Process
+from of7PtDboundary import of7PtDboundary
+from of7Solve import of7Solve
+from of7Turbulence import of7Turbulence
+from of7Uboundary import of7Uboundary
 
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
 class openfoam7:
-    """
-    This class includes the methods related to openfoam7.
+    """This class includes the methods related to openfoam7.
 
     Methods
-    --------
+    -------
             extract:
+
     """
 
     #############################################################
     def createfolder(self, data, path, args):
-        """
-        Creates the necessary folders for openfoam7
+        """Creates the necessary folders for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the new folder needs to be created
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -175,15 +173,14 @@ class openfoam7:
 
     #############################################################
     def creategeometry(self, data, path):
-        """
-        Creates the necessary folders for openfoam7
+        """Creates the necessary folders for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -228,15 +225,14 @@ class openfoam7:
 
     #############################################################
     def createmesh(self, data, path):
-        """
-        Creates the mesh dictionaries for openfoam7
+        """Creates the mesh dictionaries for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -250,30 +246,28 @@ class openfoam7:
         meshcode = Meshing.meshcheck(data, path)
         if meshcode == -1:
             return -1
-        else:
-            # Hydro mesher
-            if int(mesher[0]) == 0:
-                # blockMesh
-                bmeshtext = Meshing.bmeshtext(data)
-                fname = 'blockMeshDict'
-                filepath = os.path.join(path, 'system', fname)
-                bmeshfile = open(filepath, 'w')
-                bmeshfile.write(bmeshtext)
-                bmeshfile.close()
-                # surfaceFeatureExtract
-                sfetext = Meshing.sfetext()
-                fname = 'surfaceFeatureExtractDict'
-                filepath = os.path.join(path, 'system', fname)
-                sfefile = open(filepath, 'w')
-                sfefile.write(sfetext)
-                sfefile.close()
-                # snappyHexMesh
-                shmtext = Meshing.shmtext(data)
-                fname = 'snappyHexMeshDict'
-                filepath = os.path.join(path, 'system', fname)
-                shmfile = open(filepath, 'w')
-                shmfile.write(shmtext)
-                shmfile.close()
+        elif int(mesher[0]) == 0:
+            # blockMesh
+            bmeshtext = Meshing.bmeshtext(data)
+            fname = 'blockMeshDict'
+            filepath = os.path.join(path, 'system', fname)
+            bmeshfile = open(filepath, 'w')
+            bmeshfile.write(bmeshtext)
+            bmeshfile.close()
+            # surfaceFeatureExtract
+            sfetext = Meshing.sfetext()
+            fname = 'surfaceFeatureExtractDict'
+            filepath = os.path.join(path, 'system', fname)
+            sfefile = open(filepath, 'w')
+            sfefile.write(sfetext)
+            sfefile.close()
+            # snappyHexMesh
+            shmtext = Meshing.shmtext(data)
+            fname = 'snappyHexMeshDict'
+            filepath = os.path.join(path, 'system', fname)
+            shmfile = open(filepath, 'w')
+            shmfile.write(shmtext)
+            shmfile.close()
 
             # Mesh files from other softwares (1)
             # Do nothing here. Add to caserun.sh
@@ -289,15 +283,14 @@ class openfoam7:
 
     #############################################################
     def materials(self, data, path):
-        """
-        Creates the material files for openfoam7
+        """Creates the material files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the transportProperties file
         Materials = of7Materials()
         matcode = Materials.matcheck(data)
@@ -315,15 +308,14 @@ class openfoam7:
 
     #############################################################
     def initial(self, data, path):
-        """
-        Creates the initial condition files for openfoam7
+        """Creates the initial condition files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files dakota.json lies
-        """
 
+        """
         # Create the setFields file
         Inicond = of7Initial()
         initcode = Inicond.alphacheck(data, path)
@@ -344,15 +336,14 @@ class openfoam7:
 
     #############################################################
     def boundary(self, data, path):
-        """
-        Creates the bc condition files for openfoam7
+        """Creates the bc condition files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Initialize the patches
         patches = ['Entry', 'Exit', 'Top', 'Bottom', 'Right', 'Left']
 
@@ -413,15 +404,14 @@ class openfoam7:
 
     #############################################################
     def turbulence(self, data, path):
-        """
-        Creates the turbulenceDict and other files for openfoam7
+        """Creates the turbulenceDict and other files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the domain decomposition file
         Turb = of7Turbulence()
         turbtext = Turb.turbtext(data)
@@ -435,15 +425,14 @@ class openfoam7:
 
     #############################################################
     def parallelize(self, data, path):
-        """
-        Creates the domain decomposition files for openfoam7
+        """Creates the domain decomposition files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the domain decomposition file
         Decomp = of7Decomp()
         decomptext = Decomp.decomptext(data)
@@ -460,15 +449,14 @@ class openfoam7:
 
     #############################################################
     def solve(self, data, path):
-        """
-        Creates the solver related files for openfoam7
+        """Creates the solver related files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the solver files
         Solve = of7Solve()
         # fvSchemes
@@ -510,15 +498,14 @@ class openfoam7:
 
     #############################################################
     def others(self, data, path):
-        """
-        Creates the other auxillary files for openfoam7
+        """Creates the other auxillary files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the auxillary files
         Others = of7Others()
         # g-file
@@ -533,14 +520,13 @@ class openfoam7:
 
     #############################################################
     def dakota(self, args):
-        """
-        Creates the dakota scripts for openfoam7
+        """Creates the dakota scripts for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 args: all arguments
-        """
 
+        """
         # Create the solver files
         dakota = of7Dakota()
 
@@ -551,15 +537,14 @@ class openfoam7:
 
     #############################################################
     def postprocessing(self, data, path):
-        """
-        Creates the postprocessing related files for openfoam7
+        """Creates the postprocessing related files for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where the geometry files (STL) needs to be created
-        """
 
+        """
         # Create the solver files
         pprocess = of7Process()
         # controlDict
@@ -591,14 +576,13 @@ class openfoam7:
 
     #############################################################
     def cleaning(self, args, path):
-        """
-        Creates the cleaning scripts for openfoam7
+        """Creates the cleaning scripts for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 args: all arguments
-        """
 
+        """
         # Create the solver files
         cleaner = of7Dakota()
 

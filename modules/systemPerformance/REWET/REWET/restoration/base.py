@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec 25 04:00:43 2020
+"""Created on Fri Dec 25 04:00:43 2020
 
 @author: snaeimi
 """
 
-import networkx as nx
-import pandas as pd
-import numpy as np
-import random
-import logging
 import copy
+import logging
+import random
+
+import networkx as nx
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -106,8 +105,7 @@ class AgentData:
         self.cur_job_method_name = None
 
     def isOnShift(self, time):
-        """
-        Checks if a time is on an agent's shift
+        """Checks if a time is on an agent's shift
 
         Parameters
         ----------
@@ -120,7 +118,6 @@ class AgentData:
             Is true if the time is on the agent's shift.
 
         """
-
         shift_name = self.shift._shift_name
         (time_start, time_finish) = self._shifting.getShiftTimes(shift_name)
 
@@ -166,13 +163,10 @@ class AgentData:
         shift_name = self.shift._shift_name
         (time_start, time_finish) = self._shifting.getShiftTimes(shift_name)
 
-        if time_start < time_finish:
+        if time_start < time_finish or cur_time % (24 * 3600) <= time_finish:
             return time_finish + 24 * 3600 * num_of_days
         else:
-            if cur_time % (24 * 3600) <= time_finish:
-                return time_finish + 24 * 3600 * (num_of_days)
-            else:
-                return time_finish + 24 * 3600 * (num_of_days + 1)
+            return time_finish + 24 * 3600 * (num_of_days + 1)
 
     def getShiftLength(self):
         shift_name = self.shift._shift_name
@@ -225,8 +219,7 @@ class Agents:
         self.registry = registry
 
     def addAgent(self, agent_name, agent_type, definition):
-        """
-        Adds agent to the agent list
+        """Adds agent to the agent list
 
         Parameters
         ----------
@@ -240,7 +233,6 @@ class Agents:
         None.
 
         """
-
         # number_of_agents = int(definition['Number'])
         agent_speed = self.registry.settings['crew_travel_speed']
         temp_agent_data = AgentData(
@@ -267,8 +259,7 @@ class Agents:
             self.group_names[agent_type] = definition['group_name']
 
     def setActiveAgents(self, active_agent_ID_list):
-        """
-        Set agents active by a list of agents' ID
+        """Set agents active by a list of agents' ID
 
         Parameters
         ----------
@@ -301,8 +292,7 @@ class Agents:
         return self._agents['type'].unique().tolist()
 
     def getAllAgent(self):
-        """
-        get a copy of all agent dataframe.
+        """Get a copy of all agent dataframe.
 
         Returns
         -------
@@ -488,7 +478,7 @@ class Agents:
             iOnGoing = False
         elif (
             end_time > agent_shift_change_time
-            and _ETJ > (shift_length - 2 * 3600)
+            and (shift_length - 2 * 3600) < _ETJ
             and (time + _ETA + 2 * 3600) < agent_shift_change_time
         ):
             iget = 'OUTSIDE_SHIFT'
@@ -584,8 +574,7 @@ class Shifting:
         self._shift_data = pd.DataFrame(columns=['begining', 'end'])
 
     def addShift(self, name, begining, ending):
-        """
-        Adds a shift to shift registry
+        """Adds a shift to shift registry
 
         Parameters
         ----------
@@ -660,8 +649,7 @@ class Shifting:
         return change_shift_time
 
     def assignShiftToAgent(self, agent_ID, shift_name):
-        """
-        Assigns shoft to agent
+        """Assigns shoft to agent
 
         Parameters
         ----------
@@ -981,7 +969,7 @@ class Dispatch:
                         + el
                     )
                 else:
-                    discovered_ratios[el] = int(1)
+                    discovered_ratios[el] = 1
             temp = len(self._rm._registry.getDamageData(el))
             num_damaged_entity[el] = int(np.round(temp * discovered_ratios[el]))
         return num_damaged_entity
@@ -1023,7 +1011,7 @@ class Dispatch:
                 # =============================================================================
                 if len(undiscovered_damage_table) > 0:
                     used_number = random.sample(
-                        range(0, len(undiscovered_damage_table)),
+                        range(len(undiscovered_damage_table)),
                         discovered_numbers[el] - len(discovered_damage_table),
                     )
                 else:
@@ -1356,7 +1344,7 @@ class Priority:
             leak_data = self._rm._registry.getMostLeakAtCheck(
                 node_name_list, element_type
             )
-            if type(leak_data) != type(None):
+            if leak_data is not None:
                 entity_data.loc[node_name_list, name_sugest] = leak_data
                 entity_data.sort_values(by=name_sugest, ascending=True, inplace=True)
                 entity_data.drop(columns=[name_sugest], inplace=True)

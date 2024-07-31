@@ -1,18 +1,18 @@
 import json
-import math
-import time
 import os
+import time
 
 try:
     moduleName = 'numpy'
     import numpy as np
 
     moduleName = 'scipy'
-    from scipy.signal import csd, windows, butter, lfilter
-    from scipy.interpolate import interp1d
-    from scipy.stats import gaussian_kde, genpareto, norm
-    from scipy import interpolate
     import os
+
+    from scipy import interpolate
+    from scipy.interpolate import interp1d
+    from scipy.signal import butter, csd, lfilter, windows
+    from scipy.stats import gaussian_kde, genpareto, norm
 
     error_tag = False  # global variable
 except:
@@ -35,7 +35,7 @@ def err_exit(msg):
 
 
 def main(aimName, evtName, getRV):
-    with open(aimName, 'r', encoding='utf-8') as f:
+    with open(aimName, encoding='utf-8') as f:
         aim_data = json.load(f)
 
     evt_data = aim_data['Events'][0]
@@ -104,7 +104,7 @@ def main(aimName, evtName, getRV):
                 print('Starting pool')
                 tmp = time.time()
                 pool = Pool(n_processor)
-                print(' - Elapsed time: {:.3f} seconds.\n'.format(time.time() - tmp))
+                print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')
             else:
                 from mpi4py import MPI
                 from mpi4py.futures import MPIPoolExecutor
@@ -121,7 +121,7 @@ def main(aimName, evtName, getRV):
                     pressure_data[key] = pressure_data[key][0]
 
         elif filename.endswith('.json'):
-            with open(filename, 'r', encoding='utf-8') as jsonFile:
+            with open(filename, encoding='utf-8') as jsonFile:
                 pressure_data = json.load(jsonFile)
 
         fs = np.squeeze(pressure_data['frequency'])
@@ -161,12 +161,10 @@ def main(aimName, evtName, getRV):
             H_full = aim_data['GeneralInformation']['height']
             B_full = aim_data['GeneralInformation']['width']
             ms = H_full / H
-            print('Model scaling factor of {:.2f} is used'.format(ms))
-            if ((not ms == D_full / D) or (not ms == B_full / B)) and getRV:
+            print(f'Model scaling factor of {ms:.2f} is used')
+            if ((ms != D_full / D) or (ms != B_full / B)) and getRV:
                 print(
-                    'Warning: target-data geometry scaling ratio is inconsistent: H={:.2}, B={:.2}, D={:.2}'.format(
-                        H_full / H, B_full / B, D_full / D
-                    )
+                    f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'
                 )
 
         if len(set(selected_taps.flatten()).difference(id_list)) > 0:
@@ -246,9 +244,7 @@ def main(aimName, evtName, getRV):
             for j in range(1, len(d)):
                 if np.mod((i - 1) * (len(d) - 1) + j, round(nloop / 10)) == 0:
                     print(
-                        '{:.0f} % completed'.format(
-                            ((i - 1) * (len(d) - 1) + j) / nloop * 100
-                        )
+                        f'{((i - 1) * (len(d) - 1) + j) / nloop * 100:.0f} % completed'
                     )
 
                 kk = np.arange(d[i - 1], d[i])
@@ -269,7 +265,7 @@ def main(aimName, evtName, getRV):
                 # cpsd_all[kk,ll] = s
                 s_target[d[i - 1] : d[i], d[j - 1] : d[j]] = s
 
-        print(' - Elapsed time: {:.1f} seconds.\n'.format(time.time() - t_init))
+        print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')
 
         unitLength = aim_data['GeneralInformation']['units']['length']
         unitTime = aim_data['GeneralInformation']['units']['time']
@@ -279,7 +275,7 @@ def main(aimName, evtName, getRV):
 
         # Spectral Proper Orthogonal Decomposition
         V, D1, SpeN = perform_POD(s_target, f_target, tap, l_mo, pool)
-        print(' - Elapsed time: {:.1f} seconds.\n'.format(time.time() - t_init))
+        print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')
 
         #
         # Computing nonGaussian CDFs
@@ -291,7 +287,7 @@ def main(aimName, evtName, getRV):
             iterables = ((Cp_norm[:, selected_taps[i] - 1],) for i in range(tap))
             try:
                 result_objs = list(pool.starmap(getCDF, iterables))
-                print(' - Elapsed time: {:.3f} seconds.\n'.format(time.time() - tmp))
+                print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')
             except KeyboardInterrupt:
                 print('Ctrl+c received, terminating and joining pool.')
                 try:
@@ -324,7 +320,7 @@ def main(aimName, evtName, getRV):
                     Cp_norm[:, selected_taps[i] - 1]
                 )
 
-            print(' - Elapsed time: {:.1f} seconds.\n'.format(time.time() - t_init))
+            print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')
 
         # Simulation of Gaussian Stochastic wind force coefficients
 
@@ -452,7 +448,7 @@ def main(aimName, evtName, getRV):
             F_jzm  # zero-mean force coefficient time series (simulation)
         )
 
-    print(' - Elapsed time: {:.1f} seconds.\n'.format(time.time() - t_init))
+    print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')
 
     #
     # Creating Non-Gaussian Relizations
@@ -461,7 +457,7 @@ def main(aimName, evtName, getRV):
     print('Creating NonGaussian Realizations')
     if do_parallel:
         Cp_nongauss_kernel = np.zeros((tap, CP_sim.shape[2], len(seeds)))
-        print('Running {} simulations in parallel'.format(tap))
+        print(f'Running {tap} simulations in parallel')
 
         tmp = time.time()
         iterables = (
@@ -477,7 +473,7 @@ def main(aimName, evtName, getRV):
         )
         try:
             result_objs = list(pool.starmap(genCP, iterables))
-            print(' - Elapsed time: {:.3f} seconds.\n'.format(time.time() - tmp))
+            print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')
         except KeyboardInterrupt:
             print('Ctrl+c received, terminating and joining pool.')
             try:
@@ -491,7 +487,7 @@ def main(aimName, evtName, getRV):
     else:
         Cp_nongauss_kernel = np.zeros((tap, CP_sim.shape[2], len(seeds)))
 
-        print('Running {} simulations in series'.format(tap))
+        print(f'Running {tap} simulations in series')
         tmp = time.time()
         for seed_num in range(len(seeds)):  # always 1
             for i in range(tap):
@@ -504,7 +500,7 @@ def main(aimName, evtName, getRV):
                     my_cdf_x_range[:, i],
                 )
 
-        print(' - Elapsed time: {:.3f} seconds.\n'.format(time.time() - tmp))
+        print(f' - Elapsed time: {time.time() - tmp:.3f} seconds.\n')
 
     Cp_std_tmp = Cp_std[selected_taps - 1][:, np.newaxis, np.newaxis]
     Cp_mean_tmp = Cp_mean[selected_taps - 1][:, np.newaxis, np.newaxis]
@@ -552,33 +548,32 @@ def main(aimName, evtName, getRV):
                 tmp['face'] = int(taps['face'][0][0])
                 new_taps += [tmp]
 
+    elif filename.endswith('.mat'):
+        new_json['breadth'] = float(pressure_data['breadth'][0] * ms)
+        new_json['depth'] = float(pressure_data['depth'][0] * ms)
+        new_json['height'] = float(pressure_data['height'][0] * ms)
+        new_taps = []
+        for taps in pressure_data['tapLocations']:
+            if taps['id'] in selected_taps:
+                tmp = {}
+                tmp['id'] = int(taps['id'][0][0])
+                tmp['xLoc'] = float(taps['xLoc'][0][0]) * ms
+                tmp['yLoc'] = float(taps['yLoc'][0][0]) * ms
+                tmp['face'] = int(taps['face'][0][0])
+                new_taps += [tmp]
     else:
-        if filename.endswith('.mat'):
-            new_json['breadth'] = float(pressure_data['breadth'][0] * ms)
-            new_json['depth'] = float(pressure_data['depth'][0] * ms)
-            new_json['height'] = float(pressure_data['height'][0] * ms)
-            new_taps = []
-            for taps in pressure_data['tapLocations']:
-                if taps['id'] in selected_taps:
-                    tmp = {}
-                    tmp['id'] = int(taps['id'][0][0])
-                    tmp['xLoc'] = float(taps['xLoc'][0][0]) * ms
-                    tmp['yLoc'] = float(taps['yLoc'][0][0]) * ms
-                    tmp['face'] = int(taps['face'][0][0])
-                    new_taps += [tmp]
-        else:
-            new_json['breadth'] = float(pressure_data['breadth'] * ms)
-            new_json['depth'] = float(pressure_data['depth'] * ms)
-            new_json['height'] = float(pressure_data['height'] * ms)
-            new_taps = []
-            for taps in pressure_data['tapLocations']:
-                if taps['id'] in selected_taps:
-                    tmp = {}
-                    tmp['id'] = int(taps['id'])
-                    tmp['xLoc'] = float(taps['xLoc']) * ms
-                    tmp['yLoc'] = float(taps['yLoc']) * ms
-                    tmp['face'] = int(taps['face'])
-                    new_taps += [tmp]
+        new_json['breadth'] = float(pressure_data['breadth'] * ms)
+        new_json['depth'] = float(pressure_data['depth'] * ms)
+        new_json['height'] = float(pressure_data['height'] * ms)
+        new_taps = []
+        for taps in pressure_data['tapLocations']:
+            if taps['id'] in selected_taps:
+                tmp = {}
+                tmp['id'] = int(taps['id'])
+                tmp['xLoc'] = float(taps['xLoc']) * ms
+                tmp['yLoc'] = float(taps['yLoc']) * ms
+                tmp['face'] = int(taps['face'])
+                new_taps += [tmp]
 
     new_pressures = []
     for i in range(len(selected_taps)):

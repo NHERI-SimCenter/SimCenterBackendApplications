@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 23 13:54:21 2020
+"""Created on Mon Mar 23 13:54:21 2020
 This module is responsble for calculating damage to t=different componenst of
 teh system, including pipe lines. pupmo and so.
 @author: snaeimi
 """
 
-import wntrfr
-import pandas as pd
-from scipy.stats import lognorm
 import logging
 import pickle
-import random
+
 import numpy as np
+import pandas as pd
+import wntrfr
+from EnhancedWNTR.morph.link import break_pipe, split_pipe
+from scipy.stats import lognorm
 from wntrfr.network.model import LinkStatus
-from EnhancedWNTR.morph.link import split_pipe, break_pipe
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +59,7 @@ class Damage:
     def readDamageFromPickleFile(
         self, pickle_file_name, csv_file_name, csv_index=None
     ):
-        """
-        This function is only for teh sake of reading picke file that nafiseg gives to me
+        """This function is only for teh sake of reading picke file that nafiseg gives to me
         This function shall not be in any distribution that we release
 
         Parameters
@@ -233,14 +230,14 @@ class Damage:
                 raise ValueError('There is an unknow damage type')
 
     def readDamageFromTextFile(self, path):
-        """
-        Reads a damage from scenario from a text file and add the information
+        """Reads a damage from scenario from a text file and add the information
             to the damage class object.
 
         Parameters
         ----------
         [path] : str
             The input file name
+
         """
         if path == None:
             raise ValueError('None in path')
@@ -256,7 +253,7 @@ class Damage:
                 # print(len(sline))
                 temp_leak = {}
                 if line_length < 4:
-                    raise IOError(
+                    raise OSError(
                         'There must be at least 4 arguement in line' + repr(line_cnt)
                     )
                     # print('Probelm 1')
@@ -275,7 +272,7 @@ class Damage:
 
             elif sline[0].lower() == 'break':
                 if line_length < 3:
-                    raise IOError('There most be at least 3 arguement in line')
+                    raise OSError('There most be at least 3 arguement in line')
                 # print('Probelm 2')
                 temp_break = {}
                 temp_break['pipe_id'] = sline[1]
@@ -301,8 +298,7 @@ class Damage:
         file.close()
 
     def applyNodalDamage(self, WaterNetwork, current_time):
-        """
-        Apply Nodal Damage
+        """Apply Nodal Damage
 
         Parameters
         ----------
@@ -314,7 +310,6 @@ class Damage:
         None.
 
         """
-
         if self.node_damage.empty:
             print('no node damage at all')
             return
@@ -718,6 +713,7 @@ class Damage:
 
         current_time : int
             current time
+
         """
         last_pipe_id = None
         same_pipe_damage_cnt = None
@@ -1014,9 +1010,7 @@ class Damage:
             WaterNetwork.get_link(values).initial_status = LinkStatus(0)
 
     def read_earthquake(self, earthquake_file_name):
-        """
-
-        Parameters
+        """Parameters
         ----------
         earthquake_file_name : str
             path to the text file that include earthquake definition file
@@ -1045,7 +1039,7 @@ class Damage:
             sline = line.split()
             line_length = len(sline)
             if line_length != 5:
-                raise IOError(
+                raise OSError(
                     'there should be 5 valie in line '
                     + repr(ct)
                     + '\n M[SPACE]depth[SPACE]X coordinate[SPACE]Y coordinate{SPACE]Time'
@@ -1064,8 +1058,7 @@ class Damage:
         self.sortEarthquakeListTimely()
 
     def sortEarthquakeListTimely(self):
-        """
-        This functions sorts the list of earthquakes in a timely manner
+        """This functions sorts the list of earthquakes in a timely manner
 
         Returns
         -------
@@ -1076,8 +1069,8 @@ class Damage:
         self.is_timely_sorted = True
 
     def predictDamage(self, wn, iClear=False):
-        """
-        This function predict the water network model damage based on  probabilistic method.
+        """This function predict the water network model damage based on  probabilistic method.
+
         Parameters
         ----------
         wn : wntrfr.network.model.WaterNetworkModel
@@ -1091,7 +1084,6 @@ class Damage:
         None.
 
         """
-
         if iClear:
             self.pipe_leak = pd.Series()
             self.pipe_break = pd.Series()
@@ -1136,8 +1128,7 @@ class Damage:
                     )
 
     def get_damage_distinct_time(self):
-        """
-        get distinct time for all kind of damages
+        """Get distinct time for all kind of damages
 
         Returns
         -------
@@ -1164,8 +1155,7 @@ class Damage:
         return all_damages_time
 
     def get_earthquake_distict_time(self):
-        """
-        checks if the earthquake time are in order. Then the it will get
+        """Checks if the earthquake time are in order. Then the it will get
         distict earthquake time sand return it
 
         Raises
@@ -1186,10 +1176,7 @@ class Damage:
         time_list = self._earthquake.index
         last_value = None
         for time in iter(time_list):
-            if last_value == None:
-                reg.append(time)
-                last_value = time
-            elif last_value < time:
+            if last_value == None or last_value < time:
                 reg.append(time)
                 last_value = time
 

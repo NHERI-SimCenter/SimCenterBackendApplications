@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2023 The Regents of the University of California
 #
@@ -42,8 +41,9 @@
 # Import packages required for running the latest version of BRAILS:
 import argparse
 import os
-from time import gmtime, strftime
 import sys
+from time import gmtime, strftime
+
 from brails.InventoryGenerator import InventoryGenerator
 
 
@@ -94,11 +94,10 @@ def runBrails(
     # Get attribute map input by processing the GUI input:
     if baselineInvInp and invAttributeMap:
         attrmapInp = invAttributeMap
+    elif fpAttrMap:
+        attrmapInp = fpAttrMap
     else:
-        if fpAttrMap:
-            attrmapInp = fpAttrMap
-        else:
-            attrmapInp = ''
+        attrmapInp = ''
 
     # Format number of buildings and requested attributes inputs by parsing the
     # GUI input:

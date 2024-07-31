@@ -6,20 +6,19 @@
 # Last revision: 09/2020
 
 import os
-import subprocess
 import shutil
+import subprocess
+from pathlib import Path
 
 from global_variables import ACCIDENTAL_TORSION
-from pathlib import Path
 
 # #########################################################################
 #              Generate OpenSees model (write .tcl files)                 #
 # #########################################################################
 
 
-class ElasticAnalysis(object):
-    """
-    This class generates the .tcl files required for elastic analysis. It includes .tcl files for the following modules:
+class ElasticAnalysis:
+    """This class generates the .tcl files required for elastic analysis. It includes .tcl files for the following modules:
     (1) OpenSees nodes
     (2) boundary condition
     (3) floor constraint
@@ -41,8 +40,7 @@ class ElasticAnalysis(object):
     """
 
     def __init__(self, building, for_drift_only=False, for_period_only=False):
-        """
-        This function is used to call all methods to write .tcl files required for an elastic analysis OpenSees model.
+        """This function is used to call all methods to write .tcl files required for an elastic analysis OpenSees model.
         :param building: a class defined in "building_information.py" file
         :param for_drift_only: a boolean variable.
                                True means we only perform the elastic analysis under GravityEarthquake loads.
@@ -1019,8 +1017,7 @@ class ElasticAnalysis(object):
             tclfile.write('# puts "Gravity and earthquake loads defined"')
 
     def copy_baseline_files(self, building, for_drift_only, for_period_only):
-        """
-        Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
+        """Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
         Therefore, just copy these .tcl files from the baseline folder
         """
         # define a list which includes all baseline files' names
@@ -1054,7 +1051,7 @@ class ElasticAnalysis(object):
         )
         new_string_for_drift = '[list GravityEarthquake]'
         if for_drift_only:
-            with open('Model.tcl', 'r') as file:
+            with open('Model.tcl') as file:
                 content = file.read()
             new_content = content.replace(old_string, new_string_for_drift)
             with open('Model.tcl', 'w') as file:
@@ -1062,7 +1059,7 @@ class ElasticAnalysis(object):
         # Revise "Model.tcl" file if we only want to obtain period
         new_string_for_period = '[list EigenValue]'
         if for_period_only:
-            with open('Model.tcl', 'r') as file:
+            with open('Model.tcl') as file:
                 content = file.read()
             new_content = content.replace(old_string, new_string_for_period)
             with open('Model.tcl', 'w') as file:

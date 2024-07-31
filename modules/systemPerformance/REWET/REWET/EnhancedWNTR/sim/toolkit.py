@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 26 16:11:36 2021
+"""Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
 """
 
-import wntrfr.epanet.toolkit
-import numpy as np
 import ctypes
-import os, sys
-from pkg_resources import resource_filename
-import platform
-
 import logging
+import os
+import platform
+import sys
+
+import numpy as np
+import wntrfr.epanet.toolkit
+from pkg_resources import resource_filename
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +66,6 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):
                 except Exception as E1:
                     if lib == libnames[-1]:
                         raise E1
-                    pass
                 finally:
                     if version >= 2.2 and '32' not in lib:
                         self._project = ctypes.c_uint64()
@@ -77,8 +75,7 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):
                         self._project = None
 
     def ENn(self, inpfile=None, rptfile=None, binfile=None):
-        """
-        Opens an EPANET input file and reads in network data
+        """Opens an EPANET input file and reads in network data
 
         Parameters
         ----------
@@ -98,7 +95,6 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):
         self._error()
         if self.errcode < 100:
             self.fileLoaded = True
-        return
 
     def ENSetIgnoreFlag(self, ignore_flag=0):
         if abs(ignore_flag - np.round(ignore_flag)) > 0.00001 or ignore_flag < 0:

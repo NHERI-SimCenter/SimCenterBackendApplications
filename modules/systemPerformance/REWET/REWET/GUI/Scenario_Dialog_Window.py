@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Scenario_Dialog_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -7,10 +5,10 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Scenario_Dialog(object):
+class Ui_Scenario_Dialog:
     def setupUi(self, Scenario_Dialog):
         Scenario_Dialog.setObjectName('Scenario_Dialog')
         Scenario_Dialog.resize(351, 241)

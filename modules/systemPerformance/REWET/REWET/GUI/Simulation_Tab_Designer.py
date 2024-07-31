@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 27 19:00:30 2022
+"""Created on Thu Oct 27 19:00:30 2022
 
 @author: snaeimi
 """
 
 import os
 import tempfile
+
 from PyQt5 import QtGui, QtWidgets
 
 
 class Simulation_Tab_Designer:
     def __init__(self):
-        """
-        These are variables that are shared between ui and settings.
-        """
+        """These are variables that are shared between ui and settings."""
         self.setSimulationSettings(self.settings)
 
         """

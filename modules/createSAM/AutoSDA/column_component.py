@@ -3,20 +3,17 @@
 # Updated in Oct. 2018
 
 import numpy as np
-
-from scipy import interpolate
-
-from help_functions import search_section_property
 from global_variables import SECTION_DATABASE
+from help_functions import search_section_property
+from scipy import interpolate
 
 # #########################################################################
 #                           Define a class of column                      #
 # #########################################################################
 
 
-class Column(object):
-    """
-    This class is used to define a column member, which has the following attributes:
+class Column:
+    """This class is used to define a column member, which has the following attributes:
     (1) Column section, a dictionary including the size and associated properties.
     (2) Column demand, a dictionary including axial, shear, and flexural demands.
     (3) Column strength, a dictionary including axial, shear, and flexural strengths.
@@ -34,8 +31,7 @@ class Column(object):
         Ly,
         steel,
     ):
-        """
-        This function initializes the attributes of class of column.
+        """This function initializes the attributes of class of column.
         :param section_size: a string which specifies the size for column.
         :param axial_demand: a float number which describes axial demand.
         :param shear_demand: a float number which describes shear demand.
@@ -77,8 +73,7 @@ class Column(object):
         self.calculate_hinge_parameters(steel)
 
     def check_flange(self, steel):
-        """
-        This method is used to check whether the flange is satisfied with highly ductile requirement, as specified in
+        """This method is used to check whether the flange is satisfied with highly ductile requirement, as specified in
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
@@ -92,8 +87,7 @@ class Column(object):
             self.is_feasible['flange limit'] = False
 
     def check_web(self, steel):
-        """
-        This method is used to check whether the web is satisfied with highly ductile requirement, as specified in
+        """This method is used to check whether the web is satisfied with highly ductile requirement, as specified in
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
@@ -117,8 +111,7 @@ class Column(object):
             self.is_feasible['web limit'] = False
 
     def check_axial_strength(self, steel):
-        """
-        This method is used to check the axial strength of the column.
+        """This method is used to check the axial strength of the column.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting the axial strength
                  and a boolean variable denoting whether the column strength is enough.
@@ -151,8 +144,7 @@ class Column(object):
             self.is_feasible['axial strength'] = False
 
     def check_shear_strength(self, steel):
-        """
-        This method is used to check the shear strength of single column member.
+        """This method is used to check the shear strength of single column member.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting shear strength
                  and a boolean variable denoting whether shear strength is enough.
@@ -170,8 +162,7 @@ class Column(object):
             self.is_feasible['shear strength'] = False
 
     def check_flexural_strength(self, steel):
-        """
-        This method is used to check the flexural strength of single column member.
+        """This method is used to check the flexural strength of single column member.
         :param steel:  a class defined in "steel_material.py" file.
         :return: a float number denoting the flexural strength
                  and a boolean denoting whether flexural strength is enough.
@@ -239,8 +230,7 @@ class Column(object):
             self.is_feasible['flexural strength'] = False
 
     def check_combined_loads(self):
-        """
-        This method is whether the strength is sufficient for column subjected to combined loading.
+        """This method is whether the strength is sufficient for column subjected to combined loading.
         :return: a boolean variable denoting whether the strength is sufficient under combined loading.
         """
         # Obtain the axial capacity and moment capacity
@@ -267,8 +257,7 @@ class Column(object):
             self.is_feasible['combined strength'] = False
 
     def check_flag(self):
-        """
-        This method is used check whether the column passes all checks.
+        """This method is used check whether the column passes all checks.
         :return: a boolean variable indicating whether column is feasible or not.
         """
         self.flag = True
@@ -278,8 +267,7 @@ class Column(object):
         return self.flag
 
     def compute_demand_capacity_ratio(self):
-        """
-        This method is used to calculate the demand to capacity ratios for column components
+        """This method is used to calculate the demand to capacity ratios for column components
         :return: a dictionary which includes ratios for axial force, shear force, flexural moment, and combined loading.
         """
         self.demand_capacity_ratio['axial'] = (
@@ -294,8 +282,7 @@ class Column(object):
         )
 
     def calculate_hinge_parameters(self, steel):
-        """
-        This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
+        """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
         """
         # Following content is based on the following reference:

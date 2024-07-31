@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov  2 14:40:45 2022
+"""Created on Wed Nov  2 14:40:45 2022
 
 @author: snaeimi
 """
 
-import threading
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
-from initial import Starter
 import subprocess
-import time
+import threading
+
+from PyQt5.QtCore import QObject, pyqtSignal
 
 
 class Custom_Object(QObject):
@@ -53,7 +50,6 @@ class Run_Tab_Designer:
         for line in iter(self.rewet_sub_process.stdout.readline, b''):
             # sys.stdout.flush()
             self.cobject.outSignal.emit(line)
-        #
         self.rewet_sub_process.stdout.close()
 
     def setAllTabsEnabled(self, enabled):

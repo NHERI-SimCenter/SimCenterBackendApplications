@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
@@ -47,20 +46,17 @@
 # TODO recommended ranges???
 
 
-import json
-import sys
-import numpy as np
-from scipy.stats import qmc
-from scipy.stats import gmean
-from scipy.spatial import distance_matrix
-import os
-
 # import matplotlib.pyplot as plt
 # import matplotlib.ticker as mticker
 # from matplotlib.colors import LinearSegmentedColormap
-import itertools
-import pandas as pd  # later clear packages
+import json
+import os
+import sys
+
+import numpy as np
 import plotly.express as px
+from scipy.spatial import distance_matrix
+from scipy.stats import gmean, qmc
 
 
 def main(inputArgs, err):
@@ -74,7 +70,7 @@ class gmCluster:
         gmDataBaseDir = os.path.join(curDir, 'gmdata.json')
         inputJsonPath = inputArgs[1]
 
-        with open(inputJsonPath, 'r') as fj:
+        with open(inputJsonPath) as fj:
             inputJson = json.load(fj)
 
         nim = len(inputJson['IM'])
@@ -254,7 +250,7 @@ class gmCluster:
         #
         # Read Database
         #
-        with open(gmDataBaseDir, 'r') as fd:
+        with open(gmDataBaseDir) as fd:
             gmData = json.load(fd)
 
         RSN = gmData['RSN']
@@ -734,10 +730,10 @@ class gmCluster:
             #
             # interpolated area
             #
-            lowerboundX = np.min((np.log(im_lb[0]) - log_im_range[0] * 0.05))
-            upperboundX = np.max((np.log(im_ub[0]) + log_im_range[0] * 0.05))
-            lowerboundY = np.min((np.log(im_lb[1]) - log_im_range[1] * 0.05))
-            upperboundY = np.max((np.log(im_ub[1]) + log_im_range[1] * 0.05))
+            lowerboundX = np.min(np.log(im_lb[0]) - log_im_range[0] * 0.05)
+            upperboundX = np.max(np.log(im_ub[0]) + log_im_range[0] * 0.05)
+            lowerboundY = np.min(np.log(im_lb[1]) - log_im_range[1] * 0.05)
+            upperboundY = np.max(np.log(im_ub[1]) + log_im_range[1] * 0.05)
 
             xx = np.linspace(lowerboundX, upperboundX, 20)
             yy = np.linspace(lowerboundY, upperboundY, 20)

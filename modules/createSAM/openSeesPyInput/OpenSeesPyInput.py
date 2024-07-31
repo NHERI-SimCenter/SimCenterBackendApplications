@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,7 +37,9 @@
 # Adam Zsarn�czay
 #
 
-import sys, argparse, json
+import argparse
+import json
+import sys
 
 
 def create_SAM(
@@ -52,7 +53,7 @@ def create_SAM(
     column_line,
     getRV,
 ):
-    with open(BIM_file, 'r', encoding='utf-8') as f:
+    with open(BIM_file, encoding='utf-8') as f:
         root_BIM = json.load(f)['GeneralInformation']
 
     try:

@@ -1,10 +1,10 @@
-import os
 import math
-import pandas as pd
+import os
+
 import numpy as np
+import pandas as pd
 from EnhancedWNTR.sim.epanet import EpanetSimulator
 from EnhancedWNTR.sim.results import SimulationResults
-import wntrfr
 
 
 class Hydraulic_Simulation:
@@ -59,7 +59,7 @@ class Hydraulic_Simulation:
         required_pressure = self.required_pressure
         temp_file_dest = self.temp_directory
         orginal_c_dict = {}
-        for itrr in range(0, maximum_iteration):
+        for itrr in range(maximum_iteration):
             print(itrr)
             sim = EpanetSimulator(self.wn)
             self.s = sim
@@ -120,7 +120,7 @@ class Hydraulic_Simulation:
         required_pressure = self.required_pressure
         temp_file_dest = self.temp_directory
         self.closed_pipes = {}
-        for itrr in range(0, maximum_iteration):
+        for itrr in range(maximum_iteration):
             print(itrr)
             sim = EpanetSimulator(self.wn)
             self._prev_isolated_junctions, self._prev_isolated_links = (
@@ -240,13 +240,13 @@ class Hydraulic_Simulation:
         unreliable_time_list = result.maximum_trial_time
         time.reverse()
 
-        last_valid_time = int(-1)
+        last_valid_time = -1
         for checked_last_time in time:
             if checked_last_time not in unreliable_time_list:
                 last_valid_time = checked_last_time
                 break
 
-        if last_valid_time == int(-1):
+        if last_valid_time == -1:
             raise ValueError('Last reliabale tiem is not found')
 
         time_step = min(
@@ -370,10 +370,10 @@ class Hydraulic_Simulation:
     def updateTankHeadsAndPressure(
         self, demand, head, pressure, sim_time, time_step
     ):  # Addapted from the latest version of wntrfr. Courtessy of WNTR: https://github.com/USEPA/WNTR
-        """
-        Parameters
+        """Parameters
         ----------
         wn: wntrfr.network.WaterNetworkModel
+
         """
         dt = time_step
         # print(sim_time)

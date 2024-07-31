@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
 
-"""
-Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation
-"""
+"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""
 
-from __future__ import print_function
+import argparse
+from fractions import Fraction
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from fractions import Fraction
-import matplotlib as mpl
-import os, sys
-import re
-import json
-import argparse
 
 # Local
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.tools.colors import python_colors
-from welib.hydro.wavekin import *
 from welib.hydro.morison import *
-
+from welib.hydro.wavekin import *
+from welib.tools.colors import python_colors
 
 # --- Parameters
 g = 9.81  # gravity [m/s^2]
@@ -30,7 +23,7 @@ h = 30.0  # water depth [m]
 rho = 1000  # water density
 D = 6  # monopile diameter [m]
 CD = 1  # given
-CM = 2  #
+CM = 2
 a = 3  # wave peak amplitude [m]
 T = 12.0  # period [s]
 eps = 0  # phase shift [rad]
@@ -89,7 +82,7 @@ for it, t in enumerate(time[:-1]):
     ax.plot(p_inertia0 / 1000, z, '+', c=python_colors(0))
     ax.plot(p_drag0 / 1000, z, '+', c=python_colors(3))
     ax.plot(p_tot0 / 1000, z, 'k+')
-    ax.set_title('t/T={}'.format(Fraction(t / T)))
+    ax.set_title(f't/T={Fraction(t / T)}')
     if it == 0:
         ax.legend()
     ax.plot(XLIM, [0, 0], 'k')
@@ -100,7 +93,7 @@ for it, t in enumerate(time[:-1]):
     ax = axes2[int(it / 4), np.mod(it, 4)]
     ax.plot(dM / 1000, z, 'k-', label=r'$dM_{tot}$ with Wheeler')
     ax.plot(dM0 / 1000, z, 'k+', label=r'$dM_{tot}$ no-correction')
-    ax.set_title('t/T={}'.format(Fraction(t / T)))
+    ax.set_title(f't/T={Fraction(t / T)}')
     if it == 0:
         ax.legend()
     ax.plot(XLIMM, [0, 0], 'k')

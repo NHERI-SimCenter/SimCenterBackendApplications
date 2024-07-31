@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 24 18:10:31 2022
+"""Created on Mon Oct 24 18:10:31 2022
 
 @author: snaeimi
 """
 
 # import numba
-import pandas as pd
-import numpy as np
-from functools import reduce  # Valid in Python 2.6+, required in Python 3
 import operator
+from functools import reduce  # Valid in Python 2.6+, required in Python 3
+
+import numpy as np
 
 
 def hhelper(x):
@@ -26,7 +24,7 @@ def EPHelper(prob_mat, old):
         one_minus_p_list = [1 - p for p in prob_mat]
         pi_one_minus_p_list = [
             1 - reduce(operator.mul, one_minus_p_list[: i + 1], 1)
-            for i in range(0, len(one_minus_p_list))
+            for i in range(len(one_minus_p_list))
         ]
         # pi_one_minus_p_list         = [rr.apply(lambda x: [x[i] * x[1], raw=True)
         return pi_one_minus_p_list

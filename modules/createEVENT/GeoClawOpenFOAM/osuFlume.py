@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,6 +32,7 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
+
 import numpy as np
 
 # Other custom modules
@@ -43,25 +43,24 @@ from flume import flume
 # OpenFOAM7 solver class
 ####################################################################
 class osuFlume:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     creating a standard OSU flume
 
     Methods
-    --------
+    -------
             creategeom: Create geometry and STL files
+
     """
 
     #############################################################
     def creategeom(self, data, path):
-        """
-        Creates the geometry for OSU flume
+        """Creates the geometry for OSU flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Number of flume points
         numflumepoints = 9
 

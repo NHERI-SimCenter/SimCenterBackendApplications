@@ -1,5 +1,4 @@
-"""
-This file creates a function that is called by "main_design.py" to perform seismic design
+"""This file creates a function that is called by "main_design.py" to perform seismic design
 
 Developed by GUAN, XINGQUAN @ UCLA, March 29 2018
 Revised in Feb. 2019
@@ -14,25 +13,25 @@ Revised in Feb. 2019
 
 # Please add all the imported modules in the part below
 import copy
-import numpy as np
 import os
-import pandas as pd
 import pickle
 import sys
-
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from beam_component import Beam
 from building_information import Building
+from column_component import Column
+from connection_part import Connection
 from elastic_analysis import ElasticAnalysis
 from elastic_output import ElasticOutput
-from column_component import Column
-from beam_component import Beam
-from connection_part import Connection
-
-from global_variables import steel
-from global_variables import BEAM_TO_COLUMN_RATIO
-from global_variables import UPPER_LOWER_COLUMN_Zx
-from global_variables import RBS_STIFFNESS_FACTOR
-
+from global_variables import (
+    BEAM_TO_COLUMN_RATIO,
+    RBS_STIFFNESS_FACTOR,
+    UPPER_LOWER_COLUMN_Zx,
+    steel,
+)
 
 ##########################################################################
 #                         Function Implementation                        #
@@ -408,48 +407,46 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                         top_column=column_set[story + 1][connection_no],
                         bottom_column=column_set[story][connection_no],
                     )
-            else:
-                # The connection is not on roof
-                if connection_no == 0:
-                    # The connection is an left top exterior joint
-                    connection_set[story][connection_no] = Connection(
-                        'top exterior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=beam_set[story][connection_no],
-                        right_beam=None,
-                        top_column=None,
-                        bottom_column=column_set[story][connection_no],
-                    )
-                elif connection_no == building_1.geometry['number of X bay']:
-                    # The connection is an right top exterior joint
-                    connection_set[story][connection_no] = Connection(
-                        'top exterior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=beam_set[story][connection_no - 1],
-                        right_beam=None,
-                        top_column=None,
-                        bottom_column=column_set[story][connection_no],
-                    )
+            elif connection_no == 0:
+                # The connection is an left top exterior joint
+                connection_set[story][connection_no] = Connection(
+                    'top exterior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=beam_set[story][connection_no],
+                    right_beam=None,
+                    top_column=None,
+                    bottom_column=column_set[story][connection_no],
+                )
+            elif connection_no == building_1.geometry['number of X bay']:
+                # The connection is an right top exterior joint
+                connection_set[story][connection_no] = Connection(
+                    'top exterior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=beam_set[story][connection_no - 1],
+                    right_beam=None,
+                    top_column=None,
+                    bottom_column=column_set[story][connection_no],
+                )
 
-                else:
-                    # The connection is an top interior joint
-                    connection_set[story][connection_no] = Connection(
-                        'top interior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=beam_set[story][connection_no],
-                        right_beam=beam_set[story][connection_no],
-                        top_column=None,
-                        bottom_column=column_set[story][connection_no],
-                    )
+            else:
+                # The connection is an top interior joint
+                connection_set[story][connection_no] = Connection(
+                    'top interior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=beam_set[story][connection_no],
+                    right_beam=beam_set[story][connection_no],
+                    top_column=None,
+                    bottom_column=column_set[story][connection_no],
+                )
             if not connection_set[story][connection_no].check_flag():
                 sys.stderr.write(
                     'connection_%s%s is not feasible!!!\n' % (story, connection_no)
@@ -569,48 +566,46 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                                 top_column=column_set[story + 1][connection_no],
                                 bottom_column=column_set[story][connection_no],
                             )
-                    else:
-                        # The connection is not on roof
-                        if connection_no == 0:
-                            # The connection is an left top exterior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top exterior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no],
-                                right_beam=None,
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
-                        elif connection_no == building_1.geometry['number of X bay']:
-                            # The connection is an right top exterior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top exterior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no - 1],
-                                right_beam=None,
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
+                    elif connection_no == 0:
+                        # The connection is an left top exterior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top exterior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no],
+                            right_beam=None,
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
+                    elif connection_no == building_1.geometry['number of X bay']:
+                        # The connection is an right top exterior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top exterior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no - 1],
+                            right_beam=None,
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
 
-                        else:
-                            # The connection is an top interior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top interior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no],
-                                right_beam=beam_set[story][connection_no],
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
+                    else:
+                        # The connection is an top interior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top interior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no],
+                            right_beam=beam_set[story][connection_no],
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
 
         i = 0
         # For connection not satisfy the strong-column-weak beam -> upscale the column
@@ -624,19 +619,16 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 target_story = target_story_index
             # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column
             # If that's the case, we should pick up the smaller upper column to upscale.
+            elif (
+                column_set[target_story_index + 1][target_connection_no].section[
+                    'Zx'
+                ]
+                < UPPER_LOWER_COLUMN_Zx
+                * column_set[target_story_index][target_connection_no].section['Zx']
+            ):
+                target_story = target_story_index + 1
             else:
-                if (
-                    column_set[target_story_index + 1][target_connection_no].section[
-                        'Zx'
-                    ]
-                    < UPPER_LOWER_COLUMN_Zx
-                    * column_set[target_story_index][target_connection_no].section[
-                        'Zx'
-                    ]
-                ):
-                    target_story = target_story_index + 1
-                else:
-                    target_story = target_story_index
+                target_story = target_story_index
             # Upscale the unsatisfied column on the determined story
             if (
                 target_connection_no == 0
@@ -762,48 +754,46 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                                 top_column=column_set[story + 1][connection_no],
                                 bottom_column=column_set[story][connection_no],
                             )
-                    else:
-                        # The connection is not on roof
-                        if connection_no == 0:
-                            # The connection is an left top exterior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top exterior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no],
-                                right_beam=None,
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
-                        elif connection_no == building_1.geometry['number of X bay']:
-                            # The connection is an right top exterior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top exterior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no - 1],
-                                right_beam=None,
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
+                    elif connection_no == 0:
+                        # The connection is an left top exterior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top exterior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no],
+                            right_beam=None,
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
+                    elif connection_no == building_1.geometry['number of X bay']:
+                        # The connection is an right top exterior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top exterior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no - 1],
+                            right_beam=None,
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
 
-                        else:
-                            # The connection is an top interior joint
-                            connection_set[story][connection_no] = Connection(
-                                'top interior',
-                                steel,
-                                dead_load,
-                                live_load,
-                                span,
-                                left_beam=beam_set[story][connection_no],
-                                right_beam=beam_set[story][connection_no],
-                                top_column=None,
-                                bottom_column=column_set[story][connection_no],
-                            )
+                    else:
+                        # The connection is an top interior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top interior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=beam_set[story][connection_no],
+                            right_beam=beam_set[story][connection_no],
+                            top_column=None,
+                            bottom_column=column_set[story][connection_no],
+                        )
 
     # ********************************************************************
     # /////// Revise Beam Member to Consider Constructability ////////////
@@ -963,47 +953,45 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                         top_column=construction_column_set[story + 1][connection_no],
                         bottom_column=construction_column_set[story][connection_no],
                     )
+            elif connection_no == 0:
+                # The connection is an left top exterior joint
+                construction_connection_set[story][connection_no] = Connection(
+                    'top exterior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=construction_beam_set[story][connection_no],
+                    right_beam=None,
+                    top_column=None,
+                    bottom_column=construction_column_set[story][connection_no],
+                )
+            elif connection_no == building_2.geometry['number of X bay']:
+                # The connection is an right top exterior joint
+                construction_connection_set[story][connection_no] = Connection(
+                    'top exterior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=construction_beam_set[story][connection_no - 1],
+                    right_beam=None,
+                    top_column=None,
+                    bottom_column=construction_column_set[story][connection_no],
+                )
             else:
-                # The connection is not on roof
-                if connection_no == 0:
-                    # The connection is an left top exterior joint
-                    construction_connection_set[story][connection_no] = Connection(
-                        'top exterior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=construction_beam_set[story][connection_no],
-                        right_beam=None,
-                        top_column=None,
-                        bottom_column=construction_column_set[story][connection_no],
-                    )
-                elif connection_no == building_2.geometry['number of X bay']:
-                    # The connection is an right top exterior joint
-                    construction_connection_set[story][connection_no] = Connection(
-                        'top exterior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=construction_beam_set[story][connection_no - 1],
-                        right_beam=None,
-                        top_column=None,
-                        bottom_column=construction_column_set[story][connection_no],
-                    )
-                else:
-                    # The connection is an top interior joint
-                    construction_connection_set[story][connection_no] = Connection(
-                        'top interior',
-                        steel,
-                        dead_load,
-                        live_load,
-                        span,
-                        left_beam=construction_beam_set[story][connection_no],
-                        right_beam=construction_beam_set[story][connection_no],
-                        top_column=None,
-                        bottom_column=construction_column_set[story][connection_no],
-                    )
+                # The connection is an top interior joint
+                construction_connection_set[story][connection_no] = Connection(
+                    'top interior',
+                    steel,
+                    dead_load,
+                    live_load,
+                    span,
+                    left_beam=construction_beam_set[story][connection_no],
+                    right_beam=construction_beam_set[story][connection_no],
+                    top_column=None,
+                    bottom_column=construction_column_set[story][connection_no],
+                )
             if not construction_connection_set[story][
                 connection_no
             ].check_flag():  # (Might not be necessary)
@@ -1152,68 +1140,66 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                                     ],
                                 )
                             )
-                    else:
-                        # The connection is not on roof
-                        if connection_no == 0:
-                            # The connection is an left top exterior joint
-                            construction_connection_set[story][connection_no] = (
-                                Connection(
-                                    'top exterior',
-                                    steel,
-                                    dead_load,
-                                    live_load,
-                                    span,
-                                    left_beam=construction_beam_set[story][
-                                        connection_no
-                                    ],
-                                    right_beam=None,
-                                    top_column=None,
-                                    bottom_column=construction_column_set[story][
-                                        connection_no
-                                    ],
-                                )
+                    elif connection_no == 0:
+                        # The connection is an left top exterior joint
+                        construction_connection_set[story][connection_no] = (
+                            Connection(
+                                'top exterior',
+                                steel,
+                                dead_load,
+                                live_load,
+                                span,
+                                left_beam=construction_beam_set[story][
+                                    connection_no
+                                ],
+                                right_beam=None,
+                                top_column=None,
+                                bottom_column=construction_column_set[story][
+                                    connection_no
+                                ],
                             )
-                        elif connection_no == building_2.geometry['number of X bay']:
-                            # The connection is an right top exterior joint
-                            construction_connection_set[story][connection_no] = (
-                                Connection(
-                                    'top exterior',
-                                    steel,
-                                    dead_load,
-                                    live_load,
-                                    span,
-                                    left_beam=construction_beam_set[story][
-                                        connection_no - 1
-                                    ],
-                                    right_beam=None,
-                                    top_column=None,
-                                    bottom_column=construction_column_set[story][
-                                        connection_no
-                                    ],
-                                )
+                        )
+                    elif connection_no == building_2.geometry['number of X bay']:
+                        # The connection is an right top exterior joint
+                        construction_connection_set[story][connection_no] = (
+                            Connection(
+                                'top exterior',
+                                steel,
+                                dead_load,
+                                live_load,
+                                span,
+                                left_beam=construction_beam_set[story][
+                                    connection_no - 1
+                                ],
+                                right_beam=None,
+                                top_column=None,
+                                bottom_column=construction_column_set[story][
+                                    connection_no
+                                ],
                             )
+                        )
 
-                        else:
-                            # The connection is an top interior joint
-                            construction_connection_set[story][connection_no] = (
-                                Connection(
-                                    'top interior',
-                                    steel,
-                                    dead_load,
-                                    live_load,
-                                    span,
-                                    left_beam=construction_beam_set[story][
-                                        connection_no
-                                    ],
-                                    right_beam=construction_beam_set[story][
-                                        connection_no
-                                    ],
-                                    top_column=None,
-                                    bottom_column=construction_column_set[story][
-                                        connection_no
-                                    ],
-                                )
+                    else:
+                        # The connection is an top interior joint
+                        construction_connection_set[story][connection_no] = (
+                            Connection(
+                                'top interior',
+                                steel,
+                                dead_load,
+                                live_load,
+                                span,
+                                left_beam=construction_beam_set[story][
+                                    connection_no
+                                ],
+                                right_beam=construction_beam_set[story][
+                                    connection_no
+                                ],
+                                top_column=None,
+                                bottom_column=construction_column_set[story][
+                                    connection_no
+                                ],
                             )
+                        )
 
         i = 0
         # For connection not satisfy the strong-column-weak beam -> upscale the column
@@ -1227,19 +1213,16 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 target_story = target_story_index
             # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column
             # If that's the case, we should pick up the smaller upper column to upscale.
+            elif (
+                column_set[target_story_index + 1][target_connection_no].section[
+                    'Zx'
+                ]
+                < UPPER_LOWER_COLUMN_Zx
+                * column_set[target_story_index][target_connection_no].section['Zx']
+            ):
+                target_story = target_story_index + 1
             else:
-                if (
-                    column_set[target_story_index + 1][target_connection_no].section[
-                        'Zx'
-                    ]
-                    < UPPER_LOWER_COLUMN_Zx
-                    * column_set[target_story_index][target_connection_no].section[
-                        'Zx'
-                    ]
-                ):
-                    target_story = target_story_index + 1
-                else:
-                    target_story = target_story_index
+                target_story = target_story_index
             # Upscale the unsatisfied column on the determined story
             if (
                 target_connection_no == 0
@@ -1391,18 +1374,32 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                                     ],
                                 )
                             )
-                    else:
-                        # The connection is not on roof
-                        if connection_no == 0:
-                            # The connection is an left top exterior joint
-                            connection_set[story][connection_no] = Connection(
+                    elif connection_no == 0:
+                        # The connection is an left top exterior joint
+                        connection_set[story][connection_no] = Connection(
+                            'top exterior',
+                            steel,
+                            dead_load,
+                            live_load,
+                            span,
+                            left_beam=construction_beam_set[story][connection_no],
+                            right_beam=None,
+                            top_column=None,
+                            bottom_column=construction_column_set[story][
+                                connection_no
+                            ],
+                        )
+                    elif connection_no == building_2.geometry['number of X bay']:
+                        # The connection is an right top exterior joint
+                        construction_connection_set[story][connection_no] = (
+                            Connection(
                                 'top exterior',
                                 steel,
                                 dead_load,
                                 live_load,
                                 span,
                                 left_beam=construction_beam_set[story][
-                                    connection_no
+                                    connection_no - 1
                                 ],
                                 right_beam=None,
                                 top_column=None,
@@ -1410,46 +1407,28 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                                     connection_no
                                 ],
                             )
-                        elif connection_no == building_2.geometry['number of X bay']:
-                            # The connection is an right top exterior joint
-                            construction_connection_set[story][connection_no] = (
-                                Connection(
-                                    'top exterior',
-                                    steel,
-                                    dead_load,
-                                    live_load,
-                                    span,
-                                    left_beam=construction_beam_set[story][
-                                        connection_no - 1
-                                    ],
-                                    right_beam=None,
-                                    top_column=None,
-                                    bottom_column=construction_column_set[story][
-                                        connection_no
-                                    ],
-                                )
+                        )
+                    else:
+                        # The connection is an top interior joint
+                        construction_connection_set[story][connection_no] = (
+                            Connection(
+                                'top interior',
+                                steel,
+                                dead_load,
+                                live_load,
+                                span,
+                                left_beam=construction_beam_set[story][
+                                    connection_no
+                                ],
+                                right_beam=construction_beam_set[story][
+                                    connection_no
+                                ],
+                                top_column=None,
+                                bottom_column=construction_column_set[story][
+                                    connection_no
+                                ],
                             )
-                        else:
-                            # The connection is an top interior joint
-                            construction_connection_set[story][connection_no] = (
-                                Connection(
-                                    'top interior',
-                                    steel,
-                                    dead_load,
-                                    live_load,
-                                    span,
-                                    left_beam=construction_beam_set[story][
-                                        connection_no
-                                    ],
-                                    right_beam=construction_beam_set[story][
-                                        connection_no
-                                    ],
-                                    top_column=None,
-                                    bottom_column=construction_column_set[story][
-                                        connection_no
-                                    ],
-                                )
-                            )
+                        )
 
     # ********************************************************************
     # ////////////// Revise Column to for Constructability  //////////////
@@ -1565,8 +1544,8 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # ********************************************************************
     # //////////// Check Column Width Greater than Beam //////////////////
     # ********************************************************************
-    for story in range(0, building_3.geometry['number of story']):
-        for col_no in range(0, building_3.geometry['number of X bay'] + 1):
+    for story in range(building_3.geometry['number of story']):
+        for col_no in range(building_3.geometry['number of X bay'] + 1):
             if (
                 construction_column_set[story][col_no].section['bf']
                 < construction_beam_set[story][0].section['bf']
@@ -1703,23 +1682,20 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             if row == building_1.geometry['number of story'] - 1:
                 optimal_column_beam_ratio.loc[row, name] = 'NA'
                 construction_column_beam_ratio.loc[row, name] = 'NA'
+            elif col != building_1.geometry['number of X bay'] + 1:
+                optimal_column_beam_ratio.loc[row, name] = (
+                    connection_set[row][col].moment['Mpc']
+                    / connection_set[row][col].moment['Mpb']
+                )
+                construction_column_beam_ratio.loc[row, name] = (
+                    construction_connection_set[row][col].moment['Mpc']
+                    / construction_connection_set[row][col].moment['Mpb']
+                )
             else:
-                if col != building_1.geometry['number of X bay'] + 1:
-                    optimal_column_beam_ratio.loc[row, name] = (
-                        connection_set[row][col].moment['Mpc']
-                        / connection_set[row][col].moment['Mpb']
-                    )
-                    construction_column_beam_ratio.loc[row, name] = (
-                        construction_connection_set[row][col].moment['Mpc']
-                        / construction_connection_set[row][col].moment['Mpb']
-                    )
-                else:
-                    optimal_column_beam_ratio.loc[row, name] = (
-                        1 / BEAM_TO_COLUMN_RATIO
-                    )
-                    construction_column_beam_ratio.loc[row, name] = (
-                        1 / BEAM_TO_COLUMN_RATIO
-                    )
+                optimal_column_beam_ratio.loc[row, name] = 1 / BEAM_TO_COLUMN_RATIO
+                construction_column_beam_ratio.loc[row, name] = (
+                    1 / BEAM_TO_COLUMN_RATIO
+                )
     optimal_column_beam_ratio.to_csv(
         'OptimalColumnBeamRatio.csv', sep=',', index=False
     )
@@ -1742,8 +1718,8 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             [0] * (building_1.geometry['number of X bay'] + 1)
             for story in range(building_1.geometry['number of story'])
         ]
-        for story in range(0, building_1.geometry['number of story']):
-            for bay in range(0, building_1.geometry['number of X bay'] + 1):
+        for story in range(building_1.geometry['number of story']):
+            for bay in range(building_1.geometry['number of X bay'] + 1):
                 column_DC[story][bay] = column_set[story][bay].demand_capacity_ratio[
                     force
                 ]
@@ -1778,8 +1754,8 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             [0] * (building_1.geometry['number of X bay'])
             for story in range(building_1.geometry['number of story'])
         ]
-        for story in range(0, building_1.geometry['number of story']):
-            for bay in range(0, building_1.geometry['number of X bay']):
+        for story in range(building_1.geometry['number of story']):
+            for bay in range(building_1.geometry['number of X bay']):
                 beam_DC[story][bay] = beam_set[story][bay].demand_capacity_ratio[
                     force
                 ]

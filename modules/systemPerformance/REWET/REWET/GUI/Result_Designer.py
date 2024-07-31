@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 10 18:29:50 2022
+"""Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
 """
 
-from PyQt5 import QtWidgets, QtGui
 import pandas as pd
+from PyQt5 import QtGui, QtWidgets
 
 single_scenario_curve_options = ['', 'Quantity', 'Delivery', 'SSI']
 multi_scenario_curve_options = ['', 'Quantity Exceedance', 'Delivery Exceedance']
@@ -144,7 +142,7 @@ class Result_Designer:
         self.mpl_curve.canvas.ax.cla()
 
     def plot_data(self):
-        x = range(0, 10)
+        x = range(10)
         y = range(0, 20, 2)
         self.mpl_curve.canvas.ax.plot(x, y)
         self.mpl_curve.canvas.draw()

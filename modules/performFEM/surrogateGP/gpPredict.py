@@ -1,13 +1,13 @@
-import time
-import pickle as pickle
-import numpy as np
-import os
-import sys
 import json as json
+import os
+import pickle as pickle
 import shutil
-from scipy.stats import lognorm, norm
 import subprocess
+import sys
+import time
 
+import numpy as np
+from scipy.stats import lognorm, norm
 
 try:
     moduleName = 'GPy'
@@ -26,7 +26,6 @@ try:
     moduleName = 'emukit'
     from emukit.multi_fidelity.convert_lists_to_array import (
         convert_x_list_to_array,
-        convert_xy_lists_to_arrays,
     )
 
     moduleName = 'Pandas'
@@ -254,7 +253,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
             else:
                 X_unique = X
                 Y_mean = Y
-                indices = range(0, Y.shape[0])
+                indices = range(Y.shape[0])
 
                 kernel_var = GPy.kern.Matern52(
                     input_dim=nrv_sur, ARD=True
@@ -308,7 +307,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
     # Check how many RVs overlap
     #
 
-    with open(params_dir, 'r') as x_file:
+    with open(params_dir) as x_file:
         data = x_file.readlines()
         nrv = int(data[0])
         for i in range(nrv):
@@ -334,7 +333,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
             # = atleast_2d because there may be multiple samples
             samples = np.atleast_2d([float(vals) for vals in name_values[1:]]).T
             ns = len(samples)
-            if not name in rv_name_sur:
+            if name not in rv_name_sur:
                 rv_name_dummy += [name]
                 if not first_dummy_found:
                     rv_val_dummy = samples
@@ -371,10 +370,10 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
             if edp['length'] == 1:
                 edp_names += [edp['name']]
             else:
-                for i in range(0, edp['length']):
+                for i in range(edp['length']):
                     edp_names += [edp['name'] + '_' + str(i + 1)]
             try:
-                for i in range(0, edp['length']):
+                for i in range(edp['length']):
                     id_map = g_name_sur.index(edp_names[i])
                     g_idx += [id_map]
             except ValueError:
@@ -407,9 +406,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                 f'{pythonEXE} {computeIM} --filenameAIM IMinput.json --filenameEVENT EVENT.json --filenameIM IM.json --geoMeanVar'
             )
         else:
-            msg = 'IMinput.json and EVENT.json not found in workdir.{}. Cannot calculate IMs.'.format(
-                sampNum
-            )
+            msg = f'IMinput.json and EVENT.json not found in workdir.{sampNum}. Cannot calculate IMs.'
             error_exit(msg)
 
         first_eeuq_found = False
@@ -430,9 +427,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                 try:
                     id_map = rv_name_sur.index(name)
                 except ValueError:
-                    msg = 'Error importing input data: variable "{}" not identified.'.format(
-                        name
-                    )
+                    msg = f'Error importing input data: variable "{name}" not identified.'
                     error_exit(msg)
 
                 if not first_eeuq_found:
@@ -447,7 +442,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                 if ns != nsamp:
                     msg = 'Error importing input data: sample size in params.in is not consistent.'
                     error_exit(msg)
-        # todo: fix for different nys m
+        # TODO: fix for different nys m
 
         if len(id_vec + id_vec2) != nrv_sur:
             missing_ids = set([i for i in range(len(rv_name_sur))]) - set(
@@ -758,9 +753,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
 
         if not is_accurate_array[ns]:
             msg1 += [
-                'Prediction error level of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(
-                    idx[ns], np.max(error_ratio2[ns]) * 100, norm_var_thr * 100
-                )
+                f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%, which is greater than threshold={norm_var_thr * 100:.2f}%  '
             ]
         else:
             msg1 += ['']
@@ -776,16 +769,14 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                     isEEUQ and nsamp == 1
                 ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(
-                        os.getcwd(), 'subworkdir.{}'.format(sampNum)
+                        os.getcwd(), f'subworkdir.{sampNum}'
                     )
                 else:
-                    current_dir_i = os.path.join(
-                        os.getcwd(), 'subworkdir.{}'.format(1 + ns)
-                    )
+                    current_dir_i = os.path.join(os.getcwd(), f'subworkdir.{1 + ns}')
 
                 try:
                     shutil.copytree(templatedirFolder, current_dir_i)
-                except Exception as ex:
+                except Exception:
                     try:
                         shutil.copytree(templatedirFolder, current_dir_i)
                     except Exception as ex:
@@ -805,7 +796,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                     #
                     # Replace parts of AIM
                     #
-                    with open(os.path.join(current_dir_i, 'AIM.json.sc'), 'r') as f:
+                    with open(os.path.join(current_dir_i, 'AIM.json.sc')) as f:
                         try:
                             AIMsc = json.load(f)
                         except ValueError:
@@ -843,7 +834,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                     else:
                         driver_name = 'driver'
 
-                    with open(os.path.join(os.getcwd(), driver_name), 'r') as f:
+                    with open(os.path.join(os.getcwd(), driver_name)) as f:
                         event_driver = f.readline()
 
                     with open(os.path.join(current_dir_i, driver_name), 'r+') as f:
@@ -859,9 +850,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
 
                 else:
                     outF = open(current_dir_i + '/params.in', 'w')
-                    outF.write('{}\n'.format(nrv))
+                    outF.write(f'{nrv}\n')
                     for i in range(nrv):
-                        outF.write('{} {}\n'.format(rv_name_sur[i], rv_val[ns, i]))
+                        outF.write(f'{rv_name_sur[i]} {rv_val[ns, i]}\n')
                     outF.close()
 
                 os.chdir(current_dir_i)
@@ -876,22 +867,21 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                         workflowDriver = 'sc_driver.bat'
                     else:
                         workflowDriver = 'sc_driver'
+                elif (
+                    os_type.lower().startswith('win')
+                    and run_type.lower() == 'runninglocal'
+                ):
+                    workflowDriver = 'driver.bat'
                 else:
-                    if (
-                        os_type.lower().startswith('win')
-                        and run_type.lower() == 'runninglocal'
-                    ):
-                        workflowDriver = 'driver.bat'
-                    else:
-                        workflowDriver = 'driver'
+                    workflowDriver = 'driver'
 
-                workflow_run_command = '{}/{}'.format(current_dir_i, workflowDriver)
+                workflow_run_command = f'{current_dir_i}/{workflowDriver}'
                 subprocess.Popen(workflow_run_command, shell=True).wait()
 
                 # back to directory, copy result.out
                 # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
 
-                with open('results.out', 'r') as f:
+                with open('results.out') as f:
                     y_pred = np.array([np.loadtxt(f)]).flatten()
                     y_pred_subset[ns, :] = y_pred[g_idx]
 
@@ -919,8 +909,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
                     y_pred_subset[ns, :] = y_samp[ns, g_idx]
 
         else:
-            msg3 = msg0 + 'Prediction error level of output {} is {:.2f}%\n'.format(
-                idx[ns], np.max(error_ratio2[ns]) * 100
+            msg3 = (
+                msg0
+                + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
             )
             error_warning(msg3)
 
@@ -986,20 +977,16 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):
         # write values
 
         for ns in range(nsamp):
-            rv_list = ' '.join('{:e}'.format(rv) for rv in rv_val[ns, :])
-            ypred_list = ' '.join('{:e}'.format(yp) for yp in y_pred_subset[ns, :])
-            ymedian_list = ' '.join(
-                '{:e}'.format(ym) for ym in y_pred_median_subset[ns, :]
-            )
-            yQ1_list = ' '.join('{:e}'.format(yq1) for yq1 in y_q1_subset[ns, :])
-            yQ3_list = ' '.join('{:e}'.format(yq3) for yq3 in y_q3_subset[ns, :])
-            ypredvar_list = ' '.join(
-                '{:e}'.format(ypv) for ypv in y_pred_var_subset[ns, :]
-            )
-            yQ1m_list = ' '.join('{:e}'.format(yq1) for yq1 in y_q1m_subset[ns, :])
-            yQ3m_list = ' '.join('{:e}'.format(yq3) for yq3 in y_q3m_subset[ns, :])
+            rv_list = ' '.join(f'{rv:e}' for rv in rv_val[ns, :])
+            ypred_list = ' '.join(f'{yp:e}' for yp in y_pred_subset[ns, :])
+            ymedian_list = ' '.join(f'{ym:e}' for ym in y_pred_median_subset[ns, :])
+            yQ1_list = ' '.join(f'{yq1:e}' for yq1 in y_q1_subset[ns, :])
+            yQ3_list = ' '.join(f'{yq3:e}' for yq3 in y_q3_subset[ns, :])
+            ypredvar_list = ' '.join(f'{ypv:e}' for ypv in y_pred_var_subset[ns, :])
+            yQ1m_list = ' '.join(f'{yq1:e}' for yq1 in y_q1m_subset[ns, :])
+            yQ3m_list = ' '.join(f'{yq3:e}' for yq3 in y_q3m_subset[ns, :])
             ypredvarm_list = ' '.join(
-                '{:e}'.format(ypv) for ypv in y_pred_var_m_subset[ns, :]
+                f'{ypv:e}' for ypv in y_pred_var_m_subset[ns, :]
             )
 
             tab_file.write(

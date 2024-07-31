@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
@@ -43,29 +42,20 @@
 # pressure on predicted set of probes.
 #
 
-import sys
-import os
-import subprocess
+import argparse
 import json
-import stat
+import os
 import shutil
 from pathlib import Path
+
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-from scipy import signal
-from scipy.interpolate import interp1d
-from scipy.interpolate import UnivariateSpline
-from scipy import stats
-import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import argparse
+from scipy import signal
 
 
 def readPressureProbes(fileName):
-    """
-    Created on Wed May 16 14:31:42 2018
+    """Created on Wed May 16 14:31:42 2018
 
     Reads pressure probe data from OpenFOAM and return the probe location, time, and the pressure
     for each time step.
@@ -76,7 +66,7 @@ def readPressureProbes(fileName):
     p = []
     time = []
 
-    with open(fileName, 'r') as f:
+    with open(fileName) as f:
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -102,8 +92,7 @@ def readPressureProbes(fileName):
 
 
 def read_pressure_data(file_names):
-    """
-    This functions takes names of different OpenFOAM pressure measurements and connect
+    """This functions takes names of different OpenFOAM pressure measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might show up.
 
@@ -116,6 +105,7 @@ def read_pressure_data(file_names):
     -------
     time, pressure
         Returns the pressure time and pressure data of the connected file.
+
     """
     no_files = len(file_names)
     connected_time = []  # Connected array of time
@@ -151,10 +141,9 @@ def read_pressure_data(file_names):
 
 
 class PressureData:
-    """
-    A class that holds a pressure data and performs the following operations:
-            - mean and rms pressure coefficients
-            - peak pressure coefficients
+    """A class that holds a pressure data and performs the following operations:
+    - mean and rms pressure coefficients
+    - peak pressure coefficients
     """
 
     def __init__(
@@ -180,7 +169,7 @@ class PressureData:
         if os.path.isdir(self.path):
             print('Reading from path : %s' % (self.path))
             time_names = os.listdir(self.path)
-            sorted_index = np.argsort(np.float_(time_names)).tolist()
+            sorted_index = np.argsort(np.float64(time_names)).tolist()
             # print(sorted_index)
             # print("\tTime directories: %s" %(time_names))
             file_names = []
@@ -239,8 +228,7 @@ def von_karman_spectrum(f, Uav, I, L, comp=0):
 
 
 def psd(x, dt, nseg):
-    """
-    Calculates the power spectral density of a given signal using the welch
+    """Calculates the power spectral density of a given signal using the welch
     method.
 
     Parameters
@@ -267,8 +255,7 @@ def psd(x, dt, nseg):
 
 
 def write_open_foam_vector_field(p, file_name):
-    """
-    Writes a given vector-field (n x 3) array to OpenFOAM 'vectorField'
+    """Writes a given vector-field (n x 3) array to OpenFOAM 'vectorField'
     format.
 
     """
@@ -276,20 +263,17 @@ def write_open_foam_vector_field(p, file_name):
     f.write('%d' % len(p[:, 2]))
     f.write('\n(')
     for i in range(len(p[:, 2])):
-        f.write('\n ({:.7e} {:.7e} {:.7e})'.format(p[i, 0], p[i, 1], p[i, 2]))
+        f.write(f'\n ({p[i, 0]:.7e} {p[i, 1]:.7e} {p[i, 2]:.7e})')
 
     f.write('\n);')
     f.close()
 
 
 def read_openFoam_scalar_field(file_name):
-    """
-    Reads a given vectorField OpenFOAM into numpy (n x 3) array format.
-    """
-
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
     sField = []
 
-    with open(file_name, 'r') as f:
+    with open(file_name) as f:
         itrf = iter(f)
         next(itrf)
         for line in itrf:
@@ -305,13 +289,10 @@ def read_openFoam_scalar_field(file_name):
 
 
 def read_openFoam_vector_field(file_name):
-    """
-    Reads a given vectorField OpenFOAM into numpy (n x 3) array format.
-    """
-
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
     vField = []
 
-    with open(file_name, 'r') as f:
+    with open(file_name) as f:
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')
@@ -329,15 +310,12 @@ def read_openFoam_vector_field(file_name):
 
 
 def read_openFoam_tensor_field(file_name):
-    """
-    Reads a given vectorField OpenFOAM into numpy (n x 3) array format.
-    """
-
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
     vField = []
 
     row_count = 9
 
-    with open(file_name, 'r') as f:
+    with open(file_name) as f:
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')
@@ -360,15 +338,12 @@ def read_openFoam_tensor_field(file_name):
 
 
 def read_openFoam_symmetric_tensor_field(file_name):
-    """
-    Reads a given vectorField OpenFOAM into numpy (n x 3) array format.
-    """
-
+    """Reads a given vectorField OpenFOAM into numpy (n x 3) array format."""
     vField = []
 
     row_count = 6
 
-    with open(file_name, 'r') as f:
+    with open(file_name) as f:
         for line in f:
             if line.startswith('('):
                 line = line.replace('(', '')
@@ -390,8 +365,7 @@ def read_openFoam_symmetric_tensor_field(file_name):
 
 
 def read_velocity_data(path):
-    """
-    This functions takes names of different OpenFOAM velocity measurements and connect
+    """This functions takes names of different OpenFOAM velocity measurements and connect
     them into one file removing overlaps if any. All the probes must be in the same
     location, otherwise an error might showup.
 
@@ -404,8 +378,8 @@ def read_velocity_data(path):
     -------
     time, pressure
         Returns the velocity time and velocity data of the connected file.
-    """
 
+    """
     num_files = len(path)
     connected_time = []  # Connected array of time
     connected_U = []  # connected array of pressure.
@@ -442,8 +416,7 @@ def read_velocity_data(path):
 
 
 def read_velocity_probes(fileName):
-    """
-    Created on Wed May 16 14:31:42 2018
+    """Created on Wed May 16 14:31:42 2018
 
     Reads velocity probe data from OpenFOAM and return the probe location, time,
     and the velocity vector for each time step.
@@ -452,7 +425,7 @@ def read_velocity_probes(fileName):
     U = []
     time = []
 
-    with open(fileName, 'r') as f:
+    with open(fileName) as f:
         for line in f:
             if line.startswith('#'):
                 if line.startswith('# Probe'):
@@ -487,11 +460,7 @@ def read_velocity_probes(fileName):
 
 
 def calculate_length_scale(u, uav, dt, min_corr=0.0):
-    """
-    Calculates the length scale of a velocity time history given.
-
-    """
-
+    """Calculates the length scale of a velocity time history given."""
     u = u - np.mean(u)
 
     corr = signal.correlate(u, u, mode='full')
@@ -510,8 +479,7 @@ def calculate_length_scale(u, uav, dt, min_corr=0.0):
 
 
 def psd(x, dt, nseg):
-    """
-    Calculates the power spectral density of a given signal using the welch
+    """Calculates the power spectral density of a given signal using the welch
     method.
 
     Parameters
@@ -538,11 +506,10 @@ def psd(x, dt, nseg):
 
 
 class VelocityData:
-    """
-    A class that holds a velocity data and performs the following operations:
-            - mean velocity profile
-            - turbulence intensity profiles
-            - integral scale of turbulence profiles
+    """A class that holds a velocity data and performs the following operations:
+    - mean velocity profile
+    - turbulence intensity profiles
+    - integral scale of turbulence profiles
     """
 
     def __init__(
@@ -581,7 +548,7 @@ class VelocityData:
         if os.path.isdir(self.path):
             print('Reading from path : %s' % (self.path))
             time_names = os.listdir(self.path)
-            sorted_index = np.argsort(np.float_(time_names)).tolist()
+            sorted_index = np.argsort(np.float64(time_names)).tolist()
             file_names = []
 
             for i in range(len(sorted_index)):
@@ -690,8 +657,7 @@ class VelocityData:
 
 
 def copy_vtk_planes_and_order(input_path, output_path, field):
-    """
-    This code reads VTK sample plane data from OpenFOAM case directory and
+    """This code reads VTK sample plane data from OpenFOAM case directory and
     copies them into other directory with all vtks files ordered in their
     respective time sequence in one directory.
 
@@ -699,28 +665,25 @@ def copy_vtk_planes_and_order(input_path, output_path, field):
     ouput_path: path to write the vtk files in order
 
     """
-
     if not os.path.isdir(input_path):
-        print('Cannot find the path for: {}'.format(input_path))
+        print(f'Cannot find the path for: {input_path}')
         return
 
     if not os.path.isdir(output_path):
-        print('Cannot find the path for: {}'.format(output_path))
+        print(f'Cannot find the path for: {output_path}')
         return
 
-    print('Reading from path: {}'.format(input_path))
+    print(f'Reading from path: {input_path}')
     time_names = os.listdir(input_path)
-    times = np.float_(time_names)
+    times = np.float64(time_names)
     sorted_index = np.argsort(times).tolist()
 
     n_times = len(times)
 
-    print('\tNumber of time direcories: {} '.format(n_times))
-    print('\tTime step: {:.4f} s'.format(np.mean(np.diff(times))))
+    print(f'\tNumber of time direcories: {n_times} ')
+    print(f'\tTime step: {np.mean(np.diff(times)):.4f} s')
     print(
-        '\tTotal duration: {:.4f} s'.format(
-            times[sorted_index[-1]] - times[sorted_index[0]]
-        )
+        f'\tTotal duration: {times[sorted_index[-1]] - times[sorted_index[0]]:.4f} s'
     )
 
     for i in range(n_times):
@@ -728,13 +691,13 @@ def copy_vtk_planes_and_order(input_path, output_path, field):
         pathi = os.path.join(input_path, time_names[index])
         os.listdir(pathi)
 
-        new_name = '{}_T{:04d}.vtk'.format(field, i + 1)
+        new_name = f'{field}_T{i + 1:04d}.vtk'
         for f in os.listdir(pathi):
             if f.endswith('.vtk'):
                 new_path = os.path.join(output_path, new_name)
                 old_path = os.path.join(pathi, f)
                 shutil.copyfile(old_path, new_path)
-                print('Copied path: {}'.format(old_path))
+                print(f'Copied path: {old_path}')
 
 
 def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
@@ -1181,9 +1144,9 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):
     nseg = 5
     ncomp = 3
     ylabel = [
-        '$fS_{u}/\sigma^2_{u}$',
-        '$fS_{v}/\sigma^2_{v}$',
-        '$fS_{w}/\sigma^2_{w}$',
+        r'$fS_{u}/\sigma^2_{u}$',
+        r'$fS_{v}/\sigma^2_{v}$',
+        r'$fS_{w}/\sigma^2_{w}$',
     ]
 
     for i in range(n_spec):

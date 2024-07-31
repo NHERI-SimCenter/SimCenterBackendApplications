@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -38,14 +37,13 @@
 # Modified 'cb-cities' code provided by the Soga Research Group UC Berkeley
 # Dr. Stevan Gavrilovic
 
-import itertools
 import argparse
-import os, sys, json, posixpath
-import pandas as pd
+import json
+import os
+import posixpath
+
 import numpy as np
-
-from operator import itemgetter
-
+import pandas as pd
 from CBCitiesMethods import *
 
 
@@ -54,10 +52,10 @@ def main(node_info, pipe_info):
 
     print('Loading the node json file...')
 
-    with open(node_info, 'r') as f:
+    with open(node_info) as f:
         node_data = json.load(f)
 
-    with open(pipe_info, 'r') as f:
+    with open(pipe_info) as f:
         pipe_data = json.load(f)
 
     min_id = int(pipe_data[0]['id'])
@@ -74,7 +72,7 @@ def main(node_info, pipe_info):
         max_id = max(int(asst_id), max_id)
 
         # Open the AIM file
-        with open(AIM_file, 'r') as f:
+        with open(AIM_file) as f:
             pipe = AIM_data = json.load(f)
 
         allPipes.append(pipe)

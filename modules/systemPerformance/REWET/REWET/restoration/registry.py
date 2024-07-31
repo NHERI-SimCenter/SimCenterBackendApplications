@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Dec 26 03:22:21 2020
+"""Created on Sat Dec 26 03:22:21 2020
 
 @author: snaeimi
 """
 
-import pandas as pd
-import numpy as np
 import logging
 from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
 from restoration.restorationlog import RestorationLog
-from restoration.base import get_node_name
 
 logger = logging.getLogger(__name__)
 
@@ -482,7 +480,7 @@ class Registry:
     def addNodalDemandChange(self, node_name, demand1, demand2):
         # if self.settings['Virtual_node'] == False:
         if type(node_name) == str:
-            if not node_name in self._node_damage_table.index:
+            if node_name not in self._node_damage_table.index:
                 raise ValueError(repr(node_name) + ' is not in the node table')
         self._node_damage_table.loc[node_name, 'Demand1'] = demand1
         self._node_damage_table.loc[node_name, 'Demand2'] = demand2
@@ -492,8 +490,7 @@ class Registry:
         # self._node_damage_table.loc[node_name_vir, 'Demand2'] = demand2
 
     def addPipeDamageToRegistry(self, node_name, data):
-        """
-        Adds damage to pipe registry
+        """Adds damage to pipe registry
 
         Parameters
         ----------
@@ -651,14 +648,13 @@ class Registry:
                 res = res.append(temp)
             # elif len(temp)>1:
             # raise ValueError('Something wrong here')
-            else:
-                if iCheck:
-                    raise ValueError(
-                        'The element: '
-                        + repr(element_name)
-                        + ' does not exist in elemet type: '
-                        + repr(element_type)
-                    )
+            elif iCheck:
+                raise ValueError(
+                    'The element: '
+                    + repr(element_name)
+                    + ' does not exist in elemet type: '
+                    + repr(element_type)
+                )
 
         return res
 
@@ -910,15 +906,13 @@ class Registry:
         damage_table = self.getDamageData(element, iCopy=False)
         if col not in damage_table.columns:
             raise ValueError('Columns is not in damage table: ' + col)
-        if type(index) == list:
+        if type(index) == list or (
+            (index in damage_table.index and col in damage_table.columns)
+            or iCheck == True
+        ):
             damage_table.loc[index, col] = value
         else:
-            if (
-                index in damage_table.index and col in damage_table.columns
-            ) or iCheck == True:
-                damage_table.loc[index, col] = value
-            else:
-                raise ValueError(index)
+            raise ValueError(index)
 
     def setDamageDataByList(self, element, index_list, col, value, iCheck=False):
         if type(index_list) != list:
@@ -1212,8 +1206,7 @@ class Registry:
             self._reservoir_damage_table[attr] = def_data
 
     def iOccupied(self, node_name):
-        """
-        checks if the node is occuoied
+        """Checks if the node is occuoied
 
         Parameters
         ----------
@@ -1229,8 +1222,7 @@ class Registry:
         return node_name in self._occupancy.index
 
     def _getDamagedPipesRegistry(self):
-        """
-        Gets the whole damage registry. Not safe to be used outside the class.
+        """Gets the whole damage registry. Not safe to be used outside the class.
 
         Returns
         -------
@@ -1241,8 +1233,7 @@ class Registry:
         return self._pipe_node_damage_status
 
     def getNumberofDamagedNodes(self):
-        """
-        Gets numbers of Damaged locations. Counts two for broken pipes
+        """Gets numbers of Damaged locations. Counts two for broken pipes
 
         Returns
         -------
@@ -1253,8 +1244,7 @@ class Registry:
         return len(self._pipe_node_damage_status)
 
     def occupyNode(self, node_name, occupier_name):
-        """
-        Put adds node and its occupier in occupency list
+        """Put adds node and its occupier in occupency list
 
         Parameters
         ----------
@@ -1283,8 +1273,7 @@ class Registry:
         )
 
     def removeOccupancy(self, occupier_name):
-        """
-        Removes occupency in the node by occupier's name.
+        """Removes occupency in the node by occupier's name.
 
         Parameters
         ----------
@@ -1310,8 +1299,7 @@ class Registry:
         self._occupancy = self._occupancy.drop(ind)
 
     def whoOccupiesIn(self, node_name):
-        """
-        Gets name of the occupier
+        """Gets name of the occupier
 
         Parameters
         ----------
@@ -1327,8 +1315,7 @@ class Registry:
         return self._occupancy[node_name]
 
     def whereIsOccupiedByName(self, occupier_name):
-        """
-        Get's node(s) occupied by occupier
+        """Get's node(s) occupied by occupier
 
         Parameters
         ----------
@@ -1351,8 +1338,8 @@ class Registry:
             raise ValueError('there is no occupancy with this name')
 
     def getListofFreeRepairAgents(self):
-        """
-        MAYBE NOT NEEDED Gets a list of free agents. Not needed anymore.
+        """MAYBE NOT NEEDED Gets a list of free agents. Not needed anymore.
+
         Returns
         -------
         Free_RepairAgents : TYPE
@@ -1367,8 +1354,7 @@ class Registry:
         return Free_RepairAgents
 
     def coupleTwoBreakNodes(self, break_point_1_name, break_point_2_name):
-        """
-        Couples two nodes in registry for the time which we have a break.
+        """Couples two nodes in registry for the time which we have a break.
         PLEASE NOTE THAT THE FIRST NODE MUST BE TEH ONE CONNECTED TO THE
         MAIN(ORIGINAL) PIPE THAT IS BROKEN NOW.
 
@@ -1384,14 +1370,12 @@ class Registry:
         None.
 
         """
-
         self._pipe_break_node_coupling[break_point_1_name] = break_point_2_name
         self._pipe_break_node_coupling[break_point_2_name] = break_point_1_name
         self._break_point_attached_to_mainPipe.append(break_point_1_name)
 
     def getCoupledBreakNode(self, break_point_name):
-        """
-        Gets the coupled node given the first coupled node, and checks if the
+        """Gets the coupled node given the first coupled node, and checks if the
         given coupled node is connected to the main pipe.
 
         Parameters
@@ -1408,7 +1392,6 @@ class Registry:
             pipe
 
         """
-
         out1 = self._pipe_break_node_coupling[break_point_name]
         is_breakPoint_1_attacjedToMainPipe = (
             break_point_name in self._break_point_attached_to_mainPipe
@@ -1424,7 +1407,7 @@ class Registry:
             return False
         is_reminded = False
         for node_name in iter(damaged_nodes):
-            if not node_name in self._occupancy.index:
+            if node_name not in self._occupancy.index:
                 is_reminded = True
                 return is_reminded
         return is_reminded
@@ -1433,8 +1416,7 @@ class Registry:
         return self._pipe_break_node_coupling[node_name]
 
     def removeCoupledBreakNodes(self, break_point_name):
-        """
-        Removes tghe coupled
+        """Removes tghe coupled
 
         Parameters
         ----------
@@ -1467,7 +1449,7 @@ class Registry:
 
     def recordPipeDamageTable(self, stop_time):
         if self.settings['result_details'] == 'minimal':
-            return
+            return None
         if stop_time in self._pipe_damage_table_history:
             return ValueError('Time exists in pipe damage hostry: ' + str(stop_time))
         self._pipe_damage_table_history['stop_time'] = (

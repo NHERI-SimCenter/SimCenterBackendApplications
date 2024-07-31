@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -41,25 +40,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class GeoClawBathy:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     reading GeoClaw bathymetry into OpenFOAM in HydroUQ
 
     Methods
-    --------
+    -------
             creategeom: Create geometry and STL files
+
     """
 
     #############################################################
     def creategeom(self, data, path):
-        """
-        Creates the geometry for bathymetry
+        """Creates the geometry for bathymetry
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

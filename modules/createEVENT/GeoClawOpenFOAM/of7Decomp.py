@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -41,25 +40,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Decomp:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     parallelization for openfoam7.
 
     Methods
-    --------
+    -------
             decomptext: Get all the text for the decomposeParDict
+
     """
 
     #############################################################
     def decomptext(self, data):
-        """
-        Creates the necessary files for domain decomposition for openfoam7
+        """Creates the necessary files for domain decomposition for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -81,21 +79,19 @@ class of7Decomp:
 
     #############################################################
     def decompheader(self):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the decomposeparDict-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\tdecomposeParDict;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -105,15 +101,14 @@ FoamFile
 
     #############################################################
     def scripts(self, data, path):
-        """
-        Create the scripts for caserun.sh
+        """Create the scripts for caserun.sh
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where dakota.json file is located
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

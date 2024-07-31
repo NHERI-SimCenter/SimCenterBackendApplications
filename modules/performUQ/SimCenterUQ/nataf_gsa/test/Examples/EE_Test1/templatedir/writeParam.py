@@ -1,7 +1,5 @@
-import sys
 import os
-from subprocess import Popen, PIPE
-import subprocess
+import sys
 
 
 def main():
@@ -9,7 +7,7 @@ def main():
     paramsOut = sys.argv[2]
 
     if not os.path.isfile(paramsIn):
-        print('Input param file {} does not exist. Exiting...'.format(paramsIn))
+        print(f'Input param file {paramsIn} does not exist. Exiting...')
         sys.exit()
 
     outFILE = open(paramsOut, 'w')
@@ -25,7 +23,7 @@ def main():
             splitLine = line.split()
             nameRV = splitLine[1]
             valueRV = splitLine[3]
-            print('{} {}'.format(nameRV, valueRV), file=outFILE)
+            print(f'{nameRV} {valueRV}', file=outFILE)
 
     outFILE.close
     inFILE.close

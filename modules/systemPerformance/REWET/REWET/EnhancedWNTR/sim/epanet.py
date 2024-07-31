@@ -1,32 +1,30 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  1 17:09:25 2021
+"""Created on Tue Jun  1 17:09:25 2021
 
 @author: snaeimi
 """
 
-import logging
 import itertools
+import logging
+from collections import OrderedDict
+
 import numpy as np
 import scipy.sparse.csr
-from collections import OrderedDict
-from wntrfr.sim.core import WaterNetworkSimulator
 import wntrfr.epanet.io
-from ..epanet import toolkit
+from Report_Reading import Report_Reading
 from wntrfr.network.io import write_inpfile
+from wntrfr.network.model import LinkStatus
+from wntrfr.sim.core import _get_csr_data_index
 from wntrfr.sim.epanet import EpanetSimulator
 from wntrfr.sim.network_isolation import check_for_isolated_junctions, get_long_size
-from wntrfr.sim.core import _get_csr_data_index
 from wntrfr.utils.ordered_set import OrderedSet
-from wntrfr.network.model import LinkStatus
-from Report_Reading import Report_Reading
+
+from ..epanet import toolkit
 
 logger = logging.getLogger(__name__)
 
 
 class EpanetSimulator(EpanetSimulator):
-    """
-    Fast EPANET simulator class.
+    """Fast EPANET simulator class.
 
     Use the EPANET DLL to run an INP file as-is, and read the results from the
     binary output file. Multiple water quality simulations are still possible
@@ -140,8 +138,7 @@ class EpanetSimulator(EpanetSimulator):
         start_time=None,
         iModified=True,
     ):
-        """
-        Run the EPANET simulator.
+        """Run the EPANET simulator.
 
         Runs the EPANET simulator through the compiled toolkit DLL. Can use/save hydraulics
         to allow for separate WQ runs.
@@ -294,10 +291,8 @@ class EpanetSimulator(EpanetSimulator):
 
         if logger_level <= logging.DEBUG:
             if len(isolated_junctions) > 0 or len(isolated_links) > 0:
-                raise ValueError(
-                    'isolated junctions: {0}'.format(isolated_junctions)
-                )
-                logger.debug('isolated links: {0}'.format(isolated_links))
+                raise ValueError(f'isolated junctions: {isolated_junctions}')
+                logger.debug(f'isolated links: {isolated_links}')
 
         self._prev_isolated_junctions = isolated_junctions
         self._prev_isolated_links = isolated_links
@@ -448,7 +443,7 @@ class EpanetSimulator(EpanetSimulator):
         ndx_map = self._map_link_to_internal_graph_data_ndx
         for mgr in [self._presolve_controls, self._rules, self._postsolve_controls]:
             for obj, attr in mgr.get_changes():
-                if 'status' == attr:
+                if attr == 'status':
                     if obj.status == wntrfr.network.LinkStatus.closed:
                         ndx1, ndx2 = ndx_map[obj]
                         data[ndx1] = 0

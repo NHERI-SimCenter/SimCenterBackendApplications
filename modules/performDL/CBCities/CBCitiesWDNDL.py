@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -39,11 +38,13 @@
 # Dr. Stevan Gavrilovic
 
 import argparse
-import os, sys, json, posixpath
-import pandas as pd
-import numpy as np
-
+import json
+import posixpath
+import sys
 from time import gmtime, strftime
+
+import numpy as np
+import pandas as pd
 
 
 def log_msg(msg):
@@ -51,8 +52,6 @@ def log_msg(msg):
 
     print(formatted_msg)
 
-
-from operator import itemgetter
 
 from CBCitiesMethods import *
 
@@ -63,7 +62,7 @@ def run_DL_calc(aim_file_path, saveDir, output_name):
     print('Loading the pipeline json file...')
 
     # Open the AIM file
-    with open(aim_file_path, 'r') as f:
+    with open(aim_file_path) as f:
         pipe = AIM_data = json.load(f)
 
     add_failrate2pipe(pipe)

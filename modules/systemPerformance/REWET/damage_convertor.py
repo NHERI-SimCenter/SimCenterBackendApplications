@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
@@ -39,6 +38,7 @@
 
 import os
 from pathlib import Path
+
 import pandas as pd
 import preprocessorIO
 
@@ -46,8 +46,7 @@ CBIG_int = int(1e9)
 
 
 def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):
-    """
-    Creates REWET-style piep damage file.
+    """Creates REWET-style piep damage file.
 
     Parameters
     ----------
@@ -141,8 +140,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
 
 
 def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
-    """
-    Creates REWET-style node damage file.
+    """Creates REWET-style node damage file.
 
     Parameters
     ----------
@@ -201,8 +199,7 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
 
 
 def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
-    """
-     Creates REWET-style pump damage file.
+    """Creates REWET-style pump damage file.
 
     Parameters
     ----------
@@ -254,8 +251,7 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
 
 
 def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
-    """
-    Creates REWET-style Tank damage file.
+    """Creates REWET-style Tank damage file.
 
     Parameters
     ----------
@@ -268,6 +264,7 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
     -------
     tank_damage_list : Pandas Series
         REWET-style tank damage file.
+
     """
     tank_id_list = [key for key in tank_damage_data]
 
@@ -309,8 +306,7 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
 
 
 def findAndReadAIMFile(asset_id, asset_type, run_dir):
-    """
-    Finds and read the AIM file for an asset.
+    """Finds and read the AIM file for an asset.
 
     Parameters
     ----------
@@ -327,7 +323,6 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
         AIM file data as a dict.
 
     """
-
     file_path = Path(
         run_dir, asset_type, str(asset_id), 'templatedir', f'{asset_id}-AIM.json'
     )
@@ -336,8 +331,7 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
 
 
 def getPumpRetsoreTime(damage_state):
-    """
-    NOT USED! WE WILL GET IT FROM PELICUN
+    """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
     approach available in the future. If damage state is slight, the restore
@@ -357,7 +351,6 @@ def getPumpRetsoreTime(damage_state):
 
 
     """
-
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:
@@ -369,8 +362,7 @@ def getPumpRetsoreTime(damage_state):
 
 
 def getTankRetsoreTime(tank_type, damage_state):
-    """
-    NOT USED! WE WILL GET IT FROM PELICUN
+    """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
     approach available in the future. if damage state is slight, the restore
@@ -392,7 +384,6 @@ def getTankRetsoreTime(tank_type, damage_state):
 
 
     """
-
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
     elif damage_state == 2:
@@ -404,8 +395,7 @@ def getTankRetsoreTime(tank_type, damage_state):
 
 
 def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
-    """
-    Reads PELICUN damage files and create REWET-Style damage for all
+    """Reads PELICUN damage files and create REWET-Style damage for all
     WaterDistributionNetwork elements
 
     Parameters

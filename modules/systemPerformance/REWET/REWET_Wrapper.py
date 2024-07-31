@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
@@ -38,21 +37,19 @@
 # Sina Naeimi
 # Jinyan Zhao
 
-import os
 import argparse
-import random
-import string
 import importlib
 import json
-from pathlib import Path
-import pandas as pd
-import subprocess
-from shapely import geometry
+import os
+import random
+import string
 import sys
-
+from pathlib import Path
 
 import damage_convertor
+import pandas as pd
 import preprocessorIO
+from shapely import geometry
 
 # try:
 # import REWET
@@ -63,13 +60,10 @@ import preprocessorIO
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 # main_dir = this_dir.parent
 
-import wntrfr
 
 sys.path.insert(0, str(this_dir / 'REWET'))
-import Input.Settings as Settings
-from Result_Project import Project_Result
-
 from initial import Starter
+from Result_Project import Project_Result
 
 
 def createScnearioList(run_directory, scn_number):
@@ -107,8 +101,7 @@ def createScnearioList(run_directory, scn_number):
 
 
 def chooseARandomPreefix(damage_input_dir):
-    """
-    Choses a random prefix for sceranio and pipe, node, pump and tank damage
+    """Choses a random prefix for sceranio and pipe, node, pump and tank damage
     file. The is important to find and unused prefix so if this script is being
     ran in parallel, then files are not being overwritten.
 
@@ -123,7 +116,6 @@ def chooseARandomPreefix(damage_input_dir):
         The Chosen random prefix string.
 
     """
-
     number_of_prefix = 4
     dir_list = os.listdir(damage_input_dir)
 
@@ -167,8 +159,7 @@ def chooseARandomPreefix(damage_input_dir):
 
 
 def getDLFileName(run_dir, dl_file_path, scn_number):
-    """
-    If dl_file_path is not given, the path is acquired from rwhale input data.
+    """If dl_file_path is not given, the path is acquired from rwhale input data.
 
     Parameters
     ----------
@@ -452,7 +443,6 @@ if __name__ == '__main__':
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found and argParser.par:
-        import mpi4py
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -463,7 +453,7 @@ if __name__ == '__main__':
             numP = 1
             procID = 0
             print(
-                f'Parallel running is not possible. Numebr of CPUS are are not enough.'
+                'Parallel running is not possible. Numebr of CPUS are are not enough.'
             )
         else:
             doParallel = True
@@ -513,7 +503,7 @@ if __name__ == '__main__':
     create_path(damage_save_path_hir)
 
     if parser_data.number == None:
-        scneario_list_path = damage_save_path / f'scenario_table.xlsx'
+        scneario_list_path = damage_save_path / 'scenario_table.xlsx'
     else:
         scneario_list_path = (
             damage_save_path / f'scenario_table_{parser_data.number}.xlsx'
@@ -537,7 +527,7 @@ if __name__ == '__main__':
         scenario_table = preprocessorIO.create_scneario_table()
 
         if parser_data.number == None:
-            Damage_file_name = list(range(0, number_of_realization))
+            Damage_file_name = list(range(number_of_realization))
 
         else:
             Damage_file_name.append(parser_data.number)
@@ -594,7 +584,7 @@ if __name__ == '__main__':
     )
 
     system_std_out = sys.stdout
-    with open(rewet_log_path, 'wt') as log_file:
+    with open(rewet_log_path, 'w') as log_file:
         sys.stdout = log_file
         REWET_starter = Starter()
         REWET_starter.run(settings_json_file_path)
@@ -635,7 +625,7 @@ if __name__ == '__main__':
         scneario_size = len(p.project.scenario_list.index)
         # create a dictionary with keys for each scenario number (in int) and keys for a BSC metric (None)
         temp_realization_in_each_time_series = dict(
-            zip(range(0, scneario_size), [None] * scneario_size)
+            zip(range(scneario_size), [None] * scneario_size)
         )
         # create a dictionary for stroing tiems series, each BSC metric (requested_result) is a key and each key has the dictioanry created in line before
         time_series_result = dict(
@@ -681,7 +671,7 @@ if __name__ == '__main__':
                         consistency_time_window=consistency_time_window,
                         sum_time=True,
                     )
-                    if res_agg.get(single_requested_result, None) is None:
+                    if res_agg.get(single_requested_result) is None:
                         res_agg[single_requested_result] = res[
                             single_requested_result
                         ].to_dict()
@@ -705,7 +695,7 @@ if __name__ == '__main__':
                 / cur_json_file_name
             )
 
-            with open(cur_json_file_path, 'rt') as f:
+            with open(cur_json_file_path) as f:
                 json_data = json.load(f)
 
             for single_requested_result in requested_result:
@@ -730,7 +720,7 @@ if __name__ == '__main__':
                     junction_json_data
                 )
 
-            with open(cur_json_file_path, 'wt') as f:
+            with open(cur_json_file_path, 'w') as f:
                 json_data = json.dump(json_data, f, indent=2)
 
         res_agg_mean = dict()
@@ -778,7 +768,7 @@ if __name__ == '__main__':
                 R2Dres = dict()
                 asset_name = sub_asset_id_to_name[WDNtype][id]
                 for single_requested_result in requested_result:
-                    if not asset_name in res_agg_mean[single_requested_result].index:
+                    if asset_name not in res_agg_mean[single_requested_result].index:
                         continue
                     R2Dres_key_mean = f'R2Dres_mean_{single_requested_result}'
                     R2Dres_key_std = f'R2Dres_std_{single_requested_result}'
@@ -819,7 +809,7 @@ if __name__ == '__main__':
     }
 
     for single_requested_result in requested_result:
-        for i in range(0, scneario_size):
+        for i in range(scneario_size):
             time_series_result_struc['Result'][single_requested_result]['Data'][
                 i
             ] = time_series_result[single_requested_result][i].to_dict()

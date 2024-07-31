@@ -1,28 +1,15 @@
-"""
-This script create blockMeshDict for OpenFoam given vertices and boundary type.
-
+"""This script create blockMeshDict for OpenFoam given vertices and boundary type.
 
 code creates pressure probes for the main simulation. Three types of
 probes are created.
 
 """
 
-import sys
-import os
-import subprocess
 import json
-import stat
-import shutil
-import numpy as np
+import sys
+
 import CWE as cwe
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import numpy as np
-import CWE as cwe
-from scipy import signal
-from scipy.interpolate import interp1d
-from scipy.interpolate import UnivariateSpline
-from scipy import stats
 
 
 def write_wind_profiles(case_path):
@@ -65,7 +52,7 @@ def write_wind_profiles(case_path):
     Suhout = np.asarray(Suh, dtype=np.float32).T
 
     write_precision = 6
-    fmt = '%.{}e'.format(write_precision)
+    fmt = f'%.{write_precision}e'
 
     prof_path = case_path + '/constant/simCenter/output/windProfiles.txt'
     Suh_path = case_path + '/constant/simCenter/output/Suh.txt'
@@ -91,7 +78,7 @@ def write_wind_loads(case_path):
     )
 
     write_precision = 6
-    fmt = '%.{}e'.format(write_precision)
+    fmt = f'%.{write_precision}e'
 
     out_base_path = case_path + '/constant/simCenter/output/baseForces.txt'
 

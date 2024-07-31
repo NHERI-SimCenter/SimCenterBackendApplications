@@ -1,4 +1,6 @@
-import os, sys, argparse, posixpath, ntpath, json
+import argparse
+import json
+import sys
 
 
 def create_building_files(output_file, building_source_file, min_id, max_id):
@@ -9,7 +11,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
             min_id = max_id
             max_id = tmp
 
-    with open(building_source_file, 'r', encoding='utf-8') as f:
+    with open(building_source_file, encoding='utf-8') as f:
         building_source_list = json.load(f)['features']
 
     buildings_array = []
@@ -33,7 +35,7 @@ def create_building_files(output_file, building_source_file, min_id, max_id):
             ),
         }
 
-        BIM_file_name = '{}-BIM.json'.format(bldg_id)
+        BIM_file_name = f'{bldg_id}-BIM.json'
 
         with open(BIM_file_name, 'w', encoding='utf-8') as f:
             json.dump(BIM_i, f, indent=2)

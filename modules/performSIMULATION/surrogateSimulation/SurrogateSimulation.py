@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,13 +38,12 @@
 # Joanna J. Zou
 #
 
-import os, sys
-import argparse, json
-import importlib
+import argparse
+import json
+import os
 import sys
-import numpy as np
 
-from pathlib import Path
+import numpy as np
 
 # from simcenter_common import *
 
@@ -64,7 +62,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):
     # the -getRV flag
     # import openseespy.opensees as ops
 
-    with open(AIM_input_path, 'r', encoding='utf-8') as f:
+    with open(AIM_input_path, encoding='utf-8') as f:
         root_AIM = json.load(f)
     # root_GI = root_AIM['GeneralInformation']
 
@@ -124,7 +122,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):
 
 
 def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
-    with open(AIM_input_path, 'r', encoding='utf-8') as f:
+    with open(AIM_input_path, encoding='utf-8') as f:
         root_AIM = json.load(f)
 
     if newEDP_input_path == None:
@@ -135,7 +133,7 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
     # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
     surrogate_path = os.path.join(curpath, root_SAM['ApplicationData']['mainScript'])
 
-    with open(surrogate_path, 'r', encoding='utf-8') as f:
+    with open(surrogate_path, encoding='utf-8') as f:
         surrogate_model = json.load(f)
 
     #
@@ -159,7 +157,7 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):
     # Read EDP file, mapping between EDPnames and EDP.json and write scalar_data
     #
 
-    with open(EDP_input_path, 'r', encoding='utf-8') as f:
+    with open(EDP_input_path, encoding='utf-8') as f:
         rootEDP = json.load(f)
 
     numEvents = len(rootEDP['EngineeringDemandParameters'])

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Node_Damage_Model_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -10,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Node_Damage_Model(object):
+class Ui_Node_Damage_Model:
     def setupUi(self, Node_Damage_Model):
         Node_Damage_Model.setObjectName('Node_Damage_Model')
         Node_Damage_Model.resize(396, 296)
@@ -214,9 +212,6 @@ class Ui_Node_Damage_Model(object):
         self.label_22.setText(_translate('Node_Damage_Model', 'FF2'))
         self.label_23.setText(_translate('Node_Damage_Model', 'EE2'))
         self.help_button.setText(_translate('Node_Damage_Model', 'Help'))
-
-
-from . import REWET_Resource_rc
 
 
 if __name__ == '__main__':

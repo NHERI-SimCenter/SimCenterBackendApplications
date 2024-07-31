@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
@@ -42,23 +41,21 @@
 # Sang-ri Yi
 # Frank Mckenna
 #
-import shutil
-import os
-import sys
 import json
-from scipy.stats import lognorm, norm
-import numpy as np
-from multiprocessing import Pool
-from PLoM.PLoM import *
-import pandas as pd
+import os
+import shutil
 import subprocess
+import sys
+
+import numpy as np
+import pandas as pd
+from PLoM.PLoM import *
 
 # ==========================================================================================
 
 
 class runPLoM:
-    """
-    runPLoM: class for run a PLoM job
+    """runPLoM: class for run a PLoM job
     methods:
         __init__: initialization
         _create_variables: create variable name lists
@@ -79,8 +76,7 @@ class runPLoM:
         input_file,
         workflow_driver,
     ):
-        """
-        __init__
+        """__init__
         input:
             work_dir: working directory
             run_type: job type
@@ -88,7 +84,6 @@ class runPLoM:
             job_config: configuration (dtype = dict)
             errlog: error log object
         """
-
         # read inputs
         self.work_dir = work_dir
         self.run_type = run_type
@@ -151,8 +146,7 @@ class runPLoM:
             self.errlog.exit(msg)
 
     def _run_simulation(self):
-        """
-        _run_simulation: running simulation to get training data
+        """_run_simulation: running simulation to get training data
         input:
             job_config: job configuration dictionary
         output:
@@ -204,7 +198,7 @@ class runPLoM:
 
         # write a new dakota.json for forward propogation
         ## KZ modified 0331
-        with open(self.input_file, 'r', encoding='utf-8') as f:
+        with open(self.input_file, encoding='utf-8') as f:
             tmp = json.load(f)
         tmp['UQ']['uqType'] = 'Forward Propagation'
         tmp['UQ']['parallelExecution'] = True
@@ -286,7 +280,7 @@ class runPLoM:
         if os.path.exists(os.path.join(run_dir, 'IM.csv')):
             df_IM = pd.read_csv(os.path.join(run_dir, 'IM.csv'), index_col=None)
         else:
-            msg = 'runPLoM._prepare_training_data: no IM.csv in {}.'.format(run_dir)
+            msg = f'runPLoM._prepare_training_data: no IM.csv in {run_dir}.'
             print(msg)
 
         # load response.csv if exists
@@ -296,16 +290,13 @@ class runPLoM:
                 os.path.join(run_dir, 'response.csv'), index_col=None
             )
         else:
-            msg = 'runPLoM._prepare_training_data: response.csv not found in {}.'.format(
-                run_dir
-            )
+            msg = f'runPLoM._prepare_training_data: response.csv not found in {run_dir}.'
             self.errlog.exit(msg)
 
         # read BIM to get RV names
         # KZ modified 0331
         with open(
             os.path.join(run_dir, 'templatedir', self.input_file),
-            'r',
             encoding='utf-8',
         ) as f:
             tmp = json.load(f)
@@ -415,8 +406,7 @@ class runPLoM:
         im_collector.to_csv('IM.csv', index=False)
 
     def _create_variables(self, training_data):
-        """
-        create_variables: creating X and Y variables
+        """create_variables: creating X and Y variables
         input:
             training_data: training data source
         output:
@@ -425,7 +415,6 @@ class runPLoM:
             rv_name: random variable name (X data)
             g_name: variable name (Y data)
         """
-
         job_config = self.job_config
 
         # initialization
@@ -480,14 +469,12 @@ class runPLoM:
             self.multipleEvent = None
 
     def _parse_plom_parameters(self, surrogateInfo):
-        """
-        _parse_plom_parameters: parse PLoM parameters from surrogateInfo
+        """_parse_plom_parameters: parse PLoM parameters from surrogateInfo
         input:
             surrogateInfo: surrogate information dictionary
         output:
             run_flag: 0 - sucess, 1: failure
         """
-
         run_flag = 0
         try:
             self.n_mc = int(surrogateInfo['newSampleRatio'])
@@ -510,9 +497,7 @@ class runPLoM:
                     )
                     if not os.path.isfile(self.smootherKDE_file):
                         # not found the file
-                        msg = 'Error finding user-defined function file for KDE: {}.'.format(
-                            self.smootherKDE_file
-                        )
+                        msg = f'Error finding user-defined function file for KDE: {self.smootherKDE_file}.'
                         errlog.exit(msg)
                 else:
                     # KZ, 07/24: missing user-defined file
@@ -542,9 +527,7 @@ class runPLoM:
                     )
                     if not os.path.isfile(self.kdeTolerance_file):
                         # not found the file
-                        msg = 'Error finding user-defined function file for KDE: {}.'.format(
-                            self.kdeTolerance_file
-                        )
+                        msg = f'Error finding user-defined function file for KDE: {self.kdeTolerance_file}.'
                         errlog.exit(msg)
                 else:
                     # KZ, 07/24: missing user-defined file
@@ -579,14 +562,12 @@ class runPLoM:
         return run_flag
 
     def _set_up_parallel(self):
-        """
-        _set_up_parallel: set up modules and variables for parallel jobs
+        """_set_up_parallel: set up modules and variables for parallel jobs
         input:
             none
         output:
             run_flag: 0 - sucess, 1 - failure
         """
-
         run_flag = 0
         try:
             if self.run_type.lower() == 'runninglocal':
@@ -611,8 +592,7 @@ class runPLoM:
         return run_flag
 
     def _load_variables(self, do_sampling, do_simulation):
-        """
-        _load_variables: load variables
+        """_load_variables: load variables
         input:
             do_sampling: sampling flag
             do_simulation: simulation flag
@@ -631,9 +611,7 @@ class runPLoM:
             print('X = ', X)
             print(X.columns)
             if len(X.columns) != self.x_dim:
-                msg = 'Error importing input data: Number of dimension inconsistent: have {} RV(s) but {} column(s).'.format(
-                    self.x_dim, len(X.columns)
-                )
+                msg = f'Error importing input data: Number of dimension inconsistent: have {self.x_dim} RV(s) but {len(X.columns)} column(s).'
                 errlog.exit(msg)
             if self.logTransform:
                 X = np.log(X)
@@ -643,17 +621,13 @@ class runPLoM:
         else:
             Y = read_txt(self.outData, self.errlog)
             if Y.shape[1] != self.y_dim:
-                msg = 'Error importing input data: Number of dimension inconsistent: have {} QoI(s) but {} column(s).'.format(
-                    self.y_dim, len(Y.columns)
-                )
+                msg = f'Error importing input data: Number of dimension inconsistent: have {self.y_dim} QoI(s) but {len(Y.columns)} column(s).'
                 errlog.exit(msg)
             if self.logTransform:
                 Y = np.log(Y)
 
             if X.shape[0] != Y.shape[0]:
-                msg = 'Warning importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(
-                    len(X.columns), len(Y.columns)
-                )
+                msg = f'Warning importing input data: numbers of samples of inputs ({len(X.columns)}) and outputs ({len(Y.columns)}) are inconsistent'
                 print(msg)
 
             n_samp = Y.shape[0]
@@ -973,9 +947,9 @@ def read_txt(text_dir, errlog):
     return df_X
 
 
-class errorLog(object):
+class errorLog:
     def __init__(self, work_dir):
-        self.file = open('{}/dakota.err'.format(work_dir), 'w')
+        self.file = open(f'{work_dir}/dakota.err', 'w')
 
     def exit(self, msg):
         print(msg)
@@ -985,14 +959,12 @@ class errorLog(object):
 
 
 def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
-    """
-    build_surrogate: built surrogate model
+    """build_surrogate: built surrogate model
     input:
         work_dir: working directory
         run_type: job type
         os_type: operating system type
     """
-
     # t_total = time.process_time()
     # default filename
     filename = 'PLoM_Model'
@@ -1036,7 +1008,7 @@ if __name__ == '__main__':
     inputArgs = sys.argv
     # working diretory
     work_dir = inputArgs[1].replace(os.sep, '/')
-    print('work_dir = {}'.format(work_dir))
+    print(f'work_dir = {work_dir}')
     # print the work_dir
     errlog = errorLog(work_dir)
     # job type
@@ -1047,7 +1019,7 @@ if __name__ == '__main__':
     result_file = 'results.out'
     # input file name
     input_file = os.path.basename(inputArgs[2])
-    print('input_file = {}'.format(input_file))
+    print(f'input_file = {input_file}')
     # workflowDriver
     workflow_driver = inputArgs[3]
     # start build the surrogate

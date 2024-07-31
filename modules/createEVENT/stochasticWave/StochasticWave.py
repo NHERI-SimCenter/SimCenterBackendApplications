@@ -1,29 +1,14 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-import os, sys
-import re
-import json
 import argparse
-
-from fractions import Fraction
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+import json
+import re
 
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.tools.colors import python_colors
-from welib.hydro.wavekin import *
 from welib.hydro.morison import *
-
-
-import Ex1_WaveKinematics
-import Ex2_Jonswap_spectrum
-import Ex3_WaveTimeSeries
-import Ex4_WaveLoads
+from welib.hydro.wavekin import *
 
 
 class FloorForces:
@@ -42,14 +27,14 @@ class FloorForces:
             # prepend zeros to the list to account for the timeSeries transient analysis req in OpenSees
             prependZero = False
             if prependZero:
-                self.X.append(float(0.0))
-                self.Y.append(float(0.0))
-                self.Z.append(float(0.0))
+                self.X.append(0.0)
+                self.Y.append(0.0)
+                self.Z.append(0.0)
 
             # Read in forces.[out or evt] file and add to EVENT.json
             # now using intermediary forces.evt for output of preceeding Python calcs,
             # prevents confusion with forces.out made by FEM tab
-            with open('forces.evt', 'r') as file:
+            with open('forces.evt') as file:
                 print('Reading forces from forces.evt to EVENT.json')
                 lines = file.readlines()
                 j = 0
@@ -72,8 +57,8 @@ class FloorForces:
 
                         for k in range(len(clean_line)):
                             self.X.append(float(clean_line[k]))
-                            self.Y.append(float(0.0))
-                            self.Z.append(float(0.0))
+                            self.Y.append(0.0)
+                            self.Z.append(0.0)
                     j = j + 1
 
                 # must not have empty lists for max and min
@@ -112,20 +97,16 @@ class FloorForces:
 
 
 def directionToDof(direction):
-    """
-    Converts direction to degree of freedom
-    """
+    """Converts direction to degree of freedom"""
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}
 
     return directioMap[direction]
 
 
 def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
-    """
-    Add force (one component) time series and pattern in the event file
+    """Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """
-
     seriesName = '1'
     patternName = '1'
     seriesName = 'WindForceSeries_' + str(floor) + direction
@@ -160,9 +141,7 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
 
 
 def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):
-    """
-    This method writes the EVENT.json file
-    """
+    """This method writes the EVENT.json file"""
     # Adding floor forces
     patternsArray = []
     timeSeriesArray = []
@@ -209,7 +188,7 @@ def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):
 
 def GetFloorsCount(BIMFilePath):
     filePath = BIMFilePath
-    with open(filePath, 'r', encoding='utf-8') as file:
+    with open(filePath, encoding='utf-8') as file:
         bim = json.load(file)
     file.close
 

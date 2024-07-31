@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -39,32 +38,31 @@ import os
 # Hydro-UQ utilities class
 ####################################################################
 class hydroUtils:
-    """
-    This class includes all the general utilities that are
+    """This class includes all the general utilities that are
     required for the Hydro-UQ.
 
     Methods
-    --------
+    -------
             extract: Extracts an element from a nested json
             extract_element_from_json: Extracts an element from a nested json
             hydrolog: Initializes the log file
             general_header: Creates the header for the Hydro-UQ files
+
     """
 
     #############################################################
     def extract(self, obj, path, ind, arr):
-        """
-        Extracts an element from a nested dictionary
+        """Extracts an element from a nested dictionary
         along a specified path and returns a list.
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 obj: A dict - input dictionary
                 path: A list - list of strings that form the JSON path
                 ind: An int - starting index
                 arr: A list - output list
-        """
 
+        """
         key = path[ind]
         if ind + 1 < len(path):
             if isinstance(obj, dict):
@@ -96,18 +94,17 @@ class hydroUtils:
 
     #############################################################
     def extract_element_from_json(self, obj, path):
-        """
-        Extracts an element from a nested dictionary or
+        """Extracts an element from a nested dictionary or
         a list of nested dictionaries along a specified path.
         If the input is a dictionary, a list is returned.
         If the input is a list of dictionary, a list of lists is returned.
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 obj: A list or dict - input dictionary or list of dictionaries
                 path: A list - list of strings that form the path to the desired element
-        """
 
+        """
         if isinstance(obj, dict):
             return self.extract(obj, path, 0, [])
         elif isinstance(obj, list):
@@ -118,35 +115,31 @@ class hydroUtils:
 
     #############################################################
     def general_header(self):
-        """
-        Used to create a general header for Hydro-UQ related files
+        """Used to create a general header for Hydro-UQ related files
 
         Variables
         -----------
                 header: Stores the general header for the Hydro-UQ files
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H  |
 |	   | Y  | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D  | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R  | Version: 1.00
 |	   | O  |
-\*---------------------------------------------------------------------------*/ \n\n"""
+\\*---------------------------------------------------------------------------*/ \n\n"""
 
         return header
 
     ####################################################################
     def of7header(self, OFclass, location, filename):
-        """
-        Method to create a header for the input dictionaries.
+        """Method to create a header for the input dictionaries.
 
         Variables
         -----------
                 header: FileID for the file being created
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = rf"""/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
@@ -157,31 +150,28 @@ FoamFile
 {{
 	version   2.0;
 	format	ascii;
-	class	 {};
-	location  "{}";
-	object	{};
+	class	 {OFclass};
+	location  "{location}";
+	object	{filename};
 }}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n""".format(
-            OFclass, location, filename
-        )
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
 
         return header
 
     #############################################################
     def hydrolog(self, projname, fipath):
-        """
-        Used to initialize the log file for the Hydro-UQ program
+        """Used to initialize the log file for the Hydro-UQ program
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 projname: Name of the project as given by the user
                 fipath: Path where the log file needs to be created
 
         Variables
         -----------
                 flog: File pointer to the log file
-        """
 
+        """
         # Open a log file to write the outputs
         # Use project name for the log file
         # If no project name is specified, call it Untitled
@@ -196,15 +186,13 @@ FoamFile
 
     #############################################################
     def getlist(self, data):
-        """
-        Used to get the float from a list of negative string
+        """Used to get the float from a list of negative string
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 userlist: Name of the project as given by the user
 
         """
-
         # results = []
 
         # for line in data:

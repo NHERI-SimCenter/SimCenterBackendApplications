@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,24 +38,17 @@
 #
 
 import os
-import subprocess
-import time
-import glob
-import re
-import shutil
 import sys
 from pathlib import Path
 
 R2D = True
 if not R2D:
-    from selenium import webdriver
-import json
-import random
+    pass
+import copy
+import csv
+
 import numpy as np
 import pandas as pd
-import zipfile
-import csv
-import copy
 
 
 class GM_Selector:
@@ -179,7 +171,7 @@ def select_ground_motion(
                     }
                 )
             else:
-                im_loc_tag.append(im_map.get(cur_im, None))
+                im_loc_tag.append(im_map.get(cur_im))
                 gmdb_im_dict.update(
                     {
                         cur_im: [
@@ -384,7 +376,7 @@ def readNGAWest2record(ngaW2FilePath):
                 series.extend([float(value) for value in line.split()])
             elif("NPTS=" in line):
                 # sampling rate
-                dt = float(re.match(r"NPTS=.+, DT=\s+([0-9\.]+)\s+SEC", line).group(1))
+                dt = float(re.match(r"NPTS=.+, DT=\\s+([0-9\\.]+)\\s+SEC", line).group(1))
                 data_flag = True
     # return
     return series, dt

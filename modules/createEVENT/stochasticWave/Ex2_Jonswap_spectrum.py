@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 
-"""
-Plot the JONSWAP spectrum for a given sea state
-"""
+"""Plot the JONSWAP spectrum for a given sea state"""
 
-from __future__ import print_function
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from fractions import Fraction
-import matplotlib as mpl
-import os, sys
-import re
-import json
-import argparse
+import numpy as np
 
 # Local
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.tools.colors import python_colors
-from welib.hydro.wavekin import *
 from welib.hydro.morison import *
 from welib.hydro.spectra import jonswap
-
+from welib.hydro.wavekin import *
 
 # --- Parameters
 t = np.arange(0, 3600.1, 1)  # time vector  [s]

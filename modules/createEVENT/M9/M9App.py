@@ -1,9 +1,9 @@
 # %%
-import os
-from subprocess import PIPE, run
 import json
-from datetime import datetime
+import os
 import time
+from datetime import datetime
+from subprocess import PIPE, run
 
 # change the directory to the current directory
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -15,14 +15,14 @@ def call(command):
     command = command.split()
     command.append('-f')
     command.append('json')
-    result = run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    result = run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)
     result = json.loads(result.stdout)
     return result
 
 
 # %%
 def Submit_tapis_job():
-    with open('TapisFiles/information.json', 'r') as file:
+    with open('TapisFiles/information.json') as file:
         information = json.load(file)
     file.close()
 
@@ -118,7 +118,7 @@ def Submit_tapis_job():
     else:
         command = f'tapis files download {archivePath}/Events/ -W {savingDirectory}/'
         command = command.split()
-        run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        run(command, stdout=PIPE, stderr=PIPE, text=True, check=False)
 
     return res
 

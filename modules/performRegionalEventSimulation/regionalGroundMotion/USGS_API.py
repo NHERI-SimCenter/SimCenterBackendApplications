@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,8 +37,11 @@
 # Kuanshi Zhong
 #
 
-import os, requests, json
+import json
+import os
+
 import numpy as np
+import requests
 
 
 class USGS_HazardCurve:
@@ -62,18 +64,14 @@ class USGS_HazardCurve:
             self.edition = self._check_edition(edition)
         else:
             print(
-                'USGS_HazardCurve.__init__: edition {} is not supported by USGS.'.format(
-                    edition
-                )
+                f'USGS_HazardCurve.__init__: edition {edition} is not supported by USGS.'
             )
             return
 
         query_region = self._get_region(longitude, latitude)
         if query_region is None:
             print(
-                'USGS_HazardCurve.__init__: site (lon, lat) = ({},{}) is not supported.'.format(
-                    longitude, latitude
-                )
+                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is not supported.'
             )
             return
         else:
@@ -81,20 +79,14 @@ class USGS_HazardCurve:
             self.latitude = latitude
             self.region = query_region
             print(
-                'USGS_HazardCurve.__init__: site (lon, lat) = ({},{}) is found in USGS region {}.'.format(
-                    longitude, latitude, self.region
-                )
+                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is found in USGS region {self.region}.'
             )
 
         if self._check_region(self.region):
-            print(
-                'USGS_HazardCurve.__init__: region {} is set up.'.format(self.region)
-            )
+            print(f'USGS_HazardCurve.__init__: region {self.region} is set up.')
         else:
             print(
-                'USGS_HazardCurve.__init__: region {} is not supported by edition {}.'.format(
-                    self.region, self.edition
-                )
+                f'USGS_HazardCurve.__init__: region {self.region} is not supported by edition {self.edition}.'
             )
             return
 
@@ -102,16 +94,14 @@ class USGS_HazardCurve:
             self.vs30 = self._check_vs30(vs30)
         else:
             print(
-                'USGS_HazardCurve.__init__: vs30 {} is not supported by edition {} and reigon {}.'.format(
-                    vs30, self.edition, self.region
-                )
+                f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and reigon {self.region}.'
             )
             return
 
         if self._check_imt(imt):
             self.imt = imt
         else:
-            print('USGS_HazardCurve.__init__: imt {} is not supported.'.format(imt))
+            print(f'USGS_HazardCurve.__init__: imt {imt} is not supported.')
             return
 
         self.tag = tag
@@ -123,7 +113,7 @@ class USGS_HazardCurve:
         cur_path = os.path.dirname(os.path.abspath(__file__))
         config_file = os.path.join(cur_path, 'lib', 'USGS_HazardCurveConfig.json')
         try:
-            with open(config_file, 'r') as f:
+            with open(config_file) as f:
                 self.config = json.load(f)
             return True
         except:
@@ -135,20 +125,17 @@ class USGS_HazardCurve:
         ed_list = self.config.get('parameters').get('edition').get('values')
         self.avail_editions = [x.get('value') for x in ed_list]
         print(
-            'USGS_HazardCurve._check_edition: available editions: {}'.format(
-                self.avail_editions
-            )
+            f'USGS_HazardCurve._check_edition: available editions: {self.avail_editions}'
         )
 
         # check
         if edition in self.avail_editions:
             return edition
+        elif auto_correction:
+            edition = self.avail_editions[0]
+            return edition
         else:
-            if auto_correction:
-                edition = self.avail_editions[0]
-                return edition
-            else:
-                return False
+            return False
 
     def _get_region(self, long, lat):
         self.all_regions = [
@@ -249,16 +236,9 @@ class USGS_HazardCurve:
 
         for cur_imt in self.imt_list:
             # set url
-            usgs_url = 'https://earthquake.usgs.gov/nshmp-haz-ws/hazard/{}/{}/{}/{}/{}/{}'.format(
-                self.edition,
-                self.region,
-                self.longitude,
-                self.latitude,
-                cur_imt,
-                self.vs30,
-            )
+            usgs_url = f'https://earthquake.usgs.gov/nshmp-haz-ws/hazard/{self.edition}/{self.region}/{self.longitude}/{self.latitude}/{cur_imt}/{self.vs30}'
 
-            print('USGS_HazardCurve.fetch_url: {}.\n'.format(usgs_url))
+            print(f'USGS_HazardCurve.fetch_url: {usgs_url}.\n')
             # request
             res = requests.get(usgs_url)
             if res.status_code == 200:
@@ -271,10 +251,9 @@ class USGS_HazardCurve:
                     if res.status_code == 200:
                         self.res_json.append(res.json())
                         return True
-                else:
-                    self.res_json.append(None)
-                    print('USGS_HazardCurve.fetch_url: cannot get the data')
-                    return False
+                self.res_json.append(None)
+                print('USGS_HazardCurve.fetch_url: cannot get the data')
+                return False
 
         return True
 

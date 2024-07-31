@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -39,13 +38,13 @@
 # Dr. Stevan Gavrilovic
 
 
-from scipy.spatial import cKDTree
 import itertools
-import os, sys, json, posixpath
-import pandas as pd
-import numpy as np
-
+import posixpath
 from operator import itemgetter
+
+import numpy as np
+import pandas as pd
+from scipy.spatial import cKDTree
 
 
 def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):

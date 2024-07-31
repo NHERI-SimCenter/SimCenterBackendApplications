@@ -3,7 +3,6 @@
 # written: fmk, adamzs 01/18
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -20,7 +19,7 @@ def process_results(inputArgs):
     # process output file "node.out" for nodal displacements
     #
 
-    with open('node.out', 'rt') as inFile:
+    with open('node.out') as inFile:
         line = inFile.readline()
         line = inFile.readline()
         line = inFile.readline()

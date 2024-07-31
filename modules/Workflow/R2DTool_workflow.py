@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -41,15 +40,16 @@
 # Michael Gardner
 # Chaofeng Wang
 
-import sys, os, json
 import argparse
 import json
+import os
+import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
-from whale.main import log_msg, log_div
+from whale.main import log_div, log_msg
 
 
 def main(
@@ -64,7 +64,7 @@ def main(
     log_file,
 ):
     # initialize the log file
-    with open(input_file, 'r') as f:
+    with open(input_file) as f:
         inputs = json.load(f)
     if working_dir is not None:
         runDir = working_dir
@@ -127,7 +127,7 @@ def main(
     WF.perform_regional_mapping(building_file)
 
     # TODO: not elegant code, fix later
-    with open(WF.building_file_path, 'r') as f:
+    with open(WF.building_file_path) as f:
         bldg_data = json.load(f)
 
     for bldg in bldg_data:  # [:1]:

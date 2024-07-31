@@ -1,5 +1,4 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
 """
@@ -9,19 +8,19 @@ import os
 import sys
 import time
 from typing import TextIO
-import numpy as np
 
+import numpy as np
+from calibration_utilities import (
+    CalDataPreparer,
+    CovarianceMatrixPreparer,
+    DataTransformer,
+    LogLikelihoodHandler,
+    createLogFile,
+    make_distributions,
+    syncLogFile,
+)
 from parseData import parseDataFunction
 from runTMCMC import run_TMCMC
-from calibration_utilities import (
-    CovarianceMatrixPreparer,
-    CalDataPreparer,
-    DataTransformer,
-    createLogFile,
-    syncLogFile,
-    make_distributions,
-    LogLikelihoodHandler,
-)
 
 # ======================================================================================================================
 
@@ -145,9 +144,7 @@ def main(input_args):
     # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
     input_json_filename_full_path = input_json_filename
     logfile.write('\n\n==========================')
-    logfile.write(
-        '\nParsing the json input file {}'.format(input_json_filename_full_path)
-    )
+    logfile.write(f'\nParsing the json input file {input_json_filename_full_path}')
     (
         number_of_samples,
         seed_value,
@@ -218,16 +215,12 @@ def main(input_args):
     logfile.write('\n\n\tThe scale and shift factors computed are: ')
     for j in range(len(edp_names_list)):
         logfile.write(
-            '\n\t\tEDP: {}, scale factor: {}, shift factor: {}'.format(
-                edp_names_list[j], scale_factors[j], shift_factors[j]
-            )
+            f'\n\t\tEDP: {edp_names_list[j]}, scale factor: {scale_factors[j]}, shift factor: {shift_factors[j]}'
         )
 
     transformed_calibration_data = data_transformer_instance.transformData()
     logfile.write(
-        '\n\nThe transformed calibration data: \n{}'.format(
-            transformed_calibration_data
-        )
+        f'\n\nThe transformed calibration data: \n{transformed_calibration_data}'
     )
 
     # ======================================================================================================================
@@ -264,24 +257,20 @@ def main(input_args):
     logfile.write('\nSetting up the TMCMC algorithm')
 
     # sys.path.append(workdirMain)
-    logfile.write('\n\tResults path: {}'.format(working_directory))
+    logfile.write(f'\n\tResults path: {working_directory}')
 
     # number of particles: Np
     number_of_samples = tmcmc_data_instance.numberOfSamples
-    logfile.write('\n\tNumber of particles: {}'.format(number_of_samples))
+    logfile.write(f'\n\tNumber of particles: {number_of_samples}')
 
     # number of max MCMC steps
     number_of_MCMC_steps = (
         tmcmc_data_instance.numBurnInSteps + tmcmc_data_instance.numStepsAfterBurnIn
     )
     max_number_of_MCMC_steps = 10
+    logfile.write(f'\n\tNumber of MCMC steps in first stage: {number_of_MCMC_steps}')
     logfile.write(
-        '\n\tNumber of MCMC steps in first stage: {}'.format(number_of_MCMC_steps)
-    )
-    logfile.write(
-        '\n\tMax. number of MCMC steps in any stage: {}'.format(
-            max_number_of_MCMC_steps
-        )
+        f'\n\tMax. number of MCMC steps in any stage: {max_number_of_MCMC_steps}'
     )
 
     syncLogFile(logfile)
@@ -296,7 +285,7 @@ def main(input_args):
     # For each model:
     for model_number, parameters_of_model in enumerate(variables_list):
         logfile.write('\n\n\t==========================')
-        logfile.write('\n\tStarting analysis for model {}'.format(model_number + 1))
+        logfile.write(f'\n\tStarting analysis for model {model_number + 1}')
         logfile.write('\n\t==========================')
 
         # Assign probability distributions to the parameters of the model
@@ -310,7 +299,7 @@ def main(input_args):
 
         # set the seed
         np.random.seed(tmcmc_data_instance.seedVal)
-        logfile.write('\n\tSeed: {}'.format(tmcmc_data_instance.seedVal))
+        logfile.write(f'\n\tSeed: {tmcmc_data_instance.seedVal}')
 
         syncLogFile(logfile)
 
@@ -357,8 +346,8 @@ def main(input_args):
         #     evidence *= np.mean(Wm)
         # logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
         evidence = np.exp(log_evidence)
-        logfile.write('\n\t\t\tModel evidence: {:g}'.format(evidence))
-        logfile.write('\n\t\t\tModel log_evidence: {:g}'.format(log_evidence))
+        logfile.write(f'\n\t\t\tModel evidence: {evidence:g}')
+        logfile.write(f'\n\t\t\tModel log_evidence: {log_evidence:g}')
 
         syncLogFile(logfile)
 
@@ -380,7 +369,7 @@ def main(input_args):
         model_evidences[model_number] = evidence
 
         logfile.write('\n\n\t==========================')
-        logfile.write('\n\tCompleted analysis for model {}'.format(model_number + 1))
+        logfile.write(f'\n\tCompleted analysis for model {model_number + 1}')
         logfile.write('\n\t==========================')
 
         syncLogFile(logfile)
@@ -401,9 +390,7 @@ def main(input_args):
 
     # ======================================================================================================================
     logfile.write('\nUCSD_UQ engine workflow complete!\n')
-    logfile.write(
-        '\nTime taken: {:0.2f} minutes\n\n'.format((time.time() - t1) / 60)
-    )
+    logfile.write(f'\nTime taken: {(time.time() - t1) / 60:0.2f} minutes\n\n')
 
     syncLogFile(logfile)
 

@@ -1,10 +1,9 @@
-"""
-The wntrfr.morph.link module contains functions to split/break pipes.
-"""
+"""The wntrfr.morph.link module contains functions to split/break pipes."""
 
-import logging
 import copy
-from wntrfr.network.elements import Reservoir, Pipe
+import logging
+
+from wntrfr.network.elements import Pipe, Reservoir
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +17,7 @@ def split_pipe(
     split_at_point=0.5,
     return_copy=True,
 ):
-    """
-    Split a pipe by adding a junction and one new pipe segment.
+    """Split a pipe by adding a junction and one new pipe segment.
 
     This function splits the original pipe into two pipes by adding a new
     junction and new pipe to the model.
@@ -66,6 +64,7 @@ def split_pipe(
     -------
     wntr WaterNetworkModel
         Water network model with split pipe
+
     """
     wn2 = _split_or_break_pipe(
         wn,
@@ -91,8 +90,7 @@ def break_pipe(
     split_at_point=0.5,
     return_copy=True,
 ):
-    """
-    Break a pipe by adding a two unconnected junctions and one new pipe segment.
+    """Break a pipe by adding a two unconnected junctions and one new pipe segment.
 
     This function splits the original pipe into two disconnected pipes by
     adding two new junctions and new pipe to the model.
@@ -145,6 +143,7 @@ def break_pipe(
     -------
     wntr WaterNetworkModel
         Water network model with pipe break
+
     """
     wn2 = _split_or_break_pipe(
         wn,
@@ -273,7 +272,7 @@ def _split_or_break_pipe(
         pipe.length = original_length * (1 - split_at_point)
 
     if pipe.cv:
-        logger.warn(
+        logger.warning(
             'You are splitting a pipe with a check valve. The new \
                     pipe will not have a check valve.'
         )

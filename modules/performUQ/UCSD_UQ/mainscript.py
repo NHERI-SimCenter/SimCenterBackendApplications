@@ -1,18 +1,16 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
 """
 
 # ======================================================================================================================
-import sys
 import json
-from pathlib import Path
 import shlex
+import sys
+from pathlib import Path
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import uq_utilities
 
 
 # ======================================================================================================================
@@ -38,7 +36,7 @@ def main(input_args):
 
     input_file_full_path = path_to_template_directory / input_file_name
 
-    with open(input_file_full_path, 'r', encoding='utf-8') as f:
+    with open(input_file_full_path, encoding='utf-8') as f:
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']

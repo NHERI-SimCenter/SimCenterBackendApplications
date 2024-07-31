@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
 # JGA
 # from matplotlib import pyplot as plt
-import numpy as np
-from scipy import integrate
-from math import sqrt, exp, pi, log
-import time
-from ctypes import *
 import os
-from general import Logfile, DBServer
-
-from sys import platform as pltm
 import platform
+from ctypes import *
+from math import exp, log, pi, sqrt
+from sys import platform as pltm
+
+import numpy as np
+from general import Logfile
+from scipy import integrate
 
 if pltm == 'linux' or pltm == 'linux2':
     c_lib = CDLL(
@@ -72,7 +70,7 @@ def scaling(x):
     n = x.shape[0]
     alpha = np.zeros(n)
     x_min = np.zeros((n, 1))
-    for i in range(0, n):
+    for i in range(n):
         x_max_k = max(x[i, :])
         x_min_k = min(x[i, :])
         x_min[i] = x_min_k
@@ -97,8 +95,7 @@ def gradient_rhoctypes(gradient, y, eta, nu, N, s_v, hat_s_v):
 
 
 def kernel(x, y, epsilon):
-    """
-    >>> kernel(np.array([1,0]), np.array([1,0]), 0.5)
+    """>>> kernel(np.array([1,0]), np.array([1,0]), 0.5)
     1.0
     """
     dist = np.linalg.norm(x - y) ** 2
@@ -107,8 +104,7 @@ def kernel(x, y, epsilon):
 
 
 def K(eta, epsilon):
-    """
-    >>> K((np.array([[1,1],[1,1]])), 3)
+    """>>> K((np.array([[1,1],[1,1]])), 3)
     (array([[1., 1.],
            [1., 1.]]), array([[2., 0.],
            [0., 2.]]))
@@ -116,9 +112,9 @@ def K(eta, epsilon):
     N = eta.shape[1]
     K = np.zeros((N, N))
     b = np.zeros((N, N))
-    for i in range(0, N):
+    for i in range(N):
         row_sum = 0
-        for j in range(0, N):
+        for j in range(N):
             if j != i:
                 K[i, j] = kernel((eta[:, i]), (eta[:, j]), epsilon)
                 row_sum = row_sum + K[i, j]
@@ -130,8 +126,7 @@ def K(eta, epsilon):
 
 
 def g(K, b):
-    """
-    >>> g((np.array([[1,0.5],[0.5,1]])), np.array([[1.5, 0.], [0., 1.5]]))
+    """>>> g((np.array([[1,0.5],[0.5,1]])), np.array([[1.5, 0.], [0., 1.5]]))
     (array([[ 0.57735027, -0.57735027],
            [ 0.57735027,  0.57735027]]), array([1.        , 0.33333333]))
     """
@@ -149,8 +144,7 @@ def g(K, b):
 
 
 def m(eigenvalues, tol=0.1):
-    """
-    >>> m(np.array([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.025]))
+    """>>> m(np.array([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.05, 0.025]))
     11
     """
     i = 2
@@ -165,22 +159,20 @@ def m(eigenvalues, tol=0.1):
 
 
 def mean(x):
-    """
-    >>> mean(np.array([[1,1],[0,1],[2,4]]))
+    """>>> mean(np.array([[1,1],[0,1],[2,4]]))
     array([[1. ],
            [0.5],
            [3. ]])
     """
     dim = x.shape[0]
     x_mean = np.zeros((dim, 1))
-    for i in range(0, dim):
+    for i in range(dim):
         x_mean[i] = np.mean(x[i, :])
     return x_mean
 
 
 def covariance(x):
-    """
-    >>> covariance(np.array([[1,1],[0,1],[2,4]]))
+    """>>> covariance(np.array([[1,1],[0,1],[2,4]]))
     array([[0. , 0. , 0. ],
            [0. , 0.5, 1. ],
            [0. , 1. , 2. ]])
@@ -189,16 +181,15 @@ def covariance(x):
     N = x.shape[1]
     C = np.zeros((dim, dim))
     x_mean = mean(x)
-    for i in range(0, N):
+    for i in range(N):
         C = C + (np.resize(x[:, i], x_mean.shape) - x_mean).dot(
-            np.transpose((np.resize(x[:, i], x_mean.shape) - x_mean))
+            np.transpose(np.resize(x[:, i], x_mean.shape) - x_mean)
         )
     return C / (N - 1)
 
 
 def PCA(x, tol):
-    """
-    >>> PCA(np.array([[1,1],[0,1],[2,4]]), 0.1)
+    """>>> PCA(np.array([[1,1],[0,1],[2,4]]), 0.1)
     (array([[-0.70710678,  0.70710678]]), array([1.58113883]), array([[-1.13483031e-17],
            [ 4.47213595e-01],
            [ 8.94427191e-01]]))
@@ -214,12 +205,12 @@ def PCA(x, tol):
     i = 0
     errors = [1]
     while error > tol and i < len(mu):
-        error = error - (mu[i] ** 2) / sum((mu**2))
+        error = error - (mu[i] ** 2) / sum(mu**2)
         i = i + 1
         nu = i
         errors.append(error)
     while i < len(mu):
-        error = error - (mu[i] ** 2) / sum((mu**2))
+        error = error - (mu[i] ** 2) / sum(mu**2)
         i = i + 1
         errors.append(error)
     # plt.figure()
@@ -232,7 +223,7 @@ def PCA(x, tol):
     mu_sqrt_inv = np.diag(
         1 / (mu)
     )  # no need to do the sqrt because we use the singularvalues
-    eta = mu_sqrt_inv.dot(np.transpose(phi)).dot((x - x_mean))
+    eta = mu_sqrt_inv.dot(np.transpose(phi)).dot(x - x_mean)
     return (
         eta,
         mu,
@@ -242,8 +233,7 @@ def PCA(x, tol):
 
 
 def parameters_kde(eta):
-    """
-    >>> parameters_kde(np.array([[1,1],[0,1],[2,4]]))
+    """>>> parameters_kde(np.array([[1,1],[0,1],[2,4]]))
     (0.8773066621237415, 0.13452737030512696, 0.7785858648409519)
     """
     nu = eta.shape[0]
@@ -255,8 +245,7 @@ def parameters_kde(eta):
 
 
 def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):
-    """
-    >>> kde(np.array([[1, 2, 3]]), np.array([[1,1],[0,1],[2,4]]))
+    """>>> kde(np.array([[1, 2, 3]]), np.array([[1,1],[0,1],[2,4]]))
     0.01940049487135241
     """
     nu = eta.shape[0]
@@ -274,8 +263,7 @@ def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):
 
 
 def PCA2(C_h_hat_eta, beta, tol):  # taking only independent constraints
-    """
-    >>> PCA2(np.array([[1. , 1. , 1. ], [1. , 4.5, 1.5 ], [1. , 1.5 , 2. ]]), np.array([10, 1, 2]), 0.1)
+    """>>> PCA2(np.array([[1. , 1. , 1. ], [1. , 4.5, 1.5 ], [1. , 1.5 , 2. ]]), np.array([10, 1, 2]), 0.1)
     (array([-4.53648062,  5.2236145 ]), array([[-0.28104828,  0.42570005],
            [-0.85525695, -0.51768266],
            [-0.43537043,  0.74214832]]))
@@ -323,7 +311,7 @@ def solve_inverse(matrix):
         )
     else:
         inverse = np.zeros(matrix.shape)
-        for j in range(0, matrix.shape[1]):
+        for j in range(matrix.shape[1]):
             unit = np.zeros(matrix.shape[1])
             unit[j] = 1
             solve = np.linalg.solve(matrix, unit)
@@ -368,7 +356,7 @@ def generator(
     y_l = y_init
     eta_lambda[:, 0:N] = z_init.dot(np.transpose(g))
     nu_lambda[:, 0:N] = y_init.dot(np.transpose(g))
-    for i in range(0, l_0):
+    for i in range(l_0):
         z_l_half = z_l + delta_t * 0.5 * y_l
         w_l_1 = np.random.normal(scale=sqrt(delta_t), size=(nu, N)).dot(
             a
@@ -453,7 +441,7 @@ def L(
     nu = eta.shape[0]
     N = eta.shape[1]
     L = np.zeros((nu, N))
-    for l in range(0, N):
+    for l in range(N):
         yl = np.resize(y[:, l], (len(y[:, l]), 1))
         rho_ = rhoctypes(
             yl, np.resize(np.transpose(eta), (nu * N, 1)), nu, N, s_v, hat_s_v
@@ -469,7 +457,7 @@ def L(
             grad_g_c = np.zeros((x_mean.shape[0], 1))
         if rho_ < 1e-250:
             closest = 1e30
-            for i in range(0, N):
+            for i in range(N):
                 if closest > np.linalg.norm(
                     (hat_s_v / s_v) * np.resize(eta[:, i], yl.shape) - yl
                 ):

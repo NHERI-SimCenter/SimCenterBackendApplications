@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2016-2017, The Regents of the University of California (Regents).
 # All rights reserved.
 #
@@ -42,17 +41,14 @@
 # Plots are saved to a specified directory.
 #
 
-"""
-Entry point to read the simulation results from MPM case and post-processes it.
+"""Entry point to read the simulation results from MPM case and post-processes it."""
 
-"""
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
 import sys
-import argparse
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
 # import json
 # from pathlib import Path
 # import plotly.graph_objects as go

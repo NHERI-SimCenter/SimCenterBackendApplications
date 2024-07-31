@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Node_Damage_Model_Help_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -7,10 +5,10 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Node_Damage_Model_Help(object):
+class Ui_Node_Damage_Model_Help:
     def setupUi(self, Node_Damage_Model_Help):
         Node_Damage_Model_Help.setObjectName('Node_Damage_Model_Help')
         Node_Damage_Model_Help.resize(340, 130)

@@ -1,5 +1,5 @@
-from __future__ import division, print_function
-import os, sys
+import os
+import sys
 
 if sys.version.startswith('2'):
     range = xrange
@@ -7,7 +7,8 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import argparse, posixpath, ntpath, json
+import argparse
+import json
 
 
 def write_RV(BIM_input_path, EVENT_input_path):
@@ -24,17 +25,17 @@ def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity
     sys.path.insert(0, os.getcwd())
 
     # load the BIM file
-    with open(BIM_input_path, 'r') as f:
+    with open(BIM_input_path) as f:
         BIM_in = json.load(f)
 
     # load the EVENT file
-    with open(EVENT_input_path, 'r') as f:
+    with open(EVENT_input_path) as f:
         EVENT_in = json.load(f)
 
     # if there is a wind database path provided
     if wind_database_path is not None:
         # then we need to load the wind data from there
-        with open(wind_database_path, 'r') as f:
+        with open(wind_database_path) as f:
             wind_db = json.load(f)
 
         # the location id is stored in the BIM file
@@ -53,7 +54,7 @@ def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity
                 event['Events'][0]['type'] == 'ASCE7_WindSpeed'
             ):
                 event_info = event['Events'][0]
-                with open(event_info['fileName'], 'r') as f:
+                with open(event_info['fileName']) as f:
                     wind_speed_in = json.load(f)
 
     event_id = wind_speed_in['id']

@@ -1,11 +1,12 @@
-import sys, os, json
+import json
+import sys
 
 
 def main(inputFile, outputFile):
     extraArgs = sys.argv[3:]
 
     # initialize the log file
-    with open(inputFile, 'r') as f:
+    with open(inputFile) as f:
         data = json.load(f)
 
     for k, val in zip(extraArgs[0::2], extraArgs[1::2]):

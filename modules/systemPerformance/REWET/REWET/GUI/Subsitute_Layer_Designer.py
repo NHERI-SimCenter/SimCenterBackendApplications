@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan  5 16:31:32 2023
+"""Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
 """
 
-import shapely
 import os
-import pandas as pd
+
 import geopandas as gpd
-from PyQt5 import QtWidgets
+import pandas as pd
 from GUI.Subsitute_Layer_Window import Ui_subsitite_layer_dialoge
+from PyQt5 import QtWidgets
 
 
 class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
@@ -31,7 +29,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
         self.subsitute_layer_addr = subsitute_layer_addr
         self.demand_node_layers = demand_node_layers
         self.iUse_substitute_layer = iUse_substitute_layer
-        self.demand_node_layers.to_file('Northridge\demand_node_layer.shp')
+        self.demand_node_layers.to_file(r'Northridge\demand_node_layer.shp')
         self.subsitute_layer_addr_line.setText(self.subsitute_layer_addr)
         if type(self.subsitute_layer) != type(None):
             self.subsitute_layer_projection_name_line.setText(

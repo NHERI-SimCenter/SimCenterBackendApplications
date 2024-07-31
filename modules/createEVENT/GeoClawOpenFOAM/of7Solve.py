@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -41,33 +40,31 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Solve:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     solver for openfoam7.
 
     Methods
-    --------
+    -------
             fvSchemetext: Get all the text for the fvSchemes
+
     """
 
     #############################################################
     def solverheader(self, fileobjec):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the solver-files
         """
-
         header = (
-            """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+            """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""
             + fileobjec
@@ -80,14 +77,13 @@ FoamFile
 
     #############################################################
     def fvSchemetext(self, data):
-        """
-        Creates the necessary text for fvSchemes for openfoam7
+        """Creates the necessary text for fvSchemes for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Get the header text for the U-file
         fvSchemetext = self.solverheader('fvSchemes')
 
@@ -171,14 +167,13 @@ FoamFile
 
     #############################################################
     def fvSolntext(self, data):
-        """
-        Creates the necessary text for fvSolution for openfoam7
+        """Creates the necessary text for fvSolution for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -289,14 +284,13 @@ FoamFile
 
     #############################################################
     def cdicttext(self, data):
-        """
-        Creates the necessary text for controlDict for openfoam7
+        """Creates the necessary text for controlDict for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -359,14 +353,13 @@ FoamFile
 
     #############################################################
     def cdictcheck(self, data):
-        """
-        Creates the check for controlDict for openfoam7
+        """Creates the check for controlDict for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -399,15 +392,14 @@ FoamFile
 
     #############################################################
     def cdictFtext(self, data):
-        """
-        Creates the necessary text for controlDict for openfoam7
+        """Creates the necessary text for controlDict for openfoam7
         This is used for force computation with Dakota
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

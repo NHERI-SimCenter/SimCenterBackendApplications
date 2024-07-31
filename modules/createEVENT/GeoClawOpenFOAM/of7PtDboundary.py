@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -32,7 +31,6 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -42,13 +40,13 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7PtDboundary:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     point displacement boundary conditions for openfoam7.
 
     Methods
-    --------
+    -------
             PDtext: Get all the text for the pointDisplacement-file
+
     """
 
     # #############################################################
@@ -84,15 +82,14 @@ class of7PtDboundary:
 
     #############################################################
     def PtDcheck(self, data, patches):
-        """
-        Checks if a point displacement for openfoam7 is required
+        """Checks if a point displacement for openfoam7 is required
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 patches: List of boundary patches
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -127,15 +124,14 @@ class of7PtDboundary:
 
     #############################################################
     def PtDtext(self, data, fipath, patches):
-        """
-        Create text for point displacement for openfoam7
+        """Create text for point displacement for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 patches: List of boundary patches
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -177,21 +173,19 @@ class of7PtDboundary:
 
     #############################################################
     def PtDheader(self):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the pointDisplacement-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tpointVectorField;\n\tlocation\t"0.01";\n\tobject\tpointDisplacement;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -204,11 +198,10 @@ FoamFile
 
     #############################################################
     def PtDpatchtext(self, data, Utype, patchname, fipath):
-        """
-        Creates the text the pointDisplacement boundary condition
+        """Creates the text the pointDisplacement boundary condition
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: All the json data
                 Utype: Type of velocity b.c
                 patchname: Name of the patch
@@ -217,8 +210,8 @@ FoamFile
         Variable
         -----------
                 PtDtext: Text for the particular patch
-        """
 
+        """
         # Get hte normal of the patch
         normal = self.getNormal(patchname)
 
@@ -254,18 +247,17 @@ FoamFile
 
     #############################################################
     def getNormal(self, patchname):
-        """
-        Get the normal to the patch
+        """Get the normal to the patch
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 patchname: Name of the patch
 
         Variable
         -----------
                 normal: Normal to the patch
-        """
 
+        """
         if (patchname == 'Entry') or (patchname == 'Exit'):
             normal = '1 0 0'
         elif (patchname == 'Left') or (patchname == 'Right'):

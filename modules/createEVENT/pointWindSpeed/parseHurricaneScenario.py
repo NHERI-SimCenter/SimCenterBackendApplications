@@ -2,15 +2,10 @@
 # and put data into a SimCenter JSON file for
 # wind tunnel data
 
-import sys
 import os
-import subprocess
-import json
-import stat
-import shutil
-import numpy as np
+import sys
+
 import scipy.io as sio
-from pprint import pprint
 
 inputArgs = sys.argv
 
@@ -37,7 +32,7 @@ def parseMatFile(matFileIn, windFileOutName):
     print(lat.shape)
     file.write('{')
     file.write('"wind":[')
-    for i in range(0, numLocations):
+    for i in range(numLocations):
         locSpeed = f[i]
         locLat = lat[i]
         locLong = long[i]

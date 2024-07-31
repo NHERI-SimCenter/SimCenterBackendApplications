@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 25 14:30:01 2022
+"""Created on Tue Oct 25 14:30:01 2022
 
 @author: snaeimi
 """
 
 import pandas as pd
+
 from .Helper import hhelper
 
 
@@ -242,11 +241,7 @@ class Curve:
 
         damage_location_list = reg._pipe_damage_table
 
-        if mode == 'leak':
-            damage_location_list = damage_location_list[
-                damage_location_list['damage_type'] == mode
-            ]
-        elif mode == 'break':
+        if mode == 'leak' or mode == 'break':
             damage_location_list = damage_location_list[
                 damage_location_list['damage_type'] == mode
             ]

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -10,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Pipe_Damage_Model(object):
+class Ui_Pipe_Damage_Model:
     def setupUi(self, Pipe_Damage_Model):
         Pipe_Damage_Model.setObjectName('Pipe_Damage_Model')
         Pipe_Damage_Model.resize(377, 372)

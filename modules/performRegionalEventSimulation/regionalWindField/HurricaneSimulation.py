@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
@@ -38,15 +37,15 @@
 # Kuanshi Zhong
 #
 
+import argparse
+import json
+import logging
 import os
 import sys
-import argparse, posixpath, json
-import numpy as np
-import pandas as pd
-import logging
-from CreateStation import *
-from CreateScenario import *
+
 from ComputeIntensityMeasure import *
+from CreateScenario import *
+from CreateStation import *
 
 if __name__ == '__main__':
     logger = logging.getLogger()

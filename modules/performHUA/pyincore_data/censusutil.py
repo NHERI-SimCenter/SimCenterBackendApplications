@@ -8,19 +8,15 @@
 # terms of the Mozilla Public License v2.0 which accompanies this distribution,
 # and is available at https://www.mozilla.org/en-US/MPL/2.0/
 
-import json
-from math import isnan
-from pathlib import Path
-
-import requests
 import os
-import pandas as pd
-import geopandas as gpd
 import urllib.request
-import shutil
-
-from pyincore_data import globals
+from pathlib import Path
 from zipfile import ZipFile
+
+import geopandas as gpd
+import pandas as pd
+import requests
+from pyincore_data import globals
 
 logger = globals.LOGGER
 
@@ -41,6 +37,7 @@ class CensusUtil:
         """Create url string to access census data api.
 
         Args:
+        ----
             state (str): A string of state FIPS with comma separated format. e.g, '41, 42' or '*'
             county (str): A string of county FIPS with comma separated format. e.g, '017,029,045,091,101' or '*'
             year (str): Census Year.
@@ -51,6 +48,7 @@ class CensusUtil:
             data_name (str): Optional for getting different dataset. e.g, 'component'
 
         Returns:
+        -------
             string: A string for representing census api url
 
         """
@@ -76,13 +74,12 @@ class CensusUtil:
         data_url = f'{base_url}?get={columns}'
         if county is None:  # only state is provided. There shouldn't be any geo_type
             data_url = f'{data_url}&for=state:{state}'
-        else:  # county has been provided and there could be geo_type or not
-            if geo_type is None:
-                data_url = f'{data_url}&in=state:{state}&for=county:{county}'
-            else:
-                data_url = (
-                    f'{data_url}&for={geo_type}&in=state:{state}&in=county:{county}'
-                )
+        elif geo_type is None:
+            data_url = f'{data_url}&in=state:{state}&for=county:{county}'
+        else:
+            data_url = (
+                f'{data_url}&for={geo_type}&in=state:{state}&in=county:{county}'
+            )
 
         return data_url
 
@@ -91,6 +88,7 @@ class CensusUtil:
         """Request census data to api and gets the output data
 
         Args:
+        ----
             data_url (str): url for obtaining the data from census api
         Returns:
             dict, object: A json list and a dataframe for census api result
@@ -126,6 +124,7 @@ class CensusUtil:
         """Generate population demographics dataset from census
 
         Args:
+        ----
             state_counties (list): A List of concatenated State and County FIPS Codes.
                 see full list https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143_013697
             vintage (str): Census Year.
@@ -137,7 +136,6 @@ class CensusUtil:
             output_dir (str): Name of directory used to save output files.
 
         """
-
         # ***********************
         # Get the population data
         # ***********************
@@ -193,7 +191,7 @@ class CensusUtil:
 
         else:
             print('Only 2000, 2010, and 2020 decennial census supported')
-            return
+            return None
 
         # Make directory to save output
         if not os.path.exists(output_dir):
@@ -490,6 +488,7 @@ class CensusUtil:
         """Generate household income dataset from census
 
         Args:
+        ----
             state_counties (list): A List of concatenated State and County FIPS Codes.
                 see full list https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143_013697
             vintage (str): Census Year.
@@ -501,7 +500,6 @@ class CensusUtil:
             output_dir (str): Name of directory used to save output files.
 
         """
-
         # dataset_name (str): ACS dataset name.
         dataset_name = 'acs/acs5'
 
@@ -869,6 +867,7 @@ B19001_016E,B19001_017E,B19013_001E'
         """Create shapefile of dislocation geodataframe.
 
         Args:
+        ----
             in_gpd (object): Geodataframe of the dislocation.
             programname (str): Output directory name.
             savefile (str): Output shapefile name.
@@ -885,6 +884,7 @@ B19001_016E,B19001_017E,B19013_001E'
         """Create geojson of dislocation geodataframe.
 
         Args:
+        ----
             in_gpd (object): Geodataframe of the dislocation.
             programname (str): Output directory name.
             savefile (str): Output geojson name.
@@ -905,6 +905,7 @@ B19001_016E,B19001_017E,B19013_001E'
         """Create shapefile of dislocation geodataframe.
 
         Args:
+        ----
             in_gpd (object): Geodataframe of the dislocation.
             programname (str): Output directory name.
             savefile (str): Output shapefile name.
@@ -927,13 +928,13 @@ B19001_016E,B19001_017E,B19013_001E'
         """Create csv of dislocation dataframe using the column names.
 
         Args:
+        ----
             in_pd (object): Geodataframe of the dislocation.
             save_columns (list): A list of column names to use.
             programname (str): Output directory name.
             savefile (str): Output csv file name.
 
         """
-
         # Save cen_blockgroup dataframe with save_column variables to csv named savefile
         print('CSV data file saved to: ' + programname + '/' + savefile + '.csv')
         in_pd[save_columns].to_csv(

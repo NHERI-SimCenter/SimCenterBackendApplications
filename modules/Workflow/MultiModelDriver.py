@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 #
@@ -36,10 +35,11 @@
 # Contributors:
 # Frank McKenna
 
-import sys, os, json
 import argparse
+import json
+import os
+import sys
 from copy import deepcopy
-import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -56,7 +56,7 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType):
     if inputDir != '':
         os.chdir(inputDir)
 
-    with open(inputFileName, 'r') as f:
+    with open(inputFileName) as f:
         inputs = json.load(f)
 
     localAppDir = inputs['localAppDir']

@@ -1,7 +1,8 @@
-import os
-import pandas as pd
-import pickle
 import json
+import os
+import pickle
+
+import pandas as pd
 
 
 ##################### Read files From json #####################
@@ -9,22 +10,26 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
     """Read pipe damage of a single scenario.
 
     Args:
+    ----
         directory (path): damage scnearios path
         pipe_file_name (str): pipe damage file name
 
     Raises:
+    ------
         ValueError: _description_
         RuntimeError: _description_
 
     Returns:
+    -------
         Pandas.Series: Pipe Damage
+
     """
     pipe_damaage = []
     pipe_time = []
 
     file_dest = os.path.join(directory, pipe_file_name)
 
-    with open(file_dest, 'rt') as f:
+    with open(file_dest) as f:
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
@@ -49,22 +54,26 @@ def read_node_damage_seperate_json_file(directory, node_file_name):
     """Read node damage of a single scenario.
 
     Args:
+    ----
         directory (path): damage scnearios path
         pipe_file_name (str): node damage file name
 
     Raises:
+    ------
         ValueError: _description_
         RuntimeError: _description_
 
     Returns:
+    -------
         Pandas.Series: node Damage
+
     """
     node_damage = []
     node_time = []
 
     file_dest = os.path.join(directory, node_file_name)
 
-    with open(file_dest, 'rt') as f:
+    with open(file_dest) as f:
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
@@ -88,22 +97,26 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):
     """Read tank damage of a single scenario.
 
     Args:
+    ----
         directory (path): tank scnearios path
         pipe_file_name (str): tank damage file name
 
     Raises:
+    ------
         ValueError: _description_
         RuntimeError: _description_
 
     Returns:
+    -------
         Pandas.Series: tank Damage
+
     """
     tank_damage = []
     tank_time = []
 
     file_dest = os.path.join(directory, tank_file_name)
 
-    with open(file_dest, 'rt') as f:
+    with open(file_dest) as f:
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
@@ -126,22 +139,26 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):
     """Read pump damage of a single scenario.
 
     Args:
+    ----
         directory (path): pump scnearios path
         pipe_file_name (str): pump damage file name
 
     Raises:
+    ------
         ValueError: _description_
         RuntimeError: _description_
 
     Returns:
+    -------
         Pandas.Series: pump Damage
+
     """
     pump_damage = []
     pump_time = []
 
     file_dest = os.path.join(directory, pump_file_name)
 
-    with open(file_dest, 'rt') as f:
+    with open(file_dest) as f:
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
@@ -249,8 +266,7 @@ def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):
 
 
 def read_damage_list(list_file_addr, file_directory, iCheck=False):
-    """
-    Reads damage sceanrio list.
+    """Reads damage sceanrio list.
 
     Parameters
     ----------

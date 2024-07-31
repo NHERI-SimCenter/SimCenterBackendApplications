@@ -1,20 +1,16 @@
-# -*- coding: utf-8 -*-
 # JGA
+import importlib
 import os
-import numpy as np
-import pandas as pd
-import random
-from math import pi, sqrt
-import PLoM_library as plom
+import sys
 
 # import matplotlib.pyplot as plt
-import warnings
-
 # export DISPLAY=localhost:0.0
 from ctypes import *
-import importlib
 from pathlib import Path
-import sys
+
+import numpy as np
+import pandas as pd
+import PLoM_library as plom
 from general import *
 
 
@@ -43,7 +39,6 @@ class PLoM:
         # initialize constraints
         self.constraints = {}
         self.num_constraints = 0
-        #
         self.runDiffMaps = runDiffMaps
         # initialize input data
         if self.initialize_data(data, separator, col_header):
@@ -99,8 +94,7 @@ class PLoM:
             )
 
     def _basic_config(self, model_name=None, db_path=None):
-        """
-        Basic setups
+        """Basic setups
         - model_name: job name (used for database name)
         """
         if not db_path:
@@ -118,15 +112,13 @@ class PLoM:
             os.makedirs(self.dir_run, exist_ok=True)
             self.logfile = Logfile(logfile_dir=self.dir_log)
             self.logfile.write_msg(
-                msg='PLoM: Running directory {} initialized.'.format(self.dir_run),
+                msg=f'PLoM: Running directory {self.dir_run} initialized.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
         except:
             self.logfile.write_msg(
-                msg='PLoM: Running directory {} cannot be initialized.'.format(
-                    self.dir_run
-                ),
+                msg=f'PLoM: Running directory {self.dir_run} cannot be initialized.',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -152,17 +144,13 @@ class PLoM:
         try:
             os.makedirs(self.vl_path, exist_ok=True)
             self.logfile.write_msg(
-                msg='PLoM: visualization folder {} initialized.'.format(
-                    self.vl_path
-                ),
+                msg=f'PLoM: visualization folder {self.vl_path} initialized.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
         except:
             self.logfile.write_msg(
-                msg='PLoM: visualization folder {} not initialized.'.format(
-                    self.vl_path
-                ),
+                msg=f'PLoM: visualization folder {self.vl_path} not initialized.',
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -192,9 +180,7 @@ class PLoM:
             )
         except:
             self.logfile.write_msg(
-                msg='PLoM.add_constraints: could not add constraints {}'.format(
-                    constraints_file
-                ),
+                msg=f'PLoM.add_constraints: could not add constraints {constraints_file}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -226,9 +212,7 @@ class PLoM:
             )
         except:
             self.logfile.write_msg(
-                msg='PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {}'.format(
-                    constraints_file
-                ),
+                msg=f'PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {constraints_file}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -236,16 +220,12 @@ class PLoM:
         return 0
 
     def switch_constraints(self, constraint_tag=1):
-        """
-        Selecting different constraints
+        """Selecting different constraints
         - constraint_tag: the tag of selected constraint
         """
-
         if constraint_tag > self.num_constraints:
             self.logfile.write_msg(
-                msg='PLoM.switch_constraints: sorry the maximum constraint tag is {}'.format(
-                    self.num_constraints
-                ),
+                msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -278,10 +258,7 @@ class PLoM:
             )
 
     def delete_constraints(self):
-        """
-        Removing all current constraints
-        """
-
+        """Removing all current constraints"""
         self.g_c = None
         self.D_x_g_c = None
         self.beta_c = []
@@ -298,7 +275,7 @@ class PLoM:
 
         if not os.path.exists(filename):
             self.logfile.write_msg(
-                msg='load_data: the input file {} is not found'.format(filename),
+                msg=f'load_data: the input file {filename} is not found',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -343,7 +320,7 @@ class PLoM:
             else:
                 import json
 
-                with open(filename, 'r', encoding='utf-8') as f:
+                with open(filename, encoding='utf-8') as f:
                     jsondata = json.load(f)
                 var_names = list(jsondata.keys())
                 # multiple columns
@@ -372,7 +349,7 @@ class PLoM:
         # Update data sizes
         N, n = X.shape
         self.logfile.write_msg(
-            msg='PLoM.load_data: loaded data size = ({}, {}).'.format(N, n),
+            msg=f'PLoM.load_data: loaded data size = ({N}, {n}).',
             msg_type='RUNNING',
             msg_level=0,
         )
@@ -387,9 +364,7 @@ class PLoM:
         return self.X, self.N, self.n
 
     def _load_h5_plom(self, filename):
-        """
-        Loading PLoM-formatted h5 database
-        """
+        """Loading PLoM-formatted h5 database"""
         try:
             store = pd.HDFStore(filename, 'r')
             for cur_var in store.keys():
@@ -421,17 +396,13 @@ class PLoM:
 
         except:
             self.logfile.write_msg(
-                msg='PLoM._load_h5_plom: data in {} not compatible.'.format(
-                    filename
-                ),
+                msg=f'PLoM._load_h5_plom: data in {filename} not compatible.',
                 msg_type='ERROR',
                 msg_level=0,
             )
 
     def _load_h5_data_X(self, filename):
-        """
-        Loading a h5 data which is expected to contain X data
-        """
+        """Loading a h5 data which is expected to contain X data"""
         try:
             store = pd.HDFStore(filename, 'r')
             # Note a table is expected for the variable
@@ -446,9 +417,7 @@ class PLoM:
             return None
 
     def _sync_data(self):
-        """
-        Sync database data to current attributes
-        """
+        """Sync database data to current attributes"""
         avail_name_list = self.dbserver.get_name_list()
         if not avail_name_list:
             # empty database
@@ -467,24 +436,20 @@ class PLoM:
                         ATTR_MAP[cur_item], self.dbserver.get_item(cur_item[1:])
                     )
                     self.logfile.write_msg(
-                        msg='PLoM._sync_data: self.{} synced.'.format(
-                            ATTR_MAP[cur_item]
-                        ),
+                        msg=f'PLoM._sync_data: self.{ATTR_MAP[cur_item]} synced.',
                         msg_type='RUNNING',
                         msg_level=0,
                     )
                 else:
                     # None type (this is the 'basic' - skipped)
                     self.logfile.write_msg(
-                        msg='PLoM._sync_data: data {} skipped.'.format(cur_item),
+                        msg=f'PLoM._sync_data: data {cur_item} skipped.',
                         msg_type='RUNNING',
                         msg_level=0,
                     )
 
     def _sync_constraints(self):
-        """
-        Sync constraints from dbserver to the attributes
-        """
+        """Sync constraints from dbserver to the attributes"""
         avail_name_list = self.dbserver.get_name_list()
         if '/constraints_file' not in avail_name_list:
             # empty constraints
@@ -500,9 +465,7 @@ class PLoM:
             self.add_constraints(constraints_file=cfile)
 
     def load_h5(self, filename):
-        """
-        Loading h5 database
-        """
+        """Loading h5 database"""
         try:
             self._load_h5_plom(filename)
             self.logfile.write_msg(
@@ -511,13 +474,13 @@ class PLoM:
             # sync data
             self._sync_data()
             self.logfile.write_msg(
-                msg='PLoM.load_h5: data in {} synced.'.format(filename),
+                msg=f'PLoM.load_h5: data in {filename} synced.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
             self._sync_constraints()
             self.logfile.write_msg(
-                msg='PLoM.load_h5: constraints in {} synced.'.format(filename),
+                msg=f'PLoM.load_h5: constraints in {filename} synced.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
@@ -535,7 +498,7 @@ class PLoM:
             X = self._load_h5_data_X(filename)
             if X is None:
                 self.logfile.write_msg(
-                    msg='PLoM.load_h5: cannot load {}.'.format(filename),
+                    msg=f'PLoM.load_h5: cannot load {filename}.',
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -549,9 +512,7 @@ class PLoM:
         # check data sizes
         if new_n != self.n:
             self.logfile.write_msg(
-                msg='PLoM.add_data: incompatible column size when loading {}'.format(
-                    filename
-                ),
+                msg=f'PLoM.add_data: incompatible column size when loading {filename}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -562,7 +523,7 @@ class PLoM:
             self.X0.append(pd.DataFrame(new_X.T, columns=list(self.X0.columns)))
 
         self.logfile.write_msg(
-            msg='PLoM.add_data: current X0 size = ({}, {}).'.format(self.N, self.n),
+            msg=f'PLoM.add_data: current X0 size = ({self.N}, {self.n}).',
             msg_type='RUNNING',
             msg_level=0,
         )
@@ -575,9 +536,7 @@ class PLoM:
             self.X, self.N, self.n = self.load_data(filename, separator, col_header)
         except:
             self.logfile.write_msg(
-                msg='PLoM.initialize_data: cannot initialize data with {}'.format(
-                    filename
-                ),
+                msg=f'PLoM.initialize_data: cannot initialize data with {filename}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -593,9 +552,7 @@ class PLoM:
         self.dbserver.add_item(item_name='N', item=np.array([self.N]))
         self.dbserver.add_item(item_name='n', item=np.array([self.n]))
         self.logfile.write_msg(
-            msg='PLoM.initialize_data: current X0 size = ({}, {}).'.format(
-                self.N, self.n
-            ),
+            msg=f'PLoM.initialize_data: current X0 size = ({self.N}, {self.n}).',
             msg_type='RUNNING',
             msg_level=0,
         )
@@ -608,15 +565,12 @@ class PLoM:
         return 0
 
     def _init_indv_tasks(self):
-        """
-        Initializing tasks
-        """
+        """Initializing tasks"""
         for cur_task in FULL_TASK_LIST:
             self.__setattr__('task_' + cur_task, Task(task_name=cur_task))
 
     def ConfigTasks(self, task_list=FULL_TASK_LIST):
-        """
-        Creating a task list object
+        """Creating a task list object
         - task_list: a string list of tasks to run
         """
         config_flag = True
@@ -695,9 +649,7 @@ class PLoM:
                 if not self.__getattribute__('task_' + cur_task).refresh_status():
                     config_flag = False
                     self.logfile.write_msg(
-                        msg='PLoM.config_tasks: configuration failed with dependent task {} not completed.'.format(
-                            cur_task
-                        ),
+                        msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',
                         msg_type='ERROR',
                         msg_level=0,
                     )
@@ -724,8 +676,7 @@ class PLoM:
         seed_num=None,
         tolKDE=0.1,
     ):
-        """
-        Running the PLoM algorithm to train the model and generate new realizations
+        """Running the PLoM algorithm to train the model and generate new realizations
         - n_mc: realization/sample size ratio
         - epsilon_pca: tolerance for selecting the number of considered componenets in PCA
         - epsilon_kde: smoothing parameter in the kernel density estimation
@@ -957,9 +908,7 @@ class PLoM:
                 )
             else:
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: task {} not found.'.format(
-                        cur_task.task_name
-                    ),
+                    msg=f'PLoM.RunAlgorithm: task {cur_task.task_name} not found.',
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -972,9 +921,7 @@ class PLoM:
                     ).avail_var_list.append(cur_item)
             if not cur_task.refresh_status():
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: simulation stopped with task {} not fully completed.'.format(
-                        cur_task.task_name
-                    ),
+                    msg=f'PLoM.RunAlgorithm: simulation stopped with task {cur_task.task_name} not fully completed.',
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -998,8 +945,7 @@ class PLoM:
             )
 
     def DataNormalization(self, X):
-        """
-        Normalizing the X
+        """Normalizing the X
         - X: the data matrix to be normalized
         """
         # scaling
@@ -1013,7 +959,7 @@ class PLoM:
         (H, mu, phi, errors) = plom.PCA(X_origin, epsilon_pca)
         nu = len(H)
         self.logfile.write_msg(
-            msg='PLoM.RunPCA: considered number of PCA components = {}'.format(nu),
+            msg=f'PLoM.RunPCA: considered number of PCA components = {nu}',
             msg_type='RUNNING',
             msg_level=0,
         )
@@ -1033,8 +979,7 @@ class PLoM:
         return H, mu, phi, nu, errors
 
     def RunKDE(self, X, epsilon_kde):
-        """
-        Running Kernel Density Estimation
+        """Running Kernel Density Estimation
         - X: the data matrix to be reduced
         - epsilon_kde: smoothing parameter in the kernel density estimation
         """
@@ -1079,9 +1024,7 @@ class PLoM:
     def ISDEGeneration(
         self, n_mc=5, tol_PCA2=1e-5, tol=0.02, max_iter=50, seed_num=None
     ):
-        """
-        The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H
-        """
+        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""
         if seed_num:
             np.random.seed(seed_num)
         # constraints
@@ -1124,9 +1067,7 @@ class PLoM:
                 and (increasing_iterations < 3)
             ):
                 self.logfile.write_msg(
-                    msg='PLoM.ISDEGeneration: running iteration {}.'.format(
-                        iteration + 1
-                    ),
+                    msg=f'PLoM.ISDEGeneration: running iteration {iteration + 1}.',
                     msg_type='RUNNING',
                     msg_level=0,
                 )
@@ -1230,8 +1171,7 @@ class PLoM:
         self.Xnew = np.diag(self.alpha).dot(self.Xnew) + self.x_min
 
     def export_results(self, data_list=[], file_format_list=['csv']):
-        """
-        Exporting results by the data names
+        """Exporting results by the data names
         - data_list: list of data names
         - file_format_list: list of output formats
         """
@@ -1240,7 +1180,7 @@ class PLoM:
             # print available data names
             avail_name_str = ','.join(avail_name_list)
             self.logfile.write_msg(
-                msg='PLoM.export_results: available data {}.'.format(avail_name_str),
+                msg=f'PLoM.export_results: available data {avail_name_str}.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
@@ -1255,9 +1195,7 @@ class PLoM:
             for tag, data_i in enumerate(data_list):
                 if data_i not in avail_name_list:
                     self.logfile.write_msg(
-                        msg='PLoM.export_results: {} is not found and skipped.'.format(
-                            data_i
-                        ),
+                        msg=f'PLoM.export_results: {data_i} is not found and skipped.',
                         msg_type='WARNING',
                         msg_level=0,
                     )
@@ -1271,25 +1209,19 @@ class PLoM:
                     )
                     if type(ex_flag) == int and ex_flat == 1:
                         self.logfile.write_msg(
-                            msg='PLoM.export_results: {} is not found and skipped.'.format(
-                                data_i
-                            ),
+                            msg=f'PLoM.export_results: {data_i} is not found and skipped.',
                             msg_type='WARNING',
                             msg_level=0,
                         )
                     elif type(ex_flag) == int and ex_flag == 2:
                         self.logfile.write_msg(
-                            msg='PLoM.export_results: {} is not supported yest.'.format(
-                                ff_i
-                            ),
+                            msg=f'PLoM.export_results: {ff_i} is not supported yest.',
                             msg_type='ERROR',
                             msg_level=0,
                         )
                     else:
                         self.logfile.write_msg(
-                            msg='PLoM.export_results: {} is exported in {}.'.format(
-                                data_i, ex_flag
-                            ),
+                            msg=f'PLoM.export_results: {data_i} is exported in {ex_flag}.',
                             msg_type='RUNNING',
                             msg_level=0,
                         )

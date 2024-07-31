@@ -1,20 +1,19 @@
 # %%
+import json
 import os
+
 import numpy as np
 import pandas as pd
-import json
 import xarray as xr
 
 
 # 'netcdf4', 'h5netcdf', 'scipy'
 # %%
 def M9(information):
-    """
-    the default is to select sites from all M9 sites, but
+    """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
     """
-
     LocationFlag = information['LocationFlag']
     numSiteGM = information['number_of_realizations']
     grid_type = information[
@@ -110,6 +109,6 @@ if __name__ == '__main__':
     # change the directory to the directory of the current file
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    with open('information.json', 'r') as file:
+    with open('information.json') as file:
         information = json.load(file)
     M9(information)

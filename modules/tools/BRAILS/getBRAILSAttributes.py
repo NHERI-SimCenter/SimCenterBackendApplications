@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2024 The Regents of the University of California
 #
@@ -40,8 +39,8 @@
 # 03-27-2024
 
 # Import packages needed for setting up required packages:
-import sys
 import subprocess
+import sys
 from importlib import metadata as importlib_metadata
 
 print('Initializing BRAILS...')
@@ -100,6 +99,7 @@ if importlib_metadata.version('BRAILS') != latestBrailsVersion:
 import argparse
 import os
 from time import gmtime, strftime
+
 from brails.EnabledAttributes import BldgAttributes
 
 

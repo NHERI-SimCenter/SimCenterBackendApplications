@@ -1,7 +1,6 @@
 # written: UQ team @ SimCenter
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -11,11 +10,11 @@ else:
     string_types = str
 
 import os
-import stat
-import sys
 import platform
+import stat
 import subprocess
-import argparse
+import sys
+
 import click
 
 
@@ -63,16 +62,14 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
 
     os.chmod(
-        '{}/preprocessUQpy.py'.format(thisScriptDir),
+        f'{thisScriptDir}/preprocessUQpy.py',
         stat.S_IWUSR | stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH,
     )
 
     # 1. Create the UQy analysis python script
-    preprocessorCommand = "'{}' '{}/preprocessUQpy.py' --workflowInput {} --driverFile {} --runType {} --osType {}".format(
-        python, thisScriptDir, workflowinput, driverfile, runtype, osType
-    )
+    preprocessorCommand = f"'{python}' '{thisScriptDir}/preprocessUQpy.py' --workflowInput {workflowinput} --driverFile {driverfile} --runType {runtype} --osType {osType}"
 
-    subprocess.run(preprocessorCommand, shell=True)
+    subprocess.run(preprocessorCommand, shell=True, check=False)
 
     if runtype in ['runningLocal']:
         os.chmod(
@@ -88,7 +85,9 @@ def main(workflowinput, workflowoutput, driverfile, runtype):
 
     if runtype in ['runningLocal']:
         print('running UQpy: ', UQpycommand)
-        subprocess.run(UQpycommand, stderr=subprocess.STDOUT, shell=True)
+        subprocess.run(
+            UQpycommand, stderr=subprocess.STDOUT, shell=True, check=False
+        )
 
 
 if __name__ == '__main__':

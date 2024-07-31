@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb  2 20:22:09 2021
+"""Created on Tue Feb  2 20:22:09 2021
 
 @author: snaeimi
 """
 
-from wntrfr.network.model import LinkStatus
 from collections import OrderedDict
+
+from wntrfr.network.model import LinkStatus
 
 LINK_TYPE_COLLECTIVES = {
     'BYPASS_PIPE',
@@ -601,10 +600,10 @@ class Repair:
             change_list = self._registry._record_registry[rec_id]
 
             for change, name in ((k, change_list[k]) for k in reversed(change_list)):
-                if 'removeExplicitLeak' == change:
+                if change == 'removeExplicitLeak':
                     pass
 
-                elif 'NODE_DEMAND_AFTER' == change or 'NODE_DEMAND_BEFORE' == change:
+                elif change == 'NODE_DEMAND_AFTER' or change == 'NODE_DEMAND_BEFORE':
                     if (
                         self._registry.settings['damage_node_model']
                         == 'Predefined_demand'
@@ -613,9 +612,7 @@ class Repair:
                     elif (
                         self._registry.settings['damage_node_model']
                         == 'equal_diameter_emitter'
-                    ):
-                        self.restoreDistributionOrginalDemand(damage_node_name, wn)
-                    elif (
+                    ) or (
                         self._registry.settings['damage_node_model']
                         == 'equal_diameter_reservoir'
                     ):
@@ -639,7 +636,7 @@ class Repair:
 
             for change, name in ((k, change_list[k]) for k in reversed(change_list)):
                 flag = True
-                if 'ADDED_PIPE' == change or 'ADDED_PUMP' == change:
+                if change == 'ADDED_PIPE' or change == 'ADDED_PUMP':
                     wn.remove_link(name)
 
                 i_link_collective = False
@@ -660,19 +657,19 @@ class Repair:
                     ]
                     if (refined_damage_data[action] == True).all():
                         if i_link_collective:
-                            if change == 'BYPASS_PIPE':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PIPE_A':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PIPE_B':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PIPE_C':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PIPE_D':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PUMP_A':
-                                wn.remove_link(name)
-                            elif change == 'ADDED_PUMP_B':
+                            if (
+                                change == 'BYPASS_PIPE'
+                                or change == 'ADDED_PIPE_A'
+                                or (
+                                    change == 'ADDED_PIPE_B'
+                                    or change == 'ADDED_PIPE_C'
+                                )
+                                or (
+                                    change == 'ADDED_PIPE_D'
+                                    or change == 'ADDED_PUMP_A'
+                                    or change == 'ADDED_PUMP_B'
+                                )
+                            ):
                                 wn.remove_link(name)
                             elif change == 'PIPE_CLOSED_FROM_OPEN':
                                 if name in wn.pipe_name_list:

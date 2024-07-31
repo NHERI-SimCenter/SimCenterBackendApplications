@@ -1,8 +1,9 @@
 # %%
-import os
 import json
-from datetime import datetime
+import os
 import time
+from datetime import datetime
+
 from agavepy.agave import Agave
 
 # change the directory to the current directory
@@ -11,7 +12,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 def Submit_tapis_job():
     ag = Agave.restore()
-    with open('TapisFiles/information.json', 'r') as file:
+    with open('TapisFiles/information.json') as file:
         information = json.load(file)
     file.close()
 

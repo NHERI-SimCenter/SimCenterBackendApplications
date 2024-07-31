@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,16 +37,17 @@
 # Adam Zsarnóczay
 #
 
-import os, sys
-import argparse, json
-import string
-import numpy as np
+import argparse
+import json
+import sys
 from pathlib import Path, PurePath
+
+import numpy as np
 
 
 def write_RV(EVENT_input_path):
     # open the event file and get the list of events
-    with open(EVENT_input_path, 'r', encoding='utf-8') as f:
+    with open(EVENT_input_path, encoding='utf-8') as f:
         EVENT_in = json.load(f)
 
     # if there is a list of possible events, load all of them
@@ -67,7 +67,7 @@ def write_RV(EVENT_input_path):
     for e_i, event in enumerate(event_list):
         filename, sample_id, __ = event.split('x')
 
-        if filename not in file_sample_dict.keys():
+        if filename not in file_sample_dict:
             file_sample_dict.update({filename: [[], []]})
 
         file_sample_dict[filename][0].append(e_i)
@@ -75,7 +75,7 @@ def write_RV(EVENT_input_path):
 
     EDP_output = None
 
-    for filename in file_sample_dict.keys():
+    for filename in file_sample_dict:
         # get the header
         header_data = np.genfromtxt(
             data_dir / filename,
@@ -163,11 +163,11 @@ def write_RV(EVENT_input_path):
 # It is not used currently
 def create_EDP(EVENT_input_path, EDP_input_path):
     # load the EDP file
-    with open(EDP_input_path, 'r', encoding='utf-8') as f:
+    with open(EDP_input_path, encoding='utf-8') as f:
         EDP_in = json.load(f)
 
     # load the EVENT file
-    with open(EVENT_input_path, 'r', encoding='utf-8') as f:
+    with open(EVENT_input_path, encoding='utf-8') as f:
         EVENT_in = json.load(f)
 
     # store the IM(s) in the EDP file

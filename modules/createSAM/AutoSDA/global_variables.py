@@ -9,9 +9,8 @@
 # Last revision: 09/2020
 
 import os
-import pandas as pd
-import pathlib
 
+import pandas as pd
 from steel_material import SteelMaterial
 
 ##########################################################################

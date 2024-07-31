@@ -1,8 +1,17 @@
-import os, sys, argparse, posixpath, ntpath, json, importlib
+import argparse
+import importlib
+import json
+import os
+import posixpath
+import shutil
+import sys
+import warnings
+
+import geopandas as gpd
+import momepy
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-import shapely, warnings, momepy, shutil
+import shapely
 
 
 # https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
@@ -18,8 +27,7 @@ class NpEncoder(json.JSONEncoder):
 
 
 class generalAIMGenerator:
-    """
-    The generator of general AIM such as buildings, bridges, tunnels
+    """The generator of general AIM such as buildings, bridges, tunnels
     :param : The arg is used for ...
     :type arg: str
     :param `*args`: The variable arguments are used for ...
@@ -56,7 +64,7 @@ class generalAIMGenerator:
             assets_requested = np.array(assets_requested)
             assets_available = self.gdf.index.values
             assets_to_run = assets_requested[
-                np.where(np.in1d(assets_requested, assets_available))[0]
+                np.where(np.isin(assets_requested, assets_available))[0]
             ]
         else:
             assets_to_run = self.gdf.index.values
@@ -97,7 +105,7 @@ class generalAIMGenerator:
         if componentType:
             outDir = os.path.join(outDir, componentType)
         asset_id = AIM_i['GeneralInformation']['AIM_id']
-        AIM_file_name = '{}-AIM.json'.format(asset_id)
+        AIM_file_name = f'{asset_id}-AIM.json'
         AIM_file_name = os.path.join(outDir, AIM_file_name)
         with open(AIM_file_name, 'w', encoding='utf-8') as f:
             json.dump(AIM_i, f, indent=2, cls=NpEncoder)
@@ -161,7 +169,6 @@ class lineAIMGenerator(generalAIMGenerator):
             )
         # self.gdf = edges.reset_index().rename(columns={"index":"AIM_id"})
         self.gdf = edges
-        return
 
     def defineConnectivities(
         self, AIM_id_prefix=None, edges_file_name=None, nodes_file_name=None
@@ -226,13 +233,12 @@ class lineAIMGenerator(generalAIMGenerator):
                 os.path.join(outDir, f'{nodes_file_name}.geojson'), driver='GeoJSON'
             )
         self.gdf = edges
-        return
 
 
 def split_and_select_components(input_config):
     component_dict = dict()
     asset_source_file = input_config['assetSourceFile']
-    with open(asset_source_file, 'r', encoding='utf-8') as f:
+    with open(asset_source_file, encoding='utf-8') as f:
         source_data = json.load(f)
     crs = source_data['crs']
     featureList = source_data['features']
@@ -261,7 +267,7 @@ def split_and_select_components(input_config):
                 component_dict.update({key: []})
     for feat in featureList:
         component_type = feat['properties'].get('type', None)
-        if component_type in component_dict.keys():
+        if component_type in component_dict:
             feat_id = int(feat['id'])
             if requested_dict[component_type].size == 0:
                 component_dict.pop(component_type)
@@ -269,7 +275,7 @@ def split_and_select_components(input_config):
             if feat_id in requested_dict[component_type]:
                 feat['properties'].update({'id': feat_id})
                 component_dict[component_type].append(feat)
-    for component in component_dict.keys():
+    for component in component_dict:
         component_dict[component] = gpd.GeoDataFrame.from_features(
             component_dict[component], crs=crs['properties']['name']
         ).set_index('id')
@@ -302,7 +308,6 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            import mpi4py
             from mpi4py import MPI
 
             runParallel = True
@@ -316,7 +321,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
                 procID = 0
     outDir = os.path.dirname(output_file)
 
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:
         input_data = json.load(f)
     input_config = input_data['Applications']['Assets'][asset_type][
         'ApplicationData'
@@ -375,7 +380,7 @@ def create_asset_files(output_file, asset_type, input_file, doParallel):
             comm.Barrier()
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, 'r', encoding='utf-8') as data_file:
+                with open(fileToAppend, encoding='utf-8') as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend

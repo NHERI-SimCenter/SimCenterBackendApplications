@@ -1,5 +1,4 @@
-"""
-The wntrfr.network.model module includes methods to build a water network
+"""The wntrfr.network.model module includes methods to build a water network
 model.
 
 .. rubric:: Contents
@@ -16,29 +15,27 @@ model.
 """
 
 import logging
-import pandas as pd
-import numpy as np
 from collections import OrderedDict
-from wntrfr.network.base import LinkStatus
-from wntrfr.network.elements import Pump
-from wntrfr.network.elements import Valve
-from ..epanet.io import InpFile
 
+import numpy as np
 from wntrfr.network import WaterNetworkModel
+from wntrfr.network.base import LinkStatus
+from wntrfr.network.elements import Pump, Valve
 
+from ..epanet.io import InpFile
 
 logger = logging.getLogger(__name__)
 
 
 class WaterNetworkModel(WaterNetworkModel):
-    """
-    Water network model class.
+    """Water network model class.
 
     Parameters
-    -------------------
+    ----------
     inp_file_name: string (optional)
         Directory and filename of EPANET inp file to load into the
         WaterNetworkModel object.
+
     """
 
     def __init__(self, inp_file_name=None):
@@ -49,8 +46,7 @@ class WaterNetworkModel(WaterNetworkModel):
     def updateWaterNetworkModelWithResult(
         self, result, registry, latest_simulation_time=None
     ):
-        """
-        Updates Water Netwrok Model consistent with result model. must be only
+        """Updates Water Netwrok Model consistent with result model. must be only
         used with EPANET solver or just in case you really know what you are
         doing.
 
@@ -76,15 +72,13 @@ class WaterNetworkModel(WaterNetworkModel):
         None.
 
         """
-
         max_time = result.node['head'].index.max()
         if latest_simulation_time == None:
             latest_simulation_time = max_time
-        else:
-            if latest_simulation_time != max_time:
-                raise ValueError(
-                    'Provided LATEST SIMULATION TIME id not consistnt with teh latest time in RESULT'
-                )
+        elif latest_simulation_time != max_time:
+            raise ValueError(
+                'Provided LATEST SIMULATION TIME id not consistnt with teh latest time in RESULT'
+            )
 
         avilable_tank_name_list = set(self.tank_name_list).intersection(
             result.node['head'].columns
@@ -153,8 +147,7 @@ class WaterNetworkModel(WaterNetworkModel):
                 logger.error('Status is : ' + repr(status))
 
     def read_inpfile(self, filename):
-        """
-        Defines water network model components from an EPANET INP file
+        """Defines water network model components from an EPANET INP file
 
         Parameters
         ----------
@@ -167,8 +160,7 @@ class WaterNetworkModel(WaterNetworkModel):
         self._inpfile = inpfile
 
     def write_inpfile(self, filename, units=None):
-        """
-        Writes the current water network model to an EPANET INP file
+        """Writes the current water network model to an EPANET INP file
 
         Parameters
         ----------

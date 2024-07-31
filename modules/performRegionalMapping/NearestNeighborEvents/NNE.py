@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,13 +38,13 @@
 # Tamika Bassman
 #
 
-import argparse, json
-import numpy as np
-import pandas as pd
+import argparse
 import importlib
-
+import json
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -61,7 +60,6 @@ def find_neighbors(
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            import mpi4py
             from mpi4py import MPI
 
             runParallel = True
@@ -101,7 +99,7 @@ def find_neighbors(
     )
 
     # load the building data file
-    with open(asset_file, 'r', encoding='utf-8') as f:
+    with open(asset_file, encoding='utf-8') as f:
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
@@ -112,7 +110,7 @@ def find_neighbors(
     count = 0
     for i, asset in enumerate(asset_dict):
         if runParallel == False or (i % numP) == procID:
-            with open(asset['file'], 'r', encoding='utf-8') as f:
+            with open(asset['file'], encoding='utf-8') as f:
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
@@ -149,7 +147,7 @@ def find_neighbors(
         # open the AIM file
         asst_file = AIM_df.iloc[AIM_id]['file']
 
-        with open(asst_file, 'r', encoding='utf-8') as f:
+        with open(asst_file, encoding='utf-8') as f:
             asset_data = json.load(f)
 
         if filter_label != '':

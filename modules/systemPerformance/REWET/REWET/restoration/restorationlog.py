@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jan 31 21:54:19 2021
+"""Created on Sun Jan 31 21:54:19 2021
 
 @author: snaeimi
 """
 
 from collections import OrderedDict
+
 import pandas as pd
 
 

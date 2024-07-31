@@ -1,19 +1,16 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 10 18:29:50 2022
+"""Created on Thu Nov 10 18:29:50 2022
 
 @author: snaeimi
 """
 
-from PyQt5 import QtWidgets, QtGui
+import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
-import matplotlib.pyplot as plt
 from GUI.Subsitute_Layer_Designer import Subsitute_Layer_Designer
 from GUI.Symbology_Designer import Symbology_Designer
-
+from PyQt5 import QtGui, QtWidgets
+from shapely.geometry import Point
 
 single_scenario_map_options = [
     '',
@@ -259,9 +256,7 @@ class Map_Designer:
 
     def getAnnotationtype(self, text=None):
         combo_value = self.annotation_event_combo.currentText()
-        if combo_value == 'Mouse hover':
-            self.anottation_type = combo_value
-        elif combo_value == 'Mouse click':
+        if combo_value == 'Mouse hover' or combo_value == 'Mouse click':
             self.anottation_type = combo_value
         else:
             raise ValueError('unknown annotation type: ' + repr(combo_value))
@@ -310,10 +305,9 @@ class Map_Designer:
                 self.update_annot(text, event)
                 self.annot.set_visible(True)
                 self.mpl_map.canvas.fig.canvas.draw_idle()
-            else:
-                if vis:
-                    self.annot.set_visible(False)
-                    self.mpl_map.canvas.fig.canvas.draw_idle()
+            elif vis:
+                self.annot.set_visible(False)
+                self.mpl_map.canvas.fig.canvas.draw_idle()
 
     def update_annot(self, text, event):
         self.annot.xy = (event.xdata, event.ydata)

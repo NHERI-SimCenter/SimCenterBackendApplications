@@ -2,16 +2,15 @@
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
-import numpy as np
 import re
 import sys
 
+import numpy as np
 from global_variables import SECTION_DATABASE
 
 
 def determine_Fa_coefficient(site_class, Ss):
-    """
-    This function is used to determine Fa coefficient, which is based on ASCE 7-10 Table 11.4-1
+    """This function is used to determine Fa coefficient, which is based on ASCE 7-10 Table 11.4-1
     :param Ss: a scalar given in building class
     :param site_class: a string: 'A', 'B', 'C', 'D', or 'E' given in building information
     :return: a scalar which is Fa coefficient
@@ -55,8 +54,7 @@ def determine_Fa_coefficient(site_class, Ss):
 
 
 def determine_Fv_coefficient(site_class, S1):
-    """
-    This function is used to determine Fv coefficient, which is based on ASCE 7-10 Table 11.4-2
+    """This function is used to determine Fv coefficient, which is based on ASCE 7-10 Table 11.4-2
     :param S1: a scalar given in building class
     :param site_class: a string 'A', 'B', 'C', 'D' or 'E' given in building class
     :return: a scalar which is Fv coefficient
@@ -100,8 +98,7 @@ def determine_Fv_coefficient(site_class, S1):
 
 
 def calculate_DBE_acceleration(Ss, S1, Fa, Fv):
-    """
-    This function is used to calculate design spectrum acceleration parameters,
+    """This function is used to calculate design spectrum acceleration parameters,
     which is based ASCE 7-10 Section 11.4
     Note: All notations for these variables can be found in ASCE 7-10.
     :param Ss: a scalar given in building information (problem statement)
@@ -118,8 +115,7 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):
 
 
 def determine_Cu_coefficient(SD1):
-    """
-    This function is used to determine Cu coefficient, which is based on ASCE 7-10 Table 12.8-1
+    """This function is used to determine Cu coefficient, which is based on ASCE 7-10 Table 12.8-1
     Note: All notations for these variables can be found in ASCE 7-10.
     :param SD1: a scalar calculated from funtion determine_DBE_acceleration
     :return: Cu: a scalar
@@ -143,8 +139,7 @@ def determine_Cu_coefficient(SD1):
 def determine_floor_height(
     number_of_story, first_story_height, typical_story_height
 ):
-    """
-    This function is used to calculate the height for each floor level: from ground floor to roof
+    """This function is used to calculate the height for each floor level: from ground floor to roof
     Obviously, the height for ground floor level is zero
     Unit: foot (ft)
     :param number_of_story: a scalar which desbribes the number of story for a certain building
@@ -168,8 +163,7 @@ def determine_floor_height(
 
 
 def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):
-    """
-    This function is used to calculate the seismic response coefficient based on ASCE 7-10 Section 12.8.1
+    """This function is used to calculate the seismic response coefficient based on ASCE 7-10 Section 12.8.1
     Unit: kips, g (gravity constant), second
     Note: All notations for these variables can be found in ASCE 7-10.
     :param SDS: a scalar determined using Equation 11.4-3; output from "calculate_DBE_acceleration" function
@@ -220,8 +214,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):
 
 
 def determine_k_coeficient(period):
-    """
-    This function is used to determine the coefficient k based on ASCE 7-10 Section 12.8.3
+    """This function is used to determine the coefficient k based on ASCE 7-10 Section 12.8.3
     :param period: building period;
     :return: k: a scalar will be used in Equation 12.8-12 in ASCE 7-10
     """
@@ -236,8 +229,7 @@ def determine_k_coeficient(period):
 
 
 def calculate_seismic_force(base_shear, floor_weight, floor_height, k):
-    """
-    This function is used to calculate the seismic story force for each floor level
+    """This function is used to calculate the seismic story force for each floor level
     Unit: kip, foot
     :param base_shear: a scalar, total base shear for the building
     :param floor_weight: a vector with a length of number_of_story
@@ -262,8 +254,7 @@ def calculate_seismic_force(base_shear, floor_weight, floor_height, k):
 
 
 def find_section_candidate(target_depth, section_database):
-    """
-    This function is used to find all possible section sizes that satisfies the user-specified depth.
+    """This function is used to find all possible section sizes that satisfies the user-specified depth.
     :param target_depth: a string which defines the depth of columns or beams, e.g. W14
     :param section_database: a dataframe read from SMF_Section_Property.csv in Library folder
     :return: a pandas Series of strings which denotes all possible sizes based on depth
@@ -278,8 +269,7 @@ def find_section_candidate(target_depth, section_database):
 
 
 def search_member_size(target_name, target_quantity, candidate, section_database):
-    """
-    This function is used to find an appropriate member size based on a certain section property
+    """This function is used to find an appropriate member size based on a certain section property
     :param target_name: a string which labels the name of target quantity.
                         Options for this string are headers of SMF_Section_Property.csv
     :param target_quantity: a scalar value of the section property, such as the value of Ix or Zx
@@ -311,8 +301,7 @@ def search_member_size(target_name, target_quantity, candidate, section_database
 
 
 def search_section_property(target_size, section_database):
-    """
-    This function is used to obtain the section property when section size is given.
+    """This function is used to obtain the section property when section size is given.
     The output will be stored in a dictionary.
     :param target_size: a string which defines section size, e.g. 'W14X500'
     :param section_database: a dataframe read from SMF_Section_Property.csv in "Library" folder
@@ -334,8 +323,7 @@ def search_section_property(target_size, section_database):
 
 
 def decrease_member_size(candidate, current_size):
-    """
-    This function is used to decrease the member size one step downward
+    """This function is used to decrease the member size one step downward
     :param candidate: a list of strings which defines the possible sizes
     :param current_size: a string which defines current member size
     :return: optimized_size: a string which defines the member size after decrease
@@ -350,8 +338,7 @@ def decrease_member_size(candidate, current_size):
 
 
 def extract_depth(size):
-    """
-    This function is used to extract the depth of a section size when a size string is given.
+    """This function is used to extract the depth of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the depth of section. e.g. 'W14X550' ==> 14
     """
@@ -361,8 +348,7 @@ def extract_depth(size):
 
 
 def extract_weight(size):
-    """
-    This function is used to extract the weight of a section size when a size string is given.
+    """This function is used to extract the weight of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the weight of the section, e.g. 'W14X550' ==> 550
     """
@@ -375,8 +361,7 @@ def extract_weight(size):
 def constructability_helper(
     section_size, identical_size_per_story, total_story, sorted_quantity
 ):
-    """
-    This function is used to make every adjacent N stories have the same size and ensure that the whole list
+    """This function is used to make every adjacent N stories have the same size and ensure that the whole list
     is in a descending order.
     :param section_size: a list of strings. e.g. ['W14X500', 'W14X550']
     :param identical_size_per_story: a scalar to denote how many stories are supposed to have same size
@@ -392,7 +377,7 @@ def constructability_helper(
         per_story = identical_size_per_story
     # Compute the index where the member size is supposed to be varied
     variation_story = []
-    for i in range(0, total_story):
+    for i in range(total_story):
         if i % per_story == 0:
             variation_story.append(i)
     # Pre-process the section size list:
@@ -488,29 +473,27 @@ def constructability_helper(
                         for k in range(indx, starting_index + 1, 1):
                             section_size[k] = section_size[indx]
                 # Case 2: lower depth is smaller
+                elif current_property > lower_property:
+                    section_size[indx - 1] = section_size[indx]
+                # Sub-case 2.2: lower member has larger Zx
                 else:
-                    # Sub-case 2.1: lower member has smaller Zx
-                    if current_property > lower_property:
-                        section_size[indx - 1] = section_size[indx]
-                    # Sub-case 2.2: lower member has larger Zx
-                    else:
-                        # We need to change the lower member size such that it has the same depth with current story
-                        # and comparable Ix or Zx with old itself.
-                        candidates = find_section_candidate(
-                            'W' + str(current_depth), SECTION_DATABASE
-                        )
-                        section_size[indx - 1] = search_member_size(
-                            sorted_quantity,
-                            lower_property,
-                            candidates,
-                            SECTION_DATABASE,
-                        )
-                        section_size[indx] = section_size[indx - 1]
-                        # Don't forget to trace back because you just change the current story size.
-                        # If the story above the current story is still within "identical story block".
-                        # Then we need to revise the story above too.
-                        for k in range(indx, starting_index + 1, 1):
-                            section_size[k] = section_size[indx]
+                    # We need to change the lower member size such that it has the same depth with current story
+                    # and comparable Ix or Zx with old itself.
+                    candidates = find_section_candidate(
+                        'W' + str(current_depth), SECTION_DATABASE
+                    )
+                    section_size[indx - 1] = search_member_size(
+                        sorted_quantity,
+                        lower_property,
+                        candidates,
+                        SECTION_DATABASE,
+                    )
+                    section_size[indx] = section_size[indx - 1]
+                    # Don't forget to trace back because you just change the current story size.
+                    # If the story above the current story is still within "identical story block".
+                    # Then we need to revise the story above too.
+                    for k in range(indx, starting_index + 1, 1):
+                        section_size[k] = section_size[indx]
         # For stories at the boundary between "identical story block"
         indx = variation_story[-1]
         if indx == 0:
@@ -541,13 +524,11 @@ def constructability_helper(
                 sorted_quantity, lower_property, candidates, SECTION_DATABASE
             )
         # Case 3: lower member has larger depth
+        elif lower_property < current_property:
+            section_size[indx - 1] = section_size[indx]
+        # Sub-case 3.2: lower member has larger Ix or Zx
         else:
-            # Sub-case 3.1: lower member has smaller Ix or Zx
-            if lower_property < current_property:
-                section_size[indx - 1] = section_size[indx]
-            # Sub-case 3.2: lower member has larger Ix or Zx
-            else:
-                pass
+            pass
         # Update the stating index for next "identical story block"
         starting_index = variation_story[-1] - 1
         if starting_index < 0:
@@ -600,8 +581,7 @@ def constructability_helper(
 
 
 def increase_member_size(candidate, current_size):
-    """
-    This function is used to increase the member size one step upward
+    """This function is used to increase the member size one step upward
     :param candidate: a list of strings which defines the possible sizes
     :param current_size: a string which denotes current member size
     :return: a string which denotes the member size after one step upward

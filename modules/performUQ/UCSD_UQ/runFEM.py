@@ -1,13 +1,13 @@
-"""
-authors: Dr. Frank McKenna*, Aakash Bangalore Satish*, Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati,
+"""authors: Dr. Frank McKenna*, Aakash Bangalore Satish*, Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati,
 and Prof. J.P. Conte
 affiliation: SimCenter*; University of California, San Diego
 
 """
 
 import os
-import subprocess
 import shutil
+import subprocess
+
 import numpy as np
 
 
@@ -47,12 +47,10 @@ def runFEM(
     shiftFactors,
     workflowDriver,
 ):
-    """
-    this function runs FE model (model.tcl) for each parameter value (par)
+    """This function runs FE model (model.tcl) for each parameter value (par)
     model.tcl should take parameter input
     model.tcl should output 'output$PN.txt' -> column vector of size 'Ny'
     """
-
     workdirName = 'workdir.' + str(particleNumber + 1)
     analysisPath = os.path.join(workdirMain, workdirName)
 
@@ -73,12 +71,12 @@ def runFEM(
     covarianceMultiplierList = []
     parameterNames = variables['names']
     with open('params.in', 'w') as f:
-        f.write('{}\n'.format(len(parameterSampleValues) - len(edpNamesList)))
+        f.write(f'{len(parameterSampleValues) - len(edpNamesList)}\n')
         for i in range(len(parameterSampleValues)):
             name = str(parameterNames[i])
             value = str(parameterSampleValues[i])
             if name.split('.')[-1] != 'CovMultiplier':
-                f.write('{} {}\n'.format(name, value))
+                f.write(f'{name} {value}\n')
             else:
                 covarianceMultiplierList.append(parameterSampleValues[i])
 
@@ -93,7 +91,7 @@ def runFEM(
 
     # Read in the model prediction
     if os.path.exists('results.out'):
-        with open('results.out', 'r') as f:
+        with open('results.out') as f:
             prediction = np.atleast_2d(np.genfromtxt(f)).reshape((1, -1))
         preds = prediction.copy()
         os.chdir('../')

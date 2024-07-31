@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 #
@@ -36,16 +35,14 @@
 # Contributors:
 # Frank McKenna
 
-import sys, os, json
 import argparse
-from pathlib import Path
+import json
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-import whale.main as whale
 from whale.main import (
-    log_msg,
-    log_div,
     _parse_app_registry,
     create_command,
     run_command,
@@ -72,7 +69,7 @@ def main(
     if inputDir != '':
         os.chdir(inputDir)
 
-    with open(inputFileName, 'r') as f:
+    with open(inputFileName) as f:
         inputs = json.load(f)
 
     if 'referenceDir' in inputs:
@@ -119,7 +116,7 @@ def main(
         if isinstance(modelToRun, str):
             rvName = 'MultiModel-' + appKey
             # if not here, try opening params.in and getting var from there
-            with open('params.in', 'r') as params:
+            with open('params.in') as params:
                 # Read the file line by line
                 for line in params:
                     values = line.strip().split()
@@ -149,7 +146,7 @@ def main(
         appRunDataInMultiModel.append(appRunData)
         numModels = numModels + 1
 
-    for i in range(0, numModels):
+    for i in range(numModels):
         beliefs[i] = beliefs[i] / sumBeliefs
 
     #
@@ -184,7 +181,7 @@ def main(
         # need to create temp inputfile for just that application,
         #
 
-        for i in range(0, numModels):
+        for i in range(numModels):
             appName = appsInMultiModel[i]
             print('appsRegistry:', appsRegistry)
             application = appsRegistry[appName]
@@ -217,7 +214,7 @@ def main(
             'createdRun': True,
             'variableClass': 'Uncertain',
             'Weights': beliefs,
-            'Values': [i + 1 for i in range(0, numModels)],
+            'Values': [i + 1 for i in range(numModels)],
         }
         randomVariables.append(thisRV)
 

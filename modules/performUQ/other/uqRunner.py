@@ -20,5 +20,5 @@ class UqRunnerFactory:
 
 
 # Abstract base class
-class UqRunner(object):
+class UqRunner:
     pass

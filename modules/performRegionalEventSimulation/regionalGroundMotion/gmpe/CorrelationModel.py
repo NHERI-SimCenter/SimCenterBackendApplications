@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,14 +38,14 @@
 #
 
 import os
+
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d, interp2d
 
 
 def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
-    """
-    Computing inter-event correlation coeffcieint between Sa of two periods
+    """Computing inter-event correlation coeffcieint between Sa of two periods
     Reference:
         Baker and Jayaram (2008) Correlation of Spectral Acceleration
         Values from NGA Ground Motion Models
@@ -60,7 +59,6 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
     Note:
         The valid range of T1 and T2 is 0.01s ~ 10.0s
     """
-
     # Parse periods from im1 and im2
     if im1.startswith('SA'):
         T1 = float(im1[3:-1])
@@ -111,8 +109,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):
 
 
 def bradley_correlation_2011(IM, T=None, flag_Ds=True):
-    """
-    Computing inter-event correlation coeffcieint between Sa(T) and Ds575/D595
+    """Computing inter-event correlation coeffcieint between Sa(T) and Ds575/D595
     Reference:
         Bradley (2011) Correlation of Significant Duration with Amplitude and
         Cumulative Intensity Measures and Its Use in Ground Motion Selection
@@ -189,44 +186,42 @@ def bradley_correlation_2011(IM, T=None, flag_Ds=True):
                 a_c = 0.00
                 b_p = 6.50
                 b_c = 10.00
-        else:
-            if T < 0.04:
-                a_p = -0.41
-                a_c = -0.41
-                b_p = 0.01
-                b_c = 0.04
-            elif T < 0.08:
-                a_p = -0.41
-                a_c = -0.38
-                b_p = 0.04
-                b_c = 0.08
-            elif T < 0.26:
-                a_p = -0.38
-                a_c = -0.35
-                b_p = 0.08
-                b_c = 0.26
-            elif T < 1.40:
-                a_p = -0.35
-                a_c = -0.02
-                b_p = 0.26
-                b_c = 1.40
-            elif T <= 6.00:
-                a_p = -0.02
-                a_c = 0.23
-                b_p = 1.40
-                b_c = 6.00
-            elif T <= 10.00:
-                a_p = 0.23
-                a_c = 0.02
-                b_p = 6.00
-                b_c = 10.0
+        elif T < 0.04:
+            a_p = -0.41
+            a_c = -0.41
+            b_p = 0.01
+            b_c = 0.04
+        elif T < 0.08:
+            a_p = -0.41
+            a_c = -0.38
+            b_p = 0.04
+            b_c = 0.08
+        elif T < 0.26:
+            a_p = -0.38
+            a_c = -0.35
+            b_p = 0.08
+            b_c = 0.26
+        elif T < 1.40:
+            a_p = -0.35
+            a_c = -0.02
+            b_p = 0.26
+            b_c = 1.40
+        elif T <= 6.00:
+            a_p = -0.02
+            a_c = 0.23
+            b_p = 1.40
+            b_c = 6.00
+        elif T <= 10.00:
+            a_p = 0.23
+            a_c = 0.02
+            b_p = 6.00
+            b_c = 10.0
         rho = a_p + np.log(T / b_p) / np.log(b_c / b_p) * (a_c - a_p)
         return rho
 
 
 def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
-    """
-    Computing intra-event correlation coeffcieint between Sa(T) at two sites
+    """Computing intra-event correlation coeffcieint between Sa(T) at two sites
     Reference:
         Jayaram and Baker (2009) Correlation model for spatially distributed
         ground-motion intensities
@@ -238,7 +233,6 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
     Output:
         rho: correlation between normalized intra-event residuals
     """
-
     # parse period form im
     try:
         # for Sa
@@ -248,25 +242,21 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):
             T = 0.0
     except ValueError:
         print(
-            'CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {}'.format(
-                im
-            )
+            f'CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {im}'
         )
 
     if T >= 1.0:
         b = 22.0 + 3.7 * T
+    elif flag_clustering:
+        b = 8.5 + 17.2 * T
     else:
-        if flag_clustering:
-            b = 8.5 + 17.2 * T
-        else:
-            b = 40.7 - 15.0 * T
+        b = 40.7 - 15.0 * T
     rho = np.exp(-3.0 * h / b)
     return rho
 
 
 def load_loth_baker_correlation_2013(datapath):
-    """
-    Loading the three matrices in the Loth-Baker correaltion model (2013)
+    """Loading the three matrices in the Loth-Baker correaltion model (2013)
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
         accelerations at multiple periods (with the Erratum)
@@ -284,8 +274,7 @@ def load_loth_baker_correlation_2013(datapath):
 
 
 def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
-    """
-    Computing intra-event correlation coeffcieint between Sa(Ti) and Sa(Tj)
+    """Computing intra-event correlation coeffcieint between Sa(Ti) and Sa(Tj)
     at two sites
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
@@ -318,8 +307,7 @@ def compute_rho_loth_baker_correlation_2013(T1, T2, h, B1, B2, B3):
 
 
 def loth_baker_correlation_2013(stations, im_name_list, num_simu):
-    """
-    Simulating intra-event residuals
+    """Simulating intra-event residuals
     Reference:
         Loth and Baker (2013) A spatial cross-correlation model of spectral
         accelerations at multiple periods (with the Erratum)
@@ -342,9 +330,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
                 periods.append(0.0)
         except ValueError:
             print(
-                'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(
-                    cur_im
-                )
+                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading modeling coefficients
     B1, B2, B3 = load_loth_baker_correlation_2013(
@@ -391,8 +377,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):
 
 
 def load_markhvida_ceferino_baker_correlation_2017(datapath):
-    """
-    Loading the three matrices in the Markhivida et al. correaltion model (2017)
+    """Loading the three matrices in the Markhivida et al. correaltion model (2017)
     Reference:
         Markhvida et al. (2017) Modeling spatially correlated spectral
         accelerations at multiple periods using principal component analysis
@@ -425,8 +410,7 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):
 def markhvida_ceferino_baker_correlation_2017(
     stations, im_name_list, num_simu, num_pc=19
 ):
-    """
-    Simulating intra-event residuals
+    """Simulating intra-event residuals
     Reference:
         Markhvida et al. (2017) Modeling spatially correlated spectral
         accelerations at multiple periods using principal component analysis
@@ -451,15 +435,11 @@ def markhvida_ceferino_baker_correlation_2017(
                 periods.append(0.0)
             else:
                 raise ValueError(
-                    'CorrelationModel Markhvida et al. (2017): error - cannot handle {}'.format(
-                        cur_im
-                    )
+                    f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'
                 )
         except ValueError:
             print(
-                'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {}'.format(
-                    cur_im
-                )
+                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading factors
     MCB_model, MCB_pca, MCB_var = load_markhvida_ceferino_baker_correlation_2017(
@@ -542,8 +522,7 @@ def markhvida_ceferino_baker_correlation_2017(
 
 
 def load_du_ning_correlation_2021(datapath):
-    """
-    Loading the three matrices in the Du and Ning correlation model (2021)
+    """Loading the three matrices in the Du and Ning correlation model (2021)
     Reference:
         Du and Ning (2021) Modeling spatial cross-correlation of multiple
         ground motion intensity measures (SAs, PGA, PGV, Ia, CAV, and significant
@@ -570,8 +549,7 @@ def load_du_ning_correlation_2021(datapath):
 
 
 def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
-    """
-    Simulating intra-event residuals
+    """Simulating intra-event residuals
     Reference:
         Du and Ning (2021) Modeling spatial cross-correlation of multiple
         ground motion intensity measures (SAs, PGA, PGV, Ia, CAV, and significant
@@ -676,8 +654,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):
 
 
 def baker_bradley_correlation_2017(im1=None, im2=None):
-    """
-    Correlation between Sa and other IMs
+    """Correlation between Sa and other IMs
     Baker, J. W., and Bradley, B. A. (2017). “Intensity measure correlations observed in
     the NGA-West2 database, and dependence of correlations on rupture and site parameters.”
     Based on the script: https://github.com/bakerjw/NGAW2_correlations/blob/master/corrPredictions.m
@@ -688,7 +665,6 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     Output:
         rho: correlation coefficient
     """
-
     # im map:
     im_map = {'DS575H': 0, 'DS595H': 1, 'PGA': 2, 'PGV': 3}
 
@@ -701,9 +677,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
         tmp_tag = im_map.get(im1.upper(), None)
         if tmp_tag is None:
             print(
-                'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {}'.format(
-                    im1
-                )
+                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'
             )
             return 0.0
         im_list.append(tmp_tag)
@@ -715,9 +689,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
         tmp_tag = im_map.get(im2.upper(), None)
         if tmp_tag is None:
             print(
-                'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {}'.format(
-                    im2
-                )
+                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im2}'
             )
             return 0.0
         im_list.append(tmp_tag)
@@ -767,14 +739,14 @@ def baker_bradley_correlation_2017(im1=None, im2=None):
     # rho
     if im_tag < 2:
         for j in range(1, len(e[im_tag])):
-            if T <= e[im_tag][j]:
+            if e[im_tag][j] >= T:
                 rho = a[im_tag][j] + (b[im_tag][j] - a[im_tag][j]) / np.log(
                     e[im_tag][j] / e[im_tag][j - 1]
                 ) * np.log(T / e[im_tag][j - 1])
                 break
     else:
         for j in range(len(e[im_tag])):
-            if T <= e[im_tag][j]:
+            if e[im_tag][j] >= T:
                 rho = (a[im_tag][j] + b[im_tag][j]) / 2 - (
                     a[im_tag][j] - b[im_tag][j]
                 ) / 2 * np.tanh(d[im_tag][j] * np.log(T / c[im_tag][j]))

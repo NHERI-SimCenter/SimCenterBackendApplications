@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -36,14 +35,20 @@
 # Contributors:
 # Stevan Gavrilovic
 
-import json, io, os, sys, time, math, argparse
-from pathlib import Path
-from typing import List, Dict, Any
-import numpy as np
-from io import StringIO
+import argparse
+import io
+import json
+import math
+import os
+import sys
+import time
 import zipfile
-import pandas as pd
+from io import StringIO
+from pathlib import Path
+from typing import Any, Dict, List
 
+import numpy as np
+import pandas as pd
 from REDi.go_redi import go_redi
 
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
@@ -508,7 +513,7 @@ def main(args):
     # Create a high-level json with detailed results
     print(f'Saving all samples to: {redi_output_dir}/redi_results_all_samples.json')
     with open(
-        redi_output_dir / f'redi_results_all_samples.json', 'w', encoding='utf-8'
+        redi_output_dir / 'redi_results_all_samples.json', 'w', encoding='utf-8'
     ) as f:
         json.dump(final_results_dict, f, cls=NumpyEncoder)
 
@@ -537,13 +542,13 @@ def main(args):
 
     print(f'Saving all samples to: {redi_output_dir}/redi_summary_stats.json')
     with open(
-        redi_output_dir / f'redi_summary_stats.json', 'w', encoding='utf-8'
+        redi_output_dir / 'redi_summary_stats.json', 'w', encoding='utf-8'
     ) as f:
         json.dump(summary_stats, f, indent=4, cls=NumpyEncoder)
 
     # Write the log file
     print(f'Saving REDi log file at: {redi_output_dir}/redi_log.txt')
-    with open(redi_output_dir / f'redi_log.txt', 'w', encoding='utf-8') as file:
+    with open(redi_output_dir / 'redi_log.txt', 'w', encoding='utf-8') as file:
         # Iterate through the list of strings and write each one to the file
         for string in log_output:
             file.write(string + '\n')
@@ -576,22 +581,20 @@ if __name__ == '__main__':
             'Path to the working directory containing the Pelicun results is required'
         )
         exit()
-    else:
-        if not Path(args.dirnameOutput).exists():
-            print(
-                f'Provided path to the working directory {args.dirnameOutput} does not exist'
-            )
-            exit()
+    elif not Path(args.dirnameOutput).exists():
+        print(
+            f'Provided path to the working directory {args.dirnameOutput} does not exist'
+        )
+        exit()
 
     if not args.riskParametersPath:
         print('Path to the risk parameters JSON file is required')
         exit()
-    else:
-        if not Path(args.riskParametersPath).exists():
-            print(
-                f'Provided path to the risk parameters JSON file {args.riskParametersPath} does not exist'
-            )
-            exit()
+    elif not Path(args.riskParametersPath).exists():
+        print(
+            f'Provided path to the risk parameters JSON file {args.riskParametersPath} does not exist'
+        )
+        exit()
 
     start_time = time.time()
 

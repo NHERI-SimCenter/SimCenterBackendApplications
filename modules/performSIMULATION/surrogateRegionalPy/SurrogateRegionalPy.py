@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -44,13 +43,11 @@
 #
 
 
-import sys
-import os
-import subprocess
-import importlib
 import argparse
+import importlib
 import json
-from pathlib import Path
+import os
+import sys
 
 
 def main(aimName, samName, evtName, edpName, simName, getRV):
@@ -58,11 +55,11 @@ def main(aimName, samName, evtName, edpName, simName, getRV):
     # Find the GI and SAM files
     #
 
-    with open(aimName, 'r', encoding='utf-8') as f:
+    with open(aimName, encoding='utf-8') as f:
         root_AIM = json.load(f)
         GI = root_AIM['GeneralInformation']
 
-    with open(samName, 'r', encoding='utf-8') as f:
+    with open(samName, encoding='utf-8') as f:
         SAM = json.load(f)
 
     #
@@ -92,9 +89,7 @@ def main(aimName, samName, evtName, edpName, simName, getRV):
     # Parse filter file
     #
 
-    if modelName.lower() == 'none':
-        pass
-    elif modelName.lower() == 'error':
+    if modelName.lower() == 'none' or modelName.lower() == 'error':
         pass
     elif modelName.lower() == 'default':
         runDefault(root_AIM, aimName, samName, evtName, edpName, simName)
@@ -132,7 +127,7 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
         'WorkflowApplications.json',
     ]
     workflowAppJsonPath = os.path.join(*s)
-    with open(workflowAppJsonPath, 'r', encoding='utf-8') as f:
+    with open(workflowAppJsonPath, encoding='utf-8') as f:
         workflowAppDict = json.load(f)
         appList = workflowAppDict['SimulationApplications']['Applications']
         myApp = next(item for item in appList if item['Name'] == mySimAppName)
@@ -188,8 +183,6 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
             ]
         )
 
-    return
-
 
 def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
     #
@@ -221,7 +214,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
     ]
     SAMkeys_nodes = ['mass']
 
-    with open('params.in', 'r') as f:
+    with open('params.in') as f:
         paramsStr = f.read()
     nAddParams = 0
 
@@ -229,9 +222,9 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
         if key in GIkeys:
             val = GI[key]
             if not isinstance(val, str):
-                paramsStr += '{} {}\n'.format(key, val)
+                paramsStr += f'{key} {val}\n'
             else:
-                paramsStr += '{} "{}"\n'.format(key, val)
+                paramsStr += f'{key} "{val}"\n'
             nAddParams += 1
 
     # For damping
@@ -239,9 +232,9 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
         if key in SAMkeys_properties:
             val = SAM['Properties'][key]
             if not isinstance(val, str):
-                paramsStr += '{} {}\n'.format(key, val)
+                paramsStr += f'{key} {val}\n'
             else:
-                paramsStr += '{} "{}"\n'.format(key, val)
+                paramsStr += f'{key} "{val}"\n'
             nAddParams += 1
 
     # For material properties
@@ -286,7 +279,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
             surFileName = model['fileName']
 
     if surFileName is None:
-        print('surrogate model {} is not found'.format(modelName))
+        print(f'surrogate model {modelName} is not found')
         exit(-1)
 
     #
@@ -301,7 +294,7 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
         'WorkflowApplications.json',
     ]
     workflowAppJsonPath = os.path.join(*s)
-    with open(workflowAppJsonPath, 'r', encoding='utf-8') as f:
+    with open(workflowAppJsonPath, encoding='utf-8') as f:
         workflowAppDict = json.load(f)
         appList = workflowAppDict['SimulationApplications']['Applications']
         simAppName = 'SurrogateSimulation'
@@ -352,8 +345,6 @@ def runSurrogate(modelName, GI, SAM, root_AIM, aimName, edpName):
     #
 
     sur_module.write_EDP(newAimName, edpName)
-
-    return
 
 
 if __name__ == '__main__':

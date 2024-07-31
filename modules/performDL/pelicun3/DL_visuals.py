@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2023 Leland Stanford Junior University
 # Copyright (c) 2023 The Regents of the University of California
@@ -37,27 +36,23 @@
 # Contributors:
 # Adam Zsarnóczay
 
-import os, sys, json
 import argparse
+import json
+import os
 import shutil
+import sys
+from copy import deepcopy
 from pathlib import Path
 from textwrap import wrap
-from copy import deepcopy
 from zipfile import ZipFile
 
-import numpy as np
-from scipy.stats import norm
-import pandas as pd
-
 import colorlover as cl
-
-from pelicun.base import pelicun_path
-from pelicun.base import convert_to_MultiIndex
-
+import numpy as np
+import pandas as pd
+from pelicun.base import convert_to_MultiIndex, pelicun_path
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
-
-import time
+from scipy.stats import norm
 
 # start_time = time.time()
 
@@ -76,7 +71,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
     comp_db_meta = comp_db_path[:-3] + 'json'
 
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta, 'r') as f:
+        with open(comp_db_meta) as f:
             frag_meta = json.load(f)
     else:
         frag_meta = None
@@ -325,7 +320,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         y_loc_ds = y_loc - 0.018 - i_ds * ds_offset
 
                         fig.add_annotation(
-                            text=f'<b>*</b>',
+                            text='<b>*</b>',
                             hovertext=ds_text,
                             xref='paper',
                             yref='paper',
@@ -367,7 +362,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
                     fig.add_annotation(
-                        text=f'<b>*</b>',
+                        text='<b>*</b>',
                         hovertext=ds_text,
                         xref='paper',
                         yref='paper',
@@ -399,7 +394,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
         )
 
         fig.update_yaxes(
-            title_text=f'P(LS≥ls<sub>i</sub>)', range=[0, 1.01], **shared_ax_props
+            title_text='P(LS≥ls<sub>i</sub>)', range=[0, 1.01], **shared_ax_props
         )
 
         fig.update_layout(
@@ -459,7 +454,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
 
     # check if the metadata is there and open it
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta, 'r') as f:
+        with open(comp_db_meta) as f:
             repair_meta = json.load(f)
     else:
         # otherwise, assign None to facilitate checks later
@@ -575,7 +570,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                 '<b>Damage<br>  State</b>',
                 '<b>Median<br>Conseq.</b>',
                 '<b>   Conseq.<br>Distribution</b>',
-                f'<b>  Conseq.<br>Dispersion</b>',
+                '<b>  Conseq.<br>Dispersion</b>',
             ]
             cell_alignment = ['center', 'center', 'center', 'center']
             column_widths = [45, 45, 60, 55]
@@ -838,14 +833,14 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
 
                     # add annotations for median function parameters, if needed
                     if '|' in str(mu_capacity):
-                        c_vals, q_vals = [
+                        c_vals, q_vals = (
                             vals.split(',') for vals in mu_capacity.split('|')
-                        ]
+                        )
 
                         func_text = f'<b>Multilinear Function Breakpoints</b><br>Medians: {", ".join(c_vals)}<br>Quantities: {", ".join(q_vals)}'
 
                         fig.add_annotation(
-                            text=f'<b>*</b>',
+                            text='<b>*</b>',
                             hovertext=func_text,
                             xref='paper',
                             yref='paper',
@@ -887,7 +882,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             )
 
                         fig.add_annotation(
-                            text=f'<b>*</b>',
+                            text='<b>*</b>',
                             hovertext=ds_text,
                             xref='paper',
                             yref='paper',
@@ -1022,8 +1017,8 @@ def check_diff(comp_db_path, output_path):
             # check if a file with the same name exists in the output dir
             if comp_db in os.listdir(output_path):
                 # open the two files and compare them
-                with open(Path(source_path) / comp_db, 'r') as f1, open(
-                    Path(output_path) / comp_db, 'r'
+                with open(Path(source_path) / comp_db) as f1, open(
+                    Path(output_path) / comp_db
                 ) as f2:
                     if ext == 'csv':
                         new_file = f1.readlines()

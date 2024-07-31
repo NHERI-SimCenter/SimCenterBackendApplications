@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,14 +37,15 @@
 # Kuanshi Zhong
 #
 
-import os, time
-import subprocess
 import json
+import os
 import random
-import numpy as np
-import pandas as pd
 import socket
 import sys
+import time
+
+import numpy as np
+import pandas as pd
 
 if 'stampede2' not in socket.gethostname():
     from FetchOpenSHA import *
@@ -61,7 +61,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):
                 'Both SourceIndex and RuptureIndex are needed for'
                 'ScenarioSpecific analysis'
             )
-            return
+            return None
         rups_to_run = []
         for ind in range(len(user_scenarios.get('features'))):
             cur_rup = user_scenarios.get('features')[ind]
@@ -75,7 +75,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):
     elif scenario_info['Generator'].get('method', None) == 'MonteCarlo':
         rup_filter = scenario_info['Generator'].get('RuptureFilter', None)
         if rup_filter is None or len(rup_filter) == 0:
-            rups_to_run = list(range(0, num_scenarios))
+            rups_to_run = list(range(num_scenarios))
         else:
             rups_requested = []
             for rups in rup_filter.split(','):
@@ -90,13 +90,13 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):
             rups_requested = (
                 rups_requested - 1
             )  # The input index starts from 1, not 0
-            rups_available = list(range(0, num_scenarios))
+            rups_available = list(range(num_scenarios))
             rups_to_run = rups_requested[
-                np.where(np.in1d(rups_requested, rups_available))[0]
+                np.where(np.isin(rups_requested, rups_available))[0]
             ]
         # Select all
     elif scenario_info['Generator'].get('method', None) == 'Subsampling':
-        rups_to_run = list(range(0, num_scenarios))
+        rups_to_run = list(range(num_scenarios))
     else:
         sys.exit(
             f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available'
@@ -108,10 +108,10 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):
     # Getting earthquake rupture forecast data
     source_type = scenario_info['EqRupture']['Type']
     try:
-        with open(rupFilePath, 'r') as f:
+        with open(rupFilePath) as f:
             user_scenarios = json.load(f)
     except:
-        sys.exit('CreateScenario: source file {} not found.'.format(rupFilePath))
+        sys.exit(f'CreateScenario: source file {rupFilePath} not found.')
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
@@ -189,18 +189,19 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     # Reference location
     mlat = np.mean(lat)
     mlon = np.mean(lon)
-    from openquake.hazardlib import nrml, sourceconverter, site
-    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
-    from openquake.hazardlib.geo.surface.base import BaseSurface
-    from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
-    from openquake.commonlib import readinput
     import json
 
+    from openquake.commonlib import readinput
+    from openquake.hazardlib import nrml, site, sourceconverter
+    from openquake.hazardlib.calc.filters import SourceFilter, get_distances
+    from openquake.hazardlib.geo.mesh import Mesh
+    from openquake.hazardlib.geo.surface.base import BaseSurface
+
     try:
-        with open(rupFile, 'r') as f:
+        with open(rupFile) as f:
             user_scenarios = json.load(f)
     except:
-        sys.exit('CreateScenario: source file {} not found.'.format(rupFile))
+        sys.exit(f'CreateScenario: source file {rupFile} not found.')
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
     if num_scenarios < 1:
@@ -368,10 +369,10 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):
         dir_info.get('Input'), scenario_info.get('EqRupture').get('UserScenarioFile')
     )
     try:
-        with open(user_scenario_file, 'r') as f:
+        with open(user_scenario_file) as f:
             user_scenarios = json.load(f)
     except:
-        print('CreateScenario: source file {} not found.'.format(user_scenario_file))
+        print(f'CreateScenario: source file {user_scenario_file} not found.')
         return {}
     # number of features (i.e., ruptures)
     num_scenarios = len(user_scenarios.get('features', []))
@@ -386,9 +387,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):
         cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
         if cur_id_rupture is None or cur_id_source is None:
             print(
-                'CreateScenario: rupture #{} does not have valid source/rupture ID - skipped.'.format(
-                    rup_tag
-                )
+                f'CreateScenario: rupture #{rup_tag} does not have valid source/rupture ID - skipped.'
             )
             continue
         cur_source, cur_rupture = get_source_rupture(
@@ -466,11 +465,9 @@ def create_earthquake_scenarios(
                     rup_index_list = [scenario_info['EqRupture']['RuptureIndex']]
                 else:
                     rup_index_list = scenario_info['EqRupture']['RuptureIndex']
-                if not (len(source_index_list) == len(rup_index_list)):
+                if len(source_index_list) != len(rup_index_list):
                     print(
-                        'CreateScenario: source number {} should be matched by rupture number {}'.format(
-                            len(source_index_list), len(rup_index_list)
-                        )
+                        f'CreateScenario: source number {len(source_index_list)} should be matched by rupture number {len(rup_index_list)}'
                     )
                     return dict()
                 # loop over all scenarios
@@ -581,11 +578,7 @@ def create_earthquake_scenarios(
             feature_collection.append(newRup)
             pointSource_data.update({'features': feature_collection})
             if outfile is not None:
-                print(
-                    'The collected point source ruptures are saved in {}'.format(
-                        outfile
-                    )
-                )
+                print(f'The collected point source ruptures are saved in {outfile}')
                 with open(outfile, 'w') as f:
                     json.dump(pointSource_data, f, indent=2)
         elif source_type == 'oqSourceXML':
@@ -596,12 +589,10 @@ def create_earthquake_scenarios(
                 scenario_info, mlon, mlat, siteFile, work_dir
             )
         print(
-            'CreateScenario: all scenarios configured {0} sec'.format(
-                time.time() - t_start
-            )
+            f'CreateScenario: all scenarios configured {time.time() - t_start} sec'
         )
     # return
-    return
+    return None
 
 
 def sample_scenarios(

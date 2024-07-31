@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,6 +32,7 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
+
 import meshio
 import numpy as np
 
@@ -44,27 +44,26 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Building:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     creating the building for openfoam7.
 
     Methods
-    --------
+    -------
             buildcheck: Checks if all files required for creating the building exists
             createbuilds: Creates the STL files
+
     """
 
     #############################################################
     def buildcheck(self, data, path):
-        """
-        Checks if all files required for creating the building exists
+        """Checks if all files required for creating the building exists
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -198,15 +197,14 @@ class of7Building:
 
     #############################################################
     def createbuilds(self, data, path):
-        """
-        Creates the STL files for the buildings and move to correct location
+        """Creates the STL files for the buildings and move to correct location
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -224,15 +222,14 @@ class of7Building:
 
     #############################################################
     def buildmanual(self, data, path):
-        """
-        Creates the STL files for the buildings using manual data from table
+        """Creates the STL files for the buildings using manual data from table
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -288,29 +285,27 @@ class of7Building:
 
     #############################################################
     def buildpara(self, data, path):
-        """
-        Creates the STL files for the buildings using parametrized data
+        """Creates the STL files for the buildings using parametrized data
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
     #############################################################
     def buildcubeGI(self, data, path):
-        """
-        Creates the STL files for the buildings using parametrized data
+        """Creates the STL files for the buildings using parametrized data
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -381,16 +376,15 @@ class of7Building:
 
     #############################################################
     def readResSTL(self, data, path, ztrans):
-        """
-        Creates the STL files for the buildings using parametrized data
+        """Creates the STL files for the buildings using parametrized data
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
                 ztrans: Translation distance in z-direction
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -489,15 +483,14 @@ class of7Building:
 
     #############################################################
     def buildflagadd(self, numresbuild, numotherbuild):
-        """
-        Add building flag to temp_geometry.txt
+        """Add building flag to temp_geometry.txt
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 numresbuild: Number of building with response
                 numotherbuild: NUmber of other buildings
-        """
 
+        """
         # Get building flag
         if numresbuild == 0 and numotherbuild == 0:
             flag = 0

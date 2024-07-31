@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -41,15 +40,18 @@
 # Stevan Gavrilovic
 # Jinyan Zhao
 
-import argparse, sys, os
-import json
-import numpy as np
-import pandas as pd
+import argparse
 import importlib
-import shapely
+import json
+import os
+import sys
+import warnings
+
 import geopandas as gpd
 import momepy
-import warnings
+import numpy as np
+import pandas as pd
+import shapely
 
 
 # Remove the nodes with 2 neibours
@@ -219,7 +221,6 @@ def create_asset_files(
         mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
-            import mpi4py
             from mpi4py import MPI
 
             runParallel = True
@@ -267,7 +268,7 @@ def create_asset_files(
         roads_requested = np.array(roads_requested)
 
     # load the JSON file with the asset information
-    with open(asset_source_file, 'r', encoding='utf-8') as sourceFile:
+    with open(asset_source_file, encoding='utf-8') as sourceFile:
         assets_dict = json.load(sourceFile)
 
     bridges_array = assets_dict.get('hwy_bridges', None)
@@ -293,37 +294,37 @@ def create_asset_files(
     if bridge_filter is not None:
         assets_available = np.arange(len(bridges_array))
         bridges_to_run = bridges_requested[
-            np.where(np.in1d(bridges_requested, assets_available))[0]
+            np.where(np.isin(bridges_requested, assets_available))[0]
         ]
         for i in bridges_to_run:
             selected_bridges.append(bridges_array[i])
     else:
         selected_bridges = bridges_array
-        bridges_to_run = list(range(0, len(bridges_array)))
+        bridges_to_run = list(range(len(bridges_array)))
     # if there is a filter, then pull out only the required tunnels
     selected_tunnels = []
     if tunnel_filter is not None:
         assets_available = np.arange(len(tunnels_array))
         tunnels_to_run = tunnels_requested[
-            np.where(np.in1d(tunnels_requested, assets_available))[0]
+            np.where(np.isin(tunnels_requested, assets_available))[0]
         ]
         for i in tunnels_to_run:
             selected_tunnels.append(tunnels_array[i])
     else:
         selected_tunnels = tunnels_array
-        tunnels_to_run = list(range(0, len(tunnels_array)))
+        tunnels_to_run = list(range(len(tunnels_array)))
     # if there is a filter, then pull out only the required roads
     selected_roads = []
     if road_filter is not None:
         assets_available = np.arange(len(roads_array))
         roads_to_run = roads_requested[
-            np.where(np.in1d(roads_requested, assets_available))[0]
+            np.where(np.isin(roads_requested, assets_available))[0]
         ]
         for i in roads_to_run:
             selected_roads.append(roads_array[i])
     else:
         selected_roads = roads_array
-        roads_to_run = list(range(0, len(roads_array)))
+        roads_to_run = list(range(len(roads_array)))
 
     # Reconstruct road network
     datacrs = assets_dict.get('crs', None)
@@ -482,7 +483,7 @@ def create_asset_files(
             AIM_i['GeneralInformation'].update(asset)
             AIM_i['GeneralInformation'].update({'locationNode': locationNodeID})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwy_bridge'})
-            AIM_file_name = '{}-AIM.json'.format(asset_id)
+            AIM_file_name = f'{asset_id}-AIM.json'
 
             AIM_file_name = os.path.join(outDir, AIM_file_name)
 
@@ -515,7 +516,7 @@ def create_asset_files(
             AIM_i['GeneralInformation'].update(asset)
             AIM_i['GeneralInformation'].update({'locationNode': locationNodeID})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwy_tunnel'})
-            AIM_file_name = '{}-AIM.json'.format(asset_id)
+            AIM_file_name = f'{asset_id}-AIM.json'
 
             AIM_file_name = os.path.join(outDir, AIM_file_name)
 
@@ -556,7 +557,7 @@ def create_asset_files(
             }
             AIM_i['GeneralInformation'].update({'geometry': str(geom)})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'roadway'})
-            AIM_file_name = '{}-AIM.json'.format(asset_id)
+            AIM_file_name = f'{asset_id}-AIM.json'
 
             AIM_file_name = os.path.join(outDir, AIM_file_name)
 
@@ -584,7 +585,7 @@ def create_asset_files(
 
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, 'r', encoding='utf-8') as data_file:
+                with open(fileToAppend, encoding='utf-8') as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -37,11 +36,12 @@
 # fmk
 #
 
-import os, sys
-import argparse, json
-import subprocess
+import argparse
+import json
+import os
 import shutil
-
+import subprocess
+import sys
 from pathlib import Path
 
 #
@@ -74,7 +74,7 @@ def runHazardSimulation(inputFILE):
     #
 
     print(f'inputFILE: {inputFILE}')
-    with open(inputFILE, 'r') as f:
+    with open(inputFILE) as f:
         inputJSON = json.load(f)
 
     #
@@ -162,7 +162,8 @@ def runHazardSimulation(inputFILE):
             inputDir,
             '-w',
             tmpDir,
-        ]
+        ],
+        check=False,
     )
 
     #
@@ -183,7 +184,8 @@ def runHazardSimulation(inputFILE):
             tmpDir,
             '-o',
             outputMotionDir,
-        ]
+        ],
+        check=False,
     )
 
     # subprocess.run([pythonEXE, mainDir+"/createEVENT/siteResponse/createGM4BIM.py", "-i", tmpDir, "-o", outputMotionDir], "--removeInput")

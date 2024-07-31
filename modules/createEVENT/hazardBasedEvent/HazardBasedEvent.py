@@ -1,21 +1,20 @@
 # This python script process the input and will use it to run SHA and ground motion selection
 # In addition to providing the event file
-from __future__ import print_function  # (at top of module)
 
+import glob
 import json
 import os
-import sys
-import subprocess
-import glob
 import re
+import subprocess
+import sys
 
 
 def computeScenario(gmConfig, location):
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    eqHazardPath = '{}/GMU/EQHazard.jar'.format(scriptDir)
-    simulateIMPath = '{}/GMU/SimulateIM'.format(scriptDir)
-    selectRecordPath = '{}/GMU/SelectRecord'.format(scriptDir)
-    recordDatabasePath = '{}/GMU/NGAWest2-1000.csv'.format(scriptDir)
+    eqHazardPath = f'{scriptDir}/GMU/EQHazard.jar'
+    simulateIMPath = f'{scriptDir}/GMU/SimulateIM'
+    selectRecordPath = f'{scriptDir}/GMU/SelectRecord'
+    recordDatabasePath = f'{scriptDir}/GMU/NGAWest2-1000.csv'
 
     # Separate Selection Config
     selectionConfig = gmConfig['RecordSelection']
@@ -94,7 +93,7 @@ def computeScenario(gmConfig, location):
 def readNGAWest2File(ngaW2FilePath, scaleFactor):
     series = []
     dt = 0.0
-    with open(ngaW2FilePath, 'r') as recordFile:
+    with open(ngaW2FilePath) as recordFile:
         canRead = False  # We need to process the header first
         for line in recordFile:
             if canRead:
@@ -117,10 +116,8 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):
     if len(recordFiles) != 2:
         print(
             'Error finding NGA West 2 files.\n'
-            'Please download the files for record {} '
-            'from NGA West 2 website and place them in the records folder ({})'.format(
-                rsn, recordsFolder
-            )
+            f'Please download the files for record {rsn} '
+            f'from NGA West 2 website and place them in the records folder ({recordsFolder})'
         )
         exit(-1)
 
@@ -176,7 +173,7 @@ def main():
     inputArgs = sys.argv
 
     # Process only if --getRV is passed
-    if not '--getRV' in inputArgs:
+    if '--getRV' not in inputArgs:
         sys.exit(0)
 
     # First let's process the arguments
@@ -189,7 +186,7 @@ def main():
     if not os.path.exists('./HazardWorkDir'):
         os.mkdir('./HazardWorkDir')
 
-    with open(bimFilePath, 'r', encoding='utf-8') as bimFile:
+    with open(bimFilePath, encoding='utf-8') as bimFile:
         bim = json.load(bimFile)
         location = [
             bim['GeneralInformation']['location']['latitude'],
@@ -197,14 +194,14 @@ def main():
         ]
 
     scriptDir = os.path.dirname(os.path.realpath(__file__))
-    recordsFolder = '{}/GMU/NGAWest2Records'.format(scriptDir)
+    recordsFolder = f'{scriptDir}/GMU/NGAWest2Records'
 
     computeScenario(bim['Events'][0]['GroundMotion'], location)
 
     # We need to read the building location
 
     # Now we can start processing the event
-    with open('./HazardWorkDir/Records_Selection.json', 'r') as selectionFile:
+    with open('./HazardWorkDir/Records_Selection.json') as selectionFile:
         recordSelection = json.load(selectionFile)
 
     selectedRecord = recordSelection['GroundMotions'][0]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,16 +37,19 @@
 # Kuanshi Zhong
 #
 
-import json, copy
-import numpy as np
-import pandas as pd
 import socket
 import sys
+
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 
 if 'stampede2' not in socket.gethostname():
-    from FetchOpenSHA import get_site_vs30_from_opensha
-    from FetchOpenSHA import get_site_z1pt0_from_opensha, get_site_z2pt5_from_opensha
+    from FetchOpenSHA import (
+        get_site_vs30_from_opensha,
+        get_site_z1pt0_from_opensha,
+        get_site_z2pt5_from_opensha,
+    )
 
 
 def get_label(options, labels, label_name):
@@ -60,9 +62,7 @@ def get_label(options, labels, label_name):
 
 
 class Station:
-    """
-    A class for stations in an earthquake scenario
-    """
+    """A class for stations in an earthquake scenario"""
 
     def __init__(self, lon, lat, vs30=None, z2p5=None):
         # Initializing the location, vs30, z2.5, Tcond and other Tags
@@ -96,8 +96,7 @@ def create_stations(
     soil_model_type=None,
     soil_user_fun=None,
 ):
-    """
-    Reading input csv file for stations and saving data to output json file
+    """Reading input csv file for stations and saving data to output json file
     Input:
         input_file: the filename of the station csv file
         output_file: the filename of the output json file
@@ -128,7 +127,7 @@ def create_stations(
         stns_requested = np.array(stns_requested)
         stns_available = stn_df.index.values
         stns_to_run = stns_requested[
-            np.where(np.in1d(stns_requested, stns_available))[0]
+            np.where(np.isin(stns_requested, stns_available))[0]
         ]
         selected_stn = stn_df.loc[stns_to_run]
     else:
@@ -582,8 +581,7 @@ def create_stations(
 def create_gridded_stations(
     input_file, output_file, div_lon=2, div_lat=2, delta_lon=None, delta=None
 ):
-    """
-    Reading input csv file for the grid, generating stations, and saving data
+    """Reading input csv file for the grid, generating stations, and saving data
     to output json file
     Input:
         input_file: the filename of the station csv file
@@ -632,16 +630,16 @@ def create_gridded_stations(
 
 
 def get_vs30_global(lat, lon):
-    """
-    Interpolate global Vs30 at given latitude and longitude
+    """Interpolate global Vs30 at given latitude and longitude
     Input:
         lat: list of latitude
         lon: list of longitude
     Output:
         vs30: list of vs30
     """
-    import pickle
     import os
+    import pickle
+
     from scipy import interpolate
 
     # Loading global Vs30 data
@@ -658,16 +656,16 @@ def get_vs30_global(lat, lon):
 
 
 def get_vs30_thompson(lat, lon):
-    """
-    Interpolate global Vs30 at given latitude and longitude
+    """Interpolate global Vs30 at given latitude and longitude
     Input:
         lat: list of latitude
         lon: list of longitude
     Output:
         vs30: list of vs30
     """
-    import pickle
     import os
+    import pickle
+
     from scipy import interpolate
 
     # Loading Thompson Vs30 data
@@ -690,27 +688,21 @@ def get_vs30_thompson(lat, lon):
 
 
 def get_z1(vs30):
-    """
-    Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)
-    """
-
+    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""
     z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
     # return
     return z1
 
 
 def get_z25(z1):
-    """
-    Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)
-    """
+    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""
     z25 = 0.748 + 2.218 * z1
     # return
     return z25
 
 
 def get_z25fromVs(vs):
-    """
-    Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
+    """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
     Vs is m/s
     """
     z25 = (7.089 - 1.144 * np.log(vs)) * 1000
@@ -719,16 +711,16 @@ def get_z25fromVs(vs):
 
 
 def get_zTR_global(lat, lon):
-    """
-    Interpolate depth to rock at given latitude and longitude
+    """Interpolate depth to rock at given latitude and longitude
     Input:
         lat: list of latitude
         lon: list of longitude
     Output:
         zTR: list of zTR
     """
-    import pickle
     import os
+    import pickle
+
     from scipy import interpolate
 
     # Loading depth to rock data
@@ -745,8 +737,7 @@ def get_zTR_global(lat, lon):
 
 
 def export_site_prop(stn_file, output_dir, filename):
-    """
-    saving a csv file for stations
+    """Saving a csv file for stations
     Input:
         stn_file: a dictionary of station data
         output_path: output directory
@@ -779,8 +770,7 @@ def export_site_prop(stn_file, output_dir, filename):
 
 
 def get_zTR_ncm(lat, lon):
-    """
-    Call USGS National Crustal Model services for zTR
+    """Call USGS National Crustal Model services for zTR
     https://earthquake.usgs.gov/nshmp/ncm
     Input:
         lat: list of latitude
@@ -794,9 +784,7 @@ def get_zTR_ncm(lat, lon):
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
-        url_geology = 'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geologic-framework?location={}%2C{}'.format(
-            cur_lat, cur_lon
-        )
+        url_geology = f'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geologic-framework?location={cur_lat}%2C{cur_lon}'
         # geological data (depth to bedrock)
         r1 = requests.get(url_geology)
         cur_res = r1.json()
@@ -804,9 +792,7 @@ def get_zTR_ncm(lat, lon):
             # the current site is out of the available range of NCM (Western US only, 06/2021)
             # just append 0.0 to zTR
             print(
-                'CreateStation: Warning in NCM API call - could not get the site geological data and approximate 0.0 for zTR for site {}, {}'.format(
-                    cur_lat, cur_lon
-                )
+                f'CreateStation: Warning in NCM API call - could not get the site geological data and approximate 0.0 for zTR for site {cur_lat}, {cur_lon}'
             )
             zTR.append(0.0)
             continue
@@ -818,8 +804,7 @@ def get_zTR_ncm(lat, lon):
 
 
 def get_vsp_ncm(lat, lon, depth):
-    """
-    Call USGS National Crustal Model services for Vs30 profile
+    """Call USGS National Crustal Model services for Vs30 profile
     https://earthquake.usgs.gov/nshmp/ncm
     Input:
         lat: list of latitude
@@ -831,13 +816,11 @@ def get_vsp_ncm(lat, lon, depth):
     import requests
 
     vsp = []
-    depthMin, depthInc, depthMax = [abs(x) for x in depth]
+    depthMin, depthInc, depthMax = (abs(x) for x in depth)
 
     # Looping over sites
     for cur_lat, cur_lon in zip(lat, lon):
-        url_geophys = 'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geophysical?location={}%2C{}&depths={}%2C{}%2C{}'.format(
-            cur_lat, cur_lon, depthMin, depthInc, depthMax
-        )
+        url_geophys = f'https://earthquake.usgs.gov/ws/nshmp/ncm/ws/nshmp/ncm/geophysical?location={cur_lat}%2C{cur_lon}&depths={depthMin}%2C{depthInc}%2C{depthMax}'
         r1 = requests.get(url_geophys)
         cur_res = r1.json()
         if cur_res['status'] == 'error':
@@ -860,8 +843,7 @@ def get_vsp_ncm(lat, lon, depth):
 
 
 def compute_vs30_from_vsp(depthp, vsp):
-    """
-    Compute the Vs30 given the depth and Vs profile
+    """Compute the Vs30 given the depth and Vs profile
     Input:
         depthp: list of depth for Vs profile
         vsp: Vs profile
@@ -879,8 +861,7 @@ def compute_vs30_from_vsp(depthp, vsp):
 
 
 def get_vs30_ncm(lat, lon):
-    """
-    Fetch Vs30 at given latitude and longitude from NCM
+    """Fetch Vs30 at given latitude and longitude from NCM
     Input:
         lat: list of latitude
         lon: list of longitude
@@ -907,8 +888,7 @@ def get_vs30_ncm(lat, lon):
 
 
 def get_soil_model_ba(param=None):
-    """
-    Get modeling parameters for Borja and Amies 1994 J2 model
+    """Get modeling parameters for Borja and Amies 1994 J2 model
     Currently just assign default values
     Can be extended to have input soil properties to predict this pararmeters
     """
@@ -938,8 +918,7 @@ def get_soil_model_ba(param=None):
 
 
 def get_soil_model_ei(param=None):
-    """
-    Get modeling parameters for elastic isotropic
+    """Get modeling parameters for elastic isotropic
     Currently just assign default values
     Can be extended to have input soil properties to predict this pararmeters
     """
@@ -955,12 +934,12 @@ def get_soil_model_ei(param=None):
 
 def get_soil_model_user(df_stn, model_fun):
     # check if mode_fun exists
-    import os, sys, importlib
+    import importlib
+    import os
+    import sys
 
     if not os.path.isfile(model_fun):
-        print(
-            'CreateStation.get_soil_model_user: {} is not found.'.format(model_fun)
-        )
+        print(f'CreateStation.get_soil_model_user: {model_fun} is not found.')
         return df_stn, []
 
     # try to load the model file
@@ -974,11 +953,7 @@ def get_soil_model_user(df_stn, model_fun):
             path_model_fun.name[:-3], globals(), locals(), [], 0
         )
     except:
-        print(
-            'CreateStation.get_soil_model_user: {} cannot be loaded.'.format(
-                model_fun
-            )
-        )
+        print(f'CreateStation.get_soil_model_user: {model_fun} cannot be loaded.')
         return df_stn
 
     # try to load the standard function: soil_model_fun(site_info=None)
@@ -986,9 +961,7 @@ def get_soil_model_user(df_stn, model_fun):
         soil_model = user_model.soil_model
     except:
         print(
-            'CreateStation.get_soil_model_user: soil_model is nto found in {}.'.format(
-                model_fun
-            )
+            f'CreateStation.get_soil_model_user: soil_model is nto found in {model_fun}.'
         )
         return df_stn
 

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 10 14:23:09 2024
+"""Created on Wed Jan 10 14:23:09 2024
 
 @author: snaeimi
 
@@ -11,9 +9,10 @@ initial.py. Main.py is going to be the most developed tool.
 
 """
 
-import sys
-import os
 import argparse
+import os
+import sys
+
 from initial import Starter
 
 if __name__ == '__main__':

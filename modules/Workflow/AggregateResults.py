@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,13 +38,12 @@
 # Wael Elhaddad
 #
 
+import argparse
 import glob
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
-import argparse
-
-from datetime import datetime
-from time import strftime
 
 
 def log_msg(msg):
@@ -68,11 +66,12 @@ def main(threads=1):
     use_dask = threads > 1
 
     if use_dask:
-        log_msg('{} threads requested. Using DASK.'.format(threads))
+        log_msg(f'{threads} threads requested. Using DASK.')
 
-        from dask.distributed import Client, LocalCluster
-        from dask import delayed
         import math
+
+        from dask import delayed
+        from dask.distributed import Client, LocalCluster
 
         @delayed
         def read_csv_files(file_list, header):
@@ -105,9 +104,9 @@ def main(threads=1):
         log_msg(client)
 
     for res_type in ['IM', 'BIM', 'EDP', 'DM', 'DV']:
-        log_msg('Loading {} files...'.format(res_type))
+        log_msg(f'Loading {res_type} files...')
 
-        files = glob.glob('./results/{}/*/{}_*.csv'.format(res_type, res_type))
+        files = glob.glob(f'./results/{res_type}/*/{res_type}_*.csv')
         # files = files[:1000]
 
         if len(files) > 0:
@@ -116,7 +115,7 @@ def main(threads=1):
                 chunk = math.ceil(file_count / threads)
                 df_list = []
 
-                print('Creating threads for {} files...'.format(file_count))
+                print(f'Creating threads for {file_count} files...')
 
                 for t_i in range(threads):
                     # print(t_i)
@@ -159,7 +158,7 @@ def main(threads=1):
             log_msg('Saving results')
             df_all.index = df_all.index.astype(np.int32)
             df_all.to_hdf(
-                '{}.hdf'.format(res_type),
+                f'{res_type}.hdf',
                 'data',
                 mode='w',
                 format='fixed',
@@ -169,7 +168,7 @@ def main(threads=1):
             # df_all.to_csv('{}.csv'.format(res_type))
 
         else:
-            print('No {} files found'.format(res_type))
+            print(f'No {res_type} files found')
 
     if use_dask:
         log_msg('Closing cluster...')
@@ -183,7 +182,7 @@ def main(threads=1):
         './results/{}/*/{}_*.hdf'.format('realizations', 'realizations')
     )
 
-    log_msg('Number of files: {}'.format(len(files)))
+    log_msg(f'Number of files: {len(files)}')
 
     # get the keys from the first file
     if len(files) > 0:
@@ -192,7 +191,7 @@ def main(threads=1):
         first_file.close()
 
         for key in keys:
-            log_msg('Processing realizations for key {key}'.format(key=key))
+            log_msg(f'Processing realizations for key {key}')
             df_list = [pd.read_hdf(resFileName, key) for resFileName in files]
 
             log_msg('\t\tConcatenating files')
@@ -221,7 +220,7 @@ def main(threads=1):
                     complib='blosc:blosclz',
                 )
 
-            log_msg('\t\tResults saved for {key}.'.format(key=key))
+            log_msg(f'\t\tResults saved for {key}.')
 
     log_msg('End of script')
 

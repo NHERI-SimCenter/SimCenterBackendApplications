@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
@@ -39,13 +38,12 @@
 
 import json
 import os
-from pathlib import Path
+
 import pandas as pd
 
 
 def readJSONFile(file_addr):
-    """
-    Reads a json file.
+    """Reads a json file.
 
     Parameters
     ----------
@@ -63,11 +61,10 @@ def readJSONFile(file_addr):
         JSON File data as a dict.
 
     """
-
     if not os.path.exists(file_addr):
         raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))
 
-    with open(file_addr, 'rt') as f:
+    with open(file_addr) as f:
         data = json.load(f)
 
     return data
@@ -178,8 +175,7 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
 
 
 def save_scenario_table(scenario_table, scenario_table_file_path):
-    """
-    Saves the scneario data including scneario table and damaghe data acording
+    """Saves the scneario data including scneario table and damaghe data acording
     to the table data/
 
     Parameters
@@ -207,8 +203,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):
 
 
 def saveSettingsFile(REWET_input_data, save_directory, prefix):
-    """
-    Saves seetings data that REWET NEEDs.
+    """Saves seetings data that REWET NEEDs.
 
     Parameters
     ----------
@@ -220,7 +215,6 @@ def saveSettingsFile(REWET_input_data, save_directory, prefix):
     None.
 
     """
-
     settings = REWET_input_data['settings']
     if prefix == None:
         settings_file_name = 'settings.json'

@@ -1,19 +1,16 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 27 19:19:02 2022
+"""Created on Thu Oct 27 19:19:02 2022
 
 @author: snaeimi
 """
 
-from PyQt5 import QtGui, QtWidgets
 import os
+
+from PyQt5 import QtGui, QtWidgets
 
 
 class Hydraulic_Tab_Designer:
     def __init__(self):
-        """
-        These are variables that are shared between ui and settings.
-        """
+        """These are variables that are shared between ui and settings."""
         self.setHydraulicSettings(self.settings)
 
         """

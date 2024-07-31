@@ -3,7 +3,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal
 
 import numpy as np
 
@@ -23,7 +23,7 @@ InputsType = tuple[
 class CommandLineArguments:
     working_directory_path: Path
     template_directory_path: Path
-    run_type: Union[Literal['runningLocal'], Literal['runningRemote']]
+    run_type: Literal['runningLocal', 'runningRemote']
     driver_file: Path
     input_file: Path
 
@@ -36,7 +36,7 @@ def _handle_arguments(
     run_type = command_line_arguments.run_type
     driver_file = command_line_arguments.driver_file
     input_file = command_line_arguments.input_file
-    with open(input_file, 'r') as f:
+    with open(input_file) as f:
         inputs = json.load(f)
     return (
         working_directory_path,

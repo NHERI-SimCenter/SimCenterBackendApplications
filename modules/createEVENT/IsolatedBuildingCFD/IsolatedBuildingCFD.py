@@ -1,8 +1,5 @@
-from __future__ import print_function
-import os, sys
-import re
-import json
 import argparse
+import json
 
 
 class FloorForces:
@@ -13,18 +10,14 @@ class FloorForces:
 
 
 def directionToDof(direction):
-    """
-    Converts direction to degree of freedom
-    """
+    """Converts direction to degree of freedom"""
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}
 
     return directioMap[direction]
 
 
 def addFloorForceToEvent(patternsArray, force, direction, floor):
-    """
-    Add force (one component) time series and pattern in the event file
-    """
+    """Add force (one component) time series and pattern in the event file"""
     seriesName = 'WindForceSeries_' + str(floor) + direction
     patternName = 'WindForcePattern_' + str(floor) + direction
     pattern = {
@@ -39,9 +32,7 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):
 
 
 def writeEVENT(forces, eventFilePath):
-    """
-    This method writes the EVENT.json file
-    """
+    """This method writes the EVENT.json file"""
     patternsArray = []
     windEventJson = {
         'type': 'Wind',
@@ -66,7 +57,7 @@ def writeEVENT(forces, eventFilePath):
 
 
 def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath, 'r', encoding='utf-8') as BIMFile:
+    with open(BIMFilePath, encoding='utf-8') as BIMFile:
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])

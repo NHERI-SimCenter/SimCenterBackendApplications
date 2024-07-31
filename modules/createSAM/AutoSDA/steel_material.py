@@ -8,9 +8,8 @@
 # #########################################################################
 
 
-class SteelMaterial(object):
-    """
-    This class is used to define the steel material.
+class SteelMaterial:
+    """This class is used to define the steel material.
     It includes the following physical quantities:
     (1) Yield stress (Fy)
     (2) Ultimate stress (Fu)
@@ -25,8 +24,7 @@ class SteelMaterial(object):
         elastic_modulus=29000,
         Ry_value=1.1,
     ):
-        """
-        :param yield_stress: Fy of steel material, default value is 50 ksi
+        """:param yield_stress: Fy of steel material, default value is 50 ksi
         :param elastic_modulus: E of steel material, default value is 29000 ksi
         """
         self.Fy = yield_stress

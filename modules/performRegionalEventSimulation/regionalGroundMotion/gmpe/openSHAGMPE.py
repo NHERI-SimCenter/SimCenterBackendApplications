@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,11 +37,12 @@
 # Jinyan Zhao
 # Transfered from openSHA to achieve better performance in r2d
 
+import os
+import sys
+import time
+
 import numpy as np
 import pandas as pd
-import os
-import time
-import sys
 
 
 ############### Chiou and Young (2014)
@@ -205,8 +205,7 @@ class chiou_youngs_2013:
         return phiSq
 
     def calc(self, Mw, rJB, rRup, rX, dip, zTop, vs30, vsInf, z1p0, style):
-        """
-        Preliminary implementation of the Chiou & Youngs (2013) next generation
+        """Preliminary implementation of the Chiou & Youngs (2013) next generation
         attenuation relationship developed as part of NGA West II.
         Input
         imt intensity measure type ['PGA', 'PGV',1.0]
@@ -245,9 +244,7 @@ class chiou_youngs_2013:
 
     # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/imr/attenRelImpl/ngaw2/NGAW2_Wrapper.java#L220
     def getFaultFromRake(self, rake):
-        if rake >= 135 or rake <= -135:
-            return 'STRIKE_SLIP'
-        elif rake >= -45 and rake <= 45:
+        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:
             return 'REVERSE'
@@ -343,7 +340,7 @@ class abrahamson_silva_kamai_2014:
             sys.exit(
                 f'The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)'
             )
-            return None
+            return
         self.imt = imt
         self.a1 = self.coeff['a1'][imt]
         self.a2 = self.coeff['a2'][imt]
@@ -485,11 +482,10 @@ class abrahamson_silva_kamai_2014:
         if style == 'NORMAL':
             if Mw > 5.0:
                 f78 = self.a12
+            elif Mw >= 4.0:
+                f78 = self.a12 * (Mw - 4)
             else:
-                if Mw >= 4.0:
-                    f78 = self.a12 * (Mw - 4)
-                else:
-                    f78 = 0.0
+                f78 = 0.0
         else:
             f78 = 0.0
         # -- Equation 17
@@ -498,12 +494,12 @@ class abrahamson_silva_kamai_2014:
         # Site Response Model
         f5 = 0.0
         v1 = self.getV1()  # -- Equation 9
-        vs30s = vs30 if (vs30 < v1) else v1  # -- Equation 8
+        vs30s = min(v1, vs30)  # -- Equation 8
 
         # Site term -- Equation 7
         saRock = 0.0  # calc Sa1180 (rock reference) if necessary
         if vs30 < self.Vlin:
-            if self.VS_RK < v1:
+            if v1 > self.VS_RK:
                 vs30s_rk = self.VS_RK
             else:
                 vs30s_rk = v1
@@ -543,9 +539,7 @@ class abrahamson_silva_kamai_2014:
         return mean, stdDev, np.sqrt(phiSq), tau
 
     def getFaultFromRake(self, rake):
-        if rake >= 135 or rake <= -135:
-            return 'STRIKE_SLIP'
-        elif rake >= -45 and rake <= 45:
+        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:
             return 'REVERSE'
@@ -633,7 +627,7 @@ class boore_etal_2014:
             sys.exit(
                 f'The imt {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014)'
             )
-            return None
+            return
         self.imt = imt
         self.e0 = self.coeff['e0'][imt]
         self.e1 = self.coeff['e1'][imt]
@@ -663,9 +657,7 @@ class boore_etal_2014:
         self.tau2 = self.coeff['tau2'][imt]
 
     def getFaultFromRake(self, rake):
-        if rake >= 135 or rake <= -135:
-            return 'STRIKE_SLIP'
-        elif rake >= -45 and rake <= 45:
+        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:
             return 'REVERSE'
@@ -700,7 +692,7 @@ class boore_etal_2014:
         return np.exp(FePGA + FpPGA)
 
     def calcLnFlin(self, vs30):
-        vsLin = vs30 if vs30 <= self.Vc else self.Vc
+        vsLin = min(vs30, self.Vc)
         lnFlin = self.c * np.log(vsLin / self.V_REF)
         return lnFlin
 
@@ -714,7 +706,7 @@ class boore_etal_2014:
     def calcFdz1(self, vs30, z1p0):
         DZ1 = self.calcDeltaZ1(z1p0, vs30)
         if self.imt != 'PGA' and self.imt != 'PGV' and self.imt >= 0.65:
-            if DZ1 <= (self.f7 / self.f6):
+            if (self.f7 / self.f6) >= DZ1:
                 Fdz1 = self.f6 * DZ1
             else:
                 Fdz1 = self.f7
@@ -862,7 +854,7 @@ class campbell_bozorgnia_2014:
             sys.exit(
                 f'The imt {imt} is not supported by Campbell & Bozorgnia (2014)'
             )
-            return None
+            return
         self.imt = imt
         self.c0 = self.coeff['c0'][imt]
         self.c1 = self.coeff['c1'][imt]
@@ -901,9 +893,7 @@ class campbell_bozorgnia_2014:
         self.rho = self.coeff['rho'][imt]
 
     def getFaultFromRake(self, rake):
-        if rake >= 135 or rake <= -135:
-            return 'STRIKE_SLIP'
-        elif rake >= -45 and rake <= 45:
+        if rake >= 135 or rake <= -135 or rake >= -45 and rake <= 45:
             return 'STRIKE_SLIP'
         elif rake >= 45 and rake <= 135:
             return 'REVERSE'

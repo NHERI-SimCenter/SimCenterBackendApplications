@@ -2,15 +2,10 @@
 # and put data into a SimCenter JSON file for
 # wind tunnel data
 
-import sys
 import os
-import subprocess
-import json
-import stat
-import shutil
-import numpy as np
+import sys
+
 import scipy.io as sio
-from pprint import pprint
 
 inputArgs = sys.argv
 
@@ -58,7 +53,7 @@ def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
     xMax = max(locations[0]) + 1
     yMax = max(locations[1]) + 1
 
-    for loc in range(0, numLocations):
+    for loc in range(numLocations):
         tag = locations[2][loc]
         xLoc = locations[0][loc]
         yLoc = locations[1][loc]
@@ -86,9 +81,9 @@ def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):
     coefficients = mat_contents['Wind_pressure_coefficients']
     numLocations = coefficients.shape[1]
     numValues = coefficients.shape[0]
-    for loc in range(0, numLocations):
+    for loc in range(numLocations):
         file.write('{"id": %d , "data":[' % (loc + 1))
-        for i in range(0, numValues - 1):
+        for i in range(numValues - 1):
             file.write('%f,' % coefficients[i, loc])
         if loc != numLocations - 1:
             file.write('%f]},' % coefficients[numValues - 1, loc])

@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,41 +32,41 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
+
 import numpy as np
+from GeoClaw import GeoClaw
+from GeoClawBathy import GeoClawBathy
 
 # Other custom modules
 from hydroUtils import hydroUtils
-from GeoClaw import GeoClaw
-from GeoClawBathy import GeoClawBathy
-from userFlume import userFlume
 from osuFlume import osuFlume
+from userFlume import userFlume
 
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
 class of7Geometry:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     creating the geometry for openfoam7.
 
     Methods
-    --------
+    -------
             geomcheck: Checks if all files required for creating the geometry exists
             createSTL: Creates the STL files
+
     """
 
     #############################################################
     def geomcheck(self, data, path):
-        """
-        Checks if all files required for creating the geometry exists
+        """Checks if all files required for creating the geometry exists
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -229,15 +228,14 @@ class of7Geometry:
 
     #############################################################
     def createOFSTL(self, data, path):
-        """
-        Creates the STL files
+        """Creates the STL files
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path to where the dakota.json exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -294,14 +292,13 @@ class of7Geometry:
 
     #############################################################
     def scripts(self, data):
-        """
-        Add to caserun.sh
+        """Add to caserun.sh
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 NONE
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

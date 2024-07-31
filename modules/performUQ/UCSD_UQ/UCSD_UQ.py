@@ -1,11 +1,11 @@
 import argparse
 import os
 import platform
+import shlex
 import stat
 import subprocess
-from pathlib import Path
 import sys
-import shlex
+from pathlib import Path
 
 
 def main(args):

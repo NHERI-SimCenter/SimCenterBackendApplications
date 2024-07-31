@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct  4 16:07:24 2022
+"""Created on Tue Oct  4 16:07:24 2022
 
 @author: snaeimi
 """
 
-import io
 import datetime
 
 
@@ -26,7 +23,7 @@ class Report_Reading:
     def __init__(self, file_addr):
         self.file_data = {}
         self.maximum_trial_time = []
-        with io.open(file_addr, 'r', encoding='utf-8') as f:
+        with open(file_addr, encoding='utf-8') as f:
             lnum = 0
             for line in f:
                 # self.file_data[lnum] = line

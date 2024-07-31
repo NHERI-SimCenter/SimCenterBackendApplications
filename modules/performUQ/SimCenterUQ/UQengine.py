@@ -1,15 +1,14 @@
 import glob
+import json
 import os
 import shutil
 import stat
 import subprocess
 import sys
 import time
-import pandas as pd
-import os
-import json
 
 import numpy as np
+import pandas as pd
 
 
 class UQengine:
@@ -126,9 +125,7 @@ class UQengine:
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
-                    msg = 'model output <results.out> in sample {} contains {} value(s) while the number of QoIs specified is {}'.format(
-                        ns, Y_tmp.shape[0], y_dim
-                    )
+                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'
 
                     self.exit(msg)
                 Y[ns, :] = Y_tmp
@@ -143,7 +140,7 @@ class UQengine:
         #
 
         if self.do_parallel:
-            print('Running {} simulations in parallel'.format(nsamp))
+            print(f'Running {nsamp} simulations in parallel')
             tmp = time.time()
             iterables = (
                 (
@@ -158,7 +155,7 @@ class UQengine:
             )
             try:
                 result_objs = list(self.pool.starmap(run_FEM, iterables))
-                print('Simulation time = {} s'.format(time.time() - tmp))
+                print(f'Simulation time = {time.time() - tmp} s')
             except KeyboardInterrupt:
                 print('Ctrl+c received, terminating and joining pool.')
                 try:
@@ -166,16 +163,14 @@ class UQengine:
                 except Exception:
                     sys.exit()
 
-            Nsim = len(list((result_objs)))
+            Nsim = len(list(result_objs))
             Y = np.zeros((Nsim, self.y_dim))
             for val, id in result_objs:
                 if isinstance(val, str):
                     self.exit(val)
                 elif val.shape[0]:
                     if val.shape[0] != self.y_dim:
-                        msg = 'model output <results.out> in sample {} contains {} value(s) while the number of QoIs specified is {}'.format(
-                            id + 1, val.shape[0], self.y_dim
-                        )
+                        msg = f'model output <results.out> in sample {id + 1} contains {val.shape[0]} value(s) while the number of QoIs specified is {self.y_dim}'
                         self.exit(msg)
 
                 if np.isnan(np.sum(val)):
@@ -213,7 +208,7 @@ class UQengine:
 
     def compute_IM(self, i_begin, i_end):
         workdir_list = [
-            os.path.join(self.work_dir, 'workdir.{}'.format(int(i)))
+            os.path.join(self.work_dir, f'workdir.{int(i)}')
             for i in range(i_begin, i_end + 1)
         ]
 
@@ -241,13 +236,13 @@ class UQengine:
         for i, cur_workdir in enumerate(workdir_list):
             cur_id = int(cur_workdir.split('.')[-1])
             if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
-                print('IM.csv found in wordir.{}'.format(cur_id))
+                print(f'IM.csv found in wordir.{cur_id}')
                 tmp1 = pd.read_csv(
                     os.path.join(cur_workdir, 'IM.csv'), index_col=None
                 )
                 if tmp1.empty:
-                    print('IM.csv in wordir.{} is empty.'.format(cur_id))
-                    return
+                    print(f'IM.csv in wordir.{cur_id} is empty.')
+                    return None
                 tmp2 = pd.DataFrame(
                     {'%eval_id': [cur_id for x in range(len(tmp1.index))]}
                 )
@@ -257,8 +252,8 @@ class UQengine:
                     tmp3 = pd.concat([tmp2, tmp1], axis=1)
                     im_collector = pd.concat([im_collector, tmp3])
             else:
-                print('IM.csv NOT found in wordir.{}'.format(cur_id))
-                return
+                print(f'IM.csv NOT found in wordir.{cur_id}')
+                return None
         im_collector = im_collector.sort_values(by=['%eval_id'])
 
         return im_collector
@@ -330,7 +325,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     current_dir_i = work_dir + workdirFolder
     try:
         shutil.copytree(work_dir + templatedirFolder, current_dir_i)
-    except Exception as ex:
+    except Exception:
         try:
             shutil.copytree(work_dir + templatedirFolder, current_dir_i)
 
@@ -343,26 +338,22 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     #
 
     outF = open(current_dir_i + '/params.in', 'w')
-    outF.write('{}\n'.format(x_dim))
+    outF.write(f'{x_dim}\n')
     for i in range(x_dim):
-        outF.write('{} {}\n'.format(rv_name[i], X[0, i]))
+        outF.write(f'{rv_name[i]} {X[0, i]}\n')
     outF.close()
 
     if runIdx == 0:
-        print('RUNNING FEM: working directory {} created'.format(id_sim + 1))
+        print(f'RUNNING FEM: working directory {id_sim + 1} created')
     else:
-        print(
-            'RUNNING FEM: working directory {}-{} created'.format(runIdx, id_sim + 1)
-        )
+        print(f'RUNNING FEM: working directory {runIdx}-{id_sim + 1} created')
 
     #
     # (3) run workflow_driver.bat
     #
 
     os.chdir(current_dir_i)
-    workflow_run_command = '{}/{}  1> workflow.log 2>&1'.format(
-        current_dir_i, workflowDriver
-    )
+    workflow_run_command = f'{current_dir_i}/{workflowDriver}  1> workflow.log 2>&1'
     # subprocess.check_call(
     #    workflow_run_command,
     #    shell=True,
@@ -386,7 +377,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     else:
         msg = 'Error running FEM: results.out missing at ' + current_dir_i
         if glob.glob('ops.out'):
-            with open('ops.out', 'r') as text_file:
+            with open('ops.out') as text_file:
                 error_FEM = text_file.read()
 
             startingCharId = error_FEM.lower().find('error')
@@ -407,7 +398,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     if g.shape[0] == 0:
         msg = 'Error running FEM: results.out is empty'
         if glob.glob('ops.out'):
-            with open('ops.out', 'r') as text_file:
+            with open('ops.out') as text_file:
                 error_FEM = text_file.read()
 
             startingCharId = error_FEM.lower().find('error')
@@ -428,9 +419,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     os.chdir('../')
 
     if np.isnan(np.sum(g)):
-        msg = 'Error running FEM: Response value at workdir.{} is NaN'.format(
-            id_sim + 1
-        )
+        msg = f'Error running FEM: Response value at workdir.{id_sim + 1} is NaN'
         return msg, id_sim
 
     return g, id_sim

@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -32,7 +31,6 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -42,25 +40,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Materials:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     material properties for openfoam7.
 
     Methods
-    --------
+    -------
             mattext: Get all the text for the transportProperties
+
     """
 
     #############################################################
     def mattext(self, data):
-        """
-        Creates the necessary files for materials for openfoam7
+        """Creates the necessary files for materials for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -127,21 +124,19 @@ class of7Materials:
 
     #############################################################
     def matheader(self):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the transportProp-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"constant";\n\tobject\ttransportProperties;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -151,14 +146,13 @@ FoamFile
 
     #############################################################
     def matcheck(self, data):
-        """
-        Checks for material properties for openfoam7
+        """Checks for material properties for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

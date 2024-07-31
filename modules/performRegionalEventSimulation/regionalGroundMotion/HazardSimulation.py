@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,14 +37,17 @@
 # Kuanshi Zhong
 #
 
-import os, shutil, psutil
-import sys
-import subprocess
-import argparse, posixpath, json
-import numpy as np
-import pandas as pd
-import time
+import argparse
 import importlib
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+
+import numpy as np
+import psutil
 
 R2D = True
 
@@ -112,11 +114,7 @@ def site_job(hazard_info):
             soil_user_fun=soil_user_fun,
         )
     if stations:
-        print(
-            'HazardSimulation: site data are fetched and saved in {}.'.format(
-                output_file
-            )
-        )
+        print(f'HazardSimulation: site data are fetched and saved in {output_file}.')
     else:
         print(
             'HazardSimulation: please check the "Input" directory in the configuration json file.'
@@ -337,7 +335,7 @@ def hazard_job(hazard_info):
         else:
             num_gm_per_site = event_info['NumberPerSite']
         print('num_gm_per_site = ', num_gm_per_site)
-        if not scenario_info['EqRupture']['Type'] in [
+        if scenario_info['EqRupture']['Type'] not in [
             'OpenQuakeClassicalPSHA',
             'OpenQuakeUserConfig',
             'OpenQuakeClassicalPSHA-User',
@@ -428,9 +426,7 @@ def hazard_job(hazard_info):
                 stations['Stations'],
             )
             print(
-                'HazardSimulation: ground motion records selected  ({0} s).'.format(
-                    time.time() - start_time
-                )
+                f'HazardSimulation: ground motion records selected  ({time.time() - start_time} s).'
             )
             # print(gm_id)
             gm_id = [int(i) for i in np.unique(gm_id)]
@@ -542,14 +538,13 @@ if __name__ == '__main__':
         if importlib.util.find_spec('jpype') is None:
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])
         import jpype
-        from jpype import imports
         from jpype.types import *
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
         jpype.addClassPath('./lib/OpenSHA-1.5.2.jar')
         try:
-            jpype.startJVM('-Xmx{}G'.format(memory_request), convertStrings=False)
+            jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
         except:
             print(
                 f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
@@ -575,13 +570,13 @@ if __name__ == '__main__':
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
     # import modules
-    from CreateStation import *
-    from CreateScenario import *
     from ComputeIntensityMeasure import *
-    from SelectGroundMotion import *
+    from CreateScenario import *
+    from CreateStation import *
 
     # KZ-08/23/22: adding hazard occurrence model
     from HazardOccurrence import *
+    from SelectGroundMotion import *
 
     if oq_flag:
         # import FetchOpenQuake

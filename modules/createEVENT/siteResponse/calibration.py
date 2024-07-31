@@ -1,9 +1,10 @@
-from Gauss1D import gauss1D
-from scipy.interpolate import interp1d
-import numpy as np
-import pandas as pd
 import json
 import sys
+
+import numpy as np
+import pandas as pd
+from Gauss1D import gauss1D
+from scipy.interpolate import interp1d
 
 
 def materialPM4(baseInputs, matTag, fn):
@@ -318,7 +319,7 @@ def calibration(variables, inputParameters, fn):
                     * Vs
                     * (1.0 + baseInputs['poisson'])
                 )
-                fn.write('#Vs = {:.2f}\n'.format(Vs))
+                fn.write(f'#Vs = {Vs:.2f}\n')
                 materialElastic(baseInputs, matTag, fn)
 
 

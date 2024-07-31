@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,13 +37,18 @@
 # Kuanshi Zhong
 #
 
-import argparse, json, sys, os, bisect
-import numpy as np
+import argparse
+import bisect
+import json
+import os
+import sys
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from scipy.stats.mstats import gmean
-import pandas as pd
 
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 main_dir = this_dir.parents[1]
@@ -159,9 +163,7 @@ class IntensityMeasureComputer:
         }
 
     def convert_accel_units(self, acceleration, from_, to_='cm/sec/sec'):
-        """
-        Converts acceleration from/to different units
-        """
+        """Converts acceleration from/to different units"""
         acceleration = np.asarray(acceleration)
         if from_ == 'g':
             if to_ == 'g':
@@ -553,7 +555,7 @@ def load_records(event_file, ampScaled):
     event_data = event_file.get('Events', None)
     if event_data is None:
         raise ValueError(
-            f"IntensityMeasureComputer: 'Events' attribute is not found in EVENT.json"
+            "IntensityMeasureComputer: 'Events' attribute is not found in EVENT.json"
         )
     else:
         event_data = event_data[0]
@@ -574,7 +576,7 @@ def load_records(event_file, ampScaled):
     pattern = event_data.get('pattern', None)
     if pattern is None:
         raise ValueError(
-            f"IntensityMeasureComputer: 'pattern' is not found in EVENT.json"
+            "IntensityMeasureComputer: 'pattern' is not found in EVENT.json"
         )
     dict_ts = dict()
     for cur_pat in pattern:
@@ -622,7 +624,7 @@ def get_unit_factor(unit_in, unit_out):
 def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
     # load AIM file
     try:
-        with open(AIM_file, 'r', encoding='utf-8') as f:
+        with open(AIM_file, encoding='utf-8') as f:
             AIM_file = json.load(f)
     except:
         raise ValueError(
@@ -631,7 +633,7 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
 
     # load EVENT file
     try:
-        with open(EVENT_file, 'r', encoding='utf-8') as f:
+        with open(EVENT_file, encoding='utf-8') as f:
             event_file = json.load(f)
     except:
         raise ValueError(
@@ -693,9 +695,8 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
                 'useGeoMean', False
             )
 
-    else:
-        if geoMean:
-            process_geomean = AIM_file['IntensityMeasure'].get('useGeoMean', None)
+    elif geoMean:
+        process_geomean = AIM_file['IntensityMeasure'].get('useGeoMean', None)
 
     if AIM_im is None or len(AIM_im) == 0:
         # no intensity measure calculation requested
@@ -796,39 +797,38 @@ def main(AIM_file, EVENT_file, IM_file, unitScaled, ampScaled, geoMean):
             if cur_im in IM_MAP.get('PseudoSpectrum'):
                 if len(output_periods) > 0:
                     for Ti in output_periods:
-                        cur_im_T = '{}({}s)'.format(cur_im, Ti)
-                        tmp_key = '1-{}-0-{}'.format(cur_im_T, cur_dof)
+                        cur_im_T = f'{cur_im}({Ti}s)'
+                        tmp_key = f'1-{cur_im_T}-0-{cur_dof}'
                         if len(cur_periods) > 1:
                             # interp
                             f = interp1d(
                                 cur_periods, im_dict.get(cur_im).get(cur_hist_name)
                             )
-                            if tmp_key in csv_dict.keys():
+                            if tmp_key in csv_dict:
                                 csv_dict[tmp_key].append(f(Ti))
                             else:
                                 csv_dict.update({tmp_key: [f(Ti)]})
+                        elif tmp_key in csv_dict:
+                            csv_dict[tmp_key].append(
+                                im_dict.get(cur_im).get(cur_hist_name)[
+                                    cur_periods.index(Ti)
+                                ]
+                            )
                         else:
-                            if tmp_key in csv_dict.keys():
-                                csv_dict[tmp_key].append(
-                                    im_dict.get(cur_im).get(cur_hist_name)[
-                                        cur_periods.index(Ti)
-                                    ]
-                                )
-                            else:
-                                csv_dict.update(
-                                    {
-                                        tmp_key: [
-                                            im_dict.get(cur_im).get(cur_hist_name)[
-                                                cur_periods.index(Ti)
-                                            ]
+                            csv_dict.update(
+                                {
+                                    tmp_key: [
+                                        im_dict.get(cur_im).get(cur_hist_name)[
+                                            cur_periods.index(Ti)
                                         ]
-                                    }
-                                )
+                                    ]
+                                }
+                            )
             elif cur_im == 'Periods':
                 pass
             else:
-                tmp_key = '1-{}-0-{}'.format(cur_im, cur_dof)
-                if tmp_key in csv_dict.keys():
+                tmp_key = f'1-{cur_im}-0-{cur_dof}'
+                if tmp_key in csv_dict:
                     csv_dict[tmp_key].append(im_dict.get(cur_im).get(cur_hist_name))
                 else:
                     csv_dict.update(

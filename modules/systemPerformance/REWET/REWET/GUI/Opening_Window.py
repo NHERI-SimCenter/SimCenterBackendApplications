@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Opening.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -10,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Opening_Window(object):
+class Ui_Opening_Window:
     def setupUi(self, Opening_Window):
         Opening_Window.setObjectName('Opening_Window')
         Opening_Window.resize(830, 780)
@@ -1177,7 +1175,6 @@ class Ui_Opening_Window(object):
 
 
 from .MplWidget import MplWidget
-
 
 if __name__ == '__main__':
     import sys

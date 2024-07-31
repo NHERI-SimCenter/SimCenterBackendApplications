@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -37,11 +36,12 @@
 # Dr. Stevan Gavrilovic, UC Berkeley
 #
 
-import os
-import sys
+import argparse
 import importlib
+import json
+import os
 import subprocess
-import argparse, posixpath, json
+import sys
 
 if __name__ == '__main__':
     print('Pulling census data')

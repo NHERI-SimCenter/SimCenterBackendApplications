@@ -1,7 +1,6 @@
 # written: fmk, adamzs
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -12,9 +11,8 @@ else:
 
 import json
 import os
-import subprocess
-from time import gmtime, strftime
 import posixpath
+from time import gmtime, strftime
 
 divider = '#' * 80
 log_output = []
@@ -41,7 +39,7 @@ def main(run_type, inputFile, applicationsRegistry):
         # first we parse the applications registry to load all possible applications
         #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
-        with open(applicationsRegistry, 'r') as data_file:
+        with open(applicationsRegistry) as data_file:
             registryData = json.load(data_file)
             # convert all relative paths to full paths
 
@@ -58,7 +56,7 @@ def main(run_type, inputFile, applicationsRegistry):
                 for app in applicationsData:
                     appName = app['Name']
                     appExe = app['ExecutablePath']
-                    if not app_type in Applications:
+                    if app_type not in Applications:
                         Applications[app_type] = dict()
                     Applications[app_type][appName] = appExe
 
@@ -66,7 +64,7 @@ def main(run_type, inputFile, applicationsRegistry):
         # open input file, and parse json into data
         #
 
-        with open(inputFile, 'r') as data_file:
+        with open(inputFile) as data_file:
             data = json.load(data_file)
             # convert all relative paths to full paths
             # relative2fullpath(data)
@@ -173,7 +171,7 @@ def main(run_type, inputFile, applicationsRegistry):
                     edpAppExeRemote = posixpath.join(remoteAppDir, edpAppExe)
                 else:
                     raise WorkFlowInputError(
-                        'EDP application {} not in registry'.format(edpApplication)
+                        f'EDP application {edpApplication} not in registry'
                     )
 
             else:
@@ -201,9 +199,7 @@ def main(run_type, inputFile, applicationsRegistry):
                     simAppExeRemote = posixpath.join(remoteAppDir, simAppExe)
                 else:
                     raise WorkFlowInputError(
-                        'Simulation application {} not in registry'.format(
-                            simulationApplication
-                        )
+                        f'Simulation application {simulationApplication} not in registry'
                     )
 
             else:
@@ -228,7 +224,7 @@ def main(run_type, inputFile, applicationsRegistry):
                     uqAppExeRemote = posixpath.join(localAppDir, uqAppExe)
                 else:
                     raise WorkFlowInputError(
-                        'UQ application {} not in registry'.format(uqApplication)
+                        f'UQ application {uqApplication} not in registry'
                     )
 
             else:
@@ -261,7 +257,7 @@ def main(run_type, inputFile, applicationsRegistry):
 
         # get RV for event
         eventAppDataList = [
-            '"{}"'.format(eventAppExeRemote),
+            f'"{eventAppExeRemote}"',
             '--filenameBIM',
             inputFILE,
             '--filenameEVENT',
@@ -289,7 +285,7 @@ def main(run_type, inputFile, applicationsRegistry):
         log_output.append([command, result, returncode])
 
         edpAppDataList = [
-            '"{}"'.format(edpAppExeRemote),
+            f'"{edpAppExeRemote}"',
             '--filenameBIM',
             inputFILE,
             '--filenameEVENT',
@@ -322,7 +318,7 @@ def main(run_type, inputFile, applicationsRegistry):
 
         # get RV for Simulation
         simAppDataList = [
-            '"{}"'.format(simAppExeRemote),
+            f'"{simAppExeRemote}"',
             '--filenameBIM',
             inputFILE,
             '--filenameSAM',
@@ -360,7 +356,7 @@ def main(run_type, inputFile, applicationsRegistry):
         print('HELLO')
 
         uqAppDataList = [
-            '"{}"'.format(uqAppExeLocal),
+            f'"{uqAppExeLocal}"',
             '--filenameBIM',
             inputFILE,
             '--filenameSAM',
@@ -412,7 +408,7 @@ def main(run_type, inputFile, applicationsRegistry):
         exit(1)
 
     # unhandled exceptions are handled here
-    except Exception as e:
+    except Exception:
         # print('workflow error: %s' % e.value)
         workflow_log('unhandled exception... exiting')
         raise

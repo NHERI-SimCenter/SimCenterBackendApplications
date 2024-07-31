@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,10 +32,11 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
-import numpy as np
+
 import meshio
-from shapely.geometry import Polygon, Point
+import numpy as np
 import triangle as tr
+from shapely.geometry import Point, Polygon
 
 # Other custom modules
 # from hydroUtils import hydroUtils
@@ -46,26 +46,25 @@ import triangle as tr
 # OpenFOAM7 solver class
 ####################################################################
 class flume:
-    """
-    This class includes the methods related to wave flume
+    """This class includes the methods related to wave flume
 
     Methods
-    --------
+    -------
             generateflume: Create STL files for the flume
             extremedata: Get the extreme values and building information
+
     """
 
     #############################################################
     def generateflume(self, breadth, path):
-        """
-        Creates the STL files for the flume
+        """Creates the STL files for the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 breadth: Breadth f the flume
                 path: Path where dakota.json exists - where we need to put STL files
-        """
 
+        """
         # Get the triangulated flume
         extremeval = self.flumedata('FlumeData.txt')
         self.breadth = breadth
@@ -115,14 +114,13 @@ class flume:
 
     #############################################################
     def flumedata(self, IpPTFile):
-        """
-        Gets information about the flume to create STL files
+        """Gets information about the flume to create STL files
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 IpPTFile: File with points of the flume
-        """
 
+        """
         # Get the data for the boundary
         data_boun = np.genfromtxt(IpPTFile, delimiter=',', dtype=(float, float))
 
@@ -137,7 +135,7 @@ class flume:
         segmentLR = []
 
         # Loop over all coordinates and create coordinates
-        for ii in range(0, data_boun.shape[0]):
+        for ii in range(data_boun.shape[0]):
             # Get each of the user points
             if ii < data_boun.shape[0] - 1:
                 segmentLR.extend([(ii, ii + 1)])
@@ -160,7 +158,7 @@ class flume:
         # Loop over all triangles to find if inside polygon
         indexes = []
         noindexes = []
-        for ii in range(0, self.npt.shape[0]):
+        for ii in range(self.npt.shape[0]):
             n0 = self.npt[ii, 0]
             n1 = self.npt[ii, 1]
             n2 = self.npt[ii, 2]
@@ -184,14 +182,13 @@ class flume:
 
     ####################################################################
     def right(self):
-        """
-        Gets information/nodes about to create right face of the flume
+        """Gets information/nodes about to create right face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npa_right = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_right[:, 0] = self.npa[:, 0]
         self.npa_right[:, 2] = self.npa[:, 1]
@@ -199,14 +196,13 @@ class flume:
 
     ####################################################################
     def left(self):
-        """
-        Gets information/nodes about to create left face of the flume
+        """Gets information/nodes about to create left face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npa_left = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_left[:, 0] = self.npa[:, 0]
         self.npa_left[:, 2] = self.npa[:, 1]
@@ -214,27 +210,25 @@ class flume:
 
     ####################################################################
     def lefttri(self):
-        """
-        Define triangles of the left face of the flume
+        """Define triangles of the left face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npt_left = np.array(self.npt)
         self.npt_left[:, [1, 0]] = self.npt_left[:, [0, 1]]
 
     ####################################################################
     def front(self):
-        """
-        Define information/nodes of the front face of the flume
+        """Define information/nodes of the front face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npa_front = np.zeros(shape=(4, 3))
         self.npa_front[0, :] = self.npa_right[0, :]
         self.npa_front[1, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
@@ -243,25 +237,24 @@ class flume:
 
     ####################################################################
     def fronttri(self):
-        """
-        Define triangles of the front face of the flume
+        """Define triangles of the front face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
+
         """
         self.npt_front = np.array([[0, 1, 2], [1, 3, 2]])
 
     ####################################################################
     def back(self):
-        """
-        Define information/nodes of the back face of the flume
+        """Define information/nodes of the back face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npa_back = np.zeros(shape=(4, 3))
         self.npa_back[0, :] = self.npa_right[self.npa_right.shape[0] - 3, :]
         self.npa_back[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -270,26 +263,24 @@ class flume:
 
     ####################################################################
     def backtri(self):
-        """
-        Define triangles of the back face of the flume
+        """Define triangles of the back face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npt_back = np.array([[3, 1, 0], [0, 2, 3]])
 
     ####################################################################
     def top(self):
-        """
-        Define information/nodes of the top face of the flume
+        """Define information/nodes of the top face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npa_top = np.zeros(shape=(4, 3))
         self.npa_top[0, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
         self.npa_top[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -298,31 +289,29 @@ class flume:
 
     ####################################################################
     def toptri(self):
-        """
-        Define triangles of the top face of the flume
+        """Define triangles of the top face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         self.npt_top = np.array([[2, 0, 1], [2, 1, 3]])
 
     ####################################################################
     def bottom(self):
-        """
-        Define information/nodes of the bottom face of the flume
+        """Define information/nodes of the bottom face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         # Create the coordinate vector
         self.npa_bottom = []
 
         # Loop over all the points
-        for ii in range(0, self.npa_right.shape[0] - 3):
+        for ii in range(self.npa_right.shape[0] - 3):
             npa_temp1 = np.zeros(shape=(4, 3))
             npa_temp2 = np.zeros(shape=(2, 3))
 
@@ -346,20 +335,19 @@ class flume:
 
     ####################################################################
     def bottomtri(self):
-        """
-        Define triangles of the bottom face of the flume
+        """Define triangles of the bottom face of the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 none
-        """
 
+        """
         # Create the coordinate vector
         self.npt_bottom = []
         ntri = 2
 
         # Loop over all the points
-        for ii in range(0, self.npa_right.shape[0] - 3):
+        for ii in range(self.npa_right.shape[0] - 3):
             npt_temp = np.zeros(shape=(2, 3))
 
             # Get the triangles
@@ -374,17 +362,16 @@ class flume:
 
     #############################################################
     def writeSTL(self, base_filename, npa, npt, path):
-        """
-        Write the STL files for each patch
+        """Write the STL files for each patch
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 base_filename: Patchname of the flume
                 npa: List of nodes
                 npt: List of triangles
                 path: Location where dakota.json file exists
-        """
 
+        """
         # Create a filename
         filename = base_filename + '.stl'
         # Create the STL file
@@ -404,16 +391,15 @@ class flume:
 
     #############################################################
     def extremedata(self, extreme, breadth):
-        """
-        Creates the STL files for the flume
+        """Creates the STL files for the flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: content of JSON file
                 extreme: Maximum limits
                 breadth: Breadth of the flume
-        """
 
+        """
         # Write the Max-Min values for the blockMesh
         BMXmin = extreme[0] - 0.25 * (extreme[1] - extreme[0])
         BMXmax = extreme[1] + 0.25 * (extreme[1] - extreme[0])

@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -42,25 +41,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Initial:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     initial conditions for openfoam7.
 
     Methods
-    --------
+    -------
             alphatext: Get all the text for the setFieldsDict
+
     """
 
     #############################################################
     def alphatext(self, data, fipath):
-        """
-        Creates the necessary files for alpha - setFields for openfoam7
+        """Creates the necessary files for alpha - setFields for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -77,9 +75,9 @@ class of7Initial:
             fname = 'SWAlpha.txt'
             swalphafile = os.path.join(fipath, fname)
             with open(swalphafile) as f:
-                gloalpha, localalpha, x1, y1, z1, x2, y2, z2 = [
+                gloalpha, localalpha, x1, y1, z1, x2, y2, z2 = (
                     float(x) for x in next(f).split(',')
-                ]
+                )
 
             alphatext = (
                 alphatext
@@ -179,21 +177,19 @@ class of7Initial:
 
     #############################################################
     def alphaheader(self):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the setFields-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\tsetFieldsDict;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -203,14 +199,13 @@ FoamFile
 
     #############################################################
     def alphacheck(self, data, fipath):
-        """
-        Checks for initial conditions for openfoam7
+        """Checks for initial conditions for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -279,15 +274,14 @@ FoamFile
 
     #############################################################
     def scripts(self, data, path):
-        """
-        Create the scripts for caserun.sh
+        """Create the scripts for caserun.sh
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where dakota.json file is located
-        """
 
+        """
         # Setfields
         caseruntext = 'echo Setting fields...\n'
         caseruntext = caseruntext + 'setFields > setFields.log\n\n'

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,9 +37,13 @@
 # Adam Zsarnóczay
 #
 
-import argparse, json, sys, os
-import numpy as np
+import argparse
+import json
+import os
+import sys
 from pathlib import Path
+
+import numpy as np
 
 # import the common constants and methods
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
@@ -53,7 +56,7 @@ from simcenter_common import get_scale_factors, get_unit_bases
 
 def write_RV(AIM_file, EVENT_file):
     # load the AIM file to get information about the assigned events
-    with open(AIM_file, 'r', encoding='utf-8') as f:
+    with open(AIM_file, encoding='utf-8') as f:
         aim_file = json.load(f)
 
     input_units = None
@@ -160,7 +163,7 @@ def load_record(
 
     # open the input event data file
     # (SimCenter json format is assumed here)
-    with open(data_dir / '{}.json'.format(file_name), 'r', encoding='utf-8') as f:
+    with open(data_dir / f'{file_name}.json', encoding='utf-8') as f:
         event_data = json.load(f)
 
     # check if Event File is already in EVENT format
@@ -229,18 +232,16 @@ def load_record(
 
 
 def get_records(AIM_file, EVENT_file):
-    """
-    This function is only called if UQ is part of the workflow. That is, it is
+    """This function is only called if UQ is part of the workflow. That is, it is
     not called if we are using IMasEDP and skipping the response simulation.
 
     """
-
     # load the AIM file
-    with open(AIM_file, 'r', encoding='utf-8') as f:
+    with open(AIM_file, encoding='utf-8') as f:
         AIM_file = json.load(f)
 
     # load the EVENT file
-    with open(EVENT_file, 'r', encoding='utf-8') as f:
+    with open(EVENT_file, encoding='utf-8') as f:
         event_file = json.load(f)
 
     # event_class = AIM_file['Events']['Events'][0]['EventClassification']

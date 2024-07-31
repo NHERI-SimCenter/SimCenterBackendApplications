@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 #
@@ -37,17 +36,19 @@
 # Chaofeng Wang
 # fmk
 
-import numpy as np
-import json
-import os, sys
-import shutil
-from glob import glob
 import argparse
-import pandas as pd
-from computeResponseSpectrum import *
+import json
+import os
+import shutil
+import sys
+from glob import glob
 
 # import the common constants and methods
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from computeResponseSpectrum import *
 
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 main_dir = this_dir.parents[0]
@@ -56,11 +57,7 @@ from simcenter_common import *
 
 
 def get_scale_factors(input_units, output_units):
-    """
-    Determine the scale factor to convert input event to internal event data
-
-    """
-
+    """Determine the scale factor to convert input event to internal event data"""
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -210,15 +207,13 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     for Ti in periods:
         dict_im_all.update(
             {
-                ('SA({}s)'.format(Ti), 0, 1, 'median'): [],
-                ('SA({}s)'.format(Ti), 0, 1, 'beta'): [],
-                ('SA({}s)'.format(Ti), 0, 2, 'median'): [],
-                ('SA({}s)'.format(Ti), 0, 2, 'beta'): [],
+                (f'SA({Ti}s)', 0, 1, 'median'): [],
+                (f'SA({Ti}s)', 0, 1, 'beta'): [],
+                (f'SA({Ti}s)', 0, 2, 'median'): [],
+                (f'SA({Ti}s)', 0, 2, 'beta'): [],
             }
         )
-        dict_im_site.update(
-            {'1-SA({}s)-0-1'.format(Ti): [], '1-SA({}s)-0-2'.format(Ti): []}
-        )
+        dict_im_site.update({f'1-SA({Ti}s)-0-1': [], f'1-SA({Ti}s)-0-2': []})
 
     for site in siteFiles:
         dict_im = {
@@ -247,17 +242,15 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
         for Ti in periods:
             dict_im.update(
                 {
-                    ('SA({}s)'.format(Ti), 0, 1, 'median'): [],
-                    ('SA({}s)'.format(Ti), 0, 1, 'beta'): [],
-                    ('SA({}s)'.format(Ti), 0, 2, 'median'): [],
-                    ('SA({}s)'.format(Ti), 0, 2, 'beta'): [],
+                    (f'SA({Ti}s)', 0, 1, 'median'): [],
+                    (f'SA({Ti}s)', 0, 1, 'beta'): [],
+                    (f'SA({Ti}s)', 0, 2, 'median'): [],
+                    (f'SA({Ti}s)', 0, 2, 'beta'): [],
                 }
             )
-            dict_im_site.update(
-                {'1-SA({}s)-0-1'.format(Ti): [], '1-SA({}s)-0-2'.format(Ti): []}
-            )
+            dict_im_site.update({f'1-SA({Ti}s)-0-1': [], f'1-SA({Ti}s)-0-2': []})
 
-        with open(site, 'r') as f:
+        with open(site) as f:
             All_json = json.load(f)
             generalInfo = All_json['GeneralInformation']
             Longitude.append(generalInfo['Longitude'])
@@ -315,7 +308,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
                 siteEventFactors.append(1.0)
 
                 # compute ground motion intensity measures
-                with open(f'{outputDir}/{eventName}.json', 'r') as f:
+                with open(f'{outputDir}/{eventName}.json') as f:
                     cur_gm = json.load(f)
                 cur_seismograms = cur_gm['Events'][0]['timeSeries']
                 num_seismograms = len(cur_seismograms)
@@ -355,9 +348,9 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             dict_im_site['1-PGD-0-1'] = pgd_x
             dict_im_site['1-PGD-0-2'] = pgd_y
             for jj, Ti in enumerate(periods):
-                cur_sa = '1-SA({}s)-0-1'.format(Ti)
+                cur_sa = f'1-SA({Ti}s)-0-1'
                 dict_im_site[cur_sa] = [tmp[jj] for tmp in psa_x]
-                cur_sa = '1-SA({}s)-0-2'.format(Ti)
+                cur_sa = f'1-SA({Ti}s)-0-2'
                 dict_im_site[cur_sa] = [tmp[jj] for tmp in psa_y]
 
             # dump dict_im_site
@@ -436,7 +429,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             dict_im[('PGD', 0, 2, 'median')].append(m_pgd_y)
             dict_im[('PGD', 0, 2, 'beta')].append(s_pgd_y)
             for jj, Ti in enumerate(periods):
-                cur_sa = 'SA({}s)'.format(Ti)
+                cur_sa = f'SA({Ti}s)'
                 dict_im[(cur_sa, 0, 1, 'median')].append(m_psa_x[jj])
                 dict_im[(cur_sa, 0, 1, 'beta')].append(s_psa_x[jj])
                 dict_im[(cur_sa, 0, 2, 'median')].append(m_psa_y[jj])
@@ -484,19 +477,19 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     try:
         os.mkdir(os.path.join(im_csv_path, 'Results'))
     except:
-        print(f'Results folder already exists')
+        print('Results folder already exists')
     # KZ: 10/19/2022, minor patch for Buildings
     df_im_all.to_csv(
         os.path.join(
             im_csv_path,
             'Results',
             'Buildings',
-            'IM_{}-{}.csv'.format(min(id), max(id)),
+            f'IM_{min(id)}-{max(id)}.csv',
         ),
         index=False,
     )
     df_im_all.to_csv(
-        os.path.join(im_csv_path, 'IM_{}-{}.csv'.format(min(id), max(id))),
+        os.path.join(im_csv_path, f'IM_{min(id)}-{max(id)}.csv'),
         index=False,
     )
 

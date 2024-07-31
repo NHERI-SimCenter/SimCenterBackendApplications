@@ -1,8 +1,7 @@
-from __future__ import print_function
-import os, sys
-import re
-import json
 import argparse
+import json
+import os
+import re
 
 
 class FloorForces:
@@ -13,8 +12,7 @@ class FloorForces:
 
 
 def validateCaseDirectoryStructure(caseDir):
-    """
-    This method validates that the provided case directory is valid and contains the 0, constant and system directory
+    """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
     """
     if not os.path.isdir(caseDir):
@@ -22,7 +20,7 @@ def validateCaseDirectoryStructure(caseDir):
 
     caseDirList = os.listdir(caseDir)
     necessaryDirs = ['0', 'constant', 'system', 'postProcessing']
-    if any(not aDir in caseDirList for aDir in necessaryDirs):
+    if any(aDir not in caseDirList for aDir in necessaryDirs):
         return False
 
     controlDictPath = os.path.join(caseDir, 'system/controlDict')
@@ -33,9 +31,7 @@ def validateCaseDirectoryStructure(caseDir):
 
 
 def parseForceComponents(forceArray):
-    """
-    This method takes the OpenFOAM force array and parse into components x,y,z
-    """
+    """This method takes the OpenFOAM force array and parse into components x,y,z"""
     components = forceArray.strip('()').split()
     x = float(components[0])
     y = float(components[1])
@@ -44,16 +40,14 @@ def parseForceComponents(forceArray):
 
 
 def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):
-    """
-    This method will read the forces from the output files in the OpenFOAM case output (post processing)
-    """
+    """This method will read the forces from the output files in the OpenFOAM case output (post processing)"""
     deltaT = 0
     forces = []
     for i in range(floorsCount):
         forces.append(FloorForces())
     forcePattern = re.compile(r'\([0-9.e\+\-\s]+\)')
 
-    with open(buildingForcesPath, 'r') as forcesFile:
+    with open(buildingForcesPath) as forcesFile:
         forceLines = forcesFile.readlines()
         needsDeltaT = True
         for line in forceLines:
@@ -87,9 +81,7 @@ def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):
 
 
 def directionToDof(direction):
-    """
-    Converts direction to degree of freedom
-    """
+    """Converts direction to degree of freedom"""
     directioMap = {'X': 1, 'Y': 2, 'Z': 3}
 
     return directioMap[direction]
@@ -98,9 +90,7 @@ def directionToDof(direction):
 def addFloorForceToEvent(
     timeSeriesArray, patternsArray, force, direction, floor, dT
 ):
-    """
-    Add force (one component) time series and pattern in the event file
-    """
+    """Add force (one component) time series and pattern in the event file"""
     seriesName = 'WaterForceSeries_' + str(floor) + direction
     timeSeries = {'name': seriesName, 'dT': dT, 'type': 'Value', 'data': force}
 
@@ -119,18 +109,14 @@ def addFloorForceToEvent(
 
 
 def addFloorPressure(pressureArray, floor):
-    """
-    Add floor pressure in the event file
-    """
+    """Add floor pressure in the event file"""
     floorPressure = {'story': str(floor), 'pressure': [0.0, 0.0]}
 
     pressureArray.append(floorPressure)
 
 
 def writeEVENT(forces, deltaT):
-    """
-    This method writes the EVENT.json file
-    """
+    """This method writes the EVENT.json file"""
     timeSeriesArray = []
     patternsArray = []
     pressureArray = []
@@ -164,9 +150,7 @@ def writeEVENT(forces, deltaT):
 
 
 def GetOpenFOAMEvent(floorsCount, startTime):
-    """
-    Read OpenFOAM output and generate an EVENT file for the building
-    """
+    """Read OpenFOAM output and generate an EVENT file for the building"""
     forcesOutputName = 'buildingsForces'
 
     if floorsCount == 1:
@@ -187,7 +171,7 @@ def GetOpenFOAMEvent(floorsCount, startTime):
 
 
 def ReadBIM(BIMFilePath):
-    with open(BIMFilePath, 'r') as BIMFile:
+    with open(BIMFilePath) as BIMFile:
         bim = json.load(BIMFile)
 
     return [

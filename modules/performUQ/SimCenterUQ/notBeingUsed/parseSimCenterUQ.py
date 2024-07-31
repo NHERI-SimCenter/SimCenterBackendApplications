@@ -1,7 +1,6 @@
 # written: UQ team @ SimCenter
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -10,15 +9,12 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import shutil
 import json
 import os
-import stat
-import sys
 import platform
-from subprocess import Popen, PIPE
+import stat
 import subprocess
-
+import sys
 
 inputArgs = sys.argv
 
@@ -127,20 +123,18 @@ if run_type in ['runningLocal']:
     """
     LATER, CHANGE THE LOCATION
     """
-    #
 
     if uq_data['uqType'] == 'Train GP Surrogate Model':
         # simCenterUQCommand = 'python "{}/{}" {} {} {}'.format(myScriptDir,surrogate,workdir_main,osType,run_type)
         simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(
             data['python'], myScriptDir, surrogate, workdir_main, osType, run_type
         )
-    elif uq_data['uqType'] == 'Sensitivity Analysis':
-        simCenterUQCommand = '"{}/{}" "{}" {} {}'.format(
-            myScriptDir, natafExe, workdir_main, osType, run_type
-        )
-    elif uq_data['uqType'] == 'Forward Propagation':
-        simCenterUQCommand = '"{}/{}" "{}" {} {}'.format(
-            myScriptDir, natafExe, workdir_main, osType, run_type
+    elif (
+        uq_data['uqType'] == 'Sensitivity Analysis'
+        or uq_data['uqType'] == 'Forward Propagation'
+    ):
+        simCenterUQCommand = (
+            f'"{myScriptDir}/{natafExe}" "{workdir_main}" {osType} {run_type}'
         )
     elif uq_data['uqType'] == 'Train PLoM Model':
         simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(

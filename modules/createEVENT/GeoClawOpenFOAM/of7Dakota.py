@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -35,33 +34,31 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 import os
 
 # Other custom modules
-from hydroUtils import hydroUtils
 
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
 class of7Dakota:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     dakota for openfoam7.
 
     Methods
-    --------
+    -------
             scripts: Generate relevant scripts
+
     """
 
     #############################################################
     def dakotascripts(self, args):
-        """
-        Create the scripts for caserun.sh
+        """Create the scripts for caserun.sh
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where dakota.json file is located
-        """
 
+        """
         caseruntext = 'echo Starting Dakota preparation...\n'
         caseruntext = (
             caseruntext
@@ -107,14 +104,13 @@ class of7Dakota:
 
     #############################################################
     def cleaning(self, args, path):
-        """
-        Create the scripts for cleaning
+        """Create the scripts for cleaning
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 args: all the arguments
-        """
 
+        """
         print('No OF cleaning')
 
 

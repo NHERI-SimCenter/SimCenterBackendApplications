@@ -1,27 +1,23 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Oct 23 15:00:31 2022
+"""Created on Sun Oct 23 15:00:31 2022
 
 @author: snaeimi
 """
 
-import wntrfr
-import pandas as pd
-import numpy as np
+import copy
 import os
 import pickle
 from collections import OrderedDict
-import copy
+
+import numpy as np
+import pandas as pd
+import wntrfr
+from Output.Crew_Report import Crew_Report
+from Output.Curve import Curve
 
 # import Report_Reading
-from Output.Map import Map
-from Output.Map import Helper
+from Output.Map import Helper, Map
 from Output.Raw_Data import Raw_Data
-from Output.Curve import Curve
-from Output.Crew_Report import Crew_Report
 from Output.Result_Time import Result_Time
-import Input.Input_IO as io
-from Project import Project as MainProject
 
 
 class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
@@ -81,7 +77,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             'result_directory'
         ]
 
-        if not isinstance(result_directory, type(None)):
+        if result_directory is not None:
             self.result_directory = result_directory
 
         to_neglect = []
@@ -366,8 +362,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
             )
 
     def getRequiredDemandForAllNodesandtime(self, scn_name):
-        """
-        **********
+        """**********
         ATTENTION: We Assume that all scnearios have teh same time indexing
         **********
 
@@ -664,7 +659,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
 
         table = pd.DataFrame.from_dict(table_temp).set_index('index')
         res = pd.DataFrame(
-            index=[i for i in range(0, len(table.index))], dtype=np.float64
+            index=[i for i in range(len(table.index))], dtype=np.float64
         )
         for dmg_name in dmg_index_list:
             select_columns = ['prob']
@@ -685,7 +680,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):
         res_data = []
         res_day = []
 
-        for day_iter in range(0, np.int64(np.ceil(np.max(data.index)))):
+        for day_iter in range(np.int64(np.ceil(np.max(data.index)))):
             day_data = data[(data.index >= day_iter) & (data.index <= day_iter + 1)]
             res_data.append(day_data.to_list())
             res_day.append(str(day_iter) + '-' + str(day_iter + 1))

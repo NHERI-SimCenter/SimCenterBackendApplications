@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -45,16 +44,19 @@
 # Jinyan Zhao
 # Sina Naeimi
 
-import sys, os, json
 import argparse
+import json
+import os
+import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-import whale.main as whale
-from whale.main import log_msg, log_div
-from sWHALE import runSWhale
 import importlib
+
+import whale.main as whale
+from sWHALE import runSWhale
+from whale.main import log_div, log_msg
 
 
 def main(
@@ -88,7 +90,6 @@ def main(
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found and parallelType == 'parRUN':
-        import mpi4py
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -102,7 +103,7 @@ def main(
             doParallel = True
 
     # save the reference dir in the input file
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
 
     # TODO: if the ref dir is needed, do NOT save it to the input file, store it
@@ -213,7 +214,7 @@ def main(
         # WF.perform_regional_mapping(assetIt, asset_type)
 
         # TODO: not elegant code, fix later
-        with open(assetIt, 'r', encoding='utf-8') as f:
+        with open(assetIt, encoding='utf-8') as f:
             asst_data = json.load(f)
 
         # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network

@@ -2,22 +2,19 @@
 # updated Aakash Bangalore Satish, June 11 2024
 
 import os
-from uqRunner import UqRunnerFactory
-from uqRunner import UqRunner
+import shutil
+import time
+
+from createTemplate import createTemplate
+from UQpy.distributions.collection.Uniform import Uniform
+from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
+from UQpy.run_model.RunModel import RunModel
 
 # THIS IS FOR WHEN MESSING AROUND WITH UQpy SOURCE
 # import sys
 # sys.path.append(os.path.abspath("/home/michael/UQpy/src"))
-
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling as MCS
-from UQpy.run_model.RunModel import RunModel
-from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
-from UQpy.distributions.collection.Uniform import Uniform
-from createTemplate import createTemplate
-import time
-import csv
-import json
-import shutil
+from uqRunner import UqRunner
 
 
 class UQpyRunner(UqRunner):
@@ -32,8 +29,7 @@ class UQpyRunner(UqRunner):
         localAppDir,
         remoteAppDir,
     ):
-        """
-        This function configures and runs a UQ simulation using UQpy based on the
+        """This function configures and runs a UQ simulation using UQpy based on the
         input UQ configuration, simulation configuration, random variables,
         and requested demand parameters
 
@@ -49,7 +45,6 @@ class UQpyRunner(UqRunner):
         localAppDir:    Directory containing apps for local run
         remoteAppDir:   Directory containing apps for remote run
         """
-
         # There is still plenty of configuration that can and should be added here. This currently does MCS sampling with Uniform
         # distributions only, though this is easily expanded
 
@@ -103,7 +98,7 @@ class UQpyRunner(UqRunner):
                 variableNames.append(val['name'])
                 distributionParams.append([val['lowerbound'], val['upperbound']])
             else:
-                raise IOError(
+                raise OSError(
                     "ERROR: You'll need to update UQpyRunner.py to run your"
                     + ' specified RV distribution!'
                 )
@@ -144,7 +139,7 @@ class UQpyRunner(UqRunner):
                 distributionObjects, nsamples=numberOfSamples, random_state=seed
             )
         else:
-            raise IOError(
+            raise OSError(
                 "ERROR: You'll need to update UQpyRunner.py to run your specified"
                 + ' sampling method!'
             )

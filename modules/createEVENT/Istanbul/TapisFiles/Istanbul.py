@@ -5,9 +5,10 @@ directory = './Events'
 # check if the directory exists
 if not os.path.exists(directory):
     os.makedirs(directory)
+import json
+
 import numpy as np
 import pandas as pd
-import json
 
 
 def Istanbul(information):
@@ -85,6 +86,6 @@ def write_motion(site_name, directory, i, motiondict):
 
 
 # get the location flag
-with open('information.json', 'r') as file:
+with open('information.json') as file:
     information = json.load(file)
 Istanbul(information)

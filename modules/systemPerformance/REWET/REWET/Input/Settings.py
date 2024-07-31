@@ -1,8 +1,9 @@
 import json
-import warnings
 import pickle
-import pandas as pd
+import warnings
+
 import numpy as np
+import pandas as pd
 
 list_default_headers = [
     'Scenario Name',
@@ -82,7 +83,7 @@ class Process_Settings(base):
             'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'
         )
         self.settings['pipe_damage_file_directory'] = (
-            'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
+            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
         )
         self.settings['pump_damage_relative_time'] = (
             True  # needs to be implemented in the code
@@ -286,12 +287,14 @@ class Settings:
         return False
 
     def importJsonSettings(self, json_file_path):
-        """read a settinsg json file and import the data
+        """Read a settinsg json file and import the data
 
         Args:
+        ----
             json_file_path (path): JSON file path
+
         """
-        with open(json_file_path, 'rt') as f:
+        with open(json_file_path) as f:
             settings_data = json.load(f)
 
         if not isinstance(settings_data, dict):

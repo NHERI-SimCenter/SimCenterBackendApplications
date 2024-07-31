@@ -1,25 +1,22 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, and Aakash Bangalore Satish*
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, and Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
 """
 
+import itertools
 import json
 import os
 import sys
-import time
 from importlib import import_module
-from shutil import copyfile
-
-import numpy as np
-import itertools
 
 
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
 
-    Attributes:
+    Attributes
+    ----------
         message -- explanation of the error
+
     """
 
     def __init__(self, message):
@@ -29,7 +26,7 @@ class DataProcessingError(Exception):
 def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     # Read in the json object
     logFile.write('\n\tReading the json file')
-    with open(dakotaJsonFile, 'r') as f:
+    with open(dakotaJsonFile) as f:
         jsonInputs = json.load(f)
     logFile.write(' ... Done')
 
@@ -77,36 +74,26 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         len(logLikelihoodFile) > 0
     ):  # if the log-likelihood file is not an empty string
         logFile.write(
-            "\n\t\t\t\tSearching for a user-defined log-likelihood script '{}'".format(
-                logLikelihoodFile
-            )
+            f"\n\t\t\t\tSearching for a user-defined log-likelihood script '{logLikelihoodFile}'"
         )
         if os.path.exists(os.path.join(tmpSimCenterDir, logLikelihoodFile)):
             logFile.write(
-                "\n\t\t\t\tFound log-likelihood file '{}' in {}.".format(
-                    logLikelihoodFile, tmpSimCenterDir
-                )
+                f"\n\t\t\t\tFound log-likelihood file '{logLikelihoodFile}' in {tmpSimCenterDir}."
             )
             logLikeModuleName = os.path.splitext(logLikelihoodFile)[0]
             try:
                 import_module(logLikeModuleName)
             except:
                 logFile.write(
-                    "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-                        os.path.join(tmpSimCenterDir, logLikelihoodFile)
-                    )
+                    f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."
                 )
                 raise
         else:
             logFile.write(
-                "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be found in {}.".format(
-                    logLikelihoodFile, tmpSimCenterDir
-                )
+                f"\n\t\t\t\tERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."
             )
             raise FileNotFoundError(
-                "ERROR: The log-likelihood script '{}' cannot be found in {}.".format(
-                    logLikelihoodFile, tmpSimCenterDir
-                )
+                f"ERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."
             )
     else:
         defaultLogLikeFileName = 'defaultLogLikeScript.py'
@@ -115,17 +102,13 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
         logLikeModuleName = os.path.splitext(defaultLogLikeFileName)[0]
         logFile.write('\n\t\t\t\tLog-likelihood script not provided.')
         logFile.write(
-            '\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{}'.format(
-                os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)
-            )
+            f'\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)}'
         )
         try:
             import_module(logLikeModuleName)
         except:
             logFile.write(
-                "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-                    os.path.join(tmpSimCenterDir, logLikelihoodFile)
-                )
+                f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."
             )
             raise
     logLikeModule = import_module(logLikeModuleName)
@@ -142,8 +125,8 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
     logFile.write('\n\t\t\tThe EDPs defined are:')
     printString = '\n\t\t\t\t'
     for i in range(len(edpInputs)):
-        printString += "Name: '{}', Length: {}\n\t\t\t\t".format(
-            edpNamesList[i], edpLengthsList[i]
+        printString += (
+            f"Name: '{edpNamesList[i]}', Length: {edpLengthsList[i]}\n\t\t\t\t"
         )
     logFile.write(printString)
     # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
@@ -215,9 +198,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
 
     logFile.write('\n\n\t\t\tLooping over the models')
     for ind in range(nModels):
-        logFile.write('\n\t\t\t\tModel number: {}'.format(ind))
+        logFile.write(f'\n\t\t\t\tModel number: {ind}')
         # Processing RV inputs
-        logFile.write('\n\t\t\t\t\tCreating priors for model number {}'.format(ind))
+        logFile.write(f'\n\t\t\t\t\tCreating priors for model number {ind}')
         logFile.write('\n\t\t\t\t\t\tProcessing RV inputs')
         for i, rv in enumerate(rvInputs):
             variablesList[ind]['names'].append(rv['name'])
@@ -274,7 +257,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                 variablesList[ind]['Par2'].append(sigma)
                 variablesList[ind]['Par3'].append(None)
                 variablesList[ind]['Par4'].append(None)
-                paramString = 'params: {}, {}'.format(mu, sigma)
+                paramString = f'params: {mu}, {sigma}'
             elif rv['distribution'] == 'Gumbel':
                 variablesList[ind]['Par1'].append(rv['alphaparam'])
                 variablesList[ind]['Par2'].append(rv['betaparam'])
@@ -327,8 +310,8 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
                         variablesList[ind]['Par2'].append(None)
                         variablesList[ind]['Par3'].append(None)
                         variablesList[ind]['Par4'].append(None)
-                        paramString = 'value: {}'.format(
-                            cartesianProductOfModelIndices[ind][index]
+                        paramString = (
+                            f'value: {cartesianProductOfModelIndices[ind][index]}'
                         )
                     except ValueError:
                         logFile.write(
@@ -373,7 +356,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir):
             variablesList[ind]['Par2'].append(b)
             variablesList[ind]['Par3'].append(None)
             variablesList[ind]['Par4'].append(None)
-            paramString = 'params: {}, {}'.format(a, b)
+            paramString = f'params: {a}, {b}'
             logFile.write(
                 '\n\t\t\t\t\t\t\tEDP number: {}, name: {}, dist: {}, {}'.format(
                     i, name, 'InvGamma', paramString

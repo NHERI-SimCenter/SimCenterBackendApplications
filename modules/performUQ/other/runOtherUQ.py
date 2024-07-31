@@ -1,12 +1,10 @@
 # written: Michael Gardner @ UNR
 
+import argparse
 import json
 import os
-import sys
-import platform
-import argparse
+
 from configureAndRunUQ import configureAndRunUQ
-from pathlib import Path
 
 
 def main():

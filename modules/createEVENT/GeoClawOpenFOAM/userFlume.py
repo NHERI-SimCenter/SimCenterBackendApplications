@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -34,34 +33,34 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Standard python modules
 import os
 
+from flume import flume
+
 # Other custom modules
 from hydroUtils import hydroUtils
-from flume import flume
 
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
 class userFlume:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     creating a flume as specified by the user
 
     Methods
-    --------
+    -------
             creategeom: Create geometry and STL files
+
     """
 
     #############################################################
     def creategeom(self, data, path):
-        """
-        Creates the geometry for user flume
+        """Creates the geometry for user flume
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

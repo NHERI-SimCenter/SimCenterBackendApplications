@@ -1,7 +1,7 @@
 from typing import Literal, Union
 
 import numpy as np
-from pydantic import BaseModel, validator, PositiveFloat, Field
+from pydantic import BaseModel, Field, PositiveFloat, validator
 from typing_extensions import Annotated
 
 
@@ -73,7 +73,7 @@ class UniformDataset(RVCommonData):
 
 
 def readFile(path):
-    with open(path, 'r') as f:
+    with open(path) as f:
         return np.genfromtxt(f)
 
 

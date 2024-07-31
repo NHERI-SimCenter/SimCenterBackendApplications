@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  1 18:32:32 2022
+"""Created on Tue Nov  1 18:32:32 2022
 
 @author: snaeimi
 """
 
 from PyQt5 import QtGui, QtWidgets
+
 from .Pipe_Damage_Model_Window import Ui_Pipe_Damage_Model
 
 

@@ -4,18 +4,16 @@ import shutil
 import subprocess
 import sys
 import traceback
+from dataclasses import dataclass
 from multiprocessing.pool import Pool
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 import numpy as np
-import quoFEM_RV_models
+import numpy.typing as npt
+import scipy.stats
 from ERAClasses.ERADist import ERADist
 from ERAClasses.ERANataf import ERANataf
 from numpy.typing import NDArray
-
-import scipy.stats
-import numpy.typing as npt
-from dataclasses import dataclass
 
 
 def _copytree(src, dst, symlinks=False, ignore=None):
@@ -41,7 +39,7 @@ def _copytree(src, dst, symlinks=False, ignore=None):
 
 def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):
     if glob.glob(out_file_name):
-        with open(out_file_name, 'r') as text_file:
+        with open(out_file_name) as text_file:
             error_FEM = text_file.read()
 
         startingCharId = error_FEM.lower().find('error')
@@ -159,7 +157,7 @@ class SimCenterWorkflowDriver:
             '   1> model_eval.log 2>&1'
         )
         os.chdir(workdir)
-        completed_process = subprocess.run(command, shell=True)
+        completed_process = subprocess.run(command, shell=True, check=False)
         try:
             completed_process.check_returncode()
         except subprocess.CalledProcessError as ex:
@@ -170,7 +168,7 @@ class SimCenterWorkflowDriver:
             )
             returnStringList.append(f'The return code was {ex.returncode}')
             returnStringList.append(f'The following error occurred: \n{ex}')
-            raise ModelEvaluationError(f'\n\n'.join(returnStringList))
+            raise ModelEvaluationError('\n\n'.join(returnStringList))
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
         if glob.glob('results.out'):

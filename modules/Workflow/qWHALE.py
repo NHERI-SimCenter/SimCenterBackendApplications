@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -41,19 +40,21 @@
 # Michael Gardner
 # Chaofeng Wang
 
-import sys, os, json
 import argparse
+import json
+import os
+import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
-from whale.main import log_msg, log_div
+from whale.main import log_div, log_msg
 
 
 def main(run_type, input_file, app_registry, working_dir, app_dir, log_file):
     # initialize the log file
-    with open(input_file, 'r') as f:
+    with open(input_file) as f:
         inputs = json.load(f)
     runDir = inputs['runDir']
 

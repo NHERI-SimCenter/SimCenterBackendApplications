@@ -3,7 +3,6 @@
 # Updated in Oct. 2018
 
 import numpy as np
-
 from global_variables import SECTION_DATABASE
 from help_functions import search_section_property
 
@@ -12,9 +11,8 @@ from help_functions import search_section_property
 # #########################################################################
 
 
-class Beam(object):
-    """
-    This class is used to define a beam member, which has the following attributes:
+class Beam:
+    """This class is used to define a beam member, which has the following attributes:
     (1) Beam section, a dictionary including size and associated properties.
     (2) Beam demand, a dictionary including shear and flexural demands.
     (3) Beam strength, a dictionary including shear and flexural strengths.
@@ -30,8 +28,7 @@ class Beam(object):
         moment_demand_right,
         steel,
     ):
-        """
-        This function initializes the attributes of the beam class.
+        """This function initializes the attributes of the beam class.
         :param section_size: a string specifying the section size for the beam.
         :param length: a float number denoting the beam length.
         :param shear_demand: a float number denoting the shear demand.
@@ -72,8 +69,7 @@ class Beam(object):
         self.calculate_hinge_parameters(steel)
 
     def initialize_reduced_beam_section(self):
-        """
-        This method is used to initialize RBS dimensions.
+        """This method is used to initialize RBS dimensions.
         :return: a dictionary including a, b, and c values describing RBS dimensions.
         """
         # Use the lower bound as the initial value for a and b
@@ -83,8 +79,7 @@ class Beam(object):
         self.RBS_dimension['c'] = 0.25 * self.section['bf']
 
     def check_flange(self, steel):
-        """
-        This method is used to check whether the flange is satisfied with highly ductile requirement.
+        """This method is used to check whether the flange is satisfied with highly ductile requirement.
         : steel: a class defined in "steel_material.py" file
         : return: a flag (integer) which denotes the flange check result.
         """
@@ -108,8 +103,7 @@ class Beam(object):
             self.is_feasible['flange limit'] = False
 
     def check_web(self, steel):
-        """
-        This method is used to check whether the web is satisfied with highly ductile requirement.
+        """This method is used to check whether the web is satisfied with highly ductile requirement.
         :param steel: a class defined in "steel_material.py" file.
         :return: a flag (integer) which denotes the web check result.
         """
@@ -122,8 +116,7 @@ class Beam(object):
             self.is_feasible['web limit'] = False
 
     def determine_spacing_between_lateral_support(self, steel):
-        """
-        This method is used to compute the spacing between two lateral supports.
+        """This method is used to compute the spacing between two lateral supports.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number indicating the spacing.
         """
@@ -144,8 +137,7 @@ class Beam(object):
         self.spacing = self.length / (number_lateral_support + 1)
 
     def check_shear_strength(self, steel):
-        """
-        This method is used to check whether the shear strength of column is sufficient or not
+        """This method is used to check whether the shear strength of column is sufficient or not
         :param steel: a class defined in "steel_material.py" file
         :return: a float number denoting the shear strength and a flag denoting whether shear strength is sufficient
         """
@@ -161,8 +153,7 @@ class Beam(object):
             self.is_feasible['shear strength'] = False
 
     def check_flexural_strength(self, steel):
-        """
-        This method is used to check whether the beam has enough flexural strength.
+        """This method is used to check whether the beam has enough flexural strength.
         :return: a float number denoting flexural strength and a flag denoting whether the flexural strength is enough
         """
         # Compute plastic modulus at center of RBS
@@ -183,8 +174,7 @@ class Beam(object):
             self.is_feasible['flexural strength'] = False
 
     def check_flag(self):
-        """
-        This method is used to test whether beam passes all checks.
+        """This method is used to test whether beam passes all checks.
         :return: a bool variable. True ==> passed
         """
         self.flag = True
@@ -194,8 +184,7 @@ class Beam(object):
         return self.flag
 
     def compute_demand_capacity_ratio(self):
-        """
-        This method is used to compute demand to capacity ratios.
+        """This method is used to compute demand to capacity ratios.
         :return: a dictionary which includes the ratios for shear force and flexural moment.
         """
         self.demand_capacity_ratio['shear'] = (
@@ -207,8 +196,7 @@ class Beam(object):
         )
 
     def calculate_hinge_parameters(self, steel):
-        """
-        This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
+        """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
         """
         # Following content is based on the following reference:

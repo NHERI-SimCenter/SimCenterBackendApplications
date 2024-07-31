@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -38,10 +37,12 @@
 # Adam Zsarnóczay
 #
 
-import os, sys
-import argparse, json
-import importlib, shutil
-
+import argparse
+import importlib
+import json
+import os
+import shutil
+import sys
 from pathlib import Path
 
 # import the common constants and methods
@@ -86,19 +87,19 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
     sys.path.insert(0, os.getcwd())
 
     # load the AIM file
-    with open(AIM_input_path, 'r', encoding='utf-8') as f:
+    with open(AIM_input_path, encoding='utf-8') as f:
         AIM_in = json.load(f)
 
     # load the SAM file
-    with open(SAM_input_path, 'r', encoding='utf-8') as f:
+    with open(SAM_input_path, encoding='utf-8') as f:
         SAM_in = json.load(f)
 
     # load the event file
-    with open(EVENT_input_path, 'r', encoding='utf-8') as f:
+    with open(EVENT_input_path, encoding='utf-8') as f:
         EVENT_in = json.load(f)['Events'][0]
 
     # load the EDP file
-    with open(EDP_input_path, 'r', encoding='utf-8') as f:
+    with open(EDP_input_path, encoding='utf-8') as f:
         EDP_in = json.load(f)
 
     # KZ: commented out --> we're running at the current workdir
@@ -119,9 +120,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
         else:
             shutil.copytree(custom_script_dir, os.getcwd(), dirs_exist_ok=True)
             log_msg(
-                'Custom scripts copied from {} to {}'.format(
-                    custom_script_dir, os.getcwd()
-                )
+                f'Custom scripts copied from {custom_script_dir} to {os.getcwd()}'
             )
 
     custom_script = importlib.__import__(
@@ -170,9 +169,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
                     print('dofs = ', dofs)
                     for cur_dof in dofs:
                         key_name = (
-                            '1-'
-                            + edp_name
-                            + '-{}-{}'.format(int(cur_floor), int(cur_dof))
+                            '1-' + edp_name + f'-{int(cur_floor)}-{int(cur_dof)}'
                         )
                         print('key_name = ', key_name)
                         res = EDP_res.get(key_name, None)

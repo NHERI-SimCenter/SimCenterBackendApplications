@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -32,7 +31,6 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -42,25 +40,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Prboundary:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     pressure boundary conditions for openfoam7.
 
     Methods
-    --------
+    -------
             Prtext: Get all the text for the p_rgh-file
+
     """
 
     #############################################################
     def Prtext(self, data, patches):
-        """
-        Creates the necessary text for pressure bc for openfoam7
+        """Creates the necessary text for pressure bc for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -100,21 +97,19 @@ class of7Prboundary:
 
     #############################################################
     def Prheader(self):
-        """
-        Creates the text for the header for pressure file
+        """Creates the text for the header for pressure file
 
         Variable
         -----------
                 header: Header for the p_rgh-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\tp_rgh;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -127,19 +122,18 @@ FoamFile
 
     #############################################################
     def Prpatchtext(self, data, Prtype, patchname):
-        """
-        Creates the text the pressure boundary condition
+        """Creates the text the pressure boundary condition
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 Prtype: Type of velocity b.c
                 patchname: Name of the patch
 
         Variable
         -----------
                 Prtext: Text for the particular patch
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

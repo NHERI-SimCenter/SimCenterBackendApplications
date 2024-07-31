@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -42,27 +41,26 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Uboundary:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     velocity boundary conditions for openfoam7.
 
     Methods
-    --------
+    -------
             Utext: Get s all the text for the U-file
+
     """
 
     #############################################################
     def Utext(self, data, fipath, patches):
-        """
-        Creates the necessary folders for openfoam7
+        """Creates the necessary folders for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 patches: List of boundary patches
                 fipath: Path where the dakota.json file exists
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -111,21 +109,19 @@ class of7Uboundary:
 
     #############################################################
     def Uheader(self):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the U-file
         """
-
-        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+        header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolVectorField;\n\tlocation\t"0";\n\tobject\tU;\n}
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
@@ -138,11 +134,10 @@ FoamFile
 
     #############################################################
     def Upatchtext(self, data, Utype, patchname, fipath, numMovWall):
-        """
-        Creates the text the velocity boundary condition
+        """Creates the text the velocity boundary condition
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: All the json data
                 Utype: Type of velocity b.c
                 patchname: Name of the patch
@@ -151,8 +146,8 @@ FoamFile
         Variable
         -----------
                 Utext: Text for the particular patch
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -354,16 +349,15 @@ FoamFile
 
     #############################################################
     def Uchecks(self, data, fipath, patches):
-        """
-        Creates the data files required for the OSU moving wall
+        """Creates the data files required for the OSU moving wall
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: All the data from JSON file
                 fipath: Path to the dakota.json file location
                 patches: List of patches
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -435,14 +429,13 @@ FoamFile
 
     #############################################################
     def of7wavemakerdict(self, fipath):
-        """
-        Creates the wavemaker dictionary for the moving wall
+        """Creates the wavemaker dictionary for the moving wall
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 fipath: Path to the dakota.json file location
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -462,14 +455,13 @@ FoamFile
 
     #############################################################
     def of7dynamicMeshdict(self, fipath):
-        """
-        Creates the dynamic mesh dictionary for the moving wall
+        """Creates the dynamic mesh dictionary for the moving wall
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 fipath: Path to the dakota.json file location
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -489,14 +481,13 @@ FoamFile
 
     #############################################################
     def OSUwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):
-        """
-        Creates the wavemaker text file for the OSU moving wall
+        """Creates the wavemaker text file for the OSU moving wall
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 fipath: Path to the dakota.json file location
-        """
 
+        """
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'wavemakerMovement.txt')
         fileID = open(filepath, 'w')
@@ -510,7 +501,7 @@ FoamFile
         # Get the frequency of the wavemaker
         frequency = 0
         waterdepth = 0
-        filewm = open(dispfilepath, 'r')
+        filewm = open(dispfilepath)
         Lines = filewm.readlines()
         count = 0
         for line in Lines:
@@ -559,7 +550,7 @@ FoamFile
         if heightfilepath != 'None':
             # Write the paddle Eta
             fileID.write('paddleEta 1(\n' + str(countlines) + '(\n')
-            filewmg = open(heightfilepath, 'r')
+            filewmg = open(heightfilepath)
             Lines2 = filewmg.readlines()
             count = 0
             for line in Lines2:
@@ -572,14 +563,13 @@ FoamFile
 
     #############################################################
     def GenwavemakerText(self, fipath, dispfilepath, heightfilepath, numMovWall):
-        """
-        Creates the wavemaker text file for a general moving wall
+        """Creates the wavemaker text file for a general moving wall
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 fipath: Path to the dakota.json file location
-        """
 
+        """
         # Get the file ID
         filepath = os.path.join(fipath, 'constant', 'wavemakerMovement.txt')
         fileID = open(filepath, 'w')
@@ -591,7 +581,7 @@ FoamFile
 
         # Create the wavemaker movement file
         # Get the frequency of the wavemaker
-        filewm = open(dispfilepath, 'r')
+        filewm = open(dispfilepath)
         Lines = filewm.readlines()
         count = 0
         for line in Lines:
@@ -630,7 +620,7 @@ FoamFile
         # Get the water depth and paddle eta
         if heightfilepath != 'None':
             # Get the height
-            filewmg = open(heightfilepath, 'r')
+            filewmg = open(heightfilepath)
             Lines2 = filewmg.readlines()
             count = 0
             for line in Lines2:

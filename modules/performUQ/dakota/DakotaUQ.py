@@ -9,16 +9,14 @@
 # else:
 #     string_types = str
 
-import shutil
+import argparse
 import json
 import os
-import stat
-import sys
 import platform
-from subprocess import Popen, PIPE
+import shutil
+import stat
 import subprocess
-import glob
-import argparse
+import sys
 
 
 def main(args):
@@ -41,7 +39,7 @@ def main(args):
     #  - need to know in case need to modify driver file
     #
 
-    with open(inputFile, 'r', encoding='utf-8') as f:
+    with open(inputFile, encoding='utf-8') as f:
         data = json.load(f)
 
     workflow_driver1 = 'blank'
@@ -77,9 +75,7 @@ def main(args):
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))
 
-    preprocessorCommand = '"{}/preprocessDakota" "{}" "{}" "{}" "{}" "{}" '.format(
-        thisScriptDir, inputFile, workflow_driver, workflow_driver1, runType, osType
-    )
+    preprocessorCommand = f'"{thisScriptDir}/preprocessDakota" "{inputFile}" "{workflow_driver}" "{workflow_driver1}" "{runType}" "{osType}" '
 
     subprocess.Popen(preprocessorCommand, shell=True).wait()
 
@@ -105,12 +101,12 @@ def main(args):
 
     # If calibration data files exist, copy to the main working directory
     if os.path.isfile('calibrationDataFilesToMove.cal'):
-        calDataFileList = open('calibrationDataFilesToMove.cal', 'r')
+        calDataFileList = open('calibrationDataFilesToMove.cal')
         datFileList = calDataFileList.readlines()
         for line in datFileList:
             datFile = line.strip()
             if datFile.split('.')[-1] == 'tmpFile':
-                shutil.copy(datFile, '../{}'.format(datFile[:-8]))
+                shutil.copy(datFile, f'../{datFile[:-8]}')
             else:
                 shutil.copy(datFile, '../')
 

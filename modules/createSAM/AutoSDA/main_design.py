@@ -15,11 +15,10 @@
 #                       Load Necessary Packages                          #
 ##########################################################################
 
-import sys
 import time
 
-from seismic_design import seismic_design
 from global_variables import baseDirectory
+from seismic_design import seismic_design
 
 # Count the starting time of the main program
 start_time = time.time()

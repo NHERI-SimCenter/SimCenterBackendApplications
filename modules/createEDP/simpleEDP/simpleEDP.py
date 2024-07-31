@@ -1,5 +1,4 @@
-from __future__ import division, print_function
-import os, sys
+import sys
 
 if sys.version.startswith('2'):
     range = xrange
@@ -7,12 +6,13 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import argparse, posixpath, ntpath, json
+import argparse
+import json
 
 
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     # load the AIM file
-    with open(AIM_input_path, 'r', encoding='utf-8') as f:
+    with open(AIM_input_path, encoding='utf-8') as f:
         AIM_in = json.load(f)
 
     EDP_list = []

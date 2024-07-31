@@ -1,5 +1,4 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
 """
@@ -40,9 +39,9 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):
         inc_beta = new_beta - old_beta
         Wm = np.exp(inc_beta * (likelihoods - likelihoods.max()))
         ESS = int(1 / np.sum((Wm / sum(Wm)) ** 2))
-        if ESS == rN:
+        if rN == ESS:
             break
-        elif ESS < rN:
+        elif rN > ESS:
             max_beta = new_beta
         else:
             min_beta = new_beta
@@ -87,9 +86,9 @@ def compute_beta_evidence_old(
         log_Wm_n = log_Wm - logsumexp(log_Wm)
         ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
 
-        if ESS == rN:
+        if rN == ESS:
             break
-        elif ESS < rN:
+        elif rN > ESS:
             max_beta = new_beta
         else:
             min_beta = new_beta
@@ -168,12 +167,12 @@ def MCMC_MH_old(
             )
 
             if np.isnan(likelihood_proposal):
-                likelihood_proposal = -np.Inf
+                likelihood_proposal = -np.inf
             posterior_proposal = prior_proposal + likelihood_proposal * beta
         else:
-            likelihood_proposal = -np.Inf  # dont run the FE model
-            posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
+            likelihood_proposal = -np.inf  # dont run the FE model
+            posterior_proposal = -np.inf
+            prediction_proposal = -np.inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
@@ -255,12 +254,12 @@ def MCMC_MH(
             )
 
             if np.isnan(likelihood_proposal):
-                likelihood_proposal = -np.Inf
+                likelihood_proposal = -np.inf
             posterior_proposal = prior_proposal + likelihood_proposal * beta
         else:
-            likelihood_proposal = -np.Inf  # dont run the FE model
-            posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
+            likelihood_proposal = -np.inf  # dont run the FE model
+            posterior_proposal = -np.inf
+            prediction_proposal = -np.inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)

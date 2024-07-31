@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -32,9 +31,10 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 # Import all necessary modules
 ####################################################################
 # Standard python modules
-import os
-import numpy as np
 import math
+import os
+
+import numpy as np
 
 # Other custom modules
 from hydroUtils import hydroUtils
@@ -44,25 +44,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class of7Meshing:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     meshing for openfoam7.
 
     Methods
-    --------
+    -------
             meshcheck: Check all the meshing
+
     """
 
     #############################################################
     def meshcheck(self, data, fipath):
-        """
-        Checks for material properties for openfoam7
+        """Checks for material properties for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -105,22 +104,20 @@ class of7Meshing:
 
     #############################################################
     def meshheader(self, fileobjec):
-        """
-        Creates the text for the header
+        """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the solver-files
         """
-
         header = (
-            """/*--------------------------*- NHERI SimCenter -*----------------------------*\ 
+            """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
 |======| D | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R | Version: 1.00
 |	   | O |
-\*---------------------------------------------------------------------------*/ 
+\\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""
             + fileobjec
@@ -133,14 +130,13 @@ FoamFile
 
     #############################################################
     def bmeshtext(self, data):
-        """
-        Creates the necessary files for blockMeshDict for openfoam7
+        """Creates the necessary files for blockMeshDict for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -292,14 +288,13 @@ FoamFile
 
     #############################################################
     def sfetext(self):
-        """
-        Creates the necessary files for new controldict for post-processing for openfoam7
+        """Creates the necessary files for new controldict for post-processing for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -329,14 +324,13 @@ FoamFile
 
     #############################################################
     def shmtext(self, data):
-        """
-        Creates the necessary files for new controldict for post-processing for openfoam7
+        """Creates the necessary files for new controldict for post-processing for openfoam7
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 None
-        """
 
+        """
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -515,15 +509,14 @@ FoamFile
 
     #############################################################
     def scripts(self, data, path):
-        """
-        Create the scripts for caserun.sh
+        """Create the scripts for caserun.sh
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
                 path: Path where dakota.json file is located
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 

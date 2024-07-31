@@ -1,10 +1,10 @@
 # import of modules
-import numpy as np
-from scipy import stats
-from ERADist import ERADist
-from ERACond import ERACond
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+from ERACond import ERACond
+from ERADist import ERADist
+from scipy import stats
 
 """
 ---------------------------------------------------------------------------
@@ -63,9 +63,8 @@ References:
 
 
 # %%
-class ERARosen(object):
-    """
-    Generation of joint distribution objects.
+class ERARosen:
+    """Generation of joint distribution objects.
     Construction of the joint distribution object with
 
     Obj = ERARosen(dist,depend,opt)
@@ -87,8 +86,7 @@ class ERARosen(object):
     """
 
     def __init__(self, dist, depend):
-        """
-        Constructor method, for more details have a look at the
+        """Constructor method, for more details have a look at the
         class description.
         """
         self.Dist = dist
@@ -150,8 +148,7 @@ class ERARosen(object):
 
     # %%
     def X2U(self, X, error=True):
-        """
-        Carries out the transformation from physical space X to
+        """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -159,7 +156,6 @@ class ERARosen(object):
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
         """
-
         n_dim = len(self.Dist)
         X = np.array(X, ndmin=2, dtype=float)
 
@@ -212,8 +208,7 @@ class ERARosen(object):
 
     # %%
     def U2X(self, U, error=True):
-        """
-        Carries out the transformation from standard normal space U
+        """Carries out the transformation from standard normal space U
         to physical space X .
         U must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -221,7 +216,6 @@ class ERARosen(object):
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
         """
-
         n_dim = len(self.Dist)
         U = np.array(U, ndmin=2, dtype=float)
 
@@ -260,15 +254,13 @@ class ERARosen(object):
 
     # %%
     def pdf(self, X, error=True):
-        """
-        Computes the joint PDF.
+        """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
         If no error message should be given in case of the detection
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
         """
-
         n_dim = len(self.Dist)
         X = np.array(X, ndmin=2, dtype=float)
 
@@ -307,11 +299,9 @@ class ERARosen(object):
 
     # %%
     def random(self, n=1):
-        """
-        Creates n samples of the joint distribution.
+        """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
         """
-
         n_dim = len(self.Dist)
         X = np.zeros([n, n_dim])
 
@@ -328,8 +318,7 @@ class ERARosen(object):
 
     # %%
     def plotGraph(self, opt=False):
-        """
-        Plots the Bayesian network which defines the dependency
+        """Plots the Bayesian network which defines the dependency
         between the different distributions.
         If opt is given as 'numbering' the nodes are named according
         to their order of input in dist(e.g., the first distribution
@@ -338,7 +327,6 @@ class ERARosen(object):
         position in dist, otherwise the property ID is taken as the
         name of the distribution.
         """
-
         n_layer = len(self.Layers)
         vert = np.flip(np.linspace(0, 1, n_layer))
         pos_n = dict()
@@ -359,7 +347,7 @@ class ERARosen(object):
                     labels[i] = self.Dist[i].ID
                 else:
                     labels[i] = '#' + str(i)
-        elif not opt.lower == 'numbering':
+        elif opt.lower != 'numbering':
             for i in range(n_dim):
                 labels[i] = '#' + str(i)
         else:

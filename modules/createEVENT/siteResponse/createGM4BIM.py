@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 #
@@ -37,12 +36,12 @@
 # Chaofeng Wang
 # fmk
 
-import numpy as np
+import argparse
 import json
 import os
 import shutil
 from glob import glob
-import argparse
+
 import pandas as pd
 
 
@@ -63,7 +62,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     sites = []
 
     for site in siteFiles:
-        with open(site, 'r') as f:
+        with open(site) as f:
             All_json = json.load(f)
             generalInfo = All_json['GeneralInformation']
             Longitude.append(generalInfo['Longitude'])

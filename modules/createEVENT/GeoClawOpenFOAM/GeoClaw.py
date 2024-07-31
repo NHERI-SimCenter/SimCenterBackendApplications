@@ -1,8 +1,7 @@
 ####################################################################
 # LICENSING INFORMATION
 ####################################################################
-"""
-LICENSE INFORMATION:
+"""LICENSE INFORMATION:
 
 Copyright (c) 2020-2030, The Regents of the University of California (Regents).
 
@@ -33,6 +32,7 @@ REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, TH
 ####################################################################
 # Standard python modules
 import os
+
 import numpy as np
 
 # Other custom modules
@@ -43,25 +43,24 @@ from hydroUtils import hydroUtils
 # OpenFOAM7 solver class
 ####################################################################
 class GeoClaw:
-    """
-    This class includes the methods related to
+    """This class includes the methods related to
     coupling GeoClaw and OpenFOAM in HydroUQ
 
     Methods
-    --------
+    -------
             decomptext: Get all the text for the decomposeParDict
+
     """
 
     #############################################################
     def creategeom(self, data, path):
-        """
-        Creates the geometry for bathymetry
+        """Creates the geometry for bathymetry
 
-        Arguments
-        -----------
+        Arguments:
+        ---------
                 data: all the JSON data
-        """
 
+        """
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -80,7 +79,5 @@ class GeoClaw:
 
         # Points of interest
         bottompts = self.getbathy(maxvalues, minvalues, data)
-
-        #
 
         return 0

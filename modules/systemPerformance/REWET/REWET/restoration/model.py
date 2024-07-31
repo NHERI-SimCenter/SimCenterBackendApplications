@@ -1,22 +1,20 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Dec 25 05:09:25 2020
+"""Created on Fri Dec 25 05:09:25 2020
 
 @author: snaeimi
 """
 
 import logging
+import random
+from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
 
 # import warnings
 import restoration.io as rio
-import restoration.base as base
-import pandas as pd
-import numpy as np
-import copy
-import random
-from restoration.base import get_node_name
 from repair import Repair
-from collections import OrderedDict
+from restoration import base
+from restoration.base import get_node_name
 
 logger = logging.getLogger(__name__)
 
@@ -574,11 +572,10 @@ class Restoration:
                         )
 
                         break
+                    elif job_end_time == None:
+                        raise ValueError('Job is not assigned to the agent')
                     else:
-                        if job_end_time == None:
-                            raise ValueError('Job is not assigned to the agent')
-                        else:
-                            raise ValueError('Unknown description: ' + description)
+                        raise ValueError('Unknown description: ' + description)
                 else:
                     raise RuntimeError('i_assigned not boolean')
 
@@ -892,8 +889,7 @@ class Restoration:
         self.repair.removeNodeTemporaryRepair(damage_node_name, wn)
 
     def updateShifiting(self, time):
-        """
-        Updates shifting with the new time given
+        """Updates shifting with the new time given
 
         Parameters
         ----------
@@ -1005,7 +1001,7 @@ class Restoration:
     def initializeEntities(self, WaterNetwork):
         for entity, val in self.entity_rule.items():
             element_type = self.entity[entity]
-            if not element_type in self.ELEMENTS:
+            if element_type not in self.ELEMENTS:
                 raise ValueError('Unknown Element type')
 
             if val[0][0] == 'ALL':
@@ -1472,7 +1468,7 @@ class Restoration:
                 for in_file in res:
                     i = 0
 
-                    while i in range(0, len(index_list)):
+                    while i in range(len(index_list)):
                         if index_list[i] == in_file:
                             index_list.pop(i)
                         i += 1
@@ -1503,8 +1499,7 @@ class Restoration:
             self._reminder_time_hard_event[name] += int(time)
 
     def _addHardEvent(self, next_time, requester, detail=None, current_time=None):
-        """
-        Adds a hard event
+        """Adds a hard event
 
         Parameters
         ----------

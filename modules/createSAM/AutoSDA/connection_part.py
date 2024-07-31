@@ -10,30 +10,25 @@
 # Please add all the imported modules in the part below
 
 import copy
-import pandas as pd
 import sys
-
-##########################################################################
-#                  Load User Defined Class and Py Files                  #
-##########################################################################
-
-from help_functions import extract_depth
-from help_functions import extract_weight
 
 # #########################################################################
 #           Open the section database and store it as a global variable   #
 # #########################################################################
-
 from global_variables import STRONG_COLUMN_WEAK_BEAM_RATIO
+
+##########################################################################
+#                  Load User Defined Class and Py Files                  #
+##########################################################################
+from help_functions import extract_depth, extract_weight
 
 # #########################################################################
 #                           Define a class of beam                        #
 # #########################################################################
 
 
-class Connection(object):
-    """
-    This class is used to define a beam-column connection part, which has the following attributes:
+class Connection:
+    """This class is used to define a beam-column connection part, which has the following attributes:
     (1) Check column and beam depth as well as weight per ANSI Section 5.3.1 prequalified connection.
     (2) Extract RBS (reduced beam section) dimension from beam class.
     (3) Compute the probable maximum moment at the center of RBS
@@ -58,8 +53,7 @@ class Connection(object):
         top_column=None,
         bottom_column=None,
     ):
-        """
-        This function initializes all attributes of Connection class.
+        """This function initializes all attributes of Connection class.
         :param connection_type: a string which denotes the type of beam-column connection.
                                 "interior": interior beam-column connection with two beams and two columns
                                 "exterior": exterior beam-column connection with one beam and two columns
@@ -120,8 +114,7 @@ class Connection(object):
     def check_column_beam(
         self, connection_type, left_beam, right_beam, top_column, bottom_column
     ):
-        """
-        This method is used to check whether the column and beam depth (weight) is feasible for
+        """This method is used to check whether the column and beam depth (weight) is feasible for
         prequalified connection. (step 1 in ANSI Section 5.8)
         The explanations for input arguments are presented in __init__() function.
         :return: a boolean result stored in is_feasible dictionary.
@@ -225,8 +218,7 @@ class Connection(object):
             sys.exit(2)
 
     def extract_reduced_beam_section(self, connection_type, left_beam, right_beam):
-        """
-        This method is used to extract the RBS dimensions into one (or two) dictionary.
+        """This method is used to extract the RBS dimensions into one (or two) dictionary.
         The explanations for input arguments are presented in __init__() function.
         :return: one (two) dictionary which contains the RBS dimensions.
         """
@@ -252,8 +244,7 @@ class Connection(object):
     def compute_probable_moment_RBS(
         self, connection_type, steel, left_beam, right_beam
     ):
-        """
-        This method is used to compute section modulus at RBS center (step 2 and 3 in ANSI Section 5.8)
+        """This method is used to compute section modulus at RBS center (step 2 and 3 in ANSI Section 5.8)
         :return: a dictionary which includes the probable moment at RBS center
         """
         Cpr = (steel.Fy + steel.Fu) / (2 * steel.Fy)
@@ -294,8 +285,7 @@ class Connection(object):
     def compute_shear_force_RBS(
         self, connection_type, beam_dead_load, beam_live_load, span, bottom_column
     ):
-        """
-        This method calculates the shear force at the center of RBS (step 4 in ANSI Section 5.8)
+        """This method calculates the shear force at the center of RBS (step 4 in ANSI Section 5.8)
         :return: a dictionary which includes the shear forces
         """
         # Be cautious: beam_dead_load read here is in the unit of lb/ft
@@ -325,8 +315,7 @@ class Connection(object):
             sys.exit(2)
 
     def compute_probable_moment_column_face(self, connection_type):
-        """
-        This method calculates the probable maximum moment at the face of the column. (step 5 in ANSI Section 5.8)
+        """This method calculates the probable maximum moment at the face of the column. (step 5 in ANSI Section 5.8)
         :return: Store probable maximum moment at column face into the dictionary
         """
         Sh = self.left_RBS_dimension['a'] + self.left_RBS_dimension['b'] / 2
@@ -348,8 +337,7 @@ class Connection(object):
             sys.exit(2)
 
     def compute_plastic_moment(self, connection_type, steel, left_beam, right_beam):
-        """
-        This method calculates the plastic moment of the beam based on expected yield stress.
+        """This method calculates the plastic moment of the beam based on expected yield stress.
         (step 6 in ANSI Section 5.8)
         :return: Store the plastic moment to the dictionary.
         """
@@ -371,8 +359,7 @@ class Connection(object):
             sys.exit(2)
 
     def check_moment_column_face(self, connection_type):
-        """
-        This method checks whether the plastic moment is greater than the actual moment at column face.
+        """This method checks whether the plastic moment is greater than the actual moment at column face.
         (step 7 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
         """
@@ -411,8 +398,7 @@ class Connection(object):
     def check_shear_strength(
         self, connection_type, beam_dead_load, beam_live_load, left_beam, right_beam
     ):
-        """
-        This method checks whether the beam shear strength is sufficient for the required shear strength.
+        """This method checks whether the beam shear strength is sufficient for the required shear strength.
         (step 8 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
         """
@@ -461,8 +447,7 @@ class Connection(object):
         top_column,
         bottom_column,
     ):
-        """
-        This method examines whether the "strong-column-weak-beam" criteria is satisfied.
+        """This method examines whether the "strong-column-weak-beam" criteria is satisfied.
         (step 11 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
         """
@@ -639,8 +624,7 @@ class Connection(object):
         bottom_column,
         top_column,
     ):
-        """
-        This method determines the panel zone thickness (doubler plates).
+        """This method determines the panel zone thickness (doubler plates).
         :return: a scalar which denotes the doubler plate thickness.
         """
         if connection_type == 'top exterior':
@@ -730,8 +714,7 @@ class Connection(object):
             self.doubler_plate_thickness = tp
 
     def check_flag(self):
-        """
-        This method is used to test whether the connection passed all checks.
+        """This method is used to test whether the connection passed all checks.
         :return: a boolean variable indicating the connection is feasible or note.
         """
         # Loop over each checking result to see if it is feasible or not

@@ -1,7 +1,6 @@
 # written: UQ team @ SimCenter
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -10,16 +9,13 @@ if sys.version.startswith('2'):
 else:
     string_types = str
 
-import shutil
+import argparse
 import json
 import os
 import stat
-import sys
-import platform
-from subprocess import Popen, PIPE
-from pathlib import Path
 import subprocess
-import argparse
+import sys
+from pathlib import Path
 
 
 def main(args):
@@ -37,7 +33,7 @@ def main(args):
     workflowDriver = args.driverFile
     outputFile = args.workflowOutput
 
-    with open(inputFile, 'r', encoding='utf-8') as f:
+    with open(inputFile, encoding='utf-8') as f:
         data = json.load(f)
 
     if runType in [
@@ -73,7 +69,7 @@ def main(args):
         print('work_dir: ' + workdir_main)
 
         # open the input json file
-        with open(inputFile, 'r', encoding='utf-8') as data_file:
+        with open(inputFile, encoding='utf-8') as data_file:
             data = json.load(data_file)
 
         uq_data = data['UQ']
@@ -100,45 +96,14 @@ def main(args):
         """
         LATER, CHANGE THE LOCATION
         """
-        #
 
         if uq_data['uqType'] == 'Train GP Surrogate Model':
-            simCenterUQCommand = (
-                '"{}" "{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(
-                    python,
-                    myScriptDir,
-                    surrogate,
-                    workdir_main,
-                    inputFile,
-                    workflowDriver,
-                    osType,
-                    runType,
-                )
-            )
-        elif uq_data['uqType'] == 'Sensitivity Analysis':
-            simCenterUQCommand = (
-                '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(
-                    myScriptDir,
-                    natafExe,
-                    workdir_main,
-                    inputFile,
-                    workflowDriver,
-                    osType,
-                    runType,
-                )
-            )
-        elif uq_data['uqType'] == 'Forward Propagation':
-            simCenterUQCommand = (
-                '"{}/{}" "{}" {} {} {} {} 1> logFileSimUQ.txt 2>&1'.format(
-                    myScriptDir,
-                    natafExe,
-                    workdir_main,
-                    inputFile,
-                    workflowDriver,
-                    osType,
-                    runType,
-                )
-            )
+            simCenterUQCommand = f'"{python}" "{myScriptDir}/{surrogate}" "{workdir_main}" {inputFile} {workflowDriver} {osType} {runType} 1> logFileSimUQ.txt 2>&1'
+        elif (
+            uq_data['uqType'] == 'Sensitivity Analysis'
+            or uq_data['uqType'] == 'Forward Propagation'
+        ):
+            simCenterUQCommand = f'"{myScriptDir}/{natafExe}" "{workdir_main}" {inputFile} {workflowDriver} {osType} {runType} 1> logFileSimUQ.txt 2>&1'
         # KZ: training calling runPLoM.py to launch the model training
         elif uq_data['uqType'] == 'PLoM Model':
             simCenterUQCommand = '"{}" "{}" "{}" {} {} {} {}'.format(

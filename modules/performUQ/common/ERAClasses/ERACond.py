@@ -1,8 +1,8 @@
 # import of modules
-import numpy as np
-from scipy import optimize, stats, special, integrate
 import types
-import inspect
+
+import numpy as np
+from scipy import integrate, optimize, special, stats
 
 """
 ---------------------------------------------------------------------------
@@ -49,9 +49,8 @@ References:
 
 
 # %%
-class ERACond(object):
-    """
-    Generation of conditional distribution objects for the use within the
+class ERACond:
+    """Generation of conditional distribution objects for the use within the
     ERARosen class.
 
     Construction of the conditional distribution object with
@@ -128,11 +127,9 @@ class ERACond(object):
     """
 
     def __init__(self, name, opt, param, ID=False):
-        """
-        Constructor method, for more details have a look at the
+        """Constructor method, for more details have a look at the
         class description.
         """
-
         self.Name = name.lower()
 
         if opt.upper() == 'PAR' or opt.upper() == 'MOM':
@@ -155,8 +152,7 @@ class ERACond(object):
 
     # %%
     def condParam(self, cond):
-        """
-        Evaluates the parameters of the distribution for the
+        """Evaluates the parameters of the distribution for the
         different given conditions.
         In case that the distribution is described by its moments,
         the evaluated moments are used to obtain the distribution
@@ -164,7 +160,6 @@ class ERACond(object):
         This method is used by the ERACond methods condCDF, condPDF,
         condiCDF and condRandom.
         """
-
         cond = np.array(cond, ndmin=2, dtype=float).T
         par = self.modParam(cond)
         n_cond = np.shape(cond)[0]
@@ -190,15 +185,11 @@ class ERACond(object):
                 Par = [-par[0], par[1], par[2]]
             elif self.Name == 'gevmin':
                 Par = [-par[0], par[1], -par[2]]
-            elif self.Name == 'gumbel':
-                Par = par
-            elif self.Name == 'gumbelmin':
+            elif self.Name == 'gumbel' or self.Name == 'gumbelmin':
                 Par = par
             elif self.Name == 'lognormal':
                 Par = [par[1], np.exp(par[0])]
-            elif self.Name == 'negativebinomial':
-                Par = par
-            elif self.Name == 'normal':
+            elif self.Name == 'negativebinomial' or self.Name == 'normal':
                 Par = par
             elif self.Name == 'pareto':
                 Par = [1 / par[1], par[0] / par[1], par[0]]
@@ -220,200 +211,191 @@ class ERACond(object):
 
         # ----------------------------------------------------------------------------
         # for the case of Opt == MOM
-        else:
-            if self.Name == 'beta':
-                r = (
-                    ((par[3] - par[0]) * (par[0] - par[2]) / par[1] ** 2 - 1)
-                    * (par[0] - par[2])
-                    / (par[3] - par[2])
-                )
-                s = r * (par[3] - par[0]) / (par[0] - par[2])
-                Par = [r, s, par[2], par[3] - par[2]]
-            elif self.Name == 'binomial':
-                p = 1 - (par[1]) ** 2 / par[0]
-                n = par[0] / p
-                Par = [n.astype(int), p]
-            elif self.Name == 'chisquare':
-                Par = np.around(par, 0)
-            elif self.Name == 'exponential':
-                Par = par
-            elif self.Name == 'frechet':
-                c = np.zeros(n_cond)
-                scale = np.zeros(n_cond)
-                loc = np.zeros(n_cond)
-                for i in range(n_cond):
-                    param0 = 2.0001
+        elif self.Name == 'beta':
+            r = (
+                ((par[3] - par[0]) * (par[0] - par[2]) / par[1] ** 2 - 1)
+                * (par[0] - par[2])
+                / (par[3] - par[2])
+            )
+            s = r * (par[3] - par[0]) / (par[0] - par[2])
+            Par = [r, s, par[2], par[3] - par[2]]
+        elif self.Name == 'binomial':
+            p = 1 - (par[1]) ** 2 / par[0]
+            n = par[0] / p
+            Par = [n.astype(int), p]
+        elif self.Name == 'chisquare':
+            Par = np.around(par, 0)
+        elif self.Name == 'exponential':
+            Par = par
+        elif self.Name == 'frechet':
+            c = np.zeros(n_cond)
+            scale = np.zeros(n_cond)
+            loc = np.zeros(n_cond)
+            for i in range(n_cond):
+                param0 = 2.0001
 
-                    def equation(param):
-                        return (
-                            np.sqrt(
-                                special.gamma(1 - 2 / param)
-                                - special.gamma(1 - 1 / param) ** 2
-                            )
-                            / special.gamma(1 - 1 / param)
-                            - par[1][i] / par[0][i]
+                def equation(param):
+                    return (
+                        np.sqrt(
+                            special.gamma(1 - 2 / param)
+                            - special.gamma(1 - 1 / param) ** 2
                         )
+                        / special.gamma(1 - 1 / param)
+                        - par[1][i] / par[0][i]
+                    )
 
-                    sol = optimize.fsolve(equation, x0=param0, full_output=True)
-                    if sol[2] == 1:
-                        k = sol[0][0]
-                        a_n = par[0][i] / special.gamma(1 - 1 / k)
-                        c[i] = -1 / k
-                        scale[i] = a_n / k
-                        loc[i] = a_n
-                    else:
-                        c[i] = np.nan
-                        scale[i] = np.nan
-                        loc[i] = np.nan
-                Par = [c, scale, loc]
-            elif self.Name == 'gamma':
-                Par = [(par[0] / par[1]) ** 2, par[1] ** 2 / par[0]]
-            elif self.Name == 'geometric':
-                Par = 1 / par
-            elif self.Name == 'gev':
-                beta = par[2]
-                alpha = (
-                    abs(beta)
-                    * par[1]
-                    / np.sqrt(
-                        special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2
-                    )
-                )
-                epsilon = par[0] - (alpha / beta * (special.gamma(1 - beta) - 1))
-                Par = [-beta, alpha, epsilon]
-            elif self.Name == 'gevmin':
-                beta = par[2]
-                alpha = (
-                    abs(beta)
-                    * par[1]
-                    / np.sqrt(
-                        special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2
-                    )
-                )
-                epsilon = par[0] + (alpha / beta * (special.gamma(1 - beta) - 1))
-                Par = [-beta, alpha, -epsilon]
-            elif self.Name == 'gumbel':
-                a_n = par[1] * np.sqrt(6) / np.pi
-                b_n = par[0] - np.euler_gamma * a_n
-                Par = [a_n, b_n]
-            elif self.Name == 'gumbelmin':
-                a_n = par[1] * np.sqrt(6) / np.pi
-                b_n = par[0] + np.euler_gamma * a_n
-                Par = [a_n, b_n]
-            elif self.Name == 'lognormal':
-                mu_lnx = np.log(par[0] ** 2 / np.sqrt(par[1] ** 2 + par[0] ** 2))
-                sig_lnx = np.sqrt(np.log(1 + (par[1] / par[0]) ** 2))
-                Par = [sig_lnx, np.exp(mu_lnx)]
-            elif self.Name == 'negativebinomial':
-                p = par[0] / (par[0] + par[1] ** 2)
-                k = par[0] * p
-                Par = [k, p]
-            elif self.Name == 'normal':
-                Par = par
-            elif self.Name == 'pareto':
-                alpha = 1 + np.sqrt(1 + (par[0] / par[1]) ** 2)
-                x_m = par[0] * (alpha - 1) / alpha
-                Par = [1 / alpha, x_m / alpha, x_m]
-            elif self.Name == 'poisson':
-                if isinstance(par, list):
-                    Par = par[0]
+                sol = optimize.fsolve(equation, x0=param0, full_output=True)
+                if sol[2] == 1:
+                    k = sol[0][0]
+                    a_n = par[0][i] / special.gamma(1 - 1 / k)
+                    c[i] = -1 / k
+                    scale[i] = a_n / k
+                    loc[i] = a_n
                 else:
-                    Par = par
-            elif self.Name == 'rayleigh':
-                Par = par / np.sqrt(np.pi / 2)
-            elif self.Name == 'truncatednormal':
-                mu = np.zeros(n_cond)
-                sig = np.zeros(n_cond)
-                a = par[2]
-                b = par[3]
-                for i in range(n_cond):
-                    mean = par[0][i]
-                    std = par[1][i]
-                    if a[i] >= b[i] or mean <= a[i] or mean >= b[i]:
-                        a[i] = np.nan
-                        b[i] = np.nan
-                        mu[i] = np.nan
-                        sig[i] = np.nan
-                        continue
+                    c[i] = np.nan
+                    scale[i] = np.nan
+                    loc[i] = np.nan
+            Par = [c, scale, loc]
+        elif self.Name == 'gamma':
+            Par = [(par[0] / par[1]) ** 2, par[1] ** 2 / par[0]]
+        elif self.Name == 'geometric':
+            Par = 1 / par
+        elif self.Name == 'gev':
+            beta = par[2]
+            alpha = (
+                abs(beta)
+                * par[1]
+                / np.sqrt(special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2)
+            )
+            epsilon = par[0] - (alpha / beta * (special.gamma(1 - beta) - 1))
+            Par = [-beta, alpha, epsilon]
+        elif self.Name == 'gevmin':
+            beta = par[2]
+            alpha = (
+                abs(beta)
+                * par[1]
+                / np.sqrt(special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2)
+            )
+            epsilon = par[0] + (alpha / beta * (special.gamma(1 - beta) - 1))
+            Par = [-beta, alpha, -epsilon]
+        elif self.Name == 'gumbel':
+            a_n = par[1] * np.sqrt(6) / np.pi
+            b_n = par[0] - np.euler_gamma * a_n
+            Par = [a_n, b_n]
+        elif self.Name == 'gumbelmin':
+            a_n = par[1] * np.sqrt(6) / np.pi
+            b_n = par[0] + np.euler_gamma * a_n
+            Par = [a_n, b_n]
+        elif self.Name == 'lognormal':
+            mu_lnx = np.log(par[0] ** 2 / np.sqrt(par[1] ** 2 + par[0] ** 2))
+            sig_lnx = np.sqrt(np.log(1 + (par[1] / par[0]) ** 2))
+            Par = [sig_lnx, np.exp(mu_lnx)]
+        elif self.Name == 'negativebinomial':
+            p = par[0] / (par[0] + par[1] ** 2)
+            k = par[0] * p
+            Par = [k, p]
+        elif self.Name == 'normal':
+            Par = par
+        elif self.Name == 'pareto':
+            alpha = 1 + np.sqrt(1 + (par[0] / par[1]) ** 2)
+            x_m = par[0] * (alpha - 1) / alpha
+            Par = [1 / alpha, x_m / alpha, x_m]
+        elif self.Name == 'poisson':
+            if isinstance(par, list):
+                Par = par[0]
+            else:
+                Par = par
+        elif self.Name == 'rayleigh':
+            Par = par / np.sqrt(np.pi / 2)
+        elif self.Name == 'truncatednormal':
+            mu = np.zeros(n_cond)
+            sig = np.zeros(n_cond)
+            a = par[2]
+            b = par[3]
+            for i in range(n_cond):
+                mean = par[0][i]
+                std = par[1][i]
+                if a[i] >= b[i] or mean <= a[i] or mean >= b[i]:
+                    a[i] = np.nan
+                    b[i] = np.nan
+                    mu[i] = np.nan
+                    sig[i] = np.nan
+                    continue
 
-                    def equation(param):
-                        f = lambda x: stats.norm.pdf(x, param[0], param[1]) / (
-                            stats.norm.cdf(b[i], param[0], param[1])
-                            - stats.norm.cdf(a[i], param[0], param[1])
+                def equation(param):
+                    f = lambda x: stats.norm.pdf(x, param[0], param[1]) / (
+                        stats.norm.cdf(b[i], param[0], param[1])
+                        - stats.norm.cdf(a[i], param[0], param[1])
+                    )
+                    expec_eq = (
+                        integrate.quadrature(lambda x: x * f(x), a[i], b[i])[0]
+                        - mean
+                    )
+                    std_eq = (
+                        np.sqrt(
+                            integrate.quadrature(lambda x: x**2 * f(x), a[i], b[i])[
+                                0
+                            ]
+                            - (integrate.quadrature(lambda x: x * f(x), a[i], b[i]))[
+                                0
+                            ]
+                            ** 2
                         )
-                        expec_eq = (
-                            integrate.quadrature(lambda x: x * f(x), a[i], b[i])[0]
-                            - mean
+                        - std
+                    )
+                    eq = [expec_eq, std_eq]
+                    return eq
+
+                x0 = [mean, std]
+                sol = optimize.fsolve(equation, x0=x0, full_output=True)
+                if sol[2] == 1:
+                    mu[i] = sol[0][0]
+                    sig[i] = sol[0][1]
+                else:
+                    a[i] = np.nan
+                    b[i] = np.nan
+                    mu[i] = np.nan
+                    sig[i] = np.nan
+            Par = [mu, sig, (a - mu) / sig, (b - mu) / sig]
+        elif self.Name == 'uniform':
+            lower = par[0] - np.sqrt(12) * par[1] / 2
+            upper = par[0] + np.sqrt(12) * par[1] / 2
+            Par = [lower, upper - lower]
+        elif self.Name == 'weibull':
+            a_n = np.zeros(n_cond)
+            k = np.zeros(n_cond)
+            for i in range(n_cond):
+
+                def equation(param):
+                    return (
+                        np.sqrt(
+                            special.gamma(1 + 2 / param)
+                            - (special.gamma(1 + 1 / param)) ** 2
                         )
-                        std_eq = (
-                            np.sqrt(
-                                integrate.quadrature(
-                                    lambda x: x**2 * f(x), a[i], b[i]
-                                )[0]
-                                - (
-                                    integrate.quadrature(
-                                        lambda x: x * f(x), a[i], b[i]
-                                    )
-                                )[0]
-                                ** 2
-                            )
-                            - std
-                        )
-                        eq = [expec_eq, std_eq]
-                        return eq
+                        / special.gamma(1 + 1 / param)
+                        - par[1][i] / par[0][i]
+                    )
 
-                    x0 = [mean, std]
-                    sol = optimize.fsolve(equation, x0=x0, full_output=True)
-                    if sol[2] == 1:
-                        mu[i] = sol[0][0]
-                        sig[i] = sol[0][1]
-                    else:
-                        a[i] = np.nan
-                        b[i] = np.nan
-                        mu[i] = np.nan
-                        sig[i] = np.nan
-                Par = [mu, sig, (a - mu) / sig, (b - mu) / sig]
-            elif self.Name == 'uniform':
-                lower = par[0] - np.sqrt(12) * par[1] / 2
-                upper = par[0] + np.sqrt(12) * par[1] / 2
-                Par = [lower, upper - lower]
-            elif self.Name == 'weibull':
-                a_n = np.zeros(n_cond)
-                k = np.zeros(n_cond)
-                for i in range(n_cond):
+                sol = optimize.fsolve(equation, x0=0.02, full_output=True)
+                if sol[2] == 1:
+                    k[i] = sol[0][0]
+                    a_n[i] = par[0][i] / special.gamma(1 + 1 / k[i])
+                else:
+                    k[i] = np.nan
+                    a_n[i] = np.nan
+            Par = [a_n, k]
 
-                    def equation(param):
-                        return (
-                            np.sqrt(
-                                special.gamma(1 + 2 / param)
-                                - (special.gamma(1 + 1 / param)) ** 2
-                            )
-                            / special.gamma(1 + 1 / param)
-                            - par[1][i] / par[0][i]
-                        )
-
-                    sol = optimize.fsolve(equation, x0=0.02, full_output=True)
-                    if sol[2] == 1:
-                        k[i] = sol[0][0]
-                        a_n[i] = par[0][i] / special.gamma(1 + 1 / k[i])
-                    else:
-                        k[i] = np.nan
-                        a_n[i] = np.nan
-                Par = [a_n, k]
-
-        for i in range(0, len(Par)):
+        for i in range(len(Par)):
             Par[i] = np.squeeze(Par[i])
 
         return Par
 
     # %%
     def condCDF(self, x, cond):
-        """
-        Evaluates the CDF of the conditional distribution at x for
+        """Evaluates the CDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method X2U.
         """
-
         par = self.condParam(cond)  # computation of the conditional parameters
         x = np.array(x, ndmin=1, dtype=float)
 
@@ -464,12 +446,10 @@ class ERACond(object):
 
     # %%
     def condiCDF(self, y, cond):
-        """
-        Evaluates the inverse CDF of the conditional distribution at
+        """Evaluates the inverse CDF of the conditional distribution at
         y for the given conditions.
         This method is used by the ERARosen method U2X.
         """
-
         par = self.condParam(cond)  # computation of the conditional parameters
         y = np.array(y, ndmin=1, dtype=float)
 
@@ -520,12 +500,10 @@ class ERACond(object):
 
     # %%
     def condPDF(self, x, cond):
-        """
-        Evaluates the PDF of the conditional distribution at x for
+        """Evaluates the PDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method pdf.
         """
-
         par = self.condParam(cond)  # computation of the conditional parameters
         x = np.array(x, ndmin=1, dtype=float)
 
@@ -576,11 +554,9 @@ class ERACond(object):
 
     # %%
     def condRandom(self, cond):
-        """
-        Creates one random sample for each given condition.
+        """Creates one random sample for each given condition.
         This method is used by the ERARosen method random.
         """
-
         par = self.condParam(cond)  # computation of the conditional parameters
 
         if self.Name == 'beta':

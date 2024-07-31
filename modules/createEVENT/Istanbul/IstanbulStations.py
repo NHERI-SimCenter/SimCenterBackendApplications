@@ -1,17 +1,14 @@
-import os
+import json
 import math
+import os
+
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import Polygon, Point
-import json
+from shapely.geometry import Point, Polygon
 
 
 def getStations(information, plot=False, show=False):
-    """
-    This function is used to retreive the information of the Istanbul physics-based simulations
-
-    """
-
+    """This function is used to retreive the information of the Istanbul physics-based simulations"""
     RegionFlag = information['RegionFlag']
     LocationFlag = information['LocationFlag']
 
@@ -170,14 +167,13 @@ def getStations(information, plot=False, show=False):
         gdf = gdf[gdf['Selected Site'] != 'No']
 
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
-        f'TapisFiles/selectedSites.csv', index=True
+        'TapisFiles/selectedSites.csv', index=True
     )
     json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)
 
 
 def haversine(lat1, lon1, lat2, lon2):
-    """
-    Calculate the great circle distance between two points
+    """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
     """
     # Convert decimal degrees to radians

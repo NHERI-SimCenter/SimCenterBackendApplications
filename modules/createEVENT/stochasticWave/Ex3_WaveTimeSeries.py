@@ -1,32 +1,20 @@
 #!/usr/bin/env python3
 
-"""
-Generate wave time series based on the Jonswap spectrum
-"""
+"""Generate wave time series based on the Jonswap spectrum"""
 
-from __future__ import print_function
-import numpy as np
-from numpy.random import uniform, seed
 import matplotlib.pyplot as plt
-import matplotlib as mpl
-import pandas as pd
-from fractions import Fraction
-import os, sys
-import re
-import json
-import argparse
+import numpy as np
+from numpy.random import seed, uniform
 
 # Local
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.tools.colors import python_colors
+from welib.hydro.morison import *
 from welib.hydro.spectra import jonswap
+from welib.hydro.wavekin import *
 from welib.hydro.wavekin import elevation2d, wavenumber
 from welib.tools.spectral import fft_wrap
-from welib.hydro.wavekin import *
-from welib.hydro.morison import *
-
 
 # --- Random seed
 seed(None)

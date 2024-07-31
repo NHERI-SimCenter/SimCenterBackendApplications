@@ -1,18 +1,15 @@
-"""
-Simple Python Script to integrate a strong motion record using
+"""Simple Python Script to integrate a strong motion record using
 the Newmark-Beta method
 """
 
 import numpy as np
-from math import sqrt
-from scipy.integrate import cumtrapz
 from scipy.constants import g
+from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
 def convert_accel_units(acceleration, from_, to_='cm/s/s'):
-    """
-    Converts acceleration from/to different units
+    """Converts acceleration from/to different units
     :param acceleration: the acceleration (numeric or numpy array)
     :param from_: unit of `acceleration`: string in "g", "m/s/s", "m/s**2",
         "m/s^2", "cm/s/s", "cm/s**2" or "cm/s^2"
@@ -55,8 +52,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):
 def get_velocity_displacement(
     time_step, acceleration, units='cm/s/s', velocity=None, displacement=None
 ):
-    """
-    Returns the velocity and displacment time series using simple integration
+    """Returns the velocity and displacment time series using simple integration
     :param float time_step:
         Time-series time-step (s)
     :param numpy.ndarray acceleration:
@@ -74,9 +70,7 @@ def get_velocity_displacement(
 
 
 class NewmarkBeta:
-    """
-    Evaluates the response spectrum using the Newmark-Beta methodology
-    """
+    """Evaluates the response spectrum using the Newmark-Beta methodology"""
 
     def __init__(
         self,
@@ -87,8 +81,7 @@ class NewmarkBeta:
         dt_disc=0.002,
         units='g',
     ):
-        """
-        Setup the response spectrum calculator
+        """Setup the response spectrum calculator
         :param numpy.ndarray time_hist:
             Acceleration time history
         :param numpy.ndarray periods:
@@ -114,8 +107,7 @@ class NewmarkBeta:
         self.dt_disc = dt_disc
 
     def run(self):
-        """
-        Evaluates the response spectrum
+        """Evaluates the response spectrum
         :returns:
             Response Spectrum - Dictionary containing all response spectrum
                                 data
@@ -167,8 +159,7 @@ class NewmarkBeta:
         return self.response_spectrum, time_series, accel, vel, disp
 
     def _newmark_beta(self, omega, cval, kval):
-        """
-        Newmark-beta integral
+        """Newmark-beta integral
         :param numpy.ndarray omega:
             Angular period - (2 * pi) / T
         :param numpy.ndarray cval:

@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May 26 16:11:36 2021
+"""Created on Wed May 26 16:11:36 2021
 
 @author: snaeimi
 """
 
-import wntrfr.epanet.toolkit
-import numpy as np
 import ctypes
-import os, sys
-from pkg_resources import resource_filename
-import platform
-
 import logging
+import os
+import platform
+import sys
+
+import numpy as np
+import wntrfr.epanet.toolkit
+from pkg_resources import resource_filename
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +68,6 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):
                 except Exception as E1:
                     if lib == libnames[-1]:
                         raise E1
-                    pass
                 finally:
                     if version >= 2.2 and '32' not in lib:
                         self._project = ctypes.c_uint64()

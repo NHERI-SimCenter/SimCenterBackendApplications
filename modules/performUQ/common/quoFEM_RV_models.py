@@ -1,10 +1,10 @@
-from typing import Any
-import pydantic
 import typing
+from typing import Any
+
+import numpy as np
+import pydantic
 from pydantic import Field
 from typing_extensions import Annotated
-import numpy as np
-
 
 _supported_distributions = typing.Literal[
     'Beta',

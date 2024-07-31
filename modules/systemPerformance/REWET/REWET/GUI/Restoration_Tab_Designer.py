@@ -1,23 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov  2 00:24:43 2022
+"""Created on Wed Nov  2 00:24:43 2022
 
 @author: snaeimi
 """
 
 import os
+
 from PyQt5 import QtGui, QtWidgets
-from .Pipe_Damage_Discovery_Designer import Pipe_Damage_Discovery_Designer
+
 from .Node_Damage_Discovery_Designer import Node_Damage_Discovery_Designer
+from .Pipe_Damage_Discovery_Designer import Pipe_Damage_Discovery_Designer
 from .Pump_Damage_Discovery_Designer import Pump_Damage_Discovery_Designer
 from .Tank_Damage_Discovery_Designer import Tank_Damage_Discovery_Designer
 
 
 class Restoration_Tab_Designer:
     def __init__(self):
-        """
-        These are variables that are shared between ui and settings.
-        """
+        """These are variables that are shared between ui and settings."""
         self.setRestorationSettings(self.settings)
 
         """

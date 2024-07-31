@@ -1,29 +1,27 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 27 18:06:01 2022
+"""Created on Thu Oct 27 18:06:01 2022
 
 @author: snaeimi
 """
 
-import sys
 import os
-from PyQt5 import QtWidgets
-from PyQt5.Qt import QUrl, QDesktopServices
 import pickle
-
-from Project import Project
-from .Opening_Window import Ui_Opening_Window
-from .Simulation_Tab_Designer import Simulation_Tab_Designer
-from .Hydraulic_Tab_Designer import Hydraulic_Tab_Designer
-from .Damage_Tab_Designer import Damage_Tab_Designer
-from .Restoration_Tab_Designer import Restoration_Tab_Designer
-from .Run_Tab_Designer import Run_Tab_Designer
-from .Main_Help_Designer import Main_Help_Designer
-from .PP_Data_Tab_Designer import PP_Data_Tab
-from .Result_Designer import Result_Designer
-from .Map_Designer import Map_Designer
+import sys
 
 from Input.Settings import Settings
+from Project import Project
+from PyQt5 import QtWidgets
+from PyQt5.Qt import QDesktopServices, QUrl
+
+from .Damage_Tab_Designer import Damage_Tab_Designer
+from .Hydraulic_Tab_Designer import Hydraulic_Tab_Designer
+from .Main_Help_Designer import Main_Help_Designer
+from .Map_Designer import Map_Designer
+from .Opening_Window import Ui_Opening_Window
+from .PP_Data_Tab_Designer import PP_Data_Tab
+from .Restoration_Tab_Designer import Restoration_Tab_Designer
+from .Result_Designer import Result_Designer
+from .Run_Tab_Designer import Run_Tab_Designer
+from .Simulation_Tab_Designer import Simulation_Tab_Designer
 
 
 class Opening_Designer(

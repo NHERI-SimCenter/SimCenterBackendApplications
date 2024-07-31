@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov  1 23:25:30 2022
+"""Created on Tue Nov  1 23:25:30 2022
 
 @author: snaeimi
 """
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from .Damage_Discovery_Window import Ui_damage_discovery
 import pandas as pd
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from .Damage_Discovery_Window import Ui_damage_discovery
 
 
 class Damage_Discovery_Designer(Ui_damage_discovery):
@@ -208,7 +207,7 @@ class Damage_Discovery_Designer(Ui_damage_discovery):
             return
 
         row_number = []
-        for i in range(0, len(items)):
+        for i in range(len(items)):
             selected_row = items[i].row()
             row_number.append(selected_row)
 

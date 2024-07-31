@@ -1,15 +1,11 @@
 # python code to open the .mat file
 # and put data into a SimCenter JSON file
 
-import sys
-import os
-import subprocess
 import json
-import stat
-import shutil
+import os
+
 import numpy as np
 import scipy.io as sio
-from pprint import pprint
 
 
 def parseWindMatFile(matFileIn, windFileOutName):
@@ -131,7 +127,7 @@ def parseWindMatFile(matFileIn, windFileOutName):
         # Check valid JSON file,
         validate = True
         if validate:
-            with open(windFileOutName, 'r') as infile:
+            with open(windFileOutName) as infile:
                 json_data = infile.read()
 
             # Try to parse the JSON data
@@ -176,7 +172,7 @@ def createSpectraJson(
     # Check valid JSON file
     validate = True
     if validate:
-        with open(windFileOutName, 'r') as infile:
+        with open(windFileOutName) as infile:
             json_data = infile.read()
 
         # Try to parse the JSON data

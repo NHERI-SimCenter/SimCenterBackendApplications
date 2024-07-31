@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
@@ -43,20 +42,13 @@
 # Jan 31, 2023: let's not use GPy calibration parallel for now, because it seems to give local maxima
 
 import copy
-import glob
 import json
-import math
 import os
 import pickle
 import random
-import shutil
-import subprocess
 import sys
 import time
-from copy import deepcopy
-import random
 import warnings
-import traceback
 
 warnings.filterwarnings('ignore')
 
@@ -77,7 +69,7 @@ try:
     import GPy as GPy
 
     moduleName = 'scipy'
-    from scipy.stats import lognorm, norm, cramervonmises, qmc
+    from scipy.stats import cramervonmises, lognorm, norm, qmc
 
     moduleName = 'UQengine'
     # from utilities import run_FEM_batch, errorLog
@@ -117,7 +109,7 @@ if error_tag == False:
         [
             np.put(x, ind, p.rvs(ind.size))
             for p, ind in self.priors.items()
-            if not p is None
+            if p is not None
         ]
         unfixlist = np.ones((self.size,), dtype=bool)
         from paramz.transformations import __fixed__
@@ -200,7 +192,7 @@ class surrogate(UQengine):
                     self.work_dir + '/templatedir/' + self.inputFile
                 )  # for quoFEM
 
-            with open(jsonPath, 'r', encoding='utf-8') as f:
+            with open(jsonPath, encoding='utf-8') as f:
                 dakotaJson = json.load(f)
 
         except ValueError:
@@ -308,7 +300,7 @@ class surrogate(UQengine):
             self.n_processor = 1
             self.pool = 0
             self.cal_interval = 5
-        print('self.cal_interval : {}'.format(self.cal_interval))
+        print(f'self.cal_interval : {self.cal_interval}')
 
         #
         #  Advanced
@@ -338,9 +330,7 @@ class surrogate(UQengine):
                 self.nuggetVal.shape[0] != self.y_dim
                 and self.nuggetVal.shape[0] != 0
             ):
-                msg = 'Error reading json: Number of nugget quantities ({}) does not match # QoIs ({})'.format(
-                    self.nuggetVal.shape[0], self.y_dim
-                )
+                msg = f'Error reading json: Number of nugget quantities ({self.nuggetVal.shape[0]}) does not match # QoIs ({self.y_dim})'
                 self.exit(msg)
         else:
             self.nuggetVal = 1
@@ -448,14 +438,6 @@ class surrogate(UQengine):
         if self.do_mf:
             try:
                 moduleName = 'emukit'
-                import emukit.multi_fidelity as emf
-                from emukit.model_wrappers.gpy_model_wrappers import (
-                    GPyMultiOutputWrapper,
-                )
-                from emukit.multi_fidelity.convert_lists_to_array import (
-                    convert_x_list_to_array,
-                    convert_xy_lists_to_arrays,
-                )
 
                 error_tag = False  # global variable
             except:
@@ -565,11 +547,7 @@ class surrogate(UQengine):
         elif kernel == 'Matern 5/2':
             kr = GPy.kern.Matern52(input_dim=x_dim, ARD=True)
         else:
-            msg = (
-                'Error running SimCenterUQ - Kernel name <{}> not supported'.format(
-                    kernel
-                )
-            )
+            msg = f'Error running SimCenterUQ - Kernel name <{kernel}> not supported'
             self.exit(msg)
 
         if self.do_linear:
@@ -646,7 +624,7 @@ class surrogate(UQengine):
 
     def predict(self, m_tmp, X, noise=0):
         if not self.do_mf:
-            if all(m_tmp.Y == np.mean(m_tmp.Y, axis=0)):
+            if all(np.mean(m_tmp.Y, axis=0) == m_tmp.Y):
                 return m_tmp.Y[
                     0
                 ], 0  # if response is constant - just return constant
@@ -657,7 +635,7 @@ class surrogate(UQengine):
         else:
             idxHF = np.argwhere(m_tmp.gpy_model.X[:, -1] == 0)
             if all(
-                m_tmp.gpy_model.Y == np.mean(m_tmp.gpy_model.Y[idxHF, :], axis=0)
+                np.mean(m_tmp.gpy_model.Y[idxHF, :], axis=0) == m_tmp.gpy_model.Y
             ):
                 return (
                     m_tmp.gpy_model.Y[0],
@@ -686,7 +664,7 @@ class surrogate(UQengine):
             if parname.endswith('lengthscale'):
                 exec('x_current_dim = len(m_tmp.' + parname + ')')
 
-        if not x_current_dim == X_hf.shape[1]:
+        if x_current_dim != X_hf.shape[1]:
             kr = self.create_kernel(X_hf.shape[1])
             X_dummy = np.zeros((1, X_hf.shape[1]))
             Y_dummy = np.zeros((1, 1))
@@ -742,7 +720,7 @@ class surrogate(UQengine):
                 m_tmp.set_XY(X_hf, Y_hfs)
                 self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
                 self.Y_mean[ny] = Y_hfs
-                self.indices_unique = range(0, Y_hfs.shape[0])
+                self.indices_unique = range(Y_hfs.shape[0])
                 self.n_unique_hf = X_hf.shape[0]
 
             elif n_unique == X_hf.shape[0]:  # no repl
@@ -752,7 +730,7 @@ class surrogate(UQengine):
 
                 if np.max(nugget_mean1) < 1.0e-10:
                     self.set_XY(m_tmp, ny, X_hf, Y_hfs, enforce_hom=True)
-                    return
+                    return None
                 else:
                     Y_metadata, m_var, norm_var_str = self.predictStoVars(
                         X_hf, (Y_hfs - Y_mean1) ** 2, X_hf, Y_hfs, counts
@@ -761,7 +739,7 @@ class surrogate(UQengine):
 
                     self.m_var_list[ny] = m_var
                     self.var_str[ny] = norm_var_str
-                    self.indices_unique = range(0, Y_hfs.shape[0])
+                    self.indices_unique = range(Y_hfs.shape[0])
                     self.n_unique_hf = X_new.shape[0]
                     self.Y_mean[ny] = Y_hfs
             else:
@@ -788,22 +766,20 @@ class surrogate(UQengine):
                     self.indices_unique = indices
                     return m_tmp
 
-                else:
-                    # NUGGET IS NONZERO - Do either stochastic/nonstochastic kriging
-                    if self.nugget_opt == 'Heteroscedastic':
-                        #
-                        # Constructing secondary GP model - can we make use of the "variance of sample variance"
-                        #
-                        # TODO: log-variance
+                elif self.nugget_opt == 'Heteroscedastic':
+                    #
+                    # Constructing secondary GP model - can we make use of the "variance of sample variance"
+                    #
+                    # TODO: log-variance
 
-                        Y_metadata, m_var, norm_var_str = self.predictStoVars(
-                            X_new[idx_repl, :],
-                            Y_var[idx_repl],
-                            X_new,
-                            Y_mean,
-                            counts,
-                        )
-                        """
+                    Y_metadata, m_var, norm_var_str = self.predictStoVars(
+                        X_new[idx_repl, :],
+                        Y_var[idx_repl],
+                        X_new,
+                        Y_mean,
+                        counts,
+                    )
+                    """
                         kernel_var = GPy.kern.Matern52(input_dim=self.x_dim, ARD=True)
                         log_vars = np.log(Y_var[idx_repl])
                         m_var = GPy.models.GPRegression(X_new[idx_repl, :], log_vars, kernel_var, normalizer=True,
@@ -825,22 +801,22 @@ class surrogate(UQengine):
                         # norm_var_str = (X_new+2)**2/max((X_new+2)**2)
                         Y_metadata = {'variance_structure': norm_var_str / counts}
                         """
-                        m_tmp.set_XY2(X_new, Y_mean, Y_metadata=Y_metadata)
+                    m_tmp.set_XY2(X_new, Y_mean, Y_metadata=Y_metadata)
 
-                        self.m_var_list[ny] = m_var
-                        self.var_str[ny] = norm_var_str
-                        self.indices_unique = indices
-                        self.n_unique_hf = X_new.shape[0]
-                        self.Y_mean[ny] = Y_mean
+                    self.m_var_list[ny] = m_var
+                    self.var_str[ny] = norm_var_str
+                    self.indices_unique = indices
+                    self.n_unique_hf = X_new.shape[0]
+                    self.Y_mean[ny] = Y_mean
 
-                    else:
-                        # still nonstochastic gp
-                        m_tmp.set_XY(X_hf, Y_hfs)
-                        self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
-                        self.indices_unique = range(0, Y_hfs.shape[0])
-                        self.Y_mean[ny] = Y_hfs
-                        self.n_unique_hf = X_hf.shape[0]
-                        self.stochastic[ny] = False
+                else:
+                    # still nonstochastic gp
+                    m_tmp.set_XY(X_hf, Y_hfs)
+                    self.var_str[ny] = np.ones((m_tmp.Y.shape[0], 1))
+                    self.indices_unique = range(Y_hfs.shape[0])
+                    self.Y_mean[ny] = Y_hfs
+                    self.n_unique_hf = X_hf.shape[0]
+                    self.stochastic[ny] = False
 
         else:
             (
@@ -893,8 +869,6 @@ class surrogate(UQengine):
 
         log_var_pred, dum = m_var.predict(X_new)
         var_pred = np.exp(log_var_pred)
-        #
-        #
 
         # norm_var_str = (var_pred.T[0]/counts) / max(var_pred.T[0]/counts)
         if self.set_normalizer:
@@ -934,21 +908,20 @@ class surrogate(UQengine):
                             myrange[nx] * 100,
                             warning=False,
                         )
+                    elif self.do_linear:
+                        m_mean.kern.Mat52.lengthscale[[nx]] = myrange[nx] * 5000
+                        m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(
+                            myrange[nx] / X.shape[0] * 50,
+                            myrange[nx] * 10000,
+                            warning=False,
+                        )
                     else:
-                        if self.do_linear:
-                            m_mean.kern.Mat52.lengthscale[[nx]] = myrange[nx] * 5000
-                            m_mean.kern.Mat52.lengthscale[[nx]].constrain_bounded(
-                                myrange[nx] / X.shape[0] * 50,
-                                myrange[nx] * 10000,
-                                warning=False,
-                            )
-                        else:
-                            m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
-                            m_mean.kern.lengthscale[[nx]].constrain_bounded(
-                                myrange[nx] / X.shape[0] * 50,
-                                myrange[nx] * 10000,
-                                warning=False,
-                            )
+                        m_mean.kern.lengthscale[[nx]] = myrange[nx] * 5000
+                        m_mean.kern.lengthscale[[nx]].constrain_bounded(
+                            myrange[nx] / X.shape[0] * 50,
+                            myrange[nx] * 10000,
+                            warning=False,
+                        )
 
         # m_mean.optimize(messages=True, max_f_eval=1000)
         # m_mean.Gaussian_noise.variance = np.var(Y) # First calibrate parameters
@@ -1006,7 +979,7 @@ class surrogate(UQengine):
             result_objs = list(self.pool.starmap(calibrating, iterables))
             for m_tmp, msg, ny in result_objs:
                 self.m_list[ny] = m_tmp
-                if not msg == '':
+                if msg != '':
                     self.exit(msg)
 
             # TODO: terminate it gracefully....
@@ -1025,7 +998,7 @@ class surrogate(UQengine):
                     ny,
                     self.n_processor,
                 )
-                if not msg == '':
+                if msg != '':
                     self.exit(msg)
         ####
 
@@ -1039,7 +1012,7 @@ class surrogate(UQengine):
 
             for ny in range(self.y_dim):
                 for parname in self.m_list[ny].parameter_names():
-                    if parname.endswith('variance') and (not 'Gauss' in parname):
+                    if parname.endswith('variance') and ('Gauss' not in parname):
                         exec(
                             'my_new_var = max(self.m_list[ny].'
                             + variance_keyword
@@ -1052,7 +1025,7 @@ class surrogate(UQengine):
                 self.m_list[ny].optimize()
 
         self.calib_time = time.time() - t_opt
-        print('     Calibration time: {:.2f} s'.format(self.calib_time), flush=True)
+        print(f'     Calibration time: {self.calib_time:.2f} s', flush=True)
         Y_preds, Y_pred_vars, Y_pred_vars_w_measures, e2 = (
             self.get_cross_validation_err()
         )
@@ -1150,9 +1123,7 @@ class surrogate(UQengine):
             self.X_hf, self.Y_hf = X_hf_tmp, Y_hf_tmp
         else:
             if model_hf.X_existing.shape[1] != X_hf_tmp.shape[1]:
-                msg = 'Error importing input dimension specified {} is different from the written {}.'.format(
-                    model_hf.X_existing.shape[1], X_hf_tmp.shape[1]
-                )
+                msg = f'Error importing input dimension specified {model_hf.X_existing.shape[1]} is different from the written {X_hf_tmp.shape[1]}.'
                 self.exit(msg)
 
             self.X_hf, self.Y_hf = (
@@ -1187,15 +1158,11 @@ class surrogate(UQengine):
 
         if self.X_lf.shape[0] != 0:
             if self.X_hf.shape[1] != self.X_lf.shape[1]:
-                msg = 'Error importing input data: dimension inconsistent: high fidelity model have {} RV(s) but low fidelity model have {}.'.format(
-                    self.X_hf.shape[1], self.X_lf.shape[1]
-                )
+                msg = f'Error importing input data: dimension inconsistent: high fidelity model have {self.X_hf.shape[1]} RV(s) but low fidelity model have {self.X_lf.shape[1]}.'
                 self.exit(msg)
 
             if self.Y_hf.shape[1] != self.Y_lf.shape[1]:
-                msg = 'Error importing input data: dimension inconsistent: high fidelity model have {} QoI(s) but low fidelity model have {}.'.format(
-                    self.Y_hf.shape[1], self.Y_lf.shape[1]
-                )
+                msg = f'Error importing input data: dimension inconsistent: high fidelity model have {self.Y_hf.shape[1]} QoI(s) but low fidelity model have {self.Y_lf.shape[1]}.'
                 self.exit(msg)
 
         for i in range(y_dim):
@@ -1363,13 +1330,13 @@ class surrogate(UQengine):
 
         self.verify()
         self.verify_nugget()
-        print('my exit code = {}'.format(self.exit_code), flush=True)
-        print('1. count = {}'.format(self.id_sim_hf), flush=True)
-        print('1. count_unique = {}'.format(self.n_unique_hf), flush=True)
-        print('2. max(NRMSE) = {}'.format(np.max(self.NRMSE_val)), flush=True)
-        print('3. time = {:.2f} s'.format(self.sim_time), flush=True)
+        print(f'my exit code = {self.exit_code}', flush=True)
+        print(f'1. count = {self.id_sim_hf}', flush=True)
+        print(f'1. count_unique = {self.n_unique_hf}', flush=True)
+        print(f'2. max(NRMSE) = {np.max(self.NRMSE_val)}', flush=True)
+        print(f'3. time = {self.sim_time:.2f} s', flush=True)
 
-        """
+        r"""
         
         self.inbound50
         self.Gausspvalue
@@ -1846,7 +1813,7 @@ class surrogate(UQengine):
         for ny in range(self.y_dim):
             if np.var(self.Y_hf[:, ny]) == 0:
                 constIdx += [ny]
-                constVal += [np.mean((self.Y_hf[:, ny]))]
+                constVal += [np.mean(self.Y_hf[:, ny])]
 
         hfJson['constIdx'] = constIdx
         hfJson['constVal'] = constVal
@@ -1958,12 +1925,10 @@ class surrogate(UQengine):
                     ]
                     * self.normVars[ny]
                 )
-            else:
-                if not self.heteroscedastic:
-                    results['valNugget'][self.g_name[ny]] = float(
-                        self.m_list[ny]['Gaussian_noise.variance']
-                        * self.normVars[ny]
-                    )
+            elif not self.heteroscedastic:
+                results['valNugget'][self.g_name[ny]] = float(
+                    self.m_list[ny]['Gaussian_noise.variance'] * self.normVars[ny]
+                )
 
             results['valNRMSE'][self.g_name[ny]] = self.NRMSE_val[ny]
             results['valR2'][self.g_name[ny]] = self.R2_val[ny]
@@ -2020,14 +1985,14 @@ class surrogate(UQengine):
             # read SAM.json
             SAMpath = self.work_dir + '/templatedir/SAM.json'
             try:
-                with open(SAMpath, 'r', encoding='utf-8') as f:
+                with open(SAMpath, encoding='utf-8') as f:
                     SAMjson = json.load(f)
-            except Exception as e:
-                with open(SAMpath + '.sc', 'r', encoding='utf-8') as f:
+            except Exception:
+                with open(SAMpath + '.sc', encoding='utf-8') as f:
                     SAMjson = json.load(f)
 
             EDPpath = self.work_dir + '/templatedir/EDP.json'
-            with open(EDPpath, 'r', encoding='utf-8') as f:
+            with open(EDPpath, encoding='utf-8') as f:
                 EDPjson = json.load(f)
             results['SAM'] = SAMjson
             results['EDP'] = EDPjson
@@ -2037,12 +2002,10 @@ class surrogate(UQengine):
 
         with open(self.work_dir + '/GPresults.out', 'w') as file:
             file.write('* Problem setting\n')
-            file.write('  - dimension of x : {}\n'.format(self.x_dim))
-            file.write('  - dimension of y : {}\n'.format(self.y_dim))
+            file.write(f'  - dimension of x : {self.x_dim}\n')
+            file.write(f'  - dimension of y : {self.y_dim}\n')
             if self.doe_method:
-                file.write(
-                    '  - design of experiments : {} \n'.format(self.doe_method)
-                )
+                file.write(f'  - design of experiments : {self.doe_method} \n')
 
             # if not self.do_doe:
             #     if self.do_simulation and self.do_sampling:
@@ -2052,91 +2015,75 @@ class surrogate(UQengine):
 
             file.write('* High-fidelity model\n')
             # file.write("  - sampling : {}\n".format(self.modelInfoHF.is_model))
-            file.write('  - simulation : {}\n'.format(self.modelInfoHF.is_model))
+            file.write(f'  - simulation : {self.modelInfoHF.is_model}\n')
             file.write('\n')
 
             if self.do_mf:
                 file.write('* Low-fidelity model\n')
                 # file.write("  - sampling : {}\n".format(self.modelInfoLF.is_model))
-                file.write('  - simulation : {}\n'.format(self.modelInfoLF.is_model))
+                file.write(f'  - simulation : {self.modelInfoLF.is_model}\n')
                 file.write('\n')
 
             file.write('* Convergence\n')
-            file.write('  - exit code : "{}"\n'.format(self.exit_code))
+            file.write(f'  - exit code : "{self.exit_code}"\n')
             file.write('    analysis terminated ')
             if self.exit_code == 'count':
                 file.write(
-                    'as number of counts reached the maximum (HFmax={})\n'.format(
-                        self.modelInfoHF.thr_count
-                    )
+                    f'as number of counts reached the maximum (HFmax={self.modelInfoHF.thr_count})\n'
                 )
                 if self.do_mf:
                     file.write(
-                        'as number of counts reached the maximum (HFmax={}, LFmax={})\n'.format(
-                            self.modelInfoHF.thr_count, self.modelInfoLF.thr_count
-                        )
+                        f'as number of counts reached the maximum (HFmax={self.modelInfoHF.thr_count}, LFmax={self.modelInfoLF.thr_count})\n'
                     )
 
             elif self.exit_code == 'accuracy':
                 file.write(
-                    'as minimum accuracy level (NRMSE={:.2f}) is achieved"\n'.format(
-                        self.thr_NRMSE
-                    )
+                    f'as minimum accuracy level (NRMSE={self.thr_NRMSE:.2f}) is achieved"\n'
                 )
             elif self.exit_code == 'time':
                 file.write(
-                    'as maximum running time (t={:.1f}s) reached"\n'.format(
-                        self.thr_t
-                    )
+                    f'as maximum running time (t={self.thr_t:.1f}s) reached"\n'
                 )
             elif self.exit_code == 'data':
                 file.write('without simulation\n')
             else:
                 file.write('- cannot identify the exit code\n')
 
-            file.write('  - number of HF simulations : {}\n'.format(self.id_sim_hf))
+            file.write(f'  - number of HF simulations : {self.id_sim_hf}\n')
             if self.do_mf:
-                file.write(
-                    '  - number of LF simulations : {}\n'.format(self.id_sim_lf)
-                )
+                file.write(f'  - number of LF simulations : {self.id_sim_lf}\n')
 
             file.write(
-                '  - maximum normalized root-mean-squared error (NRMSE): {:.5f}\n'.format(
-                    np.max(self.NRMSE_val)
-                )
+                f'  - maximum normalized root-mean-squared error (NRMSE): {np.max(self.NRMSE_val):.5f}\n'
             )
 
             for ny in range(self.y_dim):
-                file.write(
-                    '     {} : {:.2f}\n'.format(self.g_name[ny], self.NRMSE_val[ny])
-                )
+                file.write(f'     {self.g_name[ny]} : {self.NRMSE_val[ny]:.2f}\n')
 
-            file.write('  - analysis time : {:.1f} sec\n'.format(self.sim_time))
-            file.write('  - calibration interval : {}\n'.format(self.cal_interval))
+            file.write(f'  - analysis time : {self.sim_time:.1f} sec\n')
+            file.write(f'  - calibration interval : {self.cal_interval}\n')
             file.write('\n')
 
-            file.write('* GP parameters\n'.format(self.y_dim))
-            file.write('  - Kernel : {}\n'.format(self.kernel))
-            file.write('  - Linear : {}\n\n'.format(self.do_linear))
+            file.write('* GP parameters\n'.format())
+            file.write(f'  - Kernel : {self.kernel}\n')
+            file.write(f'  - Linear : {self.do_linear}\n\n')
 
             if not self.do_mf:
                 for ny in range(self.y_dim):
-                    file.write('  [{}]\n'.format(self.g_name[ny]))
+                    file.write(f'  [{self.g_name[ny]}]\n')
                     m_tmp = self.m_list[ny]
                     for parname in m_tmp.parameter_names():
-                        file.write('    - {} '.format(parname))
+                        file.write(f'    - {parname} ')
                         parvals = eval('m_tmp.' + parname)
                         if len(parvals) == self.x_dim:
                             file.write('\n')
                             for nx in range(self.x_dim):
                                 file.write(
-                                    '       {} : {:.2e}\n'.format(
-                                        self.rv_name[nx], parvals[nx]
-                                    )
+                                    f'       {self.rv_name[nx]} : {parvals[nx]:.2e}\n'
                                 )
                         else:
-                            file.write(' : {:.2e}\n'.format(parvals[0]))
-                    file.write('\n'.format(self.g_name[ny]))
+                            file.write(f' : {parvals[0]:.2e}\n')
+                    file.write('\n'.format())
 
         print('Results Saved', flush=True)
         return 0
@@ -2171,7 +2118,7 @@ class surrogate(UQengine):
         Y_hf = self.Y_hf
         X_lf = self.X_lf
         Y_lf = self.Y_lf
-        ll = self.ll  # Todo which ll?
+        ll = self.ll  # TODO which ll?
 
         y_var = np.var(Y_hf, axis=0)  # normalization
         y_idx = np.argmax(np.sum(e2 / y_var, axis=0))
@@ -2237,8 +2184,8 @@ class surrogate(UQengine):
                 idx_tmp = np.argwhere(
                     (logcrimi1 >= logcrimi1[id]) * (logcrimi2 >= logcrimi2[id])
                 )
-                varRank[id] = np.sum((logcrimi1 >= logcrimi1[id]))
-                biasRank[id] = np.sum((logcrimi2 >= logcrimi2[id]))
+                varRank[id] = np.sum(logcrimi1 >= logcrimi1[id])
+                biasRank[id] = np.sum(logcrimi2 >= logcrimi2[id])
                 rankid[id] = idx_tmp.size
 
             num_1rank = np.sum(rankid == 1)
@@ -2344,9 +2291,7 @@ class surrogate(UQengine):
                     for IMSE_val, idx in result_objs:
                         IMSEc1[idx] = IMSE_val
                     print(
-                        'IMSE: finding the next DOE {} - parallel .. time = {:.2f}'.format(
-                            ni, time.time() - tmp, flush=True
-                        )
+                        f'IMSE: finding the next DOE {ni} - parallel .. time = {time.time() - tmp:.2f}'
                     )  # 7s # 3-4s
                     # TODO: terminate it gracefully....
                     # see https://stackoverflow.com/questions/21104997/keyboard-interrupt-with-pythons-multiprocessing
@@ -2372,9 +2317,7 @@ class surrogate(UQengine):
                             doeIdx,
                         )
                     print(
-                        'IMSE: finding the next DOE {} - serial .. time = {}'.format(
-                            ni, time.time() - tmp, flush=True
-                        )
+                        f'IMSE: finding the next DOE {ni} - serial .. time = {time.time() - tmp}'
                     )  # 4s
 
                 new_idx = np.argmin(IMSEc1, axis=0)
@@ -2459,9 +2402,7 @@ class surrogate(UQengine):
                     for IMSE_val, idx in result_objs:
                         IMSEc1[idx] = IMSE_val
                     print(
-                        'IMSE: finding the next DOE {} - parallel .. time = {:.2f}'.format(
-                            ni, time.time() - tmp, flush=True
-                        )
+                        f'IMSE: finding the next DOE {ni} - parallel .. time = {time.time() - tmp:.2f}'
                     )  # 7s # 3-4s
                 else:
                     IMSEc1 = np.zeros(nc1)
@@ -2476,13 +2417,9 @@ class surrogate(UQengine):
                             doeIdx,
                         )
                         if np.mod(i, 200) == 0:
-                            print(
-                                'IMSE iter {}, candi {}/{}'.format(ni, i, nc1)
-                            )  # 4s
+                            print(f'IMSE iter {ni}, candi {i}/{nc1}')  # 4s
                     print(
-                        'IMSE: finding the next DOE {} - serial .. time = {}'.format(
-                            ni, time.time() - tmp, flush=True
-                        )
+                        f'IMSE: finding the next DOE {ni} - serial .. time = {time.time() - tmp}'
                     )  # 4s
 
                 new_idx = np.argmin(IMSEc1, axis=0)
@@ -2623,7 +2560,7 @@ class surrogate(UQengine):
         data_bound = np.max(ye, axis=0) - np.min(ye, axis=0)
         RMSE = np.sqrt(1 / n * np.sum(pow(yp - ye, 2), axis=0))
         NRMSE = RMSE / data_bound
-        NRMSE[np.argwhere((data_bound == 0))] = 0
+        NRMSE[np.argwhere(data_bound == 0)] = 0
         return NRMSE
 
     def get_cross_validation_err(self):
@@ -2750,7 +2687,7 @@ class surrogate(UQengine):
                 e2 = e22
                 # np.hstack([Y_pred_var,Y_pred_var2])
                 # np.hstack([e2,e22])
-                """
+                r"""
                 
                 import matplotlib.pyplot as plt
                 plt.plot(Y_pred_var/self.normVars[ny]); plt.plot(Y_pred_var2/self.normVars[ny]); 
@@ -2759,9 +2696,7 @@ class surrogate(UQengine):
                 plt.show(); 
                 """
         print(
-            '     Cross validation calculation time: {:.2f} s'.format(
-                time.time() - time_tmp
-            ),
+            f'     Cross validation calculation time: {time.time() - time_tmp:.2f} s',
             flush=True,
         )
         return Y_pred, Y_pred_var, Y_pred_var_w_measure, e2
@@ -2815,7 +2750,7 @@ def imse(m_tmp, xcandi, xq, phiqr, i, y_idx, doeIdx='HF'):
         xq_list = convert_x_list_to_array([xq, np.zeros((0, xq.shape[1]))])
         dummy, Yq_var = m_tmp.predict(xq_list)
     else:
-        print('doe method <{}> is not supported'.format(doeIdx), flush=True)
+        print(f'doe method <{doeIdx}> is not supported', flush=True)
 
     # dummy, Yq_var = self.predict(m_tmp,xq)
     IMSEc1 = 1 / xq.shape[0] * sum(phiqr.flatten() * Yq_var.flatten())
@@ -2888,25 +2823,19 @@ class model_info:
             self.X_existing = read_txt(self.inpData, exit_tmp)
             self.n_existing = self.X_existing.shape[0]
 
-            if not (self.X_existing.shape[1] == self.x_dim):
-                msg = 'Error importing input data - dimension inconsistent: have {} RV(s) but have {} column(s).'.format(
-                    self.x_dim, self.X_existing.shape[1]
-                )
+            if self.X_existing.shape[1] != self.x_dim:
+                msg = f'Error importing input data - dimension inconsistent: have {self.x_dim} RV(s) but have {self.X_existing.shape[1]} column(s).'
                 exit_tmp(msg)
 
             if not self.model_without_sampling:  # i.e. check box clicked
                 self.Y_existing = read_txt(self.outData, exit_tmp)
 
-                if not (self.Y_existing.shape[1] == self.y_dim):
-                    msg = 'Error importing input data - dimension inconsistent: have {} QoI(s) but have {} column(s).'.format(
-                        self.y_dim, self.Y_existing.shape[1]
-                    )
+                if self.Y_existing.shape[1] != self.y_dim:
+                    msg = f'Error importing input data - dimension inconsistent: have {self.y_dim} QoI(s) but have {self.Y_existing.shape[1]} column(s).'
                     exit_tmp(msg)
 
-                if not (self.Y_existing.shape[0] == self.X_existing.shape[0]):
-                    msg = 'Error importing input data: numbers of samples of inputs ({}) and outputs ({}) are inconsistent'.format(
-                        self.X_existing.shape[0], self.Y_existing.shape[0]
-                    )
+                if self.Y_existing.shape[0] != self.X_existing.shape[0]:
+                    msg = f'Error importing input data: numbers of samples of inputs ({self.X_existing.shape[0]}) and outputs ({self.Y_existing.shape[0]}) are inconsistent'
                     exit_tmp(msg)
             else:
                 self.Y_existing = np.zeros((0, y_dim))
@@ -3209,7 +3138,7 @@ def calibrating(
         # if not nopt==n:
         #     m_tmp.optimize_restarts(num_restarts=nopt-n)
 
-        print('', flush=True)
+        print(flush=True)
 
     return m_tmp, msg, ny
 

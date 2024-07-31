@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2024 The Regents of the University of California
 #
@@ -40,10 +39,11 @@
 # 03-27-2024
 
 # Import packages required for running the latest version of BRAILS:
-import sys
 import argparse
 import os
+import sys
 from time import gmtime, strftime
+
 from brails.workflow.FootprintHandler import FootprintHandler
 
 

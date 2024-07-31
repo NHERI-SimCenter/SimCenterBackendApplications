@@ -1,27 +1,24 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun  1 21:04:18 2021
+"""Created on Tue Jun  1 21:04:18 2021
 
 @author: snaeimi
 """
 
-import StochasticModel
-import Damage
+import logging
 import os
-import signal
 import pickle
 import time
-import pandas as pd
-import logging
 
+import Damage
 import Input.Input_IO as io
-from Input.Settings import Settings
+import pandas as pd
+import StochasticModel
 from EnhancedWNTR.network.model import WaterNetworkModel
+from Input.Settings import Settings
+from Project import Project
+from restoration.model import Restoration
 
 # from wntrfr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility
 from restoration.registry import Registry
-from restoration.model import Restoration
-from Project import Project
 
 logging.basicConfig(level=50)
 
@@ -36,8 +33,7 @@ class Starter:
             pickle.dump(project, f)
 
     def run(self, project_file=None):
-        """
-        Runs the ptogram. It initiates the Settings class and based on the
+        """Runs the ptogram. It initiates the Settings class and based on the
         settings, run the program in either single scenario, multiple serial or
         multiple parallel mode.
 
@@ -52,7 +48,7 @@ class Starter:
 
         """
         settings = Settings()
-        if type(project_file) != type(None):
+        if project_file is not None:
             project_file = str(project_file)
 
         if type(project_file) == str:
@@ -77,14 +73,14 @@ class Starter:
             settings.process['pipe_damage_file_directory'],
         )
         settings.process.settings['list'] = damage_list
-        if type(project_file) == type(None):
+        if project_file is None:
             self.createProjectFile(settings, damage_list, 'project.prj')
         # raise
         if settings.process['number_of_proccessor'] == 1:  # Single mode
             # get damage list as Pandas Dataframe
             if settings.process['number_of_damages'] == 'multiple':
                 damage_list_size = len(damage_list)
-                for i in range(0, damage_list_size):
+                for i in range(damage_list_size):
                     print(i, flush=True)
                     settings.initializeScenarioSettings(
                         i
@@ -137,8 +133,7 @@ class Starter:
         pump_damage_file_name=None,
         tank_damage_file_name=None,
     ):
-        """
-        Runs a single scenario on the local machine.
+        """Runs a single scenario on the local machine.
 
         Parameters
         ----------
@@ -299,8 +294,8 @@ class Starter:
         return 1
 
     def run_mpi(self, settings):
-        from mpi4py import MPI
         import mpi4py
+        from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
         mpi4py.rc.recv_mprobe = False
@@ -558,7 +553,7 @@ class Starter:
                                 + repr(run_flag)
                             )
                             comm.isend(run_flag, dest=0)
-                        except Exception as e:
+                        except Exception:
                             error_dump_file = None
                             if type(scenario_name) == str:
                                 error_dump_file = 'dump_' + scenario_name + '.pkl'

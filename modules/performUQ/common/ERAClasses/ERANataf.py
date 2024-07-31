@@ -62,9 +62,8 @@ Probabilistic Engineering Mechanics 1(2), 105-112
 
 
 # %%
-class ERANataf(object):
-    """
-    Generation of joint distribution objects.
+class ERANataf:
+    """Generation of joint distribution objects.
     Construction of the joint distribution object with
 
     Obj = ERANataf(M,Correlation)
@@ -82,11 +81,9 @@ class ERANataf(object):
     """
 
     def __init__(self, M, Correlation):
-        """
-        Constructor method, for more details have a look at the
+        """Constructor method, for more details have a look at the
         class description.
         """
-
         self.Marginals = np.array(M, ndmin=1)
         self.Marginals = self.Marginals.ravel()
         self.Rho_X = np.array(Correlation, ndmin=2)
@@ -153,15 +150,11 @@ class ERANataf(object):
                     if self.Rho_X[i, j] == 0:
                         continue
 
-                    elif (self.Marginals[i].Name == 'standardnormal') and (
-                        self.Marginals[j].Name == 'standardnormal'
-                    ):
-                        self.Rho_Z[i, j] = self.Rho_X[i, j]
-                        self.Rho_Z[j, i] = self.Rho_X[j, i]
-                        continue
-
-                    elif (self.Marginals[i].Name == 'normal') and (
-                        self.Marginals[j].Name == 'normal'
+                    elif (
+                        (self.Marginals[i].Name == 'standardnormal')
+                        and (self.Marginals[j].Name == 'standardnormal')
+                        or (self.Marginals[i].Name == 'normal')
+                        and (self.Marginals[j].Name == 'normal')
                     ):
                         self.Rho_Z[i, j] = self.Rho_X[i, j]
                         self.Rho_Z[j, i] = self.Rho_X[j, i]
@@ -275,8 +268,7 @@ class ERANataf(object):
     """
 
     def X2U(self, X, Jacobian=False):
-        """
-        Carries out the transformation from physical space X to
+        """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -284,7 +276,6 @@ class ERANataf(object):
         point is only given as an output in case that the input
         argument Jacobian=True .
         """
-
         n_dim = len(self.Marginals)
         X = np.array(X, ndmin=2)
 
@@ -329,8 +320,7 @@ class ERANataf(object):
 
     # %%
     def U2X(self, U, Jacobian=False):
-        """
-        Carries out the transformation from standard normal space U
+        """Carries out the transformation from standard normal space U
         to physical space X.
         U must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -338,7 +328,6 @@ class ERANataf(object):
         point is only given as an output in case that the input
         argument Jacobian=True .
         """
-
         n_dim = len(self.Marginals)
         U = np.array(U, ndmin=2)
 
@@ -372,8 +361,7 @@ class ERANataf(object):
 
     # %%
     def random(self, n=1):
-        """
-        Creates n samples of the joint distribution.
+        """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
         """
         n = int(n)
@@ -388,12 +376,10 @@ class ERANataf(object):
 
     # %%
     def pdf(self, X):
-        """
-        Computes the joint PDF.
+        """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
         """
-
         n_dim = len(self.Marginals)
         X = np.array(X, ndmin=2)
 
@@ -453,8 +439,7 @@ class ERANataf(object):
 
     # %%
     def cdf(self, X):
-        """
-        Computes the joint CDF.
+        """Computes the joint CDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
         The CDF computation is based on the multivariate normal cdf.
@@ -462,7 +447,6 @@ class ERANataf(object):
         sampling, the output of this method is therefore also a
         stochastic quantity.
         """
-
         n_dim = len(self.Marginals)
         X = np.array(X, ndmin=2)
 

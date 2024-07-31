@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,10 +38,11 @@
 # Wael Elhaddad
 #
 
-import os
-import math
-import json
 import argparse
+import json
+import math
+import os
+
 import numpy as np
 
 
@@ -52,7 +52,7 @@ def generate_workflow_tasks(
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:
         settings = json.load(f)
     output_types = [
         out_type for out_type, val in settings['outputs'].items() if val == True
@@ -103,7 +103,7 @@ def generate_workflow_tasks(
     workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/rWHALE.py'
 
     subfolder = 0
-    for i in range(0, tasksCount):
+    for i in range(tasksCount):
         bldg_list = np.array(bldgs_requested[i * task_size : (i + 1) * task_size])
 
         # do not try to run sims if there are no bldgs to run
@@ -192,7 +192,7 @@ def generate_workflow_tasks_siteresponse(
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:
         settings = json.load(f)
     output_types = [
         out_type for out_type, val in settings['outputs'].items() if val == True
@@ -237,7 +237,7 @@ def generate_workflow_tasks_siteresponse(
     )
 
     subfolder = 0
-    for i in range(0, tasksCount):
+    for i in range(tasksCount):
         bldg_list = np.array(bldgs_requested[i * task_size : (i + 1) * task_size])
 
         # do not try to run sims if there are no bldgs to run
@@ -291,7 +291,7 @@ def generate_workflow_tasks_siteresponse(
             )
 
             # copy the results from the task for aggregation
-            file_name = f'surface_motions/*'
+            file_name = 'surface_motions/*'
             task_list += (
                 f'mkdir -p {out_dir}/results/surface_motions' f'/{subfolder}/ && '
             )
@@ -300,7 +300,7 @@ def generate_workflow_tasks_siteresponse(
                 f'/surface_motions/{subfolder}/ && '
             )
 
-            task_list += f"echo 'cmd generated. Currend dir: '$PWD \n"
+            task_list += "echo 'cmd generated. Currend dir: '$PWD \n"
 
             # write the tasks to the output file
             with open('WorkflowJobs_siteResponse.txt', 'a+') as tasksFile:
@@ -316,7 +316,7 @@ def generate_workflow_tasks_regionalsiteresponse(
     output_valid = ['IM']
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}', 'r') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:
         settings = json.load(f)
     output_types = [
         out_type
@@ -359,7 +359,7 @@ def generate_workflow_tasks_regionalsiteresponse(
     workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/siteResponseWHALE.py'
 
     subfolder = 0
-    for i in range(0, tasksCount):
+    for i in range(tasksCount):
         site_list = np.array(sites_requested[i * task_size : (i + 1) * task_size])
 
         # do not try to run sims if there are no bldgs to run

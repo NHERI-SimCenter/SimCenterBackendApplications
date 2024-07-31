@@ -20,7 +20,7 @@ def model_generation(base_directory, pathDataFolder, workingDirectory):
     with open('construction_building.pkl', 'rb') as file:
         building = pickle.load(file)
     with open('construction_column_set.pkl', 'rb') as file:
-        column_set = pickle.load((file))
+        column_set = pickle.load(file)
     with open('construction_beam_set.pkl', 'rb') as file:
         beam_set = pickle.load(file)
     with open('construction_connection_set.pkl', 'rb') as file:

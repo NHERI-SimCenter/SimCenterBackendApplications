@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,6 +38,7 @@
 #
 
 import json
+
 import numpy as np
 import pandas as pd
 
@@ -53,8 +53,7 @@ def get_label(options, labels, label_name):
 
 
 def create_stations(input_file, output_file, min_id, max_id):
-    """
-    Reading input csv file for stations and saving data to output json file
+    """Reading input csv file for stations and saving data to output json file
     Input:
         input_file: the filename of the station csv file
         output_file: the filename of the output json file

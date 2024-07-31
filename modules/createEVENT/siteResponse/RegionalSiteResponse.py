@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,18 +37,20 @@
 # Long Chen
 
 
-import os
-import sys
-import argparse, posixpath
+import argparse
 import json
-import subprocess
+import os
+import posixpath
 import shutil
-from scipy import integrate
-import numpy as np
+import subprocess
+import sys
 from math import pi
 
 # import the common constants and methods
 from pathlib import Path
+
+import numpy as np
+from scipy import integrate
 
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 main_dir = this_dir.parents[1]
@@ -67,11 +68,7 @@ plotFlag = False
 
 
 def get_scale_factors(input_units, output_units):
-    """
-    Determine the scale factor to convert input event to internal event data
-
-    """
-
+    """Determine the scale factor to convert input event to internal event data"""
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
         scale_factors = {'ALL': 1.0}
@@ -226,7 +223,7 @@ def run_opensees(
 
     print('**************** run_opensees ****************')
     # load the model builder script
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file) as f:
         BIM_in = json.load(f)
 
     model_params = BIM_in['GeneralInformation']
@@ -252,7 +249,7 @@ def run_opensees(
     else:
         get_records(BIM_file, EVENT_file, event_path)
         # load the event file
-        with open(EVENT_file, 'r') as f:
+        with open(EVENT_file) as f:
             EVENT_in_All = json.load(f)
             EVENT_in = EVENT_in_All['Events'][0]
 
@@ -310,10 +307,10 @@ def run_opensees(
 
 
 def get_records(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file) as f:
         bim_file = json.load(f)
 
-    with open(EVENT_file, 'r') as f:
+    with open(EVENT_file) as f:
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
@@ -339,7 +336,7 @@ def get_records(BIM_file, EVENT_file, data_dir):
 def write_RV(BIM_file, EVENT_file, data_dir):
     # Copied from SimCenterEvent, write name of motions
 
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file) as f:
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -405,7 +402,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
 
     fileName = fileName.split('x')[0]
 
-    with open(posixpath.join(data_dir, '{}.json'.format(fileName)), 'r') as f:
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:
         event_data = json.load(f)
 
     event_dic = {
@@ -454,21 +451,21 @@ def build_model(model_params, numEvt):
     # Config model
     f = open('freefield_config.tcl', 'w')
     f.write('# site response configuration file\n')
-    f.write('set soilThick {:.1f}\n'.format(thickness))
-    f.write('set numLayers {:d}\n'.format(numElems))
+    f.write(f'set soilThick {thickness:.1f}\n')
+    f.write(f'set numLayers {numElems:d}\n')
     f.write('# layer thickness - bottom to top\n')
     eleVsize = thickness / numElems
     travelTime = 0
     for ii in range(numElems):
-        f.write('set layerThick({:d}) {:.2f}\n'.format(ii + 1, eleVsize))
-        f.write('set nElemY({:d}) 1\n'.format(ii + 1))
-        f.write('set sElemY({:d}) {:.3f}\n'.format(ii + 1, eleVsize))
+        f.write(f'set layerThick({ii + 1:d}) {eleVsize:.2f}\n')
+        f.write(f'set nElemY({ii + 1:d}) 1\n')
+        f.write(f'set sElemY({ii + 1:d}) {eleVsize:.3f}\n')
         travelTime += eleVsize / Vs[ii]
 
     averageVs = thickness / travelTime  # time averaged shear wave velocity
     naturalFrequency = averageVs / 4 / thickness  # Vs/4H
 
-    f.write('set nElemT {:d}\n'.format(numElems))
+    f.write(f'set nElemT {numElems:d}\n')
     f.write('# motion file (used if the input arguments do not include motion)\n')
     f.write('set accFile  xInput.acc\n')
     f.write('set dispFile xInput.disp\n')
@@ -483,9 +480,9 @@ def build_model(model_params, numEvt):
     else:
         f.write('set numEvt 1\n')
 
-    f.write('set rockVs {:.1f}\n'.format(VsRock))
-    f.write('set omega1 {:.2f}\n'.format(2.0 * pi * naturalFrequency))
-    f.write('set omega2 {:.2f}\n'.format(2.0 * pi * naturalFrequency * 5.0))
+    f.write(f'set rockVs {VsRock:.1f}\n')
+    f.write(f'set omega1 {2.0 * pi * naturalFrequency:.2f}\n')
+    f.write(f'set omega2 {2.0 * pi * naturalFrequency * 5.0:.2f}\n')
     f.close()
 
     # Create Material
@@ -497,11 +494,11 @@ def build_model(model_params, numEvt):
         poisson = 0.3
         sig_v = rhoSoil * gravityG * eleVsize * 0.5
         for ii in range(numElems):
-            f.write('set rho({:d}) {:.1f}\n'.format(ii + 1, rhoSoil))
+            f.write(f'set rho({ii + 1:d}) {rhoSoil:.1f}\n')
             shearG = rhoSoil * Vs[ii] * Vs[ii]
             bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
-            f.write('set shearG({:d}) {:.2f}\n'.format(ii + 1, shearG))
-            f.write('set bulkK({:d}) {:.2f}\n'.format(ii + 1, bulkK))
+            f.write(f'set shearG({ii + 1:d}) {shearG:.2f}\n')
+            f.write(f'set bulkK({ii + 1:d}) {bulkK:.2f}\n')
             f.write(
                 'set su({:d}) {:.2f}\n'.format(
                     ii + 1, model_params['Su_rat'] * sig_v
@@ -515,18 +512,7 @@ def build_model(model_params, numEvt):
             f.write('set h0({:d}) {:.2f}\n'.format(ii + 1, model_params['h0']))
             f.write('set chi({:d}) {:.2f}\n'.format(ii + 1, model_params['chi']))
             f.write(
-                'set mat({:d}) "J2CyclicBoundingSurface {:d} $shearG({:d}) $bulkK({:d}) $su({:d}) $rho({:d}) $h({:d}) $m({:d}) $h0({:d}) $chi({:d}) 0.5"\n\n\n'.format(
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                    ii + 1,
-                )
+                f'set mat({ii + 1:d}) "J2CyclicBoundingSurface {ii + 1:d} $shearG({ii + 1:d}) $bulkK({ii + 1:d}) $su({ii + 1:d}) $rho({ii + 1:d}) $h({ii + 1:d}) $m({ii + 1:d}) $h0({ii + 1:d}) $chi({ii + 1:d}) 0.5"\n\n\n'
             )
     elif model_params['Model'] in 'PIMY':
         # PIMY model
@@ -534,12 +520,12 @@ def build_model(model_params, numEvt):
         poisson = 0.3
         sig_v = rhoSoil * gravityG * eleVsize * 0.5
         for ii in range(numElems):
-            f.write('set rho({:d}) {:.1f}\n'.format(numElems - ii, rhoSoil))
+            f.write(f'set rho({numElems - ii:d}) {rhoSoil:.1f}\n')
             shearG = rhoSoil * Vs[ii] * Vs[ii]
             bulkK = shearG * 2.0 * (1 + poisson) / 3.0 / (1.0 - 2.0 * poisson)
-            f.write('set Vs({:d}) {:.2f}\n'.format(numElems - ii, Vs[ii]))
-            f.write('set shearG({:d}) {:.2f}\n'.format(numElems - ii, shearG))
-            f.write('set bulkK({:d}) {:.2f}\n'.format(numElems - ii, bulkK))
+            f.write(f'set Vs({numElems - ii:d}) {Vs[ii]:.2f}\n')
+            f.write(f'set shearG({numElems - ii:d}) {shearG:.2f}\n')
+            f.write(f'set bulkK({numElems - ii:d}) {bulkK:.2f}\n')
             f.write(
                 'set su({:d}) {:.2f}\n'.format(
                     numElems - ii, model_params['Su_rat'] * sig_v
@@ -559,37 +545,20 @@ def build_model(model_params, numEvt):
                 'set chi({:d}) {:.2f}\n'.format(numElems - ii, model_params['chi'])
             )
             f.write(
-                'set mat({:d}) "PressureIndependMultiYield {:d} 3 $rho({:d}) $shearG({:d}) $bulkK({:d}) $su({:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'.format(
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                    numElems - ii,
-                )
+                f'set mat({numElems - ii:d}) "PressureIndependMultiYield {numElems - ii:d} 3 $rho({numElems - ii:d}) $shearG({numElems - ii:d}) $bulkK({numElems - ii:d}) $su({numElems - ii:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'
             )
     else:
         rhoSoil = model_params['Den']
         poisson = 0.3
         for ii in range(numElems):
-            f.write('set rho({:d}) {:.1f}\n'.format(ii + 1, rhoSoil))
+            f.write(f'set rho({ii + 1:d}) {rhoSoil:.1f}\n')
+            f.write(f'set shearG({ii + 1:d}) {rhoSoil * Vs[ii] * Vs[ii]:.2f}\n')
+            f.write(f'set nu({ii + 1:d}) {poisson:.2f}\n')
             f.write(
-                'set shearG({:d}) {:.2f}\n'.format(ii + 1, rhoSoil * Vs[ii] * Vs[ii])
-            )
-            f.write('set nu({:d}) {:.2f}\n'.format(ii + 1, poisson))
-            f.write(
-                'set E({:d}) {:.2f}\n\n'.format(
-                    ii + 1, 2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson)
-                )
+                f'set E({ii + 1:d}) {2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson):.2f}\n\n'
             )
             f.write(
-                'set mat({:d}) "ElasticIsotropic {:d} $E({:d}) $nu({:d}) $rho({:d})"\n\n\n'.format(
-                    ii + 1, ii + 1, ii + 1, ii + 1, ii + 1
-                )
+                f'set mat({ii + 1:d}) "ElasticIsotropic {ii + 1:d} $E({ii + 1:d}) $nu({ii + 1:d}) $rho({ii + 1:d})"\n\n\n'
             )
 
     f.close()
@@ -603,11 +572,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
 
     # Check Vs30
     if Vs30 < 173.1 or Vs30 > 1000:
-        print(
-            'Caution: Vs30 {} is not within the valid range of the SVM! \n'.format(
-                Vs30
-            )
-        )
+        print(f'Caution: Vs30 {Vs30} is not within the valid range of the SVM! \n')
 
     # Parameters specific to: California
     z_star = 2.5  # [m] depth considered to have constant Vs
@@ -667,8 +632,8 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):
         ax = plt.gca()
         ax.invert_yaxis()
         plt.legend()
-        plt.text(100, 12.5, 'Vs30 = {:.1f}m/s'.format(Vs30))
-        plt.text(100, 17.5, 'Depth to bedrock = {:.1f}m'.format(depthToRock))
+        plt.text(100, 12.5, f'Vs30 = {Vs30:.1f}m/s')
+        plt.text(100, 17.5, f'Depth to bedrock = {depthToRock:.1f}m')
         ax.set_xlabel('Vs (m/s)')
         ax.set_ylabel('Depth (m)')
         ax.set_xlim(left=0)

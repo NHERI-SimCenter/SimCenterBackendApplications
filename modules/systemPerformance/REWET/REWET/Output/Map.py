@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 24 09:43:00 2022
+"""Created on Mon Oct 24 09:43:00 2022
 This file includes all Map Related Results.
 
 Class:
@@ -18,12 +16,13 @@ Class:
 """
 
 import warnings
+
 import geopandas as gpd
-import pandas as pd
 import numpy as np
+import pandas as pd
 import shapely
-import Output.Helper as Helper
-import initial
+from Output import Helper
+
 # import time
 
 
@@ -33,7 +32,7 @@ class Map:
 
     # def loadShapeFile(shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'):
     def loadShapeFile(
-        self, shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'
+        self, shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp'
     ):
         shape_file = gpd.read_file(shapeFileAddr)
         return shape_file
@@ -438,7 +437,7 @@ class Map:
 
         s.loc[map_res.index.to_list(), 'restoration_time'] = map_res.to_list()
 
-        polygon = gpd.read_file('Northridge\GIS\Demand\demand_polygons.shp')
+        polygon = gpd.read_file(r'Northridge\GIS\Demand\demand_polygons.shp')
         s = s.set_crs(crs=polygon.crs)
         joined_map = gpd.sjoin(polygon, s)
         # return   joined_map

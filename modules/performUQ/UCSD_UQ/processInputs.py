@@ -1,10 +1,9 @@
-import sys
-import os
+import argparse
 import json
+import os
+import platform
 import stat
 import subprocess
-import platform
-import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     if runType in ['runningLocal']:
         # Get path to python from dakota.json file
         dakotaJsonFile = os.path.join(os.path.abspath(templateDir), inputFile)
-        with open(dakotaJsonFile, 'r') as f:
+        with open(dakotaJsonFile) as f:
             jsonInputs = json.load(f)
 
         if 'python' in jsonInputs.keys():
@@ -61,15 +60,7 @@ if __name__ == '__main__':
         # Get the path to the mainscript.py of TMCMC
         #        mainScriptDir = os.path.split(mainScriptPath)[0]
         mainScript = os.path.join(mainScriptPath, 'mainscript.py')
-        command = '{} {} {} {} {} {} {}'.format(
-            pythonCommand,
-            mainScript,
-            tmpSimCenterDir,
-            templateDir,
-            runType,
-            workflowDriver,
-            inputFile,
-        )
+        command = f'{pythonCommand} {mainScript} {tmpSimCenterDir} {templateDir} {runType} {workflowDriver} {inputFile}'
         try:
             result = subprocess.check_output(
                 command, stderr=subprocess.STDOUT, shell=True

@@ -1,10 +1,7 @@
-"""
-@author: Mukesh, Maitreya, Conte, Aakash
-
-"""
+"""@author: Mukesh, Maitreya, Conte, Aakash"""
 
 import numpy as np
-import scipy.stats as stats
+from scipy import stats
 
 
 class Dist:
@@ -37,7 +34,7 @@ class Uniform:
         if (x - self.upper) * (x - self.lower) <= 0:
             lp = np.log(1 / (self.upper - self.lower))
         else:
-            lp = -np.Inf
+            lp = -np.inf
         return lp
 
 
@@ -56,7 +53,7 @@ class Halfnormal:
                 - ((x * x) / (2 * self.sig * self.sig))
             )
         else:
-            lp = -np.Inf
+            lp = -np.inf
         return lp
 
 

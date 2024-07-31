@@ -1,7 +1,8 @@
 import os
-import fire
-from sys import platform
 import shutil
+from sys import platform
+
+import fire
 
 
 def runWorkflow(index):

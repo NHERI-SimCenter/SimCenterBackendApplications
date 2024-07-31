@@ -1,7 +1,7 @@
 # Import packages needed for setting up required packages:
-import sys
-import subprocess
 import importlib.metadata
+import subprocess
+import sys
 
 # If not installed, install BRAILS, argparse, and requests:
 required = {'BRAILS', 'argparse', 'requests'}
@@ -40,6 +40,7 @@ if importlib.metadata.version('BRAILS') != latestBrailsVersion:
 import argparse
 import os
 from time import gmtime, strftime
+
 from brails.TranspInventoryGenerator import TranspInventoryGenerator
 
 

@@ -1,27 +1,24 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 28 12:50:24 2022
+"""Created on Fri Oct 28 12:50:24 2022
 
 @author: snaeimi
 """
 
 import os
 import pickle
-from PyQt5 import QtCore, QtGui, QtWidgets
+
 import pandas as pd
-from .Scenario_Dialog_Designer import Scenario_Dialog_Designer
-from .Pipe_Damage_Model_Designer import Pipe_Damage_Model_Designer
+from PyQt5 import QtCore, QtWidgets
+
 from .Node_Damage_Model_Designer import Node_Damage_Model_Designer
+from .Pipe_Damage_Model_Designer import Pipe_Damage_Model_Designer
+from .Scenario_Dialog_Designer import Scenario_Dialog_Designer
 
 
 class Damage_Tab_Designer:
     def __init__(self):
         # self.pipe_damage_model = {"CI":{"alpha":-0.0038, "beta":0.1096, "gamma":0.0196, "a":2, "b":1 }, "DI":{"alpha":-0.0038, "beta":0.05, "gamma":0.04, "a":2, "b":1 } }
         # self.node_damage_model = {'a':0.0036, 'aa':1, 'b':0, 'bb':0, 'c':-0.877, 'cc':1, 'd':0, 'dd':0, 'e':0.0248, 'ee1':1, 'ee2':1, 'f':0, 'ff1':0, 'ff2':0, "damage_node_model": "equal_diameter_emitter"}
-
-        """
-        These are variables that are shared between ui and settings.
-        """
+        """These are variables that are shared between ui and settings."""
         self.setDamageSettings(self.settings, self.scenario_list)
 
         """
@@ -178,7 +175,7 @@ class Damage_Tab_Designer:
             return
 
         row_number = []
-        for i in range(0, len(items)):
+        for i in range(len(items)):
             selected_row = items[i].row()
             row_number.append(selected_row)
 
@@ -208,7 +205,7 @@ class Damage_Tab_Designer:
         split_addr = os.path.split(file[0])
 
         temp = self.getScnearioListFromXLSX(file[0])
-        if type(temp) == type(None):
+        if temp is None:
             return
         self.scenario_list = temp
 

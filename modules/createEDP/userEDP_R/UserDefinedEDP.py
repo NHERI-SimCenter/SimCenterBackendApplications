@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,8 +37,9 @@
 # Adam Zsarnóczay
 #
 
+import argparse
+import json
 import sys
-import argparse, json
 
 
 def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
@@ -49,15 +49,15 @@ def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
 
 def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
-    with open(AIM_file, 'r') as f:
+    with open(AIM_file) as f:
         bim_file = json.load(f)
 
-    with open(EVENT_file, 'r') as f:
+    with open(EVENT_file) as f:
         event_file = json.load(f)
 
     stories = bim_file['GeneralInformation']['NumberOfStories']
 
-    with open(EDP_specs, 'r') as f:
+    with open(EDP_specs) as f:
         edp_specs = json.load(f)
 
     EDP_locs = edp_specs['locations']

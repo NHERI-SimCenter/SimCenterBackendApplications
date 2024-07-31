@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -39,10 +38,11 @@
 # Joanna J. Zou
 #
 
-import os, sys
-import argparse, json
+import argparse
 import importlib
-
+import json
+import os
+import sys
 from pathlib import Path
 
 # import the common constants and methods
@@ -74,6 +74,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import sys
+
     import numpy as np
     import openseespy.opensees as ops
 
@@ -82,12 +83,12 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
     sys.path.insert(0, os.getcwd())
 
     # load the model builder script
-    with open(BIM_input_path, 'r', encoding='utf-8') as f:
+    with open(BIM_input_path, encoding='utf-8') as f:
         BIM_in = json.load(f)
 
     model_params = BIM_in['GeneralInformation']
 
-    with open(SAM_input_path, 'r', encoding='utf-8') as f:
+    with open(SAM_input_path, encoding='utf-8') as f:
         SAM_in = json.load(f)
 
     sys.path.insert(0, SAM_in['modelPath'])
@@ -120,7 +121,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
     build_model(model_params=model_params)
 
     # load the event file
-    with open(EVENT_input_path, 'r', encoding='utf-8') as f:
+    with open(EVENT_input_path, encoding='utf-8') as f:
         EVENT_in = json.load(f)['Events'][0]
 
     event_list = EVENT_in['timeSeries']
@@ -182,7 +183,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
     # create the EDP specification
 
     # load the EDP file
-    with open(EDP_input_path, 'r', encoding='utf-8') as f:
+    with open(EDP_input_path, encoding='utf-8') as f:
         EDP_in = json.load(f)
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
@@ -192,7 +193,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
         if response['type'] in list(convert_EDP.keys()):
             response['type'] = convert_EDP[response['type']]
 
-        if response['type'] not in edp_specs.keys():
+        if response['type'] not in edp_specs:
             edp_specs.update({response['type']: {}})
 
         if 'node' in list(response.keys()):

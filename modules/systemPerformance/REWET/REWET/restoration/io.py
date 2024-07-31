@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Dec 19 19:10:35 2020
+"""Created on Wed Dec 19 19:10:35 2020
 
 @author: snaeimi
 """
 
-import io
 import logging
-import pandas as pd
 from collections import OrderedDict
 from pathlib import Path
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +31,7 @@ def _split_line(line):
 
 class RestorationIO:
     def __init__(self, restoration_model, definition_file_name):
-        """
-        Needs a file that contains:
+        """Needs a file that contains:
 
         Parameters
         ----------
@@ -48,7 +45,6 @@ class RestorationIO:
         None.
 
         """
-
         # some of the following lines have been addopted from WNTR
         self.rm = restoration_model
         self.crew_data = {}
@@ -86,7 +82,7 @@ class RestorationIO:
 
         self.config_file_dir = config_file_path.parent
 
-        with io.open(definition_file_name, 'r', encoding='utf-8') as f:
+        with open(definition_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 edata['lnum'] = lnum
@@ -161,7 +157,7 @@ class RestorationIO:
         if method == 0:
             try:
                 raise
-                with io.open(file_address, 'r', encoding='utf-8') as f:
+                with open(file_address, encoding='utf-8') as f:
                     for line in f:
                         line = line.strip()
                         nwords = len(line.split())
@@ -1166,8 +1162,7 @@ class RestorationIO:
         return res
 
     def _read_config(self):
-        """
-        reads config files which contains general specification of
+        """Reads config files which contains general specification of
         configurations
 
         Raises
@@ -1208,7 +1203,7 @@ class RestorationIO:
         ntitle = 0
         lnum = 0
         dtemp = []
-        with io.open(self._demand_Node_file_name, 'r', encoding='utf-8') as f:
+        with open(self._demand_Node_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 line = line.strip()
@@ -1240,7 +1235,7 @@ class RestorationIO:
         ntitle = 0
         lnum = 0
         dtemp = []
-        with io.open(self._crew_file_name[-1], 'r', encoding='utf-8') as f:
+        with open(self._crew_file_name[-1], encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 line = line.strip()

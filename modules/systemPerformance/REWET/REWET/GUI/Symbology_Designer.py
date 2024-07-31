@@ -1,21 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jan  6 00:08:01 2023
+"""Created on Fri Jan  6 00:08:01 2023
 
 @author: snaeimi
 """
 
 import sys
-from PyQt5 import QtCore, QtWidgets
-from GUI.Symbology_Window import Ui_Symbology_Dialog
-import pandas as pd
+
 import geopandas as gpd
 import mapclassify
 import matplotlib.pylab as plt
+import pandas as pd
+from GUI.Symbology_Window import Ui_Symbology_Dialog
 from matplotlib.backends.backend_qt5agg import FigureCanvas
-from matplotlib.backends.backend_qt5agg import (
-    NavigationToolbar2QT as NavigationToolbar,
-)
+from PyQt5 import QtCore, QtWidgets
 
 
 class Symbology_Designer(Ui_Symbology_Dialog):

@@ -13,8 +13,7 @@ def configureAndRunUQ(
     localAppDir,
     remoteAppDir,
 ):
-    """
-    This function configures and runs a UQ simulation based on the input
+    """This function configures and runs a UQ simulation based on the input
     UQ driver and its associated inputs, simulation configuration, random
     variables, and requested demand parameters
 
@@ -30,7 +29,6 @@ def configureAndRunUQ(
     localAppDir:    Directory containing apps for local run
     remoteAppDir:   Directory containing apps for remote run
     """
-
     uqDriverOptions = ['UQpy', 'HeirBayes']
 
     for val in uqData['Parameters']:
@@ -45,10 +43,8 @@ def configureAndRunUQ(
             uqDriver,
         )
     else:
-        if uqDriver in ['UQpy']:
-            from UQpyRunner import UQpyRunner
-        elif uqDriver in ['HeirBayes']:
-            from HeirBayesRunner import HeirBayesRunner
+        if uqDriver in ['UQpy'] or uqDriver in ['HeirBayes']:
+            pass
 
         uqDriverClass = locals()[uqDriver + 'Runner']
         uqDriverClass().runUQ(

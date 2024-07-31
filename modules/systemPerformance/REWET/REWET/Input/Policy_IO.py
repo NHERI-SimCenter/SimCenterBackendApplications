@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Dec 19 19:10:35 2020
+"""Created on Wed Dec 19 19:10:35 2020
 
 This is the Restoration Policy Reader/Writtter Module.
 
 @author: snaeimi
 """
 
-import io
 import logging
-import pandas as pd
 from collections import OrderedDict
 
+import pandas as pd
 
 ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']
 
@@ -57,8 +54,7 @@ class restoration_data:
 
 class RestorationIO:
     def __init__(self, definition_file_name):
-        """
-        Needs a file that contains:
+        """Needs a file that contains:
 
         Parameters
         ----------
@@ -72,7 +68,6 @@ class RestorationIO:
         None.
 
         """
-
         # some of the following lines have been addopted from WNTR
         self.rm = restoration_data()
 
@@ -103,7 +98,7 @@ class RestorationIO:
         section = None
         lnum = 0
         edata = {'fname': definition_file_name}
-        with io.open(definition_file_name, 'r', encoding='utf-8') as f:
+        with open(definition_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 edata['lnum'] = lnum
@@ -177,7 +172,7 @@ class RestorationIO:
         if method == 0:
             try:
                 raise
-                with io.open(file_address, 'r', encoding='utf-8') as f:
+                with open(file_address, encoding='utf-8') as f:
                     for line in f:
                         line = line.strip()
                         nwords = len(line.split())
@@ -219,8 +214,7 @@ class RestorationIO:
                 self.rm.shift[shift_name] = (shift_begining, shift_ending)
 
     def _read_entities(self):
-        """
-        Reads damage group definitions and updates the Restoration Model
+        """Reads damage group definitions and updates the Restoration Model
         object data.
 
         Raises
@@ -237,7 +231,6 @@ class RestorationIO:
         None.
 
         """
-
         # Entities is kept for legacy compatibility with the first version
         damage_group_data = self.sections.get(
             '[ENTITIES]', self.sections.get('[Damage Group]')
@@ -920,7 +913,7 @@ class RestorationIO:
         ntitle = 0
         lnum = 0
         dtemp = []
-        with io.open(self._demand_Node_file_name, 'r', encoding='utf-8') as f:
+        with open(self._demand_Node_file_name, encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 line = line.strip()
@@ -952,7 +945,7 @@ class RestorationIO:
         ntitle = 0
         lnum = 0
         dtemp = []
-        with io.open(self._crew_file_name[-1], 'r', encoding='utf-8') as f:
+        with open(self._crew_file_name[-1], encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 line = line.strip()

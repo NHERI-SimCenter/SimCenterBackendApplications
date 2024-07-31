@@ -1,13 +1,16 @@
-import os, sys, json
+import json
+import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-from random import randrange
+import argparse
 import platform
 import shutil
-import subprocess
 import stat
-import argparse
+import subprocess
+from random import randrange
+
 from preprocessJSON import preProcessDakota
 
 
@@ -31,15 +34,15 @@ def main(args):
     if os.getenv('PEGASUS_WF_UUID') is not None:
         print('Pegasus job detected - Pegasus will set up the env')
     elif platform.system() == 'Darwin':
-        env['PATH'] = env['PATH'] + ':{}/bin'.format(home)
-        env['PATH'] = env['PATH'] + ':{}/dakota/bin'.format(home)
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/bin'
     elif platform.system() == 'Linux':
-        env['PATH'] = env['PATH'] + ':{}/bin'.format(home)
-        env['PATH'] = env['PATH'] + ':{}/dakota/dakota-6.5/bin'.format(home)
+        env['PATH'] = env['PATH'] + f':{home}/bin'
+        env['PATH'] = env['PATH'] + f':{home}/dakota/dakota-6.5/bin'
     elif platform.system() == 'Windows':
         pass
     else:
-        print('PLATFORM {} NOT RECOGNIZED'.format(platform.system))
+        print(f'PLATFORM {platform.system} NOT RECOGNIZED')
 
     parser = argparse.ArgumentParser()
 
@@ -92,12 +95,12 @@ def main(args):
     if (
         uqData['samples'] is None
     ):  # this happens when the uq details are stored at the wrong place in the AIM file
-        with open(aimName, 'r', encoding='utf-8') as data_file:
+        with open(aimName, encoding='utf-8') as data_file:
             uq_info = json.load(data_file)['UQ']
 
         if 'samplingMethodData' in uq_info.keys():
             uq_info = uq_info['samplingMethodData']
-            for attribute in uqData.keys():
+            for attribute in uqData:
                 if attribute not in ['concurrency', 'keepSamples']:
                     uqData[attribute] = uq_info.get(attribute, None)
 

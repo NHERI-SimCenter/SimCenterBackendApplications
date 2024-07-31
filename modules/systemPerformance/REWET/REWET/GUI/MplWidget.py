@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 10 18:26:02 2022
+"""Created on Thu Nov 10 18:26:02 2022
 
 @author: snaeimi
 """
 
 # Imports
-from PyQt5 import QtWidgets
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolbar,
 )
-import matplotlib
+from matplotlib.figure import Figure
+from PyQt5 import QtWidgets
 
 
 class MplCanvas(Canvas):

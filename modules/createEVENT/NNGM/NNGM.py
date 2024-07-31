@@ -1,13 +1,9 @@
+import argparse
 import json
 import os
-import sys
-import subprocess
-import hashlib
-from scipy import spatial
-import glob
-import re
-import argparse
 from textwrap import wrap
+
+from scipy import spatial
 
 
 def ReadSMC(smcFilePath):
@@ -140,11 +136,11 @@ def main():
     gmConfigPath = gmArgs.groundMotions
     recordsFolder = gmArgs.recordsFolder
 
-    with open(gmConfigPath, 'r') as gmConfigFile:
+    with open(gmConfigPath) as gmConfigFile:
         gmConfig = json.load(gmConfigFile)
 
     # We need to read the building location
-    with open(bimFilePath, 'r') as bimFile:
+    with open(bimFilePath) as bimFile:
         bim = json.load(bimFile)
         location = [
             bim['GI']['location']['latitude'],

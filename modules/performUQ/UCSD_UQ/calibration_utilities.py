@@ -1,22 +1,23 @@
-import numpy as np
-from scipy.linalg import block_diag
 import os
 import shutil
-import time
-from numpy.typing import NDArray
-from typing import Callable
-from typing import TextIO
-from importlib import import_module
 import sys
+import time
+from importlib import import_module
+from typing import Callable, TextIO
 
+import numpy as np
 import pdfs
+from numpy.typing import NDArray
+from scipy.linalg import block_diag
 
 
 class DataProcessingError(Exception):
     """Raised when errors found when processing user-supplied calibration and covariance data.
 
-    Attributes:
+    Attributes
+    ----------
         message -- explanation of the error
+
     """
 
     def __init__(self, message):
@@ -103,15 +104,13 @@ class CovarianceMatrixPreparer:
         logFile.write('\n\nLooping over the experiments and EDPs')
         # First, check if the user has passed in any covariance matrix data
         for expNum in range(1, numExperiments + 1):
-            logFile.write('\n\nExperiment number: {}'.format(expNum))
+            logFile.write(f'\n\nExperiment number: {expNum}')
             for i, edpName in enumerate(edpNamesList):
-                logFile.write('\n\tEDP: {}'.format(edpName))
-                covarianceFileName = '{}.{}.sigma'.format(edpName, expNum)
+                logFile.write(f'\n\tEDP: {edpName}')
+                covarianceFileName = f'{edpName}.{expNum}.sigma'
                 covarianceFile = os.path.join(workdirMain, covarianceFileName)
                 logFile.write(
-                    "\n\t\tChecking to see if user-supplied file '{}' exists in '{}'".format(
-                        covarianceFileName, workdirMain
-                    )
+                    f"\n\t\tChecking to see if user-supplied file '{covarianceFileName}' exists in '{workdirMain}'"
                 )
                 if os.path.isfile(covarianceFile):
                     logFile.write('\n\t\tFound a user supplied file.')
@@ -119,16 +118,12 @@ class CovarianceMatrixPreparer:
                         src = covarianceFile
                         dst = os.path.join(workdirMain, covarianceFileName)
                         logFile.write(
-                            '\n\t\tCopying user-supplied covariance file from {} to {}'.format(
-                                src, dst
-                            )
+                            f'\n\t\tCopying user-supplied covariance file from {src} to {dst}'
                         )
                         shutil.copyfile(src, dst)
                         covarianceFile = dst
                     logFile.write(
-                        "\n\t\tReading in user supplied covariance matrix from file: '{}'".format(
-                            covarianceFile
-                        )
+                        f"\n\t\tReading in user supplied covariance matrix from file: '{covarianceFile}'"
                     )
                     # Check the data in the covariance matrix file
                     tmpCovFile = os.path.join(
@@ -138,7 +133,7 @@ class CovarianceMatrixPreparer:
                     numCols = 0
                     linenum = 0
                     with open(tmpCovFile, 'w') as f1:
-                        with open(covarianceFile, 'r') as f:
+                        with open(covarianceFile) as f:
                             for line in f:
                                 linenum += 1
                                 if len(line.strip()) == 0:
@@ -149,27 +144,18 @@ class CovarianceMatrixPreparer:
                                     words = line.split()
                                     if numRows == 0:
                                         numCols = len(words)
-                                    else:
-                                        if numCols != len(words):
-                                            logFile.write(
-                                                '\nERROR: The number of columns in line {} do not match the '
-                                                'number of columns in line {} of file {}.'.format(
-                                                    numRows,
-                                                    numRows - 1,
-                                                    covarianceFile,
-                                                )
-                                            )
-                                            raise DataProcessingError(
-                                                'ERROR: The number of columns in line {} do not match the '
-                                                'number of columns in line {} of file {}.'.format(
-                                                    numRows,
-                                                    numRows - 1,
-                                                    covarianceFile,
-                                                )
-                                            )
+                                    elif numCols != len(words):
+                                        logFile.write(
+                                            f'\nERROR: The number of columns in line {numRows} do not match the '
+                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'
+                                        )
+                                        raise DataProcessingError(
+                                            f'ERROR: The number of columns in line {numRows} do not match the '
+                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'
+                                        )
                                     tempLine = ''
                                     for w in words:
-                                        tempLine += '{} '.format(w)
+                                        tempLine += f'{w} '
                                     # logFile.write("\ncovMatrixLine {}: ".format(linenum), tempLine)
                                     if numRows == 0:
                                         f1.write(tempLine)
@@ -198,20 +184,12 @@ class CovarianceMatrixPreparer:
                             )
                         else:
                             logFile.write(
-                                '\nERROR: The number of columns of data in the covariance matrix file {}'
-                                ' must be either 1 or {}. Found {} columns'.format(
-                                    covarianceFile,
-                                    self.edpLengthsList[i],
-                                    numCols,
-                                )
+                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                             raise DataProcessingError(
-                                'ERROR: The number of columns of data in the covariance matrix file {}'
-                                ' must be either 1 or {}. Found {} columns'.format(
-                                    covarianceFile,
-                                    self.edpLengthsList[i],
-                                    numCols,
-                                )
+                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                     elif numRows == self.edpLengthsList[i]:
                         if numCols == 1:
@@ -225,35 +203,23 @@ class CovarianceMatrixPreparer:
                             logFile.write('\n\t\tA full covariance matrix provided.')
                         else:
                             logFile.write(
-                                '\nERROR: The number of columns of data in the covariance matrix file {}'
-                                ' must be either 1 or {}. Found {} columns'.format(
-                                    covarianceFile,
-                                    self.edpLengthsList[i],
-                                    numCols,
-                                )
+                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                             raise DataProcessingError(
-                                'ERROR: The number of columns of data in the covariance matrix file {}'
-                                ' must be either 1 or {}. Found {} columns'.format(
-                                    covarianceFile,
-                                    self.edpLengthsList[i],
-                                    numCols,
-                                )
+                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                     else:
                         logFile.write(
-                            '\nERROR: The number of rows of data in the covariance matrix file {}'
-                            ' must be either 1 or {}. Found {} rows'.format(
-                                covarianceFile, self.edpLengthsList[i], numCols
-                            )
+                            f'\nERROR: The number of rows of data in the covariance matrix file {covarianceFile}'
+                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'
                         )
                         raise DataProcessingError(
-                            'ERROR: The number of rows of data in the covariance matrix file {}'
-                            ' must be either 1 or {}. Found {} rows'.format(
-                                covarianceFile, self.edpLengthsList[i], numCols
-                            )
+                            f'ERROR: The number of rows of data in the covariance matrix file {covarianceFile}'
+                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'
                         )
-                    logFile.write('\n\t\tCovariance matrix: {}'.format(covMatrix))
+                    logFile.write(f'\n\t\tCovariance matrix: {covMatrix}')
                 else:
                     logFile.write(
                         '\n\t\tDid not find a user supplied file. Using the default variance value.'
@@ -264,18 +230,16 @@ class CovarianceMatrixPreparer:
                     scalarVariance = np.array(self.defaultErrorVariances[i])
                     covarianceMatrixList.append(scalarVariance)
                     covarianceTypeList.append('scalar')
-                    logFile.write(
-                        '\n\t\tCovariance matrix: {}'.format(scalarVariance)
-                    )
+                    logFile.write(f'\n\t\tCovariance matrix: {scalarVariance}')
         self.covarianceMatrixList = covarianceMatrixList
         self.covarianceTypeList = covarianceTypeList
         logFile.write(
-            f'\n\nThe covariance matrix for prediction errors being used is:'
+            '\n\nThe covariance matrix for prediction errors being used is:'
         )
         tmp = block_diag(*covarianceMatrixList)
         for row in tmp:
             rowString = ' '.join([f'{col:14.8g}' for col in row])
-            logFile.write('\n\t{}'.format(rowString))
+            logFile.write(f'\n\t{rowString}')
         return self.covarianceMatrixList
 
 
@@ -309,11 +273,11 @@ class CalDataPreparer:
         headings = 'Exp_num interface '
         for i, edpName in enumerate(self.edpNamesList):
             if self.edpLengthsList[i] == 1:
-                headings += '{} '.format(edpName)
+                headings += f'{edpName} '
             else:
                 for comp in range(self.edpLengthsList[i]):
-                    headings += '{}_{} '.format(edpName, comp + 1)
-        self.logFile.write('\n\t\tThe headings are: \n\t\t{}'.format(headings))
+                    headings += f'{edpName}_{comp + 1} '
+        self.logFile.write(f'\n\t\tThe headings are: \n\t\t{headings}')
         return headings
 
     def createTempCalDataFile(self, calDataFile):
@@ -326,7 +290,7 @@ class CalDataPreparer:
         interface = 1
         self.numExperiments = 0
         linenum = 0
-        with open(calDataFile, 'r') as f:
+        with open(calDataFile) as f:
             for line in f:
                 linenum += 1
                 if len(line.strip()) == 0:
@@ -337,33 +301,21 @@ class CalDataPreparer:
                     words = line.split()
                     if len(words) == self.lineLength:
                         self.numExperiments += 1
-                        tempLine = '{} {} '.format(self.numExperiments, interface)
+                        tempLine = f'{self.numExperiments} {interface} '
                         for w in words:
-                            tempLine += '{} '.format(w)
+                            tempLine += f'{w} '
                         self.logFile.write(
-                            '\n\tLine {}, length {}: \n\t\t{}'.format(
-                                linenum, len(words), tempLine
-                            )
+                            f'\n\tLine {linenum}, length {len(words)}: \n\t\t{tempLine}'
                         )
-                        f1.write('\n{}'.format(tempLine))
+                        f1.write(f'\n{tempLine}')
                     else:
                         self.logFile.write(
-                            "\nERROR: The number of entries ({}) in line num {} of the file '{}' "
-                            'does not match the expected length {}'.format(
-                                len(words),
-                                linenum,
-                                calDataFile,
-                                self.lineLength,
-                            )
+                            f"\nERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "
+                            f'does not match the expected length {self.lineLength}'
                         )
                         raise DataProcessingError(
-                            "ERROR: The number of entries ({}) in line num {} of the file '{}' "
-                            'does not match the expected length {}'.format(
-                                len(words),
-                                linenum,
-                                calDataFile,
-                                self.lineLength,
-                            )
+                            f"ERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "
+                            f'does not match the expected length {self.lineLength}'
                         )
         f1.close()
 
@@ -379,7 +331,7 @@ class CalDataPreparer:
     def getCalibrationData(self):
         calDataFile = os.path.join(self.workdirMain, self.calDataFileName)
         self.logFile.write(
-            '\nCalibration data file being processed: \n\t{}\n'.format(calDataFile)
+            f'\nCalibration data file being processed: \n\t{calDataFile}\n'
         )
         self.createTempCalDataFile(calDataFile)
         self.readCleanedCalData()
@@ -682,9 +634,7 @@ class LogLikelihoodHandler:
         try:
             module = import_module(log_likelihood_module_name)
         except:
-            msg = "\n\t\t\t\tERROR: The log-likelihood script '{}' cannot be imported.".format(
-                os.path.join(self.workdir_main, self.log_likelihood_file_name)
-            )
+            msg = f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(self.workdir_main, self.log_likelihood_file_name)}' cannot be imported."
             raise ImportError(msg)
         return module  # type: ignore
 
@@ -707,7 +657,7 @@ class LogLikelihoodHandler:
         return transformed_prediction - self.data
 
     def _make_mean(self, response_num: int) -> NDArray:
-        return np.zeros((self.list_of_data_segment_lengths[response_num]))
+        return np.zeros(self.list_of_data_segment_lengths[response_num])
 
     def _make_covariance(self, response_num, cov_multiplier) -> NDArray:
         return cov_multiplier * np.atleast_2d(

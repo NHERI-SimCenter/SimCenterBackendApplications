@@ -3,7 +3,6 @@
 import json
 import os
 import sys
-import subprocess
 from time import gmtime, strftime
 
 divider = '#' * 80
@@ -31,7 +30,7 @@ def main(run_type, inputFile, applicationsRegistry):
         # first we parse the applications registry to load all possible applications
         #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
-        with open(applicationsRegistry, 'r') as data_file:
+        with open(applicationsRegistry) as data_file:
             registryData = json.load(data_file)
             # convert all relative paths to full paths
             relative2fullpath(registryData)
@@ -51,7 +50,7 @@ def main(run_type, inputFile, applicationsRegistry):
                 for app in applicationsData:
                     appName = app['Name']
                     appExe = app['ExecutablePath']
-                    if not app_type in Applications:
+                    if app_type not in Applications:
                         Applications[app_type] = dict()
                     Applications[app_type][appName] = appExe
 
@@ -59,7 +58,7 @@ def main(run_type, inputFile, applicationsRegistry):
         # open input file, and parse json into data
         #
 
-        with open(inputFile, 'r') as data_file:
+        with open(inputFile) as data_file:
             data = json.load(data_file)
             # convert all relative paths to full paths
             relative2fullpath(data)
@@ -330,7 +329,7 @@ def main(run_type, inputFile, applicationsRegistry):
         #  - perform Simulation
         #  - getDL
 
-        with open(buildingsFile, 'r') as data_file:
+        with open(buildingsFile) as data_file:
             data = json.load(data_file)
 
         for building in data:

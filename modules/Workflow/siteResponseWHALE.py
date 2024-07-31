@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
@@ -41,18 +40,20 @@
 # Michael Gardner
 # Chaofeng Wang
 
-import sys, os, json
 import argparse
-from pathlib import Path
-from createGM4BIM import createFilesForEventGrid
 import importlib
+import json
+import os
+import sys
+from pathlib import Path
+
+from createGM4BIM import createFilesForEventGrid
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
-from whale.main import log_msg, log_div
-
 from sWHALE import runSWhale
+from whale.main import log_div, log_msg
 
 
 def main(
@@ -77,7 +78,6 @@ def main(
     mpi_spec = importlib.util.find_spec('mpi4py')
     found = mpi_spec is not None
     if found:
-        import mpi4py
         from mpi4py import MPI
 
         comm = MPI.COMM_WORLD
@@ -102,7 +102,7 @@ def main(
     )
 
     # save the reference dir in the input file
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:
         inputs = json.load(f)
 
     print('WORKING_DIR', working_dir)
@@ -288,7 +288,7 @@ def main(
     count = 0
     for asset_type, assetIt in asset_files.items():
         # TODO: not elegant code, fix later
-        with open(assetIt, 'r', encoding='utf-8') as f:
+        with open(assetIt, encoding='utf-8') as f:
             asst_data = json.load(f)
 
         # The preprocess app sequence (previously get_RV)

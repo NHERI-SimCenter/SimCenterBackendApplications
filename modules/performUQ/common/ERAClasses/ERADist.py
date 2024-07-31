@@ -1,8 +1,9 @@
 # import of modules
+import warnings
+
 import numpy as np
 import scipy as sp
-from scipy import optimize, stats, special
-import warnings
+from scipy import optimize, special, stats
 
 """
 ---------------------------------------------------------------------------
@@ -49,9 +50,8 @@ moment or by data, given as a vector.
 """
 
 
-class ERADist(object):
-    """
-    Generation of marginal distribution objects.
+class ERADist:
+    """Generation of marginal distribution objects.
     Construction of the distribution object with
 
             Obj = ERADist(name,opt,val)
@@ -140,11 +140,9 @@ class ERADist(object):
 
     # %%
     def __init__(self, name, opt, val=[0, 1], ID=False):
-        """
-        Constructor method, for more details have a look at the
+        """Constructor method, for more details have a look at the
         class description.
         """
-
         self.Name = name.lower()
         self.ID = ID
 
@@ -447,7 +445,7 @@ class ERADist(object):
                     n = int(n)
                 else:
                     raise RuntimeError('Please select other moments.')
-                if 0 <= p and p <= 1 and 0 < n:
+                if p >= 0 and p <= 1 and n > 0:
                     self.Par = {'n': n, 'p': p}
                     self.Dist = stats.binom(n=self.Par['n'], p=self.Par['p'])
                 else:
@@ -465,7 +463,7 @@ class ERADist(object):
                     lam = 1 / val[0]
                 except ZeroDivisionError:
                     raise RuntimeError('The first moment cannot be zero!')
-                if 0 <= lam:
+                if lam >= 0:
                     self.Par = {'lambda': lam}
                     self.Dist = stats.expon(scale=1 / self.Par['lambda'])
                 else:
@@ -519,7 +517,7 @@ class ERADist(object):
             elif name.lower() == 'geometric':
                 # Solve Equation for the parameter based on the first moment
                 p = 1 / val[0]
-                if 0 <= p and p <= 1:
+                if p >= 0 and p <= 1:
                     self.Par = {'p': p}
                     self.Dist = stats.geom(p=self.Par['p'])
                 else:
@@ -619,7 +617,7 @@ class ERADist(object):
                 # Evaluate if distribution can be defined on the parameters
                 if k % 1 <= 10 ** (-4):
                     k = round(k, 0)
-                    if 0 <= p and p <= 1:
+                    if p >= 0 and p <= 1:
                         self.Par = {'k': k, 'p': p}
                         self.Dist = stats.nbinom(n=self.Par['k'], p=self.Par['p'])
                     else:
@@ -802,7 +800,7 @@ class ERADist(object):
                 else:
                     raise RuntimeError('n must be a positive integer.')
                 X = np.array(val[0])
-                if all((X) % 1 <= 10 ** (-4)) and all(X >= 0) and all(X <= val[1]):
+                if all((X) % 1 <= 10 ** (-4)) and all(X >= 0) and all(val[1] >= X):
                     X = np.around(X, 0)
                 else:
                     raise RuntimeError(
@@ -977,14 +975,13 @@ class ERADist(object):
                         raise RuntimeError(
                             'The given samples must be non-negative integers.'
                         )
+                elif all(val >= 0) and all(val % 1 == 0):
+                    self.Par = {'lambda': np.mean(val)}
+                    self.Dist = stats.poisson(mu=self.Par['lambda'])
                 else:
-                    if all(val >= 0) and all(val % 1 == 0):
-                        self.Par = {'lambda': np.mean(val)}
-                        self.Dist = stats.poisson(mu=self.Par['lambda'])
-                    else:
-                        raise RuntimeError(
-                            'The given samples must be non-negative integers.'
-                        )
+                    raise RuntimeError(
+                        'The given samples must be non-negative integers.'
+                    )
 
             elif name.lower() == 'rayleigh':
                 pars = stats.rayleigh.fit(val, floc=0)
@@ -997,7 +994,7 @@ class ERADist(object):
                     raise RuntimeError(
                         'The upper bound a must be larger than the lower bound b.'
                     )
-                if not (all(X >= val[1]) and all(X <= val[2])):
+                if not (all(val[1] <= X) and all(val[2] >= X)):
                     raise RuntimeError(
                         'The given samples must be in the range [a,b].'
                     )
@@ -1056,10 +1053,7 @@ class ERADist(object):
 
     # %%
     def mean(self):
-        """
-        Returns the mean of the distribution.
-        """
-
+        """Returns the mean of the distribution."""
         if self.Name == 'gevmin':
             return -self.Dist.mean()
 
@@ -1071,22 +1065,13 @@ class ERADist(object):
 
     # %%
     def std(self):
-        """
-        Returns the standard deviation of the distribution.
-        """
-
+        """Returns the standard deviation of the distribution."""
         return self.Dist.std()
 
     # %%
     def pdf(self, x):
-        """
-        Returns the PDF value.
-        """
-
-        if self.Name == 'binomial':
-            return self.Dist.pmf(x)
-
-        elif self.Name == 'geometric':
+        """Returns the PDF value."""
+        if self.Name == 'binomial' or self.Name == 'geometric':
             return self.Dist.pmf(x)
 
         elif self.Name == 'gevmin':
@@ -1103,10 +1088,7 @@ class ERADist(object):
 
     # %%
     def cdf(self, x):
-        """
-        Returns the CDF value.
-        """
-
+        """Returns the CDF value."""
         if self.Name == 'gevmin':
             return 1 - self.Dist.cdf(-x)  # <-- this is not a proper cdf !
 
@@ -1118,11 +1100,9 @@ class ERADist(object):
 
     # %%
     def random(self, size=None):
-        """
-        Generates random samples according to the distribution of the
+        """Generates random samples according to the distribution of the
         object.
         """
-
         if self.Name == 'gevmin':
             return self.Dist.rvs(size=size) * (-1)
 
@@ -1136,10 +1116,7 @@ class ERADist(object):
 
     # %%
     def icdf(self, y):
-        """
-        Returns the value of the inverse CDF.
-        """
-
+        """Returns the value of the inverse CDF."""
         if self.Name == 'gevmin':
             return -self.Dist.ppf(1 - y)
 
@@ -1157,8 +1134,8 @@ def gevfit_alt(y):
     """Author: Iason Papaioannou
     The function gevfit_alt evaluates the parameters of the generalized
     extreme value distribution with the method of Probability Weighted
-    Moments (PWM) and Maximum Likelihood Estimation (MLE)."""
-
+    Moments (PWM) and Maximum Likelihood Estimation (MLE).
+    """
     # compute PWM estimates
     x01 = gevpwm(y)
 
@@ -1204,8 +1181,8 @@ def gevpwm(y):
     """Author: Iason Papaioannou
     The function gevpwm evaluates the parameters of the generalized
     extreme value distribution applying the method of Probability Weighted
-    Moments."""
-
+    Moments.
+    """
     # compute PWM estimates
     y2 = np.sort(y)
     beta0 = np.mean(y)

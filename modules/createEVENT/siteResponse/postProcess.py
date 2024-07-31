@@ -1,8 +1,8 @@
 # This script create evt.j for workflow
-import numpy as np
 import json
-import os
 import shutil
+
+import numpy as np
 
 
 def postProcess(evtName):

@@ -1,17 +1,17 @@
-"""
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
+"""authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
 """
 
+import csv
+import multiprocessing as mp
+import os
+from multiprocessing import Pool
+
 import numpy as np
 import tmcmcFunctions
-import multiprocessing as mp
-from multiprocessing import Pool
-from runFEM import runFEM
 from numpy.random import SeedSequence, default_rng
-import os
-import csv
+from runFEM import runFEM
 
 
 def write_stage_start_info_to_logfile(
@@ -24,7 +24,7 @@ def write_stage_start_info_to_logfile(
     number_of_samples,
 ):
     logfile.write('\n\n\t\t==========================')
-    logfile.write('\n\t\tStage number: {}'.format(stage_number))
+    logfile.write(f'\n\t\tStage number: {stage_number}')
     if stage_number == 0:
         logfile.write('\n\t\tSampling from prior')
         logfile.write('\n\t\tbeta = 0')
@@ -34,9 +34,7 @@ def write_stage_start_info_to_logfile(
     logfile.write('\n\t\tscalem = %.2g' % scale_factor_for_proposal_covariance)
     logfile.write(f'\n\t\tlog-evidence = {log_evidence:<9.8g}')
     logfile.write(
-        '\n\n\t\tNumber of model evaluations in this stage: {}'.format(
-            number_of_samples
-        )
+        f'\n\n\t\tNumber of model evaluations in this stage: {number_of_samples}'
     )
     logfile.flush()
     os.fsync(logfile.fileno())
@@ -46,36 +44,30 @@ def write_eval_data_to_logfile(
     logfile, parallelize_MCMC, run_type, proc_count=1, MPI_size=1, stage_num=0
 ):
     if stage_num == 0:
-        logfile.write('\n\n\t\tRun type: {}'.format(run_type))
+        logfile.write(f'\n\n\t\tRun type: {run_type}')
     if parallelize_MCMC:
         if run_type == 'runningLocal':
             if stage_num == 0:
                 logfile.write(
-                    '\n\n\t\tCreated multiprocessing pool for runType: {}'.format(
-                        run_type
-                    )
+                    f'\n\n\t\tCreated multiprocessing pool for runType: {run_type}'
                 )
             else:
                 logfile.write('\n\n\t\tLocal run - MCMC steps')
-            logfile.write(
-                '\n\t\t\tNumber of processors being used: {}'.format(proc_count)
-            )
+            logfile.write(f'\n\t\t\tNumber of processors being used: {proc_count}')
         else:
             if stage_num == 0:
                 logfile.write(
-                    '\n\n\t\tCreated mpi4py executor pool for runType: {}'.format(
-                        run_type
-                    )
+                    f'\n\n\t\tCreated mpi4py executor pool for runType: {run_type}'
                 )
             else:
                 logfile.write('\n\n\t\tRemote run - MCMC steps')
-            logfile.write('\n\t\t\tmax_workers: {}'.format(MPI_size))
+            logfile.write(f'\n\t\t\tmax_workers: {MPI_size}')
     else:
         if stage_num == 0:
             logfile.write('\n\n\t\tNot parallelized')
         else:
             logfile.write('\n\n\t\tLocal run - MCMC steps, not parallelized')
-        logfile.write('\n\t\t\tNumber of processors being used: {}'.format(1))
+        logfile.write(f'\n\t\t\tNumber of processors being used: {1}')
 
 
 def create_headings(
@@ -91,14 +83,14 @@ def create_headings(
     if model_number == 0:
         logfile.write('\n\t\t\tCreating headings')
         for v in model_parameters['names']:
-            headings += '{}\t'.format(v)
+            headings += f'{v}\t'
         if writeOutputs:  # create headings for outputs
             for i, edp in enumerate(edp_names_list):
                 if edp_lengths_list[i] == 1:
-                    headings += '{}\t'.format(edp)
+                    headings += f'{edp}\t'
                 else:
                     for comp in range(edp_lengths_list[i]):
-                        headings += '{}_{}\t'.format(edp, comp + 1)
+                        headings += f'{edp}_{comp + 1}\t'
         headings += '\n'
 
     return headings
@@ -135,7 +127,7 @@ def write_data_to_tab_files(
         write_outputs,
     )
 
-    logfile.write('\n\t\t\tWriting to file {}'.format(tab_file_full_path))
+    logfile.write(f'\n\t\t\tWriting to file {tab_file_full_path}')
     with open(tab_file_full_path, 'a+') as f:
         if model_number == 0:
             f.write(headings)
@@ -166,7 +158,7 @@ def write_data_to_csvfile(
     data_to_write,
 ):
     logfile.write(
-        '\n\n\t\tWriting samples from stage {} to csv file'.format(stage_number - 1)
+        f'\n\n\t\tWriting samples from stage {stage_number - 1} to csv file'
     )
     if total_number_of_models_in_ensemble > 1:
         string_to_append = (
@@ -181,7 +173,7 @@ def write_data_to_csvfile(
     with open(resultsFilePath, 'w', newline='') as csvfile:
         csvWriter = csv.writer(csvfile)
         csvWriter.writerows(data_to_write)
-    logfile.write('\n\t\t\tWrote to file {}'.format(resultsFilePath))
+    logfile.write(f'\n\t\t\tWrote to file {resultsFilePath}')
     # Finished writing data
 
 
@@ -211,7 +203,6 @@ def run_TMCMC(
     total_number_of_models_in_ensemble=1,
 ):
     """Runs TMCMC Algorithm"""
-
     # Initialize (beta, effective sample size)
     beta = 0
     effective_sample_size = number_of_samples
@@ -304,9 +295,7 @@ def run_TMCMC(
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write(
-        '\n\n\t\tTotal number of model evaluations so far: {}'.format(
-            total_number_of_model_evaluations
-        )
+        f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
     )
 
     # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results
@@ -488,9 +477,7 @@ def run_TMCMC(
             number_of_model_evaluations_in_this_stage
         )
         logfile.write(
-            '\n\n\t\tTotal number of model evaluations so far: {}'.format(
-                total_number_of_model_evaluations
-            )
+            f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
         )
 
         # total observed acceptance rate
@@ -561,13 +548,11 @@ def run_TMCMC(
     if parallelize_MCMC == 'yes':
         if run_type == 'runningLocal':
             pool.close()
-            logfile.write(
-                '\n\tClosed multiprocessing pool for runType: {}'.format(run_type)
-            )
+            logfile.write(f'\n\tClosed multiprocessing pool for runType: {run_type}')
         else:
             executor.shutdown()
             logfile.write(
-                '\n\tShutdown mpi4py executor pool for runType: {}'.format(run_type)
+                f'\n\tShutdown mpi4py executor pool for runType: {run_type}'
             )
 
     return mytrace, total_log_evidence

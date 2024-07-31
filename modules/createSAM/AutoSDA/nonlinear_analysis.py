@@ -4,21 +4,21 @@
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
 
-import numpy as np
 import os
+import shutil
 import subprocess
 import sys
-import shutil
 from pathlib import Path
+
+import numpy as np
 
 # #########################################################################
 #              Generate Nonlinear OpenSees model (write .tcl files)       #
 # #########################################################################
 
 
-class NonlinearAnalysis(object):
-    """
-    This class generates the .tcl files required for nonlinear analysis. It includes the following methods:
+class NonlinearAnalysis:
+    """This class generates the .tcl files required for nonlinear analysis. It includes the following methods:
     (1) OpenSees nodes
     (2) boundary condition
     (3) floor constraint
@@ -40,8 +40,7 @@ class NonlinearAnalysis(object):
     def __init__(
         self, building, column_set, beam_set, connection_set, analysis_type
     ):
-        """
-        This function is used to call all methods to write .tcl files required for nonlinear analysis OpenSees model
+        """This function is used to call all methods to write .tcl files required for nonlinear analysis OpenSees model
         :param building: a class defined in "building_information.py" file
         :param column_set: a two-dimensional list[x][y] and each element is a column object defined in "column_component
                            x: from 0 to (story number-1)
@@ -112,8 +111,7 @@ class NonlinearAnalysis(object):
             self.write_dynamic_analysis_parameters(building)
 
     def write_nodes(self, building, column_set, beam_set):
-        """
-        Create a .tcl file to write node tags and coordinates for nonlinear analysis model
+        """Create a .tcl file to write node tags and coordinates for nonlinear analysis model
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py"
         :param beam_set: a list[x][z] and each element is a class defined in "beam_component.py"
@@ -270,8 +268,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Extra nodes for leaning column springs defined"\n')
 
     def write_fixities(self, building):
-        """
-        Create a .tcl file to write boundary for the model
+        """Create a .tcl file to write boundary for the model
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
         """
@@ -290,8 +287,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "All column base fixities have been defined"')
 
     def write_floor_constraint(self, building):
-        """
-        Create a .tcl file to write floor constraint, i.e., equal DOF
+        """Create a .tcl file to write floor constraint, i.e., equal DOF
         :param building: a class defined in "building_information.py"
         :return: a .tcl file
         """
@@ -326,8 +322,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Floor constraint defined"')
 
     def write_beam_hinge_material(self, building, beam_set):
-        """
-        Create a .tcl file to define all beam plastic hinge materials using Modified IMK material model
+        """Create a .tcl file to define all beam plastic hinge materials using Modified IMK material model
         :param building: a class defined in "building_information.py"
         :param beam_set: a list[x][z] and each element is a class defined in "beam_component.py"
         :return: a .tcl file
@@ -401,8 +396,7 @@ class NonlinearAnalysis(object):
             tclfile.write('\n\nputs "Beam hinge materials defined"')
 
     def write_column_hinge_material(self, building, column_set):
-        """
-        Create a .tcl file to define all column plastic hinge materials using modified IMK material model
+        """Create a .tcl file to define all column plastic hinge materials using modified IMK material model
         :param building: a class defined in "building_information.py"
         :param column_set: a list[x][y] and each element is a class defined in "column_component.py" file
         :return: a .tcl file
@@ -490,8 +484,7 @@ class NonlinearAnalysis(object):
             tclfile.write('\n\nputs "Column hinge materials defined"')
 
     def write_beam(self, building):
-        """
-        Create a .tcl file to define the beam element
+        """Create a .tcl file to define the beam element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -558,8 +551,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Beams defined"')
 
     def write_column(self, building):
-        """
-        Create a .tcl file to define column element
+        """Create a .tcl file to define column element
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -669,8 +661,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Columns defined"')
 
     def write_beam_hinge(self, building):
-        """
-        Create a .tcl file to define beam hinge element (rotational spring)
+        """Create a .tcl file to define beam hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -718,8 +709,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Beam hinges defined"')
 
     def write_column_hinge(self, building):
-        """
-        Create a .tcl file to define column hinge element (rotational spring)
+        """Create a .tcl file to define column hinge element (rotational spring)
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -824,8 +814,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Column hinge defined"')
 
     def write_mass(self, building):
-        """
-        Create a .tcl file which defines the mass of each floor at each node
+        """Create a .tcl file which defines the mass of each floor at each node
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -879,8 +868,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Nodal mass defined"')
 
     def write_panel_zone_elements(self, building):
-        """
-        Create a .tcl file that defines the elements in panel zone
+        """Create a .tcl file that defines the elements in panel zone
         :param building: a class defined in "building_information.py" file
         :return: a .tcl file
         """
@@ -1377,8 +1365,7 @@ class NonlinearAnalysis(object):
             tclfile.write('puts "Dynamic analysis parameters defined"')
 
     def copy_baseline_eigen_files(self, building, analysis_type):
-        """
-        Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
+        """Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
         Therefore, just copy those .tcl files from the baseline folder
         :param building: a class defined in "building_information.py"
         :param analysis_type: a string specifies the analysis type that the current nonlinear model is for
@@ -1417,7 +1404,7 @@ class NonlinearAnalysis(object):
                 # This is to change the number of desired mode
                 new_mode = 'set nEigenL 3'
                 # Releast the equal DOF constraints for buildings with less than 3 stories
-                with open('Model.tcl', 'r') as file:
+                with open('Model.tcl') as file:
                     content = file.read()
                 new_content = content.replace(
                     'source DefineFloorConstraint2DModel.tcl',
@@ -1430,7 +1417,7 @@ class NonlinearAnalysis(object):
             new_string = '1110'
             for floor in range(1, building.geometry['number of story'] + 1):
                 new_string += ' %i%i%i%i' % (1, floor + 1, 1, 1)
-            with open('EigenValueAnalysis.tcl', 'r') as file:
+            with open('EigenValueAnalysis.tcl') as file:
                 content = file.read()
             new_content = content.replace(old_mode, new_mode)
             new_content = new_content.replace(old_string, new_string)
@@ -1456,7 +1443,7 @@ class NonlinearAnalysis(object):
                 '0.01',
                 '%.2f' % (0.1 * building.geometry['floor height'][-1] * 12),
             ]  # DisplamentMaximum should be in inch.
-            with open('Model.tcl', 'r') as file:
+            with open('Model.tcl') as file:
                 content = file.read()
             for indx in range(len(old_string)):
                 content = content.replace(old_string[indx], new_string[indx])
@@ -1481,7 +1468,7 @@ class NonlinearAnalysis(object):
             os.chdir(
                 building.directory['building nonlinear model'] + '/' + analysis_type
             )
-            with open('Model.tcl', 'r') as file:
+            with open('Model.tcl') as file:
                 content = file.read()
             content = content.replace(
                 old_periods[0], str(periods[0])
@@ -1493,7 +1480,7 @@ class NonlinearAnalysis(object):
             with open('Model.tcl', 'w') as file:
                 file.write(content)
             # Update dynamic parameters in RunIDA2DModel.tcl
-            with open('RunIDA2DModel.tcl', 'r') as file:
+            with open('RunIDA2DModel.tcl') as file:
                 content = file.read()
             old_string = [
                 '**NumberOfGroundMotions**',

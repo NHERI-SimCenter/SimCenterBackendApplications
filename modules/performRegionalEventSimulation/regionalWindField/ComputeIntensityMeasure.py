@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
@@ -38,13 +37,13 @@
 # Kuanshi Zhong
 #
 
+import json
+import multiprocessing as mp
 import os
+import shutil
 import subprocess
 import sys
-import json
-import copy
-import shutil
-import multiprocessing as mp
+
 import numpy as np
 import pandas as pd
 from WindFieldSimulation import *
@@ -77,19 +76,16 @@ def simulate_storm(scenarios, event_info, model_type):
         if num_per_site == 1:
             path_perturb = np.zeros(3)
             feat_perturb = np.zeros(3)
+        elif len(event_info.get('Perturbation', [])) != 6:
+            print('ComputeIntensityMeasure: Perturbation should have a size of 6.')
+            path_perturb = np.array([0.5, 0.5, 90.0])
+            feat_perturb = np.array([10.0, 10.0, 10.0])
+            print(
+                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
+            )
         else:
-            if len(event_info.get('Perturbation', [])) != 6:
-                print(
-                    'ComputeIntensityMeasure: Perturbation should have a size of 6.'
-                )
-                path_perturb = np.array([0.5, 0.5, 90.0])
-                feat_perturb = np.array([10.0, 10.0, 10.0])
-                print(
-                    'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
-                )
-            else:
-                path_perturb = np.array(event_info['Perturbation'][0:3])
-                feat_perturb = np.array(event_info['Perturbation'][3:6])
+            path_perturb = np.array(event_info['Perturbation'][0:3])
+            feat_perturb = np.array(event_info['Perturbation'][3:6])
         for i in range(len(scenarios)):
             if i == 1:
                 print(
@@ -240,19 +236,16 @@ def simulate_storm_cpp(
         if num_per_site == 1:
             path_perturb = np.zeros(3)
             feat_perturb = np.zeros(3)
+        elif len(event_info.get('Perturbation', [])) != 6:
+            print('ComputeIntensityMeasure: Perturbation should have a size of 6.')
+            path_perturb = np.array([0.5, 0.5, 90.0])
+            feat_perturb = np.array([10.0, 10.0, 10.0])
+            print(
+                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
+            )
         else:
-            if len(event_info.get('Perturbation', [])) != 6:
-                print(
-                    'ComputeIntensityMeasure: Perturbation should have a size of 6.'
-                )
-                path_perturb = np.array([0.5, 0.5, 90.0])
-                feat_perturb = np.array([10.0, 10.0, 10.0])
-                print(
-                    'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
-                )
-            else:
-                path_perturb = np.array(event_info['Perturbation'][0:3])
-                feat_perturb = np.array(event_info['Perturbation'][3:6])
+            path_perturb = np.array(event_info['Perturbation'][0:3])
+            feat_perturb = np.array(event_info['Perturbation'][3:6])
         for i in range(int(scenario_info['Number'])):
             if i == 1:
                 print(
@@ -437,9 +430,7 @@ def convert_wind_speed(event_info, simu_res):
 
 
 def interp_wind_by_height(pws_ip, height_simu, height_ref):
-    """
-    interp_wind_by_height: interpolating the wind simulation results by the reference height
-    """
+    """interp_wind_by_height: interpolating the wind simulation results by the reference height"""
     num_stat = pws_ip.shape[0]
     pws_op = np.zeros(num_stat)
     for i in range(num_stat):
@@ -456,9 +447,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):
 
 
 def gust_factor_ESDU(gd_c, gd_t):
-    """
-    gust_factor_ESDU: return a gust facto between gd_c and gd_t
-    """
+    """gust_factor_ESDU: return a gust facto between gd_c and gd_t"""
     # gust duration (sec)
     gd = [
         1.0,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
@@ -43,7 +42,10 @@
 # Input files: AIM.json, surrogate.json (user provided)
 # Output files: SAM.json
 
-import sys, argparse, json, os
+import argparse
+import json
+import os
+import sys
 
 
 def create_SAM(AIM_file, SAM_file):
@@ -53,7 +55,7 @@ def create_SAM(AIM_file, SAM_file):
 
     # load AIM
 
-    with open(AIM_file, 'r') as f:
+    with open(AIM_file) as f:
         root_AIM = json.load(f)
 
     print('General Information tab is ignored')
@@ -67,7 +69,7 @@ def create_SAM(AIM_file, SAM_file):
     )
     print(surrogate_path)
 
-    with open(surrogate_path, 'r') as f:
+    with open(surrogate_path) as f:
         surrogate_model = json.load(f)
 
     # find SAM in surrogate json

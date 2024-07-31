@@ -1,5 +1,4 @@
-"""
-The wntrfr.epanet.io module contains methods for reading/writing EPANET input and output files.
+"""The wntrfr.epanet.io module contains methods for reading/writing EPANET input and output files.
 
 .. rubric:: Contents
 
@@ -13,48 +12,41 @@ The wntrfr.epanet.io module contains methods for reading/writing EPANET input an
 
 """
 
-from __future__ import absolute_import
-
-import datetime
-import re
-import io
-import os, sys
 import logging
-import six
-import warnings
+import re
+
 import numpy as np
 import pandas as pd
-import difflib
-from collections import OrderedDict
 
 # from .time_utils import run_lineprofile
-
-import wntr
 import wntrfr.network
 import wntrfr.sim
 from wntrfr.network.base import Link
-from wntrfr.network.model import WaterNetworkModel
-from wntrfr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
-from wntrfr.network.options import WaterNetworkOptions
-from wntrfr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntrfr.network.controls import (
-    TimeOfDayCondition,
-    SimTimeCondition,
-    ValueCondition,
     Comparison,
-)
-from wntrfr.network.controls import (
-    OrCondition,
-    AndCondition,
     Control,
-    ControlAction,
+    SimTimeCondition,
+    TimeOfDayCondition,
+    ValueCondition,
     _ControlType,
-    Rule,
 )
+from wntrfr.network.elements import Junction, Pipe, Pump, Tank, Valve
+from wntrfr.network.model import LinkStatus
 
-from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
-from .util import to_si, from_si
-from .util import StatisticsType, QualType, PressureUnits
+from .util import (
+    EN,
+    FlowUnits,
+    HydParam,
+    MassUnits,
+    MixType,
+    PressureUnits,
+    QualParam,
+    QualType,
+    ResultType,
+    StatisticsType,
+    from_si,
+    to_si,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,16 +122,13 @@ def _split_line(line):
 
 
 def _is_number(s):
-    """
-    Checks if input is a number
-
+    """Checks if input is a number
 
     Parameters
     ----------
     s : anything
 
     """
-
     try:
         float(s)
         return True
@@ -148,9 +137,7 @@ def _is_number(s):
 
 
 def _str_time_to_sec(s):
-    """
-    Converts EPANET time format to seconds.
-
+    """Converts EPANET time format to seconds.
 
     Parameters
     ----------
@@ -161,6 +148,7 @@ def _str_time_to_sec(s):
     Returns
     -------
      Integer value of time in seconds.
+
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
@@ -188,9 +176,7 @@ def _str_time_to_sec(s):
 
 
 def _clock_time_to_sec(s, am_pm):
-    """
-    Converts EPANET clocktime format to seconds.
-
+    """Converts EPANET clocktime format to seconds.
 
     Parameters
     ----------
@@ -274,8 +260,7 @@ def _sec_to_string(sec):
 
 
 class InpFile(wntrfr.epanet.InpFile):
-    """
-        EPANET INP file reader and writer class.
+    """EPANET INP file reader and writer class.
 
     This class provides read and write functionality for EPANET INP files.
     The EPANET Users Manual provides full documentation for the INP file format.
@@ -557,16 +542,12 @@ class InpFile(wntrfr.epanet.InpFile):
             if isinstance(link, Pump):
                 setting = link.initial_setting
                 if type(setting) is float and setting != 1.0:
-                    f.write(
-                        '{:10s} {:10.10g}\n'.format(link_name, setting).encode(
-                            'ascii'
-                        )
-                    )
+                    f.write(f'{link_name:10s} {setting:10.10g}\n'.encode('ascii'))
             if link.initial_status in (LinkStatus.Closed,):
                 f.write(
-                    '{:10s} {:10s}\n'.format(
-                        link_name, LinkStatus(link.initial_status).name
-                    ).encode('ascii')
+                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(
+                        'ascii'
+                    )
                 )
             if isinstance(link, wntrfr.network.Valve) and link.initial_status in (
                 LinkStatus.Open,
@@ -574,9 +555,9 @@ class InpFile(wntrfr.epanet.InpFile):
             ):
                 #           if link.initial_status in (LinkStatus.Closed,):
                 f.write(
-                    '{:10s} {:10s}\n'.format(
-                        link_name, LinkStatus(link.initial_status).name
-                    ).encode('ascii')
+                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(
+                        'ascii'
+                    )
                 )
 
     #                if link.initial_status is LinkStatus.Active:
@@ -967,7 +948,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 continue
             if tank._mix_model is not None:
                 if tank._mix_model in [MixType.Mixed, MixType.Mix1, 0]:
-                    f.write(' {:19s} MIXED\n'.format(tank_name).encode('ascii'))
+                    f.write(f' {tank_name:19s} MIXED\n'.encode('ascii'))
                 elif tank._mix_model in [
                     MixType.TwoComp,
                     MixType.Mix2,
@@ -976,26 +957,20 @@ class InpFile(wntrfr.epanet.InpFile):
                     1,
                 ]:
                     f.write(
-                        ' {:19s} 2COMP  {}\n'.format(
-                            tank_name, tank._mix_frac
-                        ).encode('ascii')
+                        f' {tank_name:19s} 2COMP  {tank._mix_frac}\n'.encode('ascii')
                     )
                 elif tank._mix_model in [MixType.FIFO, 2]:
-                    f.write(' {:19s} FIFO\n'.format(tank_name).encode('ascii'))
+                    f.write(f' {tank_name:19s} FIFO\n'.encode('ascii'))
                 elif tank._mix_model in [MixType.LIFO, 3]:
-                    f.write(' {:19s} LIFO\n'.format(tank_name).encode('ascii'))
+                    f.write(f' {tank_name:19s} LIFO\n'.encode('ascii'))
                 elif isinstance(tank._mix_model, str) and tank._mix_frac is not None:
                     f.write(
-                        ' {:19s} {} {}\n'.format(
-                            tank_name, tank._mix_model, tank._mix_frac
-                        ).encode('ascii')
-                    )
-                elif isinstance(tank._mix_model, str):
-                    f.write(
-                        ' {:19s} {}\n'.format(tank_name, tank._mix_model).encode(
+                        f' {tank_name:19s} {tank._mix_model} {tank._mix_frac}\n'.encode(
                             'ascii'
                         )
                     )
+                elif isinstance(tank._mix_model, str):
+                    f.write(f' {tank_name:19s} {tank._mix_model}\n'.encode('ascii'))
                 else:
                     logger.warning('Unknown mixing model: %s', tank._mix_model)
         f.write('\n'.encode('ascii'))
@@ -1274,8 +1249,7 @@ class InpFile(wntrfr.epanet.InpFile):
 
 
 class BinFile(wntrfr.epanet.io.BinFile):
-    """
-    EPANET binary output file reader class.
+    """EPANET binary output file reader class.
 
     This class provides read functionality for EPANET binary output files.
 
@@ -1300,7 +1274,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
         values, instead.
 
     Returns
-    ----------
+    -------
     :class:`~wntrfr.sim.results.SimulationResults`
         A WNTR results object will be created and added to the instance after read.
 
@@ -1330,6 +1304,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
         start_time : int
             If the simulation is interval based, then start_time can identify the time passed after
             the last simulation. Start_time will be added to all th timings in the result.
+
         Returns
         -------
         object
@@ -1347,7 +1322,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
         if start_time == None:
             start_time = 0
         logger.debug('Read binary EPANET data from %s', filename)
-        dt_str = '|S{}'.format(self.idlen)
+        dt_str = f'|S{self.idlen}'
         with open(filename, 'rb') as fin:
             ftype = self.ftype
             idlen = self.idlen

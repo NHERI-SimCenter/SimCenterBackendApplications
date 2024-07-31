@@ -1,7 +1,6 @@
 # written: fmk, adamzs
 
 # import functions for Python 2.X support
-from __future__ import division, print_function
 import sys
 
 if sys.version.startswith('2'):
@@ -37,11 +36,11 @@ def workflow_log(msg):
 # function to return result of invoking an application
 def runApplication(application_plus_args):
     if application_plus_args[0] == 'python':
-        command = 'python "{}" '.format(application_plus_args[1]) + ' '.join(
+        command = f'python "{application_plus_args[1]}" ' + ' '.join(
             application_plus_args[2:]
         )
     else:
-        command = '"{}" '.format(application_plus_args[0]) + ' '.join(
+        command = f'"{application_plus_args[0]}" ' + ' '.join(
             application_plus_args[1:]
         )
 

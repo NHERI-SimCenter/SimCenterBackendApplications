@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'Subsitute_Layer_Window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
@@ -10,7 +8,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_subsitite_layer_dialoge(object):
+class Ui_subsitite_layer_dialoge:
     def setupUi(self, subsitite_layer_dialoge):
         subsitite_layer_dialoge.setObjectName('subsitite_layer_dialoge')
         subsitite_layer_dialoge.resize(403, 407)

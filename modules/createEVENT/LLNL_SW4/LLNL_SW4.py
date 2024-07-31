@@ -1,9 +1,13 @@
-import argparse, posixpath, json, sys
+import argparse
+import json
+import posixpath
+import sys
+
 import numpy as np
 
 
 def write_RV(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file) as f:
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -50,7 +54,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):
 def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
     fileName = fileName.split('x')[0]
 
-    with open(posixpath.join(data_dir, '{}.json'.format(fileName)), 'r') as f:
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:
         event_data = json.load(f)
 
     event_dic = {
@@ -86,10 +90,10 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
 
 
 def get_records(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file, 'r') as f:
+    with open(BIM_file) as f:
         bim_file = json.load(f)
 
-    with open(EVENT_file, 'r') as f:
+    with open(EVENT_file) as f:
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
