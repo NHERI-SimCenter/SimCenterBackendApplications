@@ -344,13 +344,14 @@ def hazard_job(hazard_info):
                 gf_im_list += settlement_info['Output']
         if "Landslide" in ground_failure_info.keys():
             import landslide
-            lsld_info = ground_failure_info['Landslide']
-            lsld_model = getattr(landslide, lsld_info['Model'])(\
-                lsld_info["Parameters"], stations)
-            ln_im_mr, mag_maf, im_list = lsld_model.run(
-                        ln_im_mr, mag_maf, im_list
-                    )
-            gf_im_list += lsld_info['Output']
+            if 'Landslide' in ground_failure_info['Landslide'].keys():
+                lsld_info = ground_failure_info['Landslide']['Landslide']
+                lsld_model = getattr(landslide, lsld_info['Model'])(\
+                    lsld_info["Parameters"], stations)
+                ln_im_mr, mag_maf, im_list = lsld_model.run(
+                            ln_im_mr, mag_maf, im_list
+                        )
+                gf_im_list += lsld_info['Output']
             
 
 

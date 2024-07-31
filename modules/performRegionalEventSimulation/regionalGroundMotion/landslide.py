@@ -322,34 +322,34 @@ class BrayMacedo2019(Landslide):
         lat_station = [site['lat'] for site in self.stations]
         lon_station = [site['lon'] for site in self.stations]
         # slope 
-        if parameters["Slope"] == "Defined (\"Slope\") in Site File (.csv)":
-            self.slope = np.array([site['Slope'] for site in self.stations])
+        if parameters["Slope"] == "Defined (\"slope\") in Site File (.csv)":
+            self.slope = np.array([site['slope'] for site in self.stations])
         else:
             self.slope = sampleRaster(parameters["Slope"], parameters["inputCRS"],\
                      lon_station, lat_station)
         # t_slope
-        if parameters["SlopeThickness"] == "Defined (\"SlopeThickness\") in Site File (.csv)":
-            self.t_slope = np.array([site['SlopeThickness'] for site in self.stations])
+        if parameters["SlopeThickness"] == "Defined (\"slopeThickness\") in Site File (.csv)":
+            self.t_slope = np.array([site['slopeThickness'] for site in self.stations])
         elif parameters["SlopeThickness"] == "Use constant value (m)":
             self.t_slope = np.array([parameters["SlopeThicknessValue"]]*len(self.stations))
         else:
             self.t_slope = sampleRaster(parameters["SlopeThickness"], parameters["inputCRS"],\
                      lon_station, lat_station)
         # gamma_soil
-        if parameters["GammaSoil"] == "Defined (\"GammaSoil\") in Site File (.csv)":
-            self.gamma_soil = np.array([site['GammaSoil'] for site in self.stations])
+        if parameters["GammaSoil"] == "Defined (\"gammaSoil\") in Site File (.csv)":
+            self.gamma_soil = np.array([site['gammaSoil'] for site in self.stations])
         elif parameters["GammaSoil"] == "Use constant value (kN/m^3)":
-            self.gamma_soil = np.array(parameters["GammaSoilValue"]*len(self.stations))
+            self.gamma_soil = np.array([parameters["GammaSoilValue"]]*len(self.stations))
         else:
             self.gamma_soil = sampleRaster(parameters["GammaSoil"], parameters["inputCRS"],\
                      lon_station, lat_station)
         # phi_soil
-        if parameters["PhiSoil"] == "Defined (\"PhiSoil\") in Site File (.csv)":
-            self.phi_soil = np.array([site['PhiSoil'] for site in self.stations])
+        if parameters["PhiSoil"] == "Defined (\"phiSoil\") in Site File (.csv)":
+            self.phi_soil = np.array([site['phiSoil'] for site in self.stations])
         elif parameters["PhiSoil"] == "Use constant value (deg)":
-            self.phi_soil = np.array(parameters["PhiSoilValue"]*len(self.stations))
-        elif parameters["PhiSoil"] == "Infer from Geologic Map":
-            if parameters["CohesionSoil"] == "Infer from Geologic Map":
+            self.phi_soil = np.array([parameters["PhiSoilValue"]]*len(self.stations))
+        elif parameters["PhiSoil"] == "Infer from Geologic Map (Bain et al. 2022)":
+            if parameters["CohesionSoil"] == "Infer from Geologic Map (Bain et al. 2022)":
                 self.phi_soil, self.coh_soil = infer_from_geologic_map(parameters["GeologicMap"],\
                                     parameters['inputCRS'], lon_station, lat_station)
             else:
@@ -360,11 +360,11 @@ class BrayMacedo2019(Landslide):
                      lon_station, lat_station)
         # coh_soil
         if self.coh_soil is None:
-            if parameters["CohesionSoil"] == "Defined (\"CohesionSoil\") in Site File (.csv)":
-                self.coh_soil = np.array([site['CohesionSoil'] for site in self.stations])
+            if parameters["CohesionSoil"] == "Defined (\"cohesionSoil\") in Site File (.csv)":
+                self.coh_soil = np.array([site['cohesionSoil'] for site in self.stations])
             elif parameters["CohesionSoil"] == "Use constant value (kPa)":
-                self.coh_soil = np.array(parameters["CohesionSoilValue"]*len(self.stations))
-            elif parameters["CohesionSoil"] == "Infer from Geologic Map":
+                self.coh_soil = np.array([parameters["CohesionSoilValue"]]*len(self.stations))
+            elif parameters["CohesionSoil"] == "Infer from Geologic Map (Bain et al. 2022)":
                 self.coh_soil = infer_from_geologic_map(parameters["GeologicMap"],\
                                     parameters['inputCRS'], lon_station, lat_station)
             else:
