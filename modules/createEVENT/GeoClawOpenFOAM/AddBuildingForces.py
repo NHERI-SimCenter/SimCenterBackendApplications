@@ -7,7 +7,7 @@ import os
 def validateCaseDirectoryStructure(caseDir):  # noqa: ANN001, ANN201, N802, N803
     """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if not os.path.isdir(caseDir):  # noqa: PTH112
         return False
 
@@ -76,10 +76,10 @@ def writeForceDictionary(controlDictLines, lineIndex, floorsCount, patches):  # 
 def AddBuildingsForces(floorsCount, patches):  # noqa: ANN001, ANN201, N802, N803
     """First, we need to validate the case directory structure"""  # noqa: D400, D415
     # if not validateCaseDirectoryStructure(caseDir):
-    #     print("Invalid OpenFOAM Case Directory!")  # noqa: ERA001
-    #     sys.exit(-1)  # noqa: ERA001
+    #     print("Invalid OpenFOAM Case Directory!")
+    #     sys.exit(-1)
 
-    # controlDictPath = os.path.join(caseDir, "system/controlDict")  # noqa: ERA001
+    # controlDictPath = os.path.join(caseDir, "system/controlDict")
     controlDictPath = 'system/controlDict'  # noqa: N806
     with open(controlDictPath) as controlDict:  # noqa: PTH123, N806
         controlDictLines = controlDict.readlines()  # noqa: N806
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Add forces postprocessing to OpenFOAM controlDict'
     )
-    # parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)  # noqa: ERA001, E501
+    # parser.add_argument('-c', '--case', help="OpenFOAM case directory", required=True)
     parser.add_argument(
         '-f', '--floors', help='Number of Floors', type=int, required=False
     )
@@ -138,5 +138,5 @@ if __name__ == '__main__':
         patches = 'Building'
 
     # Add building forces to post-processing
-    # AddBuildingsForces(arguments.case, floors, patches)  # noqa: ERA001
+    # AddBuildingsForces(arguments.case, floors, patches)
     AddBuildingsForces(floors, patches)

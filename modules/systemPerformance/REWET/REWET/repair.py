@@ -79,8 +79,8 @@ class Repair:  # noqa: D101
         length=None,  # noqa: ANN001
         friction=None,  # noqa: ANN001
     ):
-        # if self._registry.getDamageData('PIPE',False).loc[damage_node_name,'damage_type'] != 'leak':  # noqa: E501
-        # raise ValueError('Damage type is not leak in node '+damage_node_name)  # noqa: ERA001
+        # if self._registry.getDamageData('PIPE',False).loc[damage_node_name,'damage_type'] != 'leak':
+        # raise ValueError('Damage type is not leak in node '+damage_node_name)
 
         if damage_type == 'leak':
             pipe_A_name, pipe_B_name, orginal_pipe_name = self._registry.getLeakData(  # noqa: N806
@@ -117,7 +117,7 @@ class Repair:  # noqa: D101
                 roughness=pipe_friction,
             )
 
-            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added  # noqa: E501
+            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added
 
         damage_data = self._registry.getDamageData('pipe', iCopy=False)
         redefined_damage_data = damage_data[
@@ -128,7 +128,7 @@ class Repair:  # noqa: D101
             history = OrderedDict()
             if middle_pipe_size > 0:
                 history['BYPASS_PIPE'] = (
-                    new_pipe_name  # Bypass pipe doesn't get removed unless all damages in the orginal pipe is removed  # noqa: E501
+                    new_pipe_name  # Bypass pipe doesn't get removed unless all damages in the orginal pipe is removed
                 )
 
             cur_damage_type = cur_damage['damage_type']
@@ -174,7 +174,7 @@ class Repair:  # noqa: D101
             end_node_of_pipe_B = pipe_B.end_node  # noqa: N806
             new_length = pipe_A.length + pipe_B.length
 
-            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added  # noqa: E501
+            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added
             new_pipe_name = pipe_B_name + '-Red'
 
             wn.add_pipe(
@@ -203,7 +203,7 @@ class Repair:  # noqa: D101
             end_node_of_pipe_B = pipe_B.end_node  # noqa: N806
             new_length = pipe_A.length + pipe_B.length
 
-            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added  # noqa: E501
+            # For the sake of multiple damages in one pipe the following line is marked the the line after it is added
             new_pipe_name = pipe_B_name + '-Red'
 
             wn.add_pipe(
@@ -376,7 +376,7 @@ class Repair:  # noqa: D101
                 check_valve=True,
             )
             history['ADDED_PIPE_A'] = (
-                new_pipe_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_pipe_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             wn.add_pipe(
                 new_pipe_name_2,
@@ -387,7 +387,7 @@ class Repair:  # noqa: D101
                 check_valve=True,
             )
             history['ADDED_PIPE_B'] = (
-                new_pipe_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_pipe_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
 
         elif _type == 'PUMP':
@@ -408,10 +408,10 @@ class Repair:  # noqa: D101
                     pump_parameter=_power,
                 )
                 history['ADDED_PUMP_A'] = (
-                    new_pump_name_1  # ٌIt Added Pumps is collective now. Won;t be removed till all damaegs in the pipe is removed  # noqa: E501
+                    new_pump_name_1  # ٌIt Added Pumps is collective now. Won;t be removed till all damaegs in the pipe is removed
                 )
                 history['ADDED_PUMP_B'] = (
-                    new_pump_name_2  # ٌIt Added Pumps is collective now. Won;t be removed till all damaegs in the pipe is removed  # noqa: E501
+                    new_pump_name_2  # ٌIt Added Pumps is collective now. Won;t be removed till all damaegs in the pipe is removed
                 )
             else:
                 raise ValueError('Invalid Pump Type: ' + repr(pump.keys()))
@@ -488,22 +488,22 @@ class Repair:  # noqa: D101
             res_B.base_head = res_B.base_head + 20
 
             history['MIDDLE_NODE_A'] = (
-                new_RP_middle_name1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_RP_middle_name1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             history['MIDDLE_NODE_B'] = (
-                new_RP_middle_name2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_RP_middle_name2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             history['ADDED_PIPE_A'] = (
-                new_pipe_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_pipe_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             history['ADDED_PIPE_B'] = (
-                new_pipe_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_pipe_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             history['ADDED_PIPE_C'] = (
-                new_valve_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_valve_name_1  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
             history['ADDED_PIPE_D'] = (
-                new_valve_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed  # noqa: E501
+                new_valve_name_2  # ٌIt Added Pipe is collective now. Won't be removed till all damaegs in the pipe is removed
             )
 
         else:
@@ -550,7 +550,7 @@ class Repair:  # noqa: D101
         demand_after_removal_factor = 1 - factor
         node = wn.get_node(node_name)
         cur_demand = node.demand_timeseries_list[0].base_value
-        # self._registry.getDamageData('DISTNODE', iCopy=False).loc[node_name,'Demand1'] = cur_demand  # noqa: ERA001, E501
+        # self._registry.getDamageData('DISTNODE', iCopy=False).loc[node_name,'Demand1'] = cur_demand
         history['NODE_DEMAND_BEFORE'] = cur_demand
         if abs(cur_demand) < 0:
             return ValueError(
@@ -679,7 +679,7 @@ class Repair:  # noqa: D101
                                     wn.get_link(name).initial_status = LinkStatus(3)
                             else:
                                 raise ValueError(
-                                    'Unknown change indicator in restoration registry: '  # noqa: E501
+                                    'Unknown change indicator in restoration registry: '
                                     + repr(change)
                                 )
 
@@ -826,7 +826,12 @@ class Repair:  # noqa: D101
         self._registry.removeEquavalantDamageHistory(damaged_node_name)
 
     def modifyDISTNodeDemandLinearMode(  # noqa: ANN201, N802, D102
-        self, damage_node_name, real_node_name, wn, repaired_number, total_number  # noqa: ANN001
+        self,
+        damage_node_name,  # noqa: ANN001
+        real_node_name,  # noqa: ANN001
+        wn,  # noqa: ANN001
+        repaired_number,  # noqa: ANN001
+        total_number,  # noqa: ANN001
     ):
         damage_table = self._registry.getDamageData('DISTNODE', iCopy=False)
         pre_incident_demand = damage_table.loc[damage_node_name, 'Demand1']
@@ -841,7 +846,12 @@ class Repair:  # noqa: D101
         node.demand_timeseries_list[0].base_value = new_demand
 
     def modifyDISTNodeExplicitLeakEmitter(  # noqa: ANN201, N802, D102
-        self, damage_node_name, real_node_name, wn, repaired_number, total_number  # noqa: ANN001
+        self,
+        damage_node_name,  # noqa: ANN001
+        real_node_name,  # noqa: ANN001
+        wn,  # noqa: ANN001
+        repaired_number,  # noqa: ANN001
+        total_number,  # noqa: ANN001
     ):
         nodal_data = self._registry._nodal_data[real_node_name]  # noqa: SLF001
         pipe_length = nodal_data['pipe_length']
@@ -859,7 +869,7 @@ class Repair:  # noqa: D101
         )
         node = wn.get_node(new_node_name)
 
-        # print(real_node_name)  # noqa: ERA001
+        # print(real_node_name)
         if cd >= node._emitter_coefficient:  # noqa: SLF001
             raise ValueError(
                 'something wrong here: '
@@ -875,7 +885,12 @@ class Repair:  # noqa: D101
         node._emitter_coefficient = cd  # noqa: SLF001
 
     def modifyDISTNodeExplicitLeakReservoir(  # noqa: ANN201, N802, D102
-        self, damage_node_name, real_node_name, wn, repaired_number, total_number  # noqa: ANN001, ARG002
+        self,
+        damage_node_name,  # noqa: ANN001, ARG002
+        real_node_name,  # noqa: ANN001
+        wn,  # noqa: ANN001
+        repaired_number,  # noqa: ANN001
+        total_number,  # noqa: ANN001
     ):
         nodal_data = self._registry._nodal_data[real_node_name]  # noqa: SLF001
         pipe_length = nodal_data['pipe_length']
@@ -902,11 +917,16 @@ class Repair:  # noqa: D101
         ) ** (1 / 4) * 1
         pipe = wn.get_link(pipe_name)
         # if equavalant_pipe_diameter >= pipe.diameter:
-        # raise ValueError("something wrong here: "+repr(equavalant_pipe_diameter)+" - "+repr(pipe.diameter))  # noqa: ERA001, E501
+        # raise ValueError("something wrong here: "+repr(equavalant_pipe_diameter)+" - "+repr(pipe.diameter))
         pipe.diameter = pipe.diameter / 2
 
     def modifyDISTNodeExplicitLeak(  # noqa: ANN201, N802, D102
-        self, real_damage_node_name, virtual_node_name, wn, method, damaged_number  # noqa: ANN001, ARG002
+        self,
+        real_damage_node_name,  # noqa: ANN001, ARG002
+        virtual_node_name,  # noqa: ANN001
+        wn,  # noqa: ANN001
+        method,  # noqa: ANN001
+        damaged_number,  # noqa: ANN001, ARG002
     ):
         if method == 'equal_diameter':
             emitter_name = self._registry.virtual_node_data[virtual_node_name][

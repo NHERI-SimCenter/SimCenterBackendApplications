@@ -78,12 +78,12 @@ def main(inputFile, driverFile, appKey, registryFile, appDir, runType, osType): 
     if 'models' not in appData:
         print('NO models in: ', appData)  # noqa: T201
         raise KeyError(  # noqa: TRY003
-            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102, E501
+            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102
         )
 
     if len(appData['models']) < 2:  # noqa: PLR2004
         raise RuntimeError(  # noqa: TRY003
-            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102, E501
+            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102
         )
 
     models = appData['models']
@@ -240,11 +240,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )
-    # parser.add_argument('--runDriver', default="False")  # noqa: ERA001
+    # parser.add_argument('--runDriver', default="False")
     parser.add_argument(
         '-a',
         '--appDir',

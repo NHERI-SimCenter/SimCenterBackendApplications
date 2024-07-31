@@ -49,34 +49,34 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# import json  # noqa: ERA001
-# from pathlib import Path  # noqa: ERA001
-# import plotly.graph_objects as go  # noqa: ERA001
-# from plotly.subplots import make_subplots  # noqa: ERA001
+# import json
+# from pathlib import Path
+# import plotly.graph_objects as go
+# from plotly.subplots import make_subplots
 
 
 if __name__ == '__main__':
     # CLI parser
     input_args = sys.argv[1:]
     print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py reached main. Starting...'  # noqa: E501
+        'post_process_sensors.py - Backend-script post_process_sensors.py reached main. Starting...'
     )
     print(  # noqa: T201
         'post_process_sensors.py - Backend-script post_process_sensors.py running: '
         + str(sys.argv[0])
     )
     print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py recieved input args: '  # noqa: E501
+        'post_process_sensors.py - Backend-script post_process_sensors.py recieved input args: '
         + str(input_args)
     )
 
-    # parser = argparse.ArgumentParser(description="Get sensor measurements from output, process them, plot them, and then save the figures.")  # noqa: ERA001, E501
-    # parser.add_argument('-i', '--input_directory', help="Sensor Measurement Input Directory", required=True)  # noqa: ERA001, E501
-    # parser.add_argument('-o', '--output_directory', help="Sensor Plot Output Directory", required=True)  # noqa: ERA001, E501
-    # parser.add_argument('-f', '--files', help="Sensor Measurement Files", required=True)  # noqa: ERA001, E501
-    # arguments, unknowns = parser.parse_known_args()  # noqa: ERA001
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(arguments))  # noqa: ERA001, E501
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(unknowns))  # noqa: ERA001, E501
+    # parser = argparse.ArgumentParser(description="Get sensor measurements from output, process them, plot them, and then save the figures.")
+    # parser.add_argument('-i', '--input_directory', help="Sensor Measurement Input Directory", required=True)
+    # parser.add_argument('-o', '--output_directory', help="Sensor Plot Output Directory", required=True)
+    # parser.add_argument('-f', '--files', help="Sensor Measurement Files", required=True)
+    # arguments, unknowns = parser.parse_known_args()
+    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(arguments))
+    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(unknowns))
 
     # Get the directory of the sensor data
     # Get the directory to save the plots
@@ -85,16 +85,16 @@ if __name__ == '__main__':
     output_dir = sys.argv[2]
     sensor_files = sys.argv[3].split(',')
 
-    # sensor_data_dir = arguments.input_directory  # noqa: ERA001
-    # output_dir = arguments.output_directory  # noqa: ERA001
-    # sensor_files = (arguments.files).split(',')  # noqa: ERA001
+    # sensor_data_dir = arguments.input_directory
+    # output_dir = arguments.output_directory
+    # sensor_files = (arguments.files).split(',')
     print('Sensor data directory: ', sensor_data_dir)  # noqa: T201
     print('Output directory: ', output_dir)  # noqa: T201
     print('Sensor files: ', sensor_files)  # noqa: T201
-    # json_path =  os.path.join(case_path, "constant", "simCenter", "input", "MPM.json")  # noqa: ERA001, E501
+    # json_path =  os.path.join(case_path, "constant", "simCenter", "input", "MPM.json")
     # with open(json_path) as json_file:
-    #     json_data =  json.load(json_file)  # noqa: ERA001
-    # print("Backend-script post_process_sensors.py recieved: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3] "")  # noqa: E501
+    #     json_data =  json.load(json_file)
+    # print("Backend-script post_process_sensors.py recieved: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3] "")
 
     # Get the list of sensor names
     sensor_names = [
@@ -107,13 +107,14 @@ if __name__ == '__main__':
     for sensor_file in sensor_files:
         # Remove any leading '/' from the sensor file
         sensor_file = sensor_file.lstrip('/')  # noqa: PLW2901
-        sensor_file = sensor_file.strip()  # Remove whitespace from the sensor file  # noqa: PLW2901
+        # Remove whitespace from the sensor file
+        sensor_file = sensor_file.strip()  # noqa: PLW2901
         sensor_file = sensor_file.split(  # noqa: PLW2901
             '.'
         )  # Split the sensor file by the '.' character
         if sensor_file[-1] != 'csv':
             print(  # noqa: T201
-                'Error: Sensor file is not a csv file. Please provide a csv file. Will skip this file: '  # noqa: E501
+                'Error: Sensor file is not a csv file. Please provide a csv file. Will skip this file: '
                 + sensor_file[0]
                 + '.'
                 + sensor_file[-1]
@@ -130,10 +131,10 @@ if __name__ == '__main__':
             usecols=[0, 1],
         )
 
-        # Assume that the header is row 0, and that the time is in the first column, and the value is in the second column  # noqa: E501
+        # Assume that the header is row 0, and that the time is in the first column, and the value is in the second column
         sensor_data[sensor_file].columns = ['time', 'value']
 
-        please_convert_to_date_time = False  # May want to use this later, as wave-flumes tend to report time in date-time formats  # noqa: E501
+        please_convert_to_date_time = False  # May want to use this later, as wave-flumes tend to report time in date-time formats
         if (
             please_convert_to_date_time == True  # noqa: E712
             and sensor_data[sensor_file]['time'].dtype != 'datetime64[ns]'
@@ -142,7 +143,7 @@ if __name__ == '__main__':
                 sensor_data[sensor_file]['time']
             )
 
-    # Make sure the output directory exists, and save the sensor raw data to the output directory if they aren't already there  # noqa: E501
+    # Make sure the output directory exists, and save the sensor raw data to the output directory if they aren't already there
     if not os.path.exists(output_dir):  # noqa: PTH110
         print(  # noqa: T201
             'Output directory not found... Creating output directory: '
@@ -154,17 +155,18 @@ if __name__ == '__main__':
         for sensor_name in sensor_names:
             print('Save ' + os.path.join(output_dir, sensor_name) + '.csv' + '...')  # noqa: T201, PTH118
             sensor_data[sensor_name].to_csv(
-                os.path.join(output_dir, sensor_name + '.csv'), index=False  # noqa: PTH118
+                os.path.join(output_dir, sensor_name + '.csv'),  # noqa: PTH118
+                index=False,
             )
 
-    # Plot the sensor data, and save the plots to the output directory (html and png files)  # noqa: E501
+    # Plot the sensor data, and save the plots to the output directory (html and png files)
     for sensor_name in sensor_names:
         print('Plotting ' + sensor_name + '...')  # noqa: T201
         fig, axes = plt.subplots(1, 1)
         sensor_name_png = sensor_name + '.png'
         sensor_name_html = sensor_name + '.webp'
 
-        # axes.set_title(sensor_name)  # noqa: ERA001
+        # axes.set_title(sensor_name)
         axes.plot(
             sensor_data[sensor_name]['time'], sensor_data[sensor_name]['value']
         )
@@ -172,15 +174,19 @@ if __name__ == '__main__':
         axes.set_ylabel('Sensor Measurement')
         print('Save ' + os.path.join(output_dir, sensor_name_png) + '...')  # noqa: T201, PTH118
         plt.savefig(
-            os.path.join(output_dir, sensor_name_png), dpi=300, bbox_inches='tight'  # noqa: PTH118
+            os.path.join(output_dir, sensor_name_png),  # noqa: PTH118
+            dpi=300,
+            bbox_inches='tight',
         )  # save the plot as a png file
         print('Save ' + os.path.join(output_dir, sensor_name_html) + '...')  # noqa: T201, PTH118
         plt.savefig(
-            os.path.join(output_dir, sensor_name_html), dpi=300, bbox_inches='tight'  # noqa: PTH118
+            os.path.join(output_dir, sensor_name_html),  # noqa: PTH118
+            dpi=300,
+            bbox_inches='tight',
         )  # save the plot as an html file
         plt.show()
         plt.close()
 
     print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py reached end of main. Finished.'  # noqa: E501
+        'post_process_sensors.py - Backend-script post_process_sensors.py reached end of main. Finished.'
     )

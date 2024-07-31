@@ -124,7 +124,7 @@ class ERACond:
       Uniform:                    Obj = ERADist('uniform','MOM',lambda ... :[mean,std])
       Weibull:                    Obj = ERADist('weibull','MOM',lambda ... :[mean,std])
 
-    """  # noqa: E501, D205
+    """  # noqa: D205
 
     def __init__(self, name, opt, param, ID=False):  # noqa: ANN001, ANN204, FBT002, N803
         """Constructor method, for more details have a look at the
@@ -164,7 +164,7 @@ class ERACond:
         par = self.modParam(cond)
         n_cond = np.shape(cond)[0]
 
-        # ----------------------------------------------------------------------------  # noqa: E501
+        # ----------------------------------------------------------------------------
         # for the case of Opt == PAR
         if self.Opt == 'PAR':
             if self.Name == 'beta':
@@ -209,7 +209,7 @@ class ERACond:
             elif self.Name == 'weibull':
                 Par = par  # noqa: N806
 
-        # ----------------------------------------------------------------------------  # noqa: E501
+        # ----------------------------------------------------------------------------
         # for the case of Opt == MOM
         elif self.Name == 'beta':
             r = (

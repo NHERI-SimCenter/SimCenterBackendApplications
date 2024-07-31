@@ -233,7 +233,7 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
                 )
 
     # for edp_name, edp_data in edp_specs.items():
-    #    print(edp_name, edp_data)  # noqa: ERA001
+    #    print(edp_name, edp_data)
 
     # run the analysis
     # TODO: default analysis script  # noqa: FIX002, TD002, TD003
@@ -247,14 +247,14 @@ def run_openseesPy(EVENT_input_path, SAM_input_path, BIM_input_path, EDP_input_p
 
     # save the EDP results
 
-    # print(EDP_res)  # noqa: ERA001
+    # print(EDP_res)
 
     for response in EDP_list:
         edp = EDP_res[response['type']][response['id']]
-        # print(edp)  # noqa: ERA001
+        # print(edp)
 
         response['scalar_data'] = edp  # [val for dof, val in edp.items()]
-        # print(response)  # noqa: ERA001
+        # print(response)
 
     with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(EDP_in, f, indent=2)

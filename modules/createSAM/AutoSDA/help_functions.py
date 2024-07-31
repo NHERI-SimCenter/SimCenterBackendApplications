@@ -1,4 +1,4 @@
-# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: INP001, E501, D100
+# This file is used to define helpful functions that are used in either main program or user defined class  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -14,7 +14,7 @@ def determine_Fa_coefficient(site_class, Ss):  # noqa: ANN001, ANN201, C901, N80
     :param Ss: a scalar given in building class
     :param site_class: a string: 'A', 'B', 'C', 'D', or 'E' given in building information
     :return: a scalar which is Fa coefficient
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if site_class == 'A':
         Fa = 0.8  # noqa: N806
     elif site_class == 'B':
@@ -58,7 +58,7 @@ def determine_Fv_coefficient(site_class, S1):  # noqa: ANN001, ANN201, C901, N80
     :param S1: a scalar given in building class
     :param site_class: a string 'A', 'B', 'C', 'D' or 'E' given in building class
     :return: a scalar which is Fv coefficient
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if site_class == 'A':
         Fv = 0.8  # noqa: N806
     elif site_class == 'B':
@@ -106,7 +106,7 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):  # noqa: ANN001, ANN201, N802, N
     :param Fa: a scalar computed from determine_Fa_coefficient
     :param Fv: a scalar computed from determine_Fv_coefficient
     :return: SMS, SM1, SDS, SD1: four scalars which are required for lateral force calculation
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     SMS = Fa * Ss  # noqa: N806
     SM1 = Fv * S1  # noqa: N806
     SDS = 2 / 3 * SMS  # noqa: N806
@@ -119,7 +119,7 @@ def determine_Cu_coefficient(SD1):  # noqa: ANN001, ANN201, N802, N803
     Note: All notations for these variables can be found in ASCE 7-10.
     :param SD1: a scalar calculated from funtion determine_DBE_acceleration
     :return: Cu: a scalar
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if SD1 <= 0.1:  # noqa: PLR2004
         Cu = 1.7  # noqa: N806
     elif SD1 <= 0.15:  # noqa: PLR2004
@@ -137,7 +137,9 @@ def determine_Cu_coefficient(SD1):  # noqa: ANN001, ANN201, N802, N803
 
 
 def determine_floor_height(  # noqa: ANN201
-    number_of_story, first_story_height, typical_story_height  # noqa: ANN001
+    number_of_story,  # noqa: ANN001
+    first_story_height,  # noqa: ANN001
+    typical_story_height,  # noqa: ANN001
 ):
     """This function is used to calculate the height for each floor level: from ground floor to roof
     Obviously, the height for ground floor level is zero
@@ -147,7 +149,7 @@ def determine_floor_height(  # noqa: ANN201
     :param typical_story_height: a scalar which describes the typical story height for other stories
            except 1st story
     :return: an array which includes the height for each floor level (ground to roof)
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     floor_height = np.zeros([number_of_story + 1, 1])
     for level in range(1, number_of_story + 2):
         if level == 1:
@@ -175,7 +177,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: ANN001, ANN20
     :param R: a scalar given in building information
     :param Ie: a scalar given in building information
     :return: Cs: seismic response coefficient; determined using Equations 12.8-2 to 12.8-6
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     # Equation 12.8-2
     Cs_initial = SDS / (R / Ie)  # noqa: N806
 
@@ -200,7 +202,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):  # noqa: ANN001, ANN20
     else:
         Cs = Cs_lower_1  # noqa: N806
 
-    # Equation 12.8-6. if S1 is equal to or greater than 0.6g, Cs shall not be less than the following value  # noqa: E501
+    # Equation 12.8-6. if S1 is equal to or greater than 0.6g, Cs shall not be less than the following value
     if S1 >= 0.6:  # noqa: PLR2004
         Cs_lower_2 = 0.5 * S1 / (R / Ie)  # noqa: N806
         if Cs >= Cs_lower_2:
@@ -217,7 +219,7 @@ def determine_k_coeficient(period):  # noqa: ANN001, ANN201
     """This function is used to determine the coefficient k based on ASCE 7-10 Section 12.8.3
     :param period: building period;
     :return: k: a scalar will be used in Equation 12.8-12 in ASCE 7-10
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if period <= 0.5:  # noqa: PLR2004
         k = 1
     elif period >= 2.5:  # noqa: PLR2004
@@ -236,9 +238,9 @@ def calculate_seismic_force(base_shear, floor_weight, floor_height, k):  # noqa:
     :param floor_height: a vector with a length of (number_of_story+1)
     :param k: a scalar given by "determine_k_coefficient"
     :return: Fx: a vector describes the lateral force for each floor level
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     # Calculate the product of floor weight and floor height
-    # Note that floor height includes ground floor, which will not be used in the actual calculation.  # noqa: E501
+    # Note that floor height includes ground floor, which will not be used in the actual calculation.
     # Ground floor is stored here for completeness.
     weight_floor_height = floor_weight * floor_height[1:, 0] ** k
     # Equation 12.8-12 in ASCE 7-10
@@ -258,7 +260,7 @@ def find_section_candidate(target_depth, section_database):  # noqa: ANN001, ANN
     :param target_depth: a string which defines the depth of columns or beams, e.g. W14
     :param section_database: a dataframe read from SMF_Section_Property.csv in Library folder
     :return: a pandas Series of strings which denotes all possible sizes based on depth
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     candidate_index = []
     for indx in section_database['index']:
         match = re.search(target_depth, section_database.loc[indx, 'section size'])
@@ -276,21 +278,21 @@ def search_member_size(target_name, target_quantity, candidate, section_database
     :param candidate: a list of strings which defines potential section sizes for beams or columns
     :param section_database: a dataframe read from "Library" SMF_Section_Property.csv
     :return: a string which states the member sizes (e.g., W14X730)
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     # Find the index for the candidate
     candidate_index = list(
         section_database.loc[
             section_database['section size'].isin(candidate), 'index'
         ]
     )
-    # Calculate the difference between target moment of inertia and moment of inertia of each section  # noqa: E501
+    # Calculate the difference between target moment of inertia and moment of inertia of each section
     difference = section_database.loc[candidate_index, target_name] - target_quantity
     # Find the index which gives the minimum difference
     min_index = np.where(difference == np.min(difference[difference >= 0]))
-    # Note: the minimum value may not be unique. Therefore, use the first element of the min_index  # noqa: E501
-    # I don't know why I need two indices for min_index in the following coding, but this works. T.T  # noqa: E501
-    # Change the two indices into single index does not return pure string for section_size  # noqa: E501
-    # More Info: min_index is a class "tuple". If no difference >= 0 exits, simply using the largest size.  # noqa: E501
+    # Note: the minimum value may not be unique. Therefore, use the first element of the min_index
+    # I don't know why I need two indices for min_index in the following coding, but this works. T.T
+    # Change the two indices into single index does not return pure string for section_size
+    # More Info: min_index is a class "tuple". If no difference >= 0 exits, simply using the largest size.
     if not list(min_index[0]):
         section_size = section_database.loc[candidate_index[0], 'section size']
     else:
@@ -306,10 +308,10 @@ def search_section_property(target_size, section_database):  # noqa: ANN001, ANN
     :param target_size: a string which defines section size, e.g. 'W14X500'
     :param section_database: a dataframe read from SMF_Section_Property.csv in "Library" folder
     :return: section_info: a dictionary which includes section size, index, and associated properties.
-    """  # noqa: E501, D205, D401, D404
-    # Loop over the sections in the SMF section database and find the one which matches the target size  # noqa: E501
+    """  # noqa: D205, D401, D404
+    # Loop over the sections in the SMF section database and find the one which matches the target size
     # Then the property of the target section is returned as a dictionary.
-    # If target size cannot match any existing sizes in database, a warning message should be given.  # noqa: E501
+    # If target size cannot match any existing sizes in database, a warning message should be given.
     try:
         for indx in np.array(section_database['index']):
             if target_size == section_database.loc[indx, 'section size']:
@@ -328,10 +330,10 @@ def decrease_member_size(candidate, current_size):  # noqa: ANN001, ANN201
     :param current_size: a string which defines current member size
     :return: optimized_size: a string which defines the member size after decrease
     """  # noqa: D205, D400, D401, D404, D415
-    # Find the index of the current section size in candidate pool and move it to the next one  # noqa: E501
+    # Find the index of the current section size in candidate pool and move it to the next one
     candidate_pool_index = candidate.index(current_size)
     if candidate_pool_index + 1 > len(candidate):
-        # This means the smallest candidate still cannot make design drift close to drift limit,  # noqa: E501
+        # This means the smallest candidate still cannot make design drift close to drift limit,
         # which further means the smallest section candidate is too large.
         sys.stderr.write('The lower bound for depth initialization is too large!\n')
     return candidate[candidate_pool_index + 1]
@@ -341,8 +343,8 @@ def extract_depth(size):  # noqa: ANN001, ANN201
     """This function is used to extract the depth of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the depth of section. e.g. 'W14X550' ==> 14
-    """  # noqa: E501, D205, D400, D401, D404, D415
-    # Use Python regular expression to extract the char between 'W' and 'X', which then become depth  # noqa: E501
+    """  # noqa: D205, D400, D401, D404, D415
+    # Use Python regular expression to extract the char between 'W' and 'X', which then become depth
     output = re.findall(r'.*W(.*)X.*', size)
     return int(output[0])
 
@@ -351,15 +353,18 @@ def extract_weight(size):  # noqa: ANN001, ANN201
     """This function is used to extract the weight of a section size when a size string is given.
     :param size: a string denoting a member size, e.g. 'W14X550'
     :return: a integer which denotes the weight of the section, e.g. 'W14X550' ==> 550
-    """  # noqa: E501, D205, D400, D401, D404, D415
-    # Use Python regular expression to extract the char after 'W' to the end of the string,  # noqa: E501
+    """  # noqa: D205, D400, D401, D404, D415
+    # Use Python regular expression to extract the char after 'W' to the end of the string,
     # which then becomes weight
     output = re.findall(r'.X(.*)', size)
     return int(output[0])
 
 
 def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
-    section_size, identical_size_per_story, total_story, sorted_quantity  # noqa: ANN001
+    section_size,  # noqa: ANN001
+    identical_size_per_story,  # noqa: ANN001
+    total_story,  # noqa: ANN001
+    sorted_quantity,  # noqa: ANN001
 ):
     """This function is used to make every adjacent N stories have the same size and ensure that the whole list
     is in a descending order.
@@ -369,8 +374,8 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
     :param sorted_quantity：a string to indicate the members are sorted based on which quantity,
            options: 'Ix' or 'Zx'
     :return: a list whose every adjacent N stories have same strings and the whole list is in descending order
-    """  # noqa: E501, D205, D400, D401, D404, D415, RUF002
-    # Determine the number of stories that have the identical member size for constructability  # noqa: E501
+    """  # noqa: D205, D400, D401, D404, D415, RUF002
+    # Determine the number of stories that have the identical member size for constructability
     if identical_size_per_story > total_story:
         per_story = total_story
     else:
@@ -383,7 +388,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
     # Pre-process the section size list:
     # Sometimes, we may have the following case for the section list (M < N < K)
     # Story N has larger depth than M and K, but it has smaller Ix or Zx than M.
-    # In this case, simply re-assign size for story N such that it has same depth with M  # noqa: E501
+    # In this case, simply re-assign size for story N such that it has same depth with M
     # and comparable Ix or Zx with old itself.
     i = 0
     while i < total_story - 1:
@@ -391,7 +396,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
         for j in range(i + 1, total_story):
             if extract_depth(section_size[j]) != extract_depth(section_size[i]):
                 break
-                # If the current story chunk (with same depth) is not at the beginning nor end.  # noqa: E501
+                # If the current story chunk (with same depth) is not at the beginning nor end.
         if i > 0 and j < total_story:
             temp_property = []
             # Find the maximum Ix or Zx in current story chunk
@@ -402,20 +407,20 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
                     ]
                 )
             current_property = max(temp_property)
-            # Obtain the Ix or Zx for the stories just below and above the current story chunk.  # noqa: E501
+            # Obtain the Ix or Zx for the stories just below and above the current story chunk.
             lower_property = search_section_property(
                 section_size[i - 1], SECTION_DATABASE
             )[sorted_quantity]
             upper_property = search_section_property(
                 section_size[j], SECTION_DATABASE
             )[sorted_quantity]
-            # Obtain the depth for stories in current story chunk, below it, and above it.  # noqa: E501
+            # Obtain the depth for stories in current story chunk, below it, and above it.
             current_depth = extract_depth(section_size[i])
             lower_depth = extract_depth(section_size[i - 1])
             upper_depth = extract_depth(section_size[j])
             # Current story chunk has higher depth than the stories below and above
             # current Ix or Zx is less than stories below.
-            # Stories below current chunk have the same or greater depth than the stories above current chunk.  # noqa: E501
+            # Stories below current chunk have the same or greater depth than the stories above current chunk.
             if (
                 current_depth > lower_depth
                 and current_depth > upper_depth
@@ -423,7 +428,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
                 and current_property < lower_property
                 and current_property > upper_property
             ):
-                # For this case, re-assign the size such that the current chunk has the same depth  # noqa: E501
+                # For this case, re-assign the size such that the current chunk has the same depth
                 # with stories below.
                 # Meanwhile, its Ix or Zx is comparable to the old itself.
                 candidates = find_section_candidate(
@@ -461,14 +466,14 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
                 lower_depth = extract_depth(section_size[indx - 1])
                 # Case 1: two depths are the same or lower depth is greater
                 if current_depth <= lower_depth:
-                    # Sub-case 1.1: lower member has smaller Ix or Zx ==> change lower size to be equal to current size  # noqa: E501
+                    # Sub-case 1.1: lower member has smaller Ix or Zx ==> change lower size to be equal to current size
                     if current_property > lower_property:
                         section_size[indx - 1] = section_size[indx]
-                    # Sub-case 1.2: lower member has larger Ix or Zx ==> change current size to be equal to lower size  # noqa: E501
+                    # Sub-case 1.2: lower member has larger Ix or Zx ==> change current size to be equal to lower size
                     else:
                         section_size[indx] = section_size[indx - 1]
-                        # Don't forget to trace back because you just change the current story size.  # noqa: E501
-                        # If the story above the current story is still within "identical story block".  # noqa: E501
+                        # Don't forget to trace back because you just change the current story size.
+                        # If the story above the current story is still within "identical story block".
                         # Then we need to revise the story above too.
                         for k in range(indx, starting_index + 1, 1):
                             section_size[k] = section_size[indx]
@@ -477,7 +482,7 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
                     section_size[indx - 1] = section_size[indx]
                 # Sub-case 2.2: lower member has larger Zx
                 else:
-                    # We need to change the lower member size such that it has the same depth with current story  # noqa: E501
+                    # We need to change the lower member size such that it has the same depth with current story
                     # and comparable Ix or Zx with old itself.
                     candidates = find_section_candidate(
                         'W' + str(current_depth), SECTION_DATABASE
@@ -489,8 +494,8 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
                         SECTION_DATABASE,
                     )
                     section_size[indx] = section_size[indx - 1]
-                    # Don't forget to trace back because you just change the current story size.  # noqa: E501
-                    # If the story above the current story is still within "identical story block".  # noqa: E501
+                    # Don't forget to trace back because you just change the current story size.
+                    # If the story above the current story is still within "identical story block".
                     # Then we need to revise the story above too.
                     for k in range(indx, starting_index + 1, 1):
                         section_size[k] = section_size[indx]
@@ -511,12 +516,12 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
         lower_depth = extract_depth(section_size[indx - 1])
         # Case 1: lower member has same depth
         if lower_depth == current_depth:
-            # Case 1.1: lower member less Ix or Zx ==> change the lower size to be equal to current  # noqa: E501
+            # Case 1.1: lower member less Ix or Zx ==> change the lower size to be equal to current
             if lower_property < current_property:
                 section_size[indx - 1] = section_size[indx]
         # Case 2: lower member has smaller depth
         elif lower_depth < current_depth:
-            # Change the lower member such that it has same depth with current and comparable Ix or Zx to old itself.  # noqa: E501
+            # Change the lower member such that it has same depth with current and comparable Ix or Zx to old itself.
             candidates = find_section_candidate(
                 'W' + str(current_depth), SECTION_DATABASE
             )
@@ -539,45 +544,45 @@ def constructability_helper(  # noqa: ANN201, C901, PLR0912, PLR0915
     return section_size
 
     # # Loop over all stories from top to bottom to consider the constructability
-    # starting_story = total_story - 1  # noqa: ERA001
-    # ending_story = variation_story[-1]  # noqa: ERA001
+    # starting_story = total_story - 1
+    # ending_story = variation_story[-1]
     # while starting_story > 0:
     #     # For stories within "identical story block"
     #     for story in range(starting_story, ending_story, -1):
     #         # Only revise size when adjacent stories have different size
     #         if section_size[story - 1] != section_size[story]:
-    #             current_section_property = search_section_property(section_size[story], SECTION_DATABASE)  # noqa: ERA001, E501
-    #             next_section_property = search_section_property(section_size[story - 1], SECTION_DATABASE)  # noqa: ERA001, E501
-    #             if current_section_property[sorted_quanity] > next_section_property[sorted_quanity]:  # noqa: E501
-    #                 section_size[story - 1] = section_size[story]  # noqa: ERA001
-    #             else:  # noqa: ERA001
-    #                 section_size[story] = section_size[story - 1]  # noqa: ERA001
+    #             current_section_property = search_section_property(section_size[story], SECTION_DATABASE)
+    #             next_section_property = search_section_property(section_size[story - 1], SECTION_DATABASE)
+    #             if current_section_property[sorted_quanity] > next_section_property[sorted_quanity]:
+    #                 section_size[story - 1] = section_size[story]
+    #             else:
+    #                 section_size[story] = section_size[story - 1]
     #
     #     # For stories at the "identical story block boundary"
-    #     story = variation_story[-1]  # noqa: ERA001
+    #     story = variation_story[-1]
     #     if story == 0:
-    #         break  # noqa: ERA001
+    #         break
     #     if section_size[story - 1] != section_size[story]:
-    #         current_depth = extract_depth(section_size[story])  # noqa: ERA001
-    #         next_depth = extract_depth(section_size[story - 1])  # noqa: ERA001
+    #         current_depth = extract_depth(section_size[story])
+    #         next_depth = extract_depth(section_size[story - 1])
     #         # Case 1: lower member has same depth but smaller weight
     #         if next_depth == current_depth:
-    #             current_weight = extract_weight(section_size[story])  # noqa: ERA001
-    #             next_weight = extract_weight(section_size[story - 1])  # noqa: ERA001
+    #             current_weight = extract_weight(section_size[story])
+    #             next_weight = extract_weight(section_size[story - 1])
     #             if next_weight < current_weight:
-    #                 section_size[story - 1] = section_size[story]  # noqa: ERA001
+    #                 section_size[story - 1] = section_size[story]
     #         # Case 2: lower member has smaller depth
-    #         elif next_depth < current_depth:  # noqa: ERA001
-    #             section_size[story - 1] = section_size[story]  # noqa: ERA001
+    #         elif next_depth < current_depth:
+    #             section_size[story - 1] = section_size[story]
     #         # Case 3: lower member has larger depth
-    #         else:  # noqa: ERA001
+    #         else:
     #             pass
-    #     starting_story = variation_story[-1] - 1  # noqa: ERA001
+    #     starting_story = variation_story[-1] - 1
     #     if starting_story < 0:
-    #         break  # noqa: ERA001
-    #     variation_story.pop()  # noqa: ERA001
-    #     ending_story = variation_story[-1]  # noqa: ERA001
-    # return section_size  # noqa: ERA001
+    #         break
+    #     variation_story.pop()
+    #     ending_story = variation_story[-1]
+    # return section_size
 
 
 def increase_member_size(candidate, current_size):  # noqa: ANN001, ANN201
@@ -586,7 +591,7 @@ def increase_member_size(candidate, current_size):  # noqa: ANN001, ANN201
     :param current_size: a string which denotes current member size
     :return: a string which denotes the member size after one step upward
     """  # noqa: D205, D400, D401, D404, D415
-    # Find the index of current section size in candidate pool and move it to previous one  # noqa: E501
+    # Find the index of current section size in candidate pool and move it to previous one
     candidate_pool_index = candidate.index(current_size)
     if candidate_pool_index - 1 < 0:  # Make sure the index does not exceed the bound
         # This means the largest candidate still fails to satisfy the requirement

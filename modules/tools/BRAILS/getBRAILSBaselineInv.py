@@ -90,7 +90,7 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
         # Get raw NSI data:
         if outputDataType == 'raw':
             if not fpUserSpecified:
-                # Run FootprintHandler to generate the boundary polygon for the entered location:  # noqa: E501
+                # Run FootprintHandler to generate the boundary polygon for the entered location:
                 if locationStr == '':
                     (
                         bpoly,

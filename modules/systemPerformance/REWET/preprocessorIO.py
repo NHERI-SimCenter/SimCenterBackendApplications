@@ -78,31 +78,31 @@ def readJSONFile(file_addr):  # noqa: ANN001, ANN201, N802
 #
 #     Parameters
 #     ----------
-#     file_addr : Path  # noqa: ERA001
+#     file_addr : Path
 #         rwhale input file path.
-#     REWET_input_data : dict  # noqa: ERA001
+#     REWET_input_data : dict
 #         REWET input data.
 #
 #     Returns
 #     -------
-#     rwhale_data : dict  # noqa: ERA001
+#     rwhale_data : dict
 #         rwhale inoput data as a dict.
 #
 #     """
 #
 #
-#     water_asset_data = rwhale_data["Applications"]\  # noqa: ERA001
-#         ["Assets"]["WaterDistributionNetwork"]  # noqa: ERA001
-#     inp_file_addr = water_asset_data["ApplicationData"]["inpFile"]  # noqa: ERA001
-#     run_directory = rwhale_data["runDir"]  # noqa: ERA001
-#     number_of_realization = rwhale_data["Applications"]\  # noqa: ERA001
-#         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]  # noqa: ERA001
+#     water_asset_data = rwhale_data["Applications"]\
+#         ["Assets"]["WaterDistributionNetwork"]
+#     inp_file_addr = water_asset_data["ApplicationData"]["inpFile"]
+#     run_directory = rwhale_data["runDir"]
+#     number_of_realization = rwhale_data["Applications"]\
+#         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]
 #
-#     REWET_input_data["inp_file" ] = inp_file_addr  # noqa: ERA001
-#     REWET_input_data["run_dir"] = run_directory  # noqa: ERA001
-#     REWET_input_data["number_of_realizations"] = number_of_realization  # noqa: ERA001
+#     REWET_input_data["inp_file" ] = inp_file_addr
+#     REWET_input_data["run_dir"] = run_directory
+#     REWET_input_data["number_of_realizations"] = number_of_realization
 #
-#     return rwhale_data  # noqa: ERA001
+#     return rwhale_data
 # =============================================================================
 
 
@@ -197,7 +197,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN0
 
     scenario_table = scenario_table.set_index('Scenario Name')
 
-    # scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)  # noqa: ERA001, E501
+    # scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)
 
     scenario_table.to_excel(scenario_table_file_path)
 

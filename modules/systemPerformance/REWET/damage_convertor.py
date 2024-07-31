@@ -95,7 +95,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
         material = aim_data['GeneralInformation'].get('Material', None)
 
         if material == None:  # noqa: E711
-            # raise ValueError("Material is none")  # noqa: ERA001
+            # raise ValueError("Material is none")
             material = 'CI'
 
         aggregates_list = [
@@ -118,7 +118,7 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
                 continue
 
             cur_loc = c * segment_step + segment_step / 2
-            # print(cur_loc)  # noqa: ERA001
+            # print(cur_loc)
             c += 1
             damage_list.append(
                 {
@@ -133,8 +133,8 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
         data=damage_list, index=[damage_time for val in damage_list], dtype='O'
     )
 
-    # REWET_input_data["Pipe_damage_list"] =  pipe_damage_list  # noqa: ERA001
-    # REWET_input_data["AIM"] =  aim_data  # noqa: ERA001
+    # REWET_input_data["Pipe_damage_list"] =  pipe_damage_list
+    # REWET_input_data["AIM"] =  aim_data
 
     return pipe_damage_list  # noqa: RET504
 
@@ -230,12 +230,12 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: 
 
         # I'm not sure if we need any data about the pump at this point
 
-        # aim_data = findAndReadAIMFile(tank_id, os.path.join(  # noqa: ERA001
+        # aim_data = findAndReadAIMFile(tank_id, os.path.join(
         # "Results", "WaterDistributionNetwork", "Pump"),
         # REWET_input_data["run_dir"])
 
         # We are getting this data from PELICUN
-        # restore_time = getPumpRetsoreTime(cur_damage)  # noqa: ERA001
+        # restore_time = getPumpRetsoreTime(cur_damage)
         damage_list.append(
             {
                 'pump_id': pump_id,
@@ -280,15 +280,15 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: 
         if cur_damage == 0:
             continue  # cur_damage_state = 0 meeans undamged tank
 
-        # =============================================================================  # noqa: E501
+        # =============================================================================
         #         # We are getting his data from REWET
         #
-        #         aim_data = findAndReadAIMFile(tank_id, os.path.join(  # noqa: ERA001
+        #         aim_data = findAndReadAIMFile(tank_id, os.path.join(
         #             "Results", "WaterDistributionNetwork", "Tank"),
         #                                            REWET_input_data["run_dir"])
-        #         tank_type = aim_data["GeneralInformation"].get("Type", None)  # noqa: ERA001
-        #         restore_time = getTankRetsoreTime(tank_type, cur_damage)  # noqa: ERA001
-        # =============================================================================  # noqa: E501
+        #         tank_type = aim_data["GeneralInformation"].get("Type", None)
+        #         restore_time = getTankRetsoreTime(tank_type, cur_damage)
+        # =============================================================================
 
         damage_list.append(
             {
@@ -415,7 +415,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001,
     """  # noqa: D205, D400, D401, D415
     # TODO: Make reading once for each scneario  # noqa: FIX002, TD002, TD003
 
-    # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )  # noqa: ERA001
+    # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
 
     damage_data = preprocessorIO.readJSONFile(file_addr)
 

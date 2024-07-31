@@ -26,7 +26,7 @@ class Timeline:  # noqa: D101
         self._event_time_register = pd.DataFrame(
             dtype='bool'
         )  # craete event at time 0 with No event marked as True
-        # print(type(self._event_time_register))  # noqa: ERA001
+        # print(type(self._event_time_register))
         self._event_time_register.loc[0, EVENT_TYPE] = [
             False for i in range(len(EVENT_TYPE))
         ]  # create event at time 0 with No event marked as True
@@ -94,7 +94,7 @@ class Timeline:  # noqa: D101
             != self._current_time
         ):
             raise RuntimeError(  # noqa: TRY003
-                'A possible violation of time in timeline event variables and/or event time registry'  # noqa: EM101, E501
+                'A possible violation of time in timeline event variables and/or event time registry'  # noqa: EM101
             )
         next_time = self._event_time_register.index[
             self._current_time_indexOfIndex + 1
@@ -161,7 +161,7 @@ class Timeline:  # noqa: D101
         if event_type not in EVENT_TYPE:
             raise ValueError('unrecognized value for event_type')  # noqa: EM101, TRY003
 
-        # check for duplicate in time index. if there is duplicate, we will only change the true and false value in the DataFrame  # noqa: E501
+        # check for duplicate in time index. if there is duplicate, we will only change the true and false value in the DataFrame
         temp_to_pop = []
         logger.debug('event distinct time ' + repr(event_distinct_time))  # noqa: G003
 
@@ -234,8 +234,8 @@ class Timeline:  # noqa: D101
         # Pandas 1.5.2. Not only it is not efficient piece of code, but also
         # this nto required. The end time event is already made when teh event
         # table is created.
-        # if self._event_time_register[self._event_time_register.index==self._simulation_end_time].empty==True:  # noqa: E501
-        # self._event_time_register=self._event_time_register.append(pd.DataFrame(data = False , index = [self._simulation_end_time], columns = EVENT_TYPE))  # noqa: ERA001, E501
+        # if self._event_time_register[self._event_time_register.index==self._simulation_end_time].empty==True:
+        # self._event_time_register=self._event_time_register.append(pd.DataFrame(data = False , index = [self._simulation_end_time], columns = EVENT_TYPE))
 
     def iFunctionalityRequirementReached(self):  # noqa: ANN201, C901, N802, D102, PLR0915
         logger.debug('Func: node functionality')
@@ -271,13 +271,13 @@ class Timeline:  # noqa: D101
             calcualting requried demand for each dmeand node
             """
 
-            # demand_ratio      = self.registry.settings['demand_ratio']  # noqa: ERA001
+            # demand_ratio      = self.registry.settings['demand_ratio']
             time_index = demand_met.index
             req_node_demand = {}
             default_pattern = self.registry.wn.options.hydraulic.pattern
-            # node_pattern_list = pd.Series(index=self.registry.demand_node_name_list, dtype=str)  # noqa: ERA001, E501
+            # node_pattern_list = pd.Series(index=self.registry.demand_node_name_list, dtype=str)
 
-            # req_node_demand = req_node_demand.transpose()  # noqa: ERA001
+            # req_node_demand = req_node_demand.transpose()
 
             demand_nodes_list = [
                 self.registry.wn.get_node(node_name)
@@ -309,7 +309,7 @@ class Timeline:  # noqa: D101
 
             req_node_demand = pd.DataFrame.from_dict(req_node_demand)
 
-            # node_pattern_list = node_pattern_list.dropna()  # noqa: ERA001
+            # node_pattern_list = node_pattern_list.dropna()
             if len(node_pattern_list) > 0:
                 node_pattern_list = pd.Series(
                     index=[
@@ -349,9 +349,9 @@ class Timeline:  # noqa: D101
                         [req_node_demand, cur_node_req_demand]
                     )
 
-            # print(req_node_demand)  # noqa: ERA001
+            # print(req_node_demand)
             # raise
-            # req_node_demand = req_node_demand.transpose()  # noqa: ERA001
+            # req_node_demand = req_node_demand.transpose()
             req_node_demand = req_node_demand.filter(
                 self.registry.demand_node_name_list
             )

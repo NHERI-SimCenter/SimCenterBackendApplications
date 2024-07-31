@@ -13,14 +13,14 @@ from Result_Project import Project_Result
 class PP_Data_Tab:  # noqa: N801, D101
     def __init__(self, project):  # noqa: ANN001, ANN204, D107
         self.pp_project = project
-        # self.__settings            = settings  # noqa: ERA001
+        # self.__settings            = settings
         self.result_scenarios = []
         self.population_data = None
-        # self.pp_result_folder_addr = result_folder_addr  # noqa: ERA001
+        # self.pp_result_folder_addr = result_folder_addr
         self.load_results_button.clicked.connect(self.resultLoadButtonPressed)
         self.population_browser_button.clicked.connect(self.browsePopulationData)
         self.population_load_button.clicked.connect(self.loadPopulationData)
-        # self.results_tabs_widget.setTabEnabled(1, False)  # noqa: ERA001
+        # self.results_tabs_widget.setTabEnabled(1, False)
         self.project_result = None
         self.current_population_directory = ''
 
@@ -74,15 +74,15 @@ class PP_Data_Tab:  # noqa: N801, D101
             self.result_file_status_table.removeRow(0)
 
     def resultLoadButtonPressed(self):  # noqa: ANN201, N802, D102
-        # data_retrived = False  # noqa: ERA001
+        # data_retrived = False
         # if self.getSimulationSettings():
         # if self.getHydraulicSettings():
         # if self.getDamageSettings():
         # if self.getRestorationSettings():
-        # data_retrived = True  # noqa: ERA001
+        # data_retrived = True
 
         # if not data_retrived:
-        # return  # noqa: ERA001
+        # return
 
         self.initalizeResultData()
 
@@ -133,7 +133,7 @@ class PP_Data_Tab:  # noqa: N801, D101
         if node_id_header == '' or population_header == '':
             self.errorMSG(
                 'Error',
-                'Node ID Header or/and Population Header is not selected. Maybe an empty population file?',  # noqa: E501
+                'Node ID Header or/and Population Header is not selected. Maybe an empty population file?',
             )
             return
 

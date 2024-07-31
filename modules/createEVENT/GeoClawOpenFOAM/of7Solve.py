@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -66,10 +66,10 @@ class of7Solve:  # noqa: N801
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: E501, W291
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: W291
             + fileobjec
             + """;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
         )
 
         # Return the header for U file
@@ -193,7 +193,7 @@ FoamFile
         # Other data
         fvSolntext = fvSolntext + 'solvers\n{\n\t'  # noqa: N806
 
-        # solvers: alpha  # noqa: ERA001
+        # solvers: alpha
         fvSolntext = fvSolntext + '"alpha.water.*"\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'nAlphaCorr\t1;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'nAlphaSubCycles\t2;\n\t\t'  # noqa: N806
@@ -206,31 +206,31 @@ FoamFile
         fvSolntext = fvSolntext + 'tolerance\t1e-08;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
-        # solvers: pcorr  # noqa: ERA001
+        # solvers: pcorr
         fvSolntext = fvSolntext + '"pcorr.*"\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'tolerance\t1e-05;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
-        # solvers: pcorrFinal  # noqa: ERA001
+        # solvers: pcorrFinal
         fvSolntext = fvSolntext + 'pcorrFinal\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + '$pcorr;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
-        # solvers: p_rgh  # noqa: ERA001
+        # solvers: p_rgh
         fvSolntext = fvSolntext + 'p_rgh\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'solver\tPCG;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'preconditioner\tDIC;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'tolerance\t1e-07;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'relTol\t0.05;\n\t}\n\n\t'  # noqa: N806
 
-        # solvers: p_rghFinal  # noqa: ERA001
+        # solvers: p_rghFinal
         fvSolntext = fvSolntext + 'p_rghFinal\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + '$p_rgh;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'relTol\t0;\n\t}\n\n\t'  # noqa: N806
 
-        # solvers: U  # noqa: ERA001
+        # solvers: U
         fvSolntext = fvSolntext + 'U\n\t{\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'solver\tsmoothSolver;\n\t\t'  # noqa: N806
         fvSolntext = fvSolntext + 'smoother\tsymGaussSeidel;\n\t\t'  # noqa: N806

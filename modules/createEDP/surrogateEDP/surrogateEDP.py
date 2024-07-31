@@ -26,7 +26,7 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):  # noqa: ANN001, ANN201,
     ):
         with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write(
-                'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'  # noqa: E501
+                'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )
         exit(-1)  # noqa: PLR1722
 

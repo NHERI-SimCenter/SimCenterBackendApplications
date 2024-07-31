@@ -64,13 +64,13 @@ def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: ANN001, ANN201, B006, N8
 
 
 # def pgv_node2pipe(pipe_info,node_info):
-#     pgvs = []  # noqa: ERA001
+#     pgvs = []
 #     for index, row in pipe_info.iterrows():
-#         nodes = [str(row['node1']),str(row['node2'])]  # noqa: ERA001
-#         end_nodes_info = node_info.loc[node_info['node_id'].isin(nodes)]  # noqa: ERA001
-#         pgv = np.mean(end_nodes_info['pgv'])  # noqa: ERA001
-#         pgvs.append(pgv)  # noqa: ERA001
-#     return pgvs  # noqa: ERA001
+#         nodes = [str(row['node1']),str(row['node2'])]
+#         end_nodes_info = node_info.loc[node_info['node_id'].isin(nodes)]
+#         pgv = np.mean(end_nodes_info['pgv'])
+#         pgvs.append(pgv)
+#     return pgvs
 
 
 def pgv_node2pipe(pipe_info, node_info):  # noqa: ANN001, ANN201, D103
@@ -121,7 +121,7 @@ def add_pgv2pipe(pipe):  # noqa: ANN001, ANN201, D103
 
         pgv_unit = event_units['PGV']
 
-        # Scale the PGVs and account for units - fragility functions are in inch per second  # noqa: E501
+        # Scale the PGVs and account for units - fragility functions are in inch per second
         if pgv_unit == 'cmps':
             PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)  # noqa: B023, N806
         elif pgv_unit == 'inps':
@@ -136,14 +136,14 @@ def add_pgv2pipe(pipe):  # noqa: ANN001, ANN201, D103
     return pipe
 
 
-#    pgv_info = pd.read_csv(pgv_path)  # noqa: ERA001
-#    gd_pgv = gpd.GeoDataFrame(  # noqa: ERA001
+#    pgv_info = pd.read_csv(pgv_path)
+#    gd_pgv = gpd.GeoDataFrame(
 #        pgv_info, geometry=gpd.points_from_xy(pgv_info.lon, pgv_info.lat))
-#    df = ckdnearest(node_info,gd_pgv)  # noqa: ERA001
-#    pgvs = pgv_node2pipe(pipe_info,df)  # noqa: ERA001
-#    pipe_info['pgv'] = pgvs  # noqa: ERA001
+#    df = ckdnearest(node_info,gd_pgv)
+#    pgvs = pgv_node2pipe(pipe_info,df)
+#    pipe_info['pgv'] = pgvs
 #
-#    return pipe_info  # noqa: ERA001
+#    return pipe_info
 
 
 k_dict = {
@@ -194,19 +194,19 @@ def add_failrate2pipe(pipe):  # noqa: ANN001, ANN201, D103
 
 #
 #
-#    pgv_prefix = get_prefix(pgv_path)  # noqa: ERA001
-#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'  # noqa: ERA001
-#    pipe_info.to_file(save_path, driver="GeoJSON")  # noqa: ERA001
-#    print (f'saved to {save_path}')  # noqa: ERA001
+#    pgv_prefix = get_prefix(pgv_path)
+#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'
+#    pipe_info.to_file(save_path, driver="GeoJSON")
+#    print (f'saved to {save_path}')
 
 
-#    pipe_info['fail_prob'] = get_pipe_failrate(pipe_info)  # noqa: ERA001
+#    pipe_info['fail_prob'] = get_pipe_failrate(pipe_info)
 #
 #
-#    pgv_prefix = get_prefix(pgv_path)  # noqa: ERA001
-#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'  # noqa: ERA001
-#    pipe_info.to_file(save_path, driver="GeoJSON")  # noqa: ERA001
-#    print (f'saved to {save_path}')  # noqa: ERA001
+#    pgv_prefix = get_prefix(pgv_path)
+#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'
+#    pipe_info.to_file(save_path, driver="GeoJSON")
+#    print (f'saved to {save_path}')
 
 
 def get_bar_ranges(space):  # noqa: ANN001, ANN201, D103

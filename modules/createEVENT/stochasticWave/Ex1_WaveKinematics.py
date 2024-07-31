@@ -49,7 +49,7 @@ ax.legend(fontsize=8, loc='lower center')
 ax.set_title('One frequency')
 
 
-# --- (Bottom Left) Example for one frequencies, multiple points(1d array), multiple times  # noqa: E501
+# --- (Bottom Left) Example for one frequencies, multiple points(1d array), multiple times
 a = np.array(
     [
         3,
@@ -63,7 +63,7 @@ f = 1.0 / T
 k = wavenumber(f, h, g)
 time = np.linspace(0, 2 * T[0] / 2, 5)
 vel, acc = kinematics2d(a, f, k, eps, h, time, z, x)
-# eta = elevation2d(a, f, k, eps, time, x)  # noqa: ERA001
+# eta = elevation2d(a, f, k, eps, time, x)
 ax = axes[1, 0]
 sT = ['0', 'T/4', 'T/2', '3T/4']  # noqa: N816
 for it, t in enumerate(time[:-1]):  # noqa: B007
@@ -122,7 +122,7 @@ f = 1.0 / T
 k = wavenumber(f, h, g)
 time = np.arange(0, 2 * T[0], T[0] / 101)
 vel, acc = kinematics2d(a, f, k, eps, h, time, Z, X)
-# eta = elevation2d(a, f, k, eps, time, x)  # noqa: ERA001
+# eta = elevation2d(a, f, k, eps, time, x)
 
 # --- Plot
 ax = axes[1, 1]
@@ -142,11 +142,11 @@ ax.set_ylim([-8, 8])
 ax.tick_params(direction='in')
 
 
-# fig.savefig('WaveKinematics.png')  # noqa: ERA001
-# fig.savefig('WaveKinematics.webp')  # noqa: ERA001
+# fig.savefig('WaveKinematics.png')
+# fig.savefig('WaveKinematics.webp')
 
 
-# plt.show()  # noqa: ERA001
+# plt.show()
 
 
 if __name__ == '__main__':
@@ -155,7 +155,7 @@ if __name__ == '__main__':
 if __name__ == '__test__':
     pass
 if __name__ == '__export__':
-    # fig.close()  # noqa: ERA001
+    # fig.close()
     from welib.tools.repo import export_figs_callback
 
     export_figs_callback(__file__)

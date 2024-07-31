@@ -302,12 +302,16 @@ class ERANatafJointDistribution:  # noqa: D101
         )
 
     def u_to_x(  # noqa: D102
-        self, u: NDArray, jacobian: bool = False  # noqa: FBT001, FBT002
+        self,
+        u: NDArray,
+        jacobian: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:  # noqa: FA100, FA102
         return self.ERANataf_object.U2X(U=u, Jacobian=jacobian)
 
     def x_to_u(  # noqa: D102
-        self, x: NDArray, jacobian: bool = False  # noqa: FBT001, FBT002
+        self,
+        x: NDArray,
+        jacobian: bool = False,  # noqa: FBT001, FBT002
     ) -> Union[  # noqa: FA100
         tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],  # noqa: FA102
         NDArray[np.floating[Any]],
@@ -324,7 +328,9 @@ class ERANatafJointDistribution:  # noqa: D101
         return self.ERANataf_object.cdf(X=x)
 
     def random(  # noqa: D102
-        self, list_of_rngs: list[np.random.Generator] = [], n: int = 1  # noqa: B006, FA102
+        self,
+        list_of_rngs: list[np.random.Generator] = [],  # noqa: B006, FA102
+        n: int = 1,
     ) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:  # noqa: FA100, FA102
         if list_of_rngs == []:
             list_of_rngs = [
@@ -390,7 +396,8 @@ def get_default_model_evaluation_function(model):  # noqa: ANN001, ANN201, D103
 
 
 def get_ERANataf_joint_distribution_instance(  # noqa: ANN201, N802, D103
-    list_of_rv_data, correlation_matrix_data  # noqa: ANN001
+    list_of_rv_data,  # noqa: ANN001
+    correlation_matrix_data,  # noqa: ANN001
 ):
     joint_distribution = ERANatafJointDistribution(
         list_of_rv_data, correlation_matrix_data
@@ -477,7 +484,8 @@ class InverseGammaParameters:  # noqa: D101
 
 
 def _get_tabular_results_file_name_for_dataset(  # noqa: ANN202
-    tabular_results_file_base_name, dataset_number  # noqa: ANN001
+    tabular_results_file_base_name,  # noqa: ANN001
+    dataset_number,  # noqa: ANN001
 ):
     tabular_results_parent = tabular_results_file_base_name.parent
     tabular_results_stem = tabular_results_file_base_name.stem
@@ -485,7 +493,7 @@ def _get_tabular_results_file_name_for_dataset(  # noqa: ANN202
 
     tabular_results_file = (
         tabular_results_parent
-        / f'{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}'  # noqa: E501
+        / f'{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}'
     )
     return tabular_results_file  # noqa: RET504
 

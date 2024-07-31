@@ -61,7 +61,7 @@ from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF1 import (
     WGCEP_UCERF1_EqkRupForecast,
 )
 from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final import UCERF2
-from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (  # noqa: E501
+from org.opensha.sha.earthquake.rupForecastImpl.WGCEP_UCERF_2_Final.MeanUCERF2 import (
     MeanUCERF2,
 )
 from org.opensha.sha.faultSurface import *  # noqa: F403
@@ -99,13 +99,13 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
         ):
             value = erf_selection.pop('Treat Background Seismicity As')
             print(  # noqa: T201
-                f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'  # noqa: E501
+                f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
             )
         for key, value in erf_selection.items():
             if type(value) is int:
                 value = float(value)  # noqa: PLW2901
             erf.setParameter(key, value)
-            # erf.getParameter(key).setValue(value)  # noqa: ERA001
+            # erf.getParameter(key).setValue(value)
     elif erf_name == 'USGS/CGS 2002 Adj. Cal. ERF':
         erf = Frankel02_AdjustableEqkRupForecast()
     elif erf_name == 'WGCEP UCERF 1.0 (2005)':
@@ -122,9 +122,9 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
                 print(  # noqa: T201
-                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'  # noqa: E501
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
-            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one  # noqa: E501
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
             # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
@@ -148,9 +148,9 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
                 print(  # noqa: T201
-                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'  # noqa: E501
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
-            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one  # noqa: E501
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
             # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
@@ -176,9 +176,9 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
             ):
                 value = erf_selection.pop('Treat Background Seismicity As')
                 print(  # noqa: T201
-                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'  # noqa: E501
+                    f'Background Seismicvity is set as Excluded, Treat Background Seismicity As: {value} is ignored'
                 )
-            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one  # noqa: E501
+            # Some parameters in MeanUCERF3 have overloaded setValue() Need to set one by one
             # Set Apply Aftershock Filter
             if erf_selection.get('Apply Aftershock Filter', None):
                 tmp.setParameter(
@@ -199,7 +199,7 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
             setERFProbabilityModelOptions(tmp, erf_selection)
         else:
             print(  # noqa: T201
-                f"""The specified Mean UCERF3 preset {erf_selection.get("preset", None)} is not implemented"""  # noqa: E501
+                f"""The specified Mean UCERF3 preset {erf_selection.get("preset", None)} is not implemented"""
             )
         erf = tmp
         del tmp
@@ -210,7 +210,7 @@ def getERF(scenario_info, update_flag=True):  # noqa: ANN001, ANN201, FBT002, C9
 
     if erf_name and update_flag:
         erf.updateForecast()
-    # return  # noqa: ERA001
+    # return
     return erf
 
 
@@ -234,7 +234,8 @@ def setERFtreatBackgroundOptions(erf, selection):  # noqa: ANN001, ANN201, N802,
         erf.setParameter('Treat Background Seismicity As', BackgroundRupType.FINITE)  # noqa: F405
     elif option == 'Two Perpendicular Faults':
         erf.setParameter(
-            'Treat Background Seismicity As', BackgroundRupType.CROSSHAIR  # noqa: F405
+            'Treat Background Seismicity As',
+            BackgroundRupType.CROSSHAIR,  # noqa: F405
         )
 
 
@@ -277,35 +278,43 @@ def setERFMagDependentAperiodicityOptions(erf, selection):  # noqa: ANN001, ANN2
         erf.setParameter('Aperiodicity', MagDependentAperiodicityOptions.HIGH_VALUES)  # noqa: F405
     elif option == 'All 0.1':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT1_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT1_VALUES,  # noqa: F405
         )
     elif option == 'All 0.2':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT2_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT2_VALUES,  # noqa: F405
         )
     elif option == 'All 0.3':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT3_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT3_VALUES,  # noqa: F405
         )
     elif option == 'All 0.4':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT4_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT4_VALUES,  # noqa: F405
         )
     elif option == 'All 0.5':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT5_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT5_VALUES,  # noqa: F405
         )
     elif option == 'All 0.6':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT6_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT6_VALUES,  # noqa: F405
         )
     elif option == 'All 0.7':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT7_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT7_VALUES,  # noqa: F405
         )
     elif option == 'All 0.8':
         erf.setParameter(
-            'Aperiodicity', MagDependentAperiodicityOptions.ALL_PT8_VALUES  # noqa: F405
+            'Aperiodicity',
+            MagDependentAperiodicityOptions.ALL_PT8_VALUES,  # noqa: F405
         )
 
 
@@ -315,11 +324,13 @@ def setERFBPTAveragingTypeOptions(erf, selection):  # noqa: ANN001, ANN201, N802
         pass
     elif option == 'AveRI and AveTimeSince':
         erf.setParameter(
-            'BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE  # noqa: F405
+            'BPT Averaging Type',
+            BPTAveragingTypeOptions.AVE_RI_AVE_TIME_SINCE,  # noqa: F405
         )
     elif option == 'AveRI and AveNormTimeSince':
         erf.setParameter(
-            'BPT Averaging Type', BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE  # noqa: F405
+            'BPT Averaging Type',
+            BPTAveragingTypeOptions.AVE_RI_AVE_NORM_TIME_SINCE,  # noqa: F405
         )
     elif option == 'AveRate and AveNormTimeSince':
         erf.setParameter(
@@ -338,8 +349,8 @@ def get_source_rupture(erf, source_index, rupture_index):  # noqa: ANN001, ANN20
 def get_source_distance(erf, source_index, lat, lon):  # noqa: ANN001, ANN201, D103
     rupSource = erf.getSource(source_index)  # noqa: N806
     sourceSurface = rupSource.getSourceSurface()  # noqa: N806
-    # print(lon)  # noqa: ERA001
-    # print(lat)  # noqa: ERA001
+    # print(lon)
+    # print(lat)
     distToSource = []  # noqa: N806
     for i in range(len(lat)):
         distToSource.append(  # noqa: PERF401
@@ -421,7 +432,7 @@ def horzDistanceFast(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201, N802, D10
     a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
     EARTH_RADIUS_MEAN = 6371.0072  # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/commons/geo/GeoTools.java#L22  # noqa: N806
-    # return EARTH_RADIUS_MEAN * np.sqrt((dLat * dLat) + (dLon * dLon))  # noqa: ERA001
+    # return EARTH_RADIUS_MEAN * np.sqrt((dLat * dLat) + (dLon * dLon))
     return EARTH_RADIUS_MEAN * c
 
 
@@ -434,7 +445,7 @@ def getPtSrcDistCorr(horzDist, mag, type):  # noqa: ANN001, ANN201, A002, N802, 
         )
     elif type == 'NSHMP08':  # noqa: RET505
         print(  # noqa: T201
-            'The NSHMP08 rJB correction has not been implemented. corr=1.0 is used instead'  # noqa: E501
+            'The NSHMP08 rJB correction has not been implemented. corr=1.0 is used instead'
         )
         # https://github.com/opensha/opensha/blob/master/src/main/java/org/opensha/sha/faultSurface/utils/PtSrcDistCorr.java#L20
         return 1.0
@@ -486,8 +497,8 @@ def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     for i in range(num_sources):
         rupSource = erf.getSource(i)  # noqa: N806
         distanceToSource = rupSource.getMinDistance(site)  # noqa: N806
-        # sourceSurface = rupSource.getSourceSurface()  # noqa: ERA001
-        # distanceToSource = sourceSurface.getDistanceRup(site_loc)  # noqa: ERA001
+        # sourceSurface = rupSource.getSourceSurface()
+        # distanceToSource = sourceSurface.getDistanceRup(site_loc)
         source_tag.append(i)
         source_dist.append(distanceToSource)
     df = pd.DataFrame.from_dict({'sourceID': source_tag, 'sourceDist': source_dist})  # noqa: PD901
@@ -517,7 +528,8 @@ def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             ruptureSurface = rupList.get(j).getRuptureSurface()  # noqa: N806
             # If pointsource rupture distance correction
             if isinstance(ruptureSurface, PointSurface):  # noqa: F405
-                distCorrType = PtSrcDistCorr.Type.NONE  # or 'FIELD' or 'NSHMP08'  # noqa: N806
+                # or 'FIELD' or 'NSHMP08'
+                distCorrType = PtSrcDistCorr.Type.NONE  # noqa: N806
                 (PointSurface @ ruptureSurface).setDistCorrMagAndType(  # noqa: F405
                     rupList.get(j).getMag(), distCorrType
                 )
@@ -613,26 +625,26 @@ def export_to_json(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
     print(  # noqa: T201
-        f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'  # noqa: E501
+        f'FetchOpenSHA: total {len(feature_collection_sorted)} ruptures are collected.'
     )
-    # num_preview = 1000  # noqa: ERA001
+    # num_preview = 1000
     # if len(feature_collection_sorted) > num_preview:
-    #     preview_erf_data={'features': feature_collection_sorted[0:num_preview]}  # noqa: ERA001
-    # else:  # noqa: ERA001
-    #     preview_erf_data = erf_data  # noqa: ERA001
+    #     preview_erf_data={'features': feature_collection_sorted[0:num_preview]}
+    # else:
+    #     preview_erf_data = erf_data
     # Output
-    # import time  # noqa: ERA001
-    # startTime = time.process_time_ns()  # noqa: ERA001
+    # import time
+    # startTime = time.process_time_ns()
     if outfile is not None:
         print(  # noqa: T201
-            f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'  # noqa: E501
+            f'The collected ruptures are sorted by MeanAnnualRate and saved in {outfile}'
         )
         with open(outfile, 'w') as f:  # noqa: PTH123
             ujson.dump(erf_data, f, indent=2)
-    # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")  # noqa: ERA001, E501
+    # print(f"Time consumed by json dump is {(time.process_time_ns()-startTime)/1e9}s")
 
     # del preview_erf_data
-    # return  # noqa: ERA001
+    # return
     return erf_data
 
 
@@ -661,7 +673,7 @@ def CreateIMRInstance(gmpe_name):  # noqa: ANN001, ANN201, N802, D103
     imr = ctor.newInstance()
     # Setting default parameters
     imr.setParamDefaults()
-    # return  # noqa: ERA001
+    # return
     return imr
 
 
@@ -707,9 +719,9 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D10
     except:  # noqa: E722
         availableSiteData = []  # noqa: N806
         print(  # noqa: T201
-            'remote getAllAvailableData is not available temporarily, will use site Vs30 in the site csv file.'  # noqa: E501
+            'remote getAllAvailableData is not available temporarily, will use site Vs30 in the site csv file.'
         )
-        # return 1  # noqa: ERA001
+        # return 1
     siteTrans = SiteTranslator()  # noqa: N806, F405
     # Looping over all sites
     site_prop = []
@@ -800,7 +812,14 @@ def get_site_prop(gmpe_name, siteSpec):  # noqa: ANN001, ANN201, C901, N803, D10
 
 
 def get_IM(  # noqa: ANN201, C901, N802, D103, PLR0912, PLR0913, PLR0915
-    gmpe_info, erf, sites, siteSpec, site_prop, source_info, station_info, im_info  # noqa: ANN001, N803
+    gmpe_info,  # noqa: ANN001
+    erf,  # noqa: ANN001
+    sites,  # noqa: ANN001
+    siteSpec,  # noqa: ANN001, N803
+    site_prop,  # noqa: ANN001
+    source_info,  # noqa: ANN001
+    station_info,  # noqa: ANN001
+    im_info,  # noqa: ANN001
 ):
     # GMPE name
     gmpe_name = gmpe_info['Type']
@@ -975,7 +994,7 @@ def get_IM(  # noqa: ANN201, C901, N802, D103, PLR0912, PLR0913, PLR0915
         'Periods': cur_T,
         'GroundMotions': gm_collector,
     }
-    # return  # noqa: ERA001
+    # return
     return res, station_info
 
 
@@ -1003,13 +1022,13 @@ def get_site_vs30_from_opensha(lat, lon, vs30model='CGS/Wills VS30 Map (2015)'):
             continue
 
     # check if any nan (Wills Map return nan for offshore sites)
-    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'  # noqa: E501
+    # Using global vs30 as default patch - 'Global Vs30 from Topographic Slope (Wald & Allen 2008)'
     if any([np.isnan(x) for x in vs30]):  # noqa: C419
         non_list = np.where(np.isnan(vs30))[0].tolist()
         for i in non_list:
             vs30[i] = float(siteData.get(3).getValue(i).getValue())
 
-    # return  # noqa: ERA001
+    # return
     return vs30
 
 

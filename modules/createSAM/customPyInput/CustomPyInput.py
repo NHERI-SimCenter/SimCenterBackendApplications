@@ -90,7 +90,7 @@ def create_SAM(  # noqa: ANN201, N802, D103, PLR0913
         'type': 'CustomPyInput',
         'NodeMapping': node_map,
         'numStory': stories,
-        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...  # noqa: E501
+        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
         'ndm': int(ndm),
         # TODO: improve this if we want random vars in the structure  # noqa: FIX002, TD002, TD003
         'randomVar': [],

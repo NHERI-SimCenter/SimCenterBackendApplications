@@ -24,7 +24,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
     # the whole workflow is wrapped within a 'try' block.
     # a number of exceptions (files missing, explicit application failures, etc.) are
     # handled explicitly to aid the user.
-    # But unhandled exceptions case the workflow to stop with an error, handled in the  # noqa: E501
+    # But unhandled exceptions case the workflow to stop with an error, handled in the
     # exception block way at the bottom of this main() function
     try:
         workflow_log(divider)  # noqa: F405
@@ -37,7 +37,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
 
         #
         # first we parse the applications registry to load all possible applications
-        #  - for each application type we place in a dictionary key being name, value containing path to executable  # noqa: E501
+        #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
         with open(applicationsRegistry) as data_file:  # noqa: PTH123
             registryData = json.load(data_file)  # noqa: N806
@@ -67,7 +67,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
         with open(inputFile) as data_file:  # noqa: PTH123
             data = json.load(data_file)
             # convert all relative paths to full paths
-            # relative2fullpath(data)  # noqa: ERA001
+            # relative2fullpath(data)
 
         if 'runDir' in data:
             runDIR = data['runDir']  # noqa: N806
@@ -244,7 +244,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
                     simAppExeRemote = posixpath.join(remoteAppDir, simAppExe)  # noqa: N806
                 else:
                     raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        f'Simulation application {simulationApplication} not in registry'  # noqa: EM102, E501
+                        f'Simulation application {simulationApplication} not in registry'  # noqa: EM102
                     )
 
             else:

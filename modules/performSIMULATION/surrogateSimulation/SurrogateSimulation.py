@@ -45,7 +45,7 @@ import sys
 
 import numpy as np
 
-# from simcenter_common import *  # noqa: ERA001
+# from simcenter_common import *
 
 convert_EDP = {  # noqa: N816
     'max_abs_acceleration': 'PFA',
@@ -60,11 +60,11 @@ convert_EDP = {  # noqa: N816
 def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
     # these imports are here to save time when the app is called without
     # the -getRV flag
-    # import openseespy.opensees as ops  # noqa: ERA001
+    # import openseespy.opensees as ops
 
     with open(AIM_input_path, encoding='utf-8') as f:  # noqa: PTH123
         root_AIM = json.load(f)  # noqa: N806
-    # root_GI = root_AIM['GeneralInformation']  # noqa: ERA001
+    # root_GI = root_AIM['GeneralInformation']
 
     root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
 
@@ -74,7 +74,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
     )
 
     # with open(surrogate_path, 'r') as f:
-    #     surrogate_model = json.load(f)  # noqa: ERA001
+    #     surrogate_model = json.load(f)
 
     #
     # Let's call GPdriver creater
@@ -98,9 +98,9 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
     )  # json
 
     # compute IMs
-    # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")  # noqa: ERA001, E501
+    # print(f"{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}")
     os.system(  # noqa: S605
-        f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'  # noqa: E501
+        f'{pythonEXE} {surrogatePredictionPath} {params_name} {surrogate_meta_name} {surrogate_name}'
     )
 
     #
@@ -116,7 +116,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
     ):
         with open('../workflow.err', 'w') as f:  # noqa: PTH123
             f.write(
-                'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'  # noqa: E501
+                'Do not select [None] in the FEM tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
             )
         exit(-1)  # noqa: PLR1722
 
@@ -130,7 +130,7 @@ def write_EDP(AIM_input_path, EDP_input_path, newEDP_input_path=None):  # noqa: 
 
     root_SAM = root_AIM['Applications']['Modeling']  # noqa: N806
     curpath = os.getcwd()  # noqa: PTH109
-    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])  # noqa: ERA001, E501
+    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
     surrogate_path = os.path.join(curpath, root_SAM['ApplicationData']['mainScript'])  # noqa: PTH118
 
     with open(surrogate_path, encoding='utf-8') as f:  # noqa: PTH123

@@ -136,7 +136,7 @@ class ERADist:
       Uniform:                    Obj = ERADist('uniform','DATA',[X])
       Weibull:                    Obj = ERADist('weibull','DATA',[X])
 
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
 
     # %%
     def __init__(self, name, opt, val=[0, 1], ID=False):  # noqa: ANN001, ANN204, FBT002, B006, C901, N803, PLR0912, PLR0915
@@ -146,7 +146,7 @@ class ERADist:
         self.Name = name.lower()
         self.ID = ID
 
-        # ----------------------------------------------------------------------------  # noqa: E501
+        # ----------------------------------------------------------------------------
         # definition of the distribution by its parameters
         if opt.upper() == 'PAR':
             val = np.array(val, ndmin=1, dtype=float)
@@ -175,7 +175,7 @@ class ERADist:
                     self.Dist = stats.binom(n=self.Par['n'], p=self.Par['p'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Binomial distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Binomial distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'chisquare':
@@ -184,7 +184,7 @@ class ERADist:
                     self.Dist = stats.chi2(df=self.Par['k'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Chi-Squared distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Chi-Squared distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'exponential':
@@ -193,7 +193,7 @@ class ERADist:
                     self.Dist = stats.expon(scale=1 / self.Par['lambda'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Exponential distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Exponential distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'frechet':
@@ -206,7 +206,7 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Frechet distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Frechet distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'gamma':
@@ -227,7 +227,7 @@ class ERADist:
                     self.Dist = stats.geom(p=self.Par['p'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Geometric distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Geometric distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'gev':
@@ -240,7 +240,7 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Generalized Extreme Value gistribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Generalized Extreme Value gistribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'gevmin':
@@ -253,7 +253,7 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Generalized Extreme Value distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Generalized Extreme Value distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'gumbel':
@@ -286,7 +286,7 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Lognormal distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Lognormal distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'negativebinomial':
@@ -300,7 +300,7 @@ class ERADist:
                     self.Dist = stats.nbinom(n=self.Par['k'], p=self.Par['p'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Negative Binomial distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Negative Binomial distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'normal' or name.lower() == 'gaussian':
@@ -335,7 +335,7 @@ class ERADist:
                         self.Dist = stats.poisson(mu=self.Par['lambda'])
                     else:
                         raise RuntimeError(  # noqa: TRY003
-                            'The Poisson distribution is not defined for your parameters.'  # noqa: EM101, E501
+                            'The Poisson distribution is not defined for your parameters.'  # noqa: EM101
                         )
 
                 if n == 2:  # noqa: PLR2004
@@ -344,7 +344,7 @@ class ERADist:
                         self.Dist = stats.poisson(mu=self.Par['v'] * self.Par['t'])
                     else:
                         raise RuntimeError(  # noqa: TRY003
-                            'The Poisson distribution is not defined for your parameters.'  # noqa: EM101, E501
+                            'The Poisson distribution is not defined for your parameters.'  # noqa: EM101
                         )
 
             elif name.lower() == 'rayleigh':
@@ -354,7 +354,7 @@ class ERADist:
                     self.Dist = stats.rayleigh(scale=self.Par['alpha'])
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Rayleigh distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Rayleigh distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif (name.lower() == 'standardnormal') or (
@@ -391,7 +391,7 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Uniform distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Uniform distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             elif name.lower() == 'weibull':
@@ -402,13 +402,13 @@ class ERADist:
                     )
                 else:
                     raise RuntimeError(  # noqa: TRY003
-                        'The Weibull distribution is not defined for your parameters.'  # noqa: EM101, E501
+                        'The Weibull distribution is not defined for your parameters.'  # noqa: EM101
                     )
 
             else:
                 raise RuntimeError("Distribution type '" + name + "' not available.")
 
-        # ----------------------------------------------------------------------------  # noqa: E501
+        # ----------------------------------------------------------------------------
         # if the distribution is defined by its moments
         elif opt.upper() == 'MOM':
             val = np.array(val, ndmin=1, dtype=float)
@@ -489,7 +489,7 @@ class ERADist:
                 else:
                     raise RuntimeError(  # noqa: TRY003
                         'fsolve could not converge to a solution, therefore'  # noqa: EM101
-                        'the parameters of the Frechet distribution could not be determined.'  # noqa: E501
+                        'the parameters of the Frechet distribution could not be determined.'
                     )
                 if a_n > 0 and k > 0:
                     self.Par = {'a_n': a_n, 'k': k}
@@ -600,7 +600,7 @@ class ERADist:
             elif name.lower() == 'lognormal':
                 if val[0] <= 0:
                     raise RuntimeError(  # noqa: TRY003
-                        'Please select other moments, the first moment must be greater than zero.'  # noqa: EM101, E501
+                        'Please select other moments, the first moment must be greater than zero.'  # noqa: EM101
                     )
                 # solve two equations for the parameters of the distribution
                 mu_lnx = np.log(val[0] ** 2 / np.sqrt(val[1] ** 2 + val[0] ** 2))
@@ -682,7 +682,7 @@ class ERADist:
                     )
                 if val[0] <= val[2] or val[0] >= val[3]:
                     raise RuntimeError(  # noqa: TRY003
-                        'The mean of the distribution must be within the interval [a,b].'  # noqa: EM101, E501
+                        'The mean of the distribution must be within the interval [a,b].'  # noqa: EM101
                     )
 
                 def equation(par):  # noqa: ANN001, ANN202
@@ -758,7 +758,7 @@ class ERADist:
                 else:
                     raise RuntimeError(  # noqa: TRY003
                         'fsolve could not converge to a solution, therefore'  # noqa: EM101
-                        'the parameters of the Weibull distribution could not be determined.'  # noqa: E501
+                        'the parameters of the Weibull distribution could not be determined.'
                     )
                 if a_n > 0 and k > 0:
                     self.Par = {'a_n': a_n, 'k': k}
@@ -771,7 +771,7 @@ class ERADist:
             else:
                 raise RuntimeError("Distribution type '" + name + "' not available.")
 
-        # ----------------------------------------------------------------------------  # noqa: E501
+        # ----------------------------------------------------------------------------
         # if the distribution is to be fitted to a data vector
         elif opt.upper() == 'DATA':
             if name.lower() == 'beta':
@@ -917,11 +917,11 @@ class ERADist:
                 k = np.mean(val) * p
                 if k == 0:
                     raise RuntimeError(  # noqa: TRY003
-                        'No suitable parameters can be estimated from the given data.'  # noqa: EM101, E501
+                        'No suitable parameters can be estimated from the given data.'  # noqa: EM101
                     )
                 k = round(
                     k, 0
-                )  # rounding of k, since k must be a positive integer according to ERADist definition  # noqa: E501
+                )  # rounding of k, since k must be a positive integer according to ERADist definition
                 p = k / np.mean(val)  # estimation of p for rounded k (mle)
                 self.Par = {'k': k, 'p': p}
                 self.Dist = stats.nbinom(n=self.Par['k'], p=self.Par['p'])
@@ -1150,25 +1150,25 @@ def gevfit_alt(y):  # noqa: ANN001, ANN201
             if par[0] < -1:
                 par = x01
                 warnings.warn(  # noqa: B028
-                    'The MLE estimate of the shape parameter of the GEV is not in the range where the MLE estimator is valid. PWM estimation is used.'  # noqa: E501
+                    'The MLE estimate of the shape parameter of the GEV is not in the range where the MLE estimator is valid. PWM estimation is used.'
                 )
                 if par[0] > 0.4:  # noqa: PLR2004
                     warnings.warn(  # noqa: B028
-                        'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'  # noqa: E501
+                        'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'
                     )
         else:
             # set parameters obtained by PWM
             par = x01
             if par[0] > 0.4:  # noqa: PLR2004
                 warnings.warn(  # noqa: B028
-                    'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'  # noqa: E501
+                    'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'
                 )
     else:
         # set parameters obtained by PWM
         par = x01
         if par[0] < -0.4:  # noqa: PLR2004
             warnings.warn(  # noqa: B028
-                'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'  # noqa: E501
+                'The shape parameter of the GEV is not in the range where PWM asymptotic results are valid.'
             )
 
     return par

@@ -97,7 +97,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             self.track_lon = storm_track['Longitude']
             if len(self.track_lat) != len(self.track_lon):
                 print(  # noqa: T201
-                    'WindFieldSimulation: warning - storm track Latitude and Longitude sizes are different, data truncated.'  # noqa: E501
+                    'WindFieldSimulation: warning - storm track Latitude and Longitude sizes are different, data truncated.'
                 )
                 self.track_lat = self.track_lat[
                     0 : int(min(len(self.track_lat), len(self.track_lon)))
@@ -126,16 +126,16 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         self.mesh_info = []
 
     def set_delta_path(self, delta_path):  # noqa: ANN001, ANN201
-        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""  # noqa: E501, D400, D415
+        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""  # noqa: D400, D415
         if len(delta_path) == 3:  # noqa: PLR2004
             self.delta_path = delta_path
         else:
             print(  # noqa: T201
-                'WindFieldSimulation: the delta_path should have a size of 3, default delta_path used.'  # noqa: E501
+                'WindFieldSimulation: the delta_path should have a size of 3, default delta_path used.'
             )
 
     def set_delta_feat(self, delta_feat):  # noqa: ANN001, ANN201
-        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: E501, D400, D415
+        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: D400, D415
         if len(delta_feat) == 3:  # noqa: PLR2004
             self.cyclone_pres = delta_feat[0] * 100.0
             self.cyclone_sped = delta_feat[1] * 1000.0 / 3600.0
@@ -148,30 +148,30 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             )
         else:
             print(  # noqa: T201
-                'WindFieldSimulation: the delta_feat should have a size of 3, default delta_feat used.'  # noqa: E501
+                'WindFieldSimulation: the delta_feat should have a size of 3, default delta_feat used.'
             )
 
     def __interp_z0(self, lat, lon):  # noqa: ANN001, ANN202
-        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: E501, D400, D415
+        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: D400, D415
         z0 = []
         if not self.terrain_z0:
             # no reference terrain provided, using default reference z0 = 0.03
             z0 = 0.03
         else:
-            # pt = Point(lat, lon)  # noqa: ERA001
+            # pt = Point(lat, lon)
             pt = Point(lon, lat)
             for p, z in zip(self.terrain_poly, self.terrain_z0):
                 if pt.within(p):
                     z0 = z
             if not z0:
                 z0 = 0.01
-        # return  # noqa: ERA001
+        # return
         return z0
 
     def add_reference_terrain(self, terrain_info):  # noqa: ANN001, ANN201
         """add_reference_terrainL specifying reference z0 values for a set of polygons
         terrain_info: geojson formatted polygon and z0 data
-        """  # noqa: E501, D205, D400, D415
+        """  # noqa: D205, D400, D415
         for p in terrain_info['features']:
             if p['geometry']['type'] == 'Polygon':
                 # creating a new polygon
@@ -219,7 +219,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
             min(lat0, lat1) < min(self.track_lat)
         ):
             print(  # noqa: T201
-                'WindFieldSimulation: warning - forcing the track mesh consistent with the original track boundary.'  # noqa: E501
+                'WindFieldSimulation: warning - forcing the track mesh consistent with the original track boundary.'
             )
             lat0 = min(lat0, max(self.track_lat))
             lat1 = min(lat1, max(self.track_lat))
@@ -307,7 +307,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         self.beta_c[-1] = self.beta_c[-2]
 
     def compute_wind_field(self):  # noqa: ANN201, PLR0915
-        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: E501, D400, D415
+        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: D400, D415
         print('WindFieldSimulation: running linear analytical model.')  # noqa: T201
         # checking if all parameters are defined
 

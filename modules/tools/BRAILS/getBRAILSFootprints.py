@@ -79,7 +79,7 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
     else:
         location = locationStr
 
-    # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:  # noqa: E501
+    # Run FootprintHandler to get GeoJSON file for the footprints of the entered location:
     if fpSourceAttrMap == '':
         fpHandler.fetch_footprint_data(
             location, fpSource=fpSrc, lengthUnit=lengthunit, outputFile=outputfile

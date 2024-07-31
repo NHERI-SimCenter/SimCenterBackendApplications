@@ -20,7 +20,7 @@ from welib.tools.spectral import fft_wrap  # noqa: E402
 seed(None)  # noqa: NPY002
 
 # --- Parameters
-# t  = np.linspace(0,600,601) # time vector  [s]  # noqa: ERA001
+# t  = np.linspace(0,600,601) # time vector  [s]
 t = np.linspace(0, 60.0, 6001)  # time vector  [s]
 Hs = 8.1  # Significant wave height [m]
 Tp = 12.7  # Peak period [s]
@@ -38,7 +38,8 @@ S = jonswap(freq, Hs, Tp=Tp, g=9.80665)
 k = wavenumber(freq, h, g)
 
 # --- Compute wave elevation based on amplitudes and random phases
-eps = uniform(0, 2 * np.pi, len(freq))  # random phases between 0 and 2pi  # noqa: NPY002
+# random phases between 0 and 2pi
+eps = uniform(0, 2 * np.pi, len(freq))  # noqa: NPY002
 a = np.sqrt(2 * S * df)  # wave amplitudes based on spectrum
 x = 0  # longitudinal distance where wave is evaluated [m]
 eta = elevation2d(a, freq, k, eps, t, x)
@@ -70,8 +71,8 @@ ax.set_ylabel(r'Spectral density [m$^2$ s]')
 ax.tick_params(direction='in')
 ax.autoscale(enable=True, axis='both', tight=True)
 fig.savefig('WaveTimeSeries.png')
-# fig.savefig('WaveTimeSeries.webp')  # noqa: ERA001
-# plt.show()  # noqa: ERA001
+# fig.savefig('WaveTimeSeries.webp')
+# plt.show()
 
 if __name__ == '__main__':
     pass

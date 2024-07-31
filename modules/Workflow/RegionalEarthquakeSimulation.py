@@ -1,4 +1,4 @@
-# written: fmk  # noqa: ERA001, EXE002, INP001, D100
+# written: fmk  # noqa: EXE002, INP001, D100
 
 import json
 import os
@@ -15,7 +15,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
     # the whole workflow is wrapped within a 'try' block.
     # a number of exceptions (files missing, explicit application failures, etc.) are
     # handled explicitly to aid the user.
-    # But unhandled exceptions case the workflow to stop with an error, handled in the  # noqa: E501
+    # But unhandled exceptions case the workflow to stop with an error, handled in the
     # exception block way at the bottom of this main() function
     try:
         workflow_log(divider)  # noqa: F405
@@ -28,7 +28,7 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
 
         #
         # first we parse the applications registry to load all possible applications
-        #  - for each application type we place in a dictionary key being name, value containing path to executable  # noqa: E501
+        #  - for each application type we place in a dictionary key being name, value containing path to executable
         #
         with open(applicationsRegistry) as data_file:  # noqa: PTH123
             registryData = json.load(data_file)  # noqa: N806
@@ -210,7 +210,8 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
                     edpAppExe = Applications['EDPApplications'].get(edpApplication)  # noqa: N806
                 else:
                     raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        'EDP application %s not in registry', edpApplication  # noqa: EM101
+                        'EDP application %s not in registry',  # noqa: EM101
+                        edpApplication,
                     )
 
             else:
@@ -260,7 +261,8 @@ def main(run_type, inputFile, applicationsRegistry):  # noqa: ANN001, ANN201, C9
                     uqAppExe = Applications['UQApplications'].get(uqApplication)  # noqa: N806
                 else:
                     raise WorkFlowInputError(  # noqa: F405, TRY003, TRY301
-                        'UQ application %s not in registry', uqApplication  # noqa: EM101
+                        'UQ application %s not in registry',  # noqa: EM101
+                        uqApplication,
                     )
 
             else:

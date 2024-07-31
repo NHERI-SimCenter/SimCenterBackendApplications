@@ -49,7 +49,7 @@ from help_functions import (
 
 # # Global constant: SECTION_DATABASE (a panda dataframe read from .csv file)
 # with open('AllSectionDatabase.csv', 'r') as file:
-#     SECTION_DATABASE = pd.read_csv(file, header=0)  # noqa: ERA001
+#     SECTION_DATABASE = pd.read_csv(file, header=0)
 
 
 # #########################################################################
@@ -67,7 +67,7 @@ class Building:
     (5) Compute lateral force for the building based on ASCE 7-10
     (6) Determine possible section sizes for columns and beams based on user-specified section depth
     (7) Propose initial beam and column sizes
-    """  # noqa: E501, D205, D400, D404, D415
+    """  # noqa: D205, D400, D404, D415
 
     def __init__(self, base_directory, pathDataFolder, workingDirectory):  # noqa: ANN001, ANN204, N803
         """This function initializes the attributes of a building instance
@@ -79,7 +79,7 @@ class Building:
         self.dataFolderDirectory = pathDataFolder
         self.workingDirectory = workingDirectory
 
-        # Initialize the attributes for the building instance (will be assigned values in the class methods)  # noqa: E501
+        # Initialize the attributes for the building instance (will be assigned values in the class methods)
         self.directory = {}
         self.geometry = {}
         self.gravity_loads = {}
@@ -97,18 +97,18 @@ class Building:
         self.read_geometry()
         self.read_gravity_loads()
         self.read_elf_parameters()
-        # self.compute_seismic_force()  # noqa: ERA001
+        # self.compute_seismic_force()
         self.determine_member_candidate()
         self.initialize_member()
-        # self.initialize_member_v2()  # noqa: ERA001
+        # self.initialize_member_v2()
 
     def define_directory(self):  # noqa: ANN201, D102
         # Define all useful paths based on the path to root folder
-        # Define path to folder where the baseline .tcl files for elastic analysis are saved  # noqa: E501
+        # Define path to folder where the baseline .tcl files for elastic analysis are saved
         baseline_elastic_directory = (
             self.base_directory + '/BaselineTclFiles/ElasticAnalysis'
         )
-        # Define path to folder where the baseline .tcl files for nonlinear analysis are stored  # noqa: E501
+        # Define path to folder where the baseline .tcl files for nonlinear analysis are stored
         baseline_nonlinear_directory = (
             self.base_directory + '/BaselineTclFiles/NonlinearAnalysis'
         )
@@ -118,11 +118,11 @@ class Building:
         building_design_results_directory = (
             self.workingDirectory + '/BuildingDesignResults'
         )
-        # Define path to folder where the generated elastic analysis OpenSees model is saved  # noqa: E501
+        # Define path to folder where the generated elastic analysis OpenSees model is saved
         building_elastic_model_directory = (
             self.workingDirectory + '/BuildingElasticModels'
         )
-        # Define path to folder where the generated nonlinear analysis OpenSees model is saved  # noqa: E501
+        # Define path to folder where the generated nonlinear analysis OpenSees model is saved
         building_nonlinear_model_directory = (
             self.workingDirectory + '/BuildingNonlinearModels'
         )
@@ -141,7 +141,7 @@ class Building:
         """This method is used to read the building geometry information from .csv files:
         (1) Change the working directory to the folder where .csv data are stored
         (2) Open the .csv file and save all relevant information to the object itself
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         os.chdir(self.directory['building data'])
         with open('Geometry.csv') as csvfile:  # noqa: PTH123
             geometry_data = pd.read_csv(csvfile, header=0)
@@ -160,7 +160,7 @@ class Building:
         number_of_Z_LFRS = geometry_data.loc[  # noqa: N806
             0, 'number of Z LFRS'
         ]  # number of lateral resisting frame in Z direction
-        # Call function defined in "help_functions.py" to determine the height for each floor level  # noqa: E501
+        # Call function defined in "help_functions.py" to determine the height for each floor level
         floor_height = determine_floor_height(
             number_of_story, first_story_height, typical_story_height
         )
@@ -188,7 +188,7 @@ class Building:
             loads_data = pd.read_csv(csvfile, header=0)
 
         # for i in loads_data._iter_column_arrays():
-        # KZ - a minor replacement avoiding pandas.DataFrame bug when running on stampede  # noqa: E501
+        # KZ - a minor replacement avoiding pandas.DataFrame bug when running on stampede
         for ii in loads_data.columns:
             i = loads_data.loc[:, ii]
             for j in range(len(i)):
@@ -234,13 +234,13 @@ class Building:
         """This method is used to read equivalent lateral force (in short: elf) parameters and calculate SDS and SD1
         (1) Read equivalent lateral force parameters
         (2) Calculate SMS, SM1, SDS, SD1 values and save them into the attribute
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         os.chdir(self.directory['building data'])
         with open('ELFParameters.csv') as csvfile:  # noqa: PTH123
             elf_parameters_data = pd.read_csv(csvfile, header=0)
 
-        # Determine Fa and Fv coefficient based on site class and Ss and S1 (ASCE 7-10 Table 11.4-1 & 11.4-2)  # noqa: E501
-        # Call function defined in "help_functions.py" to calculate two coefficients: Fa and Fv  # noqa: E501
+        # Determine Fa and Fv coefficient based on site class and Ss and S1 (ASCE 7-10 Table 11.4-1 & 11.4-2)
+        # Call function defined in "help_functions.py" to calculate two coefficients: Fa and Fv
         Fa = determine_Fa_coefficient(  # noqa: N806
             elf_parameters_data.loc[0, 'site class'],
             elf_parameters_data.loc[0, 'Ss'],
@@ -249,7 +249,7 @@ class Building:
             elf_parameters_data.loc[0, 'site class'],
             elf_parameters_data.loc[0, 'S1'],
         )
-        # Determine SMS, SM1, SDS, SD1 using the defined function in "help_functions.py"  # noqa: E501
+        # Determine SMS, SM1, SDS, SD1 using the defined function in "help_functions.py"
         SMS, SM1, SDS, SD1 = calculate_DBE_acceleration(  # noqa: N806
             elf_parameters_data.loc[0, 'Ss'],
             elf_parameters_data.loc[0, 'S1'],
@@ -259,7 +259,7 @@ class Building:
         # Determine Cu using the defined function in "help_functions.py"
         Cu = determine_Cu_coefficient(SD1)  # noqa: N806
 
-        # Calculate the building period: approximate fundamental period and upper bound period  # noqa: E501
+        # Calculate the building period: approximate fundamental period and upper bound period
         approximate_period = elf_parameters_data.loc[0, 'Ct'] * (
             self.geometry['floor height'][-1] ** elf_parameters_data.loc[0, 'x']
         )
@@ -294,19 +294,19 @@ class Building:
         (2) Determine the correct period between first mode period and CuTa
         (3) Determine the Cs coefficient
         (4) Determine the lateral force at each floor level (ground to roof) and save it in an arrary
-        """  # noqa: E501, D205, D400, D401, D404, D415
-        # Please note that the period for computing the required strength should be bounded by CuTa  # noqa: E501
+        """  # noqa: D205, D400, D401, D404, D415
+        # Please note that the period for computing the required strength should be bounded by CuTa
         period_for_strength = min(
             self.elf_parameters['modal period'], self.elf_parameters['period']
         )
-        # The period used for computing story drift is not required to be bounded by CuTa  # noqa: E501
+        # The period used for computing story drift is not required to be bounded by CuTa
         if PERIOD_FOR_DRIFT_LIMIT:
             period_for_drift = min(
                 self.elf_parameters['modal period'], self.elf_parameters['period']
             )
         else:
             period_for_drift = self.elf_parameters['modal period']
-        # Call function defined in "help_functions.py" to determine the seismic response coefficient  # noqa: E501
+        # Call function defined in "help_functions.py" to determine the seismic response coefficient
         Cs_for_strength = calculate_Cs_coefficient(  # noqa: N806
             self.elf_parameters['SDS'],
             self.elf_parameters['SD1'],
@@ -334,7 +334,7 @@ class Building:
         )
         # Call function defined in "help_functions.py" to compute k coefficient
         k = determine_k_coeficient(self.elf_parameters['period'])
-        # Call function defined in "help_functions.py" to determine the lateral force for each floor level  # noqa: E501
+        # Call function defined in "help_functions.py" to determine the lateral force for each floor level
         lateral_story_force_for_strength, story_shear_for_strength = (
             calculate_seismic_force(
                 base_shear_for_strength,
@@ -368,21 +368,21 @@ class Building:
     def determine_member_candidate(self):  # noqa: ANN201
         """This method is used to determine all possible member candidates based on the user-specified section depth
         :return: a dictionary which contains the all possible sizes for exterior columns, interior columns, and beams.
-        """  # noqa: E501, D205, D401, D404
-        # Read the user-specified depths for interior columns, exterior columns, and beams.  # noqa: E501
+        """  # noqa: D205, D401, D404
+        # Read the user-specified depths for interior columns, exterior columns, and beams.
         os.chdir(self.directory['building data'])
         with open('MemberDepth.csv') as csvfile:  # noqa: PTH123
             depth_data = pd.read_csv(csvfile, header=0)
-        # Initialize dictionary that will be used to store all possible section sizes for each member (in each story)  # noqa: E501
+        # Initialize dictionary that will be used to store all possible section sizes for each member (in each story)
         interior_column_candidate = {}
         exterior_column_candidate = {}
         beam_candidate = {}
-        # Initialize list that will be used to store section depth for each member (in each story)  # noqa: E501
+        # Initialize list that will be used to store section depth for each member (in each story)
         interior_column_depth = []
         exterior_column_depth = []
         beam_depth = []
         for story in range(self.geometry['number of story']):  # story number
-            # Initialize the Series that will be used to store the member sizes for each single story  # noqa: E501
+            # Initialize the Series that will be used to store the member sizes for each single story
             temp_interior_column = pd.Series()
             temp_exterior_column = pd.Series()
             temp_beam = pd.Series()
@@ -394,7 +394,7 @@ class Building:
                 story, 'exterior column'
             ].split(', ')
             beam_depth_list = depth_data.loc[story, 'beam'].split(', ')
-            # Find the section size candidates associated with a certain depth specified by user  # noqa: E501
+            # Find the section size candidates associated with a certain depth specified by user
             for item in range(len(interior_column_depth_list)):
                 temp1 = find_section_candidate(
                     interior_column_depth_list[item], COLUMN_DATABASE
@@ -408,8 +408,8 @@ class Building:
             for item in range(len(beam_depth_list)):
                 temp3 = find_section_candidate(beam_depth_list[item], BEAM_DATABASE)
                 temp_beam = pd.concat([temp_beam, temp3])
-            # Store the section size candidates for each member per story in a dictionary  # noqa: E501
-            # Re-order the Series based on the index (which is further based on descending order of Ix for column  # noqa: E501
+            # Store the section size candidates for each member per story in a dictionary
+            # Re-order the Series based on the index (which is further based on descending order of Ix for column
             # and Zx for beam). Convert Series to list.
             interior_column_candidate['story %s' % (story + 1)] = list(
                 temp_interior_column.sort_index()
@@ -440,13 +440,13 @@ class Building:
     def initialize_member(self):  # noqa: ANN201
         """This method is used to initialize the member size
         :return: a dictionary which includes the initial size for interior columns, exterior columns, and beams
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         # Define initial sizes for columns and beams
         interior_column = []
         exterior_column = []
         beam = []
         for story in range(self.geometry['number of story']):
-            # The initial column is selected as the greatest sizes in the candidate pool  # noqa: E501
+            # The initial column is selected as the greatest sizes in the candidate pool
             initial_interior = self.element_candidate['interior column'][
                 'story %s' % (story + 1)
             ][0]
@@ -469,7 +469,7 @@ class Building:
             )
             # Merge initial beam size of each story together
             beam.append(beam_size)
-        # Store all initial member sizes into the dictionary (which will be updated using optimization algorithm later)  # noqa: E501
+        # Store all initial member sizes into the dictionary (which will be updated using optimization algorithm later)
         self.member_size = {
             'interior column': interior_column,
             'exterior column': exterior_column,
@@ -480,8 +480,8 @@ class Building:
         """This method is used to read the modal period from OpenSees eigen value analysis results and store it in ELF
         parameters.
         :return: the first mode period stored in self.elf_parameters
-        """  # noqa: E501, D205, D400, D401, D404, D415
-        # Change the working directory to the folder where the eigen value analysis results are stored  # noqa: E501
+        """  # noqa: D205, D400, D401, D404, D415
+        # Change the working directory to the folder where the eigen value analysis results are stored
         path_modal_period = (
             self.directory['building elastic model'] + '/EigenAnalysis'
         )
@@ -491,7 +491,7 @@ class Building:
 
         os.chdir(path_modal_period)
         # Save the first mode period in elf_parameters
-        # period = np.loadtxt('Periods.out')  # noqa: ERA001
+        # period = np.loadtxt('Periods.out')
         period = pd.read_csv('Periods.out', header=None)
         self.elf_parameters['modal period'] = np.float64(period.iloc[0, 0])
 
@@ -499,7 +499,7 @@ class Building:
         """This method is used to read the story drifts from OpenSees elastic analysis results and stored it as attribute
         The load case for story drift is the combination of dead, live, and earthquake loads.
         :return: an [story*1] array which includes the story drifts for each story.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Change the working directory to the folder where story drifts are stored
         path_story_drift = (
             self.directory['building elastic model']
@@ -518,7 +518,7 @@ class Building:
     def optimize_member_for_drift(self):  # noqa: ANN201
         """This method is used to decrease the member size such that the design is most economic.
         :return: update self.member_size
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         # Find the story which has the smallest drift
         target_story = np.where(
             self.elastic_response['story drift']
@@ -544,7 +544,7 @@ class Building:
         )
         # "Push" the updated beam size back to the class dictionary
         self.member_size['beam'][target_story] = beam_size
-        # Determine the exterior column size based on exterior/interior column moment of inertia ratio  # noqa: E501
+        # Determine the exterior column size based on exterior/interior column moment of inertia ratio
         exterior_size = search_member_size(
             'Ix',
             reference_property['Ix'] * EXTERIOR_INTERIOR_COLUMN_RATIO,
@@ -561,59 +561,59 @@ class Building:
         :param target_story: a scalar to denote which story column shall be increased (from 0 to total story # - 1).
         :param type_column: a string denoting whether it is an exterior column or interior column
         :return: update the column size stored in self.member_size
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         temp_size = increase_member_size(
             self.element_candidate[type_column]['story %s' % (target_story + 1)],
             self.member_size[type_column][target_story],
         )
         self.member_size[type_column][target_story] = temp_size
-        # temp_size_2 = increase_member_size(self.element_candidate['exterior column']['story %x' % (target_story+1)],  # noqa: E501
-        #                                    self.member_size['exterior column'][target_story])  # noqa: E501
-        # self.member_size['exterior column'][target_story] = temp_size_2  # noqa: ERA001
+        # temp_size_2 = increase_member_size(self.element_candidate['exterior column']['story %x' % (target_story+1)],
+        #                                    self.member_size['exterior column'][target_story])
+        # self.member_size['exterior column'][target_story] = temp_size_2
 
     def upscale_beam(self, target_floor):  # noqa: ANN001, ANN201
         """This method is used to increase beam size which might be necessary when beam strength is not sufficient
         :param target_floor: a scalar to denote which floor beam shall be improved. (from 0 to total story # - 1)
         :return: update the beam size stored in self.member_size
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         temp_size = increase_member_size(
             self.element_candidate['beam']['floor level %s' % (target_floor + 2)],
             self.member_size['beam'][target_floor],
         )
         self.member_size['beam'][target_floor] = temp_size
 
-    # ************************************* Keep previous version as backup ********************************************  # noqa: E501
+    # ************************************* Keep previous version as backup ********************************************
     # def constructability(self):
     #     """
-    #     This method is used to update the member size by considering the constructability (ease of construction)  # noqa: E501
-    #     :return: a dictionary which includes the member sizes after consideration of constructability.  # noqa: E501
+    #     This method is used to update the member size by considering the constructability (ease of construction)
+    #     :return: a dictionary which includes the member sizes after consideration of constructability.
     #              Those siezes are considered to be the actual final design.
     #     """
-    #     # Make a deep copy of the member sizes and stored them in a new dictionary named construction_size  # noqa: E501
+    #     # Make a deep copy of the member sizes and stored them in a new dictionary named construction_size
     #     # Use deep copy to avoid changing the varaiables stored in member size
-    #     temp_size = copy.deepcopy(self.member_size)  # noqa: ERA001
+    #     temp_size = copy.deepcopy(self.member_size)
     #     # Update interior and exterior column size
-    #     member = ['interior column', 'exterior column']  # noqa: ERA001
+    #     member = ['interior column', 'exterior column']
     #     for mem in member:
-    #         self.construction_size[mem] = constructability_helper(temp_size[mem], IDENTICAL_SIZE_PER_STORY,  # noqa: E501
-    #                                                               self.geometry['number of story'])  # noqa: E501
+    #         self.construction_size[mem] = constructability_helper(temp_size[mem], IDENTICAL_SIZE_PER_STORY,
+    #                                                               self.geometry['number of story'])
     #     # Update beam size using relative ratio between beams and columns
-    #     temp_beam = []  # noqa: ERA001
+    #     temp_beam = []
     #     for story in range(0, self.geometry['number of story']):
-    #         reference_property = search_section_property(self.construction_size['interior column'][story],  # noqa: E501
+    #         reference_property = search_section_property(self.construction_size['interior column'][story],
     #                                                      SECTION_DATABASE)
-    #         beam_size = search_member_size('Zx', reference_property['Zx'] * BEAM_TO_COLUMN_RATIO,  # noqa: E501
-    #                                        self.element_candidate['beam']['floor level %s' % (story + 2)],  # noqa: ERA001, E501
+    #         beam_size = search_member_size('Zx', reference_property['Zx'] * BEAM_TO_COLUMN_RATIO,
+    #                                        self.element_candidate['beam']['floor level %s' % (story + 2)],
     #                                        SECTION_DATABASE)
-    #         temp_beam.append(beam_size)  # noqa: ERA001
-    #     self.construction_size['beam'] = temp_beam  # noqa: ERA001
-    # ********************************************* Previous version ends here *****************************************  # noqa: E501
+    #         temp_beam.append(beam_size)
+    #     self.construction_size['beam'] = temp_beam
+    # ********************************************* Previous version ends here *****************************************
 
     def constructability_beam(self):  # noqa: ANN201
         """This method is used to update the beam member size by considering the constructability (ease of construction).
         :return: update the beam sizes stored in self.member_size['beam']
-        """  # noqa: E501, D205, D400, D401, D404, D415
-        # Make a deep copy of the member sizes and stored them in a new dictionary named construction_size  # noqa: E501
+        """  # noqa: D205, D400, D401, D404, D415
+        # Make a deep copy of the member sizes and stored them in a new dictionary named construction_size
         # Use deep copy to avoid changing the variables stored in member size
         temp_size = copy.deepcopy(self.member_size)
         # Update beam size (beam size is updated based on descending order of Zx)
@@ -630,7 +630,7 @@ class Building:
     def constructability_column(self):  # noqa: ANN201
         """This method is used to update the column member size by considering the constructability (ease of construction).
         :return: update the column sizes stored in self.member_size
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         # Make a copy of the member size
         temp_size = copy.deepcopy(self.member_size)
         # Update column sizes based on the sorted Ix

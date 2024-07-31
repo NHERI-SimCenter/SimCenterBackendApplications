@@ -126,7 +126,7 @@ def write_RV(EVENT_input_path):  # noqa: ANN001, ANN201, C901, N802, N803, D103,
     EDP_output = np.concatenate([index, EDP_output], axis=1)  # noqa: N806
 
     working_dir = Path(PurePath(EVENT_input_path).parent)
-    # working_dir = posixpath.dirname(EVENT_input_path)  # noqa: ERA001
+    # working_dir = posixpath.dirname(EVENT_input_path)
 
     # prepare the header
     header_out = []

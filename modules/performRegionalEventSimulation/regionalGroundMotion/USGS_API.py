@@ -64,14 +64,14 @@ class USGS_HazardCurve:  # noqa: N801, D101
             self.edition = self._check_edition(edition)
         else:
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: edition {edition} is not supported by USGS.'  # noqa: E501
+                f'USGS_HazardCurve.__init__: edition {edition} is not supported by USGS.'
             )
             return
 
         query_region = self._get_region(longitude, latitude)
         if query_region is None:
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is not supported.'  # noqa: E501
+                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is not supported.'
             )
             return
         else:  # noqa: RET505
@@ -79,14 +79,14 @@ class USGS_HazardCurve:  # noqa: N801, D101
             self.latitude = latitude
             self.region = query_region
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is found in USGS region {self.region}.'  # noqa: E501
+                f'USGS_HazardCurve.__init__: site (lon, lat) = ({longitude},{latitude}) is found in USGS region {self.region}.'
             )
 
         if self._check_region(self.region):
             print(f'USGS_HazardCurve.__init__: region {self.region} is set up.')  # noqa: T201
         else:
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: region {self.region} is not supported by edition {self.edition}.'  # noqa: E501
+                f'USGS_HazardCurve.__init__: region {self.region} is not supported by edition {self.edition}.'
             )
             return
 
@@ -94,7 +94,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
             self.vs30 = self._check_vs30(vs30)
         else:
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and reigon {self.region}.'  # noqa: E501
+                f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and reigon {self.region}.'
             )
             return
 
@@ -105,7 +105,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
             return
 
         self.tag = tag
-        # return  # noqa: ERA001
+        # return
         print('USGS_HazardCurve.__init__: configuration done.')  # noqa: T201
         return
 
@@ -125,7 +125,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
         ed_list = self.config.get('parameters').get('edition').get('values')
         self.avail_editions = [x.get('value') for x in ed_list]
         print(  # noqa: T201
-            f'USGS_HazardCurve._check_edition: available editions: {self.avail_editions}'  # noqa: E501
+            f'USGS_HazardCurve._check_edition: available editions: {self.avail_editions}'
         )
 
         # check
@@ -153,7 +153,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
                     'maxlatitude'
                 ):
                     return self.all_regions[i]
-        # return empty  # noqa: ERA001
+        # return empty
         return None
 
     def _check_region(self, region):  # noqa: ANN001, ANN202
@@ -184,7 +184,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
         ]
 
         # get region supported vs30
-        # vs30_avail_rg = [int(x) for x in self.config.get('parameters').get('region').get('values')[self.avail_regions.index(self.region)].get('supports').get('vs30')]  # noqa: ERA001, E501
+        # vs30_avail_rg = [int(x) for x in self.config.get('parameters').get('region').get('values')[self.avail_regions.index(self.region)].get('supports').get('vs30')]
 
         vs30_avail_all = vs30_avail_ed
         vs30_id = np.argmin(np.abs([vs30 - x for x in vs30_avail_all]))
@@ -228,7 +228,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
                 self.imt_list = [
                     'SA' + str(x).replace('.', 'P') for x in self.period_list
                 ]
-                # print('self.imt_list = ',self.imt_list)  # noqa: ERA001
+                # print('self.imt_list = ',self.imt_list)
                 return True
 
     def fetch_url(self):  # noqa: ANN201, D102
@@ -243,7 +243,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
             res = requests.get(usgs_url)  # noqa: S113
             if res.status_code == 200:  # noqa: PLR2004
                 self.res_json.append(res.json())
-                # print('USGS_HazardCurve.fetch_url: {}'.format(self.res_json))  # noqa: ERA001
+                # print('USGS_HazardCurve.fetch_url: {}'.format(self.res_json))
             else:
                 # try 10 more times to overcome the api traffic issue
                 for i in range(10):  # noqa: B007

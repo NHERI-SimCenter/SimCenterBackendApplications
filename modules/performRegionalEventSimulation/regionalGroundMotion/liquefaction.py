@@ -15,9 +15,14 @@ from scipy.spatial import ConvexHull
 
 ## Helper functions
 def sampleRaster(  # noqa: ANN201, N802, PLR0913
-    raster_file_path, raster_crs, x, y, interp_scheme='nearest', dtype=None  # noqa: ANN001
+    raster_file_path,  # noqa: ANN001
+    raster_crs,  # noqa: ANN001
+    x,  # noqa: ANN001
+    y,  # noqa: ANN001
+    interp_scheme='nearest',  # noqa: ANN001
+    dtype=None,  # noqa: ANN001
 ):
-    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: E501, D400, D401, D415
+    """Performs 2D interpolation at (x,y) pairs. Accepted interp_scheme = 'nearest', 'linear', 'cubic', and 'quintic'"""  # noqa: D400, D401, D415
     print(f'Sampling from the Raster File: {os.path.basename(raster_file_path)}...')  # noqa: T201, PTH119
     invalid_value = np.nan
     xy_crs = CRS.from_user_input(4326)
@@ -27,7 +32,7 @@ def sampleRaster(  # noqa: ANN201, N802, PLR0913
             raster_data = raster_file.read()
             if raster_data.shape[0] > 1:
                 warnings.warn(  # noqa: B028
-                    f'More than one band in the file {raster_file_path}, the first band is used.'  # noqa: E501
+                    f'More than one band in the file {raster_file_path}, the first band is used.'
                 )
         except:  # noqa: E722
             sys.exit(f'Can not read data from {raster_file_path}')
@@ -88,7 +93,7 @@ def sampleVector(vector_file_path, vector_crs, x, y, dtype=None):  # noqa: ANN00
     vector_gdf = gpd.read_file(vector_file_path)
     if vector_gdf.crs != vector_crs:
         sys.exit(
-            f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"  # noqa: E501
+            f"The CRS of vector file {vector_file_path} is {vector_gdf.crs}, and doesn't match the input CRS ({xy_crs}) defined for liquefaction triggering models"
         )
     if xy_crs != vector_crs:
         # make transformer for reprojection
@@ -237,7 +242,7 @@ class ZhuEtal2017(Liquefaction):
     ----------
     .. [1] Zhu, J., Baise, L.G., and Thompson, E.M., 2017, An Updated Geospatial Liquefaction Model for Global Application, Bulletin of the Seismological Society of America, vol. 107, no. 3, pp. 1365-1385.
 
-    """  # noqa: E501, D400, D415
+    """  # noqa: D400, D415
 
     def __init__(self, parameters, stations) -> None:  # noqa: ANN001, D107
         self.stations = stations
@@ -342,18 +347,18 @@ class ZhuEtal2017(Liquefaction):
                 item = getattr(self, key, None)
                 if item is None:
                     warnings.warn(  # noqa: B028
-                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'ZhuEtal2017'."  # noqa: E501
+                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'ZhuEtal2017'."
                     )
                 else:
                     additional_output.update({key: item})
         else:
             sys.exit(
-                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."  # noqa: E501
+                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
-            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\  # noqa: ERA001, E501
+            # print(f"At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."\
             #       , file=sys.stderr)
-            # sys.stderr.write("test")  # noqa: ERA001
-            # sys.exit(-1)  # noqa: ERA001
+            # sys.stderr.write("test")
+            # sys.exit(-1)
         return ln_im_data, eq_data, im_list, additional_output
 
     def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
@@ -370,7 +375,7 @@ class ZhuEtal2017(Liquefaction):
         liq_susc_val = np.ones(pgv.shape) * -99
         liq_susc = np.empty(pgv.shape, dtype=int)
 
-        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)  # noqa: E501
+        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)
         pgv_mag = pgv / (1 + np.exp(-2 * (mag - 6)))
         pga_mag = pga / (10**2.24 / mag**2.56)
 
@@ -378,13 +383,13 @@ class ZhuEtal2017(Liquefaction):
         # coastal model
         ind_coastal = self.dist_to_water <= model_transition
         # global model
-        # ind_global = list(set(list(range(pgv.shape[0]))).difference(set(ind_coastal)))  # noqa: ERA001, E501
+        # ind_global = list(set(list(range(pgv.shape[0]))).difference(set(ind_coastal)))
         ind_global = ~(self.dist_to_water <= model_transition)
 
         # set cap of precip to 1700 mm
         self.precip[self.precip > 1700] = 1700  # noqa: PLR2004
 
-        # x = b0 + b1*var1 + ...  # noqa: ERA001
+        # x = b0 + b1*var1 + ...
         # if len(ind_global) > 0:
         # liquefaction susceptbility value, disregard pgv term
         liq_susc_val[ind_global] = (
@@ -440,7 +445,7 @@ class ZhuEtal2017(Liquefaction):
         liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value  # noqa: PLR2004
         liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value  # noqa: PLR2004
 
-        # liq_susc[prob_liq==zero_prob_liq] = 'none'  # noqa: ERA001
+        # liq_susc[prob_liq==zero_prob_liq] = 'none'
 
         return {'liq_prob': prob_liq, 'liq_susc': liq_susc}
 
@@ -476,7 +481,7 @@ class Hazus2020(Liquefaction):
     .. [1] Federal Emergency Management Agency (FEMA), 2020, Hazus Earthquake Model - Technical Manual, Hazus 4.2 SP3, 436 pp. https://www.fema.gov/flood-maps/tools-resources/flood-map-products/hazus/user-technical-manuals.
     .. [2] Liao, S.S., Veneziano, D., and Whitman, R.V., 1988, Regression Models for Evaluating Liquefaction Probability, Journal of Geotechnical Engineering, vol. 114, no. 4, pp. 389-411.
 
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
 
     def __init__(self, parameters, stations) -> None:  # noqa: ANN001, D107
         self.stations = stations
@@ -515,7 +520,7 @@ class Hazus2020(Liquefaction):
         for susc in liq_susc_samples[SusceptibilityKey].unique():
             if susc not in list(liq_susc_enum.__members__.keys()):
                 warnings.warn(  # noqa: B028
-                    f'Unkown susceptibility "{susc}" defined, and is treated as "none".'  # noqa: E501
+                    f'Unkown susceptibility "{susc}" defined, and is treated as "none".'
                 )
         for row_index in liq_susc_samples.index:
             if pandas.isna(liq_susc_samples.loc[row_index, SusceptibilityKey]):
@@ -531,8 +536,8 @@ class Hazus2020(Liquefaction):
             else:
                 self.liq_susc.append(0)
         self.liq_susc = np.array(self.liq_susc)
-        # liq_susc = liq_susc_samples[parameters["SusceptibilityKey"]].fillna("NaN")  # noqa: ERA001
-        # self.liq_susc = liq_susc.to_numpy()  # noqa: ERA001
+        # liq_susc = liq_susc_samples[parameters["SusceptibilityKey"]].fillna("NaN")
+        # self.liq_susc = liq_susc.to_numpy()
         print('Sampling finished')  # noqa: T201
 
     def run(self, ln_im_data, eq_data, im_list, output_keys, additional_output_keys):  # noqa: ANN001, ANN201, D102
@@ -559,13 +564,13 @@ class Hazus2020(Liquefaction):
                 item = getattr(self, key, None)
                 if item is None:
                     warnings.warn(  # noqa: B028
-                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'Hazus2020'."  # noqa: E501
+                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'Hazus2020'."
                     )
                 else:
                     additional_output.update({key: item})
         else:
             sys.exit(
-                "'PGA'is missing in the selected intensity measures and the liquefaction trigging model 'Hazus2020' can not be computed."  # noqa: E501
+                "'PGA'is missing in the selected intensity measures and the liquefaction trigging model 'Hazus2020' can not be computed."
             )
         return ln_im_data, eq_data, im_list, additional_output
 
@@ -576,7 +581,7 @@ class Hazus2020(Liquefaction):
         mag,  # upstream PBEE RV  # noqa: ANN001
         gw_depth,  # geotechnical/geologic  # noqa: ANN001
         liq_susc,  # fixed/toggles  # noqa: ANN001
-        return_inter_params=False,  # to get intermediate params  # noqa: ANN001, FBT002, ARG004
+        return_inter_params=False,  # to get intermediate params  # noqa: ANN001, ARG004, FBT002
     ):
         """Model"""  # noqa: D400, D415
         # zero prob_liq
@@ -641,7 +646,7 @@ class Hazus2020(Liquefaction):
 
         # Zhu et al. (2017) boundary constraints
         # for pga_mag < 0.1 g, set prob to "0"
-        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)  # noqa: E501
+        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)
         pga_mag = pga / (10**2.24 / mag**2.56)
         prob_liq[pga_mag < 0.1] = zero_prob_liq  # noqa: PLR2004
 
@@ -689,7 +694,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
     .. [2] Liao, S.S., Veneziano, D., and Whitman, R.V., 1988, Regression Models for Evaluating Liquefaction Probability, Journal of Geotechnical Engineering, vol. 114, no. 4, pp. 389-411.
     .. [3] Zhu, J., Baise, L.G., and Thompson, E.M., 2017, An Updated Geospatial Liquefaction Model for Global Application, Bulletin of the Seismological Society of America, vol. 107, no. 3, pp. 1365-1385.
 
-    """  # noqa: E501
+    """
 
     def model(self, pgv, pga, mag):  # noqa: ANN001, ANN201
         """Model"""  # noqa: D400, D415
@@ -708,13 +713,13 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
         # coastal model
         ind_coastal = self.dist_to_water <= model_transition
         # global model
-        # ind_global = list(set(list(range(pgv.shape[0]))).difference(set(ind_coastal)))  # noqa: ERA001, E501
+        # ind_global = list(set(list(range(pgv.shape[0]))).difference(set(ind_coastal)))
         ind_global = ~(self.dist_to_water <= model_transition)
 
         # set cap of precip to 1700 mm
         self.precip[self.precip > 1700] = 1700  # noqa: PLR2004
 
-        # x = b0 + b1*var1 + ...  # noqa: ERA001
+        # x = b0 + b1*var1 + ...
         # if len(ind_global) > 0:
         # liquefaction susceptbility value, disregard pgv term
         liq_susc_val[ind_global] = (
@@ -746,7 +751,7 @@ class Hazus2020_with_ZhuEtal2017(ZhuEtal2017):  # noqa: N801
         liq_susc[liq_susc_val <= -3.20] = liq_susc_enum['very_low'].value  # noqa: PLR2004
         liq_susc[liq_susc_val <= -38.1] = liq_susc_enum['none'].value  # noqa: PLR2004
         # Below are HAZUS
-        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)  # noqa: E501
+        # magnitude correction, from Baise & Rashidian (2020) and Allstadt et al. (2022)
         pga_mag = pga / (10**2.24 / mag**2.56)
         # initialize arrays
         prob_liq_pga = np.zeros(pga.shape)
@@ -850,7 +855,7 @@ class Hazus2020Lateral(LateralSpread):
     ----------
     .. [1] Federal Emergency Management Agency (FEMA), 2020, Hazus Earthquake Model - Technical Manual, Hazus 4.2 SP3, 436 pp. https://www.fema.gov/flood-maps/tools-resources/flood-map-products/hazus/user-technical-manuals.
 
-    """  # noqa: E501
+    """
 
     def __init__(self, stations, parameters):  # noqa: ANN001, ANN204, D107
         super().__init__()
@@ -907,7 +912,7 @@ class Hazus2020Lateral(LateralSpread):
             im_list = im_list + output_keys
         else:
             sys.exit(
-                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."  # noqa: E501
+                "At least one of 'PGA' and 'PGV' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list
 
@@ -956,7 +961,7 @@ class Hazus2020Lateral(LateralSpread):
         # magnitude correction
         k_delta = 0.0086 * mag**3 - 0.0914 * mag**2 + 0.4698 * mag - 0.9835
 
-        # susceptibility to lateral spreading only for deposits found near water body (dw < dw_cutoff)  # noqa: E501
+        # susceptibility to lateral spreading only for deposits found near water body (dw < dw_cutoff)
         pgdef = k_delta * expected_pgdef * prob_liq
         pgdef = pgdef / 100  # also convert from cm to m
         pgdef[dist_water > 25] = 1e-5  # noqa: PLR2004
@@ -968,12 +973,12 @@ class Hazus2020Lateral(LateralSpread):
         output = {'liq_PGD_h': pgdef}
         # get intermediate values if requested
         # if return_inter_params:
-        #     output['k_delta'] = k_delta  # noqa: ERA001
-        #     output['expected_pgdef'] = expected_pgdef  # noqa: ERA001
-        #     output['pga_t'] = pga_t  # noqa: ERA001
-        #     output['ratio'] = ratio  # noqa: ERA001
+        #     output['k_delta'] = k_delta
+        #     output['expected_pgdef'] = expected_pgdef
+        #     output['pga_t'] = pga_t
+        #     output['ratio'] = ratio
 
-        # return  # noqa: ERA001
+        # return
         return output  # noqa: RET504
 
 
@@ -1011,7 +1016,7 @@ class Hazus2020Vertical(GroundSettlement):
     .. [2] Tokimatsu, K., and Seed, H.B., 1987, Evaluation of Settlements in Sands Due to Earthquake Shaking. Journal of Geotechnical Engineering, vol. 113, no. 8, pp. 861-878.
 
 
-    """  # noqa: E501
+    """
 
     @staticmethod
     # @njit
@@ -1046,7 +1051,7 @@ class Hazus2020Vertical(GroundSettlement):
         if return_inter_params:
             pass
 
-        # return  # noqa: ERA001
+        # return
         return output
 
     def run(self, ln_im_data, eq_data, im_list):  # noqa: ANN001, ANN201, D102
@@ -1076,6 +1081,6 @@ class Hazus2020Vertical(GroundSettlement):
             im_list = im_list + output_keys
         else:
             sys.exit(
-                "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."  # noqa: E501
+                "At least one of 'liq_susc' and 'liq_prob' is missing in the selected intensity measures and the liquefaction trigging model 'ZhuEtal2017' can not be computed."
             )
         return ln_im_data, eq_data, im_list

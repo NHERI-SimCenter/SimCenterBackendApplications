@@ -114,23 +114,23 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         ]
     )
 
-    # print(Y)  # noqa: ERA001
-    # print(sub_grid)  # noqa: ERA001
+    # print(Y)
+    # print(sub_grid)
 
-    # Find the index of the closest point - each index corresponds to the gridpoint index  # noqa: E501
+    # Find the index of the closest point - each index corresponds to the gridpoint index
     closest, distances = vq(Y, X)
 
-    #    print("****closest",closest)  # noqa: ERA001
-    #    print("****distances",distances)  # noqa: ERA001
+    #    print("****closest",closest)
+    #    print("****distances",distances)
     #
-    #    print("****num found",len(closest))  # noqa: ERA001
-    #    print("****num Y",np.size(Y, 0))  # noqa: ERA001
-    #    print("****num X",np.size(X, 0))  # noqa: ERA001
+    #    print("****num found",len(closest))
+    #    print("****num Y",np.size(Y, 0))
+    #    print("****num X",np.size(X, 0))
 
     # check to ensure we found all of the assets
     if len(closest) != np.size(Y, 0):
         print(  # noqa: T201
-            'Error, the number of assets needs to be equal to the number of grid points'  # noqa: E501
+            'Error, the number of assets needs to be equal to the number of grid points'
         )
         print(  # noqa: T201
             'The number of assets is '
@@ -235,11 +235,11 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         event_list_json = []
         for e_i, event in enumerate(event_list):
             # event_list_json.append({
-            #    #"EventClassification": "Earthquake",  # noqa: ERA001
-            #    "fileName": f'{event}x{e_i:05d}',  # noqa: ERA001
-            #    "factor": scale_list[e_i],  # noqa: ERA001
+            #    #"EventClassification": "Earthquake",
+            #    "fileName": f'{event}x{e_i:05d}',
+            #    "factor": scale_list[e_i],
             #    #"type": event_type
-            #    })  # noqa: ERA001
+            #    })
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
@@ -247,7 +247,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         # save the event dictionary to the BIM
         asset_data['Events'] = [{}]
         asset_data['Events'][0] = {
-            # "EventClassification": "Earthquake",  # noqa: ERA001
+            # "EventClassification": "Earthquake",
             'EventFolderPath': str(event_dir),
             'Events': event_list_json,
             'type': event_type,

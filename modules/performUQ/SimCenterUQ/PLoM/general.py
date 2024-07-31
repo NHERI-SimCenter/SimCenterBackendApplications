@@ -304,7 +304,7 @@ class Task:
     def refresh_status(self):  # noqa: ANN201
         """Refreshing the current status of the task
         If any of the previous tasks is not completed, the current task is also not reliable
-        """  # noqa: E501, D205, D400, D401, D415
+        """  # noqa: D205, D400, D401, D415
         # check the previous task if any
         if self.pre_task:  # noqa: SIM102
             if not self.pre_task.refresh_status():

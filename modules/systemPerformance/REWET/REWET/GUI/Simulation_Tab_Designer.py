@@ -150,8 +150,8 @@ class Simulation_Tab_Designer:  # noqa: N801, D101
             sim_time_changed = True
         else:
             sim_time_changed = False
-        # print(simulation_time_step)  # noqa: ERA001
-        # print(simulation_time)  # noqa: ERA001
+        # print(simulation_time_step)
+        # print(simulation_time)
         if simulation_time_step > simulation_time:
             if sim_time_changed:
                 self.simulation_time_line.setText(str(simulation_time_step))

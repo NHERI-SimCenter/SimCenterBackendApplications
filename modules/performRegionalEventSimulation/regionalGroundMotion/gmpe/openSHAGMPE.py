@@ -45,7 +45,7 @@ import numpy as np
 import pandas as pd
 
 
-############### Chiou and Young (2014)  # noqa: ERA001
+############### Chiou and Young (2014)
 class chiou_youngs_2013:  # noqa: N801, D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
@@ -298,7 +298,7 @@ class chiou_youngs_2013:  # noqa: N801, D101
 
         # Station
         # if station_info['Type'] == 'SiteList':
-        #     siteSpec = station_info['SiteList']  # noqa: ERA001
+        #     siteSpec = station_info['SiteList']
         # for i in range(len(site_list)):
 
 
@@ -338,7 +338,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
     def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
         if imt not in self.supportedImt:
             sys.exit(
-                f'The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)'  # noqa: E501
+                f'The imt {imt} is not supported by Abrahamson, Silva, and Kamai (2014)'
             )
             return
         self.imt = imt
@@ -417,7 +417,19 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         )
 
     def calcValues(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
-        self, Mw, rJB, rRup, rX, rY0, dip, width, zTop, vs30, vsInferred, z1p0, style  # noqa: ANN001, ARG002, N803
+        self,
+        Mw,  # noqa: ANN001, N803
+        rJB,  # noqa: ANN001, N803
+        rRup,  # noqa: ANN001, N803
+        rX,  # noqa: ANN001, N803
+        rY0,  # noqa: ANN001, ARG002, N803
+        dip,  # noqa: ANN001
+        width,  # noqa: ANN001
+        zTop,  # noqa: ANN001, N803
+        vs30,  # noqa: ANN001
+        vsInferred,  # noqa: ANN001, N803
+        z1p0,  # noqa: ANN001
+        style,  # noqa: ANN001
     ):
         if Mw > 5:  # noqa: PLR2004
             c4mag = self.C4
@@ -594,7 +606,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         return saResult  # noqa: RET504
 
 
-############### Boore, Stewart, Seyhan, Atkinson (2014)  # noqa: ERA001
+############### Boore, Stewart, Seyhan, Atkinson (2014)
 class boore_etal_2014:  # noqa: N801, D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
@@ -625,7 +637,7 @@ class boore_etal_2014:  # noqa: N801, D101
     def setIMT(self, imt):  # noqa: ANN001, ANN201, N802, D102
         if imt not in self.supportedImt:
             sys.exit(
-                f'The imt {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014)'  # noqa: E501
+                f'The imt {imt} is not supported by Boore, Stewart, Seyhan & Atkinson (2014)'
             )
             return
         self.imt = imt
@@ -765,9 +777,9 @@ class boore_etal_2014:  # noqa: N801, D101
         return tau
 
     # def calcStdDev(self, Mw, rJB, vs30):
-    #     tau = self.calcTau(Mw)  # noqa: ERA001
-    #     phiMRV = self.calcPhi(Mw, rJB, vs30)  # noqa: ERA001
-    #     return np.sqrt(phiMRV * phiMRV + tau * tau)  # noqa: ERA001
+    #     tau = self.calcTau(Mw)
+    #     phiMRV = self.calcPhi(Mw, rJB, vs30)
+    #     return np.sqrt(phiMRV * phiMRV + tau * tau)
     def calcStdDev(self, phiMRV, tau):  # noqa: ANN001, ANN201, N802, N803, D102
         return np.sqrt(phiMRV * phiMRV + tau * tau)
 
@@ -823,7 +835,7 @@ class boore_etal_2014:  # noqa: N801, D101
         return saResult  # noqa: RET504
 
 
-############### Campbell & Bozorgnia (2014)  # noqa: ERA001
+############### Campbell & Bozorgnia (2014)
 class campbell_bozorgnia_2014:  # noqa: N801, D101
     timeSetImt = 0  # noqa: N815
     timeCalc = 0  # noqa: N815
@@ -904,7 +916,19 @@ class campbell_bozorgnia_2014:  # noqa: N801, D101
         return np.exp(7.089 - 1.144 * np.log(vs30))
 
     def calcMean(  # noqa: ANN201, C901, N802, D102, PLR0912, PLR0913, PLR0915
-        self, Mw, rJB, rRup, rX, dip, width, zTop, zHyp, vs30, z2p5, style, pgaRock  # noqa: ANN001, N803
+        self,
+        Mw,  # noqa: ANN001, N803
+        rJB,  # noqa: ANN001, N803
+        rRup,  # noqa: ANN001, N803
+        rX,  # noqa: ANN001, N803
+        dip,  # noqa: ANN001
+        width,  # noqa: ANN001
+        zTop,  # noqa: ANN001, N803
+        zHyp,  # noqa: ANN001, N803
+        vs30,  # noqa: ANN001
+        z2p5,  # noqa: ANN001
+        style,  # noqa: ANN001
+        pgaRock,  # noqa: ANN001, N803
     ):
         Fmag = self.c0 + self.c1 * Mw  # noqa: N806
         if Mw > 6.5:  # noqa: PLR2004

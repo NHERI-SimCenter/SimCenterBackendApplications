@@ -287,27 +287,27 @@ class NormalDataset(NormalUncertainData):  # noqa: D101
 
 ############################################
 # class TruncatedExponentialUncertainData(RVData):
-#     a: float  # noqa: ERA001
-#     b: float  # noqa: ERA001
+#     a: float
+#     b: float
 #     @pydantic.validator('b')
 #     def upper_bound_not_bigger_than_lower_bound(v, values):
 #         if 'a' in values and v <= values['a']:
-#             raise ValueError(f"The upper bound must be bigger than \  # noqa: ERA001
+#             raise ValueError(f"The upper bound must be bigger than \
 #                              the lower bound {values['a']}. \
 #                              Got a value of {v}.")
-#         return v  # noqa: ERA001
+#         return v
 
 # class TruncatedExponentialParameters(TruncatedExponentialUncertainData):
-#     inputType: typing.Literal["Parameters"]  # noqa: ERA001
-#     lamda: pydantic.PositiveFloat = pydantic.Field(alias="lambda")  # noqa: ERA001
+#     inputType: typing.Literal["Parameters"]
+#     lamda: pydantic.PositiveFloat = pydantic.Field(alias="lambda")
 
 # class TruncatedExponentialMoments(TruncatedExponentialUncertainData):
-#     inputType: typing.Literal["Moments"]  # noqa: ERA001
-#     mean: pydantic.PositiveFloat  # noqa: ERA001
+#     inputType: typing.Literal["Moments"]
+#     mean: pydantic.PositiveFloat
 
 # class TruncatedExponentialDataset(TruncatedExponentialUncertainData):
-#     inputType: typing.Literal["Dataset"]  # noqa: ERA001
-#     dataDir: str  # noqa: ERA001
+#     inputType: typing.Literal["Dataset"]
+#     dataDir: str
 
 
 ############################################

@@ -1,13 +1,13 @@
 # written: UQ team @ SimCenter  # noqa: INP001, D100
 
 # import functions for Python 2.X support
-# from __future__ import division, print_function  # noqa: ERA001
-# import sys  # noqa: ERA001
+# from __future__ import division, print_function
+# import sys
 # if sys.version.startswith('2'):
-#     range=xrange  # noqa: ERA001
-#     string_types = basestring  # noqa: ERA001
-# else:  # noqa: ERA001
-#     string_types = str  # noqa: ERA001
+#     range=xrange
+#     string_types = basestring
+# else:
+#     string_types = str
 
 import argparse
 import json
@@ -75,7 +75,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     thisScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
 
-    preprocessorCommand = f'"{thisScriptDir}/preprocessDakota" "{inputFile}" "{workflow_driver}" "{workflow_driver1}" "{runType}" "{osType}" '  # noqa: N806, E501
+    preprocessorCommand = f'"{thisScriptDir}/preprocessDakota" "{inputFile}" "{workflow_driver}" "{workflow_driver1}" "{runType}" "{osType}" '  # noqa: N806
 
     subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
 
@@ -110,7 +110,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
             else:
                 shutil.copy(datFile, '../')
 
-        # os.remove("calibrationDataFilesToMove.cal")  # noqa: ERA001
+        # os.remove("calibrationDataFilesToMove.cal")
 
     # change dir to the main working dir for the structure
     os.chdir('../')
@@ -118,9 +118,9 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     cwd = os.getcwd()  # noqa: PTH109
 
     if runType in ['runningLocal']:
-        #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)  # noqa: ERA001
+        #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
         #    for line in p.stdout:
-        #        print(str(line))  # noqa: ERA001
+        #        print(str(line))
 
         dakotaCommand = (  # noqa: N806
             'dakota -input dakota.in -output dakota.out -error dakota.err'

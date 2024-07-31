@@ -132,15 +132,15 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
         selected_stn = stn_df.loc[stns_to_run]
     else:
         selected_stn = stn_df
-    # stn_ids_min = np.min(stn_df.index.values)  # noqa: ERA001
-    # stn_ids_max = np.max(stn_df.index.values)  # noqa: ERA001
+    # stn_ids_min = np.min(stn_df.index.values)
+    # stn_ids_max = np.max(stn_df.index.values)
     # if min_id is None:
-    #     min_id = stn_ids_min  # noqa: ERA001
+    #     min_id = stn_ids_min
     # if max_id is None:
-    #     max_id = stn_ids_max  # noqa: ERA001
-    # min_id = np.max([stn_ids_min, min_id])  # noqa: ERA001
-    # max_id = np.min([stn_ids_max, max_id])  # noqa: ERA001
-    # selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])  # noqa: ERA001
+    #     max_id = stn_ids_max
+    # min_id = np.max([stn_ids_min, min_id])
+    # max_id = np.min([stn_ids_max, max_id])
+    # selected_stn = copy.copy(stn_df.loc[min_id:max_id, :])
     selected_stn.index = list(range(len(selected_stn.index)))
     # Extracting data
     labels = selected_stn.columns.values  # noqa: PD011
@@ -212,9 +212,9 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     if vs30Config['Type'] == 'User-specified':
         if vs30_label not in selected_stn.keys():  # noqa: SIM118
             sys.exit(
-                'ERROR: User-specified option is selected for Vs30 model but the provided.'  # noqa: ISC003, E501
+                'ERROR: User-specified option is selected for Vs30 model but the provided.'  # noqa: ISC003
                 + "but the provided Site File doesn't contain a column named 'Vs30'."
-                + '\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.'  # noqa: E501
+                + '\nNote: the User-specified Vs30 model is only supported for Scattering Locations site definition.'
             )
         tmp = selected_stn.iloc[  # noqa: PD011
             :, list(selected_stn.keys()).index(vs30_label)
@@ -287,7 +287,7 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
         nan_loc = list(range(len(selected_stn.index)))
     if len(nan_loc) and zTR_tag == 0:
         print(  # noqa: T201
-            'CreateStation: Interpolating global depth to rock map for defined stations.'  # noqa: E501
+            'CreateStation: Interpolating global depth to rock map for defined stations.'
         )
         selected_stn.loc[nan_loc, zTR_label] = [
             max(0, x)
@@ -302,7 +302,7 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
         ]
     elif len(nan_loc) and zTR_tag == 1:
         print(  # noqa: T201
-            'CreateStation: Interpolating depth to rock map from National Crustal Model.'  # noqa: E501
+            'CreateStation: Interpolating depth to rock map from National Crustal Model.'
         )
         selected_stn.loc[nan_loc, zTR_label] = [
             max(0, x)
@@ -389,7 +389,7 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
         if len(row_USER):
             if soil_user_fun is None:
                 print(  # noqa: T201
-                    'CreateStation: no fetching is conducted for the User soil model- please ensure all needed parameters are defined.'  # noqa: E501
+                    'CreateStation: no fetching is conducted for the User soil model- please ensure all needed parameters are defined.'
                 )
                 for cur_param in list(selected_stn.keys()):
                     if cur_param not in [
@@ -462,7 +462,7 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
                 tmp.update({'Vs30': get_vs30_ncm([stn[lat_label]], [stn[lon_label]])[0]})
             elif vs30_tag == 0:
                 tmp.update({'Vs30': get_site_vs30_from_opensha([stn[lat_label]], [stn[lon_label]])[0]})
-            """  # noqa: E501
+            """
         if (z1Config['Type'] == 'User-specified') and stn.get('z1pt0'):
             tmp.update({'z1pt0': stn.get('z1pt0')})
         elif (z1Config['Type'] == 'User-specified') and z1Config.get(
@@ -508,7 +508,7 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
         if 'DepthToRock' in stn.index:
             tmp.update({'DepthToRock': stn.get('DepthToRock')})
         else:
-            # tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})  # noqa: ERA001, E501
+            # tmp.update({'zTR': max(0,get_zTR_global([stn[lat_label]], [stn[lon_label]])[0])})
             tmp.update({'DepthToRock': 0.0})
 
         if soil_flag:
@@ -527,10 +527,10 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
             if stn.get('vsInferred') not in [0, 1]:
                 sys.exit(
                     "CreateStation: Only '0' or '1' can be assigned to the"  # noqa: ISC003
-                    + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."  # noqa: E501
+                    + " 'vsInferred' column in the Site File (.csv), where 0 stands for false and 1 stands for true."
                 )
-            # print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+  # noqa: E501
-            #     " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")  # noqa: E501
+            # print(f"CreateStation: A value of 'vsInferred' is provided for station {stn_id} in the Site File (.csv)"+
+            #     " and the 'vsInferred' defined in the Vs30 model pane is overwritten.")
             tmp.update({'vsInferred': stn.get('vsInferred')})
         else:
             tmp.update(
@@ -550,12 +550,12 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
 
         stn_file['Stations'].append(tmp)
         # stn_file['Stations'].append({
-        #    'ID': stn_id,  # noqa: ERA001
-        #    'Longitude': stn[lon_label],  # noqa: ERA001
-        #    'Latitude': stn[lat_label],  # noqa: ERA001
-        #    'Vs30': stn.get(vs30_label, 760.0),  # noqa: ERA001
+        #    'ID': stn_id,
+        #    'Longitude': stn[lon_label],
+        #    'Latitude': stn[lat_label],
+        #    'Vs30': stn.get(vs30_label, 760.0),
         #    'z2.5': stn.get(z2p5_label, 9.0)
-        # })  # noqa: ERA001
+        # })
     # Saving data to the output file
     df_csv = {
         'ID': [x['ID'] for x in stn_file['Stations']],
@@ -579,7 +579,12 @@ def create_stations(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
 
 
 def create_gridded_stations(  # noqa: ANN201, PLR0913
-    input_file, output_file, div_lon=2, div_lat=2, delta_lon=None, delta=None  # noqa: ANN001, ARG001
+    input_file,  # noqa: ANN001
+    output_file,  # noqa: ANN001, ARG001
+    div_lon=2,  # noqa: ANN001
+    div_lat=2,  # noqa: ANN001
+    delta_lon=None,  # noqa: ANN001
+    delta=None,  # noqa: ANN001, ARG001
 ):
     """Reading input csv file for the grid, generating stations, and saving data
     to output json file
@@ -651,7 +656,7 @@ def get_vs30_global(lat, lon):  # noqa: ANN001, ANN201
         vs30_global['Longitude'], vs30_global['Latitude'], vs30_global['Vs30']
     )
     vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
-    # return  # noqa: ERA001
+    # return
     return vs30  # noqa: RET504
 
 
@@ -673,9 +678,9 @@ def get_vs30_thompson(lat, lon):  # noqa: ANN001, ANN201
     with open(cwd + '/database/site/thompson_vs30_4km.pkl', 'rb') as f:  # noqa: PTH123
         vs30_thompson = pickle.load(f)  # noqa: S301
     # Interpolation function (linear)
-    # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default  # noqa: E501
+    # Thompson's map gives zero values for water-covered region and outside CA -> use 760 for default
     print(  # noqa: T201
-        'CreateStation: Warning - approximate 760 m/s for sites not supported by Thompson Vs30 map (water/outside CA).'  # noqa: E501
+        'CreateStation: Warning - approximate 760 m/s for sites not supported by Thompson Vs30 map (water/outside CA).'
     )
     vs30_thompson['Vs30'][vs30_thompson['Vs30'] < 0.1] = 760  # noqa: PLR2004
     interpFunc = interpolate.interp2d(  # noqa: N806
@@ -683,30 +688,30 @@ def get_vs30_thompson(lat, lon):  # noqa: ANN001, ANN201
     )
     vs30 = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]
 
-    # return  # noqa: ERA001
+    # return
     return vs30  # noqa: RET504
 
 
 def get_z1(vs30):  # noqa: ANN001, ANN201
-    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: E501, D400, D415
+    """Compute z1 based on the prediction equation by Chiou and Youngs (2013) (unit of vs30 is meter/second and z1 is meter)"""  # noqa: D400, D415
     z1 = np.exp(-7.15 / 4.0 * np.log((vs30**4 + 571.0**4) / (1360.0**4 + 571.0**4)))
-    # return  # noqa: ERA001
+    # return
     return z1  # noqa: RET504
 
 
 def get_z25(z1):  # noqa: ANN001, ANN201
-    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: E501, D400, D415
+    """Compute z25 based on the prediction equation by Campbell and Bozorgnia (2013)"""  # noqa: D400, D415
     z25 = 0.748 + 2.218 * z1
-    # return  # noqa: ERA001
+    # return
     return z25  # noqa: RET504
 
 
 def get_z25fromVs(vs):  # noqa: ANN001, ANN201, N802
     """Compute z25 (m) based on the prediction equation 33 by Campbell and Bozorgnia (2014)
     Vs is m/s
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
     z25 = (7.089 - 1.144 * np.log(vs)) * 1000
-    # return  # noqa: ERA001
+    # return
     return z25  # noqa: RET504
 
 
@@ -732,7 +737,7 @@ def get_zTR_global(lat, lon):  # noqa: ANN001, ANN201, N802
         zTR_global['Longitude'], zTR_global['Latitude'], zTR_global['zTR']
     )
     zTR = [float(interpFunc(x, y)) for x, y in zip(lon, lat)]  # noqa: N806
-    # return  # noqa: ERA001
+    # return
     return zTR  # noqa: RET504
 
 
@@ -759,7 +764,8 @@ def export_site_prop(stn_file, output_dir, filename):  # noqa: ANN001, ANN201
     df = pd.DataFrame.from_dict(stn_file)  # noqa: PD901
 
     output_dir = os.path.join(  # noqa: PTH118
-        os.path.dirname(Path(output_dir)), os.path.basename(Path(output_dir))  # noqa: PTH119, PTH120
+        os.path.dirname(Path(output_dir)),  # noqa: PTH120
+        os.path.basename(Path(output_dir)),  # noqa: PTH119
     )
     try:
         os.makedirs(output_dir)  # noqa: PTH103
@@ -789,17 +795,17 @@ def get_zTR_ncm(lat, lon):  # noqa: ANN001, ANN201, N802
         r1 = requests.get(url_geology)  # noqa: S113
         cur_res = r1.json()
         if not cur_res['response']['results'][0]['profiles']:
-            # the current site is out of the available range of NCM (Western US only, 06/2021)  # noqa: E501
+            # the current site is out of the available range of NCM (Western US only, 06/2021)
             # just append 0.0 to zTR
             print(  # noqa: T201
-                f'CreateStation: Warning in NCM API call - could not get the site geological data and approximate 0.0 for zTR for site {cur_lat}, {cur_lon}'  # noqa: E501
+                f'CreateStation: Warning in NCM API call - could not get the site geological data and approximate 0.0 for zTR for site {cur_lat}, {cur_lon}'
             )
             zTR.append(0.0)
             continue
         else:  # noqa: RET507
             # get the top bedrock data
             zTR.append(abs(cur_res['response']['results'][0]['profiles'][0]['top']))
-    # return  # noqa: ERA001
+    # return
     return zTR
 
 
@@ -824,10 +830,10 @@ def get_vsp_ncm(lat, lon, depth):  # noqa: ANN001, ANN201
         r1 = requests.get(url_geophys)  # noqa: S113
         cur_res = r1.json()
         if cur_res['status'] == 'error':
-            # the current site is out of the available range of NCM (Western US only, 06/2021)  # noqa: E501
+            # the current site is out of the available range of NCM (Western US only, 06/2021)
             # just append -1 to zTR
             print(  # noqa: T201
-                'CreateStation: Warning in NCM API call - could not get the site geopyhsical data.'  # noqa: E501
+                'CreateStation: Warning in NCM API call - could not get the site geopyhsical data.'
             )
             vsp.append([])
             continue
@@ -838,7 +844,7 @@ def get_vsp_ncm(lat, lon, depth):  # noqa: ANN001, ANN201
             )
     if len(vsp) == 1:
         vsp = vsp[0]
-    # return  # noqa: ERA001
+    # return
     return vsp
 
 
@@ -856,7 +862,7 @@ def compute_vs30_from_vsp(depthp, vsp):  # noqa: ANN001, ANN201
     delta_t = [x / y for x, y in zip(delta_depth, vsp)]
     # Computing the Vs30
     vs30p = 30.0 / np.sum(delta_t)
-    # return  # noqa: ERA001
+    # return
     return vs30p  # noqa: RET504
 
 
@@ -880,10 +886,10 @@ def get_vs30_ncm(lat, lon):  # noqa: ANN001, ANN201
             vs30.append(compute_vs30_from_vsp(depthp, cur_vsp))
         else:
             print(  # noqa: T201
-                'CreateStation: Warning - approximate 760 m/s for sites not supported by NCM (Western US).'  # noqa: E501
+                'CreateStation: Warning - approximate 760 m/s for sites not supported by NCM (Western US).'
             )
             vs30.append(760.0)
-    # return  # noqa: ERA001
+    # return
     return vs30
 
 
@@ -961,7 +967,7 @@ def get_soil_model_user(df_stn, model_fun):  # noqa: ANN001, ANN201, D103
         soil_model = user_model.soil_model
     except:  # noqa: E722
         print(  # noqa: T201
-            f'CreateStation.get_soil_model_user: soil_model is nto found in {model_fun}.'  # noqa: E501
+            f'CreateStation.get_soil_model_user: soil_model is nto found in {model_fun}.'
         )
         return df_stn
 
@@ -970,7 +976,7 @@ def get_soil_model_user(df_stn, model_fun):  # noqa: ANN001, ANN201, D103
         df_stn_new = soil_model(site_info=df_stn)
     except:  # noqa: E722
         print(  # noqa: T201
-            'CreateStation.get_soil_model_user: error in soil_model_fun(site_info=None).'  # noqa: E501
+            'CreateStation.get_soil_model_user: error in soil_model_fun(site_info=None).'
         )
         return df_stn
 

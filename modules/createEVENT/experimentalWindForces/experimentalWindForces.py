@@ -35,7 +35,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         'modePercent'
     ]  # percentage of modes to include in the simulation
     seed = evt_data['seed']
-    # ^ Choose percentage of modes to include in the simulation (%). We suggest between 25% and 30% for higher accuracy  # noqa: E501
+    # ^ Choose percentage of modes to include in the simulation (%). We suggest between 25% and 30% for higher accuracy
 
     #
     # Parsing the json file
@@ -68,7 +68,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
 
     elif (
         evt_data['type'] == 'ExperimentalWindForces'
-    ):  # creates {forceTimehistory}.json here and later overwrites it with {forceSpectra}.json  # noqa: E501
+    ):  # creates {forceTimehistory}.json here and later overwrites it with {forceSpectra}.json
         if ('Fx' not in data) or ('Fy' not in data) or ('Tz' not in data):
             raise Exception(  # noqa: TRY002
                 'Force time histories not found in ' + evt_data['filename'] + '.'
@@ -76,11 +76,11 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
 
         case = 'timeHistory'
 
-    # elif not getRV:  # noqa: ERA001
+    # elif not getRV:
 
     #    # read {forceSpectra}.json
 
-    #    case = "spectra"  # noqa: ERA001
+    #    case = "spectra"
 
     else:
         raise Exception('Event type [' + evt_data['type'] + '] not found.')  # noqa: TRY002
@@ -105,12 +105,12 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         print(f'Model scaling factor of {ms:.2} is used')  # noqa: T201
         if ((ms != D_full / D) or (ms != B_full / B)) and getRV:
             print(  # noqa: T201
-                f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'  # noqa: E501
+                f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'
             )
 
     if case == 'timeHistory':
-        # Tw = 4          # duration of window (sec) - user defined - smaller window leads to more smoothing  # noqa: ERA001, E501
-        # overlap = 0.5   # 50% overlap - user defined  # noqa: ERA001
+        # Tw = 4          # duration of window (sec) - user defined - smaller window leads to more smoothing
+        # overlap = 0.5   # 50% overlap - user defined
         Tw = evt_data['windowSize']  # noqa: N806
         overlap = evt_data['overlapPerc'] / 100
 
@@ -125,7 +125,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
 
         if nfloors != nfloors_GI:
             err_exit(
-                f'Number of floors does not match - input file has {nfloors} floors, GI tab defines {nfloors_GI} floors'  # noqa: E501
+                f'Number of floors does not match - input file has {nfloors} floors, GI tab defines {nfloors_GI} floors'
             )
 
     elif case == 'spectra':
@@ -176,7 +176,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         np.round(ncomp * ((perc_mod) / 100) + 1.0e-10)
     )  # small value added to make .5 round up
     if l_mo > 100 or l_mo < 0:  # noqa: PLR2004
-        msg = 'Error: Number of modes should be equal or less than the number of components'  # noqa: E501, F841
+        msg = 'Error: Number of modes should be equal or less than the number of components'  # noqa: F841
 
     print('Number of modes = ' + str(l_mo))  # noqa: T201
 
@@ -250,8 +250,9 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     D_vH = (V_H / vRef) ** 3 * D1  # scaled eigenvalues  # noqa: N806
     theta_vH = np.arctan2(np.imag(V_vH), np.real(V_vH))  # scaled theta  # noqa: N806
     fcut_sc = (V_H / vRef) * fcut
-    f_inc = 1 / T_full  # freq.increment(Hz)
-    N_f = round(T_full * fcut_sc) + 1  # number of freq.points considered  # noqa: N806
+    f_inc = 1 / T_full  # freq.incremen
+    # number of freq.points consideredt(Hz)
+    N_f = round(T_full * fcut_sc) + 1  # noqa: N806
     dt = 1 / (2 * fcut_sc)  # max.time incremen to avoid aliasing(s)
     N_t = round(T_full / dt)  # number of time points  # noqa: N806
     fvec = np.arange(0, f_inc * (N_f), f_inc)  # frequency line  # noqa: F841
@@ -318,7 +319,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         (V_H / vRef) ** 2 * CF_sim * static_pres
     )  # simulated forces at full scale wind speed
 
-    # return F_sim  # noqa: ERA001
+    # return F_sim
 
     #
     # Writing results to an event file
@@ -430,7 +431,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     plt.title('Force - Floor = 20 - Full Scale')
     plt.show()
 
-    """  # noqa: E501
+    """
 
 
 def perform_POD(s_target, f_target, ncomp, l_mo):  # noqa: ANN001, ANN201, N802, D103
@@ -517,14 +518,14 @@ def learn_CPSD(  # noqa: ANN201, N802, D103, PLR0913
     wind_size = fs * Tw
     nover = round(overlap * wind_size)
 
-    # nfft = int(wind_size)  # noqa: ERA001
+    # nfft = int(wind_size)
     fcut_sc = (V_H / vRef) * fcut
     dt = 1 / (2 * fcut_sc)  # max.time incremen to avoid aliasing(s)
     N_t = round(T_full / dt)  # number of time points  # noqa: N806
     nfft = N_t
 
     t_init = time.time()
-    # [s_target,f_target] = cpsd(Components,Components,hanning(wind_size),nover,nfft,fp,'mimo');  # noqa: ERA001, E501
+    # [s_target,f_target] = cpsd(Components,Components,hanning(wind_size),nover,nfft,fp,'mimo');
     s_target, f_target = cpsd_matlab(
         Components, Components, wind_size, nover, nfft, fp
     )
@@ -590,14 +591,16 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
     else:
         np.random.seed(seed[seed_num] + int(sampNum))  # noqa: NPY002
 
-    F_jzm = np.zeros((ncomp, N_t))  # force coefficients initialize matrix  # noqa: N806
+    # force coefficients initialize matrix
+    F_jzm = np.zeros((ncomp, N_t))  # noqa: N806
     f_tmp = np.linspace(0, (N_f - 1) * f_inc, N_f)
 
     for m in range(l_mo):
         mo = m  # current        mode  #
         Vmo = V_vH[nf_dir, mo, :]  # eigenvector for mode mo  # noqa: N806
-        # Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo  # noqa: ERA001
-        Dmo = D_vH[mo, 0, :] + 1j * 0  # To avoid nan when calculating VDmo  # noqa: N806
+        # Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo
+        # To avoid nan when calculating VDmo
+        Dmo = D_vH[mo, 0, :] + 1j * 0  # noqa: N806
 
         thetmo = theta_vH[nf_dir, mo, :]  # theta for mode mo
         VDmo = (  # noqa: N806
@@ -610,7 +613,7 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
         varth = (2 * np.pi) * np.random.random(size=(1, N_f))  # noqa: NPY002
 
         # Loop over floors
-        # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')  # noqa: ERA001
+        # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')
         F_jm = np.zeros((ncomp, N_t))  # noqa: N806
 
         coef = np.sqrt(2) * np.sqrt(f_inc) * np.exp(1j * varth)
@@ -636,7 +639,8 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
             g_jm = np.fft.ifft(B_jm) * N_t
             F_jm[j, :] = np.real(g_jm * coef2)
 
-        F_jzm = F_jzm + F_jm  # sum up F from different modes (zero - mean)  # noqa: N806
+        # sum up F from different modes (zero - mean)
+        F_jzm = F_jzm + F_jm  # noqa: N806
 
     return F_jzm
 
@@ -649,8 +653,8 @@ def err_exit(msg):  # noqa: ANN001, ANN201, D103
 
 
 if __name__ == '__main__':
-    # parseWindMatFile("Forces_ANG000_phase1.mat", "Forces_ANG000_phase1.json")  # noqa: ERA001
-    # parseWindMatFile("TargetSpectra_ANG000_phase1.mat", "TargetSpectra_ANG000_phase1.json")  # noqa: ERA001, E501
+    # parseWindMatFile("Forces_ANG000_phase1.mat", "Forces_ANG000_phase1.json")
+    # parseWindMatFile("TargetSpectra_ANG000_phase1.mat", "TargetSpectra_ANG000_phase1.json")
 
     inputArgs = sys.argv  # noqa: N816, F405
 
@@ -674,7 +678,7 @@ if __name__ == '__main__':
         exit(-1)  # noqa: PLR1722
 
     # if getRV:
-    #     aimName = aimName + ".sc"  # noqa: ERA001
+    #     aimName = aimName + ".sc"
 
     try:
         main(aimName, evtName, getRV)

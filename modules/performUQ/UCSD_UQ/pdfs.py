@@ -12,14 +12,16 @@ class Dist:  # noqa: D101
         self.data = data
         if (params is None) and (moments is None) and (data is None):
             raise RuntimeError(  # noqa: TRY003
-                'Atleast one of parameters, moments, or data must be specified when creating a random variable'  # noqa: EM101, E501
+                'Atleast one of parameters, moments, or data must be specified when creating a random variable'  # noqa: EM101
             )
 
 
 class Uniform:  # noqa: D101
     # Method with in this uniform class
     def __init__(  # noqa: ANN204, D107
-        self, lower, upper  # noqa: ANN001
+        self,
+        lower,  # noqa: ANN001
+        upper,  # noqa: ANN001
     ):  # method receives instance as first argument automatically
         # the below are the instance variables
         self.lower = lower
@@ -151,8 +153,8 @@ class BetaDist:  # noqa: D101
 
 class LogNormDist:  # noqa: D101
     def __init__(self, mu, sigma):  # noqa: ANN001, ANN204, D107
-        # self.sigma = np.sqrt(np.log(zeta**2/lamda**2 + 1))  # noqa: ERA001
-        # self.mu = np.log(lamda) - 1/2*self.sigma**2  # noqa: ERA001
+        # self.sigma = np.sqrt(np.log(zeta**2/lamda**2 + 1))
+        # self.mu = np.log(lamda) - 1/2*self.sigma**2
         self.s = sigma
         self.loc = 0
         self.scale = np.exp(mu)

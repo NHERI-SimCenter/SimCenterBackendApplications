@@ -14,7 +14,7 @@ class FloorForces:  # noqa: D101
 def validateCaseDirectoryStructure(caseDir):  # noqa: ANN001, ANN201, N802, N803
     """This method validates that the provided case directory is valid and contains the 0, constant and system directory
     It also checks that system directory contains the controlDict
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     if not os.path.isdir(caseDir):  # noqa: PTH112
         return False
 
@@ -40,7 +40,7 @@ def parseForceComponents(forceArray):  # noqa: ANN001, ANN201, N802, N803
 
 
 def ReadOpenFOAMForces(buildingForcesPath, floorsCount, startTime):  # noqa: ANN001, ANN201, N802, N803
-    """This method will read the forces from the output files in the OpenFOAM case output (post processing)"""  # noqa: E501, D400, D401, D404, D415
+    """This method will read the forces from the output files in the OpenFOAM case output (post processing)"""  # noqa: D400, D401, D404, D415
     deltaT = 0  # noqa: N806
     forces = []
     for i in range(floorsCount):  # noqa: B007
@@ -88,7 +88,12 @@ def directionToDof(direction):  # noqa: ANN001, ANN201, N802
 
 
 def addFloorForceToEvent(  # noqa: ANN201, N802, PLR0913
-    timeSeriesArray, patternsArray, force, direction, floor, dT  # noqa: ANN001, N803
+    timeSeriesArray,  # noqa: ANN001, N803
+    patternsArray,  # noqa: ANN001, N803
+    force,  # noqa: ANN001
+    direction,  # noqa: ANN001
+    floor,  # noqa: ANN001
+    dT,  # noqa: ANN001, N803
 ):
     """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
     seriesName = 'WaterForceSeries_' + str(floor) + direction  # noqa: N806

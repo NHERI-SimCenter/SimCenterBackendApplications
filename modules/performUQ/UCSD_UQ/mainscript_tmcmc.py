@@ -1,9 +1,9 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: INP001, E501, D205, D400, D415
+"""  # noqa: INP001, D205, D400, D415
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 import os
 import sys
 import time
@@ -22,7 +22,7 @@ from calibration_utilities import (
 from parseData import parseDataFunction
 from runTMCMC import run_TMCMC
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 
 
 def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):  # noqa: ANN001, ANN201, N802, N803, D103
@@ -31,14 +31,15 @@ def computeModelPosteriorProbabilities(modelPriorProbabilities, modelEvidences):
 
 
 def computeModelPosteriorProbabilitiesUsingLogEvidences(  # noqa: ANN201, N802, D103
-    modelPriorProbabilities, modelLogEvidences  # noqa: ANN001, N803
+    modelPriorProbabilities,  # noqa: ANN001, N803
+    modelLogEvidences,  # noqa: ANN001, N803
 ):
     deltas = modelLogEvidences - np.min(modelLogEvidences)
     denominator = np.dot(modelPriorProbabilities, np.exp(deltas))
     return modelPriorProbabilities * np.exp(deltas) / denominator
 
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 
 
 class TMCMC_Data:  # noqa: N801, D101
@@ -103,23 +104,23 @@ class TMCMC_Data:  # noqa: N801, D101
         self.numStepsAfterBurnIn = (
             int(np.ceil(numParticles / numChains)) * self.numSkipSteps
         )
-        # self.numStepsPerChain = numBurnInSteps + numStepsAfterBurnIn  # noqa: ERA001
+        # self.numStepsPerChain = numBurnInSteps + numStepsAfterBurnIn
 
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     t1 = time.time()
 
     # Initialize analysis
-    # mainscript_path = os.path.abspath(input_args[0])  # noqa: ERA001
-    # working_directory = os.path.abspath(input_args[1])  # noqa: ERA001
-    # template_directory = os.path.abspath(input_args[2])  # noqa: ERA001
-    # run_type = input_args[3]  # either "runningLocal" or "runningRemote"  # noqa: ERA001
-    # driver_file = input_args[4]  # noqa: ERA001
-    # input_json_filename = input_args[5]  # noqa: ERA001
+    # mainscript_path = os.path.abspath(input_args[0])
+    # working_directory = os.path.abspath(input_args[1])
+    # template_directory = os.path.abspath(input_args[2])
+    # run_type = input_args[3]  # either "runningLocal" or "runningRemote"
+    # driver_file = input_args[4]
+    # input_json_filename = input_args[5]
 
     mainscript_path = os.path.abspath(__file__)  # noqa: PTH100
     working_directory = os.path.abspath(input_args[0])  # noqa: PTH100
@@ -131,17 +132,17 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     logfile_name = 'logFileTMCMC.txt'
     logfile = createLogFile(where=working_directory, logfile_name=logfile_name)
 
-    # Remove dakotaTab and dakotaTabPrior files if they already exist in the working directory  # noqa: E501
+    # Remove dakotaTab and dakotaTabPrior files if they already exist in the working directory
     try:
         os.remove('dakotaTab.out')  # noqa: PTH107
         os.remove('dakotTabPrior.out')  # noqa: PTH107
     except OSError:
         pass
 
-    # # ================================================================================================================  # noqa: E501
+    # # ================================================================================================================
 
     # Process input json file
-    # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)  # noqa: ERA001, E501
+    # input_json_filename_full_path = os.path.join(os.path.abspath(template_directory), input_json_filename)
     input_json_filename_full_path = input_json_filename
     logfile.write('\n\n==========================')
     logfile.write(f'\nParsing the json input file {input_json_filename_full_path}')
@@ -164,7 +165,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     )
     syncLogFile(logfile)
 
-    # # ================================================================================================================  # noqa: E501
+    # # ================================================================================================================
 
     # Initialize TMCMC object
     tmcmc_data_instance = TMCMC_Data(
@@ -184,7 +185,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         number_of_samples, tmcmc_data_instance.numChains
     )
 
-    # # ================================================================================================================  # noqa: E501
+    # # ================================================================================================================
 
     # Read calibration data
     data_preparer_instance = CalDataPreparer(
@@ -199,7 +200,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         data_preparer_instance.getCalibrationData()
     )
 
-    # # ================================================================================================================  # noqa: E501
+    # # ================================================================================================================
 
     # Transform the data depending on the option chosen by the user
     transformation = 'absMaxScaling'
@@ -215,7 +216,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     logfile.write('\n\n\tThe scale and shift factors computed are: ')
     for j in range(len(edp_names_list)):
         logfile.write(
-            f'\n\t\tEDP: {edp_names_list[j]}, scale factor: {scale_factors[j]}, shift factor: {shift_factors[j]}'  # noqa: E501
+            f'\n\t\tEDP: {edp_names_list[j]}, scale factor: {scale_factors[j]}, shift factor: {shift_factors[j]}'
         )
 
     transformed_calibration_data = data_transformer_instance.transformData()
@@ -223,7 +224,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         f'\n\nThe transformed calibration data: \n{transformed_calibration_data}'
     )
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
     # Process covariance matrix options
     cov_matrix_options_instance = CovarianceMatrixPreparer(
         transformed_calibration_data,
@@ -237,7 +238,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     defaultErrorVariances = cov_matrix_options_instance.getDefaultErrorVariances()  # noqa: N806, F841
     covariance_matrix_list = cov_matrix_options_instance.createCovarianceMatrix()
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
     # Get log-likelihood function
     LL_Handler = LogLikelihoodHandler(  # noqa: N806
         data=transformed_calibration_data,
@@ -251,12 +252,12 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     )
     log_likelihood_function = LL_Handler.evaluate_log_likelihood
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
     # Start TMCMC workflow
     logfile.write('\n\n==========================')
     logfile.write('\nSetting up the TMCMC algorithm')
 
-    # sys.path.append(workdirMain)  # noqa: ERA001
+    # sys.path.append(workdirMain)
     logfile.write(f'\n\tResults path: {working_directory}')
 
     # number of particles: Np
@@ -275,7 +276,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
 
     syncLogFile(logfile)
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
     # Initialize variables to store prior model probability and evidence
     model_prior_probabilities = np.ones((len(variables_list),)) / len(variables_list)
     model_evidences = np.ones_like(model_prior_probabilities)
@@ -340,11 +341,11 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
 
         # Compute model evidence
         logfile.write('\n\n\t\tComputing the model evidence')
-        # evidence = 1  # noqa: ERA001
+        # evidence = 1
         # for i in range(len(mytrace)):
-        #     Wm = mytrace[i][2]  # noqa: ERA001
-        #     evidence *= np.mean(Wm)  # noqa: ERA001
-        # logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))  # noqa: ERA001
+        #     Wm = mytrace[i][2]
+        #     evidence *= np.mean(Wm)
+        # logfile.write("\n\t\t\tModel evidence: {:g}".format(evidence))
         evidence = np.exp(log_evidence)
         logfile.write(f'\n\t\t\tModel evidence: {evidence:g}')
         logfile.write(f'\n\t\t\tModel log_evidence: {log_evidence:g}')
@@ -360,11 +361,11 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         # Delete Analysis Folders
 
         # for analysisNumber in range(0, Np):
-        #     stringToAppend = ("workdir." + str(analysisNumber + 1))  # noqa: ERA001
-        #     analysisLocation = os.path.join(workdirMain, stringToAppend)  # noqa: ERA001
-        #     # analysisPath = Path(analysisLocation)  # noqa: ERA001
-        #     analysisPath = os.path.abspath(analysisLocation)  # noqa: ERA001
-        #     shutil.rmtree(analysisPath)  # noqa: ERA001
+        #     stringToAppend = ("workdir." + str(analysisNumber + 1))
+        #     analysisLocation = os.path.join(workdirMain, stringToAppend)
+        #     # analysisPath = Path(analysisLocation)
+        #     analysisPath = os.path.abspath(analysisLocation)
+        #     shutil.rmtree(analysisPath)
 
         model_evidences[model_number] = evidence
 
@@ -385,10 +386,10 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     logfile.write('\nThe posterior model probabilities are:')
     for model_number in range(len(variables_list)):
         logfile.write(
-            f'\nModel number {model_number+1}: {modelPosteriorProbabilities[model_number]*100:15g}%'  # noqa: E501
+            f'\nModel number {model_number+1}: {modelPosteriorProbabilities[model_number]*100:15g}%'
         )
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
     logfile.write('\nUCSD_UQ engine workflow complete!\n')
     logfile.write(f'\nTime taken: {(time.time() - t1) / 60:0.2f} minutes\n\n')
 
@@ -399,13 +400,13 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     if run_type == 'runningRemote':
         tmcmc_data_instance.comm.Abort(0)
 
-    # ======================================================================================================================  # noqa: E501
+    # ======================================================================================================================
 
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================
 
 if __name__ == '__main__':
     inputArgs = sys.argv  # noqa: N816
     main(inputArgs)
 
-# ======================================================================================================================  # noqa: E501
+# ======================================================================================================================

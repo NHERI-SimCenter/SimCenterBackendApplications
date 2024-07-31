@@ -492,7 +492,7 @@ class IntensityMeasureComputer:  # noqa: D101
                 self.im_units.get('DS595', 'sec'), im_units.get('DS595', 'sec')
             )
 
-        # note this function assumes acceleration in cm/sec/sec and return Arias Intensity in m/sec  # noqa: E501
+        # note this function assumes acceleration in cm/sec/sec and return Arias Intensity in m/sec
         for cur_hist_name, cur_hist in self.time_hist_dict.items():
             dt = cur_hist[1]
             ground_acc = cur_hist[2]
@@ -520,7 +520,7 @@ class IntensityMeasureComputer:  # noqa: D101
         # compute ds
         ds575 = dt * (id75 - id5)
         ds595 = dt * (id95 - id5)
-        # return  # noqa: ERA001
+        # return
         return ds575, ds595
 
     def compute_saratio(self, T1=1.0, Ta=0.02, Tb=3.0, im_units=dict()):  # noqa: ANN001, ANN201, B006, C408, N803, D102
@@ -588,7 +588,7 @@ def load_records(event_file, ampScaled):  # noqa: ANN001, ANN201, N803, D103
             cur_id = ts_names.index(cur_ts)
         except:  # noqa: E722
             raise ValueError(  # noqa: B904, TRY003
-                f"IntensityMeasureComputer: {cur_ts} is not found in 'timeSeries' in EVENT.json"  # noqa: EM102, E501
+                f"IntensityMeasureComputer: {cur_ts} is not found in 'timeSeries' in EVENT.json"  # noqa: EM102
             )
         # get amplitude scaling (if the record is raw, i.e., ampScaled is false)
         if not ampScaled:
@@ -601,7 +601,7 @@ def load_records(event_file, ampScaled):  # noqa: ANN001, ANN201, N803, D103
             [x * scalingFactor for x in time_series[cur_id]['data']]
         )
 
-    # return  # noqa: ERA001
+    # return
     return dict_ts
 
 

@@ -18,7 +18,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -104,7 +104,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     args = h2oparser.parse_args()
 
     # Get the path
-    # fipath = args.b.replace('/dakota.json','')  # noqa: ERA001
+    # fipath = args.b.replace('/dakota.json','')
     fipath = Path(args.b)
     if fipath.is_file():
         fipath = fipath.parent
@@ -152,9 +152,9 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     )
 
     # Find the solver
-    # 0 - OpenFoam7 (+ olaFlow)  # noqa: ERA001
+    # 0 - OpenFoam7 (+ olaFlow)
     # 1 - OpenFoam 8 (+ olaFlow)
-    # default - OpenFoam7 (+ olaFlow)  # noqa: ERA001
+    # default - OpenFoam7 (+ olaFlow)
     # Create related object
     if int(hydrosolver) == 0:
         solver = openfoam7()
@@ -162,7 +162,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     elif int(hydrosolver) == 1:
         print('This is not yet available')  # noqa: T201
         # OpenFoam 8 + olaFlow
-        # solver = openfoam8()  # noqa: ERA001
+        # solver = openfoam8()
 
     else:
         # Default is Openfoam7 + olaFlow
@@ -224,7 +224,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
         sys.exit('Error with material parameters in EVT.')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for materials definition successfully created.\n'  # noqa: E501
+            '%d (%s): Files required for materials definition successfully created.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
@@ -239,7 +239,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
         sys.exit('Issues with definition of initial condition in EVT')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for initial condition definition successfully created.\n'  # noqa: E501
+            '%d (%s): Files required for initial condition definition successfully created.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
@@ -254,7 +254,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
         sys.exit('Issues with definition of boundary condition in EVT')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for boundary condition definition successfully created.\n'  # noqa: E501
+            '%d (%s): Files required for boundary condition definition successfully created.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
@@ -269,7 +269,7 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
         sys.exit('Error with turbulence parameters in EVT.')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for turbulence definition successfully created.\n'  # noqa: E501
+            '%d (%s): Files required for turbulence definition successfully created.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 

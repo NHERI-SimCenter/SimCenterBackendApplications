@@ -146,7 +146,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 numP = 1  # noqa: N806
                 procID = 0  # noqa: N806
 
-    # Get the out dir, may not always be in the results folder if multiple assets are used  # noqa: E501
+    # Get the out dir, may not always be in the results folder if multiple assets are used
     outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
     # check if a filter is provided for bridges
@@ -232,12 +232,12 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
         # Convert find connectivity and add start_node, end_node attributes
         graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
-        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph  # noqa: E501
+        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
             nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
             )
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder  # noqa: E501
+        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -254,7 +254,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             else:
                 print(  # noqa: T201
                     ind,
-                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',  # noqa: E501
+                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',
                 )
         locationGS = gpd.GeoSeries(  # noqa: N806
             edges['geometry'].apply(lambda x: x.centroid), crs=edges.crs
@@ -295,7 +295,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         ind += 1  # noqa: PLW2901
         if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            # locationNodeID = str(asset["location"])  # noqa: ERA001
+            # locationNodeID = str(asset["location"])
             AIM_i = {  # noqa: N806
                 'RandomVariables': [],
                 'GeneralInformation': dict(  # noqa: C408
@@ -309,7 +309,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             asset.pop('geometry')
             # save every label as-is
             AIM_i['GeneralInformation'].update(asset)
-            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})  # noqa: ERA001
+            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwyBridge'})
             AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
@@ -328,7 +328,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         ind += 1  # noqa: PLW2901
         if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            # locationNodeID = str(asset["location"])  # noqa: ERA001
+            # locationNodeID = str(asset["location"])
             AIM_i = {  # noqa: N806
                 'RandomVariables': [],
                 'GeneralInformation': dict(  # noqa: C408
@@ -342,7 +342,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             asset.pop('geometry')
             # save every label as-is
             AIM_i['GeneralInformation'].update(asset)
-            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})  # noqa: ERA001
+            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwyTunnel'})
             AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
@@ -408,7 +408,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     else:
         if runParallel == True:  # noqa: E712
-            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append  # noqa: E501
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
 
             for i in range(1, numP):
@@ -473,8 +473,8 @@ if __name__ == '__main__':
         const=True,
     )
     # parser.add_argument('--saveFullNetwork',
-    #     help = "Save the full network into edges and nodes.",  # noqa: ERA001
-    #     default=False,  # noqa: ERA001
+    #     help = "Save the full network into edges and nodes.",
+    #     default=False,
     #     type=bool)
 
     args = parser.parse_args()

@@ -175,7 +175,8 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 gmdb_im_dict.update(
                     {
                         cur_im: [
-                            x[0] for x in gmdb.iloc[:, im_loc_tag].values.tolist()  # noqa: PD011
+                            x[0]
+                            for x in gmdb.iloc[:, im_loc_tag].values.tolist()  # noqa: PD011
                         ]
                     }
                 )
@@ -225,12 +226,12 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                         .replace('\\', '_')
                         .replace('/', '_')
                     )
-                    # print('---Station #'+str(j+1))  # noqa: ERA001
+                    # print('---Station #'+str(j+1))
             # Collecting results in one scenario
             gm_id.append(tmp_id)
             sf_data.append(tmp_sf)
             filename.extend(tmp_filename)
-            # print(tmp_min_err)  # noqa: ERA001
+            # print(tmp_min_err)
     else:
         sys.exit('SelectGroundMotion: currently only supporting NGAWest2.')
 
@@ -238,21 +239,22 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     station_name = ['site' + str(j) + '.csv' for j in range(len(stations))]
     lat = [stations[j]['lat'] for j in range(len(stations))]
     lon = [stations[j]['lon'] for j in range(len(stations))]
-    # vs30 = [stations[j]['vs30'] for j in range(len(stations))]  # noqa: ERA001
+    # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
     # DepthToRock is not used in NGA-West2 GMPEs and is not saved
-    # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]  # noqa: ERA001
+    # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
     df = pd.DataFrame(  # noqa: PD901
         {
             'GP_file': station_name,
             'Longitude': lon,
             'Latitude': lat,
-            # 'Vs30': vs30,  # noqa: ERA001
+            # 'Vs30': vs30,
             # DepthToRock is not used in NGA-West2 GMPEs and is not saved
             # 'DepthToRock': zTR
         }
     )
     output_dir = os.path.join(  # noqa: PTH118
-        os.path.dirname(Path(output_dir)), os.path.basename(Path(output_dir))  # noqa: PTH119, PTH120
+        os.path.dirname(Path(output_dir)),  # noqa: PTH120
+        os.path.basename(Path(output_dir)),  # noqa: PTH119
     )
     df.to_csv(os.path.join(output_dir, output_file), index=False)  # noqa: PTH118
     for cur_scen in range(len(gm_id)):
@@ -270,7 +272,7 @@ def select_ground_motion(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             factor = [j for j in sf_data[cur_scen][i]]  # noqa: C416
             df = pd.DataFrame({'TH_file': gm_file, 'factor': factor})  # noqa: PD901
             df.to_csv(os.path.join(cur_output_dir, site_id), index=False)  # noqa: PTH118
-    # return  # noqa: ERA001
+    # return
     return gm_id, filename
 
 
@@ -418,4 +420,4 @@ def parse_record(gm_file, raw_dir, output_dir, input_format, output_format):
     return output_dir
 
 Uncommenting above if use this tool alone to download records from PEER
-"""  # noqa: E501
+"""

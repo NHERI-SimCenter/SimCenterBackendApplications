@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'  # noqa: N999, D100
+# Form implementation generated from reading ui file 'Pipe_Damage_Model_Window.ui'  # noqa: D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #

@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -143,23 +143,23 @@ class of7Building:  # noqa: N801
                         )[0]
                         # if not depth:
                         # 	return -1
-                        # # else:  # noqa: ERA001
+                        # # else:
                         # # 	depth = float(depth)
                         # if not width:
                         # 	return -1
-                        # # else:  # noqa: ERA001
+                        # # else:
                         # # 	width = float(width)
                         # if not height:
                         # 	return -1
-                        # # else:  # noqa: ERA001
+                        # # else:
                         # # 	height = float(height)
                         if not xbuild:
                             return -1
-                        # else:  # noqa: ERA001
+                        # else:
                         # 	xbuild = float(float)
                         if not ybuild:
                             return -1
-                        # else:  # noqa: ERA001
+                        # else:
                         # 	ybuild = float(ybuild)
 
                     if numbuildres > 1:
@@ -261,7 +261,7 @@ class of7Building:  # noqa: N801
                     # Increment response buildign number
                     numresbuild += 1
                 elif int(buildtype) == -1:
-                    # Move the STL file to OF folder and change name to Building (Response)  # noqa: E501
+                    # Move the STL file to OF folder and change name to Building (Response)
                     self.readResSTL(data, path, nums[3])
                     # Increment response buildign number
                     numresbuild += 1
@@ -405,9 +405,9 @@ class of7Building:  # noqa: N801
         # Get GI
         geninfo = hydroutil.extract_element_from_json(data, ['GeneralInformation'])
         geninfo = str(geninfo[0])
-        # depth = float(geninfo.partition("'depth': ")[2].partition(", 'height':")[0])  # noqa: ERA001, E501
-        # width = float(geninfo.partition("'width': ")[2].partition("}")[0])  # noqa: ERA001
-        # height = float(geninfo.partition("'height': ")[2].partition(", 'location':")[0])  # noqa: ERA001, E501
+        # depth = float(geninfo.partition("'depth': ")[2].partition(", 'height':")[0])
+        # width = float(geninfo.partition("'width': ")[2].partition("}")[0])
+        # height = float(geninfo.partition("'height': ")[2].partition(", 'location':")[0])
         xbuild = float(
             geninfo.partition("'location': {'latitude': ")[2].partition(
                 ", 'longitude':"

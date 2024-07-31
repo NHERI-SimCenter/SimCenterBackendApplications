@@ -7,7 +7,8 @@ from src.quofemDTOs import RandomVariable
 class RunModelDTO:  # noqa: D101
     @staticmethod
     def create_runmodel_with_variables_driver(  # noqa: ANN205, D102
-        variables: List[RandomVariable], driver_filename: str = 'driver'  # noqa: FA100
+        variables: List[RandomVariable],  # noqa: FA100
+        driver_filename: str = 'driver',
     ):
         RunModelDTO.__create_runmodel_input_teplate(variables)
         RunModelDTO.__create_model_script(driver_filename)
@@ -21,8 +22,8 @@ class RunModelDTO:  # noqa: D101
         var_names = [f'{rv.name}' for rv in variables]
         run_model_code = [
             'from UQpy.run_model.RunModel import RunModel',
-            'from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel',  # noqa: E501
-            f"third_party_model = ThirdPartyModel(var_names={var_names}, input_template='params_template.in', model_script='model_script.py', model_object_name='model', output_script='postprocess_script.py', output_object_name='compute_limit_state')",  # noqa: E501
+            'from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel',
+            f"third_party_model = ThirdPartyModel(var_names={var_names}, input_template='params_template.in', model_script='model_script.py', model_object_name='model', output_script='postprocess_script.py', output_object_name='compute_limit_state')",
             'run_model = RunModel(model=third_party_model)\n',
         ]
 
@@ -69,13 +70,13 @@ class RunModelDTO:  # noqa: D101
             '\t\ttry:',
             '\t\t\tres = float(res)',
             '\t\texcept ValueError:',
-            "\t\t\traise ValueError(f'Result should be a single float value, check results.out file for sample evaluation {index}')",  # noqa: E501
+            "\t\t\traise ValueError(f'Result should be a single float value, check results.out file for sample evaluation {index}')",
             '\t\texcept Exception:',
             '\t\t\traise',
             '\t\telse:',
             '\t\t\treturn res',
             '\telse:',
-            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "  # noqa: ISC003, E501
+            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "  # noqa: ISC003
             + "{index}')",
         ]
 

@@ -10,7 +10,7 @@
 ----
 
 
-"""  # noqa: E501
+"""
 
 import logging
 import re
@@ -18,7 +18,7 @@ import re
 import numpy as np
 import pandas as pd
 
-# from .time_utils import run_lineprofile  # noqa: ERA001
+# from .time_utils import run_lineprofile
 import wntrfr.network
 import wntrfr.sim
 from wntrfr.network.base import Link
@@ -86,10 +86,10 @@ _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 _RES_ENTRY = ' {name:20s} {head:15.11g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>20s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:15.11g} {initlev:15.11g} {minlev:15.11g} {maxlev:15.11g} {diam:15.11g} {minvol:15.11g} {curve:20s} {com:>3s}\n'  # noqa: E501
+_TANK_ENTRY = ' {name:20s} {elev:15.11g} {initlev:15.11g} {minlev:15.11g} {maxlev:15.11g} {diam:15.11g} {minvol:15.11g} {curve:20s} {com:>3s}\n'
 _TANK_LABEL = '{:21s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:15.11g} {diam:15.11g} {rough:15.11g} {mloss:15.11g} {status:>20s} {com:>3s}\n'  # noqa: E501
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:15.11g} {diam:15.11g} {rough:15.11g} {mloss:15.11g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s}\n'
 
 _PUMP_ENTRY = (
@@ -97,8 +97,8 @@ _PUMP_ENTRY = (
 )
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'  # noqa: E501
-_GPV_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:20s} {mloss:15.11g} {com:>3s}\n'  # noqa: E501
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'
+_GPV_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:20s} {mloss:15.11g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -277,10 +277,11 @@ class InpFile(wntrfr.epanet.InpFile):
             )
         )
         nnames = list(wn.junction_name_list)
-        # nnames.sort()  # noqa: ERA001
+        # nnames.sort()
         for junction_name in nnames:
             junction = wn.nodes[junction_name]
-            if junction._is_isolated == True:  # sina added this  # noqa: SLF001, E712
+            # sina added this
+            if junction._is_isolated == True:  # noqa: SLF001, E712
                 continue
             if junction.demand_timeseries_list:
                 base_demands = junction.demand_timeseries_list.base_demand_list()
@@ -317,10 +318,11 @@ class InpFile(wntrfr.epanet.InpFile):
         f.write('[RESERVOIRS]\n'.encode('ascii'))
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
         nnames = list(wn.reservoir_name_list)
-        # nnames.sort()  # noqa: ERA001
+        # nnames.sort()
         for reservoir_name in nnames:
             reservoir = wn.nodes[reservoir_name]
-            if reservoir._is_isolated == True:  # sina added this  # noqa: SLF001, E712
+            # sina added this
+            if reservoir._is_isolated == True:  # noqa: SLF001, E712
                 continue
             E = {  # noqa: N806
                 'name': reservoir_name,
@@ -353,7 +355,7 @@ class InpFile(wntrfr.epanet.InpFile):
             ).encode('ascii')
         )
         nnames = list(wn.tank_name_list)
-        # nnames.sort()  # noqa: ERA001
+        # nnames.sort()
         for tank_name in nnames:
             tank = wn.nodes[tank_name]
             if tank._is_isolated == True:  # sina added this  # noqa: SLF001, E712
@@ -397,7 +399,7 @@ class InpFile(wntrfr.epanet.InpFile):
             ).encode('ascii')
         )
         lnames = list(wn.pipe_name_list)
-        # lnames.sort()  # noqa: ERA001
+        # lnames.sort()
         for pipe_name in lnames:
             pipe = wn.links[pipe_name]
             if pipe._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -426,7 +428,7 @@ class InpFile(wntrfr.epanet.InpFile):
             _PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode('ascii')
         )
         lnames = list(wn.pump_name_list)
-        # lnames.sort()  # noqa: ERA001
+        # lnames.sort()
         for pump_name in lnames:
             pump = wn.links[pump_name]
             if pump._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -437,8 +439,8 @@ class InpFile(wntrfr.epanet.InpFile):
                 'node2': pump.end_node_name,
                 'ptype': pump.pump_type,
                 'params': '',
-                #                 'speed_keyword': 'SPEED',  # noqa: ERA001
-                #                 'speed': pump.speed_timeseries.base_value,  # noqa: ERA001
+                #                 'speed_keyword': 'SPEED',
+                #                 'speed': pump.speed_timeseries.base_value,
                 'com': ';',
             }
             if pump.pump_type == 'HEAD':
@@ -475,7 +477,7 @@ class InpFile(wntrfr.epanet.InpFile):
             ).encode('ascii')
         )
         lnames = list(wn.valve_name_list)
-        # lnames.sort()  # noqa: ERA001
+        # lnames.sort()
         for valve_name in lnames:
             valve = wn.links[valve_name]
             if valve._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -496,11 +498,15 @@ class InpFile(wntrfr.epanet.InpFile):
             formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = from_si(
-                    self.flow_units, valve._initial_setting, HydParam.Pressure  # noqa: SLF001
+                    self.flow_units,
+                    valve._initial_setting,  # noqa: SLF001
+                    HydParam.Pressure,
                 )
             elif valve_type == 'FCV':
                 valve_set = from_si(
-                    self.flow_units, valve._initial_setting, HydParam.Flow  # noqa: SLF001
+                    self.flow_units,
+                    valve._initial_setting,  # noqa: SLF001
+                    HydParam.Flow,
                 )
             elif valve_type == 'TCV':
                 valve_set = valve._initial_setting  # noqa: SLF001
@@ -517,14 +523,17 @@ class InpFile(wntrfr.epanet.InpFile):
         label = '{:10s} {:10s}\n'
         f.write(label.format(';ID', 'Flow coefficient').encode('ascii'))
         njunctions = list(wn.junction_name_list)
-        # njunctions.sort()  # noqa: ERA001
+        # njunctions.sort()
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
-            if junction._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
+            # Sina added this
+            if junction._is_isolated == True:  # noqa: SLF001, E712
                 continue
             if junction._emitter_coefficient:  # noqa: SLF001
                 val = from_si(
-                    self.flow_units, junction._emitter_coefficient, HydParam.Flow  # noqa: SLF001
+                    self.flow_units,
+                    junction._emitter_coefficient,  # noqa: SLF001
+                    HydParam.Flow,
                 )
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -545,7 +554,7 @@ class InpFile(wntrfr.epanet.InpFile):
                     f.write(f'{link_name:10s} {setting:10.10g}\n'.encode('ascii'))
             if link.initial_status in (LinkStatus.Closed,):
                 f.write(
-                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(  # noqa: E501
+                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(
                         'ascii'
                     )
                 )
@@ -555,28 +564,28 @@ class InpFile(wntrfr.epanet.InpFile):
             ):
                 #           if link.initial_status in (LinkStatus.Closed,):
                 f.write(
-                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(  # noqa: E501
+                    f'{link_name:10s} {LinkStatus(link.initial_status).name:10s}\n'.encode(
                         'ascii'
                     )
                 )
 
     #                if link.initial_status is LinkStatus.Active:
-    #                    valve_type = link.valve_type  # noqa: ERA001
+    #                    valve_type = link.valve_type
     #                    if valve_type in ['PRV', 'PSV', 'PBV']:
-    #                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Pressure)  # noqa: ERA001, E501
-    #                    elif valve_type == 'FCV':  # noqa: ERA001
-    #                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Flow)  # noqa: ERA001, E501
-    #                    elif valve_type == 'TCV':  # noqa: ERA001
-    #                        setting = link.initial_setting  # noqa: ERA001
-    #                    else:  # noqa: ERA001
-    #                        continue  # noqa: ERA001
-    #                    continue  # noqa: ERA001
-    #                elif isinstance(link, wntrfr.network.Pump):  # noqa: ERA001
-    #                    setting = link.initial_setting  # noqa: ERA001
-    #                else: continue  # noqa: ERA001
+    #                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Pressure)
+    #                    elif valve_type == 'FCV':
+    #                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Flow)
+    #                    elif valve_type == 'TCV':
+    #                        setting = link.initial_setting
+    #                    else:
+    #                        continue
+    #                    continue
+    #                elif isinstance(link, wntrfr.network.Pump):
+    #                    setting = link.initial_setting
+    #                else: continue
     #                f.write('{:10s} {:10.10g}\n'.format(link_name,
     #                        setting).encode('ascii'))
-    #        f.write('\n'.encode('ascii'))  # noqa: ERA001
+    #        f.write('\n'.encode('ascii'))
 
     def _write_controls(self, f, wn):  # noqa: ANN001, ANN202, C901, PLR0912, PLR0915
         def get_setting(control_action, control_name):  # noqa: ANN001, ANN202
@@ -587,7 +596,8 @@ class InpFile(wntrfr.epanet.InpFile):
             elif attribute == 'base_speed':
                 setting = str(value)
             elif attribute == 'setting' and isinstance(
-                control_action._target_obj, Valve  # noqa: SLF001
+                control_action._target_obj,  # noqa: SLF001
+                Valve,
             ):
                 valve = control_action._target_obj  # noqa: SLF001
                 valve_type = valve.valve_type
@@ -615,7 +625,8 @@ class InpFile(wntrfr.epanet.InpFile):
         # Time controls and conditional controls only
         for text, all_control in wn.controls():
             control_action = all_control._then_actions[0]  # noqa: SLF001
-            if control_action._target_obj._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
+            # Sina added this
+            if control_action._target_obj._is_isolated == True:  # noqa: SLF001, E712
                 continue
             if all_control.epanet_control_type is not _ControlType.rule:
                 if (
@@ -627,7 +638,8 @@ class InpFile(wntrfr.epanet.InpFile):
                 if not isinstance(control_action.target()[0], Link):
                     continue
                 if isinstance(
-                    all_control._condition, (SimTimeCondition, TimeOfDayCondition)  # noqa: SLF001
+                    all_control._condition,  # noqa: SLF001
+                    (SimTimeCondition, TimeOfDayCondition),
                 ):
                     entry = '{ltype} {link} {setting} AT {compare} {time:g}\n'
                     vals = {
@@ -647,7 +659,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 ):  # Sina added this
                     continue
                 elif isinstance(all_control._condition, (ValueCondition)):  # noqa: SLF001
-                    entry = '{ltype} {link} {setting} IF {ntype} {node} {compare} {thresh}\n'  # noqa: E501
+                    entry = '{ltype} {link} {setting} IF {ntype} {node} {compare} {thresh}\n'
                     vals = {
                         'ltype': control_action._target_obj.link_type,  # noqa: SLF001
                         'link': control_action._target_obj.name,  # noqa: SLF001
@@ -718,9 +730,10 @@ class InpFile(wntrfr.epanet.InpFile):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
         nodes = list(wn.junction_name_list)
-        # nodes.sort()  # noqa: ERA001
+        # nodes.sort()
         for node in nodes:
-            if wn.get_node(node)._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
+            # Sina added this
+            if wn.get_node(node)._is_isolated == True:  # noqa: SLF001, E712
                 continue
             demands = wn.get_node(node).demand_timeseries_list
             # leak =
@@ -728,7 +741,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 for ct, demand in enumerate(demands):  # noqa: B007
                     cat = str(demand.category)
                     # if cat == 'EN2 base':
-                    #    cat = ''  # noqa: ERA001
+                    #    cat = ''
                     if cat.lower() == 'none':  # noqa: SIM108
                         cat = ''
                     else:
@@ -757,7 +770,7 @@ class InpFile(wntrfr.epanet.InpFile):
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'  # noqa: F841
         nnodes = list(wn.nodes.keys())
-        # nnodes.sort()  # noqa: ERA001
+        # nnodes.sort()
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -835,7 +848,7 @@ class InpFile(wntrfr.epanet.InpFile):
                     ).encode('ascii')
                 )
         f.write('\n'.encode('ascii'))
-        #        f.write('[REACTIONS]\n'.encode('ascii'))  # EPANET GUI puts this line in here  # noqa: ERA001, E501
+        #        f.write('[REACTIONS]\n'.encode('ascii'))  # EPANET GUI puts this line in here
         f.write(
             entry_int.format(
                 'ORDER', 'BULK', int(wn.options.quality.bulk_rxn_order)
@@ -897,7 +910,7 @@ class InpFile(wntrfr.epanet.InpFile):
         label = '{:10s} {:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'Type', 'Quality', 'Pattern').encode('ascii'))
         nsources = list(wn._sources.keys())  # noqa: SLF001
-        # nsources.sort()  # noqa: ERA001
+        # nsources.sort()
         for source_name in nsources:
             source = wn._sources[source_name]  # noqa: SLF001
             if source._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -941,7 +954,7 @@ class InpFile(wntrfr.epanet.InpFile):
             )
         )
         lnames = list(wn.tank_name_list)
-        # lnames.sort()  # noqa: ERA001
+        # lnames.sort()
         for tank_name in lnames:
             tank = wn.nodes[tank_name]
             if tank._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -965,7 +978,7 @@ class InpFile(wntrfr.epanet.InpFile):
                     f.write(f' {tank_name:19s} LIFO\n'.encode('ascii'))
                 elif isinstance(tank._mix_model, str) and tank._mix_frac is not None:  # noqa: SLF001
                     f.write(
-                        f' {tank_name:19s} {tank._mix_model} {tank._mix_frac}\n'.encode(  # noqa: SLF001, E501
+                        f' {tank_name:19s} {tank._mix_model} {tank._mix_frac}\n'.encode(  # noqa: SLF001
                             'ascii'
                         )
                     )
@@ -1189,7 +1202,7 @@ class InpFile(wntrfr.epanet.InpFile):
         hrs, mm, sec = _sec_to_string(wn.options.time.rule_timestep)
 
         ### TODO: RULE TIMESTEP is not written?!  # noqa: FIX002, TD002, TD003
-        # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))  # noqa: ERA001, E501
+        # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(
             entry.format('STATISTIC', wn.options.results.statistic).encode('ascii')
         )
@@ -1213,7 +1226,7 @@ class InpFile(wntrfr.epanet.InpFile):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
-        # lnames.sort()  # noqa: ERA001
+        # lnames.sort()
         for pipe_name in lnames:
             pipe = wn.links[pipe_name]
             if pipe._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -1228,7 +1241,7 @@ class InpFile(wntrfr.epanet.InpFile):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';type', 'name', 'tag').encode('ascii'))
         nnodes = list(wn.node_name_list)
-        # nnodes.sort()  # noqa: ERA001
+        # nnodes.sort()
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node._is_isolated == True:  # Sina added this  # noqa: SLF001, E712
@@ -1278,7 +1291,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
     :class:`~wntrfr.sim.results.SimulationResults`
         A WNTR results object will be created and added to the instance after read.
 
-    """  # noqa: E501
+    """
 
     def __init__(  # noqa: ANN204, D107
         self,
@@ -1316,7 +1329,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
             :func:`~save_ep_line` and :func:`~finalize_save` to change how extended period
             simulation results in a different format (such as directly to a file or database).
 
-        """  # noqa: E501
+        """
         self.results = wntrfr.sim.SimulationResults()
         logger.debug(start_time)
         if start_time == None:  # noqa: E711
@@ -1372,7 +1385,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
             inpfile = np.fromfile(fin, dtype=np.uint8, count=260)
             rptfile = np.fromfile(fin, dtype=np.uint8, count=260)
             chemical = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
-            #            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])  # noqa: ERA001, E501
+            #            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
             wqunits = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
             mass = wqunits.split('/', 1)[0]
             if mass in ['mg', 'ug', 'mg', 'ug']:
@@ -1493,17 +1506,17 @@ class BinFile(wntrfr.epanet.io.BinFile):
             names = np.array(nodenames, dtype=str)
             self.save_network_desc_line('link_start', pd.Series(data=names[linkstart-1], index=linknames, copy=True))
             self.save_network_desc_line('link_end', pd.Series(data=names[linkend-1], index=linknames, copy=True))
-            """  # noqa: E501
+            """
             if custom_handlers is True:
                 logger.debug('... set up results object ...')
-                # self.setup_ep_results(reporttimes, nodenames, linknames)  # noqa: ERA001
-                # print(nodenames[5712]+'  '+nodenames[5717]+'  '+nodenames[5718]+'  ')  # noqa: ERA001, E501
+                # self.setup_ep_results(reporttimes, nodenames, linknames)
+                # print(nodenames[5712]+'  '+nodenames[5717]+'  '+nodenames[5718]+'  ')
                 for ts in range(nrptsteps):
                     try:
                         demand = np.fromfile(
                             fin, dtype=np.dtype(ftype), count=nnodes
                         )
-                        # print(repr(demand[5712])+'  '+repr(demand[5717])+'  '+repr(demand[5718]))  # noqa: ERA001, E501
+                        # print(repr(demand[5712])+'  '+repr(demand[5717])+'  '+repr(demand[5718]))
                         head = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
                         pressure = np.fromfile(
                             fin, dtype=np.dtype(ftype), count=nnodes
@@ -1551,7 +1564,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
                         logger.exception('Error reading or writing EP line: %s', e)  # noqa: TRY401
                         logger.warning('Missing results from report period %d', ts)
             else:
-                #                type_list = 4*nnodes*['node'] + 8*nlinks*['link']  # noqa: ERA001
+                #                type_list = 4*nnodes*['node'] + 8*nlinks*['link']
                 name_list = nodenames * 4 + linknames * 8
                 valuetype = (
                     nnodes * ['demand']
@@ -1568,9 +1581,9 @@ class BinFile(wntrfr.epanet.io.BinFile):
                     + nlinks * ['frictionfactor']
                 )
 
-                #                tuples = zip(type_list, valuetype, name_list)  # noqa: ERA001
+                #                tuples = zip(type_list, valuetype, name_list)
                 tuples = list(zip(valuetype, name_list))
-                #                tuples = [(valuetype[i], v) for i, v in enumerate(name_list)]  # noqa: ERA001, E501
+                #                tuples = [(valuetype[i], v) for i, v in enumerate(name_list)]
                 index = pd.MultiIndex.from_tuples(tuples, names=['value', 'name'])
                 try:
                     data = np.fromfile(
@@ -1634,7 +1647,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
                     self.flow_units, df['velocity']
                 )
 
-                #                self.results.link['status'] = df['linkstatus']  # noqa: ERA001
+                #                self.results.link['status'] = df['linkstatus']
                 status = np.array(df['linkstatus'])
                 if self.convert_status:
                     status[status <= 2] = 0  # noqa: PLR2004
@@ -1679,7 +1692,7 @@ class BinFile(wntrfr.epanet.io.BinFile):
             magic2 = np.fromfile(fin, dtype=np.int32, count=1)
             if magic1 != magic2:
                 logger.critical(
-                    'The magic number did not match -- binary incomplete or incorrectly read. If you believe this file IS complete, please try a different float type. Current type is "%s"',  # noqa: E501
+                    'The magic number did not match -- binary incomplete or incorrectly read. If you believe this file IS complete, please try a different float type. Current type is "%s"',
                     ftype,
                 )
             # print numperiods, warnflag, magic

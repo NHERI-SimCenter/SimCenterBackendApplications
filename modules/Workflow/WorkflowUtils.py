@@ -50,7 +50,7 @@ def runApplication(application_plus_args):  # noqa: ANN001, ANN201, N802, D103
         )
         # for line in result.split('\n'):
         # pass
-        # print(line)  # noqa: ERA001
+        # print(line)
         returncode = 0
     except subprocess.CalledProcessError as e:
         result = e.output

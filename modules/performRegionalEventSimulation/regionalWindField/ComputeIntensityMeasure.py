@@ -59,7 +59,7 @@ def run_model(scen, p, t, path_perturb, feat_perturb, res_mp):  # noqa: ANN001, 
     model.add_stations(scen['StationList'])
     delta_path = (np.random.rand(3) - 0.5) * path_perturb  # noqa: NPY002
     delta_feat = np.array(p[3:6]) + (np.random.rand(3) - 0.5) * feat_perturb  # noqa: NPY002
-    # this just an engineering judgement that the pressure difference, moving speed, and max-wind-speed radius  # noqa: E501
+    # this just an engineering judgement that the pressure difference, moving speed, and max-wind-speed radius
     # should not be less than 0.0 in the value.
     delta_feat[delta_feat < 0.0] = 0.0
     print('dLatitude, dLongtitude, dAngle = ', delta_path)  # noqa: T201
@@ -81,7 +81,7 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
             path_perturb = np.array([0.5, 0.5, 90.0])
             feat_perturb = np.array([10.0, 10.0, 10.0])
             print(  # noqa: T201
-                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'  # noqa: E501
+                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
             )
         else:
             path_perturb = np.array(event_info['Perturbation'][0:3])
@@ -89,7 +89,7 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
         for i in range(len(scenarios)):
             if i == 1:
                 print(  # noqa: T201
-                    'ComputeIntensityMeasure: currently supporting single scenario simulation only.'  # noqa: E501
+                    'ComputeIntensityMeasure: currently supporting single scenario simulation only.'
                 )
                 return -1
             cur_scen = scenarios[i]
@@ -124,21 +124,26 @@ def simulate_storm(scenarios, event_info, model_type):  # noqa: ANN001, ANN201, 
 
     else:
         print(  # noqa: T201
-            'ComputeIntensityMeasure: currently only supporting LinearAnalytical model'  # noqa: E501
+            'ComputeIntensityMeasure: currently only supporting LinearAnalytical model'
         )
 
-    # return  # noqa: ERA001
+    # return
     return res
 
 
 def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
-    site_info, scenario_info, scenario_data, event_info, model_type, dir_info  # noqa: ANN001
+    site_info,  # noqa: ANN001
+    scenario_info,  # noqa: ANN001
+    scenario_data,  # noqa: ANN001
+    event_info,  # noqa: ANN001
+    model_type,  # noqa: ANN001
+    dir_info,  # noqa: ANN001
 ):
     if model_type == 'LinearAnalytical':
         # save configuration file
         input_dir = dir_info['Input']
         output_dir = dir_info['Output']
-        # for SimulationHist, need to populate csv files as the inputs to the executable  # noqa: E501
+        # for SimulationHist, need to populate csv files as the inputs to the executable
         if scenario_info['Generator'] == 'SimulationHist':
             scenario_info['Storm']['Track'] = 'Track_populated.csv'
             scenario_info['Storm']['TrackSimu'] = 'TrackSimu_populated.csv'
@@ -241,7 +246,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             path_perturb = np.array([0.5, 0.5, 90.0])
             feat_perturb = np.array([10.0, 10.0, 10.0])
             print(  # noqa: T201
-                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'  # noqa: E501
+                'ComputeIntensityMeasure: [1.0, 1.0, 90.0, 10.0, 10.0, 10.0] is used for perturbations.'
             )
         else:
             path_perturb = np.array(event_info['Perturbation'][0:3])
@@ -249,7 +254,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         for i in range(int(scenario_info['Number'])):
             if i == 1:
                 print(  # noqa: T201
-                    'ComputeIntensityMeasure: currently supporting single scenario simulation only.'  # noqa: E501
+                    'ComputeIntensityMeasure: currently supporting single scenario simulation only.'
                 )
                 return -1
             np.random.seed(100)  # noqa: NPY002
@@ -352,16 +357,16 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         os.remove(abs_path_config)  # noqa: PTH107
     else:
         print(  # noqa: T201
-            'ComputeIntensityMeasure: currently only supporting LinearAnalytical model'  # noqa: E501
+            'ComputeIntensityMeasure: currently only supporting LinearAnalytical model'
         )
 
-    # return  # noqa: ERA001
+    # return
     return res
 
 
 def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
     print(  # noqa: T201
-        'ComputeIntensityMeasure: converting peak wind speed to specificed exposure, measuring height, and gust duration.'  # noqa: E501
+        'ComputeIntensityMeasure: converting peak wind speed to specificed exposure, measuring height, and gust duration.'
     )
 
     if 'HAZUS' in event_info['IntensityMeasure']['Type']:
@@ -393,7 +398,7 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
         # quick check the size
         if pws_raw.shape[1] != len(measure_height):
             print(  # noqa: T201
-                'ComputeIntensityMeasure: please check the output wind speed results.'  # noqa: E501
+                'ComputeIntensityMeasure: please check the output wind speed results.'
             )
             return -1
         # ASCE 7-16 conversion (Chapter C26)
@@ -425,12 +430,12 @@ def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
         pws_mr.append(pws)
 
     print('ComputeIntensityMeasure: wind speed conversion completed.')  # noqa: T201
-    # return  # noqa: ERA001
+    # return
     return pws_mr
 
 
 def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN201
-    """interp_wind_by_height: interpolating the wind simulation results by the reference height"""  # noqa: E501, D400, D415
+    """interp_wind_by_height: interpolating the wind simulation results by the reference height"""  # noqa: D400, D415
     num_stat = pws_ip.shape[0]
     pws_op = np.zeros(num_stat)
     for i in range(num_stat):
@@ -442,7 +447,7 @@ def interp_wind_by_height(pws_ip, height_simu, height_ref):  # noqa: ANN001, ANN
             right=pws_ip[i, -1],
         )
 
-    # return  # noqa: ERA001
+    # return
     return pws_op
 
 
@@ -469,7 +474,7 @@ def gust_factor_ESDU(gd_c, gd_t):  # noqa: ANN001, ANN201, N802
     gf_t = np.interp(gd_t, gd, gf, left=gf[0], right=gf[-1]) / np.interp(
         gd_c, gd, gf, left=gf[0], right=gf[-1]
     )
-    # return  # noqa: ERA001
+    # return
     return gf_t  # noqa: RET504
 
 

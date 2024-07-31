@@ -1,4 +1,4 @@
-# This python script process the input and will use it to run SHA and ground motion selection  # noqa: INP001, E501, D100
+# This python script process the input and will use it to run SHA and ground motion selection  # noqa: INP001, D100
 # In addition to providing the event file
 
 import glob
@@ -117,7 +117,7 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):  # noqa
         print(  # noqa: T201
             'Error finding NGA West 2 files.\n'
             f'Please download the files for record {rsn} '
-            f'from NGA West 2 website and place them in the records folder ({recordsFolder})'  # noqa: E501
+            f'from NGA West 2 website and place them in the records folder ({recordsFolder})'
         )
         exit(-1)  # noqa: PLR1722
 

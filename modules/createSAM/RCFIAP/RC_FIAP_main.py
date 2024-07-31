@@ -1,4 +1,4 @@
-## ############################################################### ##  # noqa: INP001, D100
+## ############################################################### ##  # noqa: D100, INP001
 ## RC_FIAP (Reinforced Concrete Frame Inelastic Analysis Platform) ##
 ##                                                                 ##
 ## Developed by:                                                   ##
@@ -207,17 +207,17 @@ class TclLogger:  # noqa: D101
         else:
             self.list_of_lines.append(line)
 
-    # Convenience function to create a line from an array of inputs to openseespy function  # noqa: E501
+    # Convenience function to create a line from an array of inputs to openseespy function
     def add_array(self, line, addNewLine=True):  # noqa: ANN001, ANN201, FBT002, N803, D102
         outLine = ''  # noqa: N806
         for item in line:
             outLine += str(item) + ' '  # noqa: N806
 
         #        # Remove the last space
-        #        outLine = outLine.rstrip()  # noqa: ERA001
+        #        outLine = outLine.rstrip()
         #
         #        # Add the ; char to the end of the line
-        #        outLine += ';'  # noqa: ERA001
+        #        outLine += ';'
         self.add_line(outLine, addNewLine)
 
     # Save the output file
@@ -252,7 +252,7 @@ class TclLogger:  # noqa: D101
                 # Append element at the end of file
                 file_object.write(line)
 
-        # print(self.list_of_lines)  # noqa: ERA001
+        # print(self.list_of_lines)
 
 
 def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103, PLR0915
@@ -265,7 +265,7 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):  # noqa: ANN001, A
     with open(BIM_file, encoding='utf-8') as f:  # noqa: PTH123
         rootBIM = json.load(f)  # noqa: N806
     try:
-        # rootSIM = rootBIM['StructuralInformation']  # noqa: ERA001
+        # rootSIM = rootBIM['StructuralInformation']
         rootSIM = rootBIM['Modeling']  # noqa: N806
         # KZ: append simulation attribute
         rootSIM['Simulation'] = rootBIM.get('Simulation', None)
@@ -303,10 +303,12 @@ def runBuildingDesign(BIM_file, EVENT_file, SAM_file, getRV):  # noqa: ANN001, A
         outputLogger = TclLogger()  # noqa: N806
 
         outputLogger.add_line(
-            '# Reinforced Concrete Frame Inelastic Analysis Platform (RCFIAP)', False  # noqa: FBT003
+            '# Reinforced Concrete Frame Inelastic Analysis Platform (RCFIAP)',
+            False,  # noqa: FBT003
         )
         outputLogger.add_line(
-            '# Developed by Victor Ceballos & Carlos Arteta', False  # noqa: FBT003
+            '# Developed by Victor Ceballos & Carlos Arteta',
+            False,  # noqa: FBT003
         )
         outputLogger.add_line(
             '# Modified by Stevan Gavrilovic - NHERI SimCenter for use in EE-UQ'
@@ -417,20 +419,9 @@ class RCFIAP:  # noqa: D101
         def __init__(rootSIM):  # noqa: ANN001, ANN202, N803, N807
             self.rootSIM = rootSIM
 
-        global \
-            Loc_span, \
-            Loc_heigth, \
-            ListNodes, \
-            Elements, \
-            DataBeamDesing, \
-            DataColDesing, \
-            WDL, \
-            WLL, \
-            WDLS, \
-            Wtotal, \
-            cover  # noqa: PLW0603
+        global Loc_span, Loc_heigth, ListNodes, Elements, DataBeamDesing, DataColDesing, WDL, WLL, WDLS, Wtotal, cover  # noqa: PLW0603
 
-        # Function: Reads Beams design data from table that allows the user to modify the default design from TAB2 of GUI  # noqa: E501
+        # Function: Reads Beams design data from table that allows the user to modify the default design from TAB2 of GUI
         def data_beams_table(self):  # noqa: ANN001, ANN202
             self.registros_beams = []
 
@@ -460,7 +451,7 @@ class RCFIAP:  # noqa: D101
                 )
                 self.registros_beams.append(registro)
 
-        # Function: Reads Columns design data from table that allows the user to modify the default design from TAB2 of GUI.  # noqa: E501
+        # Function: Reads Columns design data from table that allows the user to modify the default design from TAB2 of GUI.
         def data_columns_table(self):  # noqa: ANN001, ANN202
             self.registros_cols = []
 
@@ -571,7 +562,8 @@ class RCFIAP:  # noqa: D101
                     d = h - dp
                     for nbH in nbH_v:  # noqa: N806
                         for nbB in nbB_v:  # noqa: N806
-                            nbT = 2.0 * (nbB + nbH - 2.0)  # numero total de barras  # noqa: N806
+                            # numero total de barras
+                            nbT = 2.0 * (nbB + nbH - 2.0)  # noqa: N806
                             Ast = nbT * Ab  # noqa: N806
                             ro = Ast / b / h
                             As = np.hstack(  # noqa: N806
@@ -676,112 +668,112 @@ class RCFIAP:  # noqa: D101
 
         # Input geometric, materials and seismic design parameters from TAB1 of GUI
 
-        # Lafg = float(self.ui.Lafg.text())  # noqa: ERA001
+        # Lafg = float(self.ui.Lafg.text())
         Lafg = float(rootSIM['TribLengthGravity'])  # noqa: N806
 
-        # Lafs = float(self.ui.Lafs.text())  # noqa: ERA001
+        # Lafs = float(self.ui.Lafs.text())
         Lafs = float(rootSIM['TribLengthSeismic'])  # noqa: N806
 
-        # DL = float(self.ui.DL.text())  # noqa: ERA001
+        # DL = float(self.ui.DL.text())
         DL = float(rootSIM['DeadLoad'])  # noqa: N806
 
-        # LL = float(self.ui.LL.text())  # noqa: ERA001
+        # LL = float(self.ui.LL.text())
         LL = float(rootSIM['LiveLoad'])  # noqa: N806
 
-        # HColi = float(self.ui.HColi.text())  # Column inside Depth  # noqa: ERA001
+        # HColi = float(self.ui.HColi.text())  # Column inside Depth
         HColi = float(rootSIM['IntColDepth'])  # noqa: N806
 
-        # BColi = float(self.ui.BColi.text())  # Column inside Width  # noqa: ERA001
+        # BColi = float(self.ui.BColi.text())  # Column inside Width
         BColi = float(rootSIM['IntColWidth'])  # noqa: N806
 
-        # HCole = float(self.ui.HCole.text())  # Column outside Depth  # noqa: ERA001
+        # HCole = float(self.ui.HCole.text())  # Column outside Depth
         HCole = float(rootSIM['ExtColDepth'])  # noqa: N806
 
-        # BCole = float(self.ui.BCole.text())  # Column outside Width  # noqa: ERA001
+        # BCole = float(self.ui.BCole.text())  # Column outside Width
         BCole = float(rootSIM['ExtColWidth'])  # noqa: N806
 
-        # HBeam = float(self.ui.HBeam.text())  # noqa: ERA001
+        # HBeam = float(self.ui.HBeam.text())
         HBeam = float(rootSIM['BeamDepth'])  # noqa: N806
 
-        # BBeam = float(self.ui.BBeam.text())  # noqa: ERA001
+        # BBeam = float(self.ui.BBeam.text())
         BBeam = float(rootSIM['BeamWidth'])  # noqa: N806
 
-        # IFC = float(self.ui.InertiaColumnsFactor.text())  # noqa: ERA001
+        # IFC = float(self.ui.InertiaColumnsFactor.text())
         IFC = float(rootSIM['ColIg'])  # noqa: N806
 
-        # IFB = float(self.ui.InertiaBeamsFactor.text())  # noqa: ERA001
+        # IFB = float(self.ui.InertiaBeamsFactor.text())
         IFB = float(rootSIM['BeamIg'])  # noqa: N806
 
-        # heigth_v = self.ui.heigth_v.text()  # noqa: ERA001
+        # heigth_v = self.ui.heigth_v.text()
         heigth_v = rootSIM['VecStoryHeights']
 
         heigth_v = heigth_v.split(',')
         heigth_v = np.array(heigth_v, dtype=float)
 
-        # span_v = self.ui.span_v.text()  # noqa: ERA001
+        # span_v = self.ui.span_v.text()
         span_v = rootSIM['VecSpans']
 
         span_v = span_v.split(',')
         span_v = np.array(span_v, dtype=float)
 
-        # fy = float(self.ui.fy.text()) * MPa  # noqa: ERA001
+        # fy = float(self.ui.fy.text()) * MPa
         fy = float(rootSIM['FySteel']) * MPa
 
-        # fcB = float(self.ui.fcB.text()) * MPa  # noqa: ERA001
+        # fcB = float(self.ui.fcB.text()) * MPa
         fcB = float(rootSIM['BeamFpc']) * MPa  # noqa: N806
 
-        # fcC = float(self.ui.fcC.text()) * MPa  # noqa: ERA001
+        # fcC = float(self.ui.fcC.text()) * MPa
         fcC = float(rootSIM['ColFpc']) * MPa  # noqa: N806
 
-        # R = float(self.ui.R.text())  # noqa: ERA001
+        # R = float(self.ui.R.text())
         R = float(rootSIM['RParam'])  # noqa: N806
 
-        # Cd = float(self.ui.Cd.text())  # noqa: ERA001
+        # Cd = float(self.ui.Cd.text())
         Cd = float(rootSIM['CdParam'])  # noqa: N806, F841
 
-        # Omo = float(self.ui.Omo.text())  # noqa: ERA001
+        # Omo = float(self.ui.Omo.text())
         Omo = float(rootSIM['OmegaParam'])  # noqa: N806
 
-        # Sds = float(self.ui.Sds.text())  # noqa: ERA001
+        # Sds = float(self.ui.Sds.text())
         Sds = float(rootSIM['SDSParam'])  # noqa: N806
 
-        # Sd1 = float(self.ui.Sd1.text())  # noqa: ERA001
+        # Sd1 = float(self.ui.Sd1.text())
         Sd1 = float(rootSIM['SD1Param'])  # noqa: N806
 
-        # Tl = float(self.ui.Tl.text())  # noqa: ERA001
+        # Tl = float(self.ui.Tl.text())
         Tl = float(rootSIM['TLParam'])  # noqa: N806
 
         WDL = Lafg * DL
         WDLS = Lafs * DL
         WLL = Lafg * LL
 
-        #        print("heigth_v: ")  # noqa: ERA001
-        #        print(heigth_v)  # noqa: ERA001
-        #        print("span_v: ")  # noqa: ERA001
-        #        print(span_v)  # noqa: ERA001
-        #        print("Lafg: "+str(Lafg))  # noqa: ERA001
-        #        print("Lafs: "+str(Lafs))  # noqa: ERA001
-        #        print("DL: "+str(DL))  # noqa: ERA001
-        #        print("LL: "+str(LL))  # noqa: ERA001
-        #        print("HColi: "+str(HColi))  # noqa: ERA001
-        #        print("BColi: "+str(BColi))  # noqa: ERA001
-        #        print("HCole: "+str(HCole))  # noqa: ERA001
-        #        print("BCole: "+str(BCole))  # noqa: ERA001
-        #        print("HBeam: "+str(HBeam))  # noqa: ERA001
-        #        print("BBeam: "+str(BBeam))  # noqa: ERA001
-        #        print("IFC: "+str(IFC))  # noqa: ERA001
-        #        print("IFB: "+str(IFB))  # noqa: ERA001
+        #        print("heigth_v: ")
+        #        print(heigth_v)
+        #        print("span_v: ")
+        #        print(span_v)
+        #        print("Lafg: "+str(Lafg))
+        #        print("Lafs: "+str(Lafs))
+        #        print("DL: "+str(DL))
+        #        print("LL: "+str(LL))
+        #        print("HColi: "+str(HColi))
+        #        print("BColi: "+str(BColi))
+        #        print("HCole: "+str(HCole))
+        #        print("BCole: "+str(BCole))
+        #        print("HBeam: "+str(HBeam))
+        #        print("BBeam: "+str(BBeam))
+        #        print("IFC: "+str(IFC))
+        #        print("IFB: "+str(IFB))
         print('********************fy: ', fy)  # noqa: T201
-        #        print("fcB: "+str(fcB))  # noqa: ERA001
-        #        print("fcC: "+str(fcC))  # noqa: ERA001
-        #        print("R: "+str(R))  # noqa: ERA001
-        #        print("Cd: "+str(Cd))  # noqa: ERA001
-        #        print("Omo: "+str(Omo))  # noqa: ERA001
-        #        print("Sds: "+str(Sds))  # noqa: ERA001
-        #        print("Sd1: "+str(Sd1))  # noqa: ERA001
-        #        print("Tl: "+str(Tl))  # noqa: ERA001
+        #        print("fcB: "+str(fcB))
+        #        print("fcC: "+str(fcC))
+        #        print("R: "+str(R))
+        #        print("Cd: "+str(Cd))
+        #        print("Omo: "+str(Omo))
+        #        print("Sds: "+str(Sds))
+        #        print("Sd1: "+str(Sd1))
+        #        print("Tl: "+str(Tl))
 
-        # plt.close('all')  # noqa: ERA001
+        # plt.close('all')
         op.wipe()
         op.model('Basic', '-ndm', 2, '-ndf', 3)
 
@@ -816,8 +808,10 @@ class RCFIAP:  # noqa: D101
         AColi = BColi * HColi  # cross-sectional area  # noqa: N806
         ACole = BCole * HCole  # cross-sectional area  # noqa: N806
         EcC = 4700 * sqrt(fcC * MPa)  # noqa: N806
-        IzColi = 1.0 / 12.0 * BColi * HColi**3  # Column moment of inertia  # noqa: N806
-        IzCole = 1.0 / 12.0 * BCole * HCole**3  # Column moment of inertia  # noqa: N806
+        # Column moment of inertia
+        IzColi = 1.0 / 12.0 * BColi * HColi**3  # noqa: N806
+        # Column moment of inertia
+        IzCole = 1.0 / 12.0 * BCole * HCole**3  # noqa: N806
         EleTag = 1  # noqa: N806
         Elements = []
         for Nod_ini in range(num_nodes):  # noqa: N806
@@ -984,27 +978,27 @@ class RCFIAP:  # noqa: D101
         op.analyze(1)
 
         # Frame Geometry plot
-        #        self.ui.DataFrame.canvas.axes.clear()  # noqa: ERA001
-        #        self.ui.DataFrame.canvas.axes.plot(ListNodes[:, 1], ListNodes[:, 2], 'ks')  # noqa: ERA001, E501
+        #        self.ui.DataFrame.canvas.axes.clear()
+        #        self.ui.DataFrame.canvas.axes.plot(ListNodes[:, 1], ListNodes[:, 2], 'ks')
         #
-        #        self.ui.DataFrame.canvas.axes.axis('off')  # noqa: ERA001
+        #        self.ui.DataFrame.canvas.axes.axis('off')
         #        for Ele in Elements:
-        #            xi = ListNodes[Ele.Nod_ini, 1]  # noqa: ERA001
-        #            yi = ListNodes[Ele.Nod_ini, 2]  # noqa: ERA001
-        #            xe = ListNodes[Ele.Nod_end, 1]  # noqa: ERA001
-        #            ye = ListNodes[Ele.Nod_end, 2]  # noqa: ERA001
-        #            self.ui.DataFrame.canvas.axes.plot([xi, xe], [yi, ye], 'k-', alpha=.3)  # noqa: ERA001, E501
+        #            xi = ListNodes[Ele.Nod_ini, 1]
+        #            yi = ListNodes[Ele.Nod_ini, 2]
+        #            xe = ListNodes[Ele.Nod_end, 1]
+        #            ye = ListNodes[Ele.Nod_end, 2]
+        #            self.ui.DataFrame.canvas.axes.plot([xi, xe], [yi, ye], 'k-', alpha=.3)
         #            if xi == xe:
-        #                self.ui.DataFrame.canvas.axes.text(xi, (ye + yi) / 2, r'C{}'.format(Ele.EleTag), style='italic',  # noqa: E501
-        #                                                   fontsize=8,  # noqa: ERA001
-        #                                                   rotation='vertical', verticalalignment='center')  # noqa: E501
+        #                self.ui.DataFrame.canvas.axes.text(xi, (ye + yi) / 2, r'C{}'.format(Ele.EleTag), style='italic',
+        #                                                   fontsize=8,
+        #                                                   rotation='vertical', verticalalignment='center')
         #            if yi == ye:
-        #                self.ui.DataFrame.canvas.axes.text((xe + xi) / 2, yi, r'B{}'.format(Ele.EleTag), style='italic',  # noqa: E501
-        #                                                   fontsize=8,  # noqa: ERA001
-        #                                                   horizontalalignment='center')  # noqa: E501
-        #        self.ui.DataFrame.canvas.axes.axis('equal')  # noqa: ERA001
-        #        self.ui.DataFrame.canvas.draw()  # noqa: ERA001
-        #        self.ui.DataFrame.canvas.show()  # noqa: ERA001
+        #                self.ui.DataFrame.canvas.axes.text((xe + xi) / 2, yi, r'B{}'.format(Ele.EleTag), style='italic',
+        #                                                   fontsize=8,
+        #                                                   horizontalalignment='center')
+        #        self.ui.DataFrame.canvas.axes.axis('equal')
+        #        self.ui.DataFrame.canvas.draw()
+        #        self.ui.DataFrame.canvas.show()
 
         ElemnsForceDL = []  # noqa: N806
         for Element in Elements:  # noqa: N806
@@ -1013,7 +1007,7 @@ class RCFIAP:  # noqa: D101
             ElemnsForceDL.append(Forces)
         ElemnsForceDL = np.array(ElemnsForceDL)  # noqa: N806
 
-        # Create a Plain load pattern for seismic loading with a Linear TimeSeries (LLEF)  # noqa: E501
+        # Create a Plain load pattern for seismic loading with a Linear TimeSeries (LLEF)
         op.loadConst('-time', 0.0)
         Htotal = Loc_heigth[-1]  # noqa: N806
         Ct = 0.0466  # noqa: N806
@@ -1204,8 +1198,8 @@ class RCFIAP:  # noqa: D101
                         db_b2,
                     )
                 )
-                # self.ui.tbl_data_design_beams.setRowCount(0)  # noqa: ERA001
-                # data_beams_table(self)  # noqa: ERA001
+                # self.ui.tbl_data_design_beams.setRowCount(0)
+                # data_beams_table(self)
 
         # Column design procedure
         ro_min = 0.01
@@ -1288,7 +1282,8 @@ class RCFIAP:  # noqa: D101
                 VID, VIL, VIE = abs(VID), abs(VIL), abs(VIE)  # noqa: N806
 
                 Mu_is = Mu_i[[1, 2, 3, 4, 6, 7, 8, 9]]  # noqa: N806
-                Mn_max = np.max(Mu_is)  # Momento maximo de todas las combo sismicas  # noqa: N806
+                # Momento maximo de todas las combo sismicas
+                Mn_max = np.max(Mu_is)  # noqa: N806
                 VI1, VI2, VI3, VI4, VI5 = Combo_ACI(VID, VIL, VIE)  # noqa: N806
 
                 VI6 = 2.0 * Mn_max / Ele.LEle  # noqa: N806
@@ -1301,7 +1296,8 @@ class RCFIAP:  # noqa: D101
                 VUb = VI6  # noqa: N806
                 VUc = max([VI7, VI8, VI9, VI10])  # noqa: N806
 
-                Vu = max([VUa, min([VUb, VUc])])  # Cortante maximo de diseño  # noqa: N806
+                # Cortante maximo de diseño
+                Vu = max([VUa, min([VUb, VUc])])  # noqa: N806
                 sst, nsB, nsH = AvColumn()  # noqa: N806
                 DataColDesing.append(
                     ColDesing(
@@ -1329,9 +1325,9 @@ class RCFIAP:  # noqa: D101
                     )
                 )
 
-            # self.ui.tbl_data_design_columns.setRowCount(0)  # noqa: ERA001
-            # data_columns_table(self)  # noqa: ERA001
-            # self.ui.tabWidget.setCurrentIndex(1)  # noqa: ERA001
+            # self.ui.tbl_data_design_columns.setRowCount(0)
+            # data_columns_table(self)
+            # self.ui.tabWidget.setCurrentIndex(1)
 
     # Creation of the nonlinear model
     def CreateNLM(self, rootSIM, outputLogger, preparePushover):  # noqa: ANN001, ANN201, C901, N802, N803, D102, PLR0912, PLR0915
@@ -1354,18 +1350,18 @@ class RCFIAP:  # noqa: D101
                     [DC.nbB * Ab, np.ones(DC.nbH - 2) * 2 * Ab, DC.nbB * Ab]
                 )
 
-                # print("DC.EleTag",DC.EleTag)  # noqa: ERA001
-                # print("DC.nbH",DC.nbH)  # noqa: ERA001
-                # print("DC.db",DC.db)  # noqa: ERA001
-                # print("Ab",Ab)  # noqa: ERA001
-                # print("DC.nbB",DC.nbB)  # noqa: ERA001
-                # print("DC.h",DC.h)  # noqa: ERA001
-                # print("DC.b",DC.b)  # noqa: ERA001
-                # print("dp",dp)  # noqa: ERA001
-                # print("dst",dst)  # noqa: ERA001
-                # print("cover",cover)  # noqa: ERA001
-                # print("DC.As",DC.As)  # noqa: ERA001
-                # print("DC.dist",DC.dist)  # noqa: ERA001
+                # print("DC.EleTag",DC.EleTag)
+                # print("DC.nbH",DC.nbH)
+                # print("DC.db",DC.db)
+                # print("Ab",Ab)
+                # print("DC.nbB",DC.nbB)
+                # print("DC.h",DC.h)
+                # print("DC.b",DC.b)
+                # print("dp",dp)
+                # print("dst",dst)
+                # print("cover",cover)
+                # print("DC.As",DC.As)
+                # print("DC.dist",DC.dist)
 
         # Function: Parameters of regularized unconfined concrete
         def con_inconf_regu():  # noqa: ANN202
@@ -1410,35 +1406,35 @@ class RCFIAP:  # noqa: D101
             ft = 0.33 * sqrt(-fpc * MPa)
             Ets = ft / 0.002  # noqa: N806
 
-            #            print("**** sst",sst)  # noqa: ERA001
-            #            print("**** fpc",fpc)  # noqa: ERA001
-            #            print("**** bcx",bcx)  # noqa: ERA001
-            #            print("**** bcy",bcy)  # noqa: ERA001
-            #            print("**** Asx",Asx)  # noqa: ERA001
-            #            print("**** Asy",Asy)  # noqa: ERA001
-            #            print("**** Asvt",Asvt)  # noqa: ERA001
-            #            print("**** flx",flx)  # noqa: ERA001
-            #            print("**** fly",fly)  # noqa: ERA001
-            #            print("**** slx",slx)  # noqa: ERA001
-            #            print("**** sly",sly)  # noqa: ERA001
-            #            print("**** k2x",k2x)  # noqa: ERA001
-            #            print("**** k2y",k2y)  # noqa: ERA001
-            #            print("**** flex",flex)  # noqa: ERA001
-            #            print("**** fley",fley)  # noqa: ERA001
-            #            print("**** fle",fle)  # noqa: ERA001
-            #            print("**** k1",k1)  # noqa: ERA001
-            #            print("**** fcc",fcc)  # noqa: ERA001
-            #            print("**** fpcc",fpcc)  # noqa: ERA001
-            #            print("**** Ecc",Ecc)  # noqa: ERA001
-            #            print("**** Gfc",Gfc)  # noqa: ERA001
-            #            print("**** K",K)  # noqa: ERA001
-            #            print("**** epscc0",epscc0)  # noqa: ERA001
-            #            print("**** Gfcc",Gfcc)  # noqa: ERA001
-            #            print("**** epsccu",epsccu)  # noqa: ERA001
-            #            print("**** fccu",fccu)  # noqa: ERA001
-            #            print("**** lambdaC",lambdaC)  # noqa: ERA001
-            #            print("**** ft",ft)  # noqa: ERA001
-            #            print("**** Ets",Ets)  # noqa: ERA001
+            #            print("**** sst",sst)
+            #            print("**** fpc",fpc)
+            #            print("**** bcx",bcx)
+            #            print("**** bcy",bcy)
+            #            print("**** Asx",Asx)
+            #            print("**** Asy",Asy)
+            #            print("**** Asvt",Asvt)
+            #            print("**** flx",flx)
+            #            print("**** fly",fly)
+            #            print("**** slx",slx)
+            #            print("**** sly",sly)
+            #            print("**** k2x",k2x)
+            #            print("**** k2y",k2y)
+            #            print("**** flex",flex)
+            #            print("**** fley",fley)
+            #            print("**** fle",fle)
+            #            print("**** k1",k1)
+            #            print("**** fcc",fcc)
+            #            print("**** fpcc",fpcc)
+            #            print("**** Ecc",Ecc)
+            #            print("**** Gfc",Gfc)
+            #            print("**** K",K)
+            #            print("**** epscc0",epscc0)
+            #            print("**** Gfcc",Gfcc)
+            #            print("**** epsccu",epsccu)
+            #            print("**** fccu",fccu)
+            #            print("**** lambdaC",lambdaC)
+            #            print("**** ft",ft)
+            #            print("**** Ets",Ets)
 
             return fpcc, epscc0, fccu, epsccu, lambdaC, ft, Ets
 
@@ -1458,7 +1454,7 @@ class RCFIAP:  # noqa: D101
             bPosN4 = (FsuPosN4 - FyPosN4) / (Es * (epsuPosN4 - epsyPosN4))  # noqa: N806
             epsuNegN4 = min(-epsccu, epsuPosN4)  # noqa: N806
             bNegN4 = bPosN4  # noqa: N806
-            # FsuNegN4 = FsuTestN4  # noqa: ERA001
+            # FsuNegN4 = FsuTestN4
             FsuNegN4 = FyNegN4 + bNegN4 * (Es * (epsuNegN4 - epsyNegN4))  # noqa: N806
             FsrPosN4 = 0.2 * FyPosN4  # noqa: N806
             epsrPosN4 = (FsuPosN4 - FsrPosN4) / Es + 1.05 * epsuPosN4  # noqa: N806, F841
@@ -1469,9 +1465,9 @@ class RCFIAP:  # noqa: D101
             damage1 = 0.0  # noqa: F841
             damage2 = 0.0  # noqa: F841
             beta = 0.0  # noqa: F841
-            # op.uniaxialMaterial('Hysteretic', Ele.EleTag * 6 + 4 + pos, FyPosN4, epsyPosN4, FsuPosN4, epsuPosN4  # noqa: E501
-            #                     , FsrPosN4, epsrPosN4, -FyNegN4, -epsyNegN4, -FsuNegN4, -epsuNegN4, -FsrNegN4  # noqa: E501
-            #                     , -epsrNegN4, pinchX, pinchY, damage1, damage2, beta)  # noqa: E501
+            # op.uniaxialMaterial('Hysteretic', Ele.EleTag * 6 + 4 + pos, FyPosN4, epsyPosN4, FsuPosN4, epsuPosN4
+            #                     , FsrPosN4, epsrPosN4, -FyNegN4, -epsyNegN4, -FsuNegN4, -epsuNegN4, -FsrNegN4
+            #                     , -epsrNegN4, pinchX, pinchY, damage1, damage2, beta)
 
             SteelN4Mat = Ele.EleTag * 6 + 4 + pos  # noqa: N806
             SteelMPFTag = 1e6 * SteelN4Mat  # noqa: N806
@@ -1612,7 +1608,7 @@ class RCFIAP:  # noqa: D101
             bPosN4 = (FsuPosN4 - FyPosN4) / (Es * (epsuPosN4 - epsyPosN4))  # noqa: N806
             epsuNegN4 = min(-epsccu, epsuPosN4)  # noqa: N806
             bNegN4 = bPosN4  # noqa: N806
-            # FsuNegN4 = FsuTestN4  # noqa: ERA001
+            # FsuNegN4 = FsuTestN4
             FsuNegN4 = FyNegN4 + bNegN4 * (Es * (epsuNegN4 - epsyNegN4))  # noqa: N806
             FsrPosN4 = 0.2 * FyPosN4  # noqa: N806
             epsrPosN4 = (FsuPosN4 - FsrPosN4) / Es + 1.05 * epsuPosN4  # noqa: N806, F841
@@ -1623,9 +1619,9 @@ class RCFIAP:  # noqa: D101
             damage1 = 0.0  # noqa: F841
             damage2 = 0.0  # noqa: F841
             beta = 0.0  # noqa: F841
-            # op.uniaxialMaterial('Hysteretic', Ele.EleTag * 6 + 4 + pos, FyPosN4, epsyPosN4, FsuPosN4, epsuPosN4  # noqa: E501
-            #                     , FsrPosN4, epsrPosN4, -FyNegN4, -epsyNegN4, -FsuNegN4, -epsuNegN4, -FsrNegN4  # noqa: E501
-            #                     , -epsrNegN4, pinchX, pinchY, damage1, damage2, beta)  # noqa: E501
+            # op.uniaxialMaterial('Hysteretic', Ele.EleTag * 6 + 4 + pos, FyPosN4, epsyPosN4, FsuPosN4, epsuPosN4
+            #                     , FsrPosN4, epsrPosN4, -FyNegN4, -epsyNegN4, -FsuNegN4, -epsuNegN4, -FsrNegN4
+            #                     , -epsrNegN4, pinchX, pinchY, damage1, damage2, beta)
 
             SteelN4Mat = Ele.EleTag * 6 + 4 + pos  # noqa: N806
             SteelMPFTag = 1e6 * SteelN4Mat  # noqa: N806
@@ -1922,24 +1918,24 @@ class RCFIAP:  # noqa: D101
         Ast = pi * dst**2 / 4.0  # area de la barra del estribo  # noqa: N806
 
         # creacion de columnas
-        # HBeam = float(self.ui.HBeam.text())  # noqa: ERA001
+        # HBeam = float(self.ui.HBeam.text())
         HBeam = float(rootSIM['BeamDepth'])  # noqa: N806
 
-        # HColi = float(self.ui.HColi.text())  # Column inside Depth  # noqa: ERA001
+        # HColi = float(self.ui.HColi.text())  # Column inside Depth
         HColi = float(rootSIM['IntColDepth'])  # noqa: N806
 
-        # HCole = float(self.ui.HCole.text())  # Column outside Depth  # noqa: ERA001
+        # HCole = float(self.ui.HCole.text())  # Column outside Depth
         HCole = float(rootSIM['ExtColDepth'])  # noqa: N806
 
-        # fy = float(self.ui.fy.text()) * MPa  # noqa: ERA001
+        # fy = float(self.ui.fy.text()) * MPa
         fy = float(rootSIM['FySteel']) * MPa
 
         Es = 200.0 * GPa  # noqa: N806, F841
 
-        # fcB = float(self.ui.fcB.text()) * MPa  # noqa: ERA001
+        # fcB = float(self.ui.fcB.text()) * MPa
         fcB = float(rootSIM['BeamFpc']) * MPa  # noqa: N806
 
-        # fcC = float(self.ui.fcC.text()) * MPa  # noqa: ERA001
+        # fcC = float(self.ui.fcC.text()) * MPa
         fcC = float(rootSIM['ColFpc']) * MPa  # noqa: N806
 
         op.geomTransf('PDelta', 1, '-jntOffset', 0, 0, 0, -HBeam / 2)
@@ -2010,8 +2006,8 @@ class RCFIAP:  # noqa: D101
         platicHingeOpt = int(rootSIM['PlasticHingeOpt'])  # noqa: N806
         includeRegularization = bool(rootSIM['IncludeRegularization'])  # noqa: N806
 
-        # print("platicHingeOpt",platicHingeOpt)  # noqa: ERA001
-        # print("includeRegularization",includeRegularization)  # noqa: ERA001
+        # print("platicHingeOpt",platicHingeOpt)
+        # print("includeRegularization",includeRegularization)
 
         # Creation of non-linear elements (beams and columns)
         eo1, eo85, eo20, lambdaU = -0.002, -0.0038, -0.006, 0.1  # noqa: N806
@@ -2398,7 +2394,7 @@ class RCFIAP:  # noqa: D101
                 Ele.EleTag,
             )
 
-            # outputLogger.add_array(['beamIntegration','HingeRadau', Ele.EleTag, Ele.EleTag, phl, Ele.EleTag, phl, Ele.EleTag])  # noqa: ERA001, E501
+            # outputLogger.add_array(['beamIntegration','HingeRadau', Ele.EleTag, Ele.EleTag, phl, Ele.EleTag, phl, Ele.EleTag])
 
             op.element(
                 'forceBeamColumn',
@@ -2715,7 +2711,7 @@ class RCFIAP:  # noqa: D101
                 phl2,
                 Ele.EleTag * 2,
             )
-            # outputLogger.add_array(['beamIntegration','HingeRadau', Ele.EleTag, Ele.EleTag * 2, phl1, Ele.EleTag * 2 + 1, phl2, Ele.EleTag * 2])  # noqa: ERA001, E501
+            # outputLogger.add_array(['beamIntegration','HingeRadau', Ele.EleTag, Ele.EleTag * 2, phl1, Ele.EleTag * 2 + 1, phl2, Ele.EleTag * 2])
 
             op.element(
                 'forceBeamColumn',
@@ -2769,13 +2765,13 @@ class RCFIAP:  # noqa: D101
         for Ele in EleCol:  # noqa: N806
             outputLogger.add_array(
                 [
-                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform 0 {-Ele.AEle * GConc}'  # noqa: E501
+                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform 0 {-Ele.AEle * GConc}'
                 ]
             )
         for Ele in EleBeam:  # noqa: N806
             outputLogger.add_array(
                 [
-                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform {-Ele.AEle * GConc - WDL}'  # noqa: E501
+                    f'eleLoad -ele {Ele.EleTag} -type -beamUniform {-Ele.AEle * GConc - WDL}'
                 ]
             )
         outputLogger.add_array(['}'])
@@ -2792,7 +2788,7 @@ class RCFIAP:  # noqa: D101
 
         # KZ: user defined damping
         xi = rootSIM.get('dampingRatio', 0.05)
-        # KZ: modes  # noqa: ERA001
+        # KZ: modes
         if rootSIM.get('Simulation', None) is not None:
             tmp = rootSIM.get('Simulation')
             mode1 = tmp.get('firstMode', 1)
@@ -2955,10 +2951,10 @@ class RCFIAP:  # noqa: D101
         )  # how to store and solve the system of equations in the analysis
         op.test(
             'NormDispIncr', Tol, 100
-        )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+        )  # determine if convergence has been achieved at the end of an iteration step
         op.algorithm(
             'KrylovNewton'
-        )  # use Newton solution algorithm: updates tangent stiffness at every iteration  # noqa: E501
+        )  # use Newton solution algorithm: updates tangent stiffness at every iteration
         NstepGravity = 10  # apply gravity in 10 steps  # noqa: N806
         DGravity = 1.0 / NstepGravity  # first load increment;  # noqa: N806
         op.integrator(
@@ -2968,7 +2964,7 @@ class RCFIAP:  # noqa: D101
         op.analyze(NstepGravity)  # apply gravity
         op.loadConst('-time', 0.0)
 
-        # xi = 0.05  # damping ratio  # noqa: ERA001
+        # xi = 0.05  # damping ratio
         MpropSwitch = 1.0  # noqa: N806
         KcurrSwitch = 0.0  # noqa: N806
         KcommSwitch = 1.0  # noqa: N806
@@ -2976,7 +2972,8 @@ class RCFIAP:  # noqa: D101
         nEigenI = 1  # mode 1  # noqa: N806
         nEigenI2 = 2  # mode 2  # noqa: N806
         nEigenJ = 3  # mode 3  # noqa: N806
-        lambdaN = op.eigen(nEigenJ)  # eigenvalue analysis for nEigenJ modes  # noqa: N806
+        # eigenvalue analysis for nEigenJ modes
+        lambdaN = op.eigen(nEigenJ)  # noqa: N806
         lambdaI = lambdaN[nEigenI - 1]  # eigenvalue mode i  # noqa: N806
         lambdaI2 = lambdaN[nEigenI2 - 1]  # eigenvalue mode i2  # noqa: N806
         lambdaJ = lambdaN[nEigenJ - 1]  # eigenvalue mode j  # noqa: N806
@@ -3012,21 +3009,21 @@ class RCFIAP:  # noqa: D101
         def singlePush1(dref, mu, ctrlNode, dispDir, nSteps):  # noqa: ANN001, ANN202, C901, N802, N803, PLR0912, PLR0915
             IOflag = 2  # noqa: N806
             testType = 'RelativeNormDispIncr'  # noqa: N806
-            # set testType	EnergyIncr;					# Dont use with Penalty constraints  # noqa: E501
-            # set testType	RelativeNormUnbalance;		# Dont use with Penalty constraints  # noqa: E501
-            # set testType	RelativeNormDispIncr;		# Dont use with Lagrange constraints  # noqa: E501
-            # set testType	RelativeTotalNormDispIncr;	# Dont use with Lagrange constraints  # noqa: E501
-            # set testType	RelativeEnergyIncr;			# Dont use with Penalty constraints  # noqa: E501
+            # set testType	EnergyIncr;					# Dont use with Penalty constraints
+            # set testType	RelativeNormUnbalance;		# Dont use with Penalty constraints
+            # set testType	RelativeNormDispIncr;		# Dont use with Lagrange constraints
+            # set testType	RelativeTotalNormDispIncr;	# Dont use with Lagrange constraints
+            # set testType	RelativeEnergyIncr;			# Dont use with Penalty constraints
             tolInit = 1.0e-6  # the initial Tolerance, so it can be referred back to  # noqa: N806
             iterInit = 50  # the initial Max Number of Iterations  # noqa: N806
             algorithmType = 'KrylovNewton'  # the algorithm type  # noqa: N806
 
             op.test(
                 testType, tolInit, iterInit
-            )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+            )  # determine if convergence has been achieved at the end of an iteration step
             op.algorithm(
                 algorithmType
-            )  # use Newton solution algorithm: updates tangent stiffness at every iteration  # noqa: E501
+            )  # use Newton solution algorithm: updates tangent stiffness at every iteration
             disp = dref * mu
             dU = disp / (1.0 * nSteps)  # noqa: N806
             print('dref ', dref, 'mu ', mu, 'dU ', dU, 'disp ', disp)  # noqa: T201
@@ -3043,14 +3040,14 @@ class RCFIAP:  # noqa: D101
             ok = 0
             step = 1
             loadf = 1.0
-            # This feature of disabling the possibility of having a negative loading has been included.  # noqa: E501
+            # This feature of disabling the possibility of having a negative loading has been included.
             # This has been adapted from a similar script by Prof. Garbaggio
             htot = op.nodeCoord(ctrlNode, 2)
             maxDriftPiso = 0.0  # noqa: N806
             VBasal_v = []  # noqa: N806
             DriftTecho_v = []  # noqa: N806
             while step <= nSteps and ok == 0 and loadf > 0:
-                # self.ui.progressBar.setValue(100 * step / nSteps)  # noqa: ERA001
+                # self.ui.progressBar.setValue(100 * step / nSteps)
                 ok = op.analyze(1)
                 loadf = op.getTime()
                 temp = op.nodeDisp(ctrlNode, dispDir)
@@ -3069,61 +3066,61 @@ class RCFIAP:  # noqa: D101
                         step,
                     )
 
-                # If the analysis fails, try the following changes to achieve convergence  # noqa: E501
+                # If the analysis fails, try the following changes to achieve convergence
                 # Analysis will be slower in here though...
                 if ok != 0:
                     print('Trying relaxed convergence..')  # noqa: T201
                     op.test(
                         testType, tolInit * 0.01, iterInit * 50
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                     ok = op.analyze(1)
                     op.test(
                         testType, tolInit, iterInit
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                 if ok != 0:
                     print('Trying Newton with initial then current .')  # noqa: T201
                     op.test(
                         testType, tolInit * 0.01, iterInit * 50
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                     op.algorithm('Newton', '-initialThenCurrent')
                     ok = op.analyze(1)
                     op.algorithm(algorithmType)
                     op.test(
                         testType, tolInit, iterInit
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                 if ok != 0:
                     print('Trying ModifiedNewton with initial ..')  # noqa: T201
                     op.test(
                         testType, tolInit * 0.01, iterInit * 50
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                     op.algorithm('ModifiedNewton', '-initial')
                     ok = op.analyze(1)
                     op.algorithm(algorithmType)
                     op.test(
                         testType, tolInit, iterInit
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                 if ok != 0:
                     print('Trying KrylovNewton ..')  # noqa: T201
                     op.test(
                         testType, tolInit * 0.01, iterInit * 50
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                     op.algorithm('KrylovNewton')
                     ok = op.analyze(1)
                     op.algorithm(algorithmType)
                     op.test(
                         testType, tolInit, iterInit
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                 if ok != 0:
                     print('Perform a Hail Mary ....')  # noqa: T201
                     op.test(
                         'FixedNumIter', iterInit
-                    )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+                    )  # determine if convergence has been achieved at the end of an iteration step
                     ok = op.analyze(1)
 
                 for nod_ini, nod_end in zip(
                     ListNodesDrift[:-1, 0], ListNodesDrift[1:, 0]
                 ):
-                    # print('nod_ini ', nod_ini, 'nod_end', nod_end)  # noqa: ERA001
+                    # print('nod_ini ', nod_ini, 'nod_end', nod_end)
                     nod_ini = int(nod_ini)  # noqa: PLW2901
                     nod_end = int(nod_end)  # noqa: PLW2901
                     pos_i = op.nodeCoord(nod_ini, 2)
@@ -3139,7 +3136,7 @@ class RCFIAP:  # noqa: D101
                 VBasal = 0.0  # noqa: N806
                 op.reactions()
                 for node in ListNodesBasal:
-                    # print('ind Basal ', node[0])  # noqa: ERA001
+                    # print('ind Basal ', node[0])
                     VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806
                 VBasal_v = np.append(VBasal_v, VBasal)  # noqa: N806
                 DriftTecho = op.nodeDisp(ctrlNode, dispDir) / htot  # noqa: N806
@@ -3156,7 +3153,7 @@ class RCFIAP:  # noqa: D101
             if loadf <= 0:
                 print('Stopped because of Load factor below zero: ', loadf)  # noqa: T201
             #    if PrintFlag == 0:
-            #        os.remove("singlePush.txt")  # noqa: ERA001
+            #        os.remove("singlePush.txt")
             #        print singlePush.txt
             return (
                 maxDriftPiso,
@@ -3171,12 +3168,12 @@ class RCFIAP:  # noqa: D101
             # --------------------------------------------------
             # Description of Parameters
             # --------------------------------------------------
-            # dref:			Reference displacement to which cycles are run. Corresponds to yield or equivalent other, such as 1mm  # noqa: E501
-            # mu:			Multiple of dref to which the push is run. So pushover can be run to a specifived ductility or displacement  # noqa: E501
+            # dref:			Reference displacement to which cycles are run. Corresponds to yield or equivalent other, such as 1mm
+            # mu:			Multiple of dref to which the push is run. So pushover can be run to a specifived ductility or displacement
             # ctrlNode:		Node to control with the displacement integrator.
             # dispDir:		DOF the loading is applied.
             # nSteps:		Number of steps.
-            # IOflag:		Option to print details on screen. 2 for print of each step, 1 for basic info (default), 0 for off  # noqa: E501
+            # IOflag:		Option to print details on screen. 2 for print of each step, 1 for basic info (default), 0 for off
             # ---------------------------------------------------
             test = {
                 1: 'NormDispIncr',
@@ -3198,8 +3195,8 @@ class RCFIAP:  # noqa: D101
                 8: 'NewtonLineSearch',
             }
 
-            # test = {1:'NormDispIncr', 2: 'RelativeEnergyIncr', 3:'EnergyIncr'}  # noqa: ERA001
-            # alg = {1:'KrylovNewton', 2:'ModifiedNewton'}  # noqa: ERA001
+            # test = {1:'NormDispIncr', 2: 'RelativeEnergyIncr', 3:'EnergyIncr'}
+            # alg = {1:'KrylovNewton', 2:'ModifiedNewton'}
 
             IOflag = 2  # noqa: N806
             PrintFlag = 0  # noqa: N806, F841
@@ -3211,16 +3208,16 @@ class RCFIAP:  # noqa: D101
             #      	algorithmType Newton;		#      the algorithm type
             #      	algorithmType Newton;		#      the algorithm type
 
-            # op.constraints('Transformation') # how it handles boundary conditions  # noqa: ERA001
-            # op.numberer('RCM')    # renumber dof to minimize band-width (optimization), if you want to  # noqa: ERA001, E501
-            # op.system('BandGeneral') # how to store and solve the system of equations in the analysis  # noqa: ERA001, E501
+            # op.constraints('Transformation') # how it handles boundary conditions
+            # op.numberer('RCM')    # renumber dof to minimize band-width (optimization), if you want to
+            # op.system('BandGeneral') # how to store and solve the system of equations in the analysis
 
             op.test(
                 testType, tolInit, iterInit
-            )  # determine if convergence has been achieved at the end of an iteration step  # noqa: E501
+            )  # determine if convergence has been achieved at the end of an iteration step
             op.algorithm(
                 algorithmType
-            )  # use Newton solution algorithm: updates tangent stiffness at every iteration  # noqa: E501
+            )  # use Newton solution algorithm: updates tangent stiffness at every iteration
             disp = dref * mu
             dU = disp / (1.0 * nSteps)  # noqa: N806
             print(  # noqa: T201
@@ -3239,18 +3236,18 @@ class RCFIAP:  # noqa: D101
             ok = 0
             step = 1
             loadf = 1.0
-            # This feature of disabling the possibility of having a negative loading has been included.  # noqa: E501
+            # This feature of disabling the possibility of having a negative loading has been included.
             # This has been adapted from a similar script by Prof. Garbaggio
             maxDriftPiso = 0.0  # noqa: N806
             htot = op.nodeCoord(ctrlNode, 2)
             VBasal_v = []  # noqa: N806
             DriftTecho_v = []  # noqa: N806
-            # factor_v = np.array([1,0.75,0.5,0.25,0.1,2,3,5,10])  # noqa: ERA001
-            # fact_v = np.array([50,100,500])  # noqa: ERA001
-            # factor = 100  # noqa: ERA001
-            # fact = 1.  # noqa: ERA001
+            # factor_v = np.array([1,0.75,0.5,0.25,0.1,2,3,5,10])
+            # fact_v = np.array([50,100,500])
+            # factor = 100
+            # fact = 1.
             while step <= nSteps and ok == 0 and loadf > 0:
-                # self.ui.progressBar.setValue(100 * step / nSteps)  # noqa: ERA001
+                # self.ui.progressBar.setValue(100 * step / nSteps)
                 ok = op.analyze(1)
                 loadf = op.getTime()
                 temp = op.nodeDisp(ctrlNode, dispDir)
@@ -3268,20 +3265,20 @@ class RCFIAP:  # noqa: D101
                         step,
                     )
                 # for factor in factor_v:
-                # op.integrator('DisplacementControl',ctrlNode,dispDir,factor*dU)  # determine the next time step for an analysis  # noqa: ERA001, E501
+                # op.integrator('DisplacementControl',ctrlNode,dispDir,factor*dU)  # determine the next time step for an analysis
                 # for fact in fact_v:
                 for j in alg:
                     for i in test:
                         for fact in [1, 20, 50]:
                             if ok != 0 and j >= 4 and i != 7:  # noqa: PLR2004
-                                # print('Trying ',str(alg[j]))  # noqa: ERA001
+                                # print('Trying ',str(alg[j]))
                                 op.test(test[i], tolInit * 0.01, iterInit * fact)
                                 op.algorithm(alg[j])
                                 ok = op.analyze(1)
                                 op.algorithm(algorithmType)
                                 op.test(testType, tolInit, iterInit)
                             elif ok != 0 and j < 4 and i != 7:  # noqa: PLR2004
-                                # print('Trying ',str(alg[j]))  # noqa: ERA001
+                                # print('Trying ',str(alg[j]))
                                 op.test(test[i], tolInit, iterInit * fact)
                                 op.algorithm(alg[j], '-initial')
                                 ok = op.analyze(1)
@@ -3298,15 +3295,15 @@ class RCFIAP:  # noqa: D101
                     if ok == 0:
                         break
                     # if ok == 0:
-                    #     break  # noqa: ERA001
+                    #     break
                     # if ok == 0:
-                    #     break  # noqa: ERA001
-                # op.integrator('DisplacementControl',ctrlNode,dispDir,dU)  # determine the next time step for an analysis  # noqa: ERA001, E501
+                    #     break
+                # op.integrator('DisplacementControl',ctrlNode,dispDir,dU)  # determine the next time step for an analysis
                 # Calculation of maximum Drift between floors
                 for nod_ini, nod_end in zip(
                     ListNodesDrift[:-1, 0], ListNodesDrift[1:, 0]
                 ):
-                    # print('nod_ini ', nod_ini, 'nod_end', nod_end)  # noqa: ERA001
+                    # print('nod_ini ', nod_ini, 'nod_end', nod_end)
                     nod_ini = int(nod_ini)  # noqa: PLW2901
                     nod_end = int(nod_end)  # noqa: PLW2901
                     pos_i = op.nodeCoord(nod_ini, 2)
@@ -3322,7 +3319,7 @@ class RCFIAP:  # noqa: D101
                 VBasal = 0.0  # noqa: N806
                 op.reactions()
                 for node in ListNodesBasal:
-                    # print('ind Basal ', node[0])  # noqa: ERA001
+                    # print('ind Basal ', node[0])
                     VBasal = VBasal + op.nodeReaction(node[0], 1)  # noqa: N806
                 VBasal_v = np.append(VBasal_v, VBasal)  # noqa: N806
                 DriftTecho = op.nodeDisp(ctrlNode, dispDir) / htot  # noqa: N806
@@ -3339,7 +3336,7 @@ class RCFIAP:  # noqa: D101
             if loadf <= 0:
                 print('Stopped because of Load factor below zero: ', loadf)  # noqa: T201
             #    if PrintFlag == 0:
-            #        os.remove("singlePush.txt")  # noqa: ERA001
+            #        os.remove("singlePush.txt")
             #        print singlePush.txt
             return (
                 maxDriftPiso,
@@ -3377,14 +3374,15 @@ class RCFIAP:  # noqa: D101
             op.load(int(node[0]), fp, 0.0, 0.0)
 
         Htotal = Loc_heigth[-1]  # noqa: N806
-        #        Der_obj = float(self.ui.Der_obj.text())  # noqa: ERA001
+        #        Der_obj = float(self.ui.Der_obj.text())
         Der_obj = 0.04  # Match default example  # noqa: N806
         Des_obj = Der_obj * Htotal  # Desplazamiento objetivo  # noqa: N806
-        #        nSteps = int(self.ui.nSteps.text())  # noqa: ERA001
+        #        nSteps = int(self.ui.nSteps.text())
         nSteps = 110  # Match default example  # noqa: N806
         dref = Des_obj / nSteps
         mu = nSteps
-        IDctrlNode = int(ListNodesDrift[-1, 0])  # Node where displacement is read  # noqa: N806
+        # Node where displacement is read
+        IDctrlNode = int(ListNodesDrift[-1, 0])  # noqa: N806
         print('IDctrlNode =', IDctrlNode)  # noqa: T201
         IDctrlDOF = 1  # DOF x=1, y=2  # noqa: N806
         Tol = 1.0e-4  # Tolerance  # noqa: N806, F841
@@ -3412,7 +3410,7 @@ class RCFIAP:  # noqa: D101
         cols_def_6 = np.loadtxt('Pushover/cols_def_6.out')
         print('cols_def_1', cols_def_1)  # noqa: T201
 
-        # fy = float(self.ui.fy.text()) * MPa  # noqa: ERA001
+        # fy = float(self.ui.fy.text()) * MPa
         fy = float(rootSIM['FySteel']) * MPa
         print('Fy', fy)  # noqa: T201
 

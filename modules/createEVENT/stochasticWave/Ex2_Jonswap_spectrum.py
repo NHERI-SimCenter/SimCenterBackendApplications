@@ -42,10 +42,10 @@ ax.set_xlabel('Frequency [Hz]')
 ax.set_ylabel(r'Spectral density [m^2 s]')
 ax.set_title('Hydro - Jonswap spectrum')
 ax.tick_params(direction='in')
-# fig.savefig('JonswapSpectrum.png')  # noqa: ERA001
-# fig.savefig('JonswapSpectrum.webp')  # noqa: ERA001
+# fig.savefig('JonswapSpectrum.png')
+# fig.savefig('JonswapSpectrum.webp')
 
-# plt.show()  # noqa: ERA001
+# plt.show()
 
 if __name__ == '__main__':
     pass

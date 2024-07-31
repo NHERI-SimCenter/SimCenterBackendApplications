@@ -49,7 +49,13 @@ from sklearn.neighbors import NearestNeighbors
 
 
 def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
-    asset_file, event_grid_file, samples, neighbors, filter_label, seed, doParallel  # noqa: ANN001, N803
+    asset_file,  # noqa: ANN001
+    event_grid_file,  # noqa: ANN001
+    samples,  # noqa: ANN001
+    neighbors,  # noqa: ANN001
+    filter_label,  # noqa: ANN001
+    seed,  # noqa: ANN001
+    doParallel,  # noqa: ANN001, N803
 ):
     # check if running parallel
     numP = 1  # noqa: N806
@@ -276,11 +282,11 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         event_list_json = []
         for e_i, event in enumerate(event_list):
             # event_list_json.append({
-            #    #"EventClassification": "Earthquake",  # noqa: ERA001
-            #    "fileName": f'{event}x{e_i:05d}',  # noqa: ERA001
-            #    "factor": scale_list[e_i],  # noqa: ERA001
+            #    #"EventClassification": "Earthquake",
+            #    "fileName": f'{event}x{e_i:05d}',
+            #    "factor": scale_list[e_i],
             #    #"type": event_type
-            #    })  # noqa: ERA001
+            #    })
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
@@ -294,7 +300,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
         asset_data['Events'][0].update(
             {
-                # "EventClassification": "Earthquake",  # noqa: ERA001
+                # "EventClassification": "Earthquake",
                 'EventFolderPath': str(event_dir),
                 'Events': event_list_json,
                 'type': event_type,

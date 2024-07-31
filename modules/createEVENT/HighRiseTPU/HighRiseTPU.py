@@ -30,7 +30,7 @@ def parseTPU_HighRise_MatFile(matFileIn, windFileOutName):  # noqa: ANN001, ANN2
     period = mat_contents['Sample_period'][0][0]
     frequency = mat_contents['Sample_frequency'][0][0]
     angle = mat_contents['Wind_direction_angle'][0][0]
-    # uH = mat_contents['Uh_AverageWindSpeed'][0][0];  # noqa: ERA001
+    # uH = mat_contents['Uh_AverageWindSpeed'][0][0];
     uH = float(mat_contents['Uh_AverageWindSpeed'][0])  # noqa: N806
     print(uH)  # noqa: T201
     print(depth)  # noqa: T201

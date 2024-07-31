@@ -16,7 +16,7 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
     LocationFlag = information['LocationFlag']  # noqa: N806
     numSiteGM = information['number_of_realizations']  # noqa: N806
 
-    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806, E501
+    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806
     maxnumSiteGM = 57  # noqa: N806
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
@@ -34,10 +34,10 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
     gdf = pd.read_csv('selectedSites.csv', index_col=0)
 
     if 'TopoFlag':
-        # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_topo/'  # noqa: ERA001, E501
+        # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_topo/'
         IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_topo/'  # noqa: N806
     else:
-        # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_flat/'  # noqa: ERA001, E501
+        # IstanbulDirectory = '/corral-repl/projects/NHERI/published/PRJ-3712/GM_data/GM_flat/'
         IstanbulDirectory = '/home/jovyan/work/projects/PRJ-3712/GM_data/GM_flat/'  # noqa: N806
 
     # print number of cites
@@ -53,7 +53,7 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
                 f'{IstanbulDirectory}/Istanbul_sim{realization}_flat.hdf5', 'r'
             )
 
-        # return df  # noqa: ERA001
+        # return df
         for site in gdf.index:
             time = df['/Ax_data'][0]
             motiondict = {
@@ -72,7 +72,7 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
 
     if LocationFlag:
         gdf = gdf.loc[[0]]
-    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"  # noqa: E501
+    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"
     gdf['Bedrock_Vs'] = 750
     gdf[['filename', 'Latitude', 'Longitude', 'Bedrock_Vs']].to_csv(
         f'{directory}/sites.csv', index=False

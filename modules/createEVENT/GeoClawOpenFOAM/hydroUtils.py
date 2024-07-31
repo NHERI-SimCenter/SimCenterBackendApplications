@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -104,7 +104,7 @@ class hydroUtils:  # noqa: N801
                 obj: A list or dict - input dictionary or list of dictionaries
                 path: A list - list of strings that form the path to the desired element
 
-        """  # noqa: E501, D205, D401
+        """  # noqa: D205, D401
         if isinstance(obj, dict):  # noqa: RET503
             return self.extract(obj, path, 0, [])
         elif isinstance(obj, list):  # noqa: RET505
@@ -127,7 +127,7 @@ class hydroUtils:  # noqa: N801
 |======| D  | Website: simcenter.designsafe-ci.org/research-tools/hydro-uq
 |	   | R  | Version: 1.00
 |	   | O  |
-\\*---------------------------------------------------------------------------*/ \n\n"""  # noqa: E501, W291
+\\*---------------------------------------------------------------------------*/ \n\n"""  # noqa: W291
 
         return header  # noqa: RET504
 
@@ -154,7 +154,7 @@ FoamFile
 	location  "{location}";
 	object	{filename};
 }}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         return header  # noqa: RET504
 
@@ -193,7 +193,7 @@ FoamFile
                 userlist: Name of the project as given by the user
 
         """  # noqa: D400, D401, D415
-        # results = []  # noqa: ERA001
+        # results = []
 
         # for line in data:
         # 	entry = []

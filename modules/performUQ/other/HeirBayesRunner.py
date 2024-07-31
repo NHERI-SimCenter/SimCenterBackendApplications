@@ -1,4 +1,4 @@
-# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: INP001, D100
+# written: Aakash Bangalore Satish @ NHERI SimCenter, UC Berkeley  # noqa: D100, INP001
 
 import importlib
 import json
@@ -108,7 +108,9 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         return row_string  # noqa: RET504
 
     def makeTabularResultsFile(  # noqa: ANN201, N802, D102
-        self, save_file_name='tabularResults.out', separator='\t'  # noqa: ANN001
+        self,
+        save_file_name='tabularResults.out',  # noqa: ANN001
+        separator='\t',  # noqa: ANN001
     ):
         self.createHeadingStringsList()
         self.makeHeadingRow(separator=separator)
@@ -179,7 +181,7 @@ class HeirBayesRunner(UqRunner):  # noqa: D101
         runType:        Specifies whether computations are being run locally or on an HPC cluster
         localAppDir:    Directory containing apps for local run
         remoteAppDir:   Directory containing apps for remote run
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         self.startTimer()
         self.storeUQData(uqData=uqData)
         os.chdir(workingDir)

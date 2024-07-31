@@ -8,8 +8,8 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
     method: Literal['Modified Metropolis Hastings'] = 'Modified Metropolis Hastings'
     burn_length: int = Field(default=0, alias='burn-in', ge=0)
     jump: int = Field(default=1, ge=0)
-    # dimension: int = Field(..., gt=0)  # noqa: ERA001
-    # n_chains: int = Field(default=1, alias='numChains', ge=1)  # noqa: ERA001
+    # dimension: int = Field(..., gt=0)
+    # n_chains: int = Field(default=1, alias='numChains', ge=1)
     random_state: int = Field(..., alias='randomState')
     save_log_pdf: bool = False
     concatenate_chains = True
@@ -29,7 +29,7 @@ class ModifiedMetropolisHastingsDto(UQpyDTO):  # noqa: D101
         stretch_parameters.pop('method')
         stretch_parameters['log_pdf_target'] = 'marginals.log_pdf'
         stretch_parameters['seed'] = 'list(marginals.rvs(numRV,))'
-        # stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"  # noqa: ERA001
+        # stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"
         str_parameters = ''
         for key in stretch_parameters:
             if stretch_parameters[key] is None:

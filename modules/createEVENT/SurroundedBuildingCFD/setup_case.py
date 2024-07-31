@@ -94,7 +94,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
     x_max = (street_width_x + plan_x) * n_grid_x - street_width_x
     y_max = (street_width_y + plan_y) * n_grid_y - street_width_y
 
-    # bound_radius = max(x_max, y_max)/2.0  # noqa: ERA001
+    # bound_radius = max(x_max, y_max)/2.0
 
     for ix in range(n_grid_x):
         for iy in range(n_grid_y):
@@ -105,7 +105,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
             center_x = -x_max / 2.0 + ix * street_width_x + plan_x * (ix + 0.5)
             center_y = -y_max / 2.0 + iy * street_width_y + plan_y * (iy + 0.5)
 
-            # bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)  # noqa: ERA001, E501
+            # bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)
             bldg_R = np.sqrt(center_x**2.0 + center_y**2.0)  # noqa: N806
 
             # Add the building if it's within bounding radius
@@ -125,12 +125,12 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
         remove_duplicate_polygons=True,
     )
 
-    # vertices = combined.vectors.reshape(-1, 3)  # noqa: ERA001
-    # unique_vertices, indices = np.unique(np.round(vertices, decimals=int(-np.log10(1e-6))), return_inverse=True, axis=0)  # noqa: ERA001, E501
-    # merged_mesh = mesh.Mesh(np.zeros(len(indices) // 3, dtype=combined.dtype))  # noqa: ERA001
-    # merged_mesh.vectors = unique_vertices[indices].reshape(-1, 3, 3)  # noqa: ERA001
+    # vertices = combined.vectors.reshape(-1, 3)
+    # unique_vertices, indices = np.unique(np.round(vertices, decimals=int(-np.log10(1e-6))), return_inverse=True, axis=0)
+    # merged_mesh = mesh.Mesh(np.zeros(len(indices) // 3, dtype=combined.dtype))
+    # merged_mesh.vectors = unique_vertices[indices].reshape(-1, 3, 3)
 
-    # print(combined.is_closed())  # noqa: ERA001
+    # print(combined.is_closed())
 
     return combined  # noqa: RET504
 
@@ -410,8 +410,8 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
         added_part += f'    {refinement_boxes[i][0]}\n'
         added_part += '    {\n'
         added_part += '         type searchableBox;\n'
-        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'  # noqa: E501
-        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'  # noqa: E501
+        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'
+        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'
         added_part += '    }\n'
     dict_lines.insert(start_index, added_part)
 
@@ -446,18 +446,18 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
     dict_lines[start_index] = (
-        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, 'locationInMesh')
     dict_lines[start_index] = (
-        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # #Write 'outsidePoint' on Frontera snappyHex will fail without this keyword
-    # start_index = foam.find_keyword_line(dict_lines, "outsidePoint")  # noqa: ERA001
-    # dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e20)  # noqa: ERA001, E501
+    # start_index = foam.find_keyword_line(dict_lines, "outsidePoint")
+    # dict_lines[start_index] = "    outsidePoint ({:.4e} {:.4e} {:.4e});\n".format(-1e-20, -1e-20, -1e20)
 
     # Add refinement edge
     if add_edge_refinement:
@@ -493,15 +493,15 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
 
     # #Add surface refinement around the building as a refinement region
     # if surface_refinements[-1]["minLevel"] > refinement_boxes[-1][1]:
-    #     added_part = ""  # noqa: ERA001
-    #     added_part += "         {}\n".format(refinement_surface_name)  # noqa: ERA001
-    #     added_part += "         {\n"  # noqa: ERA001
-    #     added_part += "             mode   distance;\n"  # noqa: ERA001
-    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)  # noqa: ERA001, E501
-    #     added_part += "         }\n"  # noqa: ERA001
+    #     added_part = ""
+    #     added_part += "         {}\n".format(refinement_surface_name)
+    #     added_part += "         {\n"
+    #     added_part += "             mode   distance;\n"
+    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)
+    #     added_part += "         }\n"
 
-    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2
+    #     dict_lines.insert(start_index, added_part)
 
     # Add box refinements
     added_part = ''
@@ -668,7 +668,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     # Initialize the internal fields frow a lower velocity to avoid Courant number
     # instability when the solver starts. Now %10 of roof-height wind speed is set
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)  # noqa: ERA001, E501
+    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)
 
     # Set the internal field to zero to make it easy for the solver to start
     dict_lines[start_index] = 'internalField   uniform (0 0 0);\n'
@@ -711,10 +711,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     added_part = ''
     added_part += '\t type \t inletOutlet;\n'
     added_part += '\t inletValue \t uniform (0 0 0);\n'
-    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)  # noqa: ERA001
+    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
     added_part += '\t value \t uniform (0 0 0);\n'
 
-    # added_part += "\t type    zeroGradient;\n"  # noqa: ERA001
+    # added_part += "\t type    zeroGradient;\n"
 
     dict_lines.insert(start_index, added_part)
 
@@ -894,8 +894,8 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     building_BC_type = boundary_data['buildingBoundaryCondition']  # noqa: N806
     surrounding_BC_type = boundary_data['surroundingBoundaryCondition']  # noqa: N806
 
-    # wind_speed = wind_data['roofHeightWindSpeed']  # noqa: ERA001
-    # building_height = wind_data['buildingHeight']  # noqa: ERA001
+    # wind_speed = wind_data['roofHeightWindSpeed']
+    # building_height = wind_data['buildingHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
@@ -1174,7 +1174,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     dict_file.close()
 
     # BC and initial condition (you may need to scale to model scale)
-    # k0 = 1.3 #not in model scale  # noqa: ERA001
+    # k0 = 1.3 #not in model scale
 
     I = 0.1  # noqa: N806, E741
     k0 = 1.5 * (I * wind_speed) ** 2
@@ -1317,10 +1317,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     max_courant_number = ns_data['maxCourantNumber']
     adjust_time_step = ns_data['adjustTimeStep']
 
-    # monitor_wind_profiles = rm_data['monitorWindProfile']  # noqa: ERA001
-    # monitor_vtk_planes = rm_data['monitorVTKPlane']  # noqa: ERA001
-    # wind_profiles = rm_data['windProfiles']  # noqa: ERA001
-    # vtk_planes = rm_data['vtkPlanes']  # noqa: ERA001
+    # monitor_wind_profiles = rm_data['monitorWindProfile']
+    # monitor_vtk_planes = rm_data['monitorVTKPlane']
+    # wind_profiles = rm_data['windProfiles']
+    # vtk_planes = rm_data['vtkPlanes']
 
     # Need to change this for
     max_delta_t = 10 * time_step
@@ -1392,22 +1392,22 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
     # #Write base loads functionObjects
     # if monitor_base_load:
-    #     added_part = "    #includeFunc  baseForces\n"  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #     added_part = "    #includeFunc  baseForces\n"
+    #     dict_lines.insert(start_index, added_part)
 
     # #Write wind profile monitoring functionObjects
     # if monitor_wind_profiles:
-    #     added_part = ""  # noqa: ERA001
+    #     added_part = ""
     #     for prof in wind_profiles:
-    #         added_part += "    #includeFunc  {}\n".format(prof["name"])  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #         added_part += "    #includeFunc  {}\n".format(prof["name"])
+    #     dict_lines.insert(start_index, added_part)
 
     # #Write VTK sampling sampling points
     # if monitor_vtk_planes:
-    #     added_part = ""  # noqa: ERA001
+    #     added_part = ""
     #     for pln in vtk_planes:
-    #         added_part += "    #includeFunc  {}\n".format(pln["name"])  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #         added_part += "    #includeFunc  {}\n".format(pln["name"])
+    #     dict_lines.insert(start_index, added_part)
 
     # Write edited dict to file
     write_file_name = case_path + '/system/controlDict'
@@ -1517,7 +1517,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
     dict_lines[start_index] = (
-        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'  # noqa: E501
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Write edited dict to file
@@ -1569,7 +1569,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
     dict_lines[start_index] = (
-        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'  # noqa: E501
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Number of stories  as nBins
@@ -1622,7 +1622,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     added_part = ''
 
     for i in range(len(pressure_sampling_points)):
-        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'  # noqa: E501
+        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1723,7 +1723,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
         added_part = ''
 
         for pi in range(n_points):
-            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'  # noqa: E501
+            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -2129,8 +2129,8 @@ if __name__ == '__main__':
     write_controlDict_file(input_json_path, template_dict_path, case_path)
 
     # Write results to be monitored
-    # write_wind_profiles_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
-    # write_vtk_plane_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_wind_profiles_file(input_json_path, template_dict_path, case_path)
+    # write_vtk_plane_file(input_json_path, template_dict_path, case_path)
     write_base_forces_file(input_json_path, template_dict_path, case_path)
     write_story_forces_file(input_json_path, template_dict_path, case_path)
 
@@ -2146,14 +2146,14 @@ if __name__ == '__main__':
     # Write physicalProperties dict
     write_physicalProperties_file(input_json_path, template_dict_path, case_path)
 
-    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below  # noqa: E501
+    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
     write_transportProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)
 
     # Write DFSRTurb dict
-    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
 
     # Write TInf files
     write_boundary_data_files(input_json_path, case_path)

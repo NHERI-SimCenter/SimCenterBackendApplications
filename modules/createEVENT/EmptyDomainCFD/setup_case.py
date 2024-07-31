@@ -177,8 +177,8 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
         added_part += f'    {refinement_boxes[i][0]}\n'
         added_part += '    {\n'
         added_part += '         type searchableBox;\n'
-        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'  # noqa: E501
-        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'  # noqa: E501
+        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'
+        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'
         added_part += '    }\n'
 
     dict_lines.insert(start_index, added_part)
@@ -198,13 +198,13 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
     dict_lines[start_index] = (
-        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, 'locationInMesh')
     dict_lines[start_index] = (
-        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # Write 'outsidePoint' on Frontera snappyHex will fail without this keyword
@@ -315,7 +315,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     # Initialize the internal fields frow a lower velocity to avoid Courant number
     # instability when the solver starts. Now %10 of roof-height wind speed is set
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)  # noqa: ERA001, E501
+    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)
 
     # Set the internal field to zero to make it easy for the solver to start
     dict_lines[start_index] = 'internalField   uniform (0 0 0);\n'
@@ -506,8 +506,8 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     top_BC_type = boundary_data['topBoundaryCondition']  # noqa: N806
     ground_BC_type = boundary_data['groundBoundaryCondition']  # noqa: N806
 
-    # wind_speed = wind_data['roofHeightWindSpeed']  # noqa: ERA001
-    # building_height = wind_data['buildingHeight']  # noqa: ERA001
+    # wind_speed = wind_data['roofHeightWindSpeed']
+    # building_height = wind_data['buildingHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
@@ -740,7 +740,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     dict_file.close()
 
     # BC and initial condition (you may need to scale to model scale)
-    # k0 = 1.3 #not in model scale  # noqa: ERA001
+    # k0 = 1.3 #not in model scale
 
     I = 0.1  # noqa: N806, E741
     k0 = 1.5 * (I * wind_speed) ** 2
@@ -1029,7 +1029,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     added_part = ''
 
     for i in range(len(pressure_sampling_points)):
-        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'  # noqa: E501
+        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1130,7 +1130,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
         added_part = ''
 
         for pi in range(n_points):
-            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'  # noqa: E501
+            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1497,12 +1497,12 @@ if __name__ == '__main__':
     template_dict_path = sys.argv[2]
     case_path = sys.argv[3]
 
-    # input_json_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD/constant/simCenter/input"  # noqa: ERA001, E501
-    # template_dict_path = "/home/abiy/SimCenter/SourceCode/NHERI-SimCenter/SimCenterBackendApplications/applications/createEVENT/EmptyDomainCFD/templateOF10Dicts"  # noqa: ERA001, E501
-    # case_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD"  # noqa: ERA001
+    # input_json_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD/constant/simCenter/input"
+    # template_dict_path = "/home/abiy/SimCenter/SourceCode/NHERI-SimCenter/SimCenterBackendApplications/applications/createEVENT/EmptyDomainCFD/templateOF10Dicts"
+    # case_path = "/home/abiy/Documents/WE-UQ/LocalWorkDir/EmptyDomainCFD"
 
-    # data_path = os.getcwd()  # noqa: ERA001
-    # script_path = os.path.dirname(os.path.realpath(__file__))  # noqa: ERA001
+    # data_path = os.getcwd()
+    # script_path = os.path.dirname(os.path.realpath(__file__))
 
     # Create case director
     # set up goes here
@@ -1553,14 +1553,14 @@ if __name__ == '__main__':
     # Write physicalProperties dict
     write_physicalProperties_file(input_json_path, template_dict_path, case_path)
 
-    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below  # noqa: E501
+    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
     write_transportProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)
 
     # Write DFSRTurb dict
-    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
 
     # Write TInf files
     write_boundary_data_files(input_json_path, case_path)

@@ -151,12 +151,12 @@ def postProcess(evtName, input_units, f_scale_units):  # noqa: ANN001, ANN201, N
                 f_scale = f_scale_units.get(cur_var)
 
     acc = np.loadtxt('acceleration.out')
-    # os.remove("acceleration.out")  # remove acceleration file to save space  # noqa: ERA001
-    # acc = np.loadtxt("out_tcl/acceleration.out")  # noqa: ERA001
-    # shutil.rmtree("out_tcl")  # remove output files to save space  # noqa: ERA001
-    # KZ, 01/17/2022: I corrected the acc_surf from [:,-2] to [:,-3] (horizontal x direction)  # noqa: E501
+    # os.remove("acceleration.out")  # remove acceleration file to save space
+    # acc = np.loadtxt("out_tcl/acceleration.out")
+    # shutil.rmtree("out_tcl")  # remove output files to save space
+    # KZ, 01/17/2022: I corrected the acc_surf from [:,-2] to [:,-3] (horizontal x direction)
     time = acc[:, 0]
-    # acc_surf = acc[:,-2] / 9.81  # noqa: ERA001
+    # acc_surf = acc[:,-2] / 9.81
     # KZ, 03/07/2022: removed the unit conversion here (did in createGM4BIM)
     acc_surf = acc[:, -3]
     dT = time[1] - time[0]  # noqa: N806
@@ -217,7 +217,13 @@ def postProcess(evtName, input_units, f_scale_units):  # noqa: ANN001, ANN201, N
 
 
 def run_opensees(  # noqa: ANN201, D103, PLR0913
-    BIM_file, EVENT_file, event_path, model_script, model_script_path, ndm, getRV  # noqa: ANN001, N803
+    BIM_file,  # noqa: ANN001, N803
+    EVENT_file,  # noqa: ANN001, N803
+    event_path,  # noqa: ANN001
+    model_script,  # noqa: ANN001
+    model_script_path,  # noqa: ANN001
+    ndm,  # noqa: ANN001
+    getRV,  # noqa: ANN001, N803
 ):
     sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
@@ -231,7 +237,7 @@ def run_opensees(  # noqa: ANN201, D103, PLR0913
     location = BIM_in['GeneralInformation']['location']  # noqa: F841
 
     # convert units if necessary
-    # KZ, 01/17/2022: Vs30 and DepthToRock are not subjected to the model_units for now...  # noqa: E501
+    # KZ, 01/17/2022: Vs30 and DepthToRock are not subjected to the model_units for now...
     """
     if model_units['length'] in ['inch', 'in']:
         model_params['Vs30'] = model_params['Vs30'] * 0.0254
@@ -282,21 +288,21 @@ def run_opensees(  # noqa: ANN201, D103, PLR0913
 
         # FMK
         # update Event file with acceleration recorded at surface
-        # acc = np.loadtxt('accelerationElasAct.out')  # noqa: ERA001
-        # acc_surf_x = acc[:, -3] / gravityG  # noqa: ERA001
-        # EVENT_in_All['Events'][0]['timeSeries'][0]['data'] = acc_surf_x.tolist()  # noqa: ERA001
+        # acc = np.loadtxt('accelerationElasAct.out')
+        # acc_surf_x = acc[:, -3] / gravityG
+        # EVENT_in_All['Events'][0]['timeSeries'][0]['data'] = acc_surf_x.tolist()
         # if int(ndm) == 3:
-        #    acc_surf_z = acc[:, -1] / gravityG  # noqa: ERA001
-        #    EVENT_in_All['Events'][0]['timeSeries'][1]['data'] = acc_surf_z.tolist()  # noqa: ERA001
+        #    acc_surf_z = acc[:, -1] / gravityG
+        #    EVENT_in_All['Events'][0]['timeSeries'][1]['data'] = acc_surf_z.tolist()
 
-        # EVENT_in_All['Events'][0]['location'] = location  # noqa: ERA001
+        # EVENT_in_All['Events'][0]['location'] = location
 
         # EVENT_file2 = 'EVENT2.json' for debug
         # with open(EVENT_file, 'w') as f:
-        #    json.dump(EVENT_in_All, f, indent=2)  # noqa: ERA001
+        #    json.dump(EVENT_in_All, f, indent=2)
 
-        # KZ, 01/17/2022: get unit scaling factor (this is a temporary patch as we assume to have "g"  # noqa: E501
-        # as the output acceleration from the site response analysis- need to discuss with Frank/Pedro/Steve  # noqa: E501
+        # KZ, 01/17/2022: get unit scaling factor (this is a temporary patch as we assume to have "g"
+        # as the output acceleration from the site response analysis- need to discuss with Frank/Pedro/Steve
         # about this...)
         # scale the input data to the event unit used internally
         input_units = {'AccelerationEvent': 'g'}
@@ -323,7 +329,7 @@ def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, 
     except:  # noqa: E722
         f_scale_user = 1.0
 
-    # FMK scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]  # noqa: E501
+    # FMK scale_factor = dict([(evt['fileName'], evt.get('factor',1.0)) for evt in bim_file["Events"]["Events"]])[event_id]
     # KZ: multiply the scale_factor by f_scale_user
     scale_factor = 1.0 * f_scale_user
 
@@ -341,7 +347,7 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
 
     event_file = {'randomVariables': [], 'Events': []}
 
-    # events = bim_data['Events']['Events']  # noqa: ERA001
+    # events = bim_data['Events']['Events']
     events = bim_data['Events'][0]['Events']
 
     if len(events) > 1:
@@ -355,8 +361,8 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
         )
         event_file['Events'].append(
             {
-                #'type': 'Seismic',  # noqa: ERA001
-                #'type': bim_data['Events']['type'],  # noqa: ERA001
+                #'type': 'Seismic',
+                #'type': bim_data['Events']['type'],
                 'type': bim_data['Events'][0]['type'],
                 'event_id': 'RV.eventID',
                 'unitScaleFactor': 1.0,
@@ -365,20 +371,20 @@ def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N80
         )
 
         RV_elements = np.array(events).T[0].tolist()  # noqa: N806
-        # RV_elements = []  # noqa: ERA001
+        # RV_elements = []
         # for event in events:
         #    if event['EventClassification'] == 'Earthquake':
-        #        RV_elements.append(event['fileName'])  # noqa: ERA001
-        #    elif event['EventClassification'] == 'Hurricane':  # noqa: ERA001
-        #        RV_elements.append(event['fileName'])  # noqa: ERA001
-        #    elif event['EventClassification'] == 'Flood':  # noqa: ERA001
-        #        RV_elements.append(event['fileName'])  # noqa: ERA001
+        #        RV_elements.append(event['fileName'])
+        #    elif event['EventClassification'] == 'Hurricane':
+        #        RV_elements.append(event['fileName'])
+        #    elif event['EventClassification'] == 'Flood':
+        #        RV_elements.append(event['fileName'])
 
         event_file['randomVariables'][0]['elements'] = RV_elements
     else:
         event_file['Events'].append(
             {
-                #'type': bim_data['Events']['type'],  # noqa: ERA001
+                #'type': bim_data['Events']['type'],
                 'type': bim_data['Events'][0]['type'],
                 'event_id': events[0]['fileName'],
                 'unitScaleFactor': 1.0,
@@ -462,7 +468,8 @@ def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103, PLR0
         f.write(f'set sElemY({ii + 1:d}) {eleVsize:.3f}\n')
         travelTime += eleVsize / Vs[ii]  # noqa: N806
 
-    averageVs = thickness / travelTime  # time averaged shear wave velocity  # noqa: N806
+    # time averaged shear wave velocity
+    averageVs = thickness / travelTime  # noqa: N806
     naturalFrequency = averageVs / 4 / thickness  # Vs/4H  # noqa: N806
 
     f.write(f'set nElemT {numElems:d}\n')
@@ -512,7 +519,7 @@ def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103, PLR0
             f.write('set h0({:d}) {:.2f}\n'.format(ii + 1, model_params['h0']))
             f.write('set chi({:d}) {:.2f}\n'.format(ii + 1, model_params['chi']))
             f.write(
-                f'set mat({ii + 1:d}) "J2CyclicBoundingSurface {ii + 1:d} $shearG({ii + 1:d}) $bulkK({ii + 1:d}) $su({ii + 1:d}) $rho({ii + 1:d}) $h({ii + 1:d}) $m({ii + 1:d}) $h0({ii + 1:d}) $chi({ii + 1:d}) 0.5"\n\n\n'  # noqa: E501
+                f'set mat({ii + 1:d}) "J2CyclicBoundingSurface {ii + 1:d} $shearG({ii + 1:d}) $bulkK({ii + 1:d}) $su({ii + 1:d}) $rho({ii + 1:d}) $h({ii + 1:d}) $m({ii + 1:d}) $h0({ii + 1:d}) $chi({ii + 1:d}) 0.5"\n\n\n'
             )
     elif model_params['Model'] in 'PIMY':
         # PIMY model
@@ -545,7 +552,7 @@ def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103, PLR0
                 'set chi({:d}) {:.2f}\n'.format(numElems - ii, model_params['chi'])
             )
             f.write(
-                f'set mat({numElems - ii:d}) "PressureIndependMultiYield {numElems - ii:d} 3 $rho({numElems - ii:d}) $shearG({numElems - ii:d}) $bulkK({numElems - ii:d}) $su({numElems - ii:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'  # noqa: E501
+                f'set mat({numElems - ii:d}) "PressureIndependMultiYield {numElems - ii:d} 3 $rho({numElems - ii:d}) $shearG({numElems - ii:d}) $bulkK({numElems - ii:d}) $su({numElems - ii:d}) 0.1 0.0 2116.0 0.0 31"\n\n\n'
             )
     else:
         rhoSoil = model_params['Den']  # noqa: N806
@@ -555,10 +562,10 @@ def build_model(model_params, numEvt):  # noqa: ANN001, ANN201, N803, D103, PLR0
             f.write(f'set shearG({ii + 1:d}) {rhoSoil * Vs[ii] * Vs[ii]:.2f}\n')
             f.write(f'set nu({ii + 1:d}) {poisson:.2f}\n')
             f.write(
-                f'set E({ii + 1:d}) {2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson):.2f}\n\n'  # noqa: E501
+                f'set E({ii + 1:d}) {2 * rhoSoil * Vs[ii] * Vs[ii] * (1 + poisson):.2f}\n\n'
             )
             f.write(
-                f'set mat({ii + 1:d}) "ElasticIsotropic {ii + 1:d} $E({ii + 1:d}) $nu({ii + 1:d}) $rho({ii + 1:d})"\n\n\n'  # noqa: E501
+                f'set mat({ii + 1:d}) "ElasticIsotropic {ii + 1:d} $E({ii + 1:d}) $nu({ii + 1:d}) $rho({ii + 1:d})"\n\n\n'
             )
 
     f.close()
@@ -644,7 +651,7 @@ def SVM(Vs30, depthToRock, VsRock, elementSize):  # noqa: ANN001, ANN201, N802, 
 
 
 if __name__ == '__main__':
-    # SVM(380, 0, 360, 0.5)  # noqa: ERA001
+    # SVM(380, 0, 360, 0.5)
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameEVENT')

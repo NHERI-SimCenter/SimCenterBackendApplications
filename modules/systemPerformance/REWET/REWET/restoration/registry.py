@@ -20,17 +20,17 @@ class Registry:  # noqa: D101
         self.settings = settings
         self.demand_node_name_list = demand_node_name_list
         self.scenario_name = scenario_name
-        # self.EQCoordinates         = (6398403.298, 1899243.660)  # noqa: ERA001
-        # self.proximity_points      = {'WaterSource':[(6435903.606431,1893248.592426),(6441950.711447,1897369.022871),  # noqa: E501
-        # (6424377.955317,1929513.408731),(6467146.075381,1816296.452238),  # noqa: ERA001
-        # (6483259.266246,1803209.907606),(6436359.6420960,1905761.7390040),  # noqa: ERA001
-        # (6492204.110122,1758379.158018),(6464169.549436,1738989.098520),  # noqa: ERA001
-        # (6504097.778564,1875687.031985),(6414434.124,1929805.346),  # noqa: ERA001
+        # self.EQCoordinates         = (6398403.298, 1899243.660)
+        # self.proximity_points      = {'WaterSource':[(6435903.606431,1893248.592426),(6441950.711447,1897369.022871),
+        # (6424377.955317,1929513.408731),(6467146.075381,1816296.452238),
+        # (6483259.266246,1803209.907606),(6436359.6420960,1905761.7390040),
+        # (6492204.110122,1758379.158018),(6464169.549436,1738989.098520),
+        # (6504097.778564,1875687.031985),(6414434.124,1929805.346),
         # (6412947.370,1936851.950)]}
-        self._pipe_break_node_coupling = {}  # for broken points that each has two nodes  # noqa: E501
-        self._break_point_attached_to_mainPipe = []  # for broken points to show which node is attached to the main point. For easier and faster coding in removals of damage  # noqa: E501
-        # self._occupancy = pd.Series() # for agent occupency  # noqa: ERA001
-        # self._pipe_RepairAgentNameRegistry=[] # MAYBE NOT NEEDED for agent occupency  # noqa: ERA001, E501
+        self._pipe_break_node_coupling = {}  # for broken points that each has two nodes
+        self._break_point_attached_to_mainPipe = []  # for broken points to show which node is attached to the main point. For easier and faster coding in removals of damage
+        # self._occupancy = pd.Series() # for agent occupency
+        # self._pipe_RepairAgentNameRegistry=[] # MAYBE NOT NEEDED for agent occupency
         self._tank_damage_table = pd.DataFrame(columns=['damage_type'])
         self._reservoir_damage_table = pd.DataFrame(columns=['damage_type'])
         self._pump_damage_table = pd.DataFrame(
@@ -70,8 +70,8 @@ class Registry:  # noqa: D101
         self.explicit_leak_node = {}
         self.demand_node_name_list = []
         self.all_node_name_list = WaterNetwork.node_name_list.copy()
-        # self.demand_node_users         = pd.Series()  # noqa: ERA001
-        # self.minimum_time_devision     = 60*60  # noqa: ERA001
+        # self.demand_node_users         = pd.Series()
+        # self.minimum_time_devision     = 60*60
         self.nodal_equavalant_diameter = None
         self.original_pipe_data = {}
         self.result = None
@@ -93,7 +93,7 @@ class Registry:  # noqa: D101
                 self.demand_node_name_list.append(node_name)
 
         # for demand_node_name in self.demand_node_name_list:
-        # self.demand_node_users.loc[demand_node_name]=1  # noqa: ERA001
+        # self.demand_node_users.loc[demand_node_name]=1
 
         for node_name, node in WaterNetwork.nodes():
             self.all_node_table.loc[node_name, 'X_COORD'] = node.coordinates[0]
@@ -105,7 +105,7 @@ class Registry:  # noqa: D101
                 link.end_node_name,
             )
 
-        # self._restoration_table  = pd.DataFrame(columns = ['node_name','function', 'element_name', 'element_type', 'in_function_index'])  # noqa: ERA001, E501
+        # self._restoration_table  = pd.DataFrame(columns = ['node_name','function', 'element_name', 'element_type', 'in_function_index'])
         self._restoration_table = pd.DataFrame(
             columns=['node_name', 'function', 'record_index']
         )
@@ -127,16 +127,16 @@ class Registry:  # noqa: D101
             }
 
     # =============================================================================
-    #     def addElementToRestorationRegistry(self, damaged_node_name, function_name, element_name, elemenet_type, in_function_index):  # noqa: E501
-    #         data = self.__restoration_table  # noqa: ERA001
-    #         selected_data = data[(data[['node_name', 'element_name', 'element_type']]==[damaged_node_name,element_name,elemenet_type]).all(1))]  # noqa: E501
+    #     def addElementToRestorationRegistry(self, damaged_node_name, function_name, element_name, elemenet_type, in_function_index):
+    #         data = self.__restoration_table
+    #         selected_data = data[(data[['node_name', 'element_name', 'element_type']]==[damaged_node_name,element_name,elemenet_type]).all(1))]
     #
     #         if len(selected_data)>1:
-    #             raise ValueError('There are data in restroation regustry. Damaged node name: '+damaged_node_name)  # noqa: ERA001, E501
+    #             raise ValueError('There are data in restroation regustry. Damaged node name: '+damaged_node_name)
     #
     #
-    #         temp = pd.Series(data=[damaged_node_name, function_name, element_name, elemenet_type, in_function_index], index=['node_name','function', 'element_name', 'element_type', 'in_function_index'])  # noqa: ERA001, E501
-    #         self._restoration_table = self._restoration_table.append(temp, ignore_index=True)  # noqa: ERA001, E501
+    #         temp = pd.Series(data=[damaged_node_name, function_name, element_name, elemenet_type, in_function_index], index=['node_name','function', 'element_name', 'element_type', 'in_function_index'])
+    #         self._restoration_table = self._restoration_table.append(temp, ignore_index=True)
     # =============================================================================
 
     def addRestorationDataOnPipe(self, damage_node_name, time, state):  # noqa: ANN001, ANN201, N802, D102
@@ -202,7 +202,12 @@ class Registry:  # noqa: D101
             return False
 
     def addLongJob(  # noqa: ANN201, N802, D102
-        self, damaged_node_name, action, entity, job_gross_time, agent_name  # noqa: ANN001
+        self,
+        damaged_node_name,  # noqa: ANN001
+        action,  # noqa: ANN001
+        entity,  # noqa: ANN001
+        job_gross_time,  # noqa: ANN001
+        agent_name,  # noqa: ANN001
     ):
         data = self._long_task_data
         temp = data[['Node_name', 'Action', 'Entity', 'Time', 'cur_agent_name']] == [
@@ -222,8 +227,8 @@ class Registry:  # noqa: D101
                 + ','
                 + entity
             )
-        # elif temp['cur_agent_name'].iloc[0]!=None:  # noqa: ERA001
-        # raise ValueError('There is one agent: '+temp['cur_agent_name'].iloc[0]+' assigned to long job: '+damaged_node_name+','+action+','+entity)  # noqa: ERA001, E501
+        # elif temp['cur_agent_name'].iloc[0]!=None:
+        # raise ValueError('There is one agent: '+temp['cur_agent_name'].iloc[0]+' assigned to long job: '+damaged_node_name+','+action+','+entity)
 
         temp = pd.Series(
             index=['Node_name', 'Action', 'Entity', 'Time', 'cur_agent_name'],
@@ -232,7 +237,11 @@ class Registry:  # noqa: D101
         self._long_task_data = data.append(temp, ignore_index=True)
 
     def assignAgenttoLongJob(  # noqa: ANN201, N802, D102
-        self, damaged_node_name, action, entity, choosed_agent_name  # noqa: ANN001
+        self,
+        damaged_node_name,  # noqa: ANN001
+        action,  # noqa: ANN001
+        entity,  # noqa: ANN001
+        choosed_agent_name,  # noqa: ANN001
     ):
         data = self._long_task_data
         temp = data[['Node_name', 'Action', 'Entity']] == [
@@ -408,7 +417,10 @@ class Registry:  # noqa: D101
         self._long_task_data.drop(ind, inplace=True)  # noqa: PD002
 
     def addFunctionDataToRestorationRegistry(  # noqa: ANN201, N802, D102
-        self, damaged_node_name, history, function_name  # noqa: ANN001
+        self,
+        damaged_node_name,  # noqa: ANN001
+        history,  # noqa: ANN001
+        function_name,  # noqa: ANN001
     ):
         data = self._restoration_table
         selected_data = data[
@@ -484,10 +496,10 @@ class Registry:  # noqa: D101
                 raise ValueError(repr(node_name) + ' is not in the node table')
         self._node_damage_table.loc[node_name, 'Demand1'] = demand1
         self._node_damage_table.loc[node_name, 'Demand2'] = demand2
-        # else:  # noqa: ERA001
-        # node_name_vir = get_node_name(node_name, self._node_damage_table)  # noqa: ERA001
-        # self._node_damage_table.loc[node_name_vir, 'Demand1'] = demand1  # noqa: ERA001
-        # self._node_damage_table.loc[node_name_vir, 'Demand2'] = demand2  # noqa: ERA001
+        # else:
+        # node_name_vir = get_node_name(node_name, self._node_damage_table)
+        # self._node_damage_table.loc[node_name_vir, 'Demand1'] = demand1
+        # self._node_damage_table.loc[node_name_vir, 'Demand2'] = demand2
 
     def addPipeDamageToRegistry(self, node_name, data):  # noqa: ANN001, ANN201, N802
         """Adds damage to pipe registry
@@ -504,7 +516,7 @@ class Registry:  # noqa: D101
         None.
 
         """  # noqa: D400, D401, D415
-        # self._pipe_node_damage_status[name] = data  # noqa: ERA001
+        # self._pipe_node_damage_status[name] = data
 
         leaking_pipe_with_pipeA_orginal_pipe = self._pipe_leak_history[  # noqa: N806
             self._pipe_leak_history.loc[:, 'Pipe_A'] == data['orginal_pipe']
@@ -518,7 +530,7 @@ class Registry:  # noqa: D101
 
         if i_leak_not_zero_length and i_break_not_zero_length:
             raise ValueError(  # noqa: TRY003
-                'There are more than 1 damage with orginal pipe name in pipe A. it does not make sense'  # noqa: EM101, E501
+                'There are more than 1 damage with orginal pipe name in pipe A. it does not make sense'  # noqa: EM101
             )
         if i_leak_not_zero_length:
             temp_node_name = leaking_pipe_with_pipeA_orginal_pipe.index[0]
@@ -618,7 +630,10 @@ class Registry:  # noqa: D101
         return original_element_list
 
     def getDamagedLocationListByOriginalElementList(  # noqa: ANN201, N802, D102
-        self, element_type, orginal_element_list, iCheck=False  # noqa: ANN001, FBT002, N803
+        self,
+        element_type,  # noqa: ANN001
+        orginal_element_list,  # noqa: ANN001
+        iCheck=False,  # noqa: ANN001, FBT002, N803
     ):
         res = pd.Series()
 
@@ -646,8 +661,8 @@ class Registry:  # noqa: D101
             # if len(temp)!=1:
             if len(temp) != 0:
                 res = res.append(temp)
-            # elif len(temp)>1:  # noqa: ERA001
-            # raise ValueError('Something wrong here')  # noqa: ERA001
+            # elif len(temp)>1:
+            # raise ValueError('Something wrong here')
             elif iCheck:
                 raise ValueError(
                     'The element: '
@@ -659,7 +674,10 @@ class Registry:  # noqa: D101
         return res
 
     def getDamagedLocationListByOriginalElementList_2(  # noqa: ANN201, N802, D102
-        self, element_type, orginal_element_list, iCheck=False  # noqa: ANN001, FBT002, N803
+        self,
+        element_type,  # noqa: ANN001
+        orginal_element_list,  # noqa: ANN001
+        iCheck=False,  # noqa: ANN001, FBT002, N803
     ):
         if element_type == 'PIPE':
             all_original_element_list = self._pipe_damage_table['Orginal_element']
@@ -725,7 +743,7 @@ class Registry:  # noqa: D101
             if pipe_B not in pipe_name_list:
                 pipe_name_list.append(pipe_B)
 
-        # orginal_pipe = self._pipe_break_history.loc[damage_node_name, 'Orginal_pipe']  # noqa: ERA001, E501
+        # orginal_pipe = self._pipe_break_history.loc[damage_node_name, 'Orginal_pipe']
         refined_data = self._pipe_break_history[
             self._pipe_break_history['Orginal_pipe'] == orginal_pipe
         ]
@@ -791,7 +809,7 @@ class Registry:  # noqa: D101
             if pipe_B not in pipe_name_list:
                 pipe_name_list.append(pipe_B)
 
-        # orginal_pipe = self._pipe_break_history.loc[damage_node_name, 'Orginal_pipe']  # noqa: ERA001, E501
+        # orginal_pipe = self._pipe_break_history.loc[damage_node_name, 'Orginal_pipe']
         refined_data = self._pipe_break_history[
             self._pipe_break_history['Orginal_pipe'] == orginal_pipe
         ]
@@ -1266,7 +1284,7 @@ class Registry:  # noqa: D101
         if occupier_name in self._occupancy:
             # if not iNodeCoupled(node_name):
             raise ValueError(  # noqa: TRY003
-                'Occupier name already in the list. Forget to remove another occupancy or double adding?'  # noqa: EM101, E501
+                'Occupier name already in the list. Forget to remove another occupancy or double adding?'  # noqa: EM101
             )
         self._occupancy = self._occupancy.append(
             pd.Series(data=occupier_name, index=[node_name])
@@ -1435,7 +1453,7 @@ class Registry:  # noqa: D101
             break_point_name
         )
         self._pipe_break_node_coupling.pop(other_coupled_break_point)
-        # self._break_node_coupling.pop(break_point_name)  # noqa: ERA001
+        # self._break_node_coupling.pop(break_point_name)
 
         i_in_list = break_point_name in self._break_point_attached_to_mainPipe
         if i_in_list:

@@ -142,7 +142,7 @@ class ERARosen:
             self.Layers = layers
         else:
             raise RuntimeError(  # noqa: TRY003
-                'The defined joint distribution consists only of independent distributions.'  # noqa: EM101, E501
+                'The defined joint distribution consists only of independent distributions.'  # noqa: EM101
                 'This type of joint distribution is not supported by ERARosen.'
             )
 
@@ -168,15 +168,15 @@ class ERARosen:
                 'poisson',
             ]:
                 raise RuntimeError(  # noqa: TRY003
-                    'At least one of the marginal distributions or conditional distributions '  # noqa: EM101, E501
-                    'is a discrete distribution, the transformation X2U is therefore not possible.'  # noqa: E501
+                    'At least one of the marginal distributions or conditional distributions '  # noqa: EM101
+                    'is a discrete distribution, the transformation X2U is therefore not possible.'
                 )
 
         # check of the dimensions of input X
         if X.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003
@@ -223,7 +223,7 @@ class ERARosen:
         if U.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('U must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(U)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003
@@ -268,7 +268,7 @@ class ERARosen:
         if X.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003

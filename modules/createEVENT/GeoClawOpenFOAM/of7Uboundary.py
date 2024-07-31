@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -124,7 +124,7 @@ class of7Uboundary:  # noqa: N801
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolVectorField;\n\tlocation\t"0";\n\tobject\tU;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         header = header + 'dimensions\t[0 1 -1 0 0 0 0];\n\n'
         header = header + 'internalField\tuniform (0 0 0);\n\n'
@@ -288,7 +288,7 @@ FoamFile
             Utext = Utext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806
 
         elif int(Utype) == 202:  # noqa: PLR2004
-            # Outlet: inletOutlet  # noqa: ERA001
+            # Outlet: inletOutlet
             # Get the velocity values
             velo = hydroutil.extract_element_from_json(
                 data, ['Events', 'Velocity_' + patchname]
@@ -335,12 +335,12 @@ FoamFile
             Utext = Utext + '\t}\n'  # noqa: N806
 
         elif int(Utype) == 301:  # noqa: PLR2004
-            # Wall: noSlip  # noqa: ERA001
+            # Wall: noSlip
             Utext = '\t{\n\t\t'  # noqa: N806
             Utext = Utext + 'type\tnoSlip;\n\t}\n'  # noqa: N806
 
         else:
-            # Default: Empty  # noqa: ERA001
+            # Default: Empty
             Utext = '\t{\n\t\t'  # noqa: N806
             Utext = Utext + 'type\tempty;\n\t}\n'  # noqa: N806
 

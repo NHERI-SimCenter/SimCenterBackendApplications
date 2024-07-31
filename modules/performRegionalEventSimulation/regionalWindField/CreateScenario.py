@@ -61,7 +61,9 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         try:
             track_file = scenario_info['Storm'].get('Track')
             df = pd.read_csv(  # noqa: PD901
-                os.path.join(data_dir, track_file), header=None, index_col=None  # noqa: PTH118
+                os.path.join(data_dir, track_file),  # noqa: PTH118
+                header=None,
+                index_col=None,
             )
             track = {
                 'Latitude': df.iloc[:, 0].values.tolist(),  # noqa: PD011
@@ -69,13 +71,15 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             }
         except:  # noqa: E722
             print(  # noqa: T201
-                'CreateScenario: error - no storm track provided or file format not accepted.'  # noqa: E501
+                'CreateScenario: error - no storm track provided or file format not accepted.'
             )
         # Save Lat_w.csv
         track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
         if track_simu_file:
             df = pd.read_csv(  # noqa: PD901
-                os.path.join(data_dir, track_simu_file), header=None, index_col=None  # noqa: PTH118
+                os.path.join(data_dir, track_simu_file),  # noqa: PTH118
+                header=None,
+                index_col=None,
             )
             track_simu = df.iloc[:, 0].values.tolist()  # noqa: PD011
         else:
@@ -99,7 +103,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         except:  # noqa: E722
             print('CreateScenario: please provide all needed landfall properties.')  # noqa: T201
         # Monte-Carlo
-        # del_par = [0, 0, 0] # default  # noqa: ERA001
+        # del_par = [0, 0, 0] # default
         # Parsing mesh configurations
         mesh_info = [1000.0, scenario_info['Mesh']['DivRad'], 1000000.0]
         mesh_info.extend([0.0, scenario_info['Mesh']['DivDeg'], 360.0])
@@ -122,7 +126,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
                     }
                 }
             )
-        # return  # noqa: ERA001
+        # return
         return scenario_data
 
     # Using the properties of a historical storm to do simulation
@@ -168,10 +172,10 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         for x in df_chs[('USA_LON', 'degrees_east')].values.tolist():  # noqa: PD011
             if x != ' ':
                 track_lon.append(float(x))  # noqa: PERF401
-        # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON  # noqa: E501
+        # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
         if len(track_lat) == 0:
             print(  # noqa: T201
-                'CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.'  # noqa: E501
+                'CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.'
             )
             for x in df_chs[('LAT', 'degrees_north')].values.tolist():  # noqa: PD011
                 if x != ' ':
@@ -201,7 +205,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             return 1
         if 0 not in dist2land:
             print(  # noqa: T201
-                'CreateScenario: warning - no landing fall is found, using the closest location.'  # noqa: E501
+                'CreateScenario: warning - no landing fall is found, using the closest location.'
             )
             tmploc = dist2land.index(min(dist2land))
         else:
@@ -220,23 +224,23 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
                 track_simu = df.iloc[:, 0].values.tolist()  # noqa: PD011
             except:  # noqa: E722
                 print(  # noqa: T201
-                    'CreateScenario: warning - TrackSimu file not found, using the full track.'  # noqa: E501
+                    'CreateScenario: warning - TrackSimu file not found, using the full track.'
                 )
                 track_simu = track_lat
         else:
             print(  # noqa: T201
-                'CreateScenario: warning - no truncation defined, using the full track.'  # noqa: E501
+                'CreateScenario: warning - no truncation defined, using the full track.'
             )
-            # tmp = track_lat  # noqa: ERA001
-            # track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]  # noqa: ERA001
-            # print(track_simu)  # noqa: ERA001
+            # tmp = track_lat
+            # track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
+            # print(track_simu)
             track_simu = track_lat
         # Reading data
         try:
             landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
             landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])
         except:  # noqa: E722
-            # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON  # noqa: E501
+            # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
             landfall_lat = float(df_chs[('LAT', 'degrees_north')].iloc[tmploc])
             landfall_lon = float(df_chs[('LON', 'degrees_east')].iloc[tmploc])
         try:
@@ -245,14 +249,17 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             print('CreateScenario: error - no landing angle is found.')  # noqa: T201
         if landfall_ang > 180.0:  # noqa: PLR2004
             landfall_ang = landfall_ang - 360.0
-        landfall_prs = 1013.0 - np.min(
-            [
-                float(x)
-                for x in df_chs[('USA_PRES', 'mb')]  # noqa: PD011
-                .iloc[tmploc - 5 :]
-                .values.tolist()
-                if x != ' '
-            ]
+        landfall_prs = (
+            1013.0
+            - np.min(
+                [
+                    float(x)
+                    for x in df_chs[('USA_PRES', 'mb')]  # noqa: PD011
+                    .iloc[tmploc - 5 :]
+                    .values.tolist()
+                    if x != ' '
+                ]
+            )
         )
         landfall_spd = (
             float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444
@@ -265,14 +272,14 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             # No available radius of maximum wind is found
             print('CreateScenario: warning - swithcing to REUNION_RMW.')  # noqa: T201
             try:
-                # If the default option (USA_RMW) is not available, swithcing to REUNION_RMW  # noqa: E501
+                # If the default option (USA_RMW) is not available, swithcing to REUNION_RMW
                 landfall_rad = (
                     float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934
                 )  # convert nmile to km
             except:  # noqa: E722
                 # No available radius of maximum wind is found
                 print(  # noqa: T201
-                    'CreateScenario: warning - no available radius of maximum wind is found, using a default 50 km.'  # noqa: E501
+                    'CreateScenario: warning - no available radius of maximum wind is found, using a default 50 km.'
                 )
                 landfall_rad = 50
         param = []
@@ -283,7 +290,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         param.append(landfall_spd)
         param.append(landfall_rad)
         # Monte-Carlo
-        # del_par = [0, 0, 0] # default  # noqa: ERA001
+        # del_par = [0, 0, 0] # default
         # Parsing mesh configurations
         mesh_info = [1000.0, scenario_info['Mesh']['DivRad'], 1000000.0]
         mesh_info.extend([0.0, scenario_info['Mesh']['DivDeg'], 360.0])
@@ -306,7 +313,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
                     }
                 }
             )
-        # return  # noqa: ERA001
+        # return
         return scenario_data
 
     else:

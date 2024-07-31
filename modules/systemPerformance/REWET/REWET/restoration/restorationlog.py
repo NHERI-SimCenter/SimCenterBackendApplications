@@ -167,12 +167,12 @@ class RestorationLog:  # noqa: D101
 
 # =============================================================================
 #     def getAgentActioLogBookat(self, time, end_time=True):
-#         res=None  # noqa: ERA001
+#         res=None
 #
 #         if end_time==True:
-#             res=self._agent_action_log_book[self._agent_action_log_book['Modified_end_time']==time]  # noqa: ERA001, E501
-#         else:  # noqa: ERA001
-#             res=self._agent_action_log_book[self._agent_action_log_book['Time']==time]  # noqa: ERA001, E501
+#             res=self._agent_action_log_book[self._agent_action_log_book['Modified_end_time']==time]
+#         else:
+#             res=self._agent_action_log_book[self._agent_action_log_book['Time']==time]
 #
-#         return res  # noqa: ERA001
+#         return res
 # =============================================================================

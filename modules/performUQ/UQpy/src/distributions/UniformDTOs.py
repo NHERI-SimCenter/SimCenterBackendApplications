@@ -22,7 +22,7 @@ class UniformParameters(RVCommonData):  # noqa: D101
     def upper_bound_not_bigger_than_lower_bound(v, values):  # noqa: ANN001, ANN201, N805, D102
         if 'lowerbound' in values and v <= values['lowerbound']:
             raise ValueError(  # noqa: TRY003
-                f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}."  # noqa: EM102, E501
+                f"The upper bound must be bigger than the lower bound {values['lowerbound']}. Got a value of {v}."  # noqa: EM102
             )
         return v
 
@@ -36,7 +36,7 @@ class UniformParameters(RVCommonData):  # noqa: D101
         import_statement_2 = 'from UQpy.distributions import JointIndependent \n'
         scipy_inputs = self._to_scipy()
         input_str = self.name
-        initializer = f"{self.name} = {class_name}(loc={scipy_inputs['loc']}, scale={scipy_inputs['scale']})"  # noqa: E501
+        initializer = f"{self.name} = {class_name}(loc={scipy_inputs['loc']}, scale={scipy_inputs['scale']})"
         prerequisite_str = import_statement + import_statement_2 + initializer
         return prerequisite_str, input_str
 

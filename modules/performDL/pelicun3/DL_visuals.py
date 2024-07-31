@@ -54,7 +54,7 @@ from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.stats import norm
 
-# start_time = time.time()  # noqa: ERA001
+# start_time = time.time()
 
 
 def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
@@ -65,7 +65,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
         shutil.rmtree(output_path)
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    # frag_df = convert_to_MultiIndex(pd.read_csv(resource_dir + '/' + frag_DB_file, index_col=0), axis=1)  # noqa: ERA001, E501
+    # frag_df = convert_to_MultiIndex(pd.read_csv(resource_dir + '/' + frag_DB_file, index_col=0), axis=1)
     frag_df = convert_to_MultiIndex(pd.read_csv(comp_db_path, index_col=0), axis=1)
 
     comp_db_meta = comp_db_path[:-3] + 'json'
@@ -89,7 +89,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
                 comp_meta = None
         else:
             comp_meta = None
-        # print(json.dumps(comp_meta, indent=2))  # noqa: ERA001
+        # print(json.dumps(comp_meta, indent=2))
 
         fig = go.Figure()
         fig = make_subplots(
@@ -313,7 +313,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
                             ds_repair = ''
 
                         if ds_repair != '':
-                            ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
+                            ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                         else:
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
@@ -357,7 +357,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
                         ds_repair = ''
 
                     if ds_repair != '':
-                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
+                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                     else:
                         ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
@@ -398,7 +398,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
         )
 
         fig.update_layout(
-            # title = f'{comp_id}',  # noqa: ERA001
+            # title = f'{comp_id}',
             margin=dict(b=5, r=5, l=5, t=5),  # noqa: C408
             height=300,
             width=950,
@@ -429,7 +429,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, 
 
 
 def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
-    # TODO:  # noqa: FIX002, TD002, TD003, TD005
+    # TODO:  # noqa: FIX002, TD002, TD003
     # change limit_states names
 
     if create_zip == '1':
@@ -837,7 +837,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN
                             vals.split(',') for vals in mu_capacity.split('|')
                         )
 
-                        func_text = f'<b>Multilinear Function Breakpoints</b><br>Medians: {", ".join(c_vals)}<br>Quantities: {", ".join(q_vals)}'  # noqa: E501
+                        func_text = f'<b>Multilinear Function Breakpoints</b><br>Medians: {", ".join(c_vals)}<br>Quantities: {", ".join(q_vals)}'
 
                         fig.add_annotation(
                             text='<b>*</b>',
@@ -875,7 +875,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN
                             ds_repair = ''
 
                         if ds_repair != '':
-                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
+                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
                         else:
                             ds_text = (
                                 f'<b>{model_params[0][ds_i]}</b><br>{ds_description}'
@@ -1025,7 +1025,7 @@ def check_diff(comp_db_path, output_path):  # noqa: ANN001, ANN201, D103
                         old_file = f2.readlines()
 
                         # compare every line in the new file with the old file
-                        # if every line exists in the old file, continue with the next file  # noqa: E501
+                        # if every line exists in the old file, continue with the next file
                         if new_file == old_file:
                             continue
 
@@ -1090,10 +1090,10 @@ def main(args):  # noqa: ANN001, ANN201, D103
         if args.comp_db_path == 'default_db':
             print(pelicun_path)  # noqa: T201
 
-    # print("--- %s seconds ---" % (time.time() - start_time))  # noqa: ERA001
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
 
-# python3 DL_visuals.py repair /Users/adamzs/SimCenter/applications/performDL/pelicun3/pelicun/resources/SimCenterDBDL/loss_repair_DB_FEMA_P58_2nd.csv  # noqa: E501
+# python3 DL_visuals.py repair /Users/adamzs/SimCenter/applications/performDL/pelicun3/pelicun/resources/SimCenterDBDL/loss_repair_DB_FEMA_P58_2nd.csv
 
 if __name__ == '__main__':
     main(sys.argv[1:])

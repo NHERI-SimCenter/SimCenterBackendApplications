@@ -1,6 +1,6 @@
 #!/usr/bin/env python3  # noqa: EXE001
 
-"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: E501, D400, D415
+"""Compute inline/total hydrodynamic force and moments on a monopile using Morison's equation"""  # noqa: D400, D415
 
 import argparse
 from fractions import Fraction
@@ -35,7 +35,7 @@ nz = 30  # number of points used in the z direction to compute loads
 z_ref = -h  # reference point for moment calculation
 
 # --------------------------------------------------------------------------------}
-# --- Inline force and moments as function of time, with or without Wheeler stretching  # noqa: E501
+# --- Inline force and moments as function of time, with or without Wheeler stretching
 # --------------------------------------------------------------------------------{
 time = np.linspace(0, T, 9)
 
@@ -111,8 +111,8 @@ axes1[1, 2].set_xlabel('Inline force [kN/m]')
 axes1[1, 3].set_xlabel('Inline force [kN/m]')
 
 fig1.savefig('forces.png')
-# fig1.savefig('forces.webp')  # noqa: ERA001
-# fig1.show()  # noqa: ERA001
+# fig1.savefig('forces.webp')
+# fig1.show()
 
 axes2[0, 0].set_xlim(XLIMM)
 axes2[0, 0].set_ylim([-h, a + 1])
@@ -124,8 +124,8 @@ axes2[1, 2].set_xlabel('Inline moment [kNm/m]')
 axes2[1, 3].set_xlabel('Inline moment [kNm/m]')
 
 fig2.savefig('moments.png')
-# fig2.savefig('moments.webp')  # noqa: ERA001
-# fig2.show()  # noqa: ERA001
+# fig2.savefig('moments.webp')
+# fig2.show()
 # --------------------------------------------------------------------------------}
 # --- Integrated force and sea bed moment over a period
 # --------------------------------------------------------------------------------{
@@ -140,7 +140,7 @@ vM0 = np.zeros(time.shape)  # noqa: N816
 XLIM = [-75, 75]  # For inline force
 XLIMM = [-2500, 2500]  # For inline moment
 
-# a=6 # NOTE: increased amplitude here to see Effect of Wheeler  # noqa: ERA001
+# a=6 # NOTE: increased amplitude here to see Effect of Wheeler
 elevation = np.zeros((len(time), nz))
 velocity = np.zeros((len(time), nz))
 accel = np.zeros((len(time), nz))
@@ -171,17 +171,17 @@ fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6.4, 4.8))  # (6.4,4.8)
 fig.subplots_adjust(
     left=0.12, right=0.95, top=0.95, bottom=0.11, hspace=0.14, wspace=0.20
 )
-# axes[0] = axes[0]  # noqa: ERA001
+# axes[0] = axes[0]
 axes[0].plot(time / T, veta, 'k-')
 axes[0].set_ylabel('Elevation [m]')
 axes[0].grid(True)  # noqa: FBT003
-# axes[1] = axes[1]  # noqa: ERA001
+# axes[1] = axes[1]
 axes[1].plot(time / T, vF0 / 1e6, label='Standard')
 axes[1].plot(time / T, vF / 1e6, 'k-', label='Wheeler Correction')
 axes[1].set_ylabel('Streamwise Load, Cumulative [MN]')
 axes[1].legend()
 axes[1].grid(True)  # noqa: FBT003
-# axes[2] = axes[2]  # noqa: ERA001
+# axes[2] = axes[2]
 axes[2].plot(time / T, vM0 / 1e6, label='Standard')
 axes[2].plot(time / T, vM / 1e6, 'k-', label='Wheeler Correction')
 axes[2].set_ylabel('Sea-Bed Moment [MNm]')
@@ -189,10 +189,10 @@ axes[2].set_xlabel('Dimensionless Time, t/T [-]')
 axes[2].legend()
 axes[2].grid(True)  # noqa: FBT003
 
-# fig.savefig('IntegratedPileLoads.png')  # noqa: ERA001
-# fig.savefig('IntegratedPileLoads.webp')  # noqa: ERA001
+# fig.savefig('IntegratedPileLoads.png')
+# fig.savefig('IntegratedPileLoads.webp')
 fig.savefig('IntegratedPileLoads.png')
-# fig.show()  # noqa: ERA001
+# fig.show()
 
 # now save csv of the velocity, acceleration, force, and moment
 veta_df = pd.DataFrame()
@@ -207,20 +207,20 @@ for i in range(nz):
     name = 'RMSA_' + str(i + 1) + '_' + str(dof)
     du_df[name] = accel[:, i]
 
-    # transpose the dataframe so one recorder occupies a row, not a column (which are timesteps)  # noqa: E501
-    # veta_df = veta_df.T  # noqa: ERA001
-    # u_df = u_df.T  # noqa: ERA001
-    # du_df = du_df.T  # noqa: ERA001
+    # transpose the dataframe so one recorder occupies a row, not a column (which are timesteps)
+    # veta_df = veta_df.T
+    # u_df = u_df.T
+    # du_df = du_df.T
 
 # add column per each force recorder
 result_df = pd.DataFrame()
 for i in range(nz):
     dof = 1
-    # name = 'Node_' + str(i+1) + '_' + str(dof)  # noqa: ERA001
+    # name = 'Node_' + str(i+1) + '_' + str(dof)
     name = 'Force_' + str(i + 1) + '_' + str(dof)
     result_df[name] = force[:, i]
     # transpose the dataframe
-    # result_df = result_df.T  # noqa: ERA001
+    # result_df = result_df.T
 
     # make sure there are no headers or indices
 
@@ -245,10 +245,10 @@ for i in range(nz):
     'node.out', sep=' ', encoding='utf-8', index=False, header=False
 )
 
-# make results.out dataframe with 3 columns and one row, no header. Each element is separated by a space  # noqa: E501
+# make results.out dataframe with 3 columns and one row, no header. Each element is separated by a space
 
-# results_df = pd.DataFrame({'total_impulse':vF[-1], 'max_force':vM[-1], 'total_disp':vF0[-1]}, index=[0])  # noqa: ERA001, E501
-# results_df.to_csv('results.out', sep=' ', encoding='utf-8', header=False, index=False)  # noqa: ERA001, E501
+# results_df = pd.DataFrame({'total_impulse':vF[-1], 'max_force':vM[-1], 'total_disp':vF0[-1]}, index=[0])
+# results_df.to_csv('results.out', sep=' ', encoding='utf-8', header=False, index=False)
 
 
 def main(df=None):  # noqa: ANN001, ANN201, D103
@@ -257,7 +257,7 @@ def main(df=None):  # noqa: ANN001, ANN201, D103
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Compute inline/total hydrodynamic force and moments on a monopile using Morisons equation'  # noqa: E501
+        description='Compute inline/total hydrodynamic force and moments on a monopile using Morisons equation'
     )
 
     parser.add_argument(
@@ -297,37 +297,37 @@ if __name__ == '__main__':
 
     arguments, unknowns = parser.parse_known_args()
 
-    # hw = arguments.water_depth  # noqa: ERA001
-    # Tp = arguments.peak_period  # noqa: ERA001
-    # Hs = arguments.significant_wave_height  # noqa: ERA001
-    # # D  = arguments.pile_diameter  # noqa: ERA001
-    # # CD = arguments.drag_coefficient  # noqa: ERA001
-    # # CM = arguments.mass_coefficient  # noqa: ERA001
-    # nz = arguments.number_of_recorders_z  # noqa: ERA001
-    # t  = arguments.time  # noqa: ERA001
+    # hw = arguments.water_depth
+    # Tp = arguments.peak_period
+    # Hs = arguments.significant_wave_height
+    # # D  = arguments.pile_diameter
+    # # CD = arguments.drag_coefficient
+    # # CM = arguments.mass_coefficient
+    # nz = arguments.number_of_recorders_z
+    # t  = arguments.time
 
     # # --- Derived parameters
-    # h = hw  # noqa: ERA001
-    # # T = Tp  # noqa: ERA001
-    # f  = 1./T  # noqa: ERA001
-    # g  = 9.81  # noqa: ERA001
-    # k  = wavenumber(f, h, g)  # noqa: ERA001
-    # a  = Hs  # noqa: ERA001
-    # z_ref = -h # reference point for moment calculation  # noqa: ERA001
-    # eps = 0   # phase shift [rad]  # noqa: ERA001
-    # rho = 1000 # water density  # noqa: ERA001
+    # h = hw
+    # # T = Tp
+    # f  = 1./T
+    # g  = 9.81
+    # k  = wavenumber(f, h, g)
+    # a  = Hs
+    # z_ref = -h # reference point for moment calculation
+    # eps = 0   # phase shift [rad]
+    # rho = 1000 # water density
 
     # --- Wave kinematics
 
-    # fig.show()  # noqa: ERA001
+    # fig.show()
 
-    # --------------------------------------------------------------------------------}  # noqa: E501
+    # --------------------------------------------------------------------------------}
 
-    # plt.suptitle('Hydro - Morison loads on monopile')  # noqa: ERA001
+    # plt.suptitle('Hydro - Morison loads on monopile')
 
-    # plt.savefig('MorisonLoads.png')  # noqa: ERA001
+    # plt.savefig('MorisonLoads.png')
 
-    # plt.show()  # noqa: ERA001
+    # plt.show()
     print('End of __main__ in Ex4_WaveLoads.py')  # noqa: T201
     main()
 
@@ -336,9 +336,9 @@ if __name__ == '__test__':
     pass
 
 if __name__ == '__export__':
-    # plt.close(fig1)  # noqa: ERA001
-    # plt.close(fig2)  # noqa: ERA001
-    # plt.close(fig)  # noqa: ERA001
+    # plt.close(fig1)
+    # plt.close(fig2)
+    # plt.close(fig)
     from welib.tools.repo import export_figs_callback
 
     export_figs_callback(__file__)

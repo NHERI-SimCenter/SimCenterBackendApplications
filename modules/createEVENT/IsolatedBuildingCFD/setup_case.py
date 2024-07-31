@@ -449,8 +449,8 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
         added_part += f'    {refinement_boxes[i][0]}\n'
         added_part += '    {\n'
         added_part += '         type searchableBox;\n'
-        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'  # noqa: E501
-        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'  # noqa: E501
+        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'
+        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'
         added_part += '    }\n'
 
     dict_lines.insert(start_index, added_part)
@@ -481,13 +481,13 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
     dict_lines[start_index] = (
-        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, 'locationInMesh')
     dict_lines[start_index] = (
-        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # Add refinement edge
@@ -507,7 +507,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
         added_part = ''
         added_part += f'         {refinement_surface_name}\n'
         added_part += '         {\n'
-        added_part += f'             level ({surface_refinement_level} {surface_refinement_level});\n'  # noqa: E501
+        added_part += f'             level ({surface_refinement_level} {surface_refinement_level});\n'
         added_part += '             patchInfo\n'
         added_part += '             {\n'
         added_part += '                 type wall;\n'
@@ -522,7 +522,7 @@ def write_snappy_hex_mesh_dict(input_json_path, template_dict_path, case_path): 
     added_part += f'         {refinement_surface_name}\n'
     added_part += '         {\n'
     added_part += '             mode   distance;\n'
-    added_part += f'             levels  (({surface_refinement_distance:.4f} {refinement_boxes[-1][1] + 1}));\n'  # noqa: E501
+    added_part += f'             levels  (({surface_refinement_distance:.4f} {refinement_boxes[-1][1] + 1}));\n'
     added_part += '         }\n'
 
     start_index = foam.find_keyword_line(dict_lines, 'refinementRegions') + 2
@@ -822,8 +822,8 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     ground_BC_type = boundary_data['groundBoundaryCondition']  # noqa: N806
     building_BC_type = boundary_data['buildingBoundaryCondition']  # noqa: N806
 
-    # wind_speed = wind_data['roofHeightWindSpeed']  # noqa: ERA001
-    # building_height = wind_data['buildingHeight']  # noqa: ERA001
+    # wind_speed = wind_data['roofHeightWindSpeed']
+    # building_height = wind_data['buildingHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
@@ -1113,7 +1113,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     dict_file.close()
 
     # BC and initial condition (you may need to scale to model scale)
-    # k0 = 1.3 #not in model scale  # noqa: ERA001
+    # k0 = 1.3 #not in model scale
 
     I = 0.1  # noqa: N806, E741
     k0 = 1.5 * (I * wind_speed) ** 2
@@ -1401,7 +1401,9 @@ def write_fvSolution_file(input_json_path, template_dict_path, case_path):  # no
 
 
 def write_generated_pressure_probes_file(  # noqa: ANN201, D103
-    input_json_path, template_dict_path, case_path  # noqa: ANN001
+    input_json_path,  # noqa: ANN001
+    template_dict_path,  # noqa: ANN001
+    case_path,  # noqa: ANN001
 ):
     # Read JSON data
     with open(  # noqa: PTH123
@@ -1454,7 +1456,7 @@ def write_generated_pressure_probes_file(  # noqa: ANN201, D103
         added_part = ''
 
         for i in range(len(generated_sampling_points)):
-            added_part += f' ({generated_sampling_points[i][0]:.6f} {generated_sampling_points[i][1]:.6f} {generated_sampling_points[i][2]:.6f})\n'  # noqa: E501
+            added_part += f' ({generated_sampling_points[i][0]:.6f} {generated_sampling_points[i][1]:.6f} {generated_sampling_points[i][2]:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1472,7 +1474,9 @@ def write_generated_pressure_probes_file(  # noqa: ANN201, D103
 
 
 def write_imported_pressure_probes_file(  # noqa: ANN201, D103
-    input_json_path, template_dict_path, case_path  # noqa: ANN001
+    input_json_path,  # noqa: ANN001
+    template_dict_path,  # noqa: ANN001
+    case_path,  # noqa: ANN001
 ):
     # Read JSON data
     with open(input_json_path + '/IsolatedBuildingCFD.json') as json_file:  # noqa: PTH123
@@ -1527,7 +1531,7 @@ def write_imported_pressure_probes_file(  # noqa: ANN201, D103
         added_part = ''
 
         for i in range(len(imported_sampling_points)):
-            added_part += f' ({imported_sampling_points[i][0]:.6f} {imported_sampling_points[i][1]:.6f} {imported_sampling_points[i][2]:.6f})\n'  # noqa: E501
+            added_part += f' ({imported_sampling_points[i][0]:.6f} {imported_sampling_points[i][1]:.6f} {imported_sampling_points[i][2]:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1583,7 +1587,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
     dict_lines[start_index] = (
-        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'  # noqa: E501
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Write edited dict to file
@@ -1639,7 +1643,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     # Write center of rotation
     start_index = foam.find_keyword_line(dict_lines, 'CofR')
     dict_lines[start_index] = (
-        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'  # noqa: E501
+        f'CofR \t\t({center_of_rotation[0]:.4f} {center_of_rotation[1]:.4f} {center_of_rotation[2]:.4f});\n'
     )
 
     # Number of stories  as nBins
@@ -1999,7 +2003,7 @@ if __name__ == '__main__':
     write_block_mesh_dict(input_json_path, template_dict_path, case_path)
 
     # Create and write the building .stl file
-    # Also, import STL file if the shape is complex, the check is done inside the function  # noqa: E501
+    # Also, import STL file if the shape is complex, the check is done inside the function
     write_building_stl_file(input_json_path, case_path)
 
     # Create and write the SnappyHexMeshDict file
@@ -2042,14 +2046,14 @@ if __name__ == '__main__':
     # Write physicalProperties dict
     write_physicalProperties_file(input_json_path, template_dict_path, case_path)
 
-    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below  # noqa: E501
+    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
     write_transportProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)
 
     # #Write DFSRTurb dict
-    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
 
     # Write TInf files
     write_boundary_data_files(input_json_path, case_path)

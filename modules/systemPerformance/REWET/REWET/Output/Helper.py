@@ -3,7 +3,7 @@
 @author: snaeimi
 """  # noqa: INP001, D400, D415
 
-# import numba  # noqa: ERA001
+# import numba
 import operator
 from functools import reduce  # Valid in Python 2.6+, required in Python 3
 
@@ -20,7 +20,7 @@ def hhelper(x):  # noqa: ANN001, ANN201, D103
 # @numba.jit()
 def EPHelper(prob_mat, old):  # noqa: ANN001, ANN201, N802, D103
     if old == False:  # prob_mat = prob_mat.tolist()  # noqa: E712
-        # one_minus_p_list = 1-prob_mat  # noqa: ERA001
+        # one_minus_p_list = 1-prob_mat
         one_minus_p_list = [1 - p for p in prob_mat]
         pi_one_minus_p_list = [
             1 - reduce(operator.mul, one_minus_p_list[: i + 1], 1)
@@ -28,9 +28,9 @@ def EPHelper(prob_mat, old):  # noqa: ANN001, ANN201, N802, D103
         ]
         # pi_one_minus_p_list         = [rr.apply(lambda x: [x[i] * x[1], raw=True)
         return pi_one_minus_p_list  # noqa: RET504
-        # pi_one_minus_p_list.iloc[0] =  one_minus_p_list.iloc[0]  # noqa: ERA001
+        # pi_one_minus_p_list.iloc[0] =  one_minus_p_list.iloc[0]
 
-        # return (pd.Series(1.00, index=pi_one_minus_p_list.index) - pi_one_minus_p_list, prob_mat)  # noqa: ERA001, E501
+        # return (pd.Series(1.00, index=pi_one_minus_p_list.index) - pi_one_minus_p_list, prob_mat)
     else:  # noqa: RET505
         ep_mat = np.ndarray(prob_mat.size)
         for i in np.arange(prob_mat.size):

@@ -159,7 +159,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     if not redi_output_dir.exists():
         redi_output_dir.mkdir(parents=True)
 
-    # dictionary to hold the base input parameter that do not change with every pelicun iteration  # noqa: E501
+    # dictionary to hold the base input parameter that do not change with every pelicun iteration
     rediInputDict = dict()  # noqa: C408, N806
 
     # load the risk parameters
@@ -211,7 +211,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
             data = pd.read_csv(
                 io.TextIOWrapper(csv_file, encoding='utf-8'), index_col=0
             )
-            # Drop Units row for now to avoid breaking the code - would be good to use this info in the future  # noqa: E501
+            # Drop Units row for now to avoid breaking the code - would be good to use this info in the future
             data = data.drop('Units').astype(float)
 
     # Get the number of samples
@@ -228,7 +228,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
             for col in data.columns
             if any(f'{DV}-{keyword}' in col for keyword in keywords)
         ]
-        # Create a boolean vector indicating whether non-zero values are present in each column  # noqa: E501
+        # Create a boolean vector indicating whether non-zero values are present in each column
         result_vector = data[columns_to_check].apply(max, axis=1)
 
         DVReplacementDict[DV] = result_vector
@@ -239,7 +239,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     sum_collapsed_buildings = sum(buildingirreparableOrCollapsed)
 
     print(  # noqa: T201
-        f'There are {sum_collapsed_buildings} collapsed or irreparable buildings from Pelicun'  # noqa: E501
+        f'There are {sum_collapsed_buildings} collapsed or irreparable buildings from Pelicun'
     )
 
     # Get some general information
@@ -268,7 +268,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     total_building_area = plan_area * nStories
 
     # Estimate the number of workers
-    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,  # noqa: E501
+    # PACT provides a default setting of 0.001 which corresponds to one worker per 1000 square feet of floor area. Users should generally execute their assessment with this default value,
     num_workers = max(int(total_building_area / 1000), 1)
 
     # Get the replacement cost and time
@@ -292,7 +292,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     for sample in range(num_samples):
         if buildingirreparableOrCollapsed[sample]:
-            # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers  # noqa: E501
+            # Convert the replacement time coming out of Pelicun (worker-days) into days by dividing by the number of workers
             replacement_time = DVReplacementDict['Time'][sample] / num_workers
 
             final_results_dict[sample] = get_replacement_response(
@@ -302,11 +302,11 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
         ### REDi input map ###
         # Assemble the component quantity vector
-        # components object is a list of lists where each item is a list of component on a particular floor.  # noqa: E501
-        # The components are a dictionary containing the component tag (NISTR) and an array of quantities (Qty) in each direction, i.e., [dir_1, dir_2]  # noqa: E501
-        # [floor_1, floor_2, ..., floor_n]  # noqa: ERA001
+        # components object is a list of lists where each item is a list of component on a particular floor.
+        # The components are a dictionary containing the component tag (NISTR) and an array of quantities (Qty) in each direction, i.e., [dir_1, dir_2]
+        # [floor_1, floor_2, ..., floor_n]
         # where floor_n = [{'NISTR' : nistr_id_1,
-        #                   'Qty' : [dir_1, dir_2]},  # noqa: ERA001
+        #                   'Qty' : [dir_1, dir_2]},
         #                   ...,
         #                  {'NISTR' : nistr_id_n,
         #                   'Qty' : [dir_1, dir_2]}]
@@ -328,7 +328,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
                 dir_1 = 0.0
                 dir_2 = 0.0
 
-                # If no directionality, i.e., direction is 0, divide the components evenly in the two directions  # noqa: E501
+                # If no directionality, i.e., direction is 0, divide the components evenly in the two directions
                 if '0' in dirs:
                     qnty = float(dirs['0'][sample])
                     dir_1 = 0.5 * qnty
@@ -350,12 +350,12 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
                 components[floor - 1].append(cmp_dict)
 
         ### REDi input map ###
-        # total_consequences = dict()  # noqa: ERA001
+        # total_consequences = dict()
         # Assemble the component damage vector
-        # component_damage object is a dictionary where each key is a component tag (NISTR) and the values is a list of a list.  # noqa: E501
-        # The highest level, outer list is associated with the number of damage states while the inner list corresponds to the number of floors  # noqa: E501
-        # [ds_1, ds_2, ..., ds_n]  # noqa: ERA001
-        # where ds_n = [num_dmg_units_floor_1, num_dmg_units_floor_2, ..., num_dmg_units_floor_n]  # noqa: E501
+        # component_damage object is a dictionary where each key is a component tag (NISTR) and the values is a list of a list.
+        # The highest level, outer list is associated with the number of damage states while the inner list corresponds to the number of floors
+        # [ds_1, ds_2, ..., ds_n]
+        # where ds_n = [num_dmg_units_floor_1, num_dmg_units_floor_2, ..., num_dmg_units_floor_n]
         component_damage: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
         ### Pelicun output map ###
@@ -386,7 +386,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
                         if math.isnan(qty):
                             log_output.append(
-                                f'Collapse detected sample {sample}. Skipping REDi run.\n'  # noqa: E501
+                                f'Collapse detected sample {sample}. Skipping REDi run.\n'
                             )
                             collapse_flag = True
                             break
@@ -405,7 +405,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
             component_damage[nistr] = ds_qtys
 
-            # total_consequences[nistr] = component_damage  # noqa: ERA001
+            # total_consequences[nistr] = component_damage
 
         if collapse_flag:
             continue
@@ -419,21 +419,21 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
         ### REDi input map ###
         # Total_consequences is a list of lists of lists.
-        # The highest-level list (always length 4) corresponds to the 4 types of consequences at the component level: (1) repair cost [dollars], (2) repair time [worker days], (3) injuries, (4) fatalities.  # noqa: E501
-        # The second level list contains the number of stories, so a list with length 5 will be a 4-story building with a roof.  # noqa: E501
-        # The third-level list is based on the number of damage states (not including Damage State 0).  # noqa: E501
+        # The highest-level list (always length 4) corresponds to the 4 types of consequences at the component level: (1) repair cost [dollars], (2) repair time [worker days], (3) injuries, (4) fatalities.
+        # The second level list contains the number of stories, so a list with length 5 will be a 4-story building with a roof.
+        # The third-level list is based on the number of damage states (not including Damage State 0).
 
         total_consequences: Dict[str, List[List[float]]] = {}  # noqa: FA100
 
         ### Pelicun output map ###
         #   "COST": {           <- cost/time key
-        #     "B1033.061b": {   <- component nistr  *special case - this one to evaluate consequences (depends on occupancy type). Note that Component name will match in FEMA P-58 analysis (this case)  # noqa: E501
-        #       "B1033.061b": { <- component nistr  *special case - this one tells you about damage (depends on perhaps location in building or something else). Note that Component name will match in FEMA P-58 analysis (this case)  # noqa: E501
+        #     "B1033.061b": {   <- component nistr  *special case - this one to evaluate consequences (depends on occupancy type). Note that Component name will match in FEMA P-58 analysis (this case)
+        #       "B1033.061b": { <- component nistr  *special case - this one tells you about damage (depends on perhaps location in building or something else). Note that Component name will match in FEMA P-58 analysis (this case)
         #         "1": {        <- damage state
         #           "4": {      <- floor
         #             "1": [    <- direction
         for nistr in cost_dict.keys():  # noqa: SIM118
-            # Handle the case of the nested nistr which will be the same for FEMA P-58  # noqa: E501
+            # Handle the case of the nested nistr which will be the same for FEMA P-58
             cost_res = cost_dict[nistr][nistr]
             time_res = time_dict[nistr][nistr]
 
@@ -468,7 +468,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
             nistr = clean_up_nistr(nistr=nistr)  # noqa: PLW2901
 
-            # Last two items are empty because pelicun does not return injuries and fatalities.  # noqa: E501
+            # Last two items are empty because pelicun does not return injuries and fatalities.
             total_consequences[nistr] = [
                 cost_floor_list,
                 time_floor_list,
@@ -578,12 +578,12 @@ if __name__ == '__main__':
     # Check for the required arguments
     if not args.dirnameOutput:
         print(  # noqa: T201
-            'Path to the working directory containing the Pelicun results is required'  # noqa: E501
+            'Path to the working directory containing the Pelicun results is required'
         )
         exit()  # noqa: PLR1722
     elif not Path(args.dirnameOutput).exists():
         print(  # noqa: T201
-            f'Provided path to the working directory {args.dirnameOutput} does not exist'  # noqa: E501
+            f'Provided path to the working directory {args.dirnameOutput} does not exist'
         )
         exit()  # noqa: PLR1722
 
@@ -592,7 +592,7 @@ if __name__ == '__main__':
         exit()  # noqa: PLR1722
     elif not Path(args.riskParametersPath).exists():
         print(  # noqa: T201
-            f'Provided path to the risk parameters JSON file {args.riskParametersPath} does not exist'  # noqa: E501
+            f'Provided path to the risk parameters JSON file {args.riskParametersPath} does not exist'
         )
         exit()  # noqa: PLR1722
 
@@ -605,4 +605,4 @@ if __name__ == '__main__':
     print(f'REDi finished. Elapsed time: {elapsed_time:.2f} seconds')  # noqa: T201
 
 
-'/opt/homebrew/anaconda3/envs/simcenter/bin/python' '/Users/stevan.gavrilovic/Desktop/SimCenter/SimCenterBackendApplications/applications/performanceAssessment/REDi/REDiWrapper.py' '--riskParametersPath' '/Users/stevan.gavrilovic/Desktop/SimCenter/build-PBE-Qt_6_5_1_for_macOS-Debug/PBE.app/Contents/MacOS/Examples/pbdl-0003/src/risk_params.json' '--dirnameOutput' '/Users/stevan.gavrilovic/Documents/PBE/LocalWorkDir/tmp.SimCenter'  # noqa: E501
+'/opt/homebrew/anaconda3/envs/simcenter/bin/python' '/Users/stevan.gavrilovic/Desktop/SimCenter/SimCenterBackendApplications/applications/performanceAssessment/REDi/REDiWrapper.py' '--riskParametersPath' '/Users/stevan.gavrilovic/Desktop/SimCenter/build-PBE-Qt_6_5_1_for_macOS-Debug/PBE.app/Contents/MacOS/Examples/pbdl-0003/src/risk_params.json' '--dirnameOutput' '/Users/stevan.gavrilovic/Documents/PBE/LocalWorkDir/tmp.SimCenter'

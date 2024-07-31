@@ -1,4 +1,4 @@
-# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation  # noqa: INP001, E501, D100
+# This file creates a function that is called by "main_generation.py" to perform nonlinear model generation  # noqa: INP001, D100
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
@@ -33,21 +33,21 @@ def model_generation(base_directory, pathDataFolder, workingDirectory):  # noqa:
     # Update the directory because Seismic Design might be run on some other PCs
     # As a result, the directory stored in construction_building.pkl might not work
     # in this PC
-    # Define path to folder where the baseline .tcl files for elastic analysis are saved  # noqa: E501
+    # Define path to folder where the baseline .tcl files for elastic analysis are saved
     building.directory['baseline files elastic'] = (
         base_directory + '/BaselineTclFiles/ElasticAnalysis'
     )
-    # Define path to folder where the baseline .tcl files for nonlinear analysis are stored  # noqa: E501
+    # Define path to folder where the baseline .tcl files for nonlinear analysis are stored
     building.directory['baseline files nonlinear'] = (
         base_directory + '/BaselineTclFiles/NonlinearAnalysis'
     )
     # Define path to folder where the building data (.csv) are saved
     building.directory['building data'] = pathDataFolder
-    # Define path to folder where the generated elastic analysis OpenSees model is saved  # noqa: E501
+    # Define path to folder where the generated elastic analysis OpenSees model is saved
     building.directory['building elastic model'] = (
         workingDirectory + '/BuildingElasticModels'
     )
-    # Define path to folder where the generated nonlinear analysis OpenSees model is saved  # noqa: E501
+    # Define path to folder where the generated nonlinear analysis OpenSees model is saved
     building.directory['building nonlinear model'] = (
         workingDirectory + '/BuildingNonlinearModels'
     )

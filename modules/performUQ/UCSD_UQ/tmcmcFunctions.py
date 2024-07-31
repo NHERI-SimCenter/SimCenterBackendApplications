@@ -30,7 +30,7 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: ANN001, ANN20
     old_beta = beta
     min_beta = beta
     max_beta = 2.0
-    # rN = int(len(likelihoods) * 0.95)   #pymc3 uses 0.5  # noqa: ERA001
+    # rN = int(len(likelihoods) * 0.95)   #pymc3 uses 0.5
     rN = threshold * prev_ESS  # purdue prof uses 0.95  # noqa: N806
     new_beta = beta
     while max_beta - min_beta > 1e-3:  # noqa: PLR2004
@@ -61,7 +61,11 @@ def compute_beta(beta, likelihoods, prev_ESS, threshold):  # noqa: ANN001, ANN20
 
 
 def compute_beta_evidence_old(  # noqa: ANN201, D103
-    beta, log_likelihoods, log_evidence, prev_ESS, threshold  # noqa: ANN001, N803
+    beta,  # noqa: ANN001
+    log_likelihoods,  # noqa: ANN001
+    log_evidence,  # noqa: ANN001
+    prev_ESS,  # noqa: ANN001, N803
+    threshold,  # noqa: ANN001
 ):
     old_beta = beta
     min_beta = beta
@@ -105,9 +109,9 @@ def compute_beta_evidence_old(  # noqa: ANN201, D103
     Wm_n = np.exp(log_Wm_n)  # noqa: N806
 
     # update model evidence
-    # evidence = evidence * (sum(Wm)/N)  # noqa: ERA001
+    # evidence = evidence * (sum(Wm)/N)
     log_evidence = log_evidence + logsumexp(log_Wm) - np.log(N)
-    # log_evidence = log_evidence + np.log((sum(Wm)/N))  # noqa: ERA001
+    # log_evidence = log_evidence + np.log((sum(Wm)/N))
 
     return new_beta, log_evidence, Wm_n, ESS
 
@@ -140,7 +144,7 @@ def MCMC_MH_old(  # noqa: ANN201, N802, D103, PLR0913
     all_proposals = []
     all_PLP = []  # noqa: N806
 
-    # deltas = propose(np.zeros(len(current)), Em, Nm_steps)  # noqa: ERA001
+    # deltas = propose(np.zeros(len(current)), Em, Nm_steps)
     deltas = rng.multivariate_normal(np.zeros(len(current)), Em, Nm_steps)
 
     for j2 in range(Nm_steps):
@@ -149,7 +153,7 @@ def MCMC_MH_old(  # noqa: ANN201, N802, D103, PLR0913
         prior_proposal = log_prior(proposal, AllPars)
 
         if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
-            # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)  # noqa: ERA001, E501
+            # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
                 proposal,
@@ -178,7 +182,7 @@ def MCMC_MH_old(  # noqa: ANN201, N802, D103, PLR0913
         all_proposals.append(proposal)
         all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
-        # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):  # noqa: E501
+        # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
         if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
@@ -227,7 +231,7 @@ def MCMC_MH(  # noqa: ANN201, N802, D103, PLR0913
     all_proposals = []
     all_PLP = []  # noqa: N806
 
-    # deltas = propose(np.zeros(len(current)), Em, Nm_steps)  # noqa: ERA001
+    # deltas = propose(np.zeros(len(current)), Em, Nm_steps)
     deltas = rng.multivariate_normal(np.zeros(len(current)), Em, Nm_steps)
 
     for j2 in range(Nm_steps):
@@ -236,7 +240,7 @@ def MCMC_MH(  # noqa: ANN201, N802, D103, PLR0913
         prior_proposal = log_prior(proposal, AllPars)
 
         if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
-            # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)  # noqa: ERA001, E501
+            # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
                 proposal,
@@ -265,7 +269,7 @@ def MCMC_MH(  # noqa: ANN201, N802, D103, PLR0913
         all_proposals.append(proposal)
         all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
-        # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):  # noqa: E501
+        # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
         if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
@@ -287,44 +291,44 @@ def MCMC_MH(  # noqa: ANN201, N802, D103, PLR0913
 
 
 # def compute_beta_evidence(beta, log_likelihoods, prev_ESS, threshold=0.95):
-#     old_beta = beta  # noqa: ERA001
-#     min_beta = beta  # noqa: ERA001
-#     max_beta = 2.0  # noqa: ERA001
-#     N = len(log_likelihoods)  # noqa: ERA001
-#     rN = max(threshold*prev_ESS, 50)  # noqa: ERA001
+#     old_beta = beta
+#     min_beta = beta
+#     max_beta = 2.0
+#     N = len(log_likelihoods)
+#     rN = max(threshold*prev_ESS, 50)
 #     while max_beta - min_beta > 1e-3: #min step size
-#         new_beta = 0.5*(max_beta+min_beta)  # noqa: ERA001
+#         new_beta = 0.5*(max_beta+min_beta)
 #         #plausible weights of Sm corresponding to new beta
-#         inc_beta = new_beta-old_beta  # noqa: ERA001
+#         inc_beta = new_beta-old_beta
 
-#         log_Wm = inc_beta * log_likelihoods  # noqa: ERA001
-#         log_Wm_n = log_Wm - logsumexp(log_Wm)  # noqa: ERA001
-#         ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))  # noqa: ERA001
+#         log_Wm = inc_beta * log_likelihoods
+#         log_Wm_n = log_Wm - logsumexp(log_Wm)
+#         ESS = int(np.exp(-logsumexp(log_Wm_n * 2)))
 
 #         if ESS == rN:
-#             break  # noqa: ERA001
-#         elif ESS < rN:  # noqa: ERA001
-#             max_beta = new_beta  # noqa: ERA001
-#         else:  # noqa: ERA001
-#             min_beta = new_beta  # noqa: ERA001
+#             break
+#         elif ESS < rN:
+#             max_beta = new_beta
+#         else:
+#             min_beta = new_beta
 
 #     if new_beta >= 1:
-#         new_beta = 1  # noqa: ERA001
+#         new_beta = 1
 #         #plausible weights of Sm corresponding to new beta
-#         inc_beta = new_beta-old_beta  # noqa: ERA001
+#         inc_beta = new_beta-old_beta
 
-#         log_Wm = inc_beta * log_likelihoods  # noqa: ERA001
-#         log_Wm_n = log_Wm - logsumexp(log_Wm)  # noqa: ERA001
+#         log_Wm = inc_beta * log_likelihoods
+#         log_Wm_n = log_Wm - logsumexp(log_Wm)
 
-#     Wm = np.exp(log_Wm)  # noqa: ERA001
-#     Wm_n = np.exp(log_Wm_n)  # noqa: ERA001
+#     Wm = np.exp(log_Wm)
+#     Wm_n = np.exp(log_Wm_n)
 
 #     # update model evidence
-#     # evidence = evidence * (sum(Wm)/N)  # noqa: ERA001
-#     log_evidence = logsumexp(log_Wm) - np.log(N)  # noqa: ERA001
-#     # log_evidence = log_evidence + np.log((sum(Wm)/N))  # noqa: ERA001
+#     # evidence = evidence * (sum(Wm)/N)
+#     log_evidence = logsumexp(log_Wm) - np.log(N)
+#     # log_evidence = log_evidence + np.log((sum(Wm)/N))
 
-#     return new_beta, log_evidence, Wm_n, ESS  # noqa: ERA001
+#     return new_beta, log_evidence, Wm_n, ESS
 
 
 def get_weights(dBeta, log_likelihoods):  # noqa: ANN001, ANN201, N803, D103
@@ -349,23 +353,23 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):  # noq
 
         # while (cov_weights > (threshold+0.00000005) or (std_weights == 0)):
         #     if ((cov_weights > (threshold+1.0)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.9  # noqa: ERA001
+        #         dBeta = dBeta*0.9
         #     if ((cov_weights > (threshold+0.5)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.95  # noqa: ERA001
+        #         dBeta = dBeta*0.95
         #     if ((cov_weights > (threshold+0.05)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.99  # noqa: ERA001
+        #         dBeta = dBeta*0.99
         #     if ((cov_weights > (threshold+0.005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.999  # noqa: ERA001
+        #         dBeta = dBeta*0.999
         #     if ((cov_weights > (threshold+0.0005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.9999  # noqa: ERA001
+        #         dBeta = dBeta*0.9999
         #     if ((cov_weights > (threshold+0.00005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.99999  # noqa: ERA001
+        #         dBeta = dBeta*0.99999
         #     if ((cov_weights > (threshold+0.000005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.999999  # noqa: ERA001
+        #         dBeta = dBeta*0.999999
         #     if ((cov_weights > (threshold+0.0000005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.9999999  # noqa: ERA001
+        #         dBeta = dBeta*0.9999999
         #     if ((cov_weights > (threshold+0.00000005)) or  (std_weights == 0)):
-        #         dBeta = dBeta*0.99999999  # noqa: ERA001
+        #         dBeta = dBeta*0.99999999
 
         if dBeta < 1e-3:  # noqa: PLR2004
             dBeta = 1e-3  # noqa: N806

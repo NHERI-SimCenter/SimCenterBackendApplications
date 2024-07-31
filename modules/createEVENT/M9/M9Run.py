@@ -59,7 +59,7 @@ if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
     if information['APIFLAG']:
         print(  # noqa: T201
-            'Using API for extracting motions:\n This may take a while. Please be patient.'  # noqa: E501
+            'Using API for extracting motions:\n This may take a while. Please be patient.'
         )
         M9API.M9(information)
     else:

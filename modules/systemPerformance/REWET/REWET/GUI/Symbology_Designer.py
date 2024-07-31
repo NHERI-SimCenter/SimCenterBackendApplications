@@ -34,7 +34,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
         self.method_combo.currentTextChanged.connect(self.methodChanged)
         self.range_table.currentItemChanged.connect(self.currentItemChanged)
         self.range_table.itemChanged.connect(self.tableDataChanged)
-        # self.range_table.currentItemChanged.connect(self.currentItemChanged)  # noqa: ERA001
+        # self.range_table.currentItemChanged.connect(self.currentItemChanged)
         self.remove_button.clicked.connect(self.removeButtonClicked)
         self.color_combo.currentTextChanged.connect(self.colorChanged)
         self.no_clases_line.editingFinished.connect(
@@ -56,7 +56,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
             self.no_clases_line.clear()
             self.no_clases_line.setEnabled(False)
         self.updateTable()
-        # self.updateLegendSample()  # noqa: ERA001
+        # self.updateLegendSample()
 
     def addByButton(self, add_location):  # noqa: ANN001, ANN201, N802, D102
         to_be_added_row = None  # noqa: F841
@@ -88,7 +88,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
                 )
 
         bins = self.class_data.bins.tolist()
-        # bins[bins==old_value] = new_item_value  # noqa: ERA001
+        # bins[bins==old_value] = new_item_value
         bins.append((old_value + other_side_value) / 2)
         bins.sort()
         kw = {'bins': bins}
@@ -124,7 +124,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
             legend=True,
         )
         self.legend_widget.draw()
-        # self.mpl_map.canvas.fig.tight_layout()  # noqa: ERA001
+        # self.mpl_map.canvas.fig.tight_layout()
 
     def updateTable(self):  # noqa: ANN201, N802, D102
         self.range_table.blockSignals(True)  # noqa: FBT003
@@ -193,7 +193,7 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
             kw = {'k': k}
         elif text == 'User Defined':
             self.no_clases_line.setEnabled(False)
-            # bins = self.getUserDefinedBins()  # noqa: ERA001
+            # bins = self.getUserDefinedBins()
             try:
                 kw = {'bins': self.bins}
             except:  # noqa: E722
@@ -210,10 +210,10 @@ class Symbology_Designer(Ui_Symbology_Dialog):  # noqa: N801, D101
         print('cur ' + repr(self.current_item_value))  # noqa: T201
 
     def tableDataChanged(self, item):  # noqa: ANN001, ANN201, N802, D102
-        # row = item.row()  # noqa: ERA001
-        # col = item.column()  # noqa: ERA001
+        # row = item.row()
+        # col = item.column()
 
-        # item_text = self.range_table.item(row, col).text()  # noqa: ERA001
+        # item_text = self.range_table.item(row, col).text()
         previous_item_value = float(self.current_item_value)
         try:
             new_item_value = float(item.text())

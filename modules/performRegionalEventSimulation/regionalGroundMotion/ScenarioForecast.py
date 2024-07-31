@@ -88,7 +88,7 @@ if __name__ == '__main__':
         if importlib.util.find_spec(p) is None:
             # print(f"""The Python package {p} is required but not found.
             #        Please install it by running
-            #       "{sys.executable} -m pip install -q {p}"  # noqa: ERA001
+            #       "{sys.executable} -m pip install -q {p}"
             #        in your terminal or command prompt""")
             subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])  # noqa: S603
 
@@ -114,21 +114,21 @@ if __name__ == '__main__':
     # if oq_flag:
     #     # clear up old db.sqlite3 if any
     #     if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
-    #         new_db_sqlite3 = True  # noqa: ERA001
-    #         try:  # noqa: ERA001
-    #             os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))  # noqa: ERA001
-    #         except:  # noqa: ERA001
-    #             new_db_sqlite3 = False  # noqa: ERA001
+    #         new_db_sqlite3 = True
+    #         try:
+    #             os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
+    #         except:
+    #             new_db_sqlite3 = False
     #     # data dir
-    #     os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')  # noqa: ERA001, E501
-    #     print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))  # noqa: ERA001
+    #     os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
+    #     print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
     #     if os.path.exists(os.environ.get('OQ_DATADIR')):
-    #         print('HazardSimulation: local OQ folder already exists, overwiting it now...')  # noqa: ERA001, E501
-    #         shutil.rmtree(os.environ.get('OQ_DATADIR'))  # noqa: ERA001
-    #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: ERA001
+    #         print('HazardSimulation: local OQ folder already exists, overwiting it now...')
+    #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
+    #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
 
     if oq_flag:
-        # import FetchOpenQuake  # noqa: ERA001
+        # import FetchOpenQuake
         from FetchOpenQuake import *  # noqa: F403
 
     # untar site databases
@@ -140,14 +140,14 @@ if __name__ == '__main__':
     print('HazardSimulation: Extracting site databases.')  # noqa: T201
     cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
     for cur_database in site_database:
-        # subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])  # noqa: ERA001, E501
+        # subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
         tar = tarfile.open(cwd + '/database/site/' + cur_database, 'r:gz')
         tar.extractall(cwd + '/database/site/')  # noqa: S202
         tar.close()
 
     # # Initial process list
-    # import psutil  # noqa: ERA001
-    # proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]  # noqa: ERA001, E501
+    # import psutil
+    # proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
 
     # Sites and stations
     print('HazardSimulation: creating stations.')  # noqa: T201
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         print('ScenarioForecast: stations created.')  # noqa: T201
     else:
         print(  # noqa: T201
-            'HazardSimulation: please check the "Input" directory in the configuration json file.'  # noqa: E501
+            'HazardSimulation: please check the "Input" directory in the configuration json file.'
         )
         exit()  # noqa: PLR1722
 
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     else:
         # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
-    # print(scenarios)  # noqa: ERA001
+    # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201
 
     # Closing the current process

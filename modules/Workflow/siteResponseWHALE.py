@@ -225,11 +225,12 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         },
     }
 
-    # siteResponseInputFile = 'tmpSiteResponseInput.json'  # noqa: ERA001
-    # siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')  # noqa: ERA001, E501
+    # siteResponseInputFile = 'tmpSiteResponseInput.json'
+    # siteResponseInputFile = os.path.join(os.path.dirname(input_file),'tmpSiteResponseInput.json')
     # KZ: 10/19/2022, fixing the json file path
     siteResponseInputFile = os.path.join(  # noqa: PTH118, N806
-        os.path.dirname(reference_dir), 'tmpSiteResponseInput.json'  # noqa: PTH120
+        os.path.dirname(reference_dir),  # noqa: PTH120
+        'tmpSiteResponseInput.json',
     )
 
     if procID == 0:
@@ -272,11 +273,11 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     if procID == 0:
         for asset_type, assetIt in asset_files.items():  # noqa: N806
             # perform the regional mapping
-            # WF.perform_regional_mapping(assetIt)  # noqa: ERA001
+            # WF.perform_regional_mapping(assetIt)
             # KZ: 10/19/2022, adding the required argument for the new whale
             print('0 STARTING MAPPING')  # noqa: T201
             # FMK _ PARALLEL WF.perform_regional_mapping(assetIt, asset_type, False)
-            # WF.perform_regional_mapping(assetIt, asset_type)  # noqa: ERA001
+            # WF.perform_regional_mapping(assetIt, asset_type)
             WF.perform_regional_mapping(assetIt, asset_type, False)  # noqa: FBT003
 
     # get all other processes to wait till we are here
@@ -327,11 +328,13 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     if procID == 0:
         createFilesForEventGrid(
-            os.path.join(working_dir, 'Buildings'), output_dir, force_cleanup  # noqa: PTH118
+            os.path.join(working_dir, 'Buildings'),  # noqa: PTH118
+            output_dir,
+            force_cleanup,
         )
 
         # aggregate results
-        # WF.aggregate_results(bldg_data = bldg_data)  # noqa: ERA001
+        # WF.aggregate_results(bldg_data = bldg_data)
         # KZ: 10/19/2022, chaning bldg_data to asst_data
         WF.aggregate_results(asst_data=asst_data)
 
@@ -468,7 +471,7 @@ if __name__ == '__main__':
     if wfArgs.check:  # noqa: SIM108
         run_type = 'set_up'
     else:
-        # run_type = 'run'  # noqa: ERA001
+        # run_type = 'run'
         # KZ: 10/19/22, changing to the new run type for the refactored whale
         run_type = 'runningLocal'
 

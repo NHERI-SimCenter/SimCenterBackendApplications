@@ -17,7 +17,7 @@ from Input.Settings import Settings
 from Project import Project
 from restoration.model import Restoration
 
-# from wntrfr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility  # noqa: ERA001, E501
+# from wntrfr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility
 from restoration.registry import Registry
 
 logging.basicConfig(level=50)
@@ -63,10 +63,10 @@ class Starter:  # noqa: D101
                         project_file.split('.')[-1].lower()
                     )
                 )
-        # =============================================================================  # noqa: E501
-        #             else:  # noqa: ERA001
-        #                 raise ValueError("project type unrecognized")  # noqa: ERA001
-        # =============================================================================  # noqa: E501
+        # =============================================================================
+        #             else:
+        #                 raise ValueError("project type unrecognized")
+        # =============================================================================
 
         damage_list = io.read_damage_list(
             settings.process['pipe_damage_file_list'],
@@ -84,7 +84,7 @@ class Starter:  # noqa: D101
                     print(i, flush=True)  # noqa: T201
                     settings.initializeScenarioSettings(
                         i
-                    )  # initialize scenario-specific settings for each list/usefule for sensitivity analysis  # noqa: E501
+                    )  # initialize scenario-specific settings for each list/usefule for sensitivity analysis
                     scenario_name = damage_list.loc[i, 'Scenario Name']
                     pipe_damage_name = damage_list.loc[i, 'Pipe Damage']
                     tank_damage_name = damage_list.loc[i, 'Tank Damage']
@@ -101,7 +101,7 @@ class Starter:  # noqa: D101
                 t1 = time.time()
                 settings.initializeScenarioSettings(
                     0
-                )  # initialize scenario-specific settings for the first line of damage list  # noqa: E501
+                )  # initialize scenario-specific settings for the first line of damage list
                 scenario_name = damage_list.loc[0, 'Scenario Name']
                 pipe_damage_name = damage_list.loc[0, 'Pipe Damage']
                 tank_damage_name = damage_list.loc[0, 'Tank Damage']
@@ -161,7 +161,7 @@ class Starter:  # noqa: D101
         -------
         None.
 
-        """  # noqa: E501, D401
+        """  # noqa: D401
         print(  # noqa: T201
             scenario_name
             + ' - '
@@ -246,9 +246,9 @@ class Starter:  # noqa: D101
 
         delta_t_h = settings['hydraulic_time_step']
         wn.options.time.hydraulic_timestep = int(delta_t_h)
-        # wn.options.time.pattern_timestep   = int(delta_t_h)  # noqa: ERA001
-        # wn.options.time.pattern_timestep   = int(delta_t_h)  # noqa: ERA001
-        # Sina What about rule time step. Also one may want to change pattern time step  # noqa: E501
+        # wn.options.time.pattern_timestep   = int(delta_t_h)
+        # wn.options.time.pattern_timestep   = int(delta_t_h)
+        # Sina What about rule time step. Also one may want to change pattern time step
 
         demand_node_name_list = []
         for junction_name, junction in wn.junctions():
@@ -307,15 +307,15 @@ class Starter:  # noqa: D101
 
         if settings.process['mpi_resume'] == True:  # noqa: E712
             pipe_damage_list = pipe_damage_list.set_index('Scenario Name')
-            # _done_file = pd.read_csv('done.csv')  # noqa: ERA001
-            # _done_file = _done_file.transpose().reset_index().transpose().set_index(0)  # noqa: ERA001, E501
+            # _done_file = pd.read_csv('done.csv')
+            # _done_file = _done_file.transpose().reset_index().transpose().set_index(0)
             file_lists = os.listdir(settings.process['result_directory'])
             done_scenario_list = []
             for name in file_lists:
                 if name.split('.')[-1] != 'res':
                     continue
                 split_k = name.split('.res')[:-1]
-                # print(split_k)  # noqa: ERA001
+                # print(split_k)
                 kk = ''
                 for portiong in split_k:
                     kk += portiong
@@ -363,7 +363,7 @@ class Starter:  # noqa: D101
                 if (time.time() - time_jobs_saved) > 120:  # noqa: PLR2004
                     jobs.to_excel(
                         'temp-jobs.xlsx'
-                    )  # only for more informaton about the latest job status for the user in teh real time  # noqa: E501
+                    )  # only for more informaton about the latest job status for the user in teh real time
                     time_jobs_saved = time.time()
 
                 if comm.iprobe():
@@ -528,7 +528,7 @@ class Starter:  # noqa: D101
                             + str(scenario_name),
                             flush=True,
                         )
-                        # row        = pipe_damage_list[pipe_damage_list['scenario_name']==scenario_name]  # noqa: ERA001, E501
+                        # row        = pipe_damage_list[pipe_damage_list['scenario_name']==scenario_name]
                         row = pipe_damage_list.loc[scenario_index]
                         file_name = row['Pipe Damage']
                         nodal_name = row['Nodal Damage']

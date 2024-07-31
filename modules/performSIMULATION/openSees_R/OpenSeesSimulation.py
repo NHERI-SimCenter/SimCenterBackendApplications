@@ -22,7 +22,7 @@ if ('-getRV' in inputArgs) or ('--getRV' in inputArgs):
     subprocess.Popen(args=getUncertaintyCommand, shell=True).wait()
 else:
     # Run preprocessor
-    preprocessorCommand = f'"{scriptDir}/mainPreprocessor" {bimName} {samName} {evtName} {edpName} example.tcl'  # noqa: N816, E501
+    preprocessorCommand = f'"{scriptDir}/mainPreprocessor" {bimName} {samName} {evtName} {edpName} example.tcl'  # noqa: N816
     subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
 
     # Run OpenSees

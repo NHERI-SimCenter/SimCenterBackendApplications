@@ -14,7 +14,7 @@ try:
     import GPy as GPy  # noqa: PLC0414
 except:  # noqa: E722
     print(  # noqa: T201
-        'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'  # noqa: E501
+        'Error running surrogate prediction - Failed to import module: Surrogate modeling module uses GPy python package which is facing a version compatibility issue at this moment (01.05.2024). To use the surrogate module, one needs to update manually the GPy version to 1.13. The instruction can be found in the the documentation: https://nheri-simcenter.github.io/quoFEM-Documentation/common/user_manual/usage/desktop/SimCenterUQSurrogate.html#lblsimsurrogate'
     )
     exit(-1)  # noqa: PLR1722
 
@@ -39,7 +39,7 @@ except:  # noqa: E722
     )
     exit(-1)  # noqa: PLR1722
 
-# from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays  # noqa: ERA001, E501
+# from emukit.multi_fidelity.convert_lists_to_array import convert_x_list_to_array, convert_xy_lists_to_arrays
 
 
 def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
@@ -71,9 +71,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         exit(-1)  # noqa: PLR1722
 
     def error_warning(msg):  # noqa: ANN001, ANN202
-        # error_file.write(msg)  # noqa: ERA001
+        # error_file.write(msg)
         file_object.write(msg)
-        # print(msg)  # noqa: ERA001
+        # print(msg)
 
     if not os.path.exists(json_dir):  # noqa: PTH110
         msg = 'Error in surrogate prediction: File not found -' + json_dir
@@ -98,7 +98,8 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             inp_tmp = json.load(f)
     except:  # noqa: E722
         try:
-            with open('sc_inputRWHALE.json') as f:  # current input file  # noqa: PTH123
+            # current input file
+            with open('sc_inputRWHALE.json') as f:  # noqa: PTH123
                 inp_tmp = json.load(f)
         except:  # noqa: S110, E722
             pass
@@ -196,12 +197,12 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     self.Y_metadata = Y_metadata
                 else:
                     self.Y_metadata.update(Y_metadata)
-                    # print("metadata_updated")  # noqa: ERA001
+                    # print("metadata_updated")
 
             self.set_XY(X, Y)
 
         def get_stochastic_variance(X, Y, x, ny):  # noqa: ANN001, ANN202, N803
-            # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)  # noqa: ERA001, E501
+            # X_unique, X_idx, indices, counts = np.unique(X, axis=0, return_index=True, return_counts=True, return_inverse=True)
             X_unique, dummy, indices, counts = np.unique(  # noqa: N806
                 X, axis=0, return_index=True, return_counts=True, return_inverse=True
             )
@@ -231,7 +232,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     normalizer=True,
                     Y_metadata=None,
                 )
-                # print("Collecting variance field of ny={}".format(ny))  # noqa: ERA001
+                # print("Collecting variance field of ny={}".format(ny))
                 for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
                     exec('m_var.' + key + '= np.array(val)')  # noqa: S102
 
@@ -265,7 +266,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     X, log_vars, kernel_var, normalizer=True, Y_metadata=None
                 )
 
-                # print("Variance field obtained for ny={}".format(ny))  # noqa: ERA001
+                # print("Variance field obtained for ny={}".format(ny))
                 for key, val in sur['modelInfo'][g_name_sur[ny] + '_Var'].items():  # noqa: B007, PERF102
                     exec('m_var.' + key + '= np.array(val)')  # noqa: S102
 
@@ -313,7 +314,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         for i in range(nrv):
             name_values = data[i + 1].split()
             name = name_values[0]
-            # print(name)  # noqa: ERA001
+            # print(name)
 
             # = pass if is string. GP cannot handle that
             if ((name == 'MultipleEvent') or (name == 'eventID')) and isEEUQ:  # noqa: PLR1714
@@ -343,13 +344,13 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 continue
 
             id_map = rv_name_sur.index(name)
-            # print(name)  # noqa: ERA001
-            # print(rv_name_sur)  # noqa: ERA001
-            # try:  # noqa: ERA001
-            #    id_map = rv_name_sur.index(name)  # noqa: ERA001
-            # except ValueError:  # noqa: ERA001
-            #    msg = 'Error importing input data: variable "{}" not identified.'.format(name)  # noqa: ERA001, E501
-            #    error_exit(msg)  # noqa: ERA001
+            # print(name)
+            # print(rv_name_sur)
+            # try:
+            #    id_map = rv_name_sur.index(name)
+            # except ValueError:
+            #    msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+            #    error_exit(msg)
 
             if not first_rv_found:
                 nsamp = ns
@@ -361,7 +362,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 id_vec += [id_map]
 
             if ns != nsamp:
-                msg = 'Error importing input data: sample size in params.in is not consistent.'  # noqa: E501
+                msg = 'Error importing input data: sample size in params.in is not consistent.'
                 error_exit(msg)
 
         g_idx = []
@@ -403,18 +404,18 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         if os.path.exists('EVENT.json') and os.path.exists('IMinput.json'):  # noqa: PTH110
             os.system(  # noqa: S605
-                f'{pythonEXE} {computeIM} --filenameAIM IMinput.json --filenameEVENT EVENT.json --filenameIM IM.json --geoMeanVar'  # noqa: E501
+                f'{pythonEXE} {computeIM} --filenameAIM IMinput.json --filenameEVENT EVENT.json --filenameIM IM.json --geoMeanVar'
             )
         else:
-            msg = f'IMinput.json and EVENT.json not found in workdir.{sampNum}. Cannot calculate IMs.'  # noqa: E501
+            msg = f'IMinput.json and EVENT.json not found in workdir.{sampNum}. Cannot calculate IMs.'
             error_exit(msg)
 
         first_eeuq_found = False
         if os.path.exists('IM.csv'):  # noqa: PTH110
-            # print("IM.csv found")  # noqa: ERA001
+            # print("IM.csv found")
             tmp1 = pd.read_csv(('IM.csv'), index_col=None)
             if tmp1.empty:
-                # print("IM.csv in wordir.{} is empty.".format(cur_id))  # noqa: ERA001
+                # print("IM.csv in wordir.{} is empty.".format(cur_id))
                 return
 
             IMnames = list(map(str, tmp1))  # noqa: N806
@@ -427,7 +428,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 try:
                     id_map = rv_name_sur.index(name)
                 except ValueError:
-                    msg = f'Error importing input data: variable "{name}" not identified.'  # noqa: E501
+                    msg = f'Error importing input data: variable "{name}" not identified.'
                     error_exit(msg)
 
                 if not first_eeuq_found:
@@ -440,7 +441,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                     id_vec2 += [id_map]
 
                 if ns != nsamp:
-                    msg = 'Error importing input data: sample size in params.in is not consistent.'  # noqa: E501
+                    msg = 'Error importing input data: sample size in params.in is not consistent.'
                     error_exit(msg)
         # TODO: fix for different nys m  # noqa: FIX002, TD002, TD003
 
@@ -453,17 +454,17 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
             if first_eeuq_found and all(
                 [missingEDP.endswith('-2') for missingEDP in s]  # noqa: C419
             ):
-                msg = 'ground motion dimension does not match with that of the training'  # noqa: E501
+                msg = 'ground motion dimension does not match with that of the training'
                 # for i in range(len(s)):
-                #     name = s[i]  # noqa: ERA001
-                #     samples = np.zeros((1,nsamp))  # noqa: ERA001
-                #     try:  # noqa: ERA001
-                #         id_map = rv_name_sur.index(name)  # noqa: ERA001
-                #     except ValueError:  # noqa: ERA001
-                #         msg = 'Error importing input data: variable "{}" not identified.'.format(name)  # noqa: ERA001, E501
-                #         error_exit(msg)  # noqa: ERA001
-                #     rv_tmp2 = np.hstack([rv_tmp2, samples])  # noqa: ERA001
-                #     id_vec2 += [id_map]  # noqa: ERA001
+                #     name = s[i]
+                #     samples = np.zeros((1,nsamp))
+                #     try:
+                #         id_map = rv_name_sur.index(name)
+                #     except ValueError:
+                #         msg = 'Error importing input data: variable "{}" not identified.'.format(name)
+                #         error_exit(msg)
+                #     rv_tmp2 = np.hstack([rv_tmp2, samples])
+                #     id_vec2 += [id_map]
                 error_exit(msg)
 
     if first_eeuq_found:
@@ -476,19 +477,19 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     nrv = len(id_vec)
     if nrv != nrv_sur:
-        # missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)  # noqa: ERA001
+        # missing_ids = set([i for i in range(len(rv_name_sur))]) - set(id_vec)
         missing_ids = set([i for i in range(len(rv_name_sur))]).difference(  # noqa: C403, C416
             set(id_vec)
         )
-        # print(missing_ids)  # noqa: ERA001
+        # print(missing_ids)
         s = [str(rv_name_sur[id]) for id in missing_ids]  # noqa: A001
-        msg = 'Error in Surrogate prediction: Number of dimension inconsistent: Please define '  # noqa: E501
+        msg = 'Error in Surrogate prediction: Number of dimension inconsistent: Please define '
         msg += ', '.join(s)
         msg += ' at RV tab'
         error_exit(msg)
 
     # if os.path.getsize('../surrogateLog.log') == 0:
-    #    file_object.write("numRV "+ str(nrv+len(rv_name_dummy)) +"\n")  # noqa: ERA001
+    #    file_object.write("numRV "+ str(nrv+len(rv_name_dummy)) +"\n")
 
     rv_val = np.zeros((nsamp, nrv))
     for i in range(nrv):
@@ -574,62 +575,62 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
     # if did_stochastic:
     #
-    #     kg = kr  # noqa: ERA001
-    #     m_list = list()  # noqa: ERA001
-    #     nugget_var_list = [0]*ng_sur  # noqa: ERA001
+    #     kg = kr
+    #     m_list = list()
+    #     nugget_var_list = [0]*ng_sur
     #     for ny in range(ng_sur):
     #
-    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]  # noqa: ERA001, E501
-    #         X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)  # noqa: ERA001, E501
-    #         Y_metadata = {'variance_structure': norm_var_str / counts}  # noqa: ERA001
-    #         m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)  # noqa: ERA001
+    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=did_normalization)]
+    #         X_unique, Y_mean, norm_var_str, counts, nugget_var_pred, Y_normFact = get_stochastic_variance(X, Y[:,ny][np.newaxis].T, rv_val,ny)
+    #         Y_metadata = {'variance_structure': norm_var_str / counts}
+    #         m_list[ny].set_XY2(X_unique, Y_mean, Y_metadata=Y_metadata)
     #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-    #             exec('m_list[ny].' + key + '= np.array(val)')  # noqa: ERA001
+    #             exec('m_list[ny].' + key + '= np.array(val)')
     #
-    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact  # noqa: ERA001, E501
+    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * nugget_var_pred * Y_normFact
     #
     #
-    # elif not did_mf:  # noqa: ERA001
-    #     kg = kr  # noqa: ERA001
-    #     m_list = list()  # noqa: ERA001
+    # elif not did_mf:
+    #     kg = kr
+    #     m_list = list()
     #     for ny in range(ng_sur):
-    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=True)]  # noqa: ERA001, E501
+    #         m_list = m_list + [GPy.models.GPRegression(X, Y[:, ny][np.newaxis].transpose(), kernel=kg.copy(),normalizer=True)]
     #         for key, val in sur["modelInfo"][g_name_sur[ny]].items():
-    #             exec('m_list[ny].' + key + '= np.array(val)')  # noqa: ERA001
+    #             exec('m_list[ny].' + key + '= np.array(val)')
     #
-    #         Y_normFact = np.var(Y[:, ny])  # noqa: ERA001
-    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact  # noqa: ERA001
+    #         Y_normFact = np.var(Y[:, ny])
+    #         nugget_var_list[ny] = m_list[ny].Gaussian_noise.parameters * Y_normFact
     #
-    # else:  # noqa: ERA001
+    # else:
     #     with open(surrogate_dir, "rb") as file:
-    #         m_list=pickle.load(file)  # noqa: ERA001
+    #         m_list=pickle.load(file)
     #
     #     for ny in range(ng_sur):
-    #         Y_normFact = np.var(Y[:, ny])  # noqa: ERA001
-    #         nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact  # noqa: ERA001, E501
+    #         Y_normFact = np.var(Y[:, ny])
+    #         nugget_var_list[ny] = m_list[ny].gpy_model["mixed_noise.Gaussian_noise.variance"]* Y_normFact
 
     # to read:::
-    # kern_name='Mat52'  # noqa: ERA001
-    # did_logtransform=True  # noqa: ERA001
+    # kern_name='Mat52'
+    # did_logtransform=True
 
     # at ui
 
-    # f = open(work_dir + '/templatedir/dakota.json')  # noqa: ERA001
-    # inp = json.load(f)  # noqa: ERA001
-    # f.close()  # noqa: ERA001
+    # f = open(work_dir + '/templatedir/dakota.json')
+    # inp = json.load(f)
+    # f.close()
 
-    # try:  # noqa: ERA001
-    #     f = open(surrogate_dir, 'rb')  # noqa: ERA001
-    # except OSError:  # noqa: ERA001
-    #     msg = 'Could not open/read surrogate model from: ' + surrogate_dir + '\n'  # noqa: ERA001
-    #     print(msg)  # noqa: ERA001
-    #     error_file.write(msg)  # noqa: ERA001
-    #     error_file.close()  # noqa: ERA001
-    #     file_object.write(msg0+msg)  # noqa: ERA001
-    #     file_object.close()  # noqa: ERA001
-    #     exit(-1)  # noqa: ERA001
+    # try:
+    #     f = open(surrogate_dir, 'rb')
+    # except OSError:
+    #     msg = 'Could not open/read surrogate model from: ' + surrogate_dir + '\n'
+    #     print(msg)
+    #     error_file.write(msg)
+    #     error_file.close()
+    #     file_object.write(msg0+msg)
+    #     file_object.close()
+    #     exit(-1)
     # with f:
-    #     m_list = pickle.load(f)  # noqa: ERA001
+    #     m_list = pickle.load(f)
 
     # read param in file and sort input
     y_dim = len(m_list)
@@ -728,9 +729,9 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         # for parname in m_list[ny].parameter_names():
         #    if (kern_name in parname) and parname.endswith('variance'):
-        #        exec('y_pred_prior_var[ny]=m_list[ny].' + parname)  # noqa: ERA001
+        #        exec('y_pred_prior_var[ny]=m_list[ny].' + parname)
 
-    # error_ratio1 = y_pred_var.T / y_pred_prior_var  # noqa: ERA001
+    # error_ratio1 = y_pred_var.T / y_pred_prior_var
     error_ratio2 = y_pred_var_m_tmp / y_data_var
     idx = np.argmax(error_ratio2, axis=1) + 1
 
@@ -742,7 +743,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         msg = 'Prediction error of output {} is {:.2f}%, which is greater than threshold={:.2f}%  '.format(idx, np.max(
             error_ratio1)*100, norm_var_thr*100)
-    """  # noqa: E501
+    """
 
     is_accurate_array = np.max(error_ratio2, axis=1) < norm_var_thr
 
@@ -753,7 +754,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
         if not is_accurate_array[ns]:
             msg1 += [
-                f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%, which is greater than threshold={norm_var_thr * 100:.2f}%  '  # noqa: E501
+                f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%, which is greater than threshold={norm_var_thr * 100:.2f}%  '
             ]
         else:
             msg1 += ['']
@@ -761,15 +762,16 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         if not is_accurate_array[ns]:
             if when_inaccurate == 'doSimulation':
                 #
-                # (1) create "workdir.idx " folder :need C++17 to use the files system namespace  # noqa: E501
+                # (1) create "workdir.idx " folder :need C++17 to use the files system namespace
                 #
                 templatedirFolder = os.path.join(os.getcwd(), 'templatedir_SIM')  # noqa: PTH109, PTH118, N806
 
                 if (
                     isEEUQ and nsamp == 1
-                ):  # because stochastic ground motion generation uses folder number when generating random seed.............  # noqa: E501
+                ):  # because stochastic ground motion generation uses folder number when generating random seed.............
                     current_dir_i = os.path.join(  # noqa: PTH118
-                        os.getcwd(), f'subworkdir.{sampNum}'  # noqa: PTH109
+                        os.getcwd(),  # noqa: PTH109
+                        f'subworkdir.{sampNum}',
                     )
                 else:
                     current_dir_i = os.path.join(os.getcwd(), f'subworkdir.{1 + ns}')  # noqa: PTH109, PTH118
@@ -800,7 +802,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                         try:
                             AIMsc = json.load(f)  # noqa: N806
                         except ValueError:
-                            msg = 'invalid AIM in template. Simulation of original model cannot be perfomred'  # noqa: E501
+                            msg = 'invalid AIM in template. Simulation of original model cannot be perfomred'
                             error_exit(msg)
                     AIMsc['Events'] = inp_tmp['Events']
                     AIMsc['Applications']['Events'] = inp_tmp['Applications'][
@@ -879,7 +881,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 subprocess.Popen(workflow_run_command, shell=True).wait()  # noqa: S602
 
                 # back to directory, copy result.out
-                # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))  # noqa: ERA001, E501
+                # shutil.copyfile(os.path.join(sim_dir, 'results.out'), os.path.join(os.getcwd(), 'results.out'))
 
                 with open('results.out') as f:  # noqa: PTH123
                     y_pred = np.array([np.loadtxt(f)]).flatten()
@@ -889,7 +891,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
 
                 msg2 = msg0 + msg1[ns] + '- RUN original model\n'
                 error_warning(msg2)
-                # exit(-1)  # noqa: ERA001
+                # exit(-1)
 
             elif when_inaccurate == 'giveError':
                 msg2 = msg0 + msg1[ns] + '- EXIT\n'
@@ -911,7 +913,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
         else:
             msg3 = (
                 msg0
-                + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'  # noqa: E501
+                + f'Prediction error level of output {idx[ns]} is {np.max(error_ratio2[ns]) * 100:.2f}%\n'
             )
             error_warning(msg3)
 
@@ -973,7 +975,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
     with open('../surrogateTab.out', 'a') as tab_file:  # noqa: PTH123
         # write header
         # if os.path.getsize('../surrogateTab.out') == 0:
-        #    tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")  # noqa: ERA001, E501
+        #    tab_file.write("%eval_id interface "+ " ".join(rv_name_sur) + " "+ " ".join(g_name_subset) + " " + ".median ".join(g_name_subset) + ".median "+ ".q5 ".join(g_name_subset) + ".q5 "+ ".q95 ".join(g_name_subset) + ".q95 " +".var ".join(g_name_subset) + ".var " + ".q5_w_mnoise ".join(g_name_subset) + ".q5_w_mnoise "+ ".q95_w_mnoise ".join(g_name_subset) + ".q95_w_mnoise " +".var_w_mnoise ".join(g_name_subset) + ".var_w_mnoise \n")
         # write values
 
         for ns in range(nsamp):
@@ -1036,19 +1038,19 @@ if __name__ == '__main__':
         error_file.write(msg)
         exit(-1)  # noqa: PLR1722
 
-    # elif not inputArgs[3].endswith('.pkl'):  # noqa: ERA001
-    #     msg = 'ERROR: surrogate model file (.pkl) not set'  # noqa: ERA001
-    #     print(msg); error_file.write(msg); exit(-1)  # noqa: ERA001
+    # elif not inputArgs[3].endswith('.pkl'):
+    #     msg = 'ERROR: surrogate model file (.pkl) not set'
+    #     print(msg); error_file.write(msg); exit(-1)
 
-    # elif len(inputArgs) < 4 or len(inputArgs) > 4:  # noqa: ERA001
-    #     msg = 'ERROR: put right number of argv'  # noqa: ERA001
-    #     print(msg); error_file.write(msg); exit(-1)  # noqa: ERA001
+    # elif len(inputArgs) < 4 or len(inputArgs) > 4:
+    #     msg = 'ERROR: put right number of argv'
+    #     print(msg); error_file.write(msg); exit(-1)
 
     """
     params_dir = 'params.in'
     surrogate_dir = 'C:/Users/yisan/Desktop/quoFEMexamples/surrogates/SimGpModel_2_better.pkl'
     result_file = 'results_GP.out'
-    """  # noqa: E501
+    """
     """
     try:
         opts, args = getopt.getopt(argv)

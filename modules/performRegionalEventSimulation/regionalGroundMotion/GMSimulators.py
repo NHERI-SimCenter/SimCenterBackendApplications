@@ -116,18 +116,18 @@ def simulate_ground_motion(  # noqa: ANN201, D103, PLR0913
         desc=f'ComputeIntensityMeasure for {len(eq_ids)} scenarios',
     ):
         # for i, cur_im_raw in enumerate(im_raw):
-        # print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(im_raw)))  # noqa: ERA001
+        # print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(im_raw)))
         cur_im_raw = im_raw[eq_ids[scen_i]]
         # set im_raw
         gm_simulator.set_im_raw(cur_im_raw, im_list)
         # Computing inter event residuals
-        # t_start = time.time()  # noqa: ERA001
+        # t_start = time.time()
         epsilon = gm_simulator.compute_inter_event_residual()
-        # print('ComputeIntensityMeasure: inter-event correlation {0} sec'.format(time.time() - t_start))  # noqa: ERA001, E501
+        # print('ComputeIntensityMeasure: inter-event correlation {0} sec'.format(time.time() - t_start))
         # Computing intra event residuals
-        # t_start = time.time()  # noqa: ERA001
+        # t_start = time.time()
         eta = gm_simulator.compute_intra_event_residual()
-        # print('ComputeIntensityMeasure: intra-event correlation {0} sec'.format(time.time() - t_start))  # noqa: ERA001, E501
+        # print('ComputeIntensityMeasure: intra-event correlation {0} sec'.format(time.time() - t_start))
         ln_im_all = np.zeros((gm_simulator.num_sites, gm_simulator.num_im, num_simu))
         for i in range(num_simu):
             epsilon_m = np.array(
@@ -151,9 +151,9 @@ def simulate_ground_motion(  # noqa: ANN201, D103, PLR0913
         )
 
     print(  # noqa: T201
-        f'ComputeIntensityMeasure: all inter- and intra-event correlation {time.time() - t_start} sec'  # noqa: E501
+        f'ComputeIntensityMeasure: all inter- and intra-event correlation {time.time() - t_start} sec'
     )
-    # return  # noqa: ERA001
+    # return
     return ln_im_mr, mag_maf
 
 
@@ -180,7 +180,7 @@ class GM_Simulator:  # noqa: N801, D101
         if self.num_sites < 2:  # noqa: PLR2004
             self.stn_dist = None
             print(  # noqa: T201
-                'GM_Simulator: Only one site is defined, spatial correlation models ignored.'  # noqa: E501
+                'GM_Simulator: Only one site is defined, spatial correlation models ignored.'
             )
             return
         self._compute_distance_matrix()
@@ -259,7 +259,7 @@ class GM_Simulator:  # noqa: N801, D101
         # parse correlation infomation if any
         if correlation_info is None:
             print(  # noqa: T201
-                'GM_Simulator: warning - correlation information not found - results will be uncorrelated motions.'  # noqa: E501
+                'GM_Simulator: warning - correlation information not found - results will be uncorrelated motions.'
             )
             return
         if correlation_info.get('Type', None) == 'Vector':
@@ -290,7 +290,7 @@ class GM_Simulator:  # noqa: N801, D101
             self.inter_cm = correlation_info['SaInterEvent']
         else:
             print(  # noqa: T201
-                'GM_Simulator: no inter-event correlation information not found - results will be uncorrelated motions.'  # noqa: E501
+                'GM_Simulator: no inter-event correlation information not found - results will be uncorrelated motions.'
             )
         # intra-event model
         if correlation_info.get('IntraEvent', None):
@@ -300,12 +300,12 @@ class GM_Simulator:  # noqa: N801, D101
             self.intra_cm = correlation_info['SaIntraEvent']
         else:
             print(  # noqa: T201
-                'GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.'  # noqa: E501
+                'GM_Simulator: no intra-event correlation information not found - results will be uncorrelated motions.'
             )
 
     def cross_check_im_correlation(self):  # noqa: ANN201, C901, D102, PLR0912
         # because each correlation model only applies to certain intensity measure
-        # so hear we check if the correlation models are applicable for the required intensity measures  # noqa: E501
+        # so hear we check if the correlation models are applicable for the required intensity measures
         self.im_cm_inter_flag = True
         self.im_cm_intra_flag = True
         if type(self.inter_cm) == dict:  # noqa: E721
@@ -313,7 +313,7 @@ class GM_Simulator:  # noqa: N801, D101
                 avail_im_inter_cm = IM_CORR_INTER.get(self.inter_cm[cur_im])
                 if cur_im not in avail_im_inter_cm:
                     print(  # noqa: T201
-                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'  # noqa: E501
+                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'
                     )
                     self.im_cm_inter_flag = False
                     continue
@@ -323,7 +323,7 @@ class GM_Simulator:  # noqa: N801, D101
                 for cur_im in self.im_type_list:
                     if cur_im not in avail_im_inter_cm:
                         print(  # noqa: T201
-                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'  # noqa: E501
+                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.inter_cm}'
                         )
                         self.im_cm_inter_flag = False
                         continue
@@ -332,7 +332,7 @@ class GM_Simulator:  # noqa: N801, D101
                 avail_im_intra_cm = IM_CORR_INTRA.get(self.intra_cm[cur_im])
                 if cur_im not in avail_im_intra_cm:
                     print(  # noqa: T201
-                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'  # noqa: E501
+                        f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'
                     )
                     self.im_cm_intra_flag = False
                     continue
@@ -342,7 +342,7 @@ class GM_Simulator:  # noqa: N801, D101
                 for cur_im in self.im_type_list:
                     if cur_im not in avail_im_intra_cm:
                         print(  # noqa: T201
-                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'  # noqa: E501
+                            f'GM_Simulator.cross_check_im_correlation: warning - {cur_im} is not available in {self.intra_cm}'
                         )
                         self.im_cm_intra_flag = False
                         continue
@@ -367,7 +367,7 @@ class GM_Simulator:  # noqa: N801, D101
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: FIX002, TD002, TD003
             sys.exit(
-                'GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)'  # noqa: E501
+                'GM_Simulator.compute_inter_event_residual: currently supporting Baker & Jayaram (2008), Baker & Bradley (2017)'
             )
         return rho
 
@@ -436,7 +436,7 @@ class GM_Simulator:  # noqa: N801, D101
             residuals = np.random.multivariate_normal(  # noqa: NPY002
                 np.zeros(self.num_im), rho, self.num_simu
             ).T
-        # return  # noqa: ERA001
+        # return
         return residuals  # noqa: RET504
 
     def compute_intra_event_residual_i(self, cm, im_name_list, num_simu):  # noqa: ANN001, ANN201, D102
@@ -474,7 +474,7 @@ class GM_Simulator:  # noqa: N801, D101
         else:
             # TODO: extending this to more inter-event correlation models  # noqa: FIX002, TD002, TD003
             sys.exit(
-                'GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)'  # noqa: E501
+                'GM_Simulator.compute_intra_event_residual: currently supporting Jayaram & Baker (2009), Loth & Baker (2013),Markhvida et al. (2017), Du & Ning (2021)'
             )
         return residuals
 
@@ -489,7 +489,7 @@ class GM_Simulator:  # noqa: N801, D101
                     cm_groups[item].append(key)
             residuals = np.zeros((self.num_sites, self.num_im, self.num_simu))
             for cm, im_types in cm_groups.items():
-                # im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]  # noqa: ERA001, E501
+                # im_type_list = [im_name.split('(')[0] for im_name in self.im_name_list]
                 im_name_list = [
                     im_name
                     for im_name in self.im_name_list
@@ -509,7 +509,7 @@ class GM_Simulator:  # noqa: N801, D101
             residuals = self.compute_intra_event_residual_i(
                 self.intra_cm, self.im_name_list, self.num_simu
             )
-        # return  # noqa: ERA001
+        # return
         return residuals
 
 

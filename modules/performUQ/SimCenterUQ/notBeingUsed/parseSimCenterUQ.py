@@ -82,12 +82,12 @@ myScriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 inputFile = 'dakota.json'  # noqa: N816
 
 osType = platform.system()  # noqa: N816
-# preprocessorCommand = '"{}/preprocessSimCenterUQ" {} {} {} {}'.format(myScriptDir, inputFile, workflow_driver, run_type, osType)  # noqa: ERA001, E501
-# subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: ERA001
-# print("DONE RUNNING PREPROCESSOR\n")  # noqa: ERA001
+# preprocessorCommand = '"{}/preprocessSimCenterUQ" {} {} {} {}'.format(myScriptDir, inputFile, workflow_driver, run_type, osType)
+# subprocess.Popen(preprocessorCommand, shell=True).wait()
+# print("DONE RUNNING PREPROCESSOR\n")
 
 
-# edps = samplingData["edps"]  # noqa: ERA001
+# edps = samplingData["edps"]
 numResponses = 0  # noqa: N816
 responseDescriptors = []  # noqa: N816
 
@@ -101,7 +101,7 @@ print(femProgram)  # noqa: T201
 if run_type in ['runningLocal']:
     os.chmod(workflow_driver, stat.S_IXUSR | stat.S_IRUSR | stat.S_IXOTH)  # noqa: PTH101
 
-# command = Dakota + ' -input dakota.in -output dakota.out -error dakota.err'  # noqa: ERA001
+# command = Dakota + ' -input dakota.in -output dakota.out -error dakota.err'
 
 # Change permision of workflow driver
 st = os.stat(workflow_driver)  # noqa: PTH116
@@ -114,18 +114,18 @@ cwd = os.getcwd()  # noqa: PTH109
 print(cwd)  # noqa: T201
 
 if run_type in ['runningLocal']:
-    #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)  # noqa: ERA001
+    #    p = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
     #    for line in p.stdout:
-    #        print(str(line))  # noqa: ERA001
+    #        print(str(line))
 
-    #    dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"  # noqa: ERA001, E501
+    #    dakotaCommand = "dakota -input dakota.in -output dakota.out -error dakota.err"
 
     """
     LATER, CHANGE THE LOCATION
     """
 
     if uq_data['uqType'] == 'Train GP Surrogate Model':
-        # simCenterUQCommand = 'python "{}/{}" {} {} {}'.format(myScriptDir,surrogate,workdir_main,osType,run_type)  # noqa: ERA001, E501
+        # simCenterUQCommand = 'python "{}/{}" {} {} {}'.format(myScriptDir,surrogate,workdir_main,osType,run_type)
         simCenterUQCommand = '"{}" "{}/{}" "{}" {} {}'.format(  # noqa: N816
             data['python'], myScriptDir, surrogate, workdir_main, osType, run_type
         )
@@ -143,7 +143,7 @@ if run_type in ['runningLocal']:
 
     print('running SimCenterUQ: ', simCenterUQCommand)  # noqa: T201
 
-    # subprocess.Popen(simCenterUQCommand, shell=True).wait()  # noqa: ERA001
+    # subprocess.Popen(simCenterUQCommand, shell=True).wait()
 
     try:
         result = subprocess.check_output(  # noqa: S602

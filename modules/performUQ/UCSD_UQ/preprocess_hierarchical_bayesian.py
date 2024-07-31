@@ -119,28 +119,28 @@ def main(arguments: InputsType):  # noqa: ANN201, D103
         driver_file,
         inputs,
     ) = arguments
-    # applications_inputs = inputs["Applications"]  # noqa: ERA001
+    # applications_inputs = inputs["Applications"]
     edp_inputs = inputs['EDP']
-    # fem_inputs = inputs["FEM"]  # noqa: ERA001
+    # fem_inputs = inputs["FEM"]
     uq_inputs = inputs['UQ']
     correlation_matrix_inputs = inputs['correlationMatrix']
-    # local_applications_directory = inputs["localAppDir"]  # noqa: ERA001
+    # local_applications_directory = inputs["localAppDir"]
     rv_inputs = inputs['randomVariables']
-    # remote_applications_directory = inputs["remoteAppDir"]  # noqa: ERA001
-    # run_type = inputs["runType"]  # noqa: ERA001
-    # working_directory = inputs["workingDir"]  # noqa: ERA001
+    # remote_applications_directory = inputs["remoteAppDir"]
+    # run_type = inputs["runType"]
+    # working_directory = inputs["workingDir"]
 
-    # path_to_common_uq = main_script_directory.parent / "common"  # noqa: ERA001
-    # sys.path.append(str(path_to_common_uq))  # noqa: ERA001
+    # path_to_common_uq = main_script_directory.parent / "common"
+    # sys.path.append(str(path_to_common_uq))
 
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
         correlation_matrix_inputs,
     )
-    # joint_distribution = uq_utilities.get_ERANataf_joint_distribution_instance(  # noqa: ERA001
-    #     list_of_rv_data=rv_inputs,  # noqa: ERA001
-    #     correlation_matrix_data=correlation_matrix_inputs,  # noqa: ERA001
-    # )  # noqa: ERA001
+    # joint_distribution = uq_utilities.get_ERANataf_joint_distribution_instance(
+    #     list_of_rv_data=rv_inputs,
+    #     correlation_matrix_data=correlation_matrix_inputs,
+    # )
 
     num_rv = len(rv_inputs)
     num_edp = len(edp_inputs)
@@ -184,7 +184,7 @@ def main(arguments: InputsType):  # noqa: ANN201, D103
         )
 
     parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
-    # parallel_evaluation_function = parallel_pool.run  # noqa: ERA001
+    # parallel_evaluation_function = parallel_pool.run
     function_to_evaluate = uq_utilities.model_evaluation_function
 
     restart_file_name = Path(uq_inputs['Restart File Name']).name

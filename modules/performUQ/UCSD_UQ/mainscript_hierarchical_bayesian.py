@@ -76,7 +76,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     workflow_driver = input_args[3]  # noqa: F841
     input_file = input_args[4]
 
-    # input_file_full_path = template_directory / input_file  # noqa: ERA001
+    # input_file_full_path = template_directory / input_file
 
     with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
@@ -140,7 +140,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     # rate within 20%-40%
 
     num_accepts_list = [0] * num_datasets
-    # scale = np.square(1 / 50)  # noqa: ERA001
+    # scale = np.square(1 / 50)
     scale = 2.38**2 / num_rv
     proposal_scale_list = [scale] * num_datasets
 
@@ -173,7 +173,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
         )
         list_of_prior_logpdf_values.append(logpdf_of_initial_state)
         model_iterable = [0, x]
-        # model_iterable = [sample_number, x]  # noqa: ERA001
+        # model_iterable = [sample_number, x]
         inputs = [
             list_of_model_evaluation_functions[model_number],
             model_iterable,
@@ -243,7 +243,7 @@ def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     adaptivity_results = {}
     # adaptivity_results["list_of_acceptance_rates"] = (
     #     list_of_acceptance_rates
-    # )  # noqa: ERA001
+    # )
     adaptivity_results['proposal_scale_list'] = proposal_scale_list
     cov_kernels_list = []
     for cov_kernel in list_of_proposal_covariance_kernels:

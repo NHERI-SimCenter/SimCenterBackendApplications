@@ -108,7 +108,7 @@ if __name__ == '__main__':
         exit(1)
 
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])
-    """  # noqa: E501
+    """
 
     # Defining the command line arguments
 
@@ -126,7 +126,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         'registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )

@@ -1,9 +1,9 @@
-# JGA  # noqa: N999, D100
+# JGA  # noqa: D100, N999
 import importlib
 import os
 import sys
 
-# import matplotlib.pyplot as plt  # noqa: ERA001
+# import matplotlib.pyplot as plt
 # export DISPLAY=localhost:0.0
 from ctypes import *  # noqa: F403
 from pathlib import Path
@@ -55,7 +55,7 @@ class PLoM:  # noqa: D101
                     ax.set_ylabel(ax.get_ylabel(), fontsize = 6, rotation = 45)
                 plt.savefig(os.path.join(self.vl_path,'ScatterMatrix_X0.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('ScatterMatrix_X0.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-            """  # noqa: E501
+            """
         if not self.constraints:  # noqa: SIM102
             if self.add_constraints(constraints_file=constraints):
                 self.logfile.write_msg(
@@ -83,12 +83,12 @@ class PLoM:  # noqa: D101
             )
         else:
             self.logfile.write_msg(
-                msg='PLoM: using ConfigTasks(task_list = FULL_TASK_LIST) to schedule a run.',  # noqa: E501
+                msg='PLoM: using ConfigTasks(task_list = FULL_TASK_LIST) to schedule a run.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
             self.logfile.write_msg(
-                msg='PLoM: using RunAlgorithm(n_mc=n_mc,epsilon_pca=epsilon_pca,epsilon_kde) to run simulations.',  # noqa: E501
+                msg='PLoM: using RunAlgorithm(n_mc=n_mc,epsilon_pca=epsilon_pca,epsilon_kde) to run simulations.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
@@ -99,10 +99,13 @@ class PLoM:  # noqa: D101
         """  # noqa: D205, D400, D401, D415
         if not db_path:
             self.dir_log = os.path.join(  # noqa: PTH118
-                os.path.dirname(os.path.abspath(__file__)), 'RunDir'  # noqa: PTH100, PTH120
+                os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+                'RunDir',
             )
             self.dir_run = os.path.join(  # noqa: PTH118
-                os.path.dirname(os.path.abspath(__file__)), 'RunDir', model_name  # noqa: PTH100, PTH120
+                os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+                'RunDir',
+                model_name,
             )
         else:
             self.dir_log = db_path
@@ -164,7 +167,7 @@ class PLoM:  # noqa: D101
             self.lambda_i = 0
             self.psi = 0
             self.logfile.write_msg(
-                msg='PLoM.add_constraints: no user-defined constraint - please use add_constraints(constraints_file=X) to add new constraints if any.',  # noqa: E501
+                msg='PLoM.add_constraints: no user-defined constraint - please use add_constraints(constraints_file=X) to add new constraints if any.',
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -180,7 +183,7 @@ class PLoM:  # noqa: D101
             )
         except:  # noqa: E722
             self.logfile.write_msg(
-                msg=f'PLoM.add_constraints: could not add constraints {constraints_file}',  # noqa: E501
+                msg=f'PLoM.add_constraints: could not add constraints {constraints_file}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -212,7 +215,7 @@ class PLoM:  # noqa: D101
             )
         except:  # noqa: E722
             self.logfile.write_msg(
-                msg=f'PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {constraints_file}',  # noqa: E501
+                msg=f'PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {constraints_file}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -225,7 +228,7 @@ class PLoM:  # noqa: D101
         """  # noqa: D205, D400, D401, D415
         if constraint_tag > self.num_constraints:
             self.logfile.write_msg(
-                msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',  # noqa: E501
+                msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -341,7 +344,7 @@ class PLoM:  # noqa: D101
                 msg_level=0,
             )
             self.logfile.write_msg(
-                msg='PLoM.load_data: accepted data formats - csv, dat, txt, mat, json.',  # noqa: E501
+                msg='PLoM.load_data: accepted data formats - csv, dat, txt, mat, json.',
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -390,7 +393,8 @@ class PLoM:  # noqa: D101
                 if cur_var == '/constraints_file':
                     cur_data = store[cur_var]
                     self.dbserver.add_item(
-                        item=cur_data.values.tolist()[0], data_type='ConstraintsFile'  # noqa: PD011
+                        item=cur_data.values.tolist()[0],  # noqa: PD011
+                        data_type='ConstraintsFile',
                     )
             store.close()
 
@@ -433,7 +437,8 @@ class PLoM:  # noqa: D101
                     continue
                 if type(ATTR_MAP[cur_item]) is str:  # noqa: F405
                     self.__setattr__(
-                        ATTR_MAP[cur_item], self.dbserver.get_item(cur_item[1:])  # noqa: F405
+                        ATTR_MAP[cur_item],  # noqa: F405
+                        self.dbserver.get_item(cur_item[1:]),
                     )
                     self.logfile.write_msg(
                         msg=f'PLoM._sync_data: self.{ATTR_MAP[cur_item]} synced.',  # noqa: F405
@@ -489,7 +494,7 @@ class PLoM:  # noqa: D101
                 return self.X0.to_numpy()
             else:  # noqa: RET505
                 self.logfile.write_msg(
-                    msg='PLoM.load_h5: the original X0 data not found in the loaded data.',  # noqa: E501
+                    msg='PLoM.load_h5: the original X0 data not found in the loaded data.',
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -512,7 +517,7 @@ class PLoM:  # noqa: D101
         # check data sizes
         if new_n != self.n:
             self.logfile.write_msg(
-                msg=f'PLoM.add_data: incompatible column size when loading {filename}',  # noqa: E501
+                msg=f'PLoM.add_data: incompatible column size when loading {filename}',
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -529,7 +534,11 @@ class PLoM:  # noqa: D101
         )
 
     def initialize_data(  # noqa: ANN201, D102
-        self, filename, separator=',', col_header=False, constraints=''  # noqa: ANN001, FBT002, ARG002
+        self,
+        filename,  # noqa: ANN001
+        separator=',',  # noqa: ANN001
+        col_header=False,  # noqa: ANN001, FBT002
+        constraints='',  # noqa: ANN001, ARG002
     ):
         # initialize the data and data sizes
         try:
@@ -606,10 +615,10 @@ class PLoM:  # noqa: D101
             )
             return False
         if (max(map_order) - min(map_order) + 1) != len(map_order):
-            # intermediate tasks missing -> since the jobs are in chain, so here the default is to automatically fill in any missing tasks in the middle  # noqa: E501
+            # intermediate tasks missing -> since the jobs are in chain, so here the default is to automatically fill in any missing tasks in the middle
             self.cur_task_list = FULL_TASK_LIST[min(map_order) : max(map_order) + 1]  # noqa: F405
             self.logfile.write_msg(
-                msg='PLoM.config_tasks: intermediate task(s) missing and being filled in automatically.',  # noqa: E501
+                msg='PLoM.config_tasks: intermediate task(s) missing and being filled in automatically.',
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -649,14 +658,14 @@ class PLoM:  # noqa: D101
                 if not self.__getattribute__('task_' + cur_task).refresh_status():
                     config_flag = False
                     self.logfile.write_msg(
-                        msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',  # noqa: E501
+                        msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',
                         msg_type='ERROR',
                         msg_level=0,
                     )
 
         if config_flag:  # noqa: RET503
             self.logfile.write_msg(  # noqa: RET503
-                msg='PLoM.config_tasks: the following tasks is configured to run: {}.'.format(  # noqa: E501
+                msg='PLoM.config_tasks: the following tasks is configured to run: {}.'.format(
                     '->'.join(self.cur_task_list)
                 ),
                 msg_type='RUNNING',
@@ -682,7 +691,7 @@ class PLoM:  # noqa: D101
         - epsilon_kde: smoothing parameter in the kernel density estimation
         - tol: tolerance in the PLoM iterations
         - max_iter: maximum number of iterations of the PLoM algorithm
-        """  # noqa: E501, D205, D400, D401, D415
+        """  # noqa: D205, D400, D401, D415
         if runDiffMaps == None:  # noqa: E711
             runDiffMaps = self.runDiffMaps  # noqa: N806
         else:
@@ -727,7 +736,7 @@ class PLoM:  # noqa: D101
                     data_shape=self.x_mean.shape,
                 )
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: X_range, X_min, X_scaled and X_scaled_mean saved.',  # noqa: E501
+                    msg='PLoM.RunAlgorithm: X_range, X_min, X_scaled and X_scaled_mean saved.',
                     msg_type='RUNNING',
                     msg_level=0,
                 )
@@ -770,7 +779,7 @@ class PLoM:  # noqa: D101
                     item_name='Error_PCA', item=np.array(self.errPCA)
                 )
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: X_PCA, EigenValue_PCA and EigenVector_PCA saved.',  # noqa: E501
+                    msg='PLoM.RunAlgorithm: X_PCA, EigenValue_PCA and EigenVector_PCA saved.',
                     msg_type='RUNNING',
                     msg_level=0,
                 )
@@ -835,7 +844,7 @@ class PLoM:  # noqa: D101
                         data_shape=self.eigenKDE.shape,
                     )
                     self.logfile.write_msg(
-                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',  # noqa: E501
+                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',
                         msg_type='RUNNING',
                         msg_level=0,
                     )
@@ -874,7 +883,7 @@ class PLoM:  # noqa: D101
                         data_shape=self.eigenKDE.shape,
                     )
                     self.logfile.write_msg(
-                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',  # noqa: E501
+                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',
                         msg_type='RUNNING',
                         msg_level=0,
                     )
@@ -921,7 +930,7 @@ class PLoM:  # noqa: D101
                     ).avail_var_list.append(cur_item)
             if not cur_task.refresh_status():
                 self.logfile.write_msg(
-                    msg=f'PLoM.RunAlgorithm: simulation stopped with task {cur_task.task_name} not fully completed.',  # noqa: E501
+                    msg=f'PLoM.RunAlgorithm: simulation stopped with task {cur_task.task_name} not fully completed.',
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -931,7 +940,7 @@ class PLoM:  # noqa: D101
 
         if self.task_list.refresh_status():
             self.logfile.write_msg(
-                msg='PLoM.RunAlgorithm: simulation completed with task(s) {} done.'.format(  # noqa: E501
+                msg='PLoM.RunAlgorithm: simulation completed with task(s) {} done.'.format(
                     '->'.join(self.cur_task_list)
                 ),
                 msg_type='RUNNING',
@@ -975,7 +984,7 @@ class PLoM:  # noqa: D101
             cbar = fig.colorbar(ctp)
             plt.savefig(os.path.join(self.vl_path,'PCA_CovarianceMatrix.png'),dpi=480)
             self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('PCA_CovarianceMatrix.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-        """  # noqa: E501
+        """
         return H, mu, phi, nu, errors
 
     def RunKDE(self, X, epsilon_kde):  # noqa: ANN001, ANN201, N802, N803
@@ -990,7 +999,7 @@ class PLoM:  # noqa: D101
 
     def DiffMaps(self, H, K, b, tol=0.1):  # noqa: ANN001, ANN201, N802, N803, D102
         # ..diff maps basis...
-        # self.Z = PCA(self.H)  # noqa: ERA001
+        # self.Z = PCA(self.H)
         try:
             g, eigenvalues = plom.g(K, b)  # diffusion maps
             g = g.real
@@ -1006,7 +1015,7 @@ class PLoM:  # noqa: D101
                 ax.set_title('Eigen value (KDE)')
                 plt.savefig(os.path.join(self.vl_path,'KDE_EigenValue.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('KDE_EigenValue.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-            """  # noqa: E501
+            """
         except:  # noqa: E722
             g = None
             m = 0
@@ -1022,9 +1031,14 @@ class PLoM:  # noqa: D101
         return g, m, a, Z, eigenvalues
 
     def ISDEGeneration(  # noqa: ANN201, N802
-        self, n_mc=5, tol_PCA2=1e-5, tol=0.02, max_iter=50, seed_num=None  # noqa: ANN001, N803
+        self,
+        n_mc=5,  # noqa: ANN001
+        tol_PCA2=1e-5,  # noqa: ANN001, N803
+        tol=0.02,  # noqa: ANN001
+        max_iter=50,  # noqa: ANN001
+        seed_num=None,  # noqa: ANN001
     ):
-        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: E501, D400, D401, D415
+        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: D400, D401, D415
         if seed_num:
             np.random.seed(seed_num)  # noqa: NPY002
         # constraints
@@ -1034,7 +1048,7 @@ class PLoM:  # noqa: D101
             )
 
             # scaling beta
-            # self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)  # noqa: ERA001, E501
+            # self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)
             # KZ, 07/24
             self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.X)
             self.b_c, self.psi = plom.PCA2(
@@ -1127,7 +1141,7 @@ class PLoM:  # noqa: D101
 
             if iteration == max_iter:
                 self.logfile.write_msg(
-                    msg='PLoM.ISDEGeneration: max. iteration reached and convergence not achieved.',  # noqa: E501
+                    msg='PLoM.ISDEGeneration: max. iteration reached and convergence not achieved.',
                     msg_type='WARNING',
                     msg_level=0,
                 )
@@ -1195,7 +1209,7 @@ class PLoM:  # noqa: D101
             for tag, data_i in enumerate(data_list):
                 if data_i not in avail_name_list:
                     self.logfile.write_msg(
-                        msg=f'PLoM.export_results: {data_i} is not found and skipped.',  # noqa: E501
+                        msg=f'PLoM.export_results: {data_i} is not found and skipped.',
                         msg_type='WARNING',
                         msg_level=0,
                     )
@@ -1209,19 +1223,19 @@ class PLoM:  # noqa: D101
                     )
                     if type(ex_flag) == int and ex_flat == 1:  # noqa: E721, F405
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {data_i} is not found and skipped.',  # noqa: E501
+                            msg=f'PLoM.export_results: {data_i} is not found and skipped.',
                             msg_type='WARNING',
                             msg_level=0,
                         )
                     elif type(ex_flag) == int and ex_flag == 2:  # noqa: E721, PLR2004
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {ff_i} is not supported yest.',  # noqa: E501
+                            msg=f'PLoM.export_results: {ff_i} is not supported yest.',
                             msg_type='ERROR',
                             msg_level=0,
                         )
                     else:
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {data_i} is exported in {ex_flag}.',  # noqa: E501
+                            msg=f'PLoM.export_results: {data_i} is exported in {ex_flag}.',
                             msg_type='RUNNING',
                             msg_level=0,
                         )

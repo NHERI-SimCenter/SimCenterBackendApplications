@@ -5,7 +5,7 @@ import sys
 from importlib import metadata as importlib_metadata
 
 #
-# need to make sure we have some python modules .. identify missing and install with python -m pip  # noqa: E501
+# need to make sure we have some python modules .. identify missing and install with python -m pip
 #
 
 modules_reqd = {'numpy', 'pandas', 'geopandas', 'shapely', 'requests', 'argparse'}
@@ -84,8 +84,10 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
         'grid_type'
     ]  # grid type (options: A, B, C, D, E, Y, and Z, can be "all")
 
-    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806, E501
-    numSiteGM = information['number_of_realizations']  # number of realizations  # noqa: N806
+    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806
+    numSiteGM = information[  # noqa: N806
+        'number_of_realizations'
+    ]  # number of realizations
     maxnumSiteGM = 30  # noqa: N806
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
@@ -101,7 +103,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
         os.makedirs(directory)  # noqa: PTH103
 
     ## remove the files in the directory
-    # os.system(f'rm -r {directory}/*')  # noqa: ERA001
+    # os.system(f'rm -r {directory}/*')
 
     # load the sites information
     path_script = os.path.dirname(os.path.abspath(__file__))  # noqa: PTH100, PTH120
@@ -152,7 +154,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
         if not region.contains(Point(lon, lat)):
             print('The location is not in the selected grid region')  # noqa: T201
             print(  # noqa: T201
-                'Please select a location in the region or change the grid type to "All"'  # noqa: E501
+                'Please select a location in the region or change the grid type to "All"'
             )
             return
         else:  # noqa: RET505
@@ -179,17 +181,17 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
             if not region.intersects(RegionofInterset):
                 print('The selected region is not in the selected grid region')  # noqa: T201
                 print(  # noqa: T201
-                    'Please select a region in in the or change the grid type to "All"'  # noqa: E501
+                    'Please select a region in in the or change the grid type to "All"'
                 )
                 return
             else:  # noqa: RET505
                 # Check if the RegionofInterset is in the region
                 if not region.contains(RegionofInterset):
                     print(  # noqa: T201
-                        'The selected region is not entirely in the selected grid region'  # noqa: E501
+                        'The selected region is not entirely in the selected grid region'
                     )
                     print(  # noqa: T201
-                        'The selected region will be changed to the intersection of the selected region and the grid region'  # noqa: E501
+                        'The selected region will be changed to the intersection of the selected region and the grid region'
                     )
                     RegionofInterset = region.intersection(RegionofInterset)  # noqa: N806
                 else:
@@ -204,7 +206,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
                 gdf = gdf[gdf.within(RegionofInterset)]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
+            # chage the gdf to calculte the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -280,7 +282,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
                 write_motion(site_name, directory, i, sitedata, APIFLAG)
                 gdf['filename'] = f'{site_name}_{i}'
 
-    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"  # noqa: E501
+    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"
     gdf[['filename', 'Latitude', 'Longitude']].to_csv(
         f'{directory}/sites.csv', index=False
     )

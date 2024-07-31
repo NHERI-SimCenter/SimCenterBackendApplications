@@ -7,9 +7,10 @@ import numpy as np
 
 def postProcess(evtName):  # noqa: ANN001, ANN201, N802, N803, D103
     acc = np.loadtxt('acceleration.out')
-    os.remove('acceleration.out')  # remove acceleration file to save space  # noqa: PTH107
-    # acc = np.loadtxt("out_tcl/acceleration.out")  # noqa: ERA001
-    # shutil.rmtree("out_tcl")  # remove output files to save space  # noqa: ERA001
+    # remove acceleration file to save space
+    os.remove('acceleration.out')  # noqa: PTH107
+    # acc = np.loadtxt("out_tcl/acceleration.out")
+    # shutil.rmtree("out_tcl")  # remove output files to save space
     time = acc[:, 0]
     acc_surf = acc[:, -2] / 9.81
     dT = time[1] - time[0]  # noqa: N806

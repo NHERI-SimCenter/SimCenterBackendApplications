@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: INP001, D100
+# Copyright (c) 2016-2017, The Regents of the University of California (Regents).  # noqa: D100, INP001
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -61,7 +61,7 @@ def readPressureProbes(fileName):  # noqa: ANN001, ANN201, N802, N803
     for each time step.
 
     @author: Abiy
-    """  # noqa: E501, D400, D401, D415
+    """  # noqa: D400, D401, D415
     probes = []
     p = []
     time = []
@@ -106,7 +106,7 @@ def read_pressure_data(file_names):  # noqa: ANN001, ANN201, D417
     time, pressure
         Returns the pressure time and pressure data of the connected file.
 
-    """  # noqa: E501, D205, D401, D404
+    """  # noqa: D205, D401, D404
     no_files = len(file_names)
     connected_time = []  # Connected array of time
     connected_p = []  # connected array of pressure.
@@ -126,10 +126,10 @@ def read_pressure_data(file_names):  # noqa: ANN001, ANN201, D417
         else:
             try:
                 index = np.where(time2 > time1[-1])[0][0]
-                # index += 1  # noqa: ERA001
+                # index += 1
 
             except:  # noqa: E722
-                # sys.exit('Fatal Error!: the pressure filese have time gap')  # noqa: ERA001
+                # sys.exit('Fatal Error!: the pressure filese have time gap')
                 index = 0  # Joint them even if they have a time gap
 
             connected_time = np.concatenate((connected_time, time2[index:]))
@@ -147,7 +147,13 @@ class PressureData:
     """  # noqa: D205, D400, D415
 
     def __init__(  # noqa: ANN204, D107, PLR0913
-        self, path, u_ref=0.0, rho=1.25, p_ref=0.0, start_time=None, end_time=None  # noqa: ANN001
+        self,
+        path,  # noqa: ANN001
+        u_ref=0.0,  # noqa: ANN001
+        rho=1.25,  # noqa: ANN001
+        p_ref=0.0,  # noqa: ANN001
+        start_time=None,  # noqa: ANN001
+        end_time=None,  # noqa: ANN001
     ):
         self.path = path
         self.u_ref = u_ref
@@ -170,19 +176,19 @@ class PressureData:
             print('Reading from path : %s' % (self.path))  # noqa: T201, UP031
             time_names = os.listdir(self.path)
             sorted_index = np.argsort(np.float64(time_names)).tolist()
-            # print(sorted_index)  # noqa: ERA001
-            # print("\tTime directories: %s" %(time_names))  # noqa: ERA001
+            # print(sorted_index)
+            # print("\tTime directories: %s" %(time_names))
             file_names = []
 
             for i in range(len(sorted_index)):
                 file_name = os.path.join(self.path, time_names[sorted_index[i]], 'p')  # noqa: PTH118
                 file_names.append(file_name)
 
-            # print(file_names)  # noqa: ERA001
+            # print(file_names)
             self.probes, self.time, self.p = read_pressure_data(file_names)
             self.p = self.rho * np.transpose(self.p)  # OpenFOAM gives p/rho
 
-            # self.p = np.transpose(self.p) # OpenFOAM gives p/rho  # noqa: ERA001
+            # self.p = np.transpose(self.p) # OpenFOAM gives p/rho
         else:
             print('Cannot find the file path: %s' % (self.path))  # noqa: T201, UP031
 
@@ -190,7 +196,7 @@ class PressureData:
         if self.start_time != None:  # noqa: E711
             start_index = int(np.argmax(self.time > self.start_time))
             self.time = self.time[start_index:]
-            # self.cp = self.cp[:,start_index:]  # noqa: ERA001
+            # self.cp = self.cp[:,start_index:]
             try:  # noqa: SIM105
                 self.p = self.p[:, start_index:]
             except:  # noqa: S110, E722
@@ -199,7 +205,7 @@ class PressureData:
         if self.end_time != None:  # noqa: E711
             end_index = int(np.argmax(self.time > self.end_time))
             self.time = self.time[:end_index]
-            # self.cp = self.cp[:,:end_index]  # noqa: ERA001
+            # self.cp = self.cp[:,:end_index]
             try:  # noqa: SIM105
                 self.p = self.p[:, :end_index]
             except:  # noqa: S110, E722
@@ -379,7 +385,7 @@ def read_velocity_data(path):  # noqa: ANN001, ANN201, D417
     time, pressure
         Returns the velocity time and velocity data of the connected file.
 
-    """  # noqa: E501, D205, D401, D404
+    """  # noqa: D205, D401, D404
     num_files = len(path)
     connected_time = []  # Connected array of time
     connected_U = []  # connected array of pressure.  # noqa: N806
@@ -396,7 +402,7 @@ def read_velocity_data(path):  # noqa: ANN001, ANN201, D417
             try:
                 index = np.where(time2 > time1[-1])[0][0]
             except:  # noqa: E722
-                # sys.exit('Fatal Error!: the pressure files have time gap')  # noqa: ERA001
+                # sys.exit('Fatal Error!: the pressure files have time gap')
                 index = 0  # Join them even if they have a time gap
             connected_time = np.concatenate((connected_time, time2[index:]))
             connected_U = np.concatenate((connected_U, U2[index:]))  # noqa: N806
@@ -1133,7 +1139,8 @@ def plot_wind_profiles_and_spectra(case_path, output_path, prof_name):  # noqa: 
     fig.update_layout(height=850, width=1200, title_text='', showlegend=False)
     fig.show()
     fig.write_html(
-        os.path.join(output_path, prof_name + '.html'), include_mathjax='cdn'  # noqa: PTH118
+        os.path.join(output_path, prof_name + '.html'),  # noqa: PTH118
+        include_mathjax='cdn',
     )
 
     # Plot the spectra at four locations
@@ -1304,7 +1311,7 @@ def plot_pressure_profile(case_path, output_path, prof_name):  # noqa: ANN001, A
 if __name__ == '__main__':
     """"
     Entry point to read the simulation results from OpenFOAM case and post-process it.
-    """  # noqa: E501
+    """
 
     # CLI parser
     parser = argparse.ArgumentParser(
@@ -1320,7 +1327,7 @@ if __name__ == '__main__':
 
     print('Case full path: ', case_path)  # noqa: T201
 
-    # prof_name = sys.argv[2]  # noqa: ERA001
+    # prof_name = sys.argv[2]
 
     # Read JSON data
     json_path = os.path.join(  # noqa: PTH118

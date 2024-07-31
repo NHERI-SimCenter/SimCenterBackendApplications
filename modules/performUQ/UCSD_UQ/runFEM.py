@@ -2,7 +2,7 @@
 and Prof. J.P. Conte
 affiliation: SimCenter*; University of California, San Diego
 
-"""  # noqa: INP001, E501, D205, D400, D415
+"""  # noqa: INP001, D205, D400, D415
 
 import os
 import shutil
@@ -80,14 +80,14 @@ def runFEM(  # noqa: ANN201, N802, PLR0913
             else:
                 covarianceMultiplierList.append(parameterSampleValues[i])
 
-    # subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)  # noqa: ERA001
+    # subprocess.run(workflowDriver, stderr=subprocess.PIPE, shell=True)
 
     returnCode = subprocess.call(  # noqa: S602, N806, F841
         os.path.join(analysisPath, workflowDriver),  # noqa: PTH118
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
-    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)  # noqa: E501
+    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     # Read in the model prediction
     if os.path.exists('results.out'):  # noqa: PTH110

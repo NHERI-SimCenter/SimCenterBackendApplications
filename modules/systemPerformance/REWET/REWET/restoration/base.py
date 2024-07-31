@@ -52,9 +52,9 @@ class Location:  # noqa: D101
 # =============================================================================
 # class restoration_base():
 #     def __init__(self):
-#         self.coord = coordination()  # noqa: ERA001
-#         self.ID = None  # noqa: ERA001
-#         self.Object_typ = None  # noqa: ERA001
+#         self.coord = coordination()
+#         self.ID = None
+#         self.Object_typ = None
 #
 # =============================================================================
 
@@ -76,7 +76,7 @@ class AgentData:  # noqa: D101
         if type(agent_type) != str:  # noqa: E721
             raise ValueError('agent type must be string')  # noqa: EM101, TRY003
         # if type(definition) != pd.Series:
-        # raise ValueError('definiton must be a Pandas series')  # noqa: ERA001
+        # raise ValueError('definiton must be a Pandas series')
 
         if type(cur_x) != float:  # noqa: E721
             raise ValueError('cur_x must be float')  # noqa: EM101, TRY003
@@ -211,7 +211,7 @@ class Agents:  # noqa: D101
         # ready:   read is true if the agent's active and it has nthing to do
         self._agents = pd.DataFrame(
             columns=['data', 'type', 'group', 'active', 'ready', 'available']
-        )  # table that includes all data about agents including attributes for fast refinement, the index is the name of the agent (AKA agent_ID)  # noqa: E501
+        )  # table that includes all data about agents including attributes for fast refinement, the index is the name of the agent (AKA agent_ID)
         self.group_names = {}
         self._shifting = shifting
         self._jobs = jobs
@@ -233,7 +233,7 @@ class Agents:  # noqa: D101
         None.
 
         """  # noqa: D400, D401, D415
-        # number_of_agents = int(definition['Number'])  # noqa: ERA001
+        # number_of_agents = int(definition['Number'])
         agent_speed = self.registry.settings['crew_travel_speed']
         temp_agent_data = AgentData(
             agent_name,
@@ -306,7 +306,7 @@ class Agents:  # noqa: D101
             if self._agents.loc[name, 'data'].isOnShift(time):
                 if (  # noqa: SIM102
                     self._agents.loc[name, 'active'] == False  # noqa: E712
-                ):  # if agent is active already and is on shift, it means that the agent has been active before teh shift change event  # noqa: E501
+                ):  # if agent is active already and is on shift, it means that the agent has been active before teh shift change event
                     if self._agents.loc[name, 'available'] == True:  # noqa: E712
                         self._agents.loc[name, 'active'] = True
                         self._agents.loc[name, 'ready'] = True
@@ -393,7 +393,7 @@ class Agents:  # noqa: D101
         if self._agents.loc[agent_name, 'data'].isWorking == True:  # noqa: E712
             raise ValueError('Agent ' + agent_name + ' is working')
 
-        # logger.debug('Assiging job to '+agent_name)  # noqa: ERA001
+        # logger.debug('Assiging job to '+agent_name)
         real_node_name = node_name
         if self._jobs._rm.entity[entity] == 'DISTNODE':  # noqa: SLF001
             damage_data = self._jobs._rm._registry.getDamageData(  # noqa: SLF001
@@ -484,7 +484,7 @@ class Agents:  # noqa: D101
             iget = 'OUTSIDE_SHIFT'
             iOnGoing = True  # noqa: N806
         else:
-            # logger.warning(agent_name+',  '+node_name+', '+repr(end_time))  # noqa: ERA001
+            # logger.warning(agent_name+',  '+node_name+', '+repr(end_time))
             iget = 'ShortOfTime'
 
         if iget == 'ShortOfTime':
@@ -562,10 +562,11 @@ class Agents:  # noqa: D101
 
 
 class AgentShift:  # noqa: D101
-    def __init__(self, agent_name, name):  # , shifting_obj):  # noqa: ANN001, ANN204, D107
+    # , shifting_obj):
+    def __init__(self, agent_name, name):  # noqa: ANN001, ANN204, D107
         self._agent_name = agent_name
         self._shift_name = name
-        # shifting_obj.addAgentShift(self._agent_name, self._shift_name)  # noqa: ERA001
+        # shifting_obj.addAgentShift(self._agent_name, self._shift_name)
 
 
 class Shifting:  # noqa: D101
@@ -634,7 +635,7 @@ class Shifting:  # noqa: D101
             if beg_time > end_time and daily_time < end_time:
                 beg_time -= 24 * 3600
             elif beg_time > end_time and daily_time >= end_time:
-                # beg_time += 24*3600*num_of_days  # noqa: ERA001
+                # beg_time += 24*3600*num_of_days
                 end_time += 24 * 3600
 
             if daily_time < end_time and daily_time >= beg_time:
@@ -643,8 +644,8 @@ class Shifting:  # noqa: D101
                 )
         change_shift_time = next_shift_candidate.min()
         # if beg_time > end_time:
-        # next_shift_time = time +(change_shift_time - daily_time)  # noqa: ERA001
-        # else:  # noqa: ERA001
+        # next_shift_time = time +(change_shift_time - daily_time)
+        # else:
 
         return change_shift_time  # noqa: RET504
 
@@ -687,13 +688,13 @@ class DispatchRule:  # noqa: D101
             self._rules['PIPE'] = self.settings['pipe_damage_discovery_model'][
                 'time_discovery_ratio'
             ]
-            # data2=pd.Series([0.90, 0.01, 0.01, 0.04, 0.04, 0, 0], index = [3600*n for n in [0, 12, 24, 36, 48, 60, 72]])  # noqa: ERA001, E501
+            # data2=pd.Series([0.90, 0.01, 0.01, 0.04, 0.04, 0, 0], index = [3600*n for n in [0, 12, 24, 36, 48, 60, 72]])
 
         if 'DISTNODE' not in exclude:
             self._rules['DISTNODE'] = self.settings['node_damage_discovery_model'][
                 'time_discovery_ratio'
             ]
-            # data=pd.Series([0, 0.67, 0.07, 0.07, 0.07, 0.07, 0.05], index = [3600*n for n in [0, 12, 24, 36, 48, 60, 72]])  # noqa: ERA001, E501
+            # data=pd.Series([0, 0.67, 0.07, 0.07, 0.07, 0.07, 0.05], index = [3600*n for n in [0, 12, 24, 36, 48, 60, 72]])
 
         self._rules['GNODE'] = self.settings['Gnode_damage_discovery_model'][
             'time_discovery_ratio'
@@ -714,7 +715,7 @@ class DispatchRule:  # noqa: D101
             raise ValueError('Unknown dispatch Rule: ' + method)
 
         # for key in exclude:
-        # self._rules.pop(key)  # noqa: ERA001
+        # self._rules.pop(key)
 
         for key, d in self._rules.items():  # noqa: B007, PERF102
             self._cumulative[key] = self._rules[key].cumsum()
@@ -784,10 +785,10 @@ class Dispatch:  # noqa: D101
 
         else:
             # if self.method == 'old':
-            # time_since_dispatch_activity = time - self._rm.restoration_start_time  # noqa: ERA001
-            # discovered_ratios         = self._rules.getDiscoveredPrecentage(time_since_dispatch_activity)  # noqa: ERA001, E501
-            # discovered_damage_numbers = self._getDamageNumbers(discovered_ratios)  # noqa: ERA001
-            # self._updateDamagesNumbers(discovered_damage_numbers)  # noqa: ERA001
+            # time_since_dispatch_activity = time - self._rm.restoration_start_time
+            # discovered_ratios         = self._rules.getDiscoveredPrecentage(time_since_dispatch_activity)
+            # discovered_damage_numbers = self._getDamageNumbers(discovered_ratios)
+            # self._updateDamagesNumbers(discovered_damage_numbers)
 
             if (
                 self.settings['pipe_damage_discovery_model']['method']
@@ -818,10 +819,10 @@ class Dispatch:  # noqa: D101
                 )
                 not_dicovered_node_B_list = not_discovered_break_node_B.to_list()  # noqa: N806
                 to_be_checked_node_list.extend(not_dicovered_node_B_list)
-                # break_pair = zip(breaks_not_discovered_pipe_damage_table, not_discovered_break_node_B)  # noqa: ERA001, E501
-                # not_discovered_pipe_damage_name_list = list(not_discovered_pipe_damage_table.index)  # noqa: ERA001, E501
-                # breaks_not_discovered_pipe_damage_table  # noqa: ERA001
-                # all_nodes_name_list = set(self._rm._registry.result.columns)  # noqa: ERA001
+                # break_pair = zip(breaks_not_discovered_pipe_damage_table, not_discovered_break_node_B)
+                # not_discovered_pipe_damage_name_list = list(not_discovered_pipe_damage_table.index)
+                # breaks_not_discovered_pipe_damage_table
+                # all_nodes_name_list = set(self._rm._registry.result.columns)
                 available_nodes = set(
                     self._rm._registry.result.node['demand'].columns  # noqa: SLF001
                 )
@@ -846,17 +847,17 @@ class Dispatch:  # noqa: D101
                     ]
                     to_be_discoverd = discovered_bool_temp.index.to_list()
 
-                    # time1    = leaking_nodes_result.index[1:]  # noqa: ERA001
-                    # time2    = leaking_nodes_result.index[0:-1]  # noqa: ERA001
-                    # time_dif = (pd.Series(time1) - pd.Series(time2))  # noqa: ERA001
-                    # leaking_nodes_result = leaking_nodes_result.drop(leaking_nodes_result.index[-1])  # noqa: ERA001, E501
+                    # time1    = leaking_nodes_result.index[1:]
+                    # time2    = leaking_nodes_result.index[0:-1]
+                    # time_dif = (pd.Series(time1) - pd.Series(time2))
+                    # leaking_nodes_result = leaking_nodes_result.drop(leaking_nodes_result.index[-1])
 
-                    # leaking_nodes_result.index = time_dif.to_numpy()  # noqa: ERA001
-                    # leaking_nodes_result = leaking_nodes_result.apply(lambda x: x.values * x.index)  # noqa: ERA001, E501
-                    # summed_water_loss = leaking_nodes_result.sum()  # noqa: ERA001
-                    # to_be_discoverd = summed_water_loss[summed_water_loss > 3600*2*0.2]  # noqa: ERA001, E501
+                    # leaking_nodes_result.index = time_dif.to_numpy()
+                    # leaking_nodes_result = leaking_nodes_result.apply(lambda x: x.values * x.index)
+                    # summed_water_loss = leaking_nodes_result.sum()
+                    # to_be_discoverd = summed_water_loss[summed_water_loss > 3600*2*0.2]
                     discovery_list = set()
-                    # to_be_discoverd = list(to_be_discoverd.index)  # noqa: ERA001
+                    # to_be_discoverd = list(to_be_discoverd.index)
                     for discovery_candidate in to_be_discoverd:
                         if discovery_candidate in not_dicovered_node_B_list:
                             candidate_break_A = not_discovered_break_node_B[  # noqa: N806
@@ -865,7 +866,7 @@ class Dispatch:  # noqa: D101
                             discovery_list.add(candidate_break_A)
                         else:
                             discovery_list.add(discovery_candidate)
-                    # discovery_list = list(discovery_list)  # noqa: ERA001
+                    # discovery_list = list(discovery_list)
                     pipe_damage_table.loc[discovery_list, 'discovered'] = True
 
             if (
@@ -944,7 +945,7 @@ class Dispatch:  # noqa: D101
                         ).index
 
                     nodal_damage_table.loc[discovered_list, 'discovered'] = True
-                # else:  # noqa: ERA001
+                # else:
 
             time_since_dispatch_activity = time - self._rm.restoration_start_time
             discovered_ratios = self._rules.getDiscoveredPrecentage(
@@ -953,8 +954,8 @@ class Dispatch:  # noqa: D101
             discovered_damage_numbers = self._getDamageNumbers(discovered_ratios)
             self._updateDamagesNumbers(discovered_damage_numbers)
 
-            # else:  # noqa: ERA001
-            # raise ValueError('Unknown method: '+repr(self.method))  # noqa: ERA001
+            # else:
+            # raise ValueError('Unknown method: '+repr(self.method))
 
     def _getDamageNumbers(self, discovered_ratios):  # noqa: ANN001, ANN202, N802
         num_damaged_entity = {}
@@ -998,17 +999,17 @@ class Dispatch:  # noqa: D101
                     refined_damaged_table['discovered'] == False  # noqa: E712
                 ]
 
-                # =============================================================================  # noqa: E501
-                #                 used_number = []  # noqa: ERA001
-                #                 i = 0  # noqa: ERA001
-                #                 while i < (discovered_numbers[el] - self._last_discovered_number[el]):  # noqa: E501
-                #                     picked_number = random.randint(0,len(undiscovered_damage_table)-1)  # noqa: ERA001, E501
+                # =============================================================================
+                #                 used_number = []
+                #                 i = 0
+                #                 while i < (discovered_numbers[el] - self._last_discovered_number[el]):
+                #                     picked_number = random.randint(0,len(undiscovered_damage_table)-1)
                 #                     if picked_number not in used_number:
-                #                         used_number.append(picked_number)  # noqa: ERA001
-                #                         i += 1  # noqa: ERA001
-                #                     else:  # noqa: ERA001
+                #                         used_number.append(picked_number)
+                #                         i += 1
+                #                     else:
                 #                         pass
-                # =============================================================================  # noqa: E501
+                # =============================================================================
                 if len(undiscovered_damage_table) > 0:
                     used_number = random.sample(
                         range(len(undiscovered_damage_table)),
@@ -1019,7 +1020,11 @@ class Dispatch:  # noqa: D101
                 for i in used_number:
                     temp_index = undiscovered_damage_table.index[i]
                     self._rm._registry.updateElementDamageTable(  # noqa: SLF001
-                        el, 'discovered', temp_index, True, icheck=True  # noqa: FBT003
+                        el,
+                        'discovered',
+                        temp_index,
+                        True,  # noqa: FBT003
+                        icheck=True,
                     )
 
                 if el == 'PIPE':
@@ -1112,7 +1117,7 @@ class Priority:  # noqa: D101
             Proximity_list = self._rm.proximity_points[target_priority]  # noqa: N806
             node_name_list = list(entity_data.index)
             for node_name in node_name_list:
-                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time  # noqa: E501
+                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time
                 node_name_vir = get_node_name(node_name, entity_data)
                 coord = wn.get_node(node_name_vir).coordinates
                 entity_data.loc[node_name, 'X_COORD'] = coord[0]
@@ -1155,9 +1160,9 @@ class Priority:  # noqa: D101
                     target_priority='CLOSEST',
                 )
             else:
-                all_time_index = self._rm._registry.result.link['flowrate'].index[  # noqa: SLF001
-                    : self._rm.restoration_start_time + 1
-                ]
+                all_time_index = self._rm._registry.result.link[  # noqa: SLF001
+                    'flowrate'
+                ].index[: self._rm.restoration_start_time + 1]
                 pipe_name_list = entity_data.loc[:, 'Orginal_element']
                 last_valid_time = [
                     cur_time
@@ -1188,7 +1193,7 @@ class Priority:  # noqa: D101
             Proximity_list = self._rm.proximity_points[target_priority]  # noqa: N806
             node_name_list = list(entity_data.index)
             for node_name in node_name_list:
-                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time  # noqa: E501
+                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time
                 node_name_vir = get_node_name(node_name, entity_data)
                 coord = wn.get_node(node_name_vir).coordinates
                 entity_data.loc[node_name, 'X_COORD'] = coord[0]
@@ -1241,7 +1246,7 @@ class Priority:  # noqa: D101
                 point_length_vector = np.sqrt(point_length_vector)
                 closest_node_name = point_length_vector.idxmin()
 
-                # print("closest_node_name= "+str(closest_node_name))  # noqa: ERA001
+                # print("closest_node_name= "+str(closest_node_name))
 
                 orginal_pipe_name_list = entity_data['Orginal_element']
                 damaged_pipe_node_list = [
@@ -1284,7 +1289,7 @@ class Priority:  # noqa: D101
                             closest_path_from_start, closest_path_from_end
                         )
                         shortest_path_length.append(cur_shortest_path_length)
-                # print(shortest_path_length)  # noqa: ERA001
+                # print(shortest_path_length)
 
                 name_sug_c = name_sugest + '_' + str(counter)
                 columns_to_drop.append(name_sug_c)
@@ -1298,8 +1303,8 @@ class Priority:  # noqa: D101
             columns_to_drop.append('X_COORD')
             columns_to_drop.append('Y_COORD')
             entity_data.drop(columns=columns_to_drop, inplace=True)  # noqa: PD002
-            # print(entity_data)  # noqa: ERA001
-            # print("+++++++++++++++++++++++++++++++++++++++")  # noqa: ERA001
+            # print(entity_data)
+            # print("+++++++++++++++++++++++++++++++++++++++")
 
         # Sina: It does nothing. When there are less damage location within
         # the priority definition for the crew type, thsi works fine, but
@@ -1332,14 +1337,14 @@ class Priority:  # noqa: D101
         # Checked (i.e. check is not at the sequnce before the current action)
         # the leak data is real time leak for the damage location.
         elif target_priority.upper() == 'MOSTLEAKATCHECK':
-            # real_node_name_list = []  # noqa: ERA001
+            # real_node_name_list = []
             node_name_list = list(entity_data.index)
             name_sugest = (
                 'Priority_' + str(target_priority_index) + '_leak_sina'
             )  # added sina so the possibility of a conflic of name is minimized
             # for node_name in node_name_list:
-            # node_name_vir = get_node_name(node_name, entity_data)  # noqa: ERA001
-            # real_node_name_list.append(node_name_vir)  # noqa: ERA001
+            # node_name_vir = get_node_name(node_name, entity_data)
+            # real_node_name_list.append(node_name_vir)
             element_type = self._rm.entity[entity]
             leak_data = self._rm._registry.getMostLeakAtCheck(  # noqa: SLF001
                 node_name_list, element_type
@@ -1374,7 +1379,7 @@ class Jobs:  # noqa: D101
         self._job_list = pd.DataFrame(
             columns=['agent_type', 'entity', 'action', 'time_argument']
         )
-        self._effect_defualts = {}  # pd.DataFrame(columns=['effect_definition_name', 'method_name','argument','value'])  # noqa: E501
+        self._effect_defualts = {}  # pd.DataFrame(columns=['effect_definition_name', 'method_name','argument','value'])
         self._effect_data = {}
         self._time_overwrite = {}
         self._final_method = {}
@@ -1426,7 +1431,13 @@ class Jobs:  # noqa: D101
         return temp
 
     def getAJobEstimate(  # noqa: ANN201, N802, D102, PLR0913
-        self, orginal_element, agent_type, entity, action, method_name, number  # noqa: ANN001
+        self,
+        orginal_element,  # noqa: ANN001
+        agent_type,  # noqa: ANN001
+        entity,  # noqa: ANN001
+        action,  # noqa: ANN001
+        method_name,  # noqa: ANN001
+        number,  # noqa: ANN001
     ):
         temp = self._filter(agent_type, entity, action)
         time_arg = temp['time_argument'].iloc[0]
@@ -1439,11 +1450,11 @@ class Jobs:  # noqa: D101
             else:
                 raise ValueError('Unknown Time Data')  # noqa: EM101, TRY003
         time = int(time_arg)
-        # try:  # noqa: ERA001
+        # try:
         # time_arg = int(time_arg):
-        # time = time_arg  # noqa: ERA001
-        # except:  # noqa: ERA001
-        # raise ValueError('Unknow time argument: '+str(type(time_arg)))  # noqa: ERA001
+        # time = time_arg
+        # except:
+        # raise ValueError('Unknow time argument: '+str(type(time_arg)))
 
         once_flag = False
         if operation_name in self._once:  # noqa: SIM102
@@ -1469,7 +1480,12 @@ class Jobs:  # noqa: D101
         return time
 
     def getAllEffectByJobData(  # noqa: ANN201, N802, D102
-        self, agent_type, action, entity, iWithout_data=True, iOnlyData=False  # noqa: ANN001, FBT002, ARG002, N803
+        self,
+        agent_type,  # noqa: ANN001
+        action,  # noqa: ANN001
+        entity,  # noqa: ANN001
+        iWithout_data=True,  # noqa: ANN001, FBT002, ARG002, N803
+        iOnlyData=False,  # noqa: ANN001, FBT002, N803
     ):
         temp = self._filter(agent_type, entity, action)
         all_effect_name = temp['effect'].iloc[0]  # noqa: F841
@@ -1559,7 +1575,7 @@ class Jobs:  # noqa: D101
                 probability = method['METHOD_PROBABILITY']
             else:
                 probability = 1  # noqa: F841
-        # else:  # noqa: ERA001
+        # else:
         # if 'METHOD_PROBABILITY' in method:
 
     def _iConditionHolds(self, val1, con, val2):  # noqa: ANN001, ANN202, C901, N802, PLR0911, PLR0912
@@ -1598,7 +1614,11 @@ class Jobs:  # noqa: D101
         return value  # noqa: RET504
 
     def iEffectApplicableByOtherConditions(  # noqa: ANN201, N802, D102
-        self, effects_definition_name, method_name, damaged_node_name, entity  # noqa: ANN001
+        self,
+        effects_definition_name,  # noqa: ANN001
+        method_name,  # noqa: ANN001
+        damaged_node_name,  # noqa: ANN001
+        entity,  # noqa: ANN001
     ):
         element_type = self._rm.entity[entity]
         effects_definition = self.getEffectDefinition(effects_definition_name)
@@ -1630,7 +1650,11 @@ class Jobs:  # noqa: D101
         return True
 
     def iEffectApplicableByProbability(  # noqa: ANN201, N802, D102
-        self, effects_definition_name, method_name, damaged_node_name, entity  # noqa: ANN001
+        self,
+        effects_definition_name,  # noqa: ANN001
+        method_name,  # noqa: ANN001
+        damaged_node_name,  # noqa: ANN001
+        entity,  # noqa: ANN001
     ):
         _prob = 0
         temp = self.getDefualtValue(
@@ -1651,18 +1675,18 @@ class Jobs:  # noqa: D101
             )
             raise ValueError(e)  # noqa: B904
 
-        # =============================================================================  # noqa: E501
+        # =============================================================================
         #         if 'DEFAULT' in self._effect_data[effects_definition_name]:
-        #             data = self._effect_data[effects_definition_name]['DEFAULT']  # noqa: ERA001
+        #             data = self._effect_data[effects_definition_name]['DEFAULT']
         #             if 'METHOD_PROBABILITY' in data:
         #                 if method_name in data['METHOD_PROBABILITY']:
-        #                     _prob=data['METHOD_PROBABILITY'][method_name]  # noqa: ERA001
-        #                     try:  # noqa: ERA001
-        #                         _check_probability(_prob)  # noqa: ERA001
-        #                     except Exception as e:  # noqa: ERA001
-        #                         print('in Method bsaed Probability of method ' +method_name+ ', and definition_name '+effects_definition_name)  # noqa: ERA001, E501
-        #                         raise ValueError(e)  # noqa: ERA001
-        # =============================================================================  # noqa: E501
+        #                     _prob=data['METHOD_PROBABILITY'][method_name]
+        #                     try:
+        #                         _check_probability(_prob)
+        #                     except Exception as e:
+        #                         print('in Method bsaed Probability of method ' +method_name+ ', and definition_name '+effects_definition_name)
+        #                         raise ValueError(e)
+        # =============================================================================
 
         if 'DATA' in self._effect_data[effects_definition_name]:
             data = self._effect_data[effects_definition_name]['DATA']
@@ -1671,7 +1695,7 @@ class Jobs:  # noqa: D101
                     damaged_node_name, self._rm.entity[entity]
                 )
 
-                # temp =data[(data[['ELEMENT_NAME','METHOD_NAME']]==[element_name, method_name]).all(1)]  # noqa: ERA001, E501
+                # temp =data[(data[['ELEMENT_NAME','METHOD_NAME']]==[element_name, method_name]).all(1)]
                 element_data = data[data['ELEMENT_NAME'] == element_name]
                 if len(element_data) == 0:
                     pass
@@ -1703,7 +1727,7 @@ class Jobs:  # noqa: D101
 
         _rand = random.random()  # noqa: S311
         # if effects_definition_name == 'MJTRreroute':
-        # print(str(method_name) + ' - ' + repr(_prob))  # noqa: ERA001
+        # print(str(method_name) + ' - ' + repr(_prob))
         logger.debug(_prob)
         if _rand < _prob:  # noqa: SIM103
             return True
@@ -1722,15 +1746,15 @@ class Jobs:  # noqa: D101
 # =============================================================================
 # class Effects():
 #     def __init__(self, restoration_model):
-#         #self._data_table = pd.DataFrame(columns=['effect', 'method_name', 'data_index'])  # noqa: ERA001, E501
+#         #self._data_table = pd.DataFrame(columns=['effect', 'method_name', 'data_index'])
 #
 #
 #
 #
 #
-#         #self._data_table.loc[effect_name, 'method'] = method  # noqa: ERA001
-#         #self._data_table.loc[effect_name, 'effect'] = effect  # noqa: ERA001
-#         #self._data_table.loc[effect_name, 'connection'] = connection  # noqa: ERA001
-#         #self._data_table.loc[effect_name, 'connection_value'] = connection_value  # noqa: ERA001
-#         #self._data_table.loc[effect_name, 'CV'] = cv  # noqa: ERA001
+#         #self._data_table.loc[effect_name, 'method'] = method
+#         #self._data_table.loc[effect_name, 'effect'] = effect
+#         #self._data_table.loc[effect_name, 'connection'] = connection
+#         #self._data_table.loc[effect_name, 'connection_value'] = connection_value
+#         #self._data_table.loc[effect_name, 'CV'] = cv
 # =============================================================================

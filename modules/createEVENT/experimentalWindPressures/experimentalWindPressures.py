@@ -29,7 +29,8 @@ sys.stderr = open(  # noqa: SIM115, PTH123, F405
 def err_exit(msg):  # noqa: ANN001, ANN201, D103
     print('Failed in wind load generator: ' + msg)  # display in stdout  # noqa: T201
     print(
-        'Failed in wind load generator: ' + msg, file=sys.stderr  # noqa: F405
+        'Failed in wind load generator: ' + msg,
+        file=sys.stderr,  # noqa: F405
     )  # display in stderr
     exit(-1)  # exit with non-zero exit code  # noqa: PLR1722
 
@@ -46,7 +47,8 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     # User-defined variables
     #
 
-    V_H = evt_data['windSpeed']  # 4*Vref, wind speed at full scale (m/s)  # noqa: N806
+    # 4*Vref, wind speed at full scale (m/s)
+    V_H = evt_data['windSpeed']  # noqa: N806
     T_full = evt_data[  # noqa: N806
         'fullScaleDuration'
     ]  # 1600, Duration of wind pressure realization at full scale (s)
@@ -57,17 +59,17 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     seed = evt_data['seed']  # Set seeds for reproducibility
     Tw = evt_data[  # noqa: N806
         'windowSize'
-    ]  # 4, window size/duration (sec) - smaller window leads to more smoothing - model scale  # noqa: E501
+    ]  # 4, window size/duration (sec) - smaller window leads to more smoothing - model scale
     overlap = evt_data['overlapPerc'] / 100  # 0.5   , 50% overlap - user defined
     gg = evt_data[
         'cpsdGroupSize'
-    ]  # 5 , User defined: variable that subdivides the CPSD matrix into ggxgg "groups" in order to avoid running out of memory  # noqa: E501
+    ]  # 5 , User defined: variable that subdivides the CPSD matrix into ggxgg "groups" in order to avoid running out of memory
 
     ms = evt_data.get('modelScale', 0)  # model scale
 
     selected_taps = np.array(
         evt_data['selectedTaps']
-    )  # np.arange(91,150+1) - 1 , to start from zero   # selected taps for simulation (1:510 if all taps are included)  # noqa: E501
+    )  # np.arange(91,150+1) - 1 , to start from zero   # selected taps for simulation (1:510 if all taps are included)
     tap = len(selected_taps)
     filtHz = 100  # if applied - filtering high-frequency noise - model scale  # noqa: N806
     # set equal to 0 if not applied
@@ -83,7 +85,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     #
     # Parameters
     #
-    tailTrshd = 5  # Percentage of tail threshold on both tails - Fixed value for all times series  # noqa: N806, E501
+    tailTrshd = 5  # Percentage of tail threshold on both tails - Fixed value for all times series  # noqa: N806
     nl = tailTrshd / 100  # Lower Tail Threshold
     nu = 1 - nl  # Upper Tail Threshold
 
@@ -116,7 +118,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         if filename.endswith('.mat'):
             pressure_data = sio.loadmat(filename)  # noqa: F405
             for key in pressure_data:
-                # print(key)  # noqa: ERA001
+                # print(key)
                 if not key.startswith('__'):
                     pressure_data[key] = pressure_data[key][0]
 
@@ -150,7 +152,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         plt.scatter(myx[id],myy[id],20,c=myMean[id])
         plt.show()
 
-        """  # noqa: E501
+        """
 
         if ms == 0:  # when mat file is imported, model scale is not precalculated
             print('Model scale not found. Calculating the unified model scale..')  # noqa: T201
@@ -164,11 +166,11 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
             print(f'Model scaling factor of {ms:.2f} is used')  # noqa: T201
             if ((ms != D_full / D) or (ms != B_full / B)) and getRV:
                 print(  # noqa: T201
-                    f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'  # noqa: E501
+                    f'Warning: target-data geometry scaling ratio is inconsistent: H={H_full / H:.2}, B={B_full / B:.2}, D={D_full / D:.2}'
                 )
 
         if len(set(selected_taps.flatten()).difference(id_list)) > 0:
-            msg = 'The selected taps are not a subset of your original set: following tabs are not found'  # noqa: E501
+            msg = 'The selected taps are not a subset of your original set: following tabs are not found'
             msg += set(selected_taps.flatten()).difference(set(id_list))
             err_exit(msg)
 
@@ -178,10 +180,10 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         fc = fs / 2  # Nyquist Frequency (Hz)  wind tunnel
         fp = fs / ms  # scaled frequency
         fcut = fc / ms  # scaled Nyquist frequency
-        # T = N/fs                # duration of simulation in model scale (s)  # noqa: ERA001
-        # rng_gen = 'twister'     # random number generator  # noqa: ERA001
-        # air_dens = 1.225        # (kg/m3) at 15 oC, sea level  # noqa: ERA001
-        # dtm = 1/fs              #  # noqa: ERA001
+        # T = N/fs                # duration of simulation in model scale (s)
+        # rng_gen = 'twister'     # random number generator
+        # air_dens = 1.225        # (kg/m3) at 15 oC, sea level
+        # dtm = 1/fs              #
 
         # filtering added
         if filtHz > 0:
@@ -190,20 +192,25 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
             Wn = Hz / (fs / 2)  # noqa: N806
             [b, a] = butter(n, Wn)
             x = Cp_pf - np.mean(Cp_pf, axis=0)
-            # y = filter(b, a, x)  # noqa: ERA001
+            # y = filter(b, a, x)
             y = lfilter(b, a, x, axis=0)
             Cp = y + np.mean(Cp_pf, axis=0)  # noqa: N806
 
         #######################################################################################################################
         # Standardization of wind records
-        # This step is necessary when doing the proper orthogonal decomposition (POD).  # noqa: E501
-        # Cp have different order of magnitude, and the energy is more evenly distributed  # noqa: E501
+        # This step is necessary when doing the proper orthogonal decomposition (POD).
+        # Cp have different order of magnitude, and the energy is more evenly distributed
         # when standardized, requiring less modes in the simulation.
         # Pressure Coefficients Time historites
 
         Cp_std = np.std(Cp, axis=0)  # std of time series for later use  # noqa: N806
-        Cp_mean = np.mean(Cp, axis=0)  # mean of time series for later use  # noqa: N806
-        # Cp_norm = np.normalize(Cp)            # standardize Cp time series such that mean = 0 and std = 1 for all taps.  # noqa: ERA001, E501
+        # mean of time series for later use
+        Cp_mean = np.mean(Cp, axis=0)  # noqa: N806
+
+        # standardize Cp time series such that mean = 0 and std = 1
+        # for all taps.
+        # Cp_norm = np.normalize(Cp)
+
         row_sums = Cp.sum(axis=1)  # noqa: F841
         Cp_norm = (Cp - Cp_mean) / Cp_std  # noqa: N806
 
@@ -244,13 +251,13 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
             for j in range(1, len(d)):
                 if np.mod((i - 1) * (len(d) - 1) + j, round(nloop / 10)) == 0:
                     print(  # noqa: T201
-                        f'{((i - 1) * (len(d) - 1) + j) / nloop * 100:.0f} % completed'  # noqa: E501
+                        f'{((i - 1) * (len(d) - 1) + j) / nloop * 100:.0f} % completed'
                     )
 
                 kk = np.arange(d[i - 1], d[i])
                 ll = np.arange(d[j - 1], d[j])
-                # ii = np.arange(selected_taps_tmp[d[i-1]],selected_taps_tmp[d[i]])  # noqa: ERA001
-                # jj = np.arange(selected_taps_tmp[d[j-1]],selected_taps_tmp[d[j]])  # noqa: ERA001
+                # ii = np.arange(selected_taps_tmp[d[i-1]],selected_taps_tmp[d[i]])
+                # jj = np.arange(selected_taps_tmp[d[j-1]],selected_taps_tmp[d[j]])
                 ii = selected_taps_tmp[kk]
                 jj = selected_taps_tmp[ll]
 
@@ -262,7 +269,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
                     nfft,
                     fp,
                 )  # -1 becuase tab1 is at column 0
-                # cpsd_all[kk,ll] = s  # noqa: ERA001
+                # cpsd_all[kk,ll] = s
                 s_target[d[i - 1] : d[i], d[j - 1] : d[j]] = s
 
         print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')  # noqa: T201
@@ -315,7 +322,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
 
                 my_cdf_vects[:, i] = kernel_cdf(my_cdf_x)  # Takes too long to evaluate
                 my_cdf_x_range[:, i] = [min(Cp_temp), max(Cp_temp)]
-                """  # noqa: E501
+                """
                 my_cdf_vects[:, i], my_cdf_x_range[:, i] = getCDF(
                     Cp_norm[:, selected_taps[i] - 1]
                 )
@@ -334,17 +341,17 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         iterm_json['V_H'] = V_H
         iterm_json['T_full'] = T_full
         iterm_json['Cp_norm'] = Cp_norm
-        # iterm_json["Tw"] = Tw  # noqa: ERA001
-        # iterm_json["overlap"] = overlap  # noqa: ERA001
-        # iterm_json["nover"] = nover  # noqa: ERA001
+        # iterm_json["Tw"] = Tw
+        # iterm_json["overlap"] = overlap
+        # iterm_json["nover"] = nover
         iterm_json['dt'] = dt
-        # iterm_json["fs"] = fs  # noqa: ERA001
-        # iterm_json["N_t"] = N_t  # noqa: ERA001
+        # iterm_json["fs"] = fs
+        # iterm_json["N_t"] = N_t
         iterm_json['fcut_sc'] = fcut_sc
         iterm_json['Vref'] = Vref
         iterm_json['Cp_std'] = Cp_std
         iterm_json['Cp_mean'] = Cp_mean
-        # iterm_json["s_target"] = s_target  # noqa: ERA001
+        # iterm_json["s_target"] = s_target
         iterm_json['f_target'] = f_target
         iterm_json['pressureData'] = pressure_data
         iterm_json['length'] = unitLength
@@ -372,14 +379,14 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
         V_H = np.squeeze(iterm_json['V_H'])  # noqa: N806
         T_full = np.squeeze(iterm_json['T_full'])  # noqa: N806
         Cp_norm = np.squeeze(iterm_json['Cp_norm'])  # noqa: N806
-        # Tw =np.squeeze(iterm_json["Tw"])  # noqa: ERA001
-        # overlap =np.squeeze(iterm_json["overlap"])  # noqa: ERA001
-        # nover =np.squeeze(iterm_json["nover"])  # noqa: ERA001
+        # Tw =np.squeeze(iterm_json["Tw"])
+        # overlap =np.squeeze(iterm_json["overlap"])
+        # nover =np.squeeze(iterm_json["nover"])
         dt = np.squeeze(iterm_json['dt'])
-        # fs =np.squeeze(iterm_json["fs"])  # noqa: ERA001
-        # N_t =np.squeeze(iterm_json["N_t"])  # noqa: ERA001
+        # fs =np.squeeze(iterm_json["fs"])
+        # N_t =np.squeeze(iterm_json["N_t"])
         fcut_sc = np.squeeze(iterm_json['fcut_sc'])
-        # s_target =np.squeeze(iterm_json["s_target"])  # noqa: ERA001
+        # s_target =np.squeeze(iterm_json["s_target"])
         f_target = np.squeeze(iterm_json['f_target'])
         Vref = np.squeeze(iterm_json['Vref'])  # noqa: N806
         Cp_std = np.squeeze(iterm_json['Cp_std'])  # noqa: N806
@@ -405,7 +412,8 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     theta_vH = np.arctan2(np.imag(V_vH), np.real(V_vH))  # scaled theta  # noqa: N806
 
     f_inc = 1 / T_full  # freq.increment(Hz)
-    N_f = round(T_full * np.squeeze(fcut_sc)) + 1  # number of time points  # noqa: N806
+    # number of time points
+    N_f = round(T_full * np.squeeze(fcut_sc)) + 1  # noqa: N806
 
     N_t = round(T_full / dt)  # number of time points  # noqa: N806
     fvec = np.arange(0, f_inc * (N_f), f_inc)  # frequency line  # noqa: F841
@@ -509,7 +517,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     ) + np.tile(Cp_mean_tmp, (1, len(seeds), N_t))  # destandardize the time series
 
     # Convert to Full Scale Pressure time series
-    # P_full=Cp_nongauss*(1/2)*air_dens*V_H**2  # Net Pressure values in full scale (Pa)  # noqa: ERA001, E501
+    # P_full=Cp_nongauss*(1/2)*air_dens*V_H**2  # Net Pressure values in full scale (Pa)
 
     # Obs: Ps is the static pressure. Some wind tunnel datasets do not provide this
     # value. Not included in this calculation.
@@ -523,11 +531,11 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     pressure_data = iterm_json['pressureData']
 
     new_json = {}
-    # new_json["period"] = Td*ms*Vref/V_H  # noqa: ERA001
+    # new_json["period"] = Td*ms*Vref/V_H
     new_json['period'] = t_vec_sc[-1]
     new_json['frequency'] = 1 / (t_vec_sc[1] - t_vec_sc[0])
 
-    # new_json["windSpeed"] =float(pressure_data["windSpeed"])  # noqa: ERA001
+    # new_json["windSpeed"] =float(pressure_data["windSpeed"])
     new_json['windSpeed'] = float(evt_data['windSpeed'])
 
     new_json['units'] = {}
@@ -596,7 +604,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     with open('tmpSimCenterLowRiseTPU.json', 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(new_json, f)
 
-    # curScriptPath = abspath(getsourcefile(lambda:0))  # noqa: ERA001
+    # curScriptPath = abspath(getsourcefile(lambda:0))
     curScriptPath = os.path.realpath(__file__)  # noqa: N806
     creatEVENTDir = os.path.dirname(os.path.dirname(curScriptPath))  # noqa: PTH120, N806
 
@@ -614,7 +622,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     except:  # noqa: E722
         err_exit('Failed to convert pressure to force.')
 
-    # t_sc = ms*(Vref/V_H);   #scale wind tunnel time series to compare  # noqa: ERA001
+    # t_sc = ms*(Vref/V_H);   #scale wind tunnel time series to compare
 
     # #
     # # Pressure coefficients (selected tap 10)
@@ -648,7 +656,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     # plt.ylim([-1400,2000])
     # plt.xlim([0,1000])
     # plt.show()
-    """  # noqa: E501, W291
+    """  # noqa: W291
 
 
 def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: ANN001, ANN201, N802, N803, D103, PLR0913
@@ -664,7 +672,7 @@ def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: A
 
     # cdf points from gaussian distribuition
     cdf_vvv = norm.cdf(F_vvv, 0, 1)
-    # force the data being bounded in due to numerical errors that can happen in Matlab when CDF ~0 or ~1;  # noqa: E501
+    # force the data being bounded in due to numerical errors that can happen in Matlab when CDF ~0 or ~1;
 
     cdf_vvv[cdf_vvv < 0.00001] = 0.00001  # noqa: PLR2004
     cdf_vvv[cdf_vvv > 0.99999] = 0.99999  # noqa: PLR2004
@@ -677,7 +685,9 @@ def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: A
 def getCDF(Cp_temp):  # noqa: ANN001, ANN201, N802, N803, D103
     kernel = gaussian_kde(Cp_temp)
     kernel_cdf = np.vectorize(lambda x: kernel.integrate_box_1d(-np.inf, x))
-    my_cdf_x = np.linspace(min(Cp_temp), max(Cp_temp), 1000)  # TODO is 1000 enough?  # noqa: FIX002, TD002, TD003, TD004
+    my_cdf_x = np.linspace(
+        min(Cp_temp), max(Cp_temp), 1000
+    )  # TODO is 1000 enough?  # noqa: FIX002, TD002, TD003, TD004
 
     my_cdf_vects = kernel_cdf(my_cdf_x)  # Takes too long to evaluate
     my_cdf_x_range = [min(Cp_temp), max(Cp_temp)]
@@ -692,8 +702,8 @@ def paretotails_icdf(pf, nl, nu, temp, my_cdf_vect, my_cdf_x):  # noqa: ANN001, 
 
     lower_temp = temp[temp < np.quantile(temp, nl)]
     upper_temp = temp[temp > np.quantile(temp, nu)]
-    # gpareto_param_lower = genpareto.fit(-lower_temp, loc=np.min(-lower_temp))  # noqa: ERA001
-    # gpareto_param_upper = genpareto.fit(upper_temp, loc=np.min(upper_temp))  # noqa: ERA001
+    # gpareto_param_lower = genpareto.fit(-lower_temp, loc=np.min(-lower_temp))
+    # gpareto_param_upper = genpareto.fit(upper_temp, loc=np.min(upper_temp))
 
     #
     # Estimating CDFs
@@ -883,14 +893,16 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
     # Start the loop
     #
 
-    F_jzm = np.zeros((ncomp, N_t))  # force coefficients initialize matrix  # noqa: N806
+    # force coefficients initialize matrix
+    F_jzm = np.zeros((ncomp, N_t))  # noqa: N806
     f_tmp = np.linspace(0, (N_f - 1) * f_inc, N_f)
 
     for m in range(l_mo):
         mo = m  # current        mode  #
         Vmo = V_vH[nf_dir, mo, :]  # eigenvector for mode mo  # noqa: N806
-        # Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo  # noqa: ERA001
-        Dmo = D_vH[mo, 0, :] + 1j * 0  # To avoid nan when calculating VDmo  # noqa: N806
+        # Dmo = D_vH[mo, 0,:] # eigenvalue for mode mo
+        # To avoid nan when calculating VDmo
+        Dmo = D_vH[mo, 0, :] + 1j * 0  # noqa: N806
 
         thetmo = theta_vH[nf_dir, mo, :]  # theta for mode mo
         VDmo = (  # noqa: N806
@@ -903,7 +915,7 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
         varth = (2 * np.pi) * np.random.random(size=(1, N_f))  # noqa: NPY002
 
         # Loop over floors
-        # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')  # noqa: ERA001
+        # g_jm = np.zeros((N_t, ncomp),dtype = 'complex_')
         F_jm = np.zeros((ncomp, N_t))  # noqa: N806
 
         coef = np.sqrt(2) * np.sqrt(f_inc) * np.exp(1j * varth)
@@ -930,12 +942,13 @@ def simulation_gaussian(  # noqa: ANN201, D103, PLR0913
             F_jm[j, :] = np.real(g_jm * coef2)
 
         # TODO it is hard to tell whether they are similar or not  # noqa: FIX002, TD002, TD003, TD004
-        F_jzm = F_jzm + F_jm  # sum up F from different modes (zero - mean)  # noqa: N806
+        # sum up F from different modes (zero - mean)
+        F_jzm = F_jzm + F_jm  # noqa: N806
 
     return F_jzm
 
     # with open(errPath, "w") as f:
-    #    f.write("Failed in wind load generator: "+ msg)  # noqa: ERA001
+    #    f.write("Failed in wind load generator: "+ msg)
 
 
 if __name__ == '__main__':
@@ -954,11 +967,11 @@ if __name__ == '__main__':
         err_exit(
             'Failed to import module '
             + moduleName
-            + ' for wind load generator. Please check the python path in the preference'  # noqa: E501
+            + ' for wind load generator. Please check the python path in the preference'
         )
 
     # if getRV:
-    #     aimName = aimName + ".sc"  # noqa: ERA001
+    #     aimName = aimName + ".sc"
 
     try:
         main(aimName, evtName, getRV)

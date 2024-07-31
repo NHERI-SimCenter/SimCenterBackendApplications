@@ -74,7 +74,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
                 numP = 1  # noqa: N806
                 procID = 0  # noqa: N806
 
-    # Get the out dir, may not always be in the results folder if multiple assets are used  # noqa: E501
+    # Get the out dir, may not always be in the results folder if multiple assets are used
     outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
     # check if a filter is provided
@@ -149,7 +149,7 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
 
     else:
         if runParallel == True:  # noqa: E712
-            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append  # noqa: E501
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
 
             for i in range(1, numP):

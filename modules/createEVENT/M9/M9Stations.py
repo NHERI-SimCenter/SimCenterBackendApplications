@@ -80,7 +80,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         if not region.contains(Point(lon, lat)):
             print('The location is not in the selected grid region')  # noqa: T201
             print(  # noqa: T201
-                'Please select a location in the region or change the grid type to "All"'  # noqa: E501
+                'Please select a location in the region or change the grid type to "All"'
             )
             return
         else:  # noqa: RET505
@@ -107,17 +107,17 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
             if not region.intersects(RegionofInterset):
                 print('The selected region is not in the selected grid region')  # noqa: T201
                 print(  # noqa: T201
-                    'Please select a region in in the or change the grid type to "All"'  # noqa: E501
+                    'Please select a region in in the or change the grid type to "All"'
                 )
                 return
             else:  # noqa: RET505
                 # Check if the RegionofInterset is in the region
                 if not region.contains(RegionofInterset):
                     print(  # noqa: T201
-                        'The selected region is not entirely in the selected grid region'  # noqa: E501
+                        'The selected region is not entirely in the selected grid region'
                     )
                     print(  # noqa: T201
-                        'The selected region will be changed to the intersection of the selected region and the grid region'  # noqa: E501
+                        'The selected region will be changed to the intersection of the selected region and the grid region'
                     )
                     RegionofInterset = region.intersection(RegionofInterset)  # noqa: N806
                 else:
@@ -131,7 +131,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
                 ]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
+            # chage the gdf to calculte the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -191,10 +191,10 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
             zoom=10,
             mapbox_style='open-street-map',
         )
-        # fig.show()  # noqa: ERA001
+        # fig.show()
         # save the html file
-        # fig.write_html("M9_sites.html")  # noqa: ERA001
-        # fig.write_image("M9_sites.png")  # noqa: ERA001
+        # fig.write_html("M9_sites.html")
+        # fig.write_image("M9_sites.png")
         # fig.
         if show:
             fig.show()
@@ -208,7 +208,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         'TapisFiles/selectedSites.csv', index=True
     )
     json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: SIM115, PTH123
-    # fig.show()  # noqa: ERA001
+    # fig.show()
 
 
 def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201

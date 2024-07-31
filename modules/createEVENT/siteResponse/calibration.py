@@ -9,8 +9,7 @@ from scipy.interpolate import interp1d
 
 def materialPM4(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D103
     fn.write(
-        'nDMaterial PM4Sand {} {:.3f} {:.2f} {:.3f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \  # noqa: E501
-    {:.2f} {:.2f} {:.2f} {:.2f} {:.2f}  {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \n'.format(  # noqa: E501
+        'nDMaterial PM4Sand {} {:.3f} {:.2f} {:.3f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f}  {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \n'.format(
             matTag,
             baseInputs['Dr'],
             baseInputs['Go'],
@@ -42,8 +41,7 @@ def materialPM4(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D1
 
 def materialPDMY03(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803, D103
     fn.write(
-        'nDMaterial PressureDependMultiYield03 {} {} {:.2f} {:.3e} {:.3e} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} \  # noqa: E501
-    {} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {} {:.3f} {:.3f} {:.3f} {:.3f} \n'.format(  # noqa: E501
+        'nDMaterial PressureDependMultiYield03 {} {} {:.2f} {:.3e} {:.3e} {:.2f} {:.2f} {:.2f} {:.2f} {:.2f} {} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f} {} {:.3f} {:.3f} {:.3f} {:.3f} \n'.format(
             matTag,
             baseInputs['nd'],
             baseInputs['rho'],
@@ -81,10 +79,10 @@ def materialElastic(baseInputs, matTag, fn):  # noqa: ANN001, ANN201, N802, N803
 
 
 def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
-    # This function contains two parts: call gauss1D to generate 1D random field; generate material based on random field  # noqa: E501
+    # This function contains two parts: call gauss1D to generate 1D random field; generate material based on random field
     # Currently only relative density is supported
-    # Calibration of PM4Sand is based on a parametric study that produces hpo = f(Dr, Go, CRR)  # noqa: E501
-    # Calibration of PDMY03 is based on interpolation of pre calibrated parameters for a range of Dr  # noqa: E501
+    # Calibration of PM4Sand is based on a parametric study that produces hpo = f(Dr, Go, CRR)
+    # Calibration of PDMY03 is based on interpolation of pre calibrated parameters for a range of Dr
 
     if variables['materialType'] == 'PM4Sand_Random':
         # PM4Sand
@@ -181,7 +179,7 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
             if variables['materialType'] == 'PM4Sand_Random':
                 baseInputs['Dr'] = Dr
                 Go = baseInputs['Go']  # noqa: N806
-                # CPT and SPT Based Liquefaction Triggering Procedures (Boulanger and Idriss 2014)  # noqa: E501
+                # CPT and SPT Based Liquefaction Triggering Procedures (Boulanger and Idriss 2014)
                 Cd = 46.0  # noqa: N806
                 N160 = Dr**2 * Cd  # noqa: N806
                 CRR_IB = np.exp(  # noqa: N806
@@ -191,7 +189,7 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
                     + (N160 / 25.4) ** 4
                     - 2.8
                 )
-                # Implementaion, Verification, and Validation of PM4Sand in OpenSees, Long Chen and Pedro Arduino, PEER Report, 2020  # noqa: E501
+                # Implementaion, Verification, and Validation of PM4Sand in OpenSees, Long Chen and Pedro Arduino, PEER Report, 2020
                 # Based on a parametric study using quoFEM
                 a = -0.06438
                 b = 0.079598 + 0.12406 * Dr
@@ -226,8 +224,8 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
             elif variables['materialType'] == 'PDMY03_Random':
                 Dr = max(min(Dr, 0.87), 0.33)  # noqa: N806
                 baseInputs['Dr'] = Dr
-                # interpolation using Khosravifar, A., Elgamal, A., Lu, J., and Li, J. [2018].  # noqa: E501
-                # "A 3D model for earthquake-induced liquefaction triggering and post-liquefaction response."  # noqa: E501
+                # interpolation using Khosravifar, A., Elgamal, A., Lu, J., and Li, J. [2018].
+                # "A 3D model for earthquake-induced liquefaction triggering and post-liquefaction response."
                 # Soil Dynamics and Earthquake Engineering, 110, 43-52
                 drs = np.array([0.33, 0.57, 0.74, 0.87])
                 df = pd.DataFrame(  # noqa: PD901
@@ -353,8 +351,8 @@ def createMaterial(data):  # noqa: ANN001, ANN201, N802, D103
                 thickness=layer['thickness'],
                 eleStart=eleStart,
                 eleEnd=eleEnd,
-                elevationStart=elevationStart,  # location of first Gauss Point respect to layer base  # noqa: E501
-                elevationEnd=elevationEnd,  # location of last Gauss Point respect to layer base  # noqa: E501
+                elevationStart=elevationStart,  # location of first Gauss Point respect to layer base
+                elevationEnd=elevationEnd,  # location of last Gauss Point respect to layer base
             )
             inputParameters = data['materials'][layer['material'] - 1]  # noqa: N806
             calibration(variables, inputParameters, fn)

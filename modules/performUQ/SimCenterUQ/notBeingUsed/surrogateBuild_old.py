@@ -24,7 +24,14 @@ from scipy.stats import lognorm, norm
 
 class GpFromModel:  # noqa: D101
     def __init__(  # noqa: ANN204, C901, D107, PLR0912, PLR0913, PLR0915
-        self, work_dir, inputFile, workflowDriver, run_type, os_type, inp, errlog  # noqa: ANN001, N803
+        self,
+        work_dir,  # noqa: ANN001
+        inputFile,  # noqa: ANN001, N803
+        workflowDriver,  # noqa: ANN001, N803
+        run_type,  # noqa: ANN001
+        os_type,  # noqa: ANN001
+        inp,  # noqa: ANN001
+        errlog,  # noqa: ANN001
     ):
         t_init = time.time()
         self.errlog = errlog
@@ -93,10 +100,10 @@ class GpFromModel:  # noqa: D101
                 self.world = MPI.COMM_WORLD
                 self.pool = MPIPoolExecutor()
                 self.n_processor = self.world.Get_size()
-                # self.n_processor =20  # noqa: ERA001
+                # self.n_processor =20
             print('nprocessor :')  # noqa: T201
             print(self.n_processor)  # noqa: T201
-            # self.cal_interval = 5  # noqa: ERA001
+            # self.cal_interval = 5
             self.cal_interval = self.n_processor
 
         else:
@@ -132,10 +139,10 @@ class GpFromModel:  # noqa: D101
             do_simulation = not surrogateInfo['outputData']
             self.doe_method = 'None'  # default
             do_doe = False
-            # self.inpData = surrogateInfo['inpFile']  # noqa: ERA001
+            # self.inpData = surrogateInfo['inpFile']
             self.inpData = os.path.join(work_dir, 'templatedir/inpFile.in')  # noqa: PTH118
             if not do_simulation:
-                # self.outData = surrogateInfo['outFile']  # noqa: ERA001
+                # self.outData = surrogateInfo['outFile']
                 self.outData = os.path.join(work_dir, 'templatedir/outFile.in')  # noqa: PTH118
 
         elif surrogateInfo['method'] == 'Import Multi-fidelity Data File':
@@ -161,7 +168,7 @@ class GpFromModel:  # noqa: D101
                 self.X_hf = read_txt(self.inpData_hf, errlog)
                 self.Y_hf = read_txt(self.outData_hf, errlog)
                 if self.X_hf.shape[0] != self.Y_hf.shape[0]:
-                    msg = 'Error reading json: high fidelity input and output files should have the same number of rows'  # noqa: E501
+                    msg = 'Error reading json: high fidelity input and output files should have the same number of rows'
                     errlog.exit(msg)
 
             if self.lf_is_model:
@@ -180,7 +187,7 @@ class GpFromModel:  # noqa: D101
                 self.X_lf = read_txt(self.inpData_lf, errlog)
                 self.Y_lf = read_txt(self.outData_lf, errlog)
                 if self.X_lf.shape[0] != self.Y_lf.shape[0]:
-                    msg = 'Error reading json: low fidelity input and output files should have the same number of rows'  # noqa: E501
+                    msg = 'Error reading json: low fidelity input and output files should have the same number of rows'
                     errlog.exit(msg)
 
             if (not self.hf_is_model) and self.lf_is_model:
@@ -236,7 +243,7 @@ class GpFromModel:  # noqa: D101
                 self.outData = self.outData_lf
 
         else:
-            msg = 'Error reading json: either select "Import Data File" or "Sampling and Simulation"'  # noqa: E501
+            msg = 'Error reading json: either select "Import Data File" or "Sampling and Simulation"'
             errlog.exit(msg)
 
         if surrogateInfo['advancedOpt']:
@@ -249,57 +256,57 @@ class GpFromModel:  # noqa: D101
                     json.loads('[{}]'.format(surrogateInfo['nuggetString']))
                 )
             except json.decoder.JSONDecodeError:
-                msg = 'Error reading json: improper format of nugget values/bounds. Provide nugget values/bounds of each QoI with comma delimiter'  # noqa: E501
+                msg = 'Error reading json: improper format of nugget values/bounds. Provide nugget values/bounds of each QoI with comma delimiter'
                 errlog.exit(msg)
 
             if (
                 self.nuggetVal.shape[0] != self.y_dim
                 and self.nuggetVal.shape[0] != 0
             ):
-                msg = f'Error reading json: Number of nugget quantities ({self.nuggetVal.shape[0]}) does not match # QoIs ({self.y_dim})'  # noqa: E501
+                msg = f'Error reading json: Number of nugget quantities ({self.nuggetVal.shape[0]}) does not match # QoIs ({self.y_dim})'
                 errlog.exit(msg)
 
             if nugget_opt == 'Fixed Values':
                 for Vals in self.nuggetVal:  # noqa: N806
                     if not np.isscalar(Vals):
-                        msg = 'Error reading json: provide nugget values of each QoI with comma delimiter'  # noqa: E501
+                        msg = 'Error reading json: provide nugget values of each QoI with comma delimiter'
                         errlog.exit(msg)
             elif nugget_opt == 'Fixed Bounds':
                 for Bous in self.nuggetVal:  # noqa: N806
                     if np.isscalar(Bous):
-                        msg = 'Error reading json: provide nugget bounds of each QoI in brackets with comma delimiter, e.g. [0.0,1.0],[0.0,2.0],...'  # noqa: E501
+                        msg = 'Error reading json: provide nugget bounds of each QoI in brackets with comma delimiter, e.g. [0.0,1.0],[0.0,2.0],...'
                         errlog.exit(msg)
                     elif isinstance(Bous, list):
-                        msg = 'Error reading json: provide both lower and upper bounds of nugget'  # noqa: E501
+                        msg = 'Error reading json: provide both lower and upper bounds of nugget'
                         errlog.exit(msg)
                     elif Bous.shape[0] != 2:  # noqa: PLR2004
-                        msg = 'Error reading json: provide nugget bounds of each QoI in brackets with comma delimiter, e.g. [0.0,1.0],[0.0,2.0],...'  # noqa: E501
+                        msg = 'Error reading json: provide nugget bounds of each QoI in brackets with comma delimiter, e.g. [0.0,1.0],[0.0,2.0],...'
                         errlog.exit(msg)
                     elif Bous[0] > Bous[1]:
-                        msg = 'Error reading json: the lower bound of a nugget value should be smaller than its upper bound'  # noqa: E501
+                        msg = 'Error reading json: the lower bound of a nugget value should be smaller than its upper bound'
                         errlog.exit(msg)
 
             # if self.do_logtransform:
-            #     mu = 0  # noqa: ERA001
-            #     sig2 = self.nuggetVal  # noqa: ERA001
+            #     mu = 0
+            #     sig2 = self.nuggetVal
 
-            #     #median = np.exp(mu)  # noqa: ERA001
-            #     #mean = np.exp(mu + sig2/2)  # noqa: ERA001
-            #     self.nuggetVal = np.exp(2*mu + sig2)*(np.exp(sig2)-1)  # noqa: ERA001
+            #     #median = np.exp(mu)
+            #     #mean = np.exp(mu + sig2/2)
+            #     self.nuggetVal = np.exp(2*mu + sig2)*(np.exp(sig2)-1)
 
         else:
             self.do_logtransform = False
             kernel = 'Matern 5/2'
             do_linear = False
-            # do_nugget = True  # noqa: ERA001
+            # do_nugget = True
             nugget_opt = 'optimize'
 
         # if not self.do_mf:
         #    if do_simulation:
-        #        femInfo = inp["fem"]  # noqa: ERA001
-        #        self.inpFile = femInfo["inputFile"]  # noqa: ERA001
-        #        self.postFile = femInfo["postprocessScript"]  # noqa: ERA001
-        #        self.appName = femInfo["program"]  # noqa: ERA001
+        #        femInfo = inp["fem"]
+        #        self.inpFile = femInfo["inputFile"]
+        #        self.postFile = femInfo["postprocessScript"]
+        #        self.appName = femInfo["program"]
 
         #
         # get x points
@@ -314,7 +321,7 @@ class GpFromModel:  # noqa: D101
             self.xrange = np.empty((0, 2), float)
             for rv in inp['randomVariables']:
                 if 'lowerbound' not in rv:
-                    msg = 'Error in input RV: all RV should be set to Uniform distribution'  # noqa: E501
+                    msg = 'Error in input RV: all RV should be set to Uniform distribution'
                     errlog.exit(msg)
                 self.xrange = np.vstack(
                     (self.xrange, [rv['lowerbound'], rv['upperbound']])
@@ -322,7 +329,7 @@ class GpFromModel:  # noqa: D101
             self.len = np.abs(np.diff(self.xrange).T[0])
 
             if sum(self.len == 0) > 0:
-                msg = 'Error in input RV: training range of RV should be greater than 0'  # noqa: E501
+                msg = 'Error in input RV: training range of RV should be greater than 0'
                 errlog.exit(msg)
 
             #
@@ -336,30 +343,30 @@ class GpFromModel:  # noqa: D101
 
                 if self.do_mf:
                     if X_tmp.shape[1] != self.X_hf.shape[1]:
-                        msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.X_hf.shape[1]} RV column(s) but low fidelity model have {X_tmp.shape[1]}.'  # noqa: E501
+                        msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.X_hf.shape[1]} RV column(s) but low fidelity model have {X_tmp.shape[1]}.'
                         errlog.exit(msg)
 
                     if Y_tmp.shape[1] != self.Y_hf.shape[1]:
-                        msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.Y_hf.shape[1]} QoI column(s) but low fidelity model have {Y_tmp.shape[1]}.'  # noqa: E501
+                        msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.Y_hf.shape[1]} QoI column(s) but low fidelity model have {Y_tmp.shape[1]}.'
                         errlog.exit(msg)
 
                 if X_tmp.shape[1] != x_dim:
-                    msg = f'Error importing input data: dimension inconsistent: have {x_dim} RV(s) but have {X_tmp.shape[1]} column(s).'  # noqa: E501
+                    msg = f'Error importing input data: dimension inconsistent: have {x_dim} RV(s) but have {X_tmp.shape[1]} column(s).'
                     errlog.exit(msg)
 
                 if Y_tmp.shape[1] != y_dim:
-                    msg = f'Error importing input data: dimension inconsistent: have {y_dim} QoI(s) but have {Y_tmp.shape[1]} column(s).'  # noqa: E501
+                    msg = f'Error importing input data: dimension inconsistent: have {y_dim} QoI(s) but have {Y_tmp.shape[1]} column(s).'
                     errlog.exit(msg)
 
                 if n_ex != Y_tmp.shape[0]:
-                    msg = f'Error importing input data: numbers of samples of inputs ({n_ex}) and outputs ({Y_tmp.shape[0]}) are inconsistent'  # noqa: E501
+                    msg = f'Error importing input data: numbers of samples of inputs ({n_ex}) and outputs ({Y_tmp.shape[0]}) are inconsistent'
                     errlog.exit(msg)
 
             else:
                 n_ex = 0
                 if user_init == 0:
-                    # msg = 'Error reading json: # of initial DoE should be greater than 0'  # noqa: ERA001, E501
-                    # errlog.exit(msg)  # noqa: ERA001
+                    # msg = 'Error reading json: # of initial DoE should be greater than 0'
+                    # errlog.exit(msg)
                     user_init = -1
                 X_tmp = np.zeros((0, x_dim))  # noqa: N806
                 Y_tmp = np.zeros((0, y_dim))  # noqa: N806
@@ -397,7 +404,7 @@ class GpFromModel:  # noqa: D101
 
             # check validity of datafile
             if n_ex > 0:
-                # Y_test, self.id_sim = FEM_batch(X_tmp[0, :][np.newaxis], self.id_sim)  # noqa: ERA001, E501
+                # Y_test, self.id_sim = FEM_batch(X_tmp[0, :][np.newaxis], self.id_sim)
                 # TODO : Fix this  # noqa: FIX002, TD002, TD003
                 print(X_tmp[0, :][np.newaxis].shape)  # noqa: T201
                 X_test, Y_test, self.id_sim = FEM_batch(  # noqa: N806
@@ -410,7 +417,7 @@ class GpFromModel:  # noqa: D101
                     )
                     > 0
                 ):
-                    msg = 'Consistency check failed. Your data is not consistent to your model response.'  # noqa: E501
+                    msg = 'Consistency check failed. Your data is not consistent to your model response.'
                     errlog.exit(msg)
                 if n_init > 0:
                     n_init -= 1
@@ -451,11 +458,11 @@ class GpFromModel:  # noqa: D101
 
             if self.do_mf:  # noqa: SIM102
                 if X.shape[1] != self.X_hf.shape[1]:
-                    msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.X_hf.shape[1]} RV column(s) but low fidelity model have {X.shape[1]}.'  # noqa: E501
+                    msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.X_hf.shape[1]} RV column(s) but low fidelity model have {X.shape[1]}.'
                     errlog.exit(msg)
 
             if X.shape[1] != x_dim:
-                msg = f'Error importing input data: Number of dimension inconsistent: have {x_dim} RV(s) but {X.shape[1]} column(s).'  # noqa: E501
+                msg = f'Error importing input data: Number of dimension inconsistent: have {x_dim} RV(s) but {X.shape[1]} column(s).'
                 errlog.exit(msg)
 
             self.xrange = np.vstack([np.min(X, axis=0), np.max(X, axis=0)]).T
@@ -511,14 +518,14 @@ class GpFromModel:  # noqa: D101
                         if os.path.exists(  # noqa: PTH110
                             f'{work_dir}/workdir.{idx}/{workflowDriver}'
                         ):
-                            # os.chmod('{}/workdir.{}'.format(work_dir, idx), 777)  # noqa: ERA001
+                            # os.chmod('{}/workdir.{}'.format(work_dir, idx), 777)
                             change_permissions_recursive(
                                 f'{work_dir}/workdir.{idx}', 0o777
                             )
                         my_dir = f'{work_dir}/workdir.{idx}'
                         os.chmod(my_dir, 0o777)  # noqa: S103, PTH101
                         shutil.rmtree(my_dir)
-                        # shutil.rmtree('{}/workdir.{}'.format(work_dir, idx), ignore_errors=False, onerror=handleRemoveReadonly)  # noqa: ERA001, E501
+                        # shutil.rmtree('{}/workdir.{}'.format(work_dir, idx), ignore_errors=False, onerror=handleRemoveReadonly)
 
                     except Exception as ex:  # noqa: BLE001
                         print(ex)  # noqa: T201
@@ -544,7 +551,7 @@ class GpFromModel:  # noqa: D101
             if os.path.exists(f'{work_dir}/verif.out'):  # noqa: PTH110
                 os.remove(f'{work_dir}/verif.out')  # noqa: PTH107
 
-            # func = self.__run_FEM(X,self.id_sim, self.rv_name)  # noqa: ERA001
+            # func = self.__run_FEM(X,self.id_sim, self.rv_name)
 
             #
             # Generate initial samples
@@ -575,9 +582,9 @@ class GpFromModel:  # noqa: D101
                         + self.xrange[nx, 0]
                     )
                 #
-                # Yt = np.zeros((n_pred, y_dim))  # noqa: ERA001
+                # Yt = np.zeros((n_pred, y_dim))
                 # for ns in range(n_pred):
-                #     Yt[ns, :],self.id_sim = run_FEM(Xt[ns, :][np.newaxis],self.id_sim, self.rv_name)  # noqa: ERA001, E501
+                #     Yt[ns, :],self.id_sim = run_FEM(Xt[ns, :][np.newaxis],self.id_sim, self.rv_name)
 
                 Yt = np.zeros((n_pred, y_dim))  # noqa: N806
                 Xt, Yt, self.id_sim = FEM_batch(Xt, self.id_sim)  # noqa: N806
@@ -590,15 +597,15 @@ class GpFromModel:  # noqa: D101
 
             if self.do_mf:  # noqa: SIM102
                 if Y.shape[1] != self.Y_hf.shape[1]:
-                    msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.Y_hf.shape[1]} QoI column(s) but low fidelity model have {Y.shape[1]}.'  # noqa: E501
+                    msg = f'Error importing input data: dimension inconsistent: high fidelity data have {self.Y_hf.shape[1]} QoI column(s) but low fidelity model have {Y.shape[1]}.'
                     errlog.exit(msg)
 
             if Y.shape[1] != y_dim:
-                msg = f'Error importing input data: Number of dimension inconsistent: have {y_dim} QoI(s) but {Y.shape[1]} column(s).'  # noqa: E501
+                msg = f'Error importing input data: Number of dimension inconsistent: have {y_dim} QoI(s) but {Y.shape[1]} column(s).'
                 errlog.exit(msg)
 
             if X.shape[0] != Y.shape[0]:
-                msg = f'Error importing input data: numbers of samples of inputs ({X.shape[0]}) and outputs ({Y.shape[0]}) are inconsistent'  # noqa: E501
+                msg = f'Error importing input data: numbers of samples of inputs ({X.shape[0]}) and outputs ({Y.shape[0]}) are inconsistent'
                 errlog.exit(msg)
 
             thr_count = 0
@@ -640,12 +647,12 @@ class GpFromModel:  # noqa: D101
 
             if not self.hf_is_model:  # noqa: SIM102
                 if X.shape[1] != self.X_hf.shape[1]:
-                    msg = f'Error importing input data: dimension of low ({X.shape[1]}) and high ({self.X_hf.shape[1]}) fidelity models (datasets) are inconsistent'  # noqa: E501
+                    msg = f'Error importing input data: dimension of low ({X.shape[1]}) and high ({self.X_hf.shape[1]}) fidelity models (datasets) are inconsistent'
                     errlog.exit(msg)
 
             if not self.lf_is_model:  # noqa: SIM102
                 if X.shape[1] != self.X_lf.shape[1]:
-                    msg = f'Error importing input data: dimension of low ({X.shape[1]}) and high ({self.X_hf.shape[1]}) fidelity models (datasets) are inconsistent'  # noqa: E501
+                    msg = f'Error importing input data: dimension of low ({X.shape[1]}) and high ({self.X_hf.shape[1]}) fidelity models (datasets) are inconsistent'
                     errlog.exit(msg)
 
             if self.mf_case == 'data-model' or self.mf_case == 'data-data':  # noqa: PLR1714
@@ -679,7 +686,7 @@ class GpFromModel:  # noqa: D101
 
         self.NRMSE_hist = np.zeros((1, y_dim), float)
         self.NRMSE_idx = np.zeros((1, 1), int)
-        # leng_hist = np.zeros((1, self.m_list[0]._param_array_.shape[0]), int)  # noqa: ERA001
+        # leng_hist = np.zeros((1, self.m_list[0]._param_array_.shape[0]), int)
         if self.do_predictive:
             self.NRMSE_pred_hist = np.empty((1, y_dim), float)
 
@@ -790,12 +797,12 @@ class GpFromModel:  # noqa: D101
 
             i = self.id_sim + n_new
 
-            # y_new = np.zeros((n_new, y_dim))  # noqa: ERA001
+            # y_new = np.zeros((n_new, y_dim))
             # for ny in range(n_new):
-            #     y_new[ny, :],self.id_sim = run_FEM(x_new[ny, :][np.newaxis],self.id_sim, self.rv_name)  # noqa: ERA001, E501
+            #     y_new[ny, :],self.id_sim = run_FEM(x_new[ny, :][np.newaxis],self.id_sim, self.rv_name)
             x_new, y_new, self.id_sim = FEM_batch(x_new, self.id_sim)
 
-            # print(">> {:.2f} s".format(time.time() - t_init))  # noqa: ERA001
+            # print(">> {:.2f} s".format(time.time() - t_init))
             X = np.vstack([X, x_new])  # noqa: N806
             Y = np.vstack([Y, y_new])  # noqa: N806
 
@@ -807,7 +814,7 @@ class GpFromModel:  # noqa: D101
             Y_tmp = np.zeros((n_left, y_dim))  # noqa: N806
             U = lhs(x_dim, samples=n_left)  # noqa: N806
             for nx in range(x_dim):
-                # X[:,nx] = np.random.uniform(xrange[nx,0], xrange[nx,1], (1, n_init))  # noqa: ERA001, E501
+                # X[:,nx] = np.random.uniform(xrange[nx,0], xrange[nx,1], (1, n_init))
                 X_tmp[:, nx] = (
                     U[:, nx] * (self.xrange[nx, 1] - self.xrange[nx, 0])
                     + self.xrange[nx, 0]
@@ -816,69 +823,69 @@ class GpFromModel:  # noqa: D101
             X_tmp, Y_tmp, self.id_sim = FEM_batch(X_tmp, self.id_sim)  # noqa: N806
 
             # for ns in np.arange(n_left):
-            #     Y_tmp[ns, :],self.id_sim = run_FEM(X_tmp[ns, :][np.newaxis],self.id_sim, self.rv_name)  # noqa: ERA001, E501
-            #     print(">> {:.2f} s".format(time.time() - t_init))  # noqa: ERA001
+            #     Y_tmp[ns, :],self.id_sim = run_FEM(X_tmp[ns, :][np.newaxis],self.id_sim, self.rv_name)
+            #     print(">> {:.2f} s".format(time.time() - t_init))
             #     if time.time() - t_init > thr_t - self.calib_time:
-            #         X_tmp = X_tmp[:ns, :]  # noqa: ERA001
-            #         Y_tmp = Y_tmp[:ns, :]  # noqa: ERA001
-            #         break  # noqa: ERA001
+            #         X_tmp = X_tmp[:ns, :]
+            #         Y_tmp = Y_tmp[:ns, :]
+            #         break
 
             X = np.vstack((X, X_tmp))  # noqa: N806
             Y = np.vstack((Y, Y_tmp))  # noqa: N806
             do_doe = False
 
             # if not do_doe:
-            #     exit_code = 'count'  # noqa: ERA001
+            #     exit_code = 'count'
             #
-            #     do_cal = True  # noqa: ERA001
-            #     self.t_sim_each = float("inf")  # so that calibration is not terminated in the middle  # noqa: ERA001, E501
-            #     self.m_list, Y_cv, Y_cv_var = self.__design_of_experiments(X, Y, 1, 1, 1, 1, self.m_list, do_cal,  # noqa: E501
-            #                                                                do_nugget, do_doe)  # noqa: E501
+            #     do_cal = True
+            #     self.t_sim_each = float("inf")  # so that calibration is not terminated in the middle
+            #     self.m_list, Y_cv, Y_cv_var = self.__design_of_experiments(X, Y, 1, 1, 1, 1, self.m_list, do_cal,
+            #                                                                do_nugget, do_doe)
             #     if not self.do_mf:
-            #         NRMSE_val = self.__normalized_mean_sq_error(Y_cv, Y)  # noqa: ERA001
-            #     else:  # noqa: ERA001
-            #         NRMSE_val = self.__normalized_mean_sq_error(Y_cv, self.Y_hf)  # noqa: ERA001
+            #         NRMSE_val = self.__normalized_mean_sq_error(Y_cv, Y)
+            #     else:
+            #         NRMSE_val = self.__normalized_mean_sq_error(Y_cv, self.Y_hf)
 
         sim_time = time.time() - t_init
         n_samp = Y.shape[0]
 
-        # import matplotlib.pyplot as plt  # noqa: ERA001
+        # import matplotlib.pyplot as plt
         # if self.x_dim==1:
         #     if self.do_mf:
         #         for ny in range(y_dim):
         #
-        #             x_plot = np.linspace(0, 1, 200)[:, np.newaxis]  # noqa: ERA001
-        #             X_plot = convert_x_list_to_array([x_plot, x_plot])  # noqa: ERA001
-        #             X_plot_l = X_plot[:len(x_plot)]  # noqa: ERA001
-        #             X_plot_h = X_plot[len(x_plot):]  # noqa: ERA001
+        #             x_plot = np.linspace(0, 1, 200)[:, np.newaxis]
+        #             X_plot = convert_x_list_to_array([x_plot, x_plot])
+        #             X_plot_l = X_plot[:len(x_plot)]
+        #             X_plot_h = X_plot[len(x_plot):]
         #
-        #             lf_mean_lin_mf_model, lf_var_lin_mf_model = self.__predict(self.m_list[ny],X_plot_l)  # noqa: ERA001, E501
-        #             lf_std_lin_mf_model = np.sqrt(lf_var_lin_mf_model)  # noqa: ERA001
-        #             hf_mean_lin_mf_model, hf_var_lin_mf_model = self.__predict(self.m_list[ny],X_plot_h)  # noqa: ERA001, E501
-        #             hf_std_lin_mf_model = np.sqrt(hf_var_lin_mf_model)  # noqa: ERA001
+        #             lf_mean_lin_mf_model, lf_var_lin_mf_model = self.__predict(self.m_list[ny],X_plot_l)
+        #             lf_std_lin_mf_model = np.sqrt(lf_var_lin_mf_model)
+        #             hf_mean_lin_mf_model, hf_var_lin_mf_model = self.__predict(self.m_list[ny],X_plot_h)
+        #             hf_std_lin_mf_model = np.sqrt(hf_var_lin_mf_model)
         #
         #
-        #             plt.plot(x_plot, lf_mean_lin_mf_model);  # noqa: ERA001
-        #             plt.plot(x_plot, hf_mean_lin_mf_model, '-');  # noqa: ERA001
-        #             plt.plot(X, Y[:,ny], 'x');  # noqa: ERA001
-        #             plt.plot(self.X_hf,self.Y_hf[:,ny], 'x');  # noqa: ERA001
-        #             plt.show()  # noqa: ERA001
-        #     else:  # noqa: ERA001
+        #             plt.plot(x_plot, lf_mean_lin_mf_model);
+        #             plt.plot(x_plot, hf_mean_lin_mf_model, '-');
+        #             plt.plot(X, Y[:,ny], 'x');
+        #             plt.plot(self.X_hf,self.Y_hf[:,ny], 'x');
+        #             plt.show()
+        #     else:
         #         for ny in range(y_dim):
-        #             x_plot = np.linspace(0, 1, 200)[:, np.newaxis]  # noqa: ERA001
+        #             x_plot = np.linspace(0, 1, 200)[:, np.newaxis]
         #
-        #             hf_mean_lin_mf_model, hf_var_lin_mf_model = self.__predict(self.m_list[ny], x_plot)  # noqa: ERA001, E501
+        #             hf_mean_lin_mf_model, hf_var_lin_mf_model = self.__predict(self.m_list[ny], x_plot)
         #
-        #             plt.plot(x_plot, hf_mean_lin_mf_model, '-');  # noqa: ERA001
-        #             plt.plot(X, Y[:, ny], 'x');  # noqa: ERA001
-        #             plt.show()  # noqa: ERA001
+        #             plt.plot(x_plot, hf_mean_lin_mf_model, '-');
+        #             plt.plot(X, Y[:, ny], 'x');
+        #             plt.show()
         #
         #
 
-        # plt.plot(Y_cv[:,0], self.Y_hf[:,0], 'x'); plt.show()  # noqa: ERA001
-        # plt.show()  # noqa: ERA001
-        # plt.plot(Y_cv[:,1], Y[:,1], 'x')  # noqa: ERA001
-        # plt.show()  # noqa: ERA001
+        # plt.plot(Y_cv[:,0], self.Y_hf[:,0], 'x'); plt.show()
+        # plt.show()
+        # plt.plot(Y_cv[:,1], Y[:,1], 'x')
+        # plt.show()
         print(f'my exit code = {exit_code}')  # noqa: T201
         print(f'1. count = {self.id_sim}')  # noqa: T201
         print(f'2. max(NRMSE) = {np.max(NRMSE_val)}')  # noqa: T201
@@ -899,10 +906,10 @@ class GpFromModel:  # noqa: D101
             y_data_var = np.zeros((n_err, y_dim))
 
             for ny in range(y_dim):
-                # m_tmp = self.m_list[ny].copy()  # noqa: ERA001
+                # m_tmp = self.m_list[ny].copy()
                 m_tmp = self.m_list[ny]
                 if self.do_logtransform:
-                    # y_var_val = np.var(np.log(Y[:, ny]))  # noqa: ERA001
+                    # y_var_val = np.var(np.log(Y[:, ny]))
                     log_mean = np.mean(np.log(Y[:, ny]))
                     log_var = np.var(np.log(Y[:, ny]))
                     y_var_val = np.exp(2 * log_mean + log_var) * (
@@ -926,11 +933,11 @@ class GpFromModel:  # noqa: D101
 
                     # for parname in m_tmp.parameter_names():
                     #    if ('Mat52' in parname) and parname.endswith('variance'):
-                    #        exec('y_pred_prior_var[ns,ny]=m_tmp.' + parname)  # noqa: ERA001
+                    #        exec('y_pred_prior_var[ns,ny]=m_tmp.' + parname)
 
-            # error_ratio1_Pr = (y_pred_var / y_pred_prior_var)  # noqa: ERA001
+            # error_ratio1_Pr = (y_pred_var / y_pred_prior_var)
             error_ratio2_Pr = y_pred_var / y_data_var  # noqa: N806
-            # np.max(error_ratio1_Pr, axis=0)  # noqa: ERA001
+            # np.max(error_ratio1_Pr, axis=0)
             np.max(error_ratio2_Pr, axis=0)
 
             self.perc_thr = np.hstack(
@@ -1038,7 +1045,7 @@ class GpFromModel:  # noqa: D101
                     m_tmp['Gaussian_noise.variance'].constrain_fixed(0)
 
                 m_tmp.optimize(clear_after_finish=True)
-                # m_tmp.optimize_restarts(5)  # noqa: ERA001
+                # m_tmp.optimize_restarts(5)
                 max_log_likli = m_tmp.log_likelihood()
 
                 t_unfix = time.time()
@@ -1046,7 +1053,7 @@ class GpFromModel:  # noqa: D101
 
                 id_opt = 1
                 print(f'{1} among {nopt} Log-Likelihood: {m_tmp.log_likelihood()}')  # noqa: T201
-                # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_unfix))  # noqa: ERA001, E501
+                # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_unfix))
 
                 if time.time() - t_unfix > self.t_sim_each:
                     nopt = 1
@@ -1073,7 +1080,7 @@ class GpFromModel:  # noqa: D101
                     m_tmp['Gaussian_noise.variance'].constrain_fixed(0)
 
                 m_tmp.optimize(clear_after_finish=True)
-                # m_tmp.optimize_restarts(5)  # noqa: ERA001
+                # m_tmp.optimize_restarts(5)
 
                 t_unfix = time.time()
                 if m_tmp.log_likelihood() > max_log_likli:
@@ -1082,21 +1089,21 @@ class GpFromModel:  # noqa: D101
 
                 id_opt = 1
                 print(f'{2} among {nopt} Log-Likelihood: {m_tmp.log_likelihood()}')  # noqa: T201
-                # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_unfix))  # noqa: ERA001, E501
+                # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_unfix))
 
                 if time.time() - t_unfix > self.t_sim_each:
                     nopt = 1
 
                 for no in range(nopt - 2):
-                    # m_tmp=m.copy()  # noqa: ERA001
-                    # m.randomize()  # noqa: ERA001
+                    # m_tmp=m.copy()
+                    # m.randomize()
                     for parname in m_tmp.parameter_names():
                         if parname.endswith('lengthscale'):
                             if math.isnan(m.log_likelihood()):
                                 exec(  # noqa: S102
                                     'm_tmp.'
                                     + parname
-                                    + '=np.random.exponential(1, (1, x_dim)) * m_init.'  # noqa: E501
+                                    + '=np.random.exponential(1, (1, x_dim)) * m_init.'
                                     + parname
                                 )
                             else:
@@ -1123,15 +1130,15 @@ class GpFromModel:  # noqa: D101
                     t_fix = time.time()  # noqa: F841
                     try:
                         m_tmp.optimize()
-                        # m_tmp.optimize_restarts(5)  # noqa: ERA001
+                        # m_tmp.optimize_restarts(5)
 
                     except Exception as ex:  # noqa: BLE001
                         print(f'OS error: {ex}')  # noqa: T201
 
                     print(  # noqa: T201
-                        f'{no + 3} among {nopt} Log-Likelihood: {m_tmp.log_likelihood()}'  # noqa: E501
+                        f'{no + 3} among {nopt} Log-Likelihood: {m_tmp.log_likelihood()}'
                     )
-                    # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_fix))  # noqa: ERA001, E501
+                    # print('     Calibration time for each: {:.2f} s'.format(time.time() - t_fix))
 
                     if m_tmp.log_likelihood() > max_log_likli:
                         max_log_likli = m_tmp.log_likelihood()
@@ -1143,7 +1150,7 @@ class GpFromModel:  # noqa: D101
                         break
 
                 if math.isinf(-max_log_likli) or math.isnan(-max_log_likli):  # noqa: SIM102
-                    # msg = "Error GP optimization failed, perhaps QoI values are zero."  # noqa: ERA001, E501
+                    # msg = "Error GP optimization failed, perhaps QoI values are zero."
                     if np.var(m_tmp.Y) != 0:
                         msg = f'Error GP optimization failed for QoI #{ny + 1}'
                         self.errlog.exit(msg)
@@ -1188,8 +1195,8 @@ class GpFromModel:  # noqa: D101
                     ].gpy_model.mixed_noise.Gaussian_noise_1.constrain_fixed(0)
                 #
                 # if not do_nugget:
-                #     m_tmp_list[ny].gpy_model.mixed_noise.Gaussian_noise.fix(0)  # noqa: ERA001
-                #     m_tmp_list[ny].gpy_model.mixed_noise.Gaussian_noise_1.fix(0)  # noqa: ERA001
+                #     m_tmp_list[ny].gpy_model.mixed_noise.Gaussian_noise.fix(0)
+                #     m_tmp_list[ny].gpy_model.mixed_noise.Gaussian_noise_1.fix(0)
 
                 m_tmp_list[ny].optimize()
                 nopt = 5
@@ -1201,24 +1208,34 @@ class GpFromModel:  # noqa: D101
         return m_tmp_list
 
     def __design_of_experiments(  # noqa: ANN202, C901, PLR0912, PLR0913, PLR0915
-        self, X, Y, ac, ar, n_candi, n_integ, pre_m_list, do_cal, nugget_opt, do_doe  # noqa: ANN001, ARG002, N803
+        self,
+        X,  # noqa: ANN001, N803
+        Y,  # noqa: ANN001, N803
+        ac,  # noqa: ANN001
+        ar,  # noqa: ANN001, ARG002
+        n_candi,  # noqa: ANN001
+        n_integ,  # noqa: ANN001
+        pre_m_list,  # noqa: ANN001
+        do_cal,  # noqa: ANN001
+        nugget_opt,  # noqa: ANN001
+        do_doe,  # noqa: ANN001
     ):
         # do log transform
         if self.do_logtransform:
             if np.min(Y) < 0:
-                msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'  # noqa: E501
+                msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'
                 errlog.exit(msg)
             Y = np.log(Y)  # noqa: N806
 
             if self.do_mf:
                 if self.mf_case == 'data-model' or self.mf_case == 'data-data':  # noqa: PLR1714
                     if np.min(self.Y_hf) < 0:
-                        msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'  # noqa: E501
+                        msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'
                         errlog.exit(msg)
                     self.Y_hf = np.log(self.Y_hf)
                 elif self.mf_case == 'mode-data':
                     if np.min(self.Y_lf) < 0:
-                        msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'  # noqa: E501
+                        msg = 'Error running SimCenterUQ. Response contains negative values. Please uncheck the log-transform option in the UQ tab'
                         errlog.exit(msg)
                     self.Y_lf = np.log(self.Y_lf)
 
@@ -1331,20 +1348,20 @@ class GpFromModel:  # noqa: D101
             for i in range(nc1):
                 if not self.do_mf:
                     wei = self.weights_node2(xc1[i, :], X, ll)
-                    # phi = e2[closest_node(xc1[i, :], X, ll)]  # noqa: ERA001
-                    # phi = e2[self.__closest_node(xc1[i, :], X)]  # noqa: ERA001
+                    # phi = e2[closest_node(xc1[i, :], X, ll)]
+                    # phi = e2[self.__closest_node(xc1[i, :], X)]
                 elif self.mf_case == 'data-model' or self.mf_case == 'data-data':  # noqa: PLR1714
                     wei = self.weights_node2(xc1[i, :], self.X_hf, ll)
-                    # phi = e2[closest_node(xc1[i, :], self.X_hf, ll)]  # noqa: ERA001
-                    # phi = e2[self.__closest_node(xc1[i, :], self.X_hf)]  # noqa: ERA001
+                    # phi = e2[closest_node(xc1[i, :], self.X_hf, ll)]
+                    # phi = e2[self.__closest_node(xc1[i, :], self.X_hf)]
                 elif self.mf_case == 'model-data':
                     wei = self.weights_node2(xc1[i, :], X, ll)
-                    # phi = e2[closest_node(xc1[i, :], X, ll)]  # noqa: ERA001
-                    # phi = e2[self.__closest_node(xc1[i, :], X)]  # noqa: ERA001
+                    # phi = e2[closest_node(xc1[i, :], X, ll)]
+                    # phi = e2[self.__closest_node(xc1[i, :], X)]
 
-                # cri1[i] = yc1_var[i]  # noqa: ERA001
+                # cri1[i] = yc1_var[i]
                 cri2[i] = sum(e2[:, y_idx] / Y_pred_var[:, y_idx] * wei.T)
-                # cri2[i] = pow(phi[y_idx],r)  # noqa: ERA001
+                # cri2[i] = pow(phi[y_idx],r)
 
             VOI = np.zeros(yc1_pred.shape)  # noqa: N806
             for i in range(nc1):
@@ -1405,7 +1422,8 @@ class GpFromModel:  # noqa: D101
 
                 for i in range(self.cal_interval - 1):  # noqa: B007
                     X_tmp = np.vstack([X_tmp, xc1[best_global, :][np.newaxis]])  # noqa: N806
-                    Y_tmp = np.vstack([Y_tmp, np.array([[0]])])  # any variables  # noqa: N806
+                    # any variables
+                    Y_tmp = np.vstack([Y_tmp, np.array([[0]])])  # noqa: N806
                     m_tmp.set_XY(X=X_tmp, Y=Y_tmp)
                     dummy, Yq_var = m_tmp.predict(xc1[idx_pareto_candi, :])  # noqa: N806
                     cri1 = Yq_var * VOI[idx_pareto_candi]
@@ -1419,21 +1437,21 @@ class GpFromModel:  # noqa: D101
                     idx_pareto_new = idx_pareto_new + [best_global]  # noqa: RUF005
                     del idx_pareto_candi[best_local]
 
-                    # score_tmp = Yq_var * cri2[idx_pareto_left]/Y_pred_var[closest_node(xc1[i, :], X, self.m_list, self.xrange)]  # noqa: ERA001, E501
+                    # score_tmp = Yq_var * cri2[idx_pareto_left]/Y_pred_var[closest_node(xc1[i, :], X, self.m_list, self.xrange)]
 
-                # idx_pareto = list(idx_rank[0:self.cal_interval])  # noqa: ERA001
+                # idx_pareto = list(idx_rank[0:self.cal_interval])
                 idx_pareto = idx_pareto_new
 
             update_point = xc1[idx_pareto, :]
             update_IMSE = 0  # noqa: N806
 
-            # import matplotlib.pyplot as plt  # noqa: ERA001
-            # plt.plot(logcrimi1, logcrimi2, 'x');plt.plot(logcrimi1[idx_pareto], logcrimi2[idx_pareto], 'x'); plt.show()  # noqa: ERA001, E501
-            # plt.plot(m_idx.X[:,0], m_idx.X[:,1], 'x'); plt.show()  # noqa: ERA001
-            # plt.plot(X[:, 0],X[:, 1], 'ro');  # noqa: ERA001
-            # plt.scatter(xc1[:,0], xc1[:,1], c=cri2); plt.plot(xc1[rankid==0,0], xc1[rankid==0,1], 'rx'); plt.show()  # noqa: ERA001, E501
-            # plt.scatter(xc1[:,0], xc1[:,1], c=cri2); plt.plot(update_point[:,0], update_point[:,1], 'rx'); plt.show()  # noqa: ERA001, E501
-            # plt.scatter(xc1[:, 0], xc1[:, 1], c=cri2); plt.show()  # noqa: ERA001
+            # import matplotlib.pyplot as plt
+            # plt.plot(logcrimi1, logcrimi2, 'x');plt.plot(logcrimi1[idx_pareto], logcrimi2[idx_pareto], 'x'); plt.show()
+            # plt.plot(m_idx.X[:,0], m_idx.X[:,1], 'x'); plt.show()
+            # plt.plot(X[:, 0],X[:, 1], 'ro');
+            # plt.scatter(xc1[:,0], xc1[:,1], c=cri2); plt.plot(xc1[rankid==0,0], xc1[rankid==0,1], 'rx'); plt.show()
+            # plt.scatter(xc1[:,0], xc1[:,1], c=cri2); plt.plot(update_point[:,0], update_point[:,1], 'rx'); plt.show()
+            # plt.scatter(xc1[:, 0], xc1[:, 1], c=cri2); plt.show()
             #
             """
             idx_pareto = list()
@@ -1450,7 +1468,7 @@ class GpFromModel:  # noqa: D101
                 idx_pareto2 = np.asarray(random_indices)
                 idx_pareto = np.asarray(idx_pareto)
                 idx_pareto = list(idx_pareto[idx_pareto2[0:self.cal_interval]])
-            """  # noqa: E501, W293
+            """  # noqa: W293
 
         elif self.doe_method == 'imsew':
             nq = round(n_integ)
@@ -1500,7 +1518,7 @@ class GpFromModel:  # noqa: D101
                     for IMSE_val, idx in result_objs:  # noqa: N806
                         IMSEc1[idx] = IMSE_val
                     print(  # noqa: T201
-                        f'IMSE: finding the next DOE {ni} in a parallel way.. time = {time.time() - tmp}'  # noqa: E501
+                        f'IMSE: finding the next DOE {ni} in a parallel way.. time = {time.time() - tmp}'
                     )  # 7s # 3-4s
                 else:
                     tmp = time.time()
@@ -1511,7 +1529,7 @@ class GpFromModel:  # noqa: D101
                             m_stack.copy(), xc1[i, :][np.newaxis], xq, phiqr, i
                         )
                     print(  # noqa: T201
-                        f'IMSE: finding the next DOE {ni} in a serial way.. time = {time.time() - tmp}'  # noqa: E501
+                        f'IMSE: finding the next DOE {ni} in a serial way.. time = {time.time() - tmp}'
                     )  # 4s
 
                 new_idx = np.argmin(IMSEc1, axis=0)
@@ -1525,9 +1543,9 @@ class GpFromModel:  # noqa: D101
                 update_point[ni, :] = x_point
                 update_IMSE[ni, :] = IMSEc1[new_idx]
 
-            # import matplotlib.pyplot as plt; plt.scatter(xc1[:,0],xc1[:,1],c = IMSEc1); plt.show()  # noqa: ERA001, E501
-            # import matplotlib.pyplot as plt; plt.scatter(xc1[:,0],xc1[:,1],c = IMSEc1); plt.plot(update_point[:,0],update_point[:,1],'x'); plt.show()  # noqa: ERA001, E501
-            # import matplotlib.pyplot as plt; plt.scatter(X_stack[:,0],X_stack[:,1]); plt.show()  # noqa: ERA001, E501
+            # import matplotlib.pyplot as plt; plt.scatter(xc1[:,0],xc1[:,1],c = IMSEc1); plt.show()
+            # import matplotlib.pyplot as plt; plt.scatter(xc1[:,0],xc1[:,1],c = IMSEc1); plt.plot(update_point[:,0],update_point[:,1],'x'); plt.show()
+            # import matplotlib.pyplot as plt; plt.scatter(X_stack[:,0],X_stack[:,1]); plt.show()
             """
             
             nc1 = round(n_candi)
@@ -1609,7 +1627,7 @@ class GpFromModel:  # noqa: D101
             update_point = xc3[new_idx, :][np.newaxis]
             update_IMSE = IMSE[new_idx]
             
-            """  # noqa: E501, W293
+            """  # noqa: W293
 
         elif self.doe_method == 'random':
             update_point = xc1[0 : self.cal_interval, :]
@@ -1692,7 +1710,7 @@ class GpFromModel:  # noqa: D101
                 self.xrange[nx, 1] - self.xrange[nx, 0]
             )  # additional weights?
 
-        # np.argmin(np.sum(pow(deltas_norm,2),axis=1))  # noqa: ERA001
+        # np.argmin(np.sum(pow(deltas_norm,2),axis=1))
         dist_2 = np.einsum('ij,ij->i', deltas_norm, deltas_norm)
         return np.argmin(dist_2)
 
@@ -1722,7 +1740,7 @@ class GpFromModel:  # noqa: D101
             X_list_h = X_list[X.shape[0] :]  # noqa: N806
             return m.predict(X_list_h)
         elif self.mf_case == 'model-data':
-            # return m.predict(X)  # noqa: ERA001
+            # return m.predict(X)
             X_list = convert_x_list_to_array([X, X])  # noqa: N806
             X_list_l = X_list[: X.shape[0]]  # noqa: N806, F841
             X_list_h = X_list[X.shape[0] :]  # noqa: N806
@@ -1740,7 +1758,7 @@ class GpFromModel:  # noqa: D101
                     Y_tmp = np.delete(Y, ns, axis=0)  # noqa: N806
                     m_tmp.set_XY(X=X_tmp, Y=Y_tmp[:, ny][np.newaxis].transpose())
                     x_loo = X[ns, :][np.newaxis]
-                    # Y_pred_tmp, Y_err_tmp = m_tmp.predict(x_loo)  # noqa: ERA001
+                    # Y_pred_tmp, Y_err_tmp = m_tmp.predict(x_loo)
                     Y_pred_tmp, Y_err_tmp = self.__predict(m_tmp, x_loo)  # noqa: N806
                     Y_pred[ns, ny] = Y_pred_tmp
                     Y_pred_var[ns, ny] = Y_err_tmp
@@ -1796,7 +1814,7 @@ class GpFromModel:  # noqa: D101
                         )
                     )
                     m_tmp.set_data(X=X_list_tmp, Y=Y_list_tmp)
-                    # x_loo = np.hstack((X[ns], 1))[np.newaxis]  # noqa: ERA001
+                    # x_loo = np.hstack((X[ns], 1))[np.newaxis]
                     x_loo = self.X_hf[ns][np.newaxis]
                     Y_pred_tmp, Y_err_tmp = self.__predict(m_tmp, x_loo)  # noqa: N806
                     Y_pred[ns, ny] = Y_pred_tmp
@@ -1818,7 +1836,7 @@ class GpFromModel:  # noqa: D101
 
         with open(self.work_dir + '/' + filename + '.pkl', 'wb') as file:  # noqa: PTH123
             pickle.dump(self.m_list, file)
-            # json.dump(self.m_list, file)  # noqa: ERA001
+            # json.dump(self.m_list, file)
 
         header_string_x = ' ' + ' '.join([str(elem) for elem in self.rv_name]) + ' '
         header_string_y = ' ' + ' '.join([str(elem) for elem in self.g_name])
@@ -1954,8 +1972,8 @@ class GpFromModel:  # noqa: D101
             results['yPredict'][self.g_name[ny]] = self.Y_loo[:, ny].tolist()
 
             if not self.do_logtransform:
-                # results["yPredict_CI_lb"][self.g_name[ny]] = self.Y_loo[:, ny].tolist()+2*np.sqrt(self.Y_loo_var[:, ny]).tolist()  # noqa: ERA001, E501
-                # results["yPredict_CI_lb"][self.g_name[ny]] = self.Y_loo[:, ny].tolist()-2*np.sqrt(self.Y_loo_var[:, ny]).tolist()  # noqa: ERA001, E501
+                # results["yPredict_CI_lb"][self.g_name[ny]] = self.Y_loo[:, ny].tolist()+2*np.sqrt(self.Y_loo_var[:, ny]).tolist()
+                # results["yPredict_CI_lb"][self.g_name[ny]] = self.Y_loo[:, ny].tolist()-2*np.sqrt(self.Y_loo_var[:, ny]).tolist()
 
                 results['yPredict_CI_lb'][self.g_name[ny]] = norm.ppf(
                     0.25, loc=self.Y_loo[:, ny], scale=np.sqrt(self.Y_loo_var[:, ny])
@@ -1978,12 +1996,12 @@ class GpFromModel:  # noqa: D101
                 ).tolist()
 
             # if self.do_logtransform:
-            #         log_mean = 0  # noqa: ERA001
-            #         log_var = float(self.m_list[ny]['Gaussian_noise.variance']) # nugget in log-space  # noqa: ERA001, E501
-            #         nuggetVal_linear = np.exp(2*log_mean+log_var)*(np.exp(log_var)-1) # in linear space  # noqa: ERA001, E501
+            #         log_mean = 0
+            #         log_var = float(self.m_list[ny]['Gaussian_noise.variance']) # nugget in log-space
+            #         nuggetVal_linear = np.exp(2*log_mean+log_var)*(np.exp(log_var)-1) # in linear space
 
             if self.do_mf:
-                # results["valNugget"][self.g_name[ny]] = float(self.m_list[ny].gpy_model['Gaussian_noise.variance'])  # noqa: ERA001, E501
+                # results["valNugget"][self.g_name[ny]] = float(self.m_list[ny].gpy_model['Gaussian_noise.variance'])
                 pass
             else:
                 results['valNugget'][self.g_name[ny]] = float(
@@ -1994,11 +2012,11 @@ class GpFromModel:  # noqa: D101
             results['valCorrCoeff'][self.g_name[ny]] = self.corr_val[ny]
 
             # if np.isnan(self.NRMSE_val[ny]):
-            #     results["valNRMSE"][self.g_name[ny]] = 0  # noqa: ERA001
+            #     results["valNRMSE"][self.g_name[ny]] = 0
             # if np.isnan(self.R2_val[ny]):
-            #     results["valR2"][self.g_name[ny]] = 0  # noqa: ERA001
+            #     results["valR2"][self.g_name[ny]] = 0
             # if np.isnan(self.corr_val[ny]):
-            #     results["valCorrCoeff"][self.g_name[ny]] = 0  # noqa: ERA001
+            #     results["valCorrCoeff"][self.g_name[ny]] = 0
 
         if self.do_simulation:
             results['predError'] = {}
@@ -2006,8 +2024,8 @@ class GpFromModel:  # noqa: D101
             results['predError']['value'] = self.perc_val.tolist()
             results['fem'] = {}
             results['fem']['workflow_driver'] = self.workflowDriver
-            # results["fem"]["postprocessScript"] = self.postFile  # noqa: ERA001
-            # results["fem"]["program"] = self.appName  # noqa: ERA001
+            # results["fem"]["postprocessScript"] = self.postFile
+            # results["fem"]["program"] = self.appName
 
         if self.do_sampling:
             if self.use_existing:
@@ -2063,7 +2081,7 @@ class GpFromModel:  # noqa: D101
             if not self.do_doe:  # noqa: SIM102
                 if self.do_simulation and self.do_sampling:
                     file.write(
-                        '  - design of experiments (DoE) turned off - DoE evaluation time exceeds the model simulation time \n'  # noqa: E501
+                        '  - design of experiments (DoE) turned off - DoE evaluation time exceeds the model simulation time \n'
                     )
             file.write('\n')
 
@@ -2076,7 +2094,7 @@ class GpFromModel:  # noqa: D101
                 )
             elif self.exit_code == 'accuracy':
                 file.write(
-                    f'minimum accuracy level (NRMSE={self.thr_NRMSE:.2f}) is achieved"\n'  # noqa: E501
+                    f'minimum accuracy level (NRMSE={self.thr_NRMSE:.2f}) is achieved"\n'
                 )
             elif self.exit_code == 'time':
                 file.write(f'maximum running time (t={self.thr_t:.1f}s) reached"\n')
@@ -2084,7 +2102,7 @@ class GpFromModel:  # noqa: D101
                 file.write('cannot identify the exit code\n')
             file.write(f'  - number of simulations (count) : {self.n_samp}\n')
             file.write(
-                f'  - maximum normalized root-mean-squared error (NRMSE): {np.max(self.NRMSE_val):.5f}\n'  # noqa: E501
+                f'  - maximum normalized root-mean-squared error (NRMSE): {np.max(self.NRMSE_val):.5f}\n'
             )
             for ny in range(self.y_dim):
                 file.write(f'     {self.g_name[ny]} : {self.NRMSE_val[ny]:.2f}\n')
@@ -2107,7 +2125,7 @@ class GpFromModel:  # noqa: D101
                             file.write('\n')
                             for nx in range(self.x_dim):
                                 file.write(
-                                    f'       {self.rv_name[nx]} : {parvals[nx]:.2e}\n'  # noqa: E501
+                                    f'       {self.rv_name[nx]} : {parvals[nx]:.2e}\n'
                                 )
                         else:
                             file.write(f' : {parvals[0]:.2e}\n')
@@ -2208,9 +2226,9 @@ def run_FEM_batch(  # noqa: ANN201, N802, D103, PLR0913
     X = np.atleast_2d(X)  # noqa: N806
     # Windows
     # if os_type.lower().startswith('win'):
-    #    workflowDriver = "workflow_driver.bat"  # noqa: ERA001
-    # else:  # noqa: ERA001
-    #    workflowDriver = "workflow_driver"  # noqa: ERA001
+    #    workflowDriver = "workflow_driver.bat"
+    # else:
+    #    workflowDriver = "workflow_driver"
 
     nsamp = X.shape[0]
     if not do_parallel:
@@ -2273,7 +2291,7 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
                 header_count = header_count + 1
                 print(line)  # noqa: T201
 
-        # X = np.loadtxt(f, skiprows=header_count, delimiter=',')  # noqa: ERA001
+        # X = np.loadtxt(f, skiprows=header_count, delimiter=',')
         try:
             with open(text_dir) as f:  # noqa: PTH123, PLW2901
                 X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
@@ -2284,7 +2302,7 @@ def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
                     # if there are extra delimiter, remove nan
                     if np.isnan(X[-1, -1]):
                         X = np.delete(X, -1, 1)  # noqa: N806
-                    # X = np.loadtxt(f, skiprows=header_count, delimiter=',')  # noqa: ERA001
+                    # X = np.loadtxt(f, skiprows=header_count, delimiter=',')
                 except ValueError:
                     msg = 'Error: file format is not supported ' + text_dir
                     errlog.exit(msg)
@@ -2318,7 +2336,7 @@ def imse(m_tmp, xcandi, xq, phiqr, i):  # noqa: ANN001, ANN201, D103
     return IMSEc1, i
 
 
-# ==========================================================================================  # noqa: E501
+# ==========================================================================================
 
 
 class errorLog:  # noqa: N801, D101
@@ -2336,7 +2354,7 @@ class errorLog:  # noqa: N801, D101
 
 
 def build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type):  # noqa: ANN001, ANN201, N803, D103
-    # t_total = time.process_time()  # noqa: ERA001
+    # t_total = time.process_time()
     filename = 'SimGpModel'
 
     print('FILE: ' + work_dir + '/templatedir/' + inputFile)  # noqa: T201
@@ -2366,7 +2384,7 @@ def build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type):  # 
 
 # the actual execution
 
-# ==========================================================================================  # noqa: E501
+# ==========================================================================================
 
 # the actual execution
 
@@ -2383,5 +2401,5 @@ if __name__ == '__main__':
 
     result_file = 'results.out'
 
-    # sys.exit(build_surrogate(work_dir, os_type, run_type))  # noqa: ERA001
+    # sys.exit(build_surrogate(work_dir, os_type, run_type))
     build_surrogate(work_dir, inputFile, workflowDriver, os_type, run_type)

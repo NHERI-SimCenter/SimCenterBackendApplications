@@ -99,7 +99,7 @@ if __name__ == '__main__':
         and popDemoVintage != '2020'
     ):
         print(  # noqa: T201
-            'Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',  # noqa: E501
+            'Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',
             popDemoVintage,
             ' is not supported',
         )
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         and houseIncomeVintage != '2020'
     ):
         print(  # noqa: T201
-            'Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',  # noqa: E501
+            'Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',
             houseIncomeVintage,
             ' is not supported',
         )
@@ -136,11 +136,11 @@ if __name__ == '__main__':
         output_dir=output_dir,
     )
 
-    # sys.exit(0)  # noqa: ERA001
+    # sys.exit(0)
 
     print('Done pulling census population demographics data')  # noqa: T201
 
-    # Get the household income at the tract (2010 ACS) or block group level (2015 and 2020 ACS)  # noqa: E501
+    # Get the household income at the tract (2010 ACS) or block group level (2015 and 2020 ACS)
     CensusUtil.get_blockgroupdata_for_income(
         state_counties,
         acs_vars,

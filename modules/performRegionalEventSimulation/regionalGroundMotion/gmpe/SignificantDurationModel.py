@@ -41,7 +41,10 @@ import numpy as np
 
 
 def abrahamson_silva_ds_1999(  # noqa: ANN201
-    magnitude=7.0, distance=10.0, soil=True, duration_type='DS575H'  # noqa: ANN001, FBT002
+    magnitude=7.0,  # noqa: ANN001
+    distance=10.0,  # noqa: ANN001
+    soil=True,  # noqa: ANN001, FBT002
+    duration_type='DS575H',  # noqa: ANN001
 ):
     """Significant duration model by Abrahamson and Silva (1996) Empirical ground motion
     models, report prepared for Brookhaven National Laboratory.
@@ -54,13 +57,13 @@ def abrahamson_silva_ds_1999(  # noqa: ANN201
     Output:
     log(ds_median): log(median) significant duration prediction
     ds_sigma: logarithmic standard deviation of the prediction
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
     # map the duration_type to integer key
     dur_map = {'DS575H': 0, 'DS575V': 1, 'DS595H': 2, 'DS595V': 3}
     dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
         print(  # noqa: T201
-            "SignificantDurationModel.abrahamson_silva_ds_1999: duration_type='DS575H','DS575V','DS595H','DS595V'?"  # noqa: E501
+            "SignificantDurationModel.abrahamson_silva_ds_1999: duration_type='DS575H','DS575V','DS595H','DS595V'?"
         )
         return None, None
     # modeling coefficients
@@ -104,12 +107,16 @@ def abrahamson_silva_ds_1999(  # noqa: ANN201
     # sigma
     ds_sigma = sigma[dur_tag]
 
-    # return  # noqa: ERA001
+    # return
     return np.log(ds_median), ds_sigma
 
 
 def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
-    magnitude=7.0, distance=10.0, vs30=760.0, ztor=0.0, duration_type='DS575H'  # noqa: ANN001
+    magnitude=7.0,  # noqa: ANN001
+    distance=10.0,  # noqa: ANN001
+    vs30=760.0,  # noqa: ANN001
+    ztor=0.0,  # noqa: ANN001
+    duration_type='DS575H',  # noqa: ANN001
 ):
     """Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical
     Equations for the Prediction of the Significant, Bracketed, and Uniform
@@ -131,7 +138,7 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
         print(  # noqa: T201
-            "SignificantDurationModel.bommer_stafford_alarcon_ds_2009: duration_type='DS575H','DS595H'?"  # noqa: E501
+            "SignificantDurationModel.bommer_stafford_alarcon_ds_2009: duration_type='DS575H','DS595H'?"
         )
         return None, None, None, None
 
@@ -162,7 +169,7 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     ds_tau = tauCoeff[dur_tag]
     ds_phi = phiCoeff[dur_tag]
 
-    # return  # noqa: ERA001
+    # return
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi
 
 
@@ -190,13 +197,13 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     ds_sigma: logarithmic standard deviation of the prediction
     ds_tau: within-event logarithmic standard deviation
     ds_phi: between-event logarithmic standard deviation
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
     # mechanism map
     mech_map = {'unknown': 0, 'normal': 1, 'reverse': 2, 'strike-slip': 3}
     mech_tag = mech_map.get(mechanism.lower(), None)
     if mech_tag is None:
         print(  # noqa: T201
-            "SignificantDurationModel.afshari_stewart_ds_2016: mechanism='unknown','normal','reverse','strike-slip'?"  # noqa: E501
+            "SignificantDurationModel.afshari_stewart_ds_2016: mechanism='unknown','normal','reverse','strike-slip'?"
         )
         return None, None, None, None
     # region map
@@ -204,7 +211,7 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     reg_tag = reg_map.get(region.lower(), None)
     if reg_tag is None:
         print(  # noqa: T201
-            "SignificantDurationModel.afshari_stewart_ds_2016: region='california', 'japan', 'other'?"  # noqa: E501
+            "SignificantDurationModel.afshari_stewart_ds_2016: region='california', 'japan', 'other'?"
         )
         return None, None, None, None
     # duration type map
@@ -212,7 +219,7 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
         print(  # noqa: T201
-            "SignificantDurationModel.afshari_stewart_ds_2016: duration_type='DS575H','DS595H','DS2080H'?"  # noqa: E501
+            "SignificantDurationModel.afshari_stewart_ds_2016: duration_type='DS575H','DS595H','DS2080H'?"
         )
         return None, None, None, None
 
@@ -331,5 +338,5 @@ def afshari_stewart_ds_2016(  # noqa: ANN201, C901, PLR0912, PLR0913, PLR0915
     # total
     ds_sigma = np.sqrt(ds_phi**2 + ds_tau**2)
 
-    # return  # noqa: ERA001
+    # return
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi

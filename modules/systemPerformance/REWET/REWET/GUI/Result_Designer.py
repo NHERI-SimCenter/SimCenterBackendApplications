@@ -130,7 +130,7 @@ class Result_Designer:  # noqa: N801, D101
         self.all_scenarios_checkbox.setChecked(True)
         self.scenario_combo.clear()
         self.scenario_combo.addItems(self.result_scenarios)
-        # self.current_curve_data = None  # noqa: ERA001
+        # self.current_curve_data = None
 
     def curveAllScenarioCheckboxChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
         if state == 0:
@@ -146,9 +146,9 @@ class Result_Designer:  # noqa: N801, D101
         y = range(0, 20, 2)
         self.mpl_curve.canvas.ax.plot(x, y)
         self.mpl_curve.canvas.draw()
-        # self.mpl_curve.canvas.ax.set_ylabel("y_label")  # noqa: ERA001
-        # self.mpl_curve.canvas.ax.set_xlabel("x_label")  # noqa: ERA001
-        # self.mpl_curve.canvas.fig.tight_layout()  # noqa: ERA001
+        # self.mpl_curve.canvas.ax.set_ylabel("y_label")
+        # self.mpl_curve.canvas.ax.set_xlabel("x_label")
+        # self.mpl_curve.canvas.fig.tight_layout()
 
     def plotCurve(self, y_label=None, x_label=None):  # noqa: ANN001, ANN201, N802, D102
         if y_label == None:  # noqa: E711
@@ -190,7 +190,7 @@ class Result_Designer:  # noqa: N801, D101
 
     def resultScenarioChanged(self, text):  # noqa: ANN001, ANN201, N802, D102
         self.result_current_scenario = text  # self.scenario_combo.getText()
-        # self.current_curve_data = None  # noqa: ERA001
+        # self.current_curve_data = None
 
     def curveTypeChanegd(self, text):  # noqa: ANN001, ANN201, N802, D102
         if self.project_result == None:  # noqa: E711
@@ -290,7 +290,7 @@ class Result_Designer:  # noqa: N801, D101
             self.plotCurve('Exceedance Probability', 'Time')
         elif curve_type == 'Quantity':
             iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
-            # iPopulation             = self.curve_population_settings_combo.currentText()  # noqa: ERA001, E501
+            # iPopulation             = self.curve_population_settings_combo.currentText()
             iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
             iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
@@ -319,9 +319,9 @@ class Result_Designer:  # noqa: N801, D101
             self.plotCurve('Quantity', 'Time')
 
         elif curve_type == 'Delivery':
-            # self.current_curve_data = (curve_type, pd.DataFrame())  # noqa: ERA001
+            # self.current_curve_data = (curve_type, pd.DataFrame())
             iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
-            # iPopulation             = self.curve_population_settings_combo.currentText()  # noqa: ERA001, E501
+            # iPopulation             = self.curve_population_settings_combo.currentText()
             iRatio = self.curve_settings_widgets['Percentage'].currentText()  # noqa: N806
             iConsider_leak = self.curve_settings_widgets['LDN leak'].currentText()  # noqa: N806
             leak_ratio = self.curve_settings_widgets['leak Criteria'].text()
@@ -350,7 +350,7 @@ class Result_Designer:  # noqa: N801, D101
             self.plotCurve('Delivery', 'Time')
 
         elif curve_type == 'SSI':
-            # self.current_curve_data = (curve_type, pd.DataFrame())  # noqa: ERA001
+            # self.current_curve_data = (curve_type, pd.DataFrame())
             iPopulation = self.curve_settings_widgets['Population'].currentText()  # noqa: N806
             scn_name = self.scenario_combo.currentText()
             self.current_raw_curve = (
@@ -371,7 +371,7 @@ class Result_Designer:  # noqa: N801, D101
             self.populateCurveSettingsTable(curve_settings[curve_type])
         else:
             pass
-            # raise ValueError("Unknown Curve type: "+repr(curve_type))  # noqa: ERA001
+            # raise ValueError("Unknown Curve type: "+repr(curve_type))
 
     def populateCurveSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
         self.curve_settings_widgets.clear()
@@ -498,5 +498,5 @@ class Result_Designer:  # noqa: N801, D101
         if file_addr[0] == '':
             return
 
-        # self.current_curve_data[1].to_excel(file_addr[0])  # noqa: ERA001
+        # self.current_curve_data[1].to_excel(file_addr[0])
         self.current_curve.to_excel(file_addr[0])

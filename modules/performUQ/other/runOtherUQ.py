@@ -9,20 +9,20 @@ from configureAndRunUQ import configureAndRunUQ
 
 def main():  # noqa: ANN201, D103
     # KEEP THIS FOR NOW--MAYBE BACKEND WILL BE UPDATED ACCEPT DIFFERENT ARGUMENTS...
-    # parser = argparse.ArgumentParser(description='Generate workflow driver based on input configuration')  # noqa: ERA001, E501
-    # parser.add_argument('--mainWorkDir', '-m', required=True, help="Main work directory")  # noqa: ERA001, E501
-    # parser.add_argument('--tempWorkDir', '-t', required=True, help="Temporary work directory")  # noqa: ERA001, E501
-    # parser.add_argument('--runType', '-r', required=True, help="Type of run")  # noqa: ERA001
-    # parser.add_argument('--inputFile', '-i', required=True, help="Input JSON file with configuration from UI")  # noqa: ERA001, E501
+    # parser = argparse.ArgumentParser(description='Generate workflow driver based on input configuration')
+    # parser.add_argument('--mainWorkDir', '-m', required=True, help="Main work directory")
+    # parser.add_argument('--tempWorkDir', '-t', required=True, help="Temporary work directory")
+    # parser.add_argument('--runType', '-r', required=True, help="Type of run")
+    # parser.add_argument('--inputFile', '-i', required=True, help="Input JSON file with configuration from UI")
     # Options for run type
     runTypeOptions = ['runningLocal', 'runningRemote']  # noqa: N806
 
-    # args = parser.parse_args()  # noqa: ERA001
+    # args = parser.parse_args()
 
-    # workDirMain = args.mainWorkDir  # noqa: ERA001
-    # workDirTemp = args.tempWorkDir  # noqa: ERA001
-    # runType = args.runType  # noqa: ERA001
-    # inputFile = args.inputFile  # noqa: ERA001
+    # workDirMain = args.mainWorkDir
+    # workDirTemp = args.tempWorkDir
+    # runType = args.runType
+    # inputFile = args.inputFile
 
     parser = argparse.ArgumentParser()
 
@@ -45,8 +45,8 @@ def main():  # noqa: ANN201, D103
         raise ValueError('ERROR: Input run type has to be either local or remote')  # noqa: EM101, TRY003
 
     # change workdir to the templatedir
-    # os.chdir(workDirTemp)  # noqa: ERA001
-    # cwd = os.getcwd()  # noqa: ERA001
+    # os.chdir(workDirTemp)
+    # cwd = os.getcwd()
 
     # Open input file
     inputdata = {}  # noqa: F841
@@ -63,7 +63,7 @@ def main():  # noqa: ANN201, D103
     localAppDir = inputData['localAppDir']  # noqa: N806
     remoteAppDir = inputData['remoteAppDir']  # noqa: N806
 
-    # Run UQ based on data and selected UQ engine--if you need to preprocess files with custom delimiters, use preprocessUQ.py  # noqa: E501
+    # Run UQ based on data and selected UQ engine--if you need to preprocess files with custom delimiters, use preprocessUQ.py
     configureAndRunUQ(
         uqData,
         simulationData,

@@ -18,7 +18,7 @@ from initial import Starter
 if __name__ == '__main__':
     argParser = argparse.ArgumentParser(  # noqa: N816
         prog='REWET V0.2',
-        description='REstoration tool for Restoration of Water after Event Tool is a package for modeling damages and restoration in water network. You can specify settings in with providing a JSON. An exampel JSON file is provided in example folder. Modify the exampel folder and provide its path as an input. If not provided, the default settings valeus from the input/settings.py will be ran. thus, you can alterbatively modify values in settings for a single run.',  # noqa: E501
+        description='REstoration tool for Restoration of Water after Event Tool is a package for modeling damages and restoration in water network. You can specify settings in with providing a JSON. An exampel JSON file is provided in example folder. Modify the exampel folder and provide its path as an input. If not provided, the default settings valeus from the input/settings.py will be ran. thus, you can alterbatively modify values in settings for a single run.',
     )
 
     argParser.add_argument('--json', '-j', default=None, help='json settings file')

@@ -103,7 +103,7 @@ class Time_Unit_Combo(QtWidgets.QComboBox):  # noqa: N801, D101
         time_unit = self.currentText()
         data = time_justified_map[value_columns_name]
 
-        # time_justified_map = time_justified_map.reset_index()  # noqa: ERA001
+        # time_justified_map = time_justified_map.reset_index()
 
         if time_unit == 'second':
             return raw_time_map.copy()
@@ -188,7 +188,7 @@ class Map_Designer:  # noqa: N801, D101
         self.map_all_scenarios_checkbox.setChecked(True)
         self.map_scenario_combo.clear()
         self.map_scenario_combo.addItems(self.result_scenarios)
-        # self.current_map_data = None  # noqa: ERA001
+        # self.current_map_data = None
 
     def symbologyByButton(self):  # noqa: ANN201, N802, D102
         sym = Symbology_Designer(
@@ -284,7 +284,7 @@ class Map_Designer:  # noqa: N801, D101
     def putAnnotation(self, event):  # noqa: ANN001, ANN201, N802, D102
         vis = self.annot.get_visible()
         if event.inaxes == self.mpl_map.canvas.ax:
-            # print((event.xdata, event.ydata) )  # noqa: ERA001
+            # print((event.xdata, event.ydata) )
             mouse_point = Point(event.xdata, event.ydata)
 
             s = self.annotation_map.geometry.contains(mouse_point)
@@ -297,7 +297,7 @@ class Map_Designer:  # noqa: N801, D101
                 cont = False
 
             if cont:
-                # print(len(s_index_list))  # noqa: ERA001
+                # print(len(s_index_list))
                 data = self.annotation_map.loc[s_index, self.map_value_columns_name]
                 if type(data) == pd.core.series.Series:  # noqa: E721
                     data = data.iloc[0]
@@ -323,10 +323,10 @@ class Map_Designer:  # noqa: N801, D101
         self.clearMapPlot()
         self.mpl_map.canvas.ax.clear()
         # for ind, val in self.current_map.geometry.iteritems():
-        # self.current_map.geometry.loc[ind] = val.buffer(2000)  # noqa: ERA001
-        # self.mpl_map.canvas.ax.clear()  # noqa: ERA001
+        # self.current_map.geometry.loc[ind] = val.buffer(2000)
+        # self.mpl_map.canvas.ax.clear()
         data = self.current_map
-        # print(data.head() )  # noqa: ERA001
+        # print(data.head() )
 
         self.annot = self.mpl_map.canvas.ax.annotate(
             '',
@@ -341,12 +341,12 @@ class Map_Designer:  # noqa: N801, D101
         if self.iUse_substitute_layer == True:  # noqa: E712
             data = data.set_crs(crs=self.subsitute_layer.crs)
             joined_map = gpd.sjoin(self.subsitute_layer, data)
-            # joined_map.plot(ax=self.mpl_map.canvas.ax, column=value_columns_name, cmap="Blues", legend=True)  # noqa: ERA001, E501
+            # joined_map.plot(ax=self.mpl_map.canvas.ax, column=value_columns_name, cmap="Blues", legend=True)
             data = joined_map
         else:
             pass
         self.annotation_map = data.copy(deep=True)
-        # data.to_file("Northridge/ss2.shp")  # noqa: ERA001
+        # data.to_file("Northridge/ss2.shp")
         self.plotted_map = self.prepareForLegend(data, value_columns_name)
         self.plotted_map.plot(
             ax=self.mpl_map.canvas.ax,
@@ -358,11 +358,11 @@ class Map_Designer:  # noqa: N801, D101
             classification_kwds=self.symbology['kw'],
         )
         self.mpl_map.canvas.ax.ticklabel_format(axis='both', style='plain')
-        # self.majorTickSet()  # noqa: ERA001
+        # self.majorTickSet()
 
-        # labels = self.mpl_map.canvas.ax.get_xticks()  # noqa: ERA001
-        # self.mpl_map.canvas.ax.set_xticklabels(labels, rotation=45, ha='right')  # noqa: ERA001
-        # self.mpl_map.canvas.ax.plot(self.current_map.index, self.current_map.to_list())  # noqa: ERA001, E501
+        # labels = self.mpl_map.canvas.ax.get_xticks()
+        # self.mpl_map.canvas.ax.set_xticklabels(labels, rotation=45, ha='right')
+        # self.mpl_map.canvas.ax.plot(self.current_map.index, self.current_map.to_list())
 
         self.mpl_map.canvas.draw()
         self.mpl_map.canvas.fig.tight_layout()
@@ -385,7 +385,7 @@ class Map_Designer:  # noqa: N801, D101
                 (data[value_columns_name] < step_max)
                 & (data[value_columns_name] > step_min)
             ].index
-            # print(index_list)  # noqa: ERA001
+            # print(index_list)
             for ind in index_list:
                 data.loc[ind, value_columns_name] = step_max
 
@@ -441,18 +441,18 @@ class Map_Designer:  # noqa: N801, D101
                 leak_ratio=leak_ratio,
                 consistency_time_window=time_window,
             )
-            # print(map_data)  # noqa: ERA001
+            # print(map_data)
             self.current_raw_map = (
                 self.project_result.getDLQNExceedenceProbabilityMap(
                     map_data, ihour=True, param=exeedance_probability
                 )
             )
-            # self.current_map      = self.current_raw_map.copy()  # noqa: ERA001
+            # self.current_map      = self.current_raw_map.copy()
             self.current_map = self.time_combo.changeMapTimeUnit(
                 self.current_raw_map, self.map_value_columns_name
             )
 
-            # print(exeedance_probability)  # noqa: ERA001
+            # print(exeedance_probability)
             self.plotMap(self.map_value_columns_name)
 
         elif map_type == 'Delivery Outage vs. Exceedance':
@@ -477,18 +477,18 @@ class Map_Designer:  # noqa: N801, D101
                 leak_ratio=leak_ratio,
                 consistency_time_window=time_window,
             )
-            # print(map_data)  # noqa: ERA001
+            # print(map_data)
             self.current_raw_map = (
                 self.project_result.getDLQNExceedenceProbabilityMap(
                     map_data, ihour=True, param=exeedance_probability
                 )
             )
-            # self.current_map      = self.current_raw_map.copy()  # noqa: ERA001
+            # self.current_map      = self.current_raw_map.copy()
             self.current_map = self.time_combo.changeMapTimeUnit(
                 self.current_raw_map, self.map_value_columns_name
             )
 
-            # print(exeedance_probability)  # noqa: ERA001
+            # print(exeedance_probability)
             self.plotMap(self.map_value_columns_name)
 
         elif map_type == 'Quantity Exceedance vs. Time':
@@ -513,18 +513,18 @@ class Map_Designer:  # noqa: N801, D101
                 leak_ratio=leak_ratio,
                 consistency_time_window=time_window,
             )
-            # print(map_data)  # noqa: ERA001
+            # print(map_data)
             self.current_raw_map = (
                 self.project_result.getDLQNExceedenceProbabilityMap(
                     map_data, ihour=False, param=outage_time
                 )
             )
-            # self.current_map      = self.current_raw_map.copy()  # noqa: ERA001
+            # self.current_map      = self.current_raw_map.copy()
             self.current_map = self.time_combo.changeMapTimeUnit(
                 self.current_raw_map, self.map_value_columns_name
             )
 
-            # print(exeedance_probability)  # noqa: ERA001
+            # print(exeedance_probability)
             self.plotMap(self.map_value_columns_name)
 
         elif map_type == 'Delivery Exceedance vs. Time':
@@ -549,18 +549,18 @@ class Map_Designer:  # noqa: N801, D101
                 leak_ratio=leak_ratio,
                 consistency_time_window=time_window,
             )
-            # print(map_data)  # noqa: ERA001
+            # print(map_data)
             self.current_raw_map = (
                 self.project_result.getDLQNExceedenceProbabilityMap(
                     map_data, ihour=False, param=outage_time
                 )
             )
-            # self.current_map      = self.current_raw_map.copy()  # noqa: ERA001
+            # self.current_map      = self.current_raw_map.copy()
             self.current_map = self.time_combo.changeMapTimeUnit(
                 self.current_raw_map, self.map_value_columns_name
             )
 
-            # print(exeedance_probability)  # noqa: ERA001
+            # print(exeedance_probability)
             self.plotMap(self.map_value_columns_name)
 
         elif map_type == 'Quantity Return':
@@ -623,7 +623,7 @@ class Map_Designer:  # noqa: N801, D101
 
         elif map_type == 'SSI':
             return
-            # self.current_map_data = (map_type, pd.DataFrame())  # noqa: ERA001
+            # self.current_map_data = (map_type, pd.DataFrame())
             iPopulation = self.map_settings_widgets['Population'].currentText()  # noqa: N806
             scn_name = self.map_scenario_combo.currentText()
             self.current_raw_map = (
@@ -640,7 +640,7 @@ class Map_Designer:  # noqa: N801, D101
         else:
             raise  # noqa: PLE0704
 
-        # self.annotation_map = self.current_raw_map.copy()  # noqa: ERA001
+        # self.annotation_map = self.current_raw_map.copy()
         self.annotationRadiusChanegd()
 
     def setMapSettingBox(self, map_type):  # noqa: ANN001, ANN201, N802, D102
@@ -651,7 +651,7 @@ class Map_Designer:  # noqa: N801, D101
             self.populateMapSettingsTable(map_settings[map_type])
         else:
             pass
-            # raise ValueError("Unknown Map type: "+repr(map_type))  # noqa: ERA001
+            # raise ValueError("Unknown Map type: "+repr(map_type))
 
     def populateMapSettingsTable(self, settings_content):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
         self.map_settings_widgets.clear()
@@ -804,5 +804,5 @@ class Map_Designer:  # noqa: N801, D101
         if file_addr[0] == '':
             return
 
-        # self.current_map_data[1].to_excel(file_addr[0])  # noqa: ERA001
+        # self.current_map_data[1].to_excel(file_addr[0])
         self.current_map.to_file(file_addr[0])

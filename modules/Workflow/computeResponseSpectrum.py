@@ -50,7 +50,11 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: ANN001, ANN
 
 
 def get_velocity_displacement(  # noqa: ANN201
-    time_step, acceleration, units='cm/s/s', velocity=None, displacement=None  # noqa: ANN001
+    time_step,  # noqa: ANN001
+    acceleration,  # noqa: ANN001
+    units='cm/s/s',  # noqa: ANN001
+    velocity=None,  # noqa: ANN001
+    displacement=None,  # noqa: ANN001
 ):
     """Returns the velocity and displacment time series using simple integration
     :param float time_step:

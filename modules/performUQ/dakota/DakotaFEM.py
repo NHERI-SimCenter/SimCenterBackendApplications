@@ -94,7 +94,7 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
 
     if (
         uqData['samples'] is None
-    ):  # this happens when the uq details are stored at the wrong place in the AIM file  # noqa: E501
+    ):  # this happens when the uq details are stored at the wrong place in the AIM file
         with open(aimName, encoding='utf-8') as data_file:  # noqa: PTH123
             uq_info = json.load(data_file)['UQ']
 
@@ -120,14 +120,14 @@ def main(args):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     # Create Template Directory and copy files
     st = os.stat(workflowDriverName)  # noqa: PTH116
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
-    # shutil.copy(workflowDriverName, "templatedir")  # noqa: ERA001
-    # shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())  # noqa: ERA001
+    # shutil.copy(workflowDriverName, "templatedir")
+    # shutil.copy("{}/dpreproSimCenter".format(scriptDir), os.getcwd())
     shutil.move(aimName, 'aim.j')
     shutil.move(evtName, 'evt.j')
     if os.path.isfile(samName):  # noqa: PTH113
         shutil.move(samName, 'sam.j')
     shutil.move(edpName, 'edp.j')
-    # if os.path.isfile(simName): shutil.move(simName, "sim.j")  # noqa: ERA001
+    # if os.path.isfile(simName): shutil.move(simName, "sim.j")
 
     # copy the dakota input file to the main working dir for the structure
     shutil.move('dakota.in', '../')

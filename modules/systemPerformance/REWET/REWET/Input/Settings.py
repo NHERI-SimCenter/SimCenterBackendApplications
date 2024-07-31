@@ -38,7 +38,7 @@ class Process_Settings(base):  # noqa: N801, D101
         self.settings['minimum_simulation_time'] = (10 + 24 * 2) * 3600  # seconds
         self.settings['simulation_time_step'] = 3600  # seconds
         self.settings['number_of_damages'] = (
-            'multiple'  # single or multiple. If single, indicate single damage files. If multiple, indicate "pipe_damage_file_list"  # noqa: E501
+            'multiple'  # single or multiple. If single, indicate single damage files. If multiple, indicate "pipe_damage_file_list"
         )
         self.settings['result_directory'] = 'Result'  # "Net3//Result"
         self.settings['temp_directory'] = 'RunFiles'
@@ -66,13 +66,13 @@ class Process_Settings(base):  # noqa: N801, D101
         Hydraulic settings
         """
         self.settings['WN_INP'] = (
-            'Example/net3.inp'  #'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"  # noqa: E501
+            'Example/net3.inp'  #'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"
         )
         self.settings['demand_ratio'] = 1
         self.settings['solver'] = (
             'ModifiedEPANETV2.2'  # sina needs to be implemented
         )
-        # self.settings['hydraulic_time_step'] = 3600  # noqa: ERA001
+        # self.settings['hydraulic_time_step'] = 3600
         self.settings['solver_type'] = 'ModifiedEPANETV2.2'
 
         """
@@ -80,10 +80,10 @@ class Process_Settings(base):  # noqa: N801, D101
         """
 
         self.settings['pipe_damage_file_list'] = (
-            'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'  # noqa: E501
+            'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'
         )
         self.settings['pipe_damage_file_directory'] = (
-            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"  # noqa: E501
+            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
         )
         self.settings['pump_damage_relative_time'] = (
             True  # needs to be implemented in the code
@@ -101,7 +101,7 @@ class Process_Settings(base):  # noqa: N801, D101
         """
         None GUI settings
         """
-        # self.settings['job_assign_time_limit'     ]=None # time in seconds or None  # noqa: ERA001
+        # self.settings['job_assign_time_limit'     ]=None # time in seconds or None
         self.settings['maximun_worker_idle_time'] = 60
         self.settings['number_of_proccessor'] = 1
 
@@ -132,7 +132,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
         self.settings['minimum_pressure'] = 8
         self.settings['required_pressure'] = 25
         self.settings['pressure_exponent'] = 0.75  # sina add it to teh code and GUI
-        # Sina also take care of the nodal damage formula in terms of exponents [Urgent]  # noqa: E501
+        # Sina also take care of the nodal damage formula in terms of exponents [Urgent]
         self.settings['hydraulic_time_step'] = 900
 
         """
@@ -209,7 +209,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
             'script'  # sina needs to be implemented in the code
         )
         self.settings['Restortion_config_file'] = (
-            'Example/exampe_config.txt'  # "config-ghab-az-tayid.txt" #'X:\\Sina Naeimi\\anytown_damage\\config-base_base.txt'#'config-base_hydsig.txt' #'Net3/config.txt' #  # noqa: E501
+            'Example/exampe_config.txt'  # "config-ghab-az-tayid.txt" #'X:\\Sina Naeimi\\anytown_damage\\config-base_base.txt'#'config-base_hydsig.txt' #'Net3/config.txt' #
         )
         self.settings['pipe_damage_discovery_model'] = {
             'method': 'leak_based',
@@ -241,7 +241,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
             False  # sina needs to be implemented in the code
         )
         self.settings['crew_travel_speed'] = (
-            16.66666  # unit: ft/s approximately 18 km/h. The unit is [coordinate unit] per seconds. # sina needs to be implemented in the code  # noqa: E501
+            16.66666  # unit: ft/s approximately 18 km/h. The unit is [coordinate unit] per seconds. # sina needs to be implemented in the code
         )
 
         self.settings['equavalant_damage_diameter'] = 1
@@ -299,7 +299,7 @@ class Settings:  # noqa: D101
 
         if not isinstance(settings_data, dict):
             raise ValueError(  # noqa: TRY003, TRY004
-                'Wrong JSON file type for teh settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101, E501
+                'Wrong JSON file type for teh settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
             )
 
         for key, val in settings_data.items():
@@ -330,9 +330,9 @@ class Settings:  # noqa: D101
         with open(project_addr, 'rb') as f:  # noqa: PTH123
             project = pickle.load(f)  # noqa: S301
         # for k in project.project_settings.scenario.settings:
-        # new_value = project.project_settings.scenario[k]  # noqa: ERA001
-        # old_value = self.scenario[k]  # noqa: ERA001
-        # print(k + ": " + repr(new_value) + " --> " + repr(old_value) + "\n"+"-----" + repr(type(new_value)) )  # noqa: ERA001, E501
+        # new_value = project.project_settings.scenario[k]
+        # old_value = self.scenario[k]
+        # print(k + ": " + repr(new_value) + " --> " + repr(old_value) + "\n"+"-----" + repr(type(new_value)) )
         self.process = project.project_settings.process
         self.scenario = project.project_settings.scenario
 
@@ -448,7 +448,7 @@ class Settings:  # noqa: D101
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
-                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name missmatch, it may not take any efffect'  # noqa: E501
+                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name missmatch, it may not take any efffect'
                             + '\n'
                         )
 
@@ -465,20 +465,20 @@ class Settings:  # noqa: D101
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
-                            + 'The Override Point Group has no valid input; thus, the override is ignored!'  # noqa: E501
+                            + 'The Override Point Group has no valid input; thus, the override is ignored!'
                         )
 
-                # =============================================================================  # noqa: E501
-                #                 elif override_key1.upper() == "CREWSPEED":  # noqa: ERA001
+                # =============================================================================
+                #                 elif override_key1.upper() == "CREWSPEED":
                 #                     if override_key2 == None:
-                #                         raise ValueError("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "You should provide a Crew Speed for CREWSPEED override key." + "\n")  # noqa: ERA001, E501
+                #                         raise ValueError("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "You should provide a Crew Speed for CREWSPEED override key." + "\n")
                 #
-                #                     crew_speed = self.getOverrideCrewSpeed(override_value, scenario_name)  # noqa: ERA001, E501
+                #                     crew_speed = self.getOverrideCrewSpeed(override_value, scenario_name)
                 #                     if crew_speed != None:
-                #                         self.overrides["CREWSPEED"] = crew_speed  # noqa: ERA001
-                #                     else:  # noqa: ERA001
-                #                         warnings.warn("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "SPEEDCREW is not valid; thus, the override is ignored!")  # noqa: ERA001, E501
-                # =============================================================================  # noqa: E501
+                #                         self.overrides["CREWSPEED"] = crew_speed
+                #                     else:
+                #                         warnings.warn("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "SPEEDCREW is not valid; thus, the override is ignored!")
+                # =============================================================================
                 else:
                     raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
 
@@ -495,7 +495,7 @@ class Settings:  # noqa: D101
                     + repr(scenario_name)
                     + '\n'
                     + word
-                    + " must be two numbeers speerated by one ':' showing X:Y coordinate. "  # noqa: E501
+                    + " must be two numbeers speerated by one ':' showing X:Y coordinate. "
                     + word
                     + ' is ignored!'
                 )
@@ -509,7 +509,7 @@ class Settings:  # noqa: D101
                     + repr(scenario_name)
                     + '\n'
                     + word
-                    + " must be two numbeers speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
+                    + " must be two numbeers speerated by ONE ':' showing X:Y coordinate. "
                     + word
                     + ' is ignored!'
                 )
@@ -528,7 +528,7 @@ class Settings:  # noqa: D101
                     + x_coord
                     + ' in '
                     + word
-                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
+                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "
                     + word
                     + ' is ignored!'
                 )
@@ -544,7 +544,7 @@ class Settings:  # noqa: D101
                     + y_coord
                     + ' in '
                     + word
-                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
+                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "
                     + word
                     + ' is ignored!'
                 )

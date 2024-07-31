@@ -78,7 +78,7 @@ def remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph):  # no
             ne = edges.loc[edge2.index[0], 'node_end']
             edges.loc[edge2.index[0], 'node_start'] = ne
             edges.loc[edge2.index[0], 'node_end'] = ns
-            # edges.loc[edge2.index[0],"geometry"] = shapely.LineString(list(edges.loc[edge2.index[0],"geometry"].coords)[::-1])  # noqa: ERA001, E501
+            # edges.loc[edge2.index[0],"geometry"] = shapely.LineString(list(edges.loc[edge2.index[0],"geometry"].coords)[::-1])
             edges.loc[edge2.index[0], 'geometry'] = edges.loc[
                 edge2.index[0], 'geometry'
             ].reverse()
@@ -89,7 +89,7 @@ def remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph):  # no
             ne = edges.loc[edge1.index[1], 'node_end']
             edges.loc[edge1.index[1], 'node_start'] = ne
             edges.loc[edge1.index[1], 'node_end'] = ns
-            # edges.loc[edge1.index[1],"geometry"] = shapely.LineString(list(edges.loc[edge1.index[1],"geometry"].coords)[::-1])  # noqa: ERA001, E501
+            # edges.loc[edge1.index[1],"geometry"] = shapely.LineString(list(edges.loc[edge1.index[1],"geometry"].coords)[::-1])
             edges.loc[edge1.index[1], 'geometry'] = edges.loc[
                 edge1.index[1], 'geometry'
             ].reverse()
@@ -100,10 +100,15 @@ def remove2neibourEdges(nodesID_to_remove, nodes_to_remove, edges, graph):  # no
             continue
         try:
             removedID_list.append(nodeid)
-            newLineCoords = list(edge1['geometry'].values[0].coords) + list(  # noqa: N806, PD011
-                edge2['geometry'].values[0].coords[1:]  # noqa: PD011
+            newLineCoords = (  # noqa: N806
+                list(
+                    edge1['geometry'].values[0].coords  # noqa: PD011
+                )
+                + list(
+                    edge2['geometry'].values[0].coords[1:]  # noqa: PD011
+                )
             )
-            # newLineCoords.append(edge2["geometry"].values[0].coords[1:])  # noqa: ERA001
+            # newLineCoords.append(edge2["geometry"].values[0].coords[1:])
             edges.loc[edge1.index, 'geometry'] = shapely.LineString(newLineCoords)
             edges.loc[edge1.index, 'node_end'] = edge2['node_end'].values[0]  # noqa: PD011
             edges.drop(edge2.index, axis=0, inplace=True)  # noqa: PD002
@@ -233,7 +238,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 numP = 1  # noqa: N806
                 procID = 0  # noqa: N806
 
-    # Get the out dir, may not always be in the results folder if multiple assets are used  # noqa: E501
+    # Get the out dir, may not always be in the results folder if multiple assets are used
     outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
     # check if a filter is provided for bridges
@@ -277,13 +282,13 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     nodes_dict = assets_dict.get('nodes', None)
     if nodes_dict is None:
         print(  # noqa: T201
-            "JSON_to_AIM_tranportation ERROR: A key of 'nodes' is not found in the asset file: "  # noqa: E501
+            "JSON_to_AIM_tranportation ERROR: A key of 'nodes' is not found in the asset file: "
             + asset_source_file
         )
         return
     if tunnels_array is None and bridges_array is None and roads_array is None:
         print(  # noqa: T201
-            "JSON_to_AIM_tranportation ERROR: None of 'hwy_bridges', 'hwy_tunnels', nor 'roadways' is not found in the asset file: "  # noqa: E501
+            "JSON_to_AIM_tranportation ERROR: None of 'hwy_bridges', 'hwy_tunnels', nor 'roadways' is not found in the asset file: "
             + asset_source_file
         )
         return
@@ -330,7 +335,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     datacrs = assets_dict.get('crs', None)
     if datacrs is None:
         print(  # noqa: T201
-            "JSON_to_AIM_tranportation WARNING: 'crs' is not found in the asset file: "  # noqa: E501
+            "JSON_to_AIM_tranportation WARNING: 'crs' is not found in the asset file: "
             + asset_source_file
         )
         print('The CRS epsg:4326 is used by default')  # noqa: T201
@@ -354,7 +359,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         roadDF = roadDF[['ID', 'roadType', 'lanes', 'maxMPH', 'geometry']]  # noqa: N806
         roadGDF = gpd.GeoDataFrame(roadDF, geometry='geometry', crs=datacrs)  # noqa: N806
         graph = momepy.gdf_to_nx(roadGDF.to_crs('epsg:6500'), approach='primal')
-        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph  # noqa: E501
+        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
             nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
@@ -364,7 +369,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             edges.duplicated(['node_start', 'node_end'], keep='first') == False  # noqa: E712
         ]
         edges = edges.reset_index(drop=True).drop('mm_len', axis=1)
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder  # noqa: E501
+        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -381,7 +386,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             else:
                 print(  # noqa: T201
                     ind,
-                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',  # noqa: E501
+                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',
                 )
         nodesID_to_remove = [  # noqa: N806
             i
@@ -580,7 +585,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     else:
         if runParallel == True:  # noqa: E712
-            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append  # noqa: E501
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
 
             for i in range(1, numP):
@@ -640,8 +645,8 @@ if __name__ == '__main__':
         const=True,
     )
     # parser.add_argument('--saveFullNetwork',
-    #     help = "Save the full network into edges and nodes.",  # noqa: ERA001
-    #     default=False,  # noqa: ERA001
+    #     help = "Save the full network into edges and nodes.",
+    #     default=False,
     #     type=bool)
 
     args = parser.parse_args()

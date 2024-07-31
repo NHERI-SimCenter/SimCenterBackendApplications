@@ -9,7 +9,11 @@ class Raw_Data:  # noqa: N801, D101
         pass
 
     def saveDetailedDemandNodeData(  # noqa: ANN201, N802, D102
-        self, scn_name, data_type, file_address, file_type  # noqa: ANN001
+        self,
+        scn_name,  # noqa: ANN001
+        data_type,  # noqa: ANN001
+        file_address,  # noqa: ANN001
+        file_type,  # noqa: ANN001
     ):
         if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(
@@ -38,7 +42,11 @@ class Raw_Data:  # noqa: N801, D101
         self.saveDataFrame(data, file_address, file_type=file_type)
 
     def saveDetailedReservoirData(  # noqa: ANN201, N802, D102
-        self, scn_name, data_type, file_address, file_type  # noqa: ANN001
+        self,
+        scn_name,  # noqa: ANN001
+        data_type,  # noqa: ANN001
+        file_address,  # noqa: ANN001
+        file_type,  # noqa: ANN001
     ):
         if data_type not in ['pressure', 'head', 'demand', 'quality']:
             raise ValueError(

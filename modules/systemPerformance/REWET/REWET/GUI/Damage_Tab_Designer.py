@@ -16,8 +16,8 @@ from .Scenario_Dialog_Designer import Scenario_Dialog_Designer
 
 class Damage_Tab_Designer:  # noqa: N801, D101
     def __init__(self):  # noqa: ANN204
-        # self.pipe_damage_model = {"CI":{"alpha":-0.0038, "beta":0.1096, "gamma":0.0196, "a":2, "b":1 }, "DI":{"alpha":-0.0038, "beta":0.05, "gamma":0.04, "a":2, "b":1 } }  # noqa: ERA001, E501
-        # self.node_damage_model = {'a':0.0036, 'aa':1, 'b':0, 'bb':0, 'c':-0.877, 'cc':1, 'd':0, 'dd':0, 'e':0.0248, 'ee1':1, 'ee2':1, 'f':0, 'ff1':0, 'ff2':0, "damage_node_model": "equal_diameter_emitter"}  # noqa: ERA001, E501
+        # self.pipe_damage_model = {"CI":{"alpha":-0.0038, "beta":0.1096, "gamma":0.0196, "a":2, "b":1 }, "DI":{"alpha":-0.0038, "beta":0.05, "gamma":0.04, "a":2, "b":1 } }
+        # self.node_damage_model = {'a':0.0036, 'aa':1, 'b':0, 'bb':0, 'c':-0.877, 'cc':1, 'd':0, 'dd':0, 'e':0.0248, 'ee1':1, 'ee2':1, 'f':0, 'ff1':0, 'ff2':0, "damage_node_model": "equal_diameter_emitter"}
         """These are variables that are shared between ui and settings."""  # noqa: D401
         self.setDamageSettings(self.settings, self.scenario_list)
 
@@ -324,11 +324,11 @@ class Damage_Tab_Designer:  # noqa: N801, D101
                                 must_have_pipe_columns - available_columns
                             )
                             pipe_damage.loc[:, not_available_columns] = None
-                        # print(pipe_damage)  # noqa: ERA001
-                        # pipe_damage = pd.DataFrame.from_dict( )  # noqa: ERA001
-                        # pipe_damage.index.name = 'time'  # noqa: ERA001
-                        # pipe_damage = pipe_damage.reset_index(drop=False)  # noqa: ERA001
-                    # print(pipe_damage)  # noqa: ERA001
+                        # print(pipe_damage)
+                        # pipe_damage = pd.DataFrame.from_dict( )
+                        # pipe_damage.index.name = 'time'
+                        # pipe_damage = pipe_damage.reset_index(drop=False)
+                    # print(pipe_damage)
                 available_columns = set(pipe_damage.columns)
                 not_available_columns = must_have_pipe_columns - available_columns
                 if len(not_available_columns) > 0:
@@ -399,8 +399,8 @@ class Damage_Tab_Designer:  # noqa: N801, D101
                             must_have_pump_columns - available_columns
                         )
                         pump_damage.loc[:, not_available_columns] = None
-                        # index_list  = pump_damage.index  # noqa: ERA001
-                        # pump_damage = pd.DataFrame.from_dict(pump_damage.to_list() )  # noqa: ERA001, E501
+                        # index_list  = pump_damage.index
+                        # pump_damage = pd.DataFrame.from_dict(pump_damage.to_list() )
 
                 available_columns = set(pump_damage.columns)
                 not_available_columns = must_have_pump_columns - available_columns
@@ -450,7 +450,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
             raise exp  # noqa: TRY201
             if_validate_successful = False
             text_output += (
-                'An error happened. File type might be wrong in addition to other problems. More information:\n'  # noqa: E501
+                'An error happened. File type might be wrong in addition to other problems. More information:\n'
                 + repr(exp)
             )
 
@@ -481,7 +481,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         if self.scneraio_validated == False:  # noqa: E712
             self.errorMSG(
                 'REWET',
-                'You must validate damage scenarios sucessfully before reviewing pipe damage models.',  # noqa: E501
+                'You must validate damage scenarios sucessfully before reviewing pipe damage models.',
             )
             return
         pipe_designer = Pipe_Damage_Model_Designer(self.pipe_damage_model)
@@ -525,7 +525,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         not_available_headers = set(must_be_headers) - set(available_headers)
         if len(not_available_headers) > 1:
             self.status_text.setText(
-                'failed to open the scenario file. the folowing columns are missing and need to be in teh file: '  # noqa: E501
+                'failed to open the scenario file. the folowing columns are missing and need to be in teh file: '
                 + repr(not_available_headers)
             )
             return None

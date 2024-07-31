@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -112,7 +112,7 @@ class of7Prboundary:  # noqa: N801
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\tp_rgh;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         header = header + 'dimensions\t[1 -1 -2 0 0 0 0];\n\n'
         header = header + 'internalField\tuniform\t0;\n\n'
@@ -141,9 +141,9 @@ FoamFile
         # For each type, get the text
         if int(Prtype) == 0:
             # Default for velocity type
-            # inlet = fixedFluxPressure  # noqa: ERA001
+            # inlet = fixedFluxPressure
             # wall/outlet = zeroGradient
-            # Empty = Empty  # noqa: ERA001
+            # Empty = Empty
             Upatch = hydroutil.extract_element_from_json(  # noqa: N806
                 data, ['Events', 'VelocityType_' + patchname]
             )
@@ -203,7 +203,7 @@ FoamFile
             Prtext = Prtext + 'value\t0;\n'  # noqa: N806
             Prtext = Prtext + '\t}\n'  # noqa: N806
         else:
-            # Default: Empty  # noqa: ERA001
+            # Default: Empty
             Prtext = '\t{\n\t\t'  # noqa: N806
             Prtext = Prtext + 'type\tempty;\n\t}\n'  # noqa: N806
 

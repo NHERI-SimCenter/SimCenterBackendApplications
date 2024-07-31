@@ -1,4 +1,4 @@
-# This file is used to include all user defined classes and functions  # noqa: INP001, D100
+# This file is used to include all user defined classes and functions  # noqa: D100, INP001
 # Developed by GUAN, XINGQUAN @ UCLA in June 2018
 # Updated in Sept. 2018
 
@@ -37,7 +37,7 @@ class ElasticAnalysis:
     (16) gravity and earthquake loads combination
     (17) copy baseline .tcl files
     (18) run OpenSees.exe
-    """  # noqa: E501, D205, D400, D404, D415
+    """  # noqa: D205, D400, D404, D415
 
     def __init__(self, building, for_drift_only=False, for_period_only=False):  # noqa: ANN001, ANN204, FBT002
         """This function is used to call all methods to write .tcl files required for an elastic analysis OpenSees model.
@@ -48,7 +48,7 @@ class ElasticAnalysis:
         :param for_period_only: a boolean variable.
                                 True means we only perform the eigen value analysis to obtain the period
                                 Otherwise, all load types will be considered.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Change the working directory to folder where .tcl files will be saved
         Path(building.directory['building elastic model']).mkdir(
             parents=True, exist_ok=True
@@ -197,7 +197,7 @@ class ElasticAnalysis:
         # Create a .tcl file to write boundary for the model
         with open('DefineFixities2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write(
-                '# This file will be used to define the fixity at all column bases \n\n\n'  # noqa: E501
+                '# This file will be used to define the fixity at all column bases \n\n\n'
             )
             tclfile.write('# Defining fixity at column base \n')
             for j in range(1, building.geometry['number of X bay'] + 2):
@@ -214,7 +214,7 @@ class ElasticAnalysis:
         with open('DefineFloorConstraint2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
             tclfile.write('# This file will be used to define floor constraint \n\n')
             tclfile.write(
-                'set\tConstrainDOF\t1;\t# Nodes at same floor level have identical lateral displacement \n\n'  # noqa: E501
+                'set\tConstrainDOF\t1;\t# Nodes at same floor level have identical lateral displacement \n\n'
             )
             # Constraint starts from floor level 2
             for i in range(2, building.geometry['number of story'] + 2):
@@ -468,7 +468,7 @@ class ElasticAnalysis:
             for i in range(2, building.geometry['number of story'] + 2):
                 tclfile.write('set\tNodalMassFloor%i' % i)
                 tclfile.write(
-                    '\t[expr $Floor%iWeight*$FrameTributaryMassRatio/$TotalNodesPerFloor/$g]; \n'  # noqa: E501
+                    '\t[expr $Floor%iWeight*$FrameTributaryMassRatio/$TotalNodesPerFloor/$g]; \n'
                     % i
                 )
             tclfile.write('\n\n')
@@ -662,7 +662,7 @@ class ElasticAnalysis:
             tclfile.write('\n')
 
             # Assign the lateral load values caused by earthquake
-            # Please note this is used to verify the strength -> use seismic_force_for_strength  # noqa: E501
+            # Please note this is used to verify the strength -> use seismic_force_for_strength
             tclfile.write(
                 '# Assign lateral load values caused by earthquake (kip)\n'
             )
@@ -763,7 +763,7 @@ class ElasticAnalysis:
             tclfile.write('\n')
 
             # Assign the lateral load values caused by earthquake
-            # This is used to compute the required strength -> use seismic_force_for_strength  # noqa: E501
+            # This is used to compute the required strength -> use seismic_force_for_strength
             tclfile.write(
                 '# Assign lateral load values caused by earthquake (kip)\n'
             )
@@ -864,7 +864,7 @@ class ElasticAnalysis:
             tclfile.write('\n')
 
             # Assign the lateral load values caused by earthquake
-            # This is used to compute the required strength -> use seismic_force_for_strength  # noqa: E501
+            # This is used to compute the required strength -> use seismic_force_for_strength
             tclfile.write(
                 '# Assign lateral load values caused by earthquake (kip)\n'
             )
@@ -994,7 +994,7 @@ class ElasticAnalysis:
             tclfile.write('# Define point loads on leaning column\n')
             for i in range(2, building.geometry['number of story'] + 2):
                 tclfile.write(
-                    'load\t%i%i\t0\t[expr -(1.2+0.2*%.2f)*$LeaningColumnDeadLoadFloor%i -'  # noqa: E501
+                    'load\t%i%i\t0\t[expr -(1.2+0.2*%.2f)*$LeaningColumnDeadLoadFloor%i -'
                     '0.5*$LeaningColumnLiveLoadFloor%i]\t0;\n'
                     % (
                         building.geometry['number of X bay'] + 2,
@@ -1019,7 +1019,7 @@ class ElasticAnalysis:
     def copy_baseline_files(self, building, for_drift_only, for_period_only):  # noqa: ANN001, ANN201
         """Some .tcl files are fixed, i.e., no need to change for different OpenSees models.
         Therefore, just copy these .tcl files from the baseline folder
-        """  # noqa: E501, D205, D400, D401, D415
+        """  # noqa: D205, D400, D401, D415
         # define a list which includes all baseline files' names
         file_list = [
             'Database.csv',
@@ -1030,7 +1030,7 @@ class ElasticAnalysis:
             'PerformLoadsAnalysis.tcl',
         ]
 
-        # Change the working directory to the folder where baseline .tcl files are stored  # noqa: E501
+        # Change the working directory to the folder where baseline .tcl files are stored
         os.chdir(building.directory['baseline files elastic'])
 
         # Create the 'building elastic model' directory if it does not already exist
@@ -1045,7 +1045,7 @@ class ElasticAnalysis:
         # Remember to change the working directory to building model directory
         os.chdir(building.directory['building elastic model'])
         # Revise "Model.tcl" file if we only want to obtain drifts
-        # Firstly read all content in "Model.tcl", then revise the content, and store it back to "Model.tcl"  # noqa: E501
+        # Firstly read all content in "Model.tcl", then revise the content, and store it back to "Model.tcl"
         old_string = (
             '[list EigenValue DeadLoad LiveLoad EarthquakeLoad GravityEarthquake]'
         )
@@ -1066,6 +1066,6 @@ class ElasticAnalysis:
                 file.write(new_content)
 
     def run_OpenSees_program(self, building):  # noqa: ANN001, ANN201, ARG002, N802, D102
-        # This method is used to run the "RunModel.bat" file. OpenSees.exe program is thus run.  # noqa: E501
+        # This method is used to run the "RunModel.bat" file. OpenSees.exe program is thus run.
         cmd = 'OpenSees Model.tcl'
         subprocess.Popen(cmd, shell=True).wait()  # noqa: S602

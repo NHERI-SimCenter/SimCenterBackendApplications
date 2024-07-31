@@ -44,7 +44,10 @@ class WaterNetworkModel(WaterNetworkModel):
         self.expicit_leak = []
 
     def updateWaterNetworkModelWithResult(  # noqa: ANN201, C901, N802, D417, PLR0912
-        self, result, registry, latest_simulation_time=None  # noqa: ANN001, ARG002
+        self,
+        result,  # noqa: ANN001
+        registry,  # noqa: ANN001, ARG002
+        latest_simulation_time=None,  # noqa: ANN001
     ):
         """Updates Water Netwrok Model consistent with result model. must be only
         used with EPANET solver or just in case you really know what you are
@@ -77,7 +80,7 @@ class WaterNetworkModel(WaterNetworkModel):
             latest_simulation_time = max_time
         elif latest_simulation_time != max_time:
             raise ValueError(  # noqa: TRY003
-                'Provided LATEST SIMULATION TIME id not consistnt with teh latest time in RESULT'  # noqa: EM101, E501
+                'Provided LATEST SIMULATION TIME id not consistnt with teh latest time in RESULT'  # noqa: EM101
             )
 
         avilable_tank_name_list = set(self.tank_name_list).intersection(
@@ -85,7 +88,7 @@ class WaterNetworkModel(WaterNetworkModel):
         )
         for tank_name in avilable_tank_name_list:
             # if tank_name not in result.node['head'].columns:
-            # continue  # noqa: ERA001
+            # continue
             tank_level = None
             head = None
 
@@ -123,8 +126,8 @@ class WaterNetworkModel(WaterNetworkModel):
                 setting = result.link['setting'].loc[max_time, link_name]
                 status = result.link['status'].loc[max_time, link_name]
             except:  # noqa: S112, E722
-                # logger.error(link_name + ' exist in WaterNetwork but does not exist in result')  # noqa: ERA001, E501
-                # raise ValueError(link_name + ' exist in WaterNetwork but does not exist in result')  # noqa: ERA001, E501
+                # logger.error(link_name + ' exist in WaterNetwork but does not exist in result')
+                # raise ValueError(link_name + ' exist in WaterNetwork but does not exist in result')
                 continue
 
             if isinstance(link, Valve):
@@ -172,7 +175,7 @@ class WaterNetworkModel(WaterNetworkModel):
         """  # noqa: D400, D401, D415
         if self._inpfile is None:
             logger.warning(
-                'Writing a minimal INP file without saved non-WNTR options (energy, etc.)'  # noqa: E501
+                'Writing a minimal INP file without saved non-WNTR options (energy, etc.)'
             )
             self._inpfile = InpFile()
         if units is None:

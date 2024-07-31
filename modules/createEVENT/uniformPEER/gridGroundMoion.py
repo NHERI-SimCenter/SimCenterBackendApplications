@@ -33,7 +33,7 @@
 # You should have received a copy of the BSD 3-Clause License along with
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
-# This module is used to select a set of ground motions such with uniformly distributed user-defined  # noqa: E501
+# This module is used to select a set of ground motions such with uniformly distributed user-defined
 # intensity measures (IM)
 #
 # Contributors:
@@ -46,9 +46,9 @@
 # TODO recommended ranges???  # noqa: FIX002, TD002, TD003, TD004
 
 
-# import matplotlib.pyplot as plt  # noqa: ERA001
-# import matplotlib.ticker as mticker  # noqa: ERA001
-# from matplotlib.colors import LinearSegmentedColormap  # noqa: ERA001
+# import matplotlib.pyplot as plt
+# import matplotlib.ticker as mticker
+# from matplotlib.colors import LinearSegmentedColormap
 import json
 import os
 import sys
@@ -107,7 +107,7 @@ class gmCluster:  # noqa: N801, D101
 
         # TODO: Convert the units... Or fix the units......  # noqa: FIX002, TD002, TD003
 
-        # nim = len(im_names)  # noqa: ERA001
+        # nim = len(im_names)
         ngrid = np.prod(im_nbins)
         #
         # Clustring parameters
@@ -115,7 +115,7 @@ class gmCluster:  # noqa: N801, D101
         numEQmax = int(  # noqa: N806
             max(1, round(ngrid / 10))
         )  # Maximum number of records from the single earthquake
-        # numEQmax = 1  # noqa: ERA001
+        # numEQmax = 1
 
         #
         # Get grid of IMs - change everything to log-space
@@ -134,16 +134,20 @@ class gmCluster:  # noqa: N801, D101
             if im_names[ni].startswith('PSA') or im_names[ni].startswith('PGA'):  # noqa: SIM102
                 # scaling anchor
                 if not found_scaling_anchor:
-                    id_im_scaling_ancher = ni  # TODO  # noqa: FIX002, TD002, TD003, TD004, TD005
+                    id_im_scaling_ancher = (
+                        ni  # TODO  # noqa: FIX002, TD002, TD003, TD004
+                    )
                     found_scaling_anchor = True
                     nim_eff = nim - 1
 
-        ## Only if we didn't find PSA or PGA, we consider PGV, PGD, Ia as scaling anchor  # noqa: E501
+        ## Only if we didn't find PSA or PGA, we consider PGV, PGD, Ia as scaling anchor
         if not found_scaling_anchor:
             for ni in range(len(im_names)):
                 if im_names[ni].startswith('PG') or im_names[ni].startswith('Ia'):  # noqa: SIM102
                     if not found_scaling_anchor:
-                        id_im_scaling_ancher = ni  # TODO  # noqa: FIX002, TD002, TD003, TD004, TD005
+                        id_im_scaling_ancher = (
+                            ni  # TODO  # noqa: FIX002, TD002, TD003, TD004
+                        )
                         found_scaling_anchor = True
                         nim_eff = nim - 1
 
@@ -362,7 +366,7 @@ class gmCluster:  # noqa: N801, D101
 
         if found_scaling_anchor:
             IM_log_data_scaling_anchor = IM_log_data_pool[:, id_im_scaling_ancher]  # noqa: N806
-            # IM_log_ref_scaling_anchor = IM_log_ref[:,id_im_scaling_ancher]  # noqa: ERA001
+            # IM_log_ref_scaling_anchor = IM_log_ref[:,id_im_scaling_ancher]
             IM_log_ref_scaling_anchor = Scaling_ref  # noqa: N806
 
             IM_log_data_pool2 = np.delete(  # noqa: N806
@@ -400,10 +404,10 @@ class gmCluster:  # noqa: N801, D101
         sf_max = 10.0  # maximum of no-pad nalty scaling
         sf_penalty = 10.0  # per unit outside the tolerance range(sf_min~sf_max)
 
-        # selected_gm_ID_list =[]  # noqa: ERA001
-        # selected_gm_err_list =[]  # noqa: ERA001
-        # selected_gm_eqID_list =[]  # noqa: ERA001
-        # selected_gm_scale_list =[]  # noqa: ERA001
+        # selected_gm_ID_list =[]
+        # selected_gm_err_list =[]
+        # selected_gm_eqID_list =[]
+        # selected_gm_scale_list =[]
         selected_gm_ID = []  # noqa: N806
         selected_gm_err = []
         selected_gm_eqID = []  # noqa: N806
@@ -425,11 +429,11 @@ class gmCluster:  # noqa: N801, D101
 
             if not found_scaling_anchor:
                 # If there is a scaling anchor
-                # T_cond = 2  # noqa: ERA001
-                # Sa_T1 = np.zeros((numgm,))  # noqa: ERA001
+                # T_cond = 2
+                # Sa_T1 = np.zeros((numgm,))
                 # for ng in range(numgm):
-                #     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])  # noqa: ERA001
-                # SaT_ref = min(1.5, 0.9 / T_cond)  # noqa: ERA001
+                #     Sa_T1[ng] = np.interp(T_cond, periods, geomPSA[ng])
+                # SaT_ref = min(1.5, 0.9 / T_cond)
                 sf_pool = np.ones((numgm,))
                 penalty_pool = np.zeros((numgm,))
 
@@ -509,17 +513,17 @@ class gmCluster:  # noqa: N801, D101
         # Drawing starts
         #
 
-        # import matplotlib.pyplot as plt  # noqa: ERA001
-        # import matplotlib.ticker as mticker  # noqa: ERA001
+        # import matplotlib.pyplot as plt
+        # import matplotlib.ticker as mticker
         from scipy import interpolate
 
-        # plt.style.use('default')  # noqa: ERA001
+        # plt.style.use('default')
         #
         # # Option 1
-        # plt.rcParams['font.size'] = 14  # noqa: ERA001
-        # try:  # noqa: ERA001
-        #     plt.rcParams["font.family"] = "Times New Roman"  # noqa: ERA001
-        # except:  # noqa: ERA001
+        # plt.rcParams['font.size'] = 14
+        # try:
+        #     plt.rcParams["font.family"] = "Times New Roman"
+        # except:
         #     pass
 
         theLogIM = []  # noqa: N806
@@ -532,8 +536,8 @@ class gmCluster:  # noqa: N801, D101
             ]
 
         # my color map
-        # colors = [(0, 0, 1), (1, 0, 0)]  # first color is black, last is red  # noqa: ERA001
-        # mycm = LinearSegmentedColormap.from_list(  # noqa: ERA001
+        # colors = [(0, 0, 1), (1, 0, 0)]  # first color is black, last is red
+        # mycm = LinearSegmentedColormap.from_list(
         #     "Custom", colors, N=20)
 
         colorscale = [[0, 'rgb(0,0,255)'], [1, 'rgb(255,0,0)']]
@@ -602,7 +606,7 @@ class gmCluster:  # noqa: N801, D101
                 scene=dict(  # noqa: C408
                     xaxis=dict(  # noqa: C408
                         tickmode='array',
-                        # tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),  # noqa: E501
+                        # tickvals=[im_lb[idx1],im_ub[idx1],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
                             im_lb[idx1],
                             im_ub[idx1],
@@ -622,7 +626,7 @@ class gmCluster:  # noqa: N801, D101
                     ),
                     yaxis=dict(  # noqa: C408
                         tickmode='array',
-                        # tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),  # noqa: E501
+                        # tickvals=[im_lb[idx2],im_ub[idx2],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
                             im_lb[idx2],
                             im_ub[idx2],
@@ -642,7 +646,7 @@ class gmCluster:  # noqa: N801, D101
                     ),
                     zaxis=dict(  # noqa: C408
                         tickmode='array',
-                        # tickvals=[im_lb[idx3],im_ub[idx3],0.001,0.01,0.1,1,10,100],),  # noqa: E501
+                        # tickvals=[im_lb[idx3],im_ub[idx3],0.001,0.01,0.1,1,10,100],),
                         tickvals=[
                             im_lb[idx3],
                             im_ub[idx3],
@@ -668,7 +672,7 @@ class gmCluster:  # noqa: N801, D101
                     xanchor='left',
                     yanchor='top',
                 ),
-                # paper_bgcolor='rgba(0,0,0,0)',  # noqa: ERA001
+                # paper_bgcolor='rgba(0,0,0,0)',
                 autosize=False,
                 height=500,
                 width=550,
@@ -714,7 +718,7 @@ class gmCluster:  # noqa: N801, D101
             fig.colorbar(sc,label= "coverage (error level)", cax=cax)
 
             ax.view_init(10, 30)
-            """  # noqa: E501
+            """
         if nim == 2:  # noqa: PLR2004
             flat_grid_error = err_sum.flatten() / npergrid
 
@@ -777,8 +781,8 @@ class gmCluster:  # noqa: N801, D101
                 name='selected ground motion',
             )
 
-            # fig = px.scatter(x=[None],y=[None],log_x=True,log_y=True,)  # noqa: ERA001
-            # fig.update(layout_coloraxis_showscale=False)  # noqa: ERA001
+            # fig = px.scatter(x=[None],y=[None],log_x=True,log_y=True,)
+            # fig.update(layout_coloraxis_showscale=False)
             fig.layout.coloraxis.colorbar.title = (
                 'Ground <br>motion <br>coverage <br>(error level)'
             )
@@ -841,7 +845,7 @@ class gmCluster:  # noqa: N801, D101
                     xanchor='left',
                     yanchor='top',
                 ),
-                # paper_bgcolor='rgba(0,0,0,0)',  # noqa: ERA001
+                # paper_bgcolor='rgba(0,0,0,0)',
                 autosize=False,
                 height=500,
                 width=550,
@@ -918,36 +922,36 @@ class gmCluster:  # noqa: N801, D101
             plt.legend(["anchor point", "selected ground motion"], ncol=2, bbox_to_anchor=(0,0.02,1,-0.15), loc="upper left")
             plt.title("Ground motion coverage", x=0.5, y=1.05)
             fig.colorbar(sc,label= "coverage (error level)")
-            """  # noqa: E501
+            """
         if nim == 1:
             pass
-        #     flat_grid_error = err_sum.flatten() / npergrid  # noqa: ERA001
+        #     flat_grid_error = err_sum.flatten() / npergrid
 
-        #     import matplotlib.pyplot as plt  # noqa: ERA001
+        #     import matplotlib.pyplot as plt
 
-        #     ngrid_1axis = int(im_nbins[0])  # noqa: ERA001
-        #     mypoints = np.zeros((0,nim))  # noqa: ERA001
+        #     ngrid_1axis = int(im_nbins[0])
+        #     mypoints = np.zeros((0,nim))
 
         #     for nsa in range(ngrid_1axis):
 
-        #         idx1 = 0  # noqa: ERA001
-        #         theLogSF1 = np.log(np.array(selected_gm_scale_list[nsa]) ** scaling_exponent[idx1])  # noqa: ERA001, E501
+        #         idx1 = 0
+        #         theLogSF1 = np.log(np.array(selected_gm_scale_list[nsa]) ** scaling_exponent[idx1])
 
-        #         theLogIM1 = np.array(IM_log_data_pool[selected_gm_ID_list[nsa], idx1])  # noqa: ERA001, E501
+        #         theLogIM1 = np.array(IM_log_data_pool[selected_gm_ID_list[nsa], idx1])
 
-        #         mypoints_tmp = np.vstack([theLogIM1 + theLogSF1]).T  # noqa: ERA001
-        #         mypoints = np.vstack([mypoints,mypoints_tmp])  # noqa: ERA001
+        #         mypoints_tmp = np.vstack([theLogIM1 + theLogSF1]).T
+        #         mypoints = np.vstack([mypoints,mypoints_tmp])
 
-        #     X = np.linspace(log_im_lb[idx1], log_im_ub[idx1], int(im_nbins[idx1]))  # noqa: ERA001
-        #     IM_log_ref = np.vstack([X.reshape(-1)]).T  # noqa: ERA001
+        #     X = np.linspace(log_im_lb[idx1], log_im_ub[idx1], int(im_nbins[idx1]))
+        #     IM_log_ref = np.vstack([X.reshape(-1)]).T
 
-        #     fig = plt.figure()  # noqa: ERA001
-        #     ax = fig.add_subplot()  # noqa: ERA001
-        #     ax.scatter(mypoints[:, 0], 0*mypoints[:, 0],s=18)  # noqa: ERA001
-        #     ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)  # noqa: ERA001
-        #     plt.xlabel(im_names[idx1]);  # noqa: ERA001
+        #     fig = plt.figure()
+        #     ax = fig.add_subplot()
+        #     ax.scatter(mypoints[:, 0], 0*mypoints[:, 0],s=18)
+        #     ax.scatter(IM_log_ref[:, 0], 0*IM_log_ref[:, 0],s=5)
+        #     plt.xlabel(im_names[idx1]);
 
-        # plt.savefig('gridIM_coverage.png',bbox_inches='tight')  # noqa: ERA001
+        # plt.savefig('gridIM_coverage.png',bbox_inches='tight')
         if nim == 2 or nim == 3:  # noqa: PLR1714, PLR2004
             with open(r'gridIM_coverage.html', 'w') as f:  # noqa: PTH123
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
@@ -957,12 +961,12 @@ class gmCluster:  # noqa: N801, D101
 if __name__ == '__main__':
     errf = open('gridIM_log.err', 'w')  # noqa: SIM115, PTH123
     main(sys.argv, errf)
-    # try:  # noqa: ERA001
-    #     main(sys.argv,errf)  # noqa: ERA001
-    #     errf.close()  # noqa: ERA001
+    # try:
+    #     main(sys.argv,errf)
+    #     errf.close()
     #
-    # except Exception as e:  # noqa: ERA001
-    #     print("Exception occurred while code Execution: " + str(repr(e)))  # noqa: ERA001
-    #     errf.write("Exception occurred while code Execution: " + str(repr(e)))  # noqa: ERA001
-    #     errf.close()  # noqa: ERA001
-    #     exit(-1)  # noqa: ERA001
+    # except Exception as e:
+    #     print("Exception occurred while code Execution: " + str(repr(e)))
+    #     errf.write("Exception occurred while code Execution: " + str(repr(e)))
+    #     errf.close()
+    #     exit(-1)

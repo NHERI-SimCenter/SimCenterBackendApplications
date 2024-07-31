@@ -1,7 +1,7 @@
-# from scipy.stats import multivariate_normal  # noqa: ERA001, INP001, D100
+# from scipy.stats import multivariate_normal  # noqa: INP001, D100
 
 # def log_likelihood(residuals, mean, cov):
-#     return multivariate_normal.logpdf(residuals, mean=mean, cov=cov)  # noqa: ERA001
+#     return multivariate_normal.logpdf(residuals, mean=mean, cov=cov)
 
 import numpy as np
 
@@ -9,8 +9,8 @@ import numpy as np
 def log_likelihood(residuals, mean, cov):  # noqa: ANN001, ANN201, ARG001, D103
     length = len(residuals)
     if np.shape(cov)[0] == np.shape(cov)[1] == 1:
-        # If there is a single variance value that is constant for all residual terms, then this is the case of  # noqa: E501
-        # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be  # noqa: E501
+        # If there is a single variance value that is constant for all residual terms, then this is the case of
+        # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be
         # computed more efficiently
         var = cov[0][0]
         ll = (
@@ -22,7 +22,7 @@ def log_likelihood(residuals, mean, cov):  # noqa: ANN001, ANN201, ARG001, D103
         if np.shape(cov)[0] != np.shape(cov)[1]:
             cov = np.diag(cov.flatten())
         # The multivariate normal log-pdf is made up of three terms:
-        # logpdf = -1/2*[(d*log(2*pi)) + (log(abs(det(cov)))) + (residual.T * inverse(cov) * residual) i.e.,  # noqa: E501
+        # logpdf = -1/2*[(d*log(2*pi)) + (log(abs(det(cov)))) + (residual.T * inverse(cov) * residual) i.e.,
         # Mahalanobis distance]
         #                = -1/2*[t1 + t2 + t3]
         t1 = length * np.log(2 * np.pi)

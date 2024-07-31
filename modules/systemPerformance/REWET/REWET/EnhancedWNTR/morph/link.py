@@ -65,7 +65,7 @@ def split_pipe(  # noqa: ANN201, PLR0913
     wntr WaterNetworkModel
         Water network model with split pipe
 
-    """  # noqa: E501
+    """
     wn2 = _split_or_break_pipe(
         wn,
         pipe_name_to_split,
@@ -144,7 +144,7 @@ def break_pipe(  # noqa: ANN201, PLR0913
     wntr WaterNetworkModel
         Water network model with pipe break
 
-    """  # noqa: E501
+    """
     wn2 = _split_or_break_pipe(
         wn,
         pipe_name_to_split,
@@ -182,14 +182,14 @@ def _split_or_break_pipe(  # noqa: ANN202, C901, PLR0912, PLR0913
     if split_at_point < 0 or split_at_point > 1:
         raise ValueError('split_at_point must be between 0 and 1')  # noqa: EM101, TRY003
     # Sina edited here
-    # node_list = [node_name for node_name, node in wn2.nodes()]  # noqa: ERA001
-    # link_list = [link_name for link_name, link in wn2.links()]  # noqa: ERA001
+    # node_list = [node_name for node_name, node in wn2.nodes()]
+    # link_list = [link_name for link_name, link in wn2.links()]
     # for new_junction_name in new_junction_names:
     # if new_junction_name in wn.node_name_list:
-    # raise RuntimeError('The junction name you provided is already \  # noqa: ERA001
+    # raise RuntimeError('The junction name you provided is already \
     # being used for another node.')
     # if new_pipe_name in wn.link_name_list:
-    # raise RuntimeError('The new link name you provided is already being \  # noqa: ERA001
+    # raise RuntimeError('The new link name you provided is already being \
     # used for another link.')
 
     # Get start and end node info

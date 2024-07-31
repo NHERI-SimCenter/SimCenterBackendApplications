@@ -74,7 +74,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
     num_target_eqs = hzo_config.get('EarthquakeSampleSize', 10)
     # number of ground motion maps
     num_target_gmms = hzo_config.get('GroundMotionMapSize', num_target_eqs * 10)
-    # return periods  # noqa: ERA001
+    # return periods
     return_periods = hzo_config.get('ReturnPeriods', None)
     if return_periods is None:
         return {}
@@ -84,7 +84,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
         return {}
     # get hazard curve input
     hc_input = hzo_config.get('HazardCurveInput', None)
-    # return periods  # noqa: ERA001
+    # return periods
     if hc_input is None:
         return {}
     elif hc_input == 'Inferred_NSHMP':  # noqa: RET505
@@ -113,7 +113,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
             )
         hc_data = []
         print(  # noqa: T201
-            'HazardOCcurrence: fetching USGS hazard curve for individual sites - this may take a while.'  # noqa: E501
+            'HazardOCcurrence: fetching USGS hazard curve for individual sites - this may take a while.'
         )
         t_start = time.time()
         if mth_flag:
@@ -126,7 +126,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
             for k in range(0, len(hazard_curve_collector), bin_size):
                 ids_list.append(list(range(k, k + bin_size)))
                 collector_list.append(hazard_curve_collector[k : k + bin_size])
-            # print(ids_list)  # noqa: ERA001
+            # print(ids_list)
             for i in range(len(ids_list)):
                 th = threading.Thread(
                     target=fetch_usgs_hazard_curve_para,
@@ -147,12 +147,12 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
                     hc_data.append(cur_collector.get_hazard_curve())
                 else:
                     print(  # noqa: T201
-                        f'HazardOCcurrence: error in fetching hazard curve for site {i}.'  # noqa: E501
+                        f'HazardOCcurrence: error in fetching hazard curve for site {i}.'
                     )
                     return None
 
         print(  # noqa: T201
-            f'HazardOCcurrence: all hazard curves fetched {time.time() - t_start} sec.'  # noqa: E501
+            f'HazardOCcurrence: all hazard curves fetched {time.time() - t_start} sec.'
         )
     elif hc_input == 'Inferred_sourceFile':
         period = hzo_config.get('Period', 0.0)
@@ -214,7 +214,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
         'Period': period,
         'HazardCurves': hc_interp,
     }
-    # return  # noqa: ERA001
+    # return
     return occ_dict  # noqa: RET504
 
 
@@ -224,9 +224,9 @@ def fetch_usgs_hazard_curve_para(ids, hc_collectors, hc_dict):  # noqa: ANN001, 
             hc_dict[cur_id] = cur_collector.get_hazard_curve()
         else:
             print(  # noqa: T201
-                f'HazardOCcurrence: error in fetching hazard curve for site {cur_id}.'  # noqa: E501
+                f'HazardOCcurrence: error in fetching hazard curve for site {cur_id}.'
             )
-    # return  # noqa: ERA001
+    # return
 
 
 def calc_hazard_curve_and_contri(IMdata, site_config, im, targetReturnPeriods):  # noqa: ANN001, ANN201, ARG001, N803, D103
@@ -385,7 +385,12 @@ def get_hazard_curves(input_dir=None, input_csv=None, input_json=None):  # noqa:
 
 # KZ-08/23/22: adding a function for computing exceeding probability at an im level
 def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
-    IMfile, im_list, im_type, period, im_level, scenario_idx  # noqa: ANN001, N803
+    IMfile,  # noqa: ANN001, N803
+    im_list,  # noqa: ANN001
+    im_type,  # noqa: ANN001
+    period,  # noqa: ANN001
+    im_level,  # noqa: ANN001
+    scenario_idx,  # noqa: ANN001
 ):
     # number of scenarios
     num_scen = len(scenario_idx)
@@ -408,7 +413,7 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
         if im_type == 'PGA':
             if 'PGA' not in im_raw[scenario_idx[0]]['IM']:
                 print(  # noqa: T201
-                    'IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.format(  # noqa: E501
+                    'IM_Calculator.get_im_exceedance_probility: error - IM {} does not match to {}.'.format(
                         period, im_raw[scenario_idx[0]].get('IM')
                     )
                 )
@@ -417,7 +422,7 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
                 periodID = 0  # noqa: N806
         elif period not in im_raw[scenario_idx[0]].get('Periods'):
             print(  # noqa: T201
-                'IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(  # noqa: E501
+                'IM_Calculator.get_im_exceedance_probility: error - period {} does not match to {}.'.format(
                     period, im_raw[scenario_idx[0]].get('Periods')
                 )
             )
@@ -447,7 +452,7 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
             SystemExit(f'{im_type} is not supported in hazard downsampling')  # noqa: PLW0133
         if im_name not in im_list:
             print(  # noqa: T201
-                f'IM_Calculator.get_im_exceedance_probility: error - intensity measure {im_name} does not match to {im_list}.'  # noqa: E501
+                f'IM_Calculator.get_im_exceedance_probility: error - intensity measure {im_name} does not match to {im_list}.'
             )
             return im_exceedance_prob
         im_ind = im_list.index(im_name)
@@ -462,12 +467,17 @@ def get_im_exceedance_probility(  # noqa: ANN201, C901, D103, PLR0912, PLR0913
                     im_exceedance_prob[i, k, :] = 1.0 - norm.cdf(
                         np.log(im_level[i, :]), loc=curMean, scale=curStd
                     )
-    # return  # noqa: ERA001
+    # return
     return im_exceedance_prob
 
 
 def get_im_exceedance_probability_gm(  # noqa: ANN201, D103, PLR0913
-    im_raw, im_list, im_type, period, im_level, mar_scen  # noqa: ANN001
+    im_raw,  # noqa: ANN001
+    im_list,  # noqa: ANN001
+    im_type,  # noqa: ANN001
+    period,  # noqa: ANN001
+    im_level,  # noqa: ANN001
+    mar_scen,  # noqa: ANN001
 ):
     # get periodID
     for i in range(len(im_list)):
@@ -486,7 +496,7 @@ def get_im_exceedance_probability_gm(  # noqa: ANN201, D103, PLR0913
     num_site = im_raw[0].shape[0]
     num_simu = im_raw[0].shape[-1]
     im_exceedance_prob = np.zeros((num_site, num_simu * num_scen, num_rps))
-    # print('im_exceedance_prob_gm.shape=',im_exceedance_prob)  # noqa: ERA001
+    # print('im_exceedance_prob_gm.shape=',im_exceedance_prob)
     occurrence_rate = [None] * num_simu * num_scen
     for i in range(num_scen):
         for j in range(num_site):
@@ -496,7 +506,7 @@ def get_im_exceedance_probability_gm(  # noqa: ANN201, D103, PLR0913
                     int(x) for x in curIM[k] > im_level[j, :]
                 ]
                 occurrence_rate[i * num_simu + k] = mar_scen[i] / num_simu
-    # return  # noqa: ERA001
+    # return
     return im_exceedance_prob, occurrence_rate
 
 
@@ -560,46 +570,46 @@ def export_sampled_earthquakes(error, id_selected_eqs, eqdata, P, output_dir=Non
             json.dump(dict_selected_eqs, f, indent=2)
 
 
-# def export_sampled_earthquakes(occ_dict, im_raw, site_config, id_selected_eqs, eqdata, P, output_dir=None):  # noqa: E501
-#     probabilityWeight = [P[x] for x in id_selected_eqs]  # noqa: ERA001
-#     period = occ_dict.get('Period',0.0)  # noqa: ERA001
-#     im_type = occ_dict.get('IntensityMeasure')  # noqa: ERA001
+# def export_sampled_earthquakes(occ_dict, im_raw, site_config, id_selected_eqs, eqdata, P, output_dir=None):
+#     probabilityWeight = [P[x] for x in id_selected_eqs]
+#     period = occ_dict.get('Period',0.0)
+#     im_type = occ_dict.get('IntensityMeasure')
 #     if im_type == 'SA':
-#         cur_imt = im_type+"{:.1f}".format(period).replace('.','P')  # noqa: ERA001
-#     else:  # noqa: ERA001
-#         cur_imt = im_type  # noqa: ERA001
-#     sampleIM = {}  # noqa: ERA001
+#         cur_imt = im_type+"{:.1f}".format(period).replace('.','P')
+#     else:
+#         cur_imt = im_type
+#     sampleIM = {}
 #     for i in range(len(id_selected_eqs)):
-#         rup_ind = (id_selected_eqs[i])  # noqa: ERA001
-#         scenario = (im_raw[rup_ind]).copy()  # noqa: ERA001
-#         scenario['MeanAnnualRate'] =  probabilityWeight[i]  # noqa: ERA001
-#         sampleIM.update({rup_ind:scenario})  # noqa: ERA001
-#     sampled_hc = calc_hazard_curves(sampleIM, site_config, cur_imt)  # noqa: ERA001
+#         rup_ind = (id_selected_eqs[i])
+#         scenario = (im_raw[rup_ind]).copy()
+#         scenario['MeanAnnualRate'] =  probabilityWeight[i]
+#         sampleIM.update({rup_ind:scenario})
+#     sampled_hc = calc_hazard_curves(sampleIM, site_config, cur_imt)
 #     # interpolate the hazard curve with the return periods
-#     num_sites = len(sampled_hc)  # noqa: ERA001
-#     num_rps = len(occ_dict['ReturnPeriods'])  # noqa: ERA001
-#     hc_interp = np.zeros((num_sites,num_rps))  # noqa: ERA001
-#     ln_maf = [np.log(x) for x in occ_dict['ReturnPeriods']]  # noqa: ERA001
+#     num_sites = len(sampled_hc)
+#     num_rps = len(occ_dict['ReturnPeriods'])
+#     hc_interp = np.zeros((num_sites,num_rps))
+#     ln_maf = [np.log(x) for x in occ_dict['ReturnPeriods']]
 #     for i in range(num_sites):
-#         ln_cur_maf = [np.log(x) for x in sampled_hc[i].get('ReturnPeriod')]  # noqa: ERA001
-#         ln_cur_sa = np.log(sampled_hc[i].get('IM')).tolist()  # noqa: ERA001
-#         hc_interp[i,:] = np.exp(np.interp(ln_maf,ln_cur_maf,ln_cur_sa,left=ln_cur_sa[0],right=ln_cur_sa[-1]))  # noqa: ERA001, E501
-#     error = ((occ_dict['HazardCurves']-hc_interp)**2).sum(axis = 1)/num_rps  # noqa: ERA001
+#         ln_cur_maf = [np.log(x) for x in sampled_hc[i].get('ReturnPeriod')]
+#         ln_cur_sa = np.log(sampled_hc[i].get('IM')).tolist()
+#         hc_interp[i,:] = np.exp(np.interp(ln_maf,ln_cur_maf,ln_cur_sa,left=ln_cur_sa[0],right=ln_cur_sa[-1]))
+#     error = ((occ_dict['HazardCurves']-hc_interp)**2).sum(axis = 1)/num_rps
 
-#     selected_eqs = []  # noqa: ERA001
+#     selected_eqs = []
 #     for i in id_selected_eqs:
-#         selected_eqs.append(eqdata[i])  # noqa: ERA001
-#     dict_selected_eqs = {  # noqa: ERA001
-#         'EarthquakeNumber': len(id_selected_eqs),  # noqa: ERA001
-#         'EarthquakeID': id_selected_eqs,  # noqa: ERA001
-#         'EarthquakeInfo': selected_eqs,  # noqa: ERA001
-#         'ProbabilityWeight': probabilityWeight,  # noqa: ERA001
+#         selected_eqs.append(eqdata[i])
+#     dict_selected_eqs = {
+#         'EarthquakeNumber': len(id_selected_eqs),
+#         'EarthquakeID': id_selected_eqs,
+#         'EarthquakeInfo': selected_eqs,
+#         'ProbabilityWeight': probabilityWeight,
 #         'MeanSquareError':error.tolist()
-#     }  # noqa: ERA001
+#     }
 
 #     if output_dir is not None:
 #         with open(os.path.join(output_dir,'RupSampled.json'), 'w') as f:
-#             json.dump(dict_selected_eqs, f, indent=2)  # noqa: ERA001
+#             json.dump(dict_selected_eqs, f, indent=2)
 
 
 class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
@@ -616,7 +626,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         :param earthquake_mafs: 1-D array of annual occurrence probability, MAF(j)
         :param im_exceedance_probs: 3-D array of exceedance probability of Sa, EP(i,j,r) for site #i, earthquake #j, return period #r
         :param num_scenarios: integer for number of target scenarios
-        """  # noqa: E501, D205, D400, D415
+        """  # noqa: D205, D400, D415
         # read input parameters
         self.return_periods = return_periods
         self.im_exceedance_probs = im_exceedance_probs
@@ -628,7 +638,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         self.input_valid = self._input_check()
         if not self.input_valid:
             print(  # noqa: T201
-                'OccurrenceModel_ManzourDavidson2016.__init__: at least one input parameter invalid.'  # noqa: E501
+                'OccurrenceModel_ManzourDavidson2016.__init__: at least one input parameter invalid.'
             )
             return
 
@@ -638,33 +648,33 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         if len(self.return_periods) > 0:
             self.num_return_periods = len(self.return_periods)
             print(  # noqa: T201
-                f'OccurrenceModel_ManzourDavidson2016._input_check: number of return periods = {self.num_return_periods}.'  # noqa: E501
+                f'OccurrenceModel_ManzourDavidson2016._input_check: number of return periods = {self.num_return_periods}.'
             )
         else:
             print(  # noqa: T201
-                'OccurrenceModel_ManzourDavidson2016._input_check: no return period is defined.'  # noqa: E501
+                'OccurrenceModel_ManzourDavidson2016._input_check: no return period is defined.'
             )
             return False
         # shape of exceedance probability
         if len(self.im_exceedance_probs.shape) != 3:  # noqa: PLR2004
             print(  # noqa: T201
-                'OccurrenceModel_ManzourDavidson2016._input_check: exceedance probability array should be 3-D.'  # noqa: E501
+                'OccurrenceModel_ManzourDavidson2016._input_check: exceedance probability array should be 3-D.'
             )
             return False
         elif self.im_exceedance_probs.shape[-1] != len(self.return_periods):  # noqa: RET505
             print(  # noqa: T201
-                'OccurrenceModel_ManzourDavidson2016._input_check: exceedance probability array should have dimensions of (#site, #eq, #return_period).'  # noqa: E501
+                'OccurrenceModel_ManzourDavidson2016._input_check: exceedance probability array should have dimensions of (#site, #eq, #return_period).'
             )
             return False
         else:
             self.num_sites = self.im_exceedance_probs.shape[0]
             print(  # noqa: T201
-                f'OccurrenceModel_ManzourDavidson2016._input_check: number of sites = {self.num_sites}.'  # noqa: E501
+                f'OccurrenceModel_ManzourDavidson2016._input_check: number of sites = {self.num_sites}.'
             )
         # number of target scenarios
         if self.num_scenarios <= 0:
             print(  # noqa: T201
-                'OccurrenceModel_ManzourDavidson2016._input_check: number of target scenarios should be positive.'  # noqa: E501
+                'OccurrenceModel_ManzourDavidson2016._input_check: number of target scenarios should be positive.'
             )
             return False
         else:  # noqa: RET505
@@ -673,12 +683,12 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
             init_flag = self._opt_initialization()
             if init_flag:
                 print(  # noqa: T201
-                    'OccurrenceModel_ManzourDavidson2016._input_check: initialization completed.'  # noqa: E501
+                    'OccurrenceModel_ManzourDavidson2016._input_check: initialization completed.'
                 )
                 return True
             else:  # noqa: RET505
                 print(  # noqa: T201
-                    'OccurrenceModel_ManzourDavidson2016._input_check: initialization errors.'  # noqa: E501
+                    'OccurrenceModel_ManzourDavidson2016._input_check: initialization errors.'
                 )
                 return False
 
@@ -752,7 +762,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
     def solve_opt(self):  # noqa: ANN201
         """target_function: compute the target function to be minimized
         :param X: 2-D array of annual occurrence probability of earthquakes and corresponding binary variables (many values are reduced to zeros)
-        """  # noqa: E501, D205, D400, D415
+        """  # noqa: D205, D400, D415
         maximum_runtime = 1 * 60 * 60  # 1 hours maximum
         self.prob.solve(pulp.PULP_CBC_CMD(timeLimit=maximum_runtime, gapRel=0.001))
         print('Status:', pulp.LpStatus[self.prob.status])  # noqa: T201
@@ -779,7 +789,11 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
         return error  # noqa: RET504
 
     def export_sampled_gmms(  # noqa: ANN201, D102
-        self, id_selected_gmms, id_selected_scens, P, output_dir=None  # noqa: ANN001, N803
+        self,
+        id_selected_gmms,  # noqa: ANN001
+        id_selected_scens,  # noqa: ANN001
+        P,  # noqa: ANN001, N803
+        output_dir=None,  # noqa: ANN001
     ):
         dict_selected_gmms = {
             'EarthquakeID': id_selected_scens.astype(int).tolist(),
@@ -807,7 +821,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         :param earthquake_mafs: 1-D array of annual occurrence probability, MAF(j)
         :param im_exceedance_probs: 3-D array of exceedance probability of Sa, EP(i,j,r) for site #i, earthquake #j, return period #r
         :param num_scenarios: integer for number of target scenarios
-        """  # noqa: E501, D205, D400, D415
+        """  # noqa: D205, D400, D415
         # read input parameters
         self.return_periods = return_periods
         self.im_exceedance_probs = im_exceedance_probs
@@ -823,7 +837,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         self.input_valid = self._input_check()
         if not self.input_valid:
             print(  # noqa: T201
-                'OccurrenceModel_Wangetal2023.__init__: at least one input parameter invalid.'  # noqa: E501
+                'OccurrenceModel_Wangetal2023.__init__: at least one input parameter invalid.'
             )
             return
 
@@ -833,33 +847,33 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         if len(self.return_periods) > 0:
             self.num_return_periods = len(self.return_periods)
             print(  # noqa: T201
-                f'OccurrenceModel_Wangetal2023._input_check: number of return periods = {self.num_return_periods}.'  # noqa: E501
+                f'OccurrenceModel_Wangetal2023._input_check: number of return periods = {self.num_return_periods}.'
             )
         else:
             print(  # noqa: T201
-                'OccurrenceModel_Wangetal2023._input_check: no return period is defined.'  # noqa: E501
+                'OccurrenceModel_Wangetal2023._input_check: no return period is defined.'
             )
             return False
         # shape of exceedance probability
         if len(self.im_exceedance_probs.shape) != 3:  # noqa: PLR2004
             print(  # noqa: T201
-                'OccurrenceModel_Wangetal2023._input_check: exceedance probability array should be 3-D.'  # noqa: E501
+                'OccurrenceModel_Wangetal2023._input_check: exceedance probability array should be 3-D.'
             )
             return False
         elif self.im_exceedance_probs.shape[-1] != len(self.return_periods):  # noqa: RET505
             print(  # noqa: T201
-                'OccurrenceModel_Wangetal2023._input_check: exceedance probability array should have dimensions of (#site, #eq, #return_period).'  # noqa: E501
+                'OccurrenceModel_Wangetal2023._input_check: exceedance probability array should have dimensions of (#site, #eq, #return_period).'
             )
             return False
         else:
             self.num_sites = self.im_exceedance_probs.shape[0]
             print(  # noqa: T201
-                f'OccurrenceModel_Wangetal2023._input_check: number of sites = {self.num_sites}.'  # noqa: E501
+                f'OccurrenceModel_Wangetal2023._input_check: number of sites = {self.num_sites}.'
             )
         # number of target scenarios
         if self.num_scenarios <= 0:
             print(  # noqa: T201
-                'OccurrenceModel_Wangetal2023._input_check: number of target scenarios should be positive.'  # noqa: E501
+                'OccurrenceModel_Wangetal2023._input_check: number of target scenarios should be positive.'
             )
             return False
         else:  # noqa: RET505
@@ -868,12 +882,12 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
             init_flag = self._opt_initialization()
             if init_flag:
                 print(  # noqa: T201
-                    'OccurrenceModel_Wangetal2023._input_check: initialization completed.'  # noqa: E501
+                    'OccurrenceModel_Wangetal2023._input_check: initialization completed.'
                 )
                 return True
             else:  # noqa: RET505
                 print(  # noqa: T201
-                    'OccurrenceModel_Wangetal2023._input_check: initialization errors.'  # noqa: E501
+                    'OccurrenceModel_Wangetal2023._input_check: initialization errors.'
                 )
                 return False
 
@@ -891,7 +905,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         self.W = np.diag(np.sqrt(1 / self.y))
 
         # rate matrix for events
-        # self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)  # noqa: ERA001, E501
+        # self.occurence_rate_origin_mat = np.repeat(self.occurence_rate_origin, self.X_P.shape[0]).reshape(self.X_P.shape[0], -1)
         self.occurence_rate_origin_mat = np.vstack(
             [np.array(self.occurence_rate_origin)] * self.X_P.shape[0]
         )
@@ -931,8 +945,8 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
             sum(x > 0 for x in self.coefs[:, i]) for i in range(self.coefs.shape[1])
         ]
 
-        # find the selection such that the number of selected events is closest to the user defined target number of scenarios  # noqa: E501
-        # the flip() is used to find the last one which has the closest number of selected events to the target value.  # noqa: E501
+        # find the selection such that the number of selected events is closest to the user defined target number of scenarios
+        # the flip() is used to find the last one which has the closest number of selected events to the target value.
         self.selected_alpha_ind = (
             self.num_selected.__len__()
             - 1
@@ -941,8 +955,8 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
 
         if self.num_selected[self.selected_alpha_ind] == 0:
             sys.exit(
-                'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003, E501
-                + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'  # noqa: E501
+                'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003
+                + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'
                 + 'Try using a smaller tunning parameter.'
             )
         self.Rate_selected = (
@@ -952,14 +966,18 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
         return self.Rate_selected, self.Z_selected
 
     def get_error_vector(self):  # noqa: ANN201, D102
-        # self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])  # noqa: ERA001, E501
+        # self.e_selected = self.y - np.dot(self.X, self.coefs[:,self.selected_alpha_ind])
         error = self.y - self.X.sum(axis=1)
         error = error.reshape(self.num_sites, self.num_return_periods)
         error = (error**2).sum(axis=1) / self.num_return_periods
         return error  # noqa: RET504
 
     def export_sampled_gmms(  # noqa: ANN201, D102
-        self, id_selected_gmms, id_selected_scens, P, output_dir=None  # noqa: ANN001, N803
+        self,
+        id_selected_gmms,  # noqa: ANN001
+        id_selected_scens,  # noqa: ANN001
+        P,  # noqa: ANN001, N803
+        output_dir=None,  # noqa: ANN001
     ):
         dict_selected_gmms = {
             'EarthquakeID': id_selected_scens.astype(int).tolist(),

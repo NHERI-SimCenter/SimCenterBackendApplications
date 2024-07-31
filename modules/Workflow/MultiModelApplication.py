@@ -97,12 +97,12 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     if 'models' not in appData:
         print('NO models in: ', appData)  # noqa: T201
         raise KeyError(  # noqa: TRY003
-            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102, E501
+            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102
         )
 
     if len(appData['models']) < 2:  # noqa: PLR2004
         raise RuntimeError(  # noqa: TRY003
-            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102, E501
+            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102
         )
 
     models = appData['models']
@@ -151,7 +151,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     #
     # parse WorkflowApplications to get possible applications
-    # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!  # noqa: E501
+    # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!
     #
 
     if appKey == 'Events':  # noqa: SIM108
@@ -190,7 +190,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             asset_command_list = application.get_command_list(appDir)
             asset_command_list.append('--getRV')
             command = create_command(asset_command_list)
-            # thinking to store aplications commands in a file so don't have to repeat this!  # noqa: E501
+            # thinking to store aplications commands in a file so don't have to repeat this!
 
         #
         # update input file
@@ -203,7 +203,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         randomVariables = inputs['randomVariables']  # noqa: N806
         rvName = 'MultiModel-' + appKey  # noqa: N806
         rvValue = 'RV.MultiModel-' + appKey  # noqa: N806
-        # nrv = len(randomVariables)  # noqa: ERA001
+        # nrv = len(randomVariables)
 
         thisRV = {  # noqa: N806
             'distribution': 'Discrete',
@@ -223,11 +223,11 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         #
 
         # if 'correlationMatrix' in inputs:
-        #     corrVec = inputs['correlationMatrix']  # noqa: ERA001
-        #     corrMat = np.reshape(corrVec, (nrv, nrv))  # noqa: ERA001
-        #     newCorrMat = np.identity(nrv+1)  # noqa: ERA001
-        #     newCorrMat[0:nrv,0:nrv] = corrMat  # noqa: ERA001
-        #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()  # noqa: ERA001
+        #     corrVec = inputs['correlationMatrix']
+        #     corrMat = np.reshape(corrVec, (nrv, nrv))
+        #     newCorrMat = np.identity(nrv+1)
+        #     newCorrMat[0:nrv,0:nrv] = corrMat
+        #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
 
         with open(inputFile, 'w') as outfile:  # noqa: PTH123
             json.dump(inputs, outfile)
@@ -235,7 +235,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         print('UPDATING INPUT FILE:', inputFile)  # noqa: T201
 
         #
-        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)  # noqa: E501
+        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
         #
 
         # create input file for application
@@ -267,10 +267,10 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         tmpFile = 'MultiModel.' + appKey + '.json'  # noqa: N806
 
         # if appKey == "Events":
-        #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]  # noqa: ERA001
+        #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]
 
-        # else:  # noqa: ERA001
-        #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]  # noqa: ERA001
+        # else:
+        #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]
         inputs[appKey] = appRunDataInMultiModel[modelToRun]
 
         print('model to run:', modelToRun)  # noqa: T201
@@ -308,7 +308,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )

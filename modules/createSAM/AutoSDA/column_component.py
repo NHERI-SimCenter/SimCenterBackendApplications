@@ -1,4 +1,4 @@
-# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, E501, D100
+# This file is used to define the class of column, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -18,7 +18,7 @@ class Column:
     (2) Column demand, a dictionary including axial, shear, and flexural demands.
     (3) Column strength, a dictionary including axial, shear, and flexural strengths.
     (4) Column flag, an integer with value of zero or nonzero. If it's zero, the column is feasible.
-    """  # noqa: E501, D205, D404
+    """  # noqa: D205, D404
 
     def __init__(  # noqa: ANN204, PLR0913
         self,
@@ -39,7 +39,7 @@ class Column:
         :param moment_demand_top: a float number which describes moment demand at top of column.
         :param Lx: unbraced length in x direction.
         :param Ly: unbraced length in y direction.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Assign the necessary information for column class
         self.section = search_section_property(section_size, SECTION_DATABASE)
         self.demand = {
@@ -52,17 +52,17 @@ class Column:
 
         # Initialize the strength dictionary with an empty dictionary
         self.strength = {}
-        # Initialize the dictionary to denote the possible failure mode (if any) of column  # noqa: E501
+        # Initialize the dictionary to denote the possible failure mode (if any) of column
         self.is_feasible = {}
         # Initialize the dictionary to indicate the demand to capacity ratios
         self.demand_capacity_ratio = {}
         # Define a boolean flag to indicate the overall check results.
         self.flag = None
 
-        # Define a hinge dictionary to store each parameters of OpenSees bilinear property  # noqa: E501
+        # Define a hinge dictionary to store each parameters of OpenSees bilinear property
         self.plastic_hinge = {}
 
-        # Using the following method to compute the strength and check whether strength is sufficient  # noqa: E501
+        # Using the following method to compute the strength and check whether strength is sufficient
         self.check_flange(steel)
         self.check_web(steel)
         self.check_axial_strength(steel)
@@ -77,9 +77,9 @@ class Column:
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         flange_limit = 0.30 * np.sqrt(steel.E / steel.Fy)
-        # If flag is still zero after checking the limitation. Then the highly ductile requirement is met.  # noqa: E501
+        # If flag is still zero after checking the limitation. Then the highly ductile requirement is met.
         # Otherwise, it is not satisfied.
         if self.section['bf to tf ratio'] <= flange_limit:
             self.is_feasible['flange limit'] = True
@@ -91,7 +91,7 @@ class Column:
         Seismic Design Manual Table D1.1.
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Compute the limit for web depth-to-thickness ratio
         phi = 0.9
         Ca = self.demand['axial'] / (phi * steel.Fy * self.section['A'])  # noqa: N806
@@ -115,7 +115,7 @@ class Column:
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number denoting the axial strength
                  and a boolean variable denoting whether the column strength is enough.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Default values for two coefficient
         Kx = 1.0  # noqa: N806
         Ky = 1.0  # noqa: N806
@@ -166,7 +166,7 @@ class Column:
         :param steel:  a class defined in "steel_material.py" file.
         :return: a float number denoting the flexural strength
                  and a boolean denoting whether flexural strength is enough.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Compute the distance between center lines of top and bottom flanges
         h0 = self.section['d'] - self.section['tf']
         # Determine coefficient: based whether it is a "W" section
@@ -174,7 +174,7 @@ class Column:
             c = 1.0
         else:
             c = h0 / 2 * np.sqrt(self.section['Iy'] / self.section['Cw'])
-        # Compute Lp and Lr, both of which are necessary to determine flexural strength  # noqa: E501
+        # Compute Lp and Lr, both of which are necessary to determine flexural strength
         Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)  # noqa: N806
         temp1 = np.sqrt(
             (self.section['J'] * c / (self.section['Sx'] * h0)) ** 2
@@ -187,7 +187,7 @@ class Column:
         # Compute moment capacity governed by plastic yielding
         Mp = steel.Fy * self.section['Zx']  # noqa: N806
 
-        # Compute MA, MB, and MC coefficients, all of which are necessary to compute Cb coefficient  # noqa: E501
+        # Compute MA, MB, and MC coefficients, all of which are necessary to compute Cb coefficient
         # See page 16.1-46 in Seismic Design Manual
         M_max = np.max(  # noqa: N806
             [abs(self.demand['moment bottom']), abs(self.demand['moment top'])]
@@ -200,8 +200,8 @@ class Column:
 
         # Calculate moment capacity based on unbraced length: case-by-case analysis
         # Case I: flexural strength is governed by plastic yielding
-        # Case II: flexural strength is governed by lateral torsional buckling with Lp < Lb <= Lr  # noqa: E501
-        # Case III: flexural strength is governed by lateral torsional buckling with Lb > Lr  # noqa: E501
+        # Case II: flexural strength is governed by lateral torsional buckling with Lp < Lb <= Lr
+        # Case III: flexural strength is governed by lateral torsional buckling with Lb > Lr
         if Lb <= Lp:
             Mn = Mp  # noqa: N806
         elif Lb <= Lr:
@@ -217,13 +217,13 @@ class Column:
             )
             Fcr = Cb * np.pi**2 * steel.E / ((Lb / self.section['rts']) ** 2) * temp  # noqa: N806
             Mn = Fcr * self.section['Sx']  # noqa: N806
-        # Attention no matter which case the column is, the flexural strength cannot exceed plastic moment capacity  # noqa: E501
+        # Attention no matter which case the column is, the flexural strength cannot exceed plastic moment capacity
         Mn = np.min([Mn, Mp])  # noqa: N806
 
         # Store the flexural strength into "strength" dictionary
         phi = 0.9
         self.strength['flexural'] = phi * Mn
-        # Check whether the flexural strength is sufficient and return it into flag variable  # noqa: E501
+        # Check whether the flexural strength is sufficient and return it into flag variable
         if self.strength['flexural'] >= M_max:
             self.is_feasible['flexural strength'] = True
         else:
@@ -232,7 +232,7 @@ class Column:
     def check_combined_loads(self):  # noqa: ANN201
         """This method is whether the strength is sufficient for column subjected to combined loading.
         :return: a boolean variable denoting whether the strength is sufficient under combined loading.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Obtain the axial capacity and moment capacity
         phi = 0.9
         Pc = self.strength['axial'] / phi  # noqa: N806
@@ -250,7 +250,7 @@ class Column:
             combination = Pr / Pc + 8 / 9 * (Mrx / Mcx)
         else:
             combination = Pr / (2 * Pc) + (Mrx / Mcx)
-        # Check whether the coefficient is less than 1.0 (AISC Specifications Eq. H1-1)  # noqa: E501
+        # Check whether the coefficient is less than 1.0 (AISC Specifications Eq. H1-1)
         if combination <= 1.0:
             self.is_feasible['combined strength'] = True
         else:
@@ -269,7 +269,7 @@ class Column:
     def compute_demand_capacity_ratio(self):  # noqa: ANN201
         """This method is used to calculate the demand to capacity ratios for column components
         :return: a dictionary which includes ratios for axial force, shear force, flexural moment, and combined loading.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         self.demand_capacity_ratio['axial'] = (
             self.demand['axial'] / self.strength['axial']
         )
@@ -284,30 +284,30 @@ class Column:
     def calculate_hinge_parameters(self, steel):  # noqa: ANN001, ANN201
         """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Following content is based on the following reference:
         # [1] Hysteretic models tha incorporate strength and stiffness deterioration
-        # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under  # noqa: E501
+        # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under
         #     earthquake loading
         # [3] Global collapse of frame structures under seismic excitations
-        # [4] Sidesway collapse of deteriorating structural systems under seismic excitations  # noqa: E501
+        # [4] Sidesway collapse of deteriorating structural systems under seismic excitations
         # dictionary keys explanations:
         #                              K0: beam stiffness, 6*E*Iz/L
-        #                              Myp: bending strength, product of section modulus and material yield strength  # noqa: E501
-        #                              My: effective yield strength, 1.06 * bending strength  # noqa: E501
+        #                              Myp: bending strength, product of section modulus and material yield strength
+        #                              My: effective yield strength, 1.06 * bending strength
         #                              Lambda: reference cumulative plastic rotation
         #                              theta_p: pre-capping plastic rotation
         #                              theta_pc: post-capping plastic rotation
-        #                              as: strain hardening before modified by n (=10)  # noqa: E501
-        #                              residual: residual strength ratio, use 0.40 per Lignos' OpenSees example  # noqa: E501
-        #                              theta_u: ultimate rotation, use 0.40 per Lignos' OpenSees example  # noqa: E501
+        #                              as: strain hardening before modified by n (=10)
+        #                              residual: residual strength ratio, use 0.40 per Lignos' OpenSees example
+        #                              theta_u: ultimate rotation, use 0.40 per Lignos' OpenSees example
         # Note that for column, the unbraced length is the column length itself.
         # units: kips, inches
-        # Note that column unbraced length is in feet, remember to convert it to inches  # noqa: E501
+        # Note that column unbraced length is in feet, remember to convert it to inches
         c1 = 25.4  # c1_unit  # noqa: F841
         c2 = 6.895  # c2_unit  # noqa: F841
         h = self.section['d'] - 2 * self.section['tf']  # Web depth
-        # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.  # noqa: E501
+        # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.
         McMy = (  # noqa: N806
             12.5
             * (h / self.section['tw']) ** (-0.2)

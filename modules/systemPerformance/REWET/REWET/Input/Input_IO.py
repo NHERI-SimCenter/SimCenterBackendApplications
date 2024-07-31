@@ -248,10 +248,10 @@ def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):  # 
     ss = None
     file_dest = os.path.join(directory, tank_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
-    #    ss.set_index('Tank_ID', inplace=True)  # noqa: ERA001
+    #    ss.set_index('Tank_ID', inplace=True)
     ss.set_index('time', inplace=True)  # noqa: PD002
     ss.Tank_ID = ss.Tank_ID.astype(str)
-    # ss = ss['Tank_ID']  # noqa: ERA001
+    # ss = ss['Tank_ID']
 
     return ss
 
@@ -317,7 +317,7 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN
 
 def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN201, D103
     result_file_directory = settings.process['result_directory']
-    # print(result_file_directory)  # noqa: ERA001
+    # print(result_file_directory)
     result_name = name + '.res'
     settings_name = name + '.xlsx'
 
@@ -336,9 +336,9 @@ def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN2
     _set.to_excel(file_dest)
 
     if settings.process['dmg_rst_data_save']:
-        # file_dest = os.path.join(result_file_directory, 'restoration_file.pkl')  # noqa: ERA001
-        # rest_data_out = pd.DataFrame.from_dict(restoration_data)  # noqa: ERA001
-        # rest_data_out.to_pickle(file_dest)  # noqa: ERA001
+        # file_dest = os.path.join(result_file_directory, 'restoration_file.pkl')
+        # rest_data_out = pd.DataFrame.from_dict(restoration_data)
+        # rest_data_out.to_pickle(file_dest)
         file_dest = os.path.join(result_file_directory, name + '_registry.pkl')  # noqa: PTH118
         print('Saving: ' + str(file_dest))  # noqa: T201
         with open(file_dest, 'wb') as f:  # noqa: PTH123

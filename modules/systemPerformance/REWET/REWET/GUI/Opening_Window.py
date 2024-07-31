@@ -901,7 +901,7 @@ class Ui_Opening_Window:  # noqa: N801, D101
         self.label_30.setText(
             _translate(
                 'Opening_Window',
-                'WARNING: Producing INP files for each event time can produce too many files',  # noqa: E501
+                'WARNING: Producing INP files for each event time can produce too many files',
             )
         )
         self.save_time_step_no_radio.setText(_translate('Opening_Window', 'No'))
@@ -970,10 +970,10 @@ class Ui_Opening_Window:  # noqa: N801, D101
             _translate(
                 'Opening_Window',
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'  # noqa: E501
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
                 'p, li { white-space: pre-wrap; }\n'
-                '</style></head><body style=" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:400; font-style:normal;">\n'  # noqa: E501
-                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',  # noqa: E501
+                '</style></head><body style=" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:400; font-style:normal;">\n'
+                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
             )
         )
         self.remove_scenario_button.setText(_translate('Opening_Window', 'Remove'))

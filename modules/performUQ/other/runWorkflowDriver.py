@@ -10,7 +10,9 @@ def runWorkflow(index):  # noqa: ANN001, ANN201, N802, D103
 
     shutil.copy(
         os.path.join(  # noqa: PTH118
-            os.getcwd(), 'InputFiles', 'params_' + str(index) + '.template'  # noqa: PTH109
+            os.getcwd(),  # noqa: PTH109
+            'InputFiles',
+            'params_' + str(index) + '.template',
         ),
         os.path.join(os.getcwd(), 'params.in'),  # noqa: PTH109, PTH118
     )
@@ -21,7 +23,7 @@ def runWorkflow(index):  # noqa: ANN001, ANN201, N802, D103
     elif platform == 'win32':
         command2 = os.path.join(os.getcwd(), 'driver.bat')  # noqa: PTH109, PTH118
 
-    # os.system(command1)  # noqa: ERA001
+    # os.system(command1)
     os.system(command2)  # noqa: S605
 
 

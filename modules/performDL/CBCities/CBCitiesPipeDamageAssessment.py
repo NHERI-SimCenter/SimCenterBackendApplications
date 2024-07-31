@@ -78,7 +78,7 @@ def main(node_info, pipe_info):  # noqa: ANN001, ANN201, D103
         allPipes.append(pipe)
 
     # read pgv for nodes
-    #    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')  # noqa: ERA001
+    #    pgv_csv_files = glob('../data/rupture/rupture62_im/*.csv')
 
     # Mapping & Saving
     import multiprocessing as mp
@@ -95,7 +95,7 @@ def main(node_info, pipe_info):  # noqa: ANN001, ANN201, D103
         pipe_id = pipe['GeneralInformation']['AIM_id']
 
         print('pipe_id: ', pipe_id)  # noqa: T201
-        #        print("failureProbArray: ",failureProbArray)  # noqa: ERA001
+        #        print("failureProbArray: ",failureProbArray)
         print('avgFailureProb: ', avgFailureProb)  # noqa: T201
 
         df2 = pd.DataFrame(
@@ -103,7 +103,7 @@ def main(node_info, pipe_info):  # noqa: ANN001, ANN201, D103
         )
         df = pd.concat([df, df2], axis=0)  # noqa: PD901
 
-    # Get the directory for saving the results, assume it is the same one with the AIM file  # noqa: E501
+    # Get the directory for saving the results, assume it is the same one with the AIM file
     aimDir = os.path.dirname(pipe_info)  # noqa: PTH120, N806
     aimFileName = os.path.basename(pipe_info)  # noqa: PTH119, N806, F841
 
@@ -112,7 +112,7 @@ def main(node_info, pipe_info):  # noqa: ANN001, ANN201, D103
     df.to_csv(saveDir, index=False)
 
     return 0
-    # failed_pipes = fail_pipes_number(pipe)  # noqa: ERA001
+    # failed_pipes = fail_pipes_number(pipe)
 
 
 if __name__ == '__main__':
@@ -137,8 +137,8 @@ if __name__ == '__main__':
 
     # update the local app dir with the default - if needed
     #    if wfArgs.appDir is None:
-    #        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: ERA001, E501
-    #        wfArgs.appDir = workflow_dir.parents[1]  # noqa: ERA001
+    #        workflow_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+    #        wfArgs.appDir = workflow_dir.parents[1]
 
     # Calling the main workflow method and passing the parsed arguments
     main(node_info=wfArgs.nodeInfo, pipe_info=wfArgs.pipeInfo)

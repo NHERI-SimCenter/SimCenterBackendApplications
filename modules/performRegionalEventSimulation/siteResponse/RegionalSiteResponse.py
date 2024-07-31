@@ -65,7 +65,7 @@ print(f'currentDir: {currentDir}')  # noqa: T201
 
 
 def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
-    # log_msg('Startring simulation script...')  # noqa: ERA001
+    # log_msg('Startring simulation script...')
 
     sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
@@ -148,7 +148,7 @@ def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
     tmpDir = currentDir + '/input_data/siteResponseRunningDir'  # noqa: N806
 
     print(  # noqa: T201
-        f'RUNNING {pythonEXE} {mainDir}/Workflow/siteResponseWHALE.py ./sc_srt.json --registry {mainDir}/Workflow/WorkflowApplications.json --referenceDir {inputDir} -w {tmpDir}'  # noqa: E501
+        f'RUNNING {pythonEXE} {mainDir}/Workflow/siteResponseWHALE.py ./sc_srt.json --registry {mainDir}/Workflow/WorkflowApplications.json --referenceDir {inputDir} -w {tmpDir}'
     )
 
     subprocess.run(  # noqa: S603
@@ -173,7 +173,7 @@ def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
 
     outputMotionDir = currentDir + '/input_data/' + outputDir  # noqa: N806
     print(  # noqa: T201
-        f'RUNNING {pythonEXE} {mainDir}/createEVENT/siteResponse/createGM4BIM.py -i  {tmpDir} -o  {outputMotionDir} --removeInput'  # noqa: E501
+        f'RUNNING {pythonEXE} {mainDir}/createEVENT/siteResponse/createGM4BIM.py -i  {tmpDir} -o  {outputMotionDir} --removeInput'
     )
 
     subprocess.run(  # noqa: S603
@@ -188,7 +188,7 @@ def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
         check=False,
     )
 
-    # subprocess.run([pythonEXE, mainDir+"/createEVENT/siteResponse/createGM4BIM.py", "-i", tmpDir, "-o", outputMotionDir], "--removeInput")  # noqa: ERA001, E501
+    # subprocess.run([pythonEXE, mainDir+"/createEVENT/siteResponse/createGM4BIM.py", "-i", tmpDir, "-o", outputMotionDir], "--removeInput")
 
     #
     # remove tmp dir
@@ -213,7 +213,7 @@ def runHazardSimulation(inputFILE):  # noqa: ANN001, ANN201, N802, N803, D103
     # we are done
     #
 
-    # log_msg('Simulation script finished.')  # noqa: ERA001
+    # log_msg('Simulation script finished.')
     return 0
 
 

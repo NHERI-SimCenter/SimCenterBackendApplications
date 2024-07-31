@@ -242,7 +242,7 @@ def jayaram_baker_correlation_2009(im, h, flag_clustering=False):  # noqa: ANN00
             T = 0.0  # noqa: N806
     except ValueError:
         print(  # noqa: T201
-            f'CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {im}'  # noqa: E501
+            f'CorrelationModel.jayaram_baker_correlation_2009: error - cannot handle {im}'
         )
 
     if T >= 1.0:
@@ -330,7 +330,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: ANN0
                 periods.append(0.0)
         except ValueError:  # noqa: PERF203
             print(  # noqa: T201
-                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'  # noqa: E501
+                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading modeling coefficients
     B1, B2, B3 = load_loth_baker_correlation_2013(  # noqa: N806
@@ -372,7 +372,7 @@ def loth_baker_correlation_2013(stations, im_name_list, num_simu):  # noqa: ANN0
         .swapaxes(0, 1)
         .swapaxes(1, 2)
     )
-    # return  # noqa: ERA001
+    # return
     return residuals  # noqa: RET504
 
 
@@ -408,7 +408,10 @@ def load_markhvida_ceferino_baker_correlation_2017(datapath):  # noqa: ANN001, A
 
 
 def markhvida_ceferino_baker_correlation_2017(  # noqa: ANN201, C901, PLR0912, PLR0915
-    stations, im_name_list, num_simu, num_pc=19  # noqa: ANN001
+    stations,  # noqa: ANN001
+    im_name_list,  # noqa: ANN001
+    num_simu,  # noqa: ANN001
+    num_pc=19,  # noqa: ANN001
 ):
     """Simulating intra-event residuals
     Reference:
@@ -435,11 +438,11 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: ANN201, C901, PLR0912, P
                 periods.append(0.0)
             else:
                 raise ValueError(  # noqa: TRY003, TRY301
-                    f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'  # noqa: EM102, E501
+                    f'CorrelationModel Markhvida et al. (2017): error - cannot handle {cur_im}'  # noqa: EM102
                 )
         except ValueError:  # noqa: PERF203
             print(  # noqa: T201
-                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'  # noqa: E501
+                f'CorrelationModel.loth_baker_correlation_2013: error - cannot handle {cur_im}'
             )
     # Loading factors
     MCB_model, MCB_pca, MCB_var = load_markhvida_ceferino_baker_correlation_2017(  # noqa: N806
@@ -517,7 +520,7 @@ def markhvida_ceferino_baker_correlation_2017(  # noqa: ANN201, C901, PLR0912, P
         for tmp_periods in periods:
             if tmp_periods > model_Tmax:
                 residuals = np.concatenate((residuals, Tmax_residuals), axis=1)
-    # return  # noqa: ERA001
+    # return
     return residuals
 
 
@@ -628,12 +631,16 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):  # no
         ).T
     # Interpolating model_coef by periods
     pseudo_periods = [x for x in model_periods if type(x) == float] + [  # noqa: E721
-        ims_map[x] for x in model_periods if type(x) == str  # noqa: E721
+        ims_map[x]
+        for x in model_periods
+        if type(x) == str  # noqa: E721
     ]
     interp_fun = interp1d(pseudo_periods, model_coef, axis=0)
     model_Tmax = 10.0  # noqa: N806
     simu_periods = [min(i, model_Tmax) for i in periods_ims if type(i) == float] + [  # noqa: E721
-        ims_map[i] for i in periods_ims if type(i) == str  # noqa: E721
+        ims_map[i]
+        for i in periods_ims
+        if type(i) == str  # noqa: E721
     ]
     if (len(simu_periods) == 1) and (simu_periods[0] == 0):
         # for PGA only (using 0.01 sec as the approximate)
@@ -649,7 +656,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):  # no
             np.matmul(residuals_pca[:, i, :], simu_coef.T), residuals[:, :, i].shape
         )
 
-    # return  # noqa: ERA001
+    # return
     return residuals
 
 
@@ -664,7 +671,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
         im2: 2nd intensity measure name
     Output:
         rho: correlation coefficient
-    """  # noqa: E501, D205, D400, D415
+    """  # noqa: D205, D400, D415
     # im map:
     im_map = {'DS575H': 0, 'DS595H': 1, 'PGA': 2, 'PGV': 3}
 
@@ -677,7 +684,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
         tmp_tag = im_map.get(im1.upper(), None)
         if tmp_tag is None:
             print(  # noqa: T201
-                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'  # noqa: E501
+                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im1}'
             )
             return 0.0
         im_list.append(tmp_tag)
@@ -689,7 +696,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
         tmp_tag = im_map.get(im2.upper(), None)
         if tmp_tag is None:
             print(  # noqa: T201
-                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im2}'  # noqa: E501
+                f'CorrelationModel.baker_bradley_correlation_2017: warning - return 0.0 for unknown {im2}'
             )
             return 0.0
         im_list.append(tmp_tag)
@@ -707,7 +714,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
             [-0.442, -0.405, 1.000, 0.733],
             [-0.259, -0.211, 0.733, 1.000],
         ]
-        # return  # noqa: ERA001
+        # return
         return rho_mat[im_list[0]][im_list[1]]
 
     # one Sa + one non-Sa
@@ -752,7 +759,7 @@ def baker_bradley_correlation_2017(im1=None, im2=None):  # noqa: ANN001, ANN201,
                 ) / 2 * np.tanh(d[im_tag][j] * np.log(T / c[im_tag][j]))
                 break
 
-    # return  # noqa: ERA001
+    # return
     return rho
 
 
@@ -780,5 +787,5 @@ def get_distance_from_lat_lon(site_loc1, site_loc2):  # noqa: ANN001, ANN201, D1
             )
         )
     )
-    # return  # noqa: ERA001
+    # return
     return dist  # noqa: RET504

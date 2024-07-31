@@ -26,7 +26,7 @@ class Report_Reading:  # noqa: N801, D101
         with open(file_addr, encoding='utf-8') as f:  # noqa: PTH123
             lnum = 0
             for line in f:
-                # self.file_data[lnum] = line  # noqa: ERA001
+                # self.file_data[lnum] = line
                 if 'Maximum trials exceeded at' in line:
                     time_str = (
                         line.split('WARNING: Maximum trials exceeded at ')[1]

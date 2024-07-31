@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -70,13 +70,13 @@ class of7PtDboundary:  # noqa: N801
     # 	# Loop over all patches
     # 	for patchname in patches:
     # 		# Get the type of velocity bc
-    # 		patch = hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname])  # noqa: E501
+    # 		patch = hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname])
     # 		if patch == [None]:
     # 			Utype = -1
     # 		else:
-    # 			Utype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname]))  # noqa: E501
+    # 			Utype = ', '.join(hydroutil.extract_element_from_json(data, ["Events","VelocityType_" + patchname]))
 
-    # 		# If any moving walls (103 - 104)  # noqa: ERA001
+    # 		# If any moving walls (103 - 104)
     # 		if (int(Utype) == 103) or (int(Utype) == 104):
     # 			print(patchname)
 
@@ -188,7 +188,7 @@ class of7PtDboundary:  # noqa: N801
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tpointVectorField;\n\tlocation\t"0.01";\n\tobject\tpointDisplacement;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: W291
 
         header = header + 'dimensions\t[0 1 0 0 0 0 0];\n\n'
         header = header + 'internalField\tuniform (0 0 0);\n\n'

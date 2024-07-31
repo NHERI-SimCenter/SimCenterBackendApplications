@@ -72,7 +72,7 @@ class RestorationIO:  # noqa: D101
         section = None
         lnum = 0
         edata = {'fname': definition_file_name}
-        # Sprint(definition_file_name)  # noqa: ERA001
+        # Sprint(definition_file_name)
         config_file_path = Path(definition_file_name)
 
         if config_file_path.is_absolute():
@@ -124,7 +124,7 @@ class RestorationIO:  # noqa: D101
         self._read_priorities()
         self._read_jobs()
         self._read_define()
-        # self._read_config()  # noqa: ERA001
+        # self._read_config()
 
     def _read_files(self):  # noqa: ANN202
         edata = OrderedDict()
@@ -138,7 +138,7 @@ class RestorationIO:  # noqa: D101
                 if len(words) != 2:  # noqa: PLR2004
                     edata['key'] = words[0]
                     raise RuntimeError(
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: E501
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
                         % edata
                     )
                 file_handle = words[0]
@@ -185,15 +185,15 @@ class RestorationIO:  # noqa: D101
         return data_temp
 
     def _read_shifts(self):  # noqa: ANN202
-        # self._shift_data=pd.DataFrame()  # noqa: ERA001
-        # self._file_handle_address = {}  # noqa: ERA001
+        # self._shift_data=pd.DataFrame()
+        # self._file_handle_address = {}
         for lnum, line in self.sections['[SHIFTS]']:  # noqa: B007
-            # edata['lnum'] = lnum  # noqa: ERA001
+            # edata['lnum'] = lnum
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) != 3:  # noqa: PLR2004
                     raise RuntimeError(  # noqa: TRY003
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101, E501
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101
                     )
                 shift_name = words[0]
                 shift_begining = int(words[1]) * 3600
@@ -209,7 +209,7 @@ class RestorationIO:  # noqa: D101
             if words is not None and len(words) > 0:
                 if len(words) != 2 and len(words) != 4:  # noqa: PLR2004
                     raise RuntimeError(  # noqa: TRY003
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101, E501
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101
                     )
                 entity_name = words[0]
                 element = words[1].upper()
@@ -218,7 +218,7 @@ class RestorationIO:  # noqa: D101
                     raise ValueError('Unknown element line number ' + str(lnum))
 
                 # if entity_name in self.rm.entity:
-                # raise ValueError('Entity already defined')  # noqa: ERA001
+                # raise ValueError('Entity already defined')
 
                 if len(words) == 4:  # noqa: PLR2004
                     arg1 = words[2]
@@ -250,7 +250,9 @@ class RestorationIO:  # noqa: D101
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
                     self.rm._registry.addAttrToElementDamageTable(  # noqa: SLF001
-                        element, entity_name, True  # noqa: FBT003
+                        element,
+                        entity_name,
+                        True,  # noqa: FBT003
                     )
 
                 elif arg1 == 'FILE' or arg1 == 'NOT_IN_FILE':  # noqa: PLR1714
@@ -261,7 +263,9 @@ class RestorationIO:  # noqa: D101
                     if entity_name not in self.rm.entity_rule:
                         self.rm.entity_rule[entity_name] = ent_rule
                         self.rm._registry.addAttrToElementDamageTable(  # noqa: SLF001
-                            element, entity_name, True  # noqa: FBT003
+                            element,
+                            entity_name,
+                            True,  # noqa: FBT003
                         )
                     else:
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
@@ -272,7 +276,7 @@ class RestorationIO:  # noqa: D101
 
                         if len(split_arg) != 2:  # noqa: PLR2004
                             raise ValueError(
-                                'There must be two parts: PART1:PART2. Now there are '  # noqa: E501
+                                'There must be two parts: PART1:PART2. Now there are '
                                 + repr(
                                     len(split_arg)
                                     + ' parts. Line number is '
@@ -289,7 +293,7 @@ class RestorationIO:  # noqa: D101
                             )
                     else:
                         raise ValueError(
-                            'There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '  # noqa: E501
+                            'There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
                             + repr(lnum)
                         )
 
@@ -308,31 +312,33 @@ class RestorationIO:  # noqa: D101
                         self.rm.entity[entity_name] = element
                         self.rm.entity_rule[entity_name] = ent_rule
                         self.rm._registry.addAttrToElementDamageTable(  # noqa: SLF001
-                            element, entity_name, True  # noqa: FBT003
+                            element,
+                            entity_name,
+                            True,  # noqa: FBT003
                         )
                     else:
                         if self.rm.entity[entity_name] != element:
                             raise ValueError(
-                                'Element must not chanage in an added condition. Line '  # noqa: E501
+                                'Element must not chanage in an added condition. Line '
                                 + str(lnum)
                             )
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
     # =============================================================================
     #                     if element == 'PIPE':
-    #                         #candidate = self.getDamageData(element)  # noqa: ERA001
-    #                         #candidate.index.tolist()  # noqa: ERA001
-    #                         ent_rule = [element,'ALL']  # noqa: ERA001
-    #                         #self.rm.entity[entity_name]      = element  # noqa: ERA001
-    #                         self.rm.entity_rule[entity_name] = ent_rule  # noqa: ERA001
-    #                         self.rm._registry.addAttrToPipeDamageTable(entity_name, True)  # noqa: ERA001, E501
-    #                     elif element == 'DISTNODE':  # noqa: ERA001
-    #                         ent_rule = [element,'ALL']  # noqa: ERA001
-    #                         #self.rm.entity[entity_name]  # noqa: ERA001
-    #                         self.rm.entity_rule[entity_name] = ent_rule  # noqa: ERA001
-    #                         self.rm._registry.AttrToDistNodeDamageTable(entity_name, True)  # noqa: ERA001, E501
-    #                     else:  # noqa: ERA001
-    #                         raise ValueError('Element type is not recognized')  # noqa: ERA001
+    #                         #candidate = self.getDamageData(element)
+    #                         #candidate.index.tolist()
+    #                         ent_rule = [element,'ALL']
+    #                         #self.rm.entity[entity_name]      = element
+    #                         self.rm.entity_rule[entity_name] = ent_rule
+    #                         self.rm._registry.addAttrToPipeDamageTable(entity_name, True)
+    #                     elif element == 'DISTNODE':
+    #                         ent_rule = [element,'ALL']
+    #                         #self.rm.entity[entity_name]
+    #                         self.rm.entity_rule[entity_name] = ent_rule
+    #                         self.rm._registry.AttrToDistNodeDamageTable(entity_name, True)
+    #                     else:
+    #                         raise ValueError('Element type is not recognized')
     # =============================================================================
 
     def _read_sequences(self):  # noqa: ANN202
@@ -340,7 +346,7 @@ class RestorationIO:  # noqa: D101
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if len(words) != 2 or len(words)!=4:
-                # raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)  # noqa: ERA001, E501
+                # raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 element = words[0].upper()
                 seq = []
                 for arg in words[1:]:
@@ -359,7 +365,7 @@ class RestorationIO:  # noqa: D101
         group_column = {}
 
         for lnum, line in self.sections['[AGENTS]']:  # noqa: B007
-            # edata['lnum'] = lnum  # noqa: ERA001
+            # edata['lnum'] = lnum
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 _group_name = None
@@ -367,7 +373,7 @@ class RestorationIO:  # noqa: D101
 
                 if len(words) < 3:  # noqa: PLR2004
                     raise RuntimeError(  # noqa: TRY003
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101, E501
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: EM101
                     )
                 agent_type = words[0]
                 if words[1].upper() == 'FILE':
@@ -385,16 +391,16 @@ class RestorationIO:  # noqa: D101
         for agent_type, file_handle in agent_file_handle.items():
             data = self._file_data[file_handle]
 
-            # print(file_handle)  # noqa: ERA001
-            # print(self._file_data[file_handle])  # noqa: ERA001
+            # print(file_handle)
+            # print(self._file_data[file_handle])
 
             agent_number = data['Number']
             j = 0
             for lnum, line in data.iterrows():  # noqa: B007
-                # try:  # noqa: ERA001
+                # try:
                 num = int(agent_number[j])
-                # except :  # noqa: ERA001
-                # print('exception')  # noqa: ERA001
+                # except :
+                # print('exception')
                 # pass
                 _r = range(num)
 
@@ -496,7 +502,7 @@ class RestorationIO:  # noqa: D101
                     'Syntax error in line: '
                     + str(lnum)
                     + '\n'
-                    + "Each Point Group must have at least one name and one point coordinate sperated by a ':'"  # noqa: E501
+                    + "Each Point Group must have at least one name and one point coordinate sperated by a ':'"
                     + '\n'
                     + "Example= 'PointGroupName X1:Y1 [X2:Y2 ...]'"
                 )
@@ -528,7 +534,7 @@ class RestorationIO:  # noqa: D101
                         + "'"
                         + word
                         + "'"
-                        + " is not an accpetable point coordinate. It must be point coordinate sperated by a ':'"  # noqa: E501
+                        + " is not an accpetable point coordinate. It must be point coordinate sperated by a ':'"
                         + '\n'
                         + "Example= 'X1:Y1'"
                     )
@@ -580,8 +586,8 @@ class RestorationIO:  # noqa: D101
                     )
 
                 current_group_point_list.append((x_coord, y_coord))
-            # print(group_name)  # noqa: ERA001
-            # print(words[1:])  # noqa: ERA001
+            # print(group_name)
+            # print(words[1:])
             if (
                 group_name in self.rm.proximity_points
             ):  # To Support mutiple line assigment of the same group
@@ -602,11 +608,11 @@ class RestorationIO:  # noqa: D101
                     'Syntax error in line: '
                     + str(lnum)
                     + '\n'
-                    + 'Inadequate parametrs to define priority. There must be at least three parametrs, '  # noqa: E501
+                    + 'Inadequate parametrs to define priority. There must be at least three parametrs, '
                     + repr(len(words))
                     + ' is given.'
                     + '\n'
-                    + "Example= 'CREW TYPE   PriorityType[1 or 2], Action:DamageGroup"  # noqa: E501
+                    + "Example= 'CREW TYPE   PriorityType[1 or 2], Action:DamageGroup"
                 )
 
             agent_type = words[0]
@@ -636,9 +642,9 @@ class RestorationIO:  # noqa: D101
                         + "'"
                         + priority_type
                         + "'"
-                        + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'  # noqa: E501
+                        + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'
                         + '\n'
-                        + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"  # noqa: E501
+                        + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"
                     )
 
             if priority_type not in [1, 2]:
@@ -649,9 +655,9 @@ class RestorationIO:  # noqa: D101
                     + "'"
                     + priority_type
                     + "'"
-                    + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'  # noqa: E501
+                    + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'
                     + '\n'
-                    + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"  # noqa: E501
+                    + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"
                 )
 
             arg = []
@@ -666,9 +672,9 @@ class RestorationIO:  # noqa: D101
                             + "'"
                             + word
                             + "'"
-                            + ' is not an acceptable Primary Priority. A Priority Priority is a consisted of an Action:DamageGroup.'  # noqa: E501
+                            + ' is not an acceptable Primary Priority. A Priority Priority is a consisted of an Action:DamageGroup.'
                             + '\n'
-                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"  # noqa: E501
+                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"
                         )
                     split_temp = word.split(':')
 
@@ -677,13 +683,13 @@ class RestorationIO:  # noqa: D101
                             'Syntax error in line: '
                             + str(lnum)
                             + '\n'
-                            + "More than one devider (':') In the Primary Priority. The primary priority "  # noqa: E501
+                            + "More than one devider (':') In the Primary Priority. The primary priority "
                             + "'"
                             + word
                             + "'"
-                            + ' is not an acceptable Primary Priority. A Priority Priority is a consisted of an Action:DamageGroup.'  # noqa: E501
+                            + ' is not an acceptable Primary Priority. A Priority Priority is a consisted of an Action:DamageGroup.'
                             + '\n'
-                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"  # noqa: E501
+                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"
                         )
 
                     action = split_temp[0]
@@ -698,9 +704,9 @@ class RestorationIO:  # noqa: D101
                             + "'"
                             + damage_group
                             + "'"
-                            + ' is not an defined. A Priority Priority is a consisted of an Action:DamageGroup.'  # noqa: E501
+                            + ' is not an defined. A Priority Priority is a consisted of an Action:DamageGroup.'
                             + '\n'
-                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"  # noqa: E501
+                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"
                         )
 
                     if action not in self.rm.sequence[self.rm.entity[damage_group]]:
@@ -712,9 +718,9 @@ class RestorationIO:  # noqa: D101
                             + "'"
                             + action
                             + "'"
-                            + ' is not an defined in Action Sequence. A Priority Priority is a consisted of an Action:DamageGroup.'  # noqa: E501
+                            + ' is not an defined in Action Sequence. A Priority Priority is a consisted of an Action:DamageGroup.'
                             + '\n'
-                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"  # noqa: E501
+                            + "Example= 'CREW TYPE   Prioritytype[1], Action:DamageGroup"
                         )
 
                     arg.append((action, damage_group))
@@ -732,9 +738,9 @@ class RestorationIO:  # noqa: D101
                             + "'"
                             + word
                             + "'"
-                            + ' is not defined as a Point Group and is not a Reserved Secondary Priority.'  # noqa: E501
+                            + ' is not defined as a Point Group and is not a Reserved Secondary Priority.'
                             + '\n'
-                            + "Example= 'CREW TYPE   Prioritytype[2] ['Point Group' or 'Reserved Secondary Priority']"  # noqa: E501
+                            + "Example= 'CREW TYPE   Prioritytype[2] ['Point Group' or 'Reserved Secondary Priority']"
                         )
                     arg.append(word)
                 else:
@@ -750,7 +756,7 @@ class RestorationIO:  # noqa: D101
                 secondary_priority_order_list
             ):
                 raise ValueError(
-                    'Logical error. The number of Primary Priority and Secondary Primary does not match for Crew Trye: '  # noqa: E501
+                    'Logical error. The number of Primary Priority and Secondary Primary does not match for Crew Trye: '
                     + repr(crew_type)
                 )
 
@@ -761,7 +767,7 @@ class RestorationIO:  # noqa: D101
 
         if len(not_defined) > 0:
             raise ValueError(
-                'Logical error. The following agent types are not defined in the prioirty sections:\n'  # noqa: E501
+                'Logical error. The following agent types are not defined in the prioirty sections:\n'
                 + repr(not_defined)
             )
 
@@ -791,7 +797,7 @@ class RestorationIO:  # noqa: D101
                 definer_arg = words[2]
                 if not definer_arg.find(':') != -1:
                     raise ValueError(
-                        'There must be an Time Definer and Argument seprated by : in line '  # noqa: E501
+                        'There must be an Time Definer and Argument seprated by : in line '
                         + str(lnum)
                     )
                 split_temp = definer_arg.split(':')
@@ -827,12 +833,12 @@ class RestorationIO:  # noqa: D101
             used_jobs.remove(None)
 
         # for key in used_effect:
-        # job[key]=[]  # noqa: ERA001
+        # job[key]=[]
         for lnum, line in self.sections['[DEFINE]']:
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 # if not len(words) >= 3:
-                # raise ValueError('Not enough arguments. error in line: ' + str(lnum))  # noqa: ERA001, E501
+                # raise ValueError('Not enough arguments. error in line: ' + str(lnum))
                 job_name = words[0]
                 if job_name not in used_jobs:
                     raise ValueError(
@@ -878,19 +884,19 @@ class RestorationIO:  # noqa: D101
                             if arg == 'PIPESIZE':
                                 if 'PIPESIZEFACTOR' in res:
                                     raise ValueError(  # noqa: TRY003
-                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101, E501
+                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101
                                     )
                                 res['PIPESIZE'] = float(val)
 
                             elif arg == 'PIPESIZEFACTOR':
                                 if 'PIPESIZE' in res:
                                     raise ValueError(  # noqa: TRY003
-                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101, E501
+                                        'Either pipe size or pipe size factor can be defined'  # noqa: EM101
                                     )
                                 val = float(val)
                                 if val > 1 or val < 0:
                                     raise ValueError(
-                                        'Pipe Size Factor must be bigger than 0 and less than or eqal to 1: '  # noqa: E501
+                                        'Pipe Size Factor must be bigger than 0 and less than or eqal to 1: '
                                         + str(val)
                                     )
                                 res['PIPESIZEFACTOR'] = float(val)
@@ -906,7 +912,7 @@ class RestorationIO:  # noqa: D101
                                         + ': '
                                         + val
                                         + (
-                                            'Value for CV must be either True or False'  # noqa: E501
+                                            'Value for CV must be either True or False'
                                         )
                                     )
                                 res['CV'] = val
@@ -951,7 +957,7 @@ class RestorationIO:  # noqa: D101
                                         + ': '
                                         + val
                                         + (
-                                            'Value for CV must be either True or False'  # noqa: E501
+                                            'Value for CV must be either True or False'
                                         )
                                     )
                                 res['CV'] = val
@@ -970,7 +976,7 @@ class RestorationIO:  # noqa: D101
                                 val = float(val)
                                 if val > 1 or val <= 0:
                                     raise ValueError(
-                                        'Leak factor must be bigger than 0 and less than or eqal to 1: '  # noqa: E501
+                                        'Leak factor must be bigger than 0 and less than or eqal to 1: '
                                         + str(val)
                                     )
                                 res['LEAKFACTOR'] = val
@@ -995,7 +1001,7 @@ class RestorationIO:  # noqa: D101
                                     or val.find(',') == -1
                                 ):
                                     ValueError(  # noqa: PLW0133
-                                        'After PIDR the format must be like (CONDIION,VALUE)'  # noqa: E501
+                                        'After PIDR the format must be like (CONDIION,VALUE)'
                                     )
 
                                 val = val.strip('(').strip(')')
@@ -1016,7 +1022,7 @@ class RestorationIO:  # noqa: D101
 
                                 if _con_val < 0:
                                     raise ValueError(
-                                        'PIDR condition value cannot be less than zero-->'  # noqa: E501
+                                        'PIDR condition value cannot be less than zero-->'
                                         + repr(_con_val)
                                     )
 
@@ -1059,14 +1065,14 @@ class RestorationIO:  # noqa: D101
                                     'value': val,
                                 }
                                 self.rm.jobs.addEffectDefaultValue(temp)
-                                # temp={'effect_definition_name':effect_name, 'method_name':arg,'argument':'METHOD_PROBABILITY','value':val}  # noqa: ERA001, E501
+                                # temp={'effect_definition_name':effect_name, 'method_name':arg,'argument':'METHOD_PROBABILITY','value':val}
                             elif main_arg == 'FINALLY':
                                 if val.upper() == 'NULL':
                                     val = None
                                 else:
                                     val = None
                                     print(  # noqa: T201
-                                        'WARNING: At default line in FINALL section, the third argument is not NULL: '  # noqa: E501
+                                        'WARNING: At default line in FINALL section, the third argument is not NULL: '
                                         + str(val)
                                         + 'The value is ignored antywhere'
                                     )
@@ -1113,7 +1119,7 @@ class RestorationIO:  # noqa: D101
 
         data = self.rm._files[file_handle]  # noqa: SLF001
 
-        # columns_to_remove = data.columns.tolist()  # noqa: ERA001
+        # columns_to_remove = data.columns.tolist()
         aliases = {}
 
         for pair in file_data:
@@ -1137,7 +1143,7 @@ class RestorationIO:  # noqa: D101
 
             elif arg == 'FIXED_TIME_OVERWRITE':
                 time_overwrite_data = data[val].to_list()
-                # self.rm.jobs._job_list[self.rm.jobs._job_list['effect']==effect_name]  # noqa: ERA001, E501
+                # self.rm.jobs._job_list[self.rm.jobs._job_list['effect']==effect_name]
                 temp_list_for_effect_name = [effect_name] * data[val].size
                 _key = list(
                     zip(
@@ -1158,7 +1164,7 @@ class RestorationIO:  # noqa: D101
             else:
                 raise ValueError('Unrecognized argument in pair: ' + _arg)
         res = pd.DataFrame(res)
-        # print(res)  # noqa: ERA001
+        # print(res)
         return res  # noqa: RET504
 
     def _read_config(self):  # noqa: ANN202
@@ -1185,7 +1191,7 @@ class RestorationIO:  # noqa: D101
                 if len(words) < 2:  # noqa: PLR2004
                     edata['key'] = words[0]
                     raise RuntimeError(
-                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'  # noqa: E501
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
                         % edata
                     )
                 key = words[0].upper()
@@ -1216,11 +1222,11 @@ class RestorationIO:  # noqa: D101
                     title = words.copy()
                     ntitle = len(
                         words
-                    )  # we need this to confirm that every line has data for every title(column)  # noqa: E501
+                    )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
                     raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101, E501
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101
                     )
                 elif nwords == ntitle:
                     dtemp.append(words)
@@ -1248,11 +1254,11 @@ class RestorationIO:  # noqa: D101
                     title = words.copy()
                     ntitle = len(
                         words
-                    )  # we need this to confirm that every line has data for every title(column)  # noqa: E501
+                    )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
                     raise ValueError(  # noqa: TRY003
-                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101, E501
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'  # noqa: EM101
                     )
                 elif nwords == ntitle:
                     dtemp.append(words)

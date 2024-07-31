@@ -38,7 +38,7 @@
 # Sangri Kuanshi
 
 # Description:
-# Read SAM info saved the surrogate model file (it was saved when training the surrogate model) and write it to new SAM.json  # noqa: E501
+# Read SAM info saved the surrogate model file (it was saved when training the surrogate model) and write it to new SAM.json
 # Input files: AIM.json, surrogate.json (user provided)
 # Output files: SAM.json
 
@@ -63,9 +63,10 @@ def create_SAM(AIM_file, SAM_file):  # noqa: ANN001, ANN201, N802, N803, D103
 
     # find and load surrogate json
 
-    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])  # noqa: ERA001, E501
+    # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
     surrogate_path = os.path.join(  # noqa: PTH118
-        os.getcwd(), root_SAM['ApplicationData']['mainScript']  # noqa: PTH109
+        os.getcwd(),  # noqa: PTH109
+        root_SAM['ApplicationData']['mainScript'],
     )
     print(surrogate_path)  # noqa: T201
 

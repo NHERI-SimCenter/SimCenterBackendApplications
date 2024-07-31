@@ -114,8 +114,8 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
         # for event in events:
         #    #if event['EventClassification'] in ['Earthquake', 'Hurricane',
         #    #                                    'Flood']:
-        #    #RV_elements.append(event['fileName'])  # noqa: ERA001
-        #    RV_elements.append(event[0])  # noqa: ERA001
+        #    #RV_elements.append(event['fileName'])
+        #    RV_elements.append(event[0])
 
         # and add them to the list of randomVariables
         event_file['randomVariables'][0]['elements'] = RV_elements
@@ -126,7 +126,7 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
         # initialize the Events part of the EVENT file
         event_file['Events'].append(
             {
-                #'type': 'Seismic',  # noqa: ERA001
+                #'type': 'Seismic',
                 'type': aim_event_input['type'],
                 'event_id': events[0][0],
                 'unitScaleFactor': f_scale_units,
@@ -151,7 +151,11 @@ def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
 
 
 def load_record(  # noqa: ANN201, D103
-    file_name, data_dir, f_scale_user=1.0, f_scale_units={'ALL': 1.0}, empty=False  # noqa: ANN001, FBT002, B006
+    file_name,  # noqa: ANN001
+    data_dir,  # noqa: ANN001
+    f_scale_user=1.0,  # noqa: ANN001
+    f_scale_units={'ALL': 1.0},  # noqa: ANN001, B006
+    empty=False,  # noqa: ANN001, FBT002
 ):
     # event_class=None):
 
@@ -170,10 +174,10 @@ def load_record(  # noqa: ANN201, D103
     isEventFile = False  # noqa: N806
     if event_data.__contains__('Events'):
         event_dic = event_data['Events'][0]
-        # event_dic['dT'] = event_data['Events'][0]['dT']  # noqa: ERA001
-        # event_dic['numSteps'] = event_data['Events'][0]['numSteps']  # noqa: ERA001
-        # event_dic['timeSeries'] = event_data['Events'][0]['timeSeries']  # noqa: ERA001
-        # event_dic['pattern'] = event_data['Events'][0]['pattern']  # noqa: ERA001
+        # event_dic['dT'] = event_data['Events'][0]['dT']
+        # event_dic['numSteps'] = event_data['Events'][0]['numSteps']
+        # event_dic['timeSeries'] = event_data['Events'][0]['timeSeries']
+        # event_dic['pattern'] = event_data['Events'][0]['pattern']
         return event_dic  # noqa: RET504
 
         isEventFile = True  # noqa: N806
@@ -244,7 +248,7 @@ def get_records(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N803
     with open(EVENT_file, encoding='utf-8') as f:  # noqa: PTH123
         event_file = json.load(f)
 
-    # event_class = AIM_file['Events']['Events'][0]['EventClassification']  # noqa: ERA001
+    # event_class = AIM_file['Events']['Events'][0]['EventClassification']
 
     # get the event_id to identify which event to load
     # (the event id might have been randomly generated earlier)

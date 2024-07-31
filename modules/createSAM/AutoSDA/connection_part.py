@@ -1,5 +1,5 @@
-# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: INP001, E501, D100
-# check, RBS dimensions, moment capacity at column face, strong-column-weak-beam check, and panel zone  # noqa: E501
+# This file is used to define the class of beam-column connection, which includes beam/column depth  # noqa: INP001, D100
+# check, RBS dimensions, moment capacity at column face, strong-column-weak-beam check, and panel zone
 # thickness (doubler plate)
 
 
@@ -39,7 +39,7 @@ class Connection:
     (8) Check shear strength of beam
     (9) Check whether strong column weak beam is satisfied
     (10) Calculate doubler plate thickness
-    """  # noqa: E501, D205, D400, D404, D415
+    """  # noqa: D205, D400, D404, D415
 
     def __init__(  # noqa: ANN204, PLR0913
         self,
@@ -71,7 +71,7 @@ class Connection:
                            upper story of the connection.
         :param bottom_column: a class defined in "column_component.py" file which refers the column in
                             lower story of the connection.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         self.connection_type = connection_type
         # The dictionary used to store the RBS dimensions
         self.left_RBS_dimension = {}
@@ -83,8 +83,8 @@ class Connection:
         # A scalar used to denote the doubler plate thickness
         self.doubler_plate_thickness = 0
         # A dictionary used to store the failure mode (if any)
-        self.is_feasible = {}  # keys: 'geometry limit', 'flexural strength', 'shear strength', 'SCWB'  # noqa: E501
-        # Define a boolean flag which denotes the overall check results (True means OK.)  # noqa: E501
+        self.is_feasible = {}  # keys: 'geometry limit', 'flexural strength', 'shear strength', 'SCWB'
+        # Define a boolean flag which denotes the overall check results (True means OK.)
         self.flag = None
 
         # Call methods to initialize the attributes listed above
@@ -112,7 +112,12 @@ class Connection:
         )
 
     def check_column_beam(  # noqa: ANN201, PLR0912
-        self, connection_type, left_beam, right_beam, top_column, bottom_column  # noqa: ANN001
+        self,
+        connection_type,  # noqa: ANN001
+        left_beam,  # noqa: ANN001
+        right_beam,  # noqa: ANN001
+        top_column,  # noqa: ANN001
+        bottom_column,  # noqa: ANN001
     ):
         """This method is used to check whether the column and beam depth (weight) is feasible for
         prequalified connection. (step 1 in ANSI Section 5.8)
@@ -120,7 +125,7 @@ class Connection:
         :return: a boolean result stored in is_feasible dictionary.
                  Actually, this method should always be true because all beam and column members are selected from a
                  database that non-prequalified sizes have been removed.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         # Extract the beam depth and weight
         if connection_type == 'typical exterior':
             # Connection only has one beam and two columns
@@ -144,9 +149,9 @@ class Connection:
                 self.is_feasible['geometry limits'] = False
         elif connection_type == 'top exterior':
             # ****************** Debug using only *************************
-            # print("top exterior:")  # noqa: ERA001
-            # print("column size = ", bottom_column.section['section size'])  # noqa: ERA001
-            # print("beam size = ", left_beam.section['section size'])  # noqa: ERA001
+            # print("top exterior:")
+            # print("column size = ", bottom_column.section['section size'])
+            # print("beam size = ", left_beam.section['section size'])
             # ****************** Debug ends here **************************
             # Connection only has one beam and one column
             left_beam_depth = extract_depth(left_beam.section['section size'])
@@ -213,7 +218,7 @@ class Connection:
                 self.is_feasible['geometry limits'] = False
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\n No such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\n No such keyword for connection exists!\n'
             )
             sys.exit(2)
 
@@ -221,7 +226,7 @@ class Connection:
         """This method is used to extract the RBS dimensions into one (or two) dictionary.
         The explanations for input arguments are presented in __init__() function.
         :return: one (two) dictionary which contains the RBS dimensions.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
             or connection_type == 'top exterior'
@@ -237,16 +242,20 @@ class Connection:
             self.right_RBS_dimension = copy.deepcopy(right_beam.RBS_dimension)
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
     def compute_probable_moment_RBS(  # noqa: ANN201, N802
-        self, connection_type, steel, left_beam, right_beam  # noqa: ANN001
+        self,
+        connection_type,  # noqa: ANN001
+        steel,  # noqa: ANN001
+        left_beam,  # noqa: ANN001
+        right_beam,  # noqa: ANN001
     ):
         """This method is used to compute section modulus at RBS center (step 2 and 3 in ANSI Section 5.8)
         :return: a dictionary which includes the probable moment at RBS center
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         Cpr = (steel.Fy + steel.Fu) / (2 * steel.Fy)  # noqa: N806
         if Cpr >= 1.2:  # noqa: PLR2004
             Cpr = 1.2  # noqa: N806
@@ -278,16 +287,21 @@ class Connection:
             self.moment['Mpr2'] = Cpr * steel.Ry * steel.Fy * right_Z_RBS
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!'
             )
             sys.exit(2)
 
     def compute_shear_force_RBS(  # noqa: ANN201, N802
-        self, connection_type, beam_dead_load, beam_live_load, span, bottom_column  # noqa: ANN001
+        self,
+        connection_type,  # noqa: ANN001
+        beam_dead_load,  # noqa: ANN001
+        beam_live_load,  # noqa: ANN001
+        span,  # noqa: ANN001
+        bottom_column,  # noqa: ANN001
     ):
         """This method calculates the shear force at the center of RBS (step 4 in ANSI Section 5.8)
         :return: a dictionary which includes the shear forces
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         # Be cautious: beam_dead_load read here is in the unit of lb/ft
         # The unit should be converted from lb/ft to kips/inch
         wu = (
@@ -310,14 +324,14 @@ class Connection:
             self.shear_force['VRBS2'] = 2 * self.moment['Mpr2'] / Lh - wu * Lh / 2
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
     def compute_probable_moment_column_face(self, connection_type):  # noqa: ANN001, ANN201
         """This method calculates the probable maximum moment at the face of the column. (step 5 in ANSI Section 5.8)
         :return: Store probable maximum moment at column face into the dictionary
-        """  # noqa: E501, D205, D400, D401, D404, D415
+        """  # noqa: D205, D400, D401, D404, D415
         Sh = self.left_RBS_dimension['a'] + self.left_RBS_dimension['b'] / 2  # noqa: N806
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
@@ -332,7 +346,7 @@ class Connection:
             self.moment['Mf2'] = self.moment['Mpr2'] + self.shear_force['VRBS2'] * Sh
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
@@ -340,7 +354,7 @@ class Connection:
         """This method calculates the plastic moment of the beam based on expected yield stress.
         (step 6 in ANSI Section 5.8)
         :return: Store the plastic moment to the dictionary.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
             or connection_type == 'top exterior'
@@ -354,7 +368,7 @@ class Connection:
             self.moment['Mpe2'] = steel.Ry * steel.Fy * right_beam.section['Zx']
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
@@ -362,7 +376,7 @@ class Connection:
         """This method checks whether the plastic moment is greater than the actual moment at column face.
         (step 7 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         phi_d = 1.0
         if (
             connection_type == 'typical exterior'  # noqa: PLR1714
@@ -391,17 +405,22 @@ class Connection:
                 self.is_feasible['flexural strength'] = False
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
     def check_shear_strength(  # noqa: ANN201
-        self, connection_type, beam_dead_load, beam_live_load, left_beam, right_beam  # noqa: ANN001
+        self,
+        connection_type,  # noqa: ANN001
+        beam_dead_load,  # noqa: ANN001
+        beam_live_load,  # noqa: ANN001
+        left_beam,  # noqa: ANN001
+        right_beam,  # noqa: ANN001
     ):
         """This method checks whether the beam shear strength is sufficient for the required shear strength.
         (step 8 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         wu = (
             1.2 * (beam_dead_load * 0.001 / 12)
             + 0.5 * (beam_live_load * 0.001 / 12)
@@ -434,7 +453,7 @@ class Connection:
                 self.is_feasible['shear strength'] = False
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
@@ -450,10 +469,10 @@ class Connection:
         """This method examines whether the "strong-column-weak-beam" criteria is satisfied.
         (step 11 in ANSI Section 5.8)
         :return: boolean result stored in is_feasible dictionary.
-        """  # noqa: E501, D205, D401, D404
+        """  # noqa: D205, D401, D404
         if connection_type == 'top exterior':
             # For column in one-story building or top story:
-            # Strong column weak beam is exempted if the column axial load ratio < 0.3 for all load combinations except  # noqa: E501
+            # Strong column weak beam is exempted if the column axial load ratio < 0.3 for all load combinations except
             # those using amplified seismic load.
             # If not the case, still need to check the Mpc/Mpb ratio.
             if bottom_column.demand['axial'] / bottom_column.strength['axial'] < 0.3:  # noqa: PLR2004
@@ -492,7 +511,7 @@ class Connection:
                     self.is_feasible['SCWB'] = False
         elif connection_type == 'top interior':
             # For column in one-story building or top story:
-            # Strong column weak beam is exempted if the column axial load ratio < 0.3 for all load combinations except  # noqa: E501
+            # Strong column weak beam is exempted if the column axial load ratio < 0.3 for all load combinations except
             # those using amplified seismic load.
             # If not the case, still need to check the Mpc/Mpb ratio.
             if bottom_column.demand['axial'] / bottom_column.strength['axial'] < 0.3:  # noqa: PLR2004
@@ -611,7 +630,7 @@ class Connection:
                 self.is_feasible['SCWB'] = False
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
 
@@ -686,7 +705,7 @@ class Connection:
             ) - self.shear_force['Vc']
         else:
             sys.stderr.write(
-                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'  # noqa: E501
+                'Error: wrong type of connection specified!\nNo such keyword for connection exists!\n'
             )
             sys.exit(2)
         # Compute the shear strength of the panel zone
@@ -710,7 +729,7 @@ class Connection:
             ) / (0.60 * steel.Fy * dc)
             tp = 0.25  # Assumed doubler plate thickness
             while tp < required_tp:
-                tp += 0.25  # Update the thickness at an increment of 0.25 until it reaches the requirement  # noqa: E501
+                tp += 0.25  # Update the thickness at an increment of 0.25 until it reaches the requirement
             self.doubler_plate_thickness = tp
 
     def check_flag(self):  # noqa: ANN201

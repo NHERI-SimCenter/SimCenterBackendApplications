@@ -114,14 +114,14 @@ def main(  # noqa: ANN201, D103, PLR0913
         WF.simulate_response(BIM_file=bldg['file'], bldg_id=bldg['id'])
 
         # run dl engine to estimate losses
-        # WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])  # noqa: ERA001
+        # WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
 
         if force_cleanup:
             # clean up intermediate files from the simulation
             WF.cleanup_simdir(bldg['id'])
 
     # aggregate results
-    # WF.aggregate_results(bldg_data = bldg_data)  # noqa: ERA001
+    # WF.aggregate_results(bldg_data = bldg_data)
 
     if force_cleanup:
         # clean up intermediate files from the working directory
@@ -149,7 +149,7 @@ def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):  # noqa: ANN001,
 
             for p in mPaths:
                 simID = p.split('/')[-2].split('.')[-1]  # noqa: N806, F841
-                # shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")  # noqa: ERA001
+                # shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
                 newEVENT = {}  # noqa: N806
                 # load the event file
                 with open(p) as f:  # noqa: PTH123
@@ -206,7 +206,8 @@ if __name__ == '__main__':
         '-r',
         '--registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )

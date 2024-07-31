@@ -79,7 +79,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     #   - if so set variables:
     #          numP (num processes),
     #          procID (process id),
-    #          doParallel = True  # noqa: ERA001
+    #          doParallel = True
     #   - else set numP = 1, procID = 0 and doParallel = False
     #
 
@@ -108,17 +108,17 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
     # TODO: if the ref dir is needed, do NOT save it to the input file, store it  # noqa: FIX002, TD002, TD003
     # somewhere else in a file that i not shared among processes
-    # inputs['refDir'] = reference_dir  # noqa: ERA001
+    # inputs['refDir'] = reference_dir
     # with open(input_file, 'w') as f:
-    #    json.dump(inputs, f, indent=2)  # noqa: ERA001
+    #    json.dump(inputs, f, indent=2)
 
     # TODO: remove the commented section below, I only kept it for now to make  # noqa: FIX002, TD002, TD003
     # sure it is not needed
 
     # if working_dir is not None:
-    #    runDir = working_dir  # noqa: ERA001
-    # else:  # noqa: ERA001
-    #    runDir = inputs['runDir']  # noqa: ERA001
+    #    runDir = working_dir
+    # else:
+    #    runDir = inputs['runDir']
 
     if not os.path.exists(working_dir):  # noqa: PTH110
         os.mkdir(working_dir)  # noqa: PTH102
@@ -211,21 +211,21 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     count = 0
     for asset_type, assetIt in asset_files.items():  # noqa: N806
         # perform the regional mapping
-        # WF.perform_regional_mapping(assetIt, asset_type)  # noqa: ERA001
+        # WF.perform_regional_mapping(assetIt, asset_type)
 
         # TODO: not elegant code, fix later  # noqa: FIX002, TD002, TD003
         with open(assetIt, encoding='utf-8') as f:  # noqa: PTH123
             asst_data = json.load(f)
 
-        # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network  # noqa: E501
+        # Sometimes multiple asset types need to be analyzed together, e.g., pipelines and nodes in a water network
         run_asset_type = asset_type
 
         if asset_type == 'Buildings' or asset_type == 'TransportationNetwork':  # noqa: PLR1714
             pass
         elif asset_type == 'WaterNetworkNodes':
-            continue  # Run the nodes with the pipelines, i.e., the water distribution network  # noqa: E501
+            continue  # Run the nodes with the pipelines, i.e., the water distribution network
         elif asset_type == 'WaterNetworkPipelines':
-            run_asset_type = 'WaterDistributionNetwork'  # Run the pipelines with the entire water distribution network  # noqa: E501
+            run_asset_type = 'WaterDistributionNetwork'  # Run the pipelines with the entire water distribution network
         else:
             print('No support for asset type: ', asset_type)  # noqa: T201
 
@@ -302,7 +302,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     # add recovery
     #
 
-    # WF.perform_recovery_simulation(asset_files.keys())  # noqa: ERA001
+    # WF.perform_recovery_simulation(asset_files.keys())
 
     WF.compile_r2d_results_geojson(asset_files)
 
@@ -344,7 +344,8 @@ if __name__ == '__main__':
         '-r',
         '--registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )

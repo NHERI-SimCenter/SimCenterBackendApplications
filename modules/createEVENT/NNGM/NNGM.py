@@ -91,7 +91,7 @@ def createEvent(recordsFolder, h1File, h2File, eventFilePath):  # noqa: ANN001, 
 def main():  # noqa: ANN201, D103
     # Input Argument Specifications
     gmArgsParser = argparse.ArgumentParser(  # noqa: N806
-        'Characterize ground motion using seismic hazard analysis and record selection'  # noqa: E501
+        'Characterize ground motion using seismic hazard analysis and record selection'
     )
     gmArgsParser.add_argument(
         '-filenameAIM', '--filenameAIM', required=True, help='Path to the BIM file'
@@ -118,7 +118,7 @@ def main():  # noqa: ANN201, D103
         '-getRV',
         '--getRV',
         action='store_true',
-        help='Flag showing whether or not this call is to get the random variables definition',  # noqa: E501
+        help='Flag showing whether or not this call is to get the random variables definition',
     )
 
     # Parse the arguments

@@ -1,5 +1,5 @@
-# JGA  # noqa: N999, D100
-# from matplotlib import pyplot as plt  # noqa: ERA001
+# JGA  # noqa: D100, N999
+# from matplotlib import pyplot as plt
 import os
 import platform
 from ctypes import *  # noqa: F403
@@ -13,7 +13,8 @@ from scipy import integrate
 if pltm == 'linux' or pltm == 'linux2':
     c_lib = CDLL(  # noqa: F405
         os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'lib/linux/PLoM_C_library.so'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'lib/linux/PLoM_C_library.so',
         )
     )
 elif pltm == 'darwin':
@@ -34,7 +35,8 @@ elif pltm == 'darwin':
 elif pltm == 'win32':
     c_lib = CDLL(  # noqa: F405
         os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'lib/win/PLoM_C_library.so'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'lib/win/PLoM_C_library.so',
         )
     )
 
@@ -193,14 +195,14 @@ def PCA(x, tol):  # noqa: ANN001, ANN201, N802
     (array([[-0.70710678,  0.70710678]]), array([1.58113883]), array([[-1.13483031e-17],
            [ 4.47213595e-01],
            [ 8.94427191e-01]]))
-    """  # noqa: E501, D205, D400, D402, D415
+    """  # noqa: D205, D400, D402, D415
     x_mean = mean(x)
     (phi, mu, v) = np.linalg.svd(x - x_mean)
     mu = mu / sqrt(len(x[0]) - 1)
-    # plt.figure()  # noqa: ERA001
-    # plt.plot(np.arange(len(mu)), mu)  # noqa: ERA001
-    # plt.xlabel('# eigenvalue of X covariance')  # noqa: ERA001
-    # plt.show()  # noqa: ERA001
+    # plt.figure()
+    # plt.plot(np.arange(len(mu)), mu)
+    # plt.xlabel('# eigenvalue of X covariance')
+    # plt.show()
     error = 1
     i = 0
     errors = [1]
@@ -213,11 +215,11 @@ def PCA(x, tol):  # noqa: ANN001, ANN201, N802
         error = error - (mu[i] ** 2) / sum(mu**2)
         i = i + 1
         errors.append(error)
-    # plt.figure()  # noqa: ERA001
-    # plt.semilogy(np.arange(len(mu)+1), errors)  # noqa: ERA001
-    # plt.xlabel('# eigenvalue of Covariance matrix of X')  # noqa: ERA001
-    # plt.ylabel('Error of the PCA associated with the eigenvalue')  # noqa: ERA001
-    # plt.show()  # noqa: ERA001
+    # plt.figure()
+    # plt.semilogy(np.arange(len(mu)+1), errors)
+    # plt.xlabel('# eigenvalue of Covariance matrix of X')
+    # plt.ylabel('Error of the PCA associated with the eigenvalue')
+    # plt.show()
     mu = mu[0:nu]
     phi = phi[:, 0:nu]
     mu_sqrt_inv = np.diag(
@@ -262,12 +264,13 @@ def kde(y, eta, s_v=None, c_v=None, hat_s_v=None):  # noqa: ANN001, ANN201
     )
 
 
-def PCA2(C_h_hat_eta, beta, tol):  # taking only independent constraints  # noqa: ANN001, ANN201, N802, N803
+# taking only independent constraints
+def PCA2(C_h_hat_eta, beta, tol):  # noqa: N802, ANN201, N803, ANN001
     """>>> PCA2(np.array([[1. , 1. , 1. ], [1. , 4.5, 1.5 ], [1. , 1.5 , 2. ]]), np.array([10, 1, 2]), 0.1)
     (array([-4.53648062,  5.2236145 ]), array([[-0.28104828,  0.42570005],
            [-0.85525695, -0.51768266],
            [-0.43537043,  0.74214832]]))
-    """  # noqa: E501, D205, D400, D402, D415
+    """  # noqa: D205, D400, D402, D415
     (lambda_c, psi) = np.linalg.eig(
         C_h_hat_eta
     )  # eigenvalue decomposition as the dimensions are not so big
@@ -436,7 +439,17 @@ def ac(sig):  # noqa: ANN001, ANN201, D103
 
 
 def L(  # noqa: ANN201, N802, D103, PLR0913
-    y, g_c, x_mean, eta, s_v, hat_s_v, mu, phi, psi, lambda_i, D_x_g_c  # noqa: ANN001, ARG001, N803
+    y,  # noqa: ANN001
+    g_c,  # noqa: ANN001, ARG001
+    x_mean,  # noqa: ANN001
+    eta,  # noqa: ANN001
+    s_v,  # noqa: ANN001
+    hat_s_v,  # noqa: ANN001
+    mu,  # noqa: ANN001
+    phi,  # noqa: ANN001
+    psi,  # noqa: ANN001
+    lambda_i,  # noqa: ANN001
+    D_x_g_c,  # noqa: ANN001, N803
 ):  # gradient of the potential
     nu = eta.shape[0]
     N = eta.shape[1]  # noqa: N806
@@ -466,8 +479,8 @@ def L(  # noqa: ANN201, N802, D103, PLR0913
                     )
                     vector = (hat_s_v / s_v) * np.resize(eta[:, i], yl.shape) - yl
             # KZ L[:,l] = (  np.resize(vector/(hat_s_v**2),(nu))\
-            #    -np.resize(np.diag(mu).dot(np.transpose(phi)).\  # noqa: ERA001
-            #            dot(D_x_g_c(x_mean+np.resize(phi.dot(np.diag(mu)).dot(yl), (x_mean.shape)))).\  # noqa: ERA001, E501
+            #    -np.resize(np.diag(mu).dot(np.transpose(phi)).\
+            #            dot(D_x_g_c(x_mean+np.resize(phi.dot(np.diag(mu)).dot(yl), (x_mean.shape)))).\
             #            dot(psi).dot(lambda_i), (nu)))
             L[:, l] = np.resize(vector / (hat_s_v**2), (nu)) - np.resize(
                 np.diag(mu)
@@ -493,8 +506,8 @@ def L(  # noqa: ANN201, N802, D103, PLR0913
             )
             gradient_rho = np.frombuffer(array_pointer.contents)
             # KZ L[:,l] = np.resize(1e250*gradient_rho/rho_,(nu))\
-            #        -np.resize(np.diag(mu).dot(np.transpose(phi)).\  # noqa: ERA001
-            #                dot(D_x_g_c(x_mean+np.resize(phi.dot(np.diag(mu)).dot(yl), (x_mean.shape)))).\  # noqa: ERA001, E501
+            #        -np.resize(np.diag(mu).dot(np.transpose(phi)).\
+            #                dot(D_x_g_c(x_mean+np.resize(phi.dot(np.diag(mu)).dot(yl), (x_mean.shape)))).\
             #                    dot(psi).dot(lambda_i), (nu))
             L[:, l] = np.resize(1e250 * gradient_rho / rho_, (nu)) - np.resize(
                 np.diag(mu)

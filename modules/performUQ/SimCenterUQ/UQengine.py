@@ -23,7 +23,8 @@ class UQengine:  # noqa: D101
 
         jsonPath = self.inputFile  # noqa: N806
         if not os.path.isabs(jsonPath):  # noqa: PTH117
-            jsonPath = self.work_dir + '/templatedir/' + self.inputFile  # for quoFEM  # noqa: N806
+            # for quoFEM
+            jsonPath = self.work_dir + '/templatedir/' + self.inputFile  # noqa: N806
 
         # temporary for EEUQ....
         jsonDir, jsonName = os.path.split(jsonPath)  # noqa: N806
@@ -36,9 +37,9 @@ class UQengine:  # noqa: D101
         with open(jsonPath) as f:  # noqa: PTH123
             dakotaJson = json.load(f)  # noqa: N806, F841
 
-        # self.workflowDriver = "workflow_driver"  # noqa: ERA001
+        # self.workflowDriver = "workflow_driver"
         # if self.os_type.lower().startswith('win'):
-        #    self.workflowDriver = "workflow_driver.bat"  # noqa: ERA001
+        #    self.workflowDriver = "workflow_driver.bat"
 
     def cleanup_workdir(self):  # noqa: ANN201, C901, D102
         # if template dir already contains results.out, give an error
@@ -50,7 +51,7 @@ class UQengine:  # noqa: D101
             # change permission for  workflow_driver.bat
             self.workflowDriver_path = os.path.join(del_path, self.workflowDriver)  # noqa: PTH118
             # if os.path.exists(self.workflowDriver_path):
-            #     os.chmod(self.workflowDriver_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # noqa: ERA001, E501
+            #     os.chmod(self.workflowDriver_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
             # Change permission
             for root, dirs, files in os.walk(del_path):
@@ -89,7 +90,7 @@ class UQengine:  # noqa: D101
             try:
                 os.remove(os.path.join(self.work_dir, 'templatedir', 'results.out'))  # noqa: PTH107, PTH118
             except:  # noqa: E722
-                msg = 'Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first'  # noqa: E501
+                msg = 'Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first'
                 self.exit(msg)
 
         print('working directory cleared')  # noqa: T201
@@ -125,7 +126,7 @@ class UQengine:  # noqa: D101
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
-                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'  # noqa: E501, F821
+                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'  # noqa: F821
 
                     self.exit(msg)
                 Y[ns, :] = Y_tmp
@@ -170,7 +171,7 @@ class UQengine:  # noqa: D101
                     self.exit(val)
                 elif val.shape[0]:  # noqa: SIM102
                     if val.shape[0] != self.y_dim:
-                        msg = f'model output <results.out> in sample {id + 1} contains {val.shape[0]} value(s) while the number of QoIs specified is {self.y_dim}'  # noqa: E501
+                        msg = f'model output <results.out> in sample {id + 1} contains {val.shape[0]} value(s) while the number of QoIs specified is {self.y_dim}'
                         self.exit(msg)
 
                 if np.isnan(np.sum(val)):
@@ -184,13 +185,13 @@ class UQengine:  # noqa: D101
             idx = alterInput[0]
             X = np.hstack([X[:, :idx], X[:, idx + 1 :]])  # noqa: N806
 
-            # IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)  # noqa: ERA001
-            # IM_list = list(map(str, IM_vals))[1:]  # noqa: ERA001
-            # self.IM_names = IM_list  # noqa: ERA001
-            # idx = alterInput[0]  # noqa: ERA001
-            # X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])  # noqa: ERA001
-            # X_new = np.hstack([X_new, X[:,idx+1:]])  # noqa: ERA001
-            # X = X_new.astype(np.double)  # noqa: ERA001
+            # IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
+            # IM_list = list(map(str, IM_vals))[1:]
+            # self.IM_names = IM_list
+            # idx = alterInput[0]
+            # X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
+            # X_new = np.hstack([X_new, X[:,idx+1:]])
+            # X = X_new.astype(np.double)
 
         #
         # In case EEUQ
@@ -228,7 +229,7 @@ class UQengine:  # noqa: D101
             os.chdir(cur_workdir)
             if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):  # noqa: PTH110
                 os.system(  # noqa: S605
-                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar'  # noqa: E501
+                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar'
                 )
             os.chdir(self.work_dir)
 
@@ -238,7 +239,8 @@ class UQengine:  # noqa: D101
             if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):  # noqa: PTH110, PTH118
                 print(f'IM.csv found in wordir.{cur_id}')  # noqa: T201
                 tmp1 = pd.read_csv(
-                    os.path.join(cur_workdir, 'IM.csv'), index_col=None  # noqa: PTH118
+                    os.path.join(cur_workdir, 'IM.csv'),  # noqa: PTH118
+                    index_col=None,
                 )
                 if tmp1.empty:
                     print(f'IM.csv in wordir.{cur_id} is empty.')  # noqa: T201
@@ -257,7 +259,7 @@ class UQengine:  # noqa: D101
         im_collector = im_collector.sort_values(by=['%eval_id'])
 
         return im_collector  # noqa: RET504
-        # im_collector.to_csv('IM.csv', index=False)  # noqa: ERA001
+        # im_collector.to_csv('IM.csv', index=False)
 
     def readJson(self):  # noqa: ANN201, N802, D102
         pass
@@ -284,19 +286,19 @@ class UQengine:  # noqa: D101
     #
 
     def create_errLog(self):  # noqa: ANN201, N802, D102
-        # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")  # noqa: ERA001
+        # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
         pass
 
     def exit(self, msg):  # noqa: ANN001, ANN201, D102
         print(msg, file=sys.stderr)  # noqa: T201
         print(msg)  # noqa: T201
-        # sys.stderr.write(msg)  # noqa: ERA001
-        # self.errfile.write(msg)  # noqa: ERA001
-        # self.errfile.close()  # noqa: ERA001
+        # sys.stderr.write(msg)
+        # self.errfile.write(msg)
+        # self.errfile.close()
         exit(-1)  # noqa: PLR1722
 
     def terminate_errLog(self):  # noqa: ANN201, N802, D102
-        # self.errfile.close()  # noqa: ERA001
+        # self.errfile.close()
         pass
 
     #
@@ -356,17 +358,17 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: AN
     workflow_run_command = f'{current_dir_i}/{workflowDriver}  1> workflow.log 2>&1'
     # subprocess.check_call(
     #    workflow_run_command,
-    #    shell=True,  # noqa: ERA001
-    #    stdout=subprocess.DEVNULL,  # noqa: ERA001
-    #    stderr=subprocess.STDOUT,  # noqa: ERA001
-    # )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)  # noqa: E501
+    #    shell=True,
+    #    stdout=subprocess.DEVNULL,
+    #    stderr=subprocess.STDOUT,
+    # )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
     # => to end grasefully
     returnCode = subprocess.call(  # noqa: S602, N806, F841
         workflow_run_command,
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
-    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)  # noqa: E501
+    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
 
     #
     # (4) reading results
@@ -426,7 +428,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: AN
 
     # def readCSV(self):
     #     pass
-    #     return  # noqa: ERA001
+    #     return
     # def MCS(self):
     #     pass
     # def makePool(self):
@@ -434,11 +436,11 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: AN
 
 
 #
-# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP  # noqa: E501
+# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP
 #
 
-# def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):  # noqa: E501
-#     g, id_sim = run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0)  # noqa: ERA001
+# def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):
+#     g, id_sim = run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0)
 
 
 #
@@ -456,7 +458,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: AN
 #     def designExp(self):
 #         # (1) generate samples
 #
-#             Y = self.runFEM()  # noqa: ERA001
+#             Y = self.runFEM()
 #         # (2) calibrat
 #         # loop
 #

@@ -59,7 +59,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
             self.iUse_substitute_layer = True
 
     def applyNewSubsituteLayer(self):  # noqa: ANN201, N802, D102
-        # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)  # noqa: ERA001, E501
+        # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)
         if type(self.subsitute_layer) == type(None):  # noqa: E721
             return
 
@@ -100,7 +100,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
 
         text = ''
         if len(number_list) > 0:
-            text += 'The following nodes is joined with more than 1 substitute layer feature\n'  # noqa: E501
+            text += 'The following nodes is joined with more than 1 substitute layer feature\n'
 
         for ind, num in number_list.iteritems():
             text += repr(ind) + ' : ' + repr(num) + '\n'

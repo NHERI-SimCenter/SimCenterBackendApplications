@@ -51,14 +51,14 @@ import pandas as pd
 import preprocessorIO
 from shapely import geometry
 
-# try:  # noqa: ERA001
-# import REWET  # noqa: ERA001
-# print("Imported")  # noqa: ERA001
-# except:  # noqa: ERA001
+# try:
+# import REWET
+# print("Imported")
+# except:
 # This is only for now
-# print("HERE")  # noqa: ERA001
+# print("HERE")
 this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
-# main_dir = this_dir.parent  # noqa: ERA001
+# main_dir = this_dir.parent
 
 
 sys.path.insert(0, str(this_dir / 'REWET'))
@@ -74,7 +74,7 @@ def createScnearioList(run_directory, scn_number):  # noqa: ANN001, ANN201, N802
     if not os.path.exists(damage_input_dir):  # noqa: PTH110
         os.makedirs(damage_input_dir)  # noqa: PTH103
 
-    # REWET_input_data["damage_input_dir"] = damage_input_dir  # noqa: ERA001
+    # REWET_input_data["damage_input_dir"] = damage_input_dir
 
     prefix = chooseARandomPreefix(damage_input_dir)
 
@@ -95,7 +95,7 @@ def createScnearioList(run_directory, scn_number):  # noqa: ANN001, ANN201, N802
 
     scenario_list = scenario  # pd.DataFrame([scenario]).set_index("Scenario Name")
 
-    # REWET_input_data["scenario_list"] = scenario_list  # noqa: ERA001
+    # REWET_input_data["scenario_list"] = scenario_list
 
     return scenario_list, prefix
 
@@ -288,7 +288,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
         pipe_damage_discovery_mode = {
             'method': 'time_based',
             'time_discovery_ratio': pipe_time_discovery_ratio,
-        }  # pd.Series([line[0] for line in pipe_time_discovery_ratio], index = [line[1] for line in pipe_time_discovery_ratio])}  # noqa: E501
+        }  # pd.Series([line[0] for line in pipe_time_discovery_ratio], index = [line[1] for line in pipe_time_discovery_ratio])}
 
     if rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
         'Node_Leak_Based'
@@ -311,7 +311,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
         node_damage_discovery_mode = {
             'method': 'time_based',
             'time_discovery_ratio': node_time_discovery_ratio,
-        }  # pd.Series([line[0] for line in node_time_discovery_ratio], index = [line[1] for line in node_time_discovery_ratio])}  # noqa: E501
+        }  # pd.Series([line[0] for line in node_time_discovery_ratio], index = [line[1] for line in node_time_discovery_ratio])}
 
     pump_time_discovery_ratio = rwhale_input_Data['SystemPerformance'][
         'WaterDistributionNetwork'
@@ -322,11 +322,11 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
     pump_damage_discovery_model = {
         'method': 'time_based',
         'time_discovery_ratio': pump_time_discovery_ratio,
-    }  # pd.Series([line[0] for line in pump_time_discovery_ratio], index = [line[1] for line in pump_time_discovery_ratio])}  # noqa: E501
+    }  # pd.Series([line[0] for line in pump_time_discovery_ratio], index = [line[1] for line in pump_time_discovery_ratio])}
     tank_damage_discovery_model = {
         'method': 'time_based',
         'time_discovery_ratio': tank_time_discovery_ratio,
-    }  # pd.Series([line[0] for line in tank_time_discovery_ratio], index = [line[1] for line in tank_time_discovery_ratio])}  # noqa: E501
+    }  # pd.Series([line[0] for line in tank_time_discovery_ratio], index = [line[1] for line in tank_time_discovery_ratio])}
 
     REWET_input_data['settings']['pipe_damage_discovery_model'] = (
         pipe_damage_discovery_mode
@@ -349,7 +349,7 @@ def setSettingsData(input_json, REWET_input_data):  # noqa: ANN001, ANN201, ARG0
 
     ############ Not Supposed to be in R2DTool GUI ############
     REWET_input_data['settings']['minimum_simulation_time'] = (
-        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]  # noqa: FIX002, TD002, TD003, E501
+        0  # TODO : HERE #REWET_input_data["event_time"] + REWET_input_data["settings"]["simulation_time_step"]  # noqa: FIX002, TD002, TD003
     )
     REWET_input_data['settings']['save_time_step'] = True
     REWET_input_data['settings']['record_restoration_agent_logs'] = True
@@ -412,8 +412,8 @@ if __name__ == '__main__':
     )
 
     # argParser.add_argument("--damage", "-d",
-    # default="water_damage_input_structure.json",  # noqa: ERA001
-    # help="water damage input json file. If provided, number of realization is ignored if prvided and number of realization is set to 1.")  # noqa: E501
+    # default="water_damage_input_structure.json",
+    # help="water damage input json file. If provided, number of realization is ignored if prvided and number of realization is set to 1.")
 
     argParser.add_argument('--dir', '-d', help='WDN damage result directory')
 
@@ -421,7 +421,7 @@ if __name__ == '__main__':
         '--number',
         '-n',
         default=None,
-        help='If specified, indicates realization number, otherwise, all scnearios are run on all CPUS.',  # noqa: E501
+        help='If specified, indicates realization number, otherwise, all scnearios are run on all CPUS.',
     )
 
     argParser.add_argument(
@@ -429,7 +429,7 @@ if __name__ == '__main__':
         '-p',
         default=False,
         action='store_true',
-        help='if speciied, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',  # noqa: E501
+        help='if speciied, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',
     )
 
     parser_data = argParser.parse_args()
@@ -453,7 +453,7 @@ if __name__ == '__main__':
             numP = 1  # noqa: N816
             procID = 0  # noqa: N816
             print(  # noqa: T201
-                'Parallel running is not possible. Numebr of CPUS are are not enough.'  # noqa: E501
+                'Parallel running is not possible. Numebr of CPUS are are not enough.'
             )
         else:
             doParallel = True  # noqa: N816
@@ -463,7 +463,7 @@ if __name__ == '__main__':
     REWET_input_data = {}
     REWET_input_data['settings'] = {}
 
-    # print(parser_data.input)  # noqa: ERA001
+    # print(parser_data.input)
     rwhale_input_Data = preprocessorIO.readJSONFile(parser_data.input)  # noqa: N816
     setSettingsData(rwhale_input_Data, REWET_input_data)
     event_time = rwhale_input_Data['SystemPerformance']['WaterDistributionNetwork'][
@@ -542,7 +542,7 @@ if __name__ == '__main__':
             damage_data = damage_convertor.readDamagefile(
                 dl_file_path, run_directory, event_time, sc_geojson
             )
-            # damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"  # noqa: ERA001, E501
+            # damage_save_path = Path(run_directory) / "Results" / "WaterDistributionNetwork" / "damage_input"
 
             cur_damage_file_name_list = preprocessorIO.save_damage_data(
                 damage_save_path, damage_data, scn_number
@@ -561,17 +561,17 @@ if __name__ == '__main__':
         + 'C:\\Users\\naeim\\Desktop\\REWET\\main.py -j '
         + str(settings_json_file_path)
     )
-    # try:  # noqa: ERA001
-    # result = subprocess.check_output(command, shell=True, text=True)  # noqa: ERA001
-    # returncode = 0  # noqa: ERA001
-    # except subprocess.CalledProcessError as e:  # noqa: ERA001
-    # result = e.output  # noqa: ERA001
-    # returncode = e.returncode  # noqa: ERA001
+    # try:
+    # result = subprocess.check_output(command, shell=True, text=True)
+    # returncode = 0
+    # except subprocess.CalledProcessError as e:
+    # result = e.output
+    # returncode = e.returncode
 
     # if returncode != 0:
-    # print('return code: {}'.format(returncode))  # noqa: ERA001
+    # print('return code: {}'.format(returncode))
     # if returncode == 0:
-    # print("REWET ran Successfully")  # noqa: ERA001
+    # print("REWET ran Successfully")
 
     create_path(REWET_input_data['settings']['result_directory'])
     create_path(REWET_input_data['settings']['temp_directory'])
@@ -623,11 +623,11 @@ if __name__ == '__main__':
         res = {}
         res_agg = {}
         scneario_size = len(p.project.scenario_list.index)
-        # create a dictionary with keys for each scenario number (in int) and keys for a BSC metric (None)  # noqa: E501
+        # create a dictionary with keys for each scenario number (in int) and keys for a BSC metric (None)
         temp_realization_in_each_time_series = dict(
             zip(range(scneario_size), [None] * scneario_size)
         )
-        # create a dictionary for stroing tiems series, each BSC metric (requested_result) is a key and each key has the dictioanry created in line before  # noqa: E501
+        # create a dictionary for stroing tiems series, each BSC metric (requested_result) is a key and each key has the dictioanry created in line before
         time_series_result = dict(
             zip(
                 requested_result,
@@ -662,7 +662,7 @@ if __name__ == '__main__':
                         / 3600
                     )
 
-                    # Running Output module's method to get BSC data for each junction (sum of outage)  # noqa: E501
+                    # Running Output module's method to get BSC data for each junction (sum of outage)
                     res[single_requested_result] = p.getOutageTimeGeoPandas_5(
                         scn_name,
                         bsc=single_requested_result,
@@ -737,7 +737,7 @@ if __name__ == '__main__':
             ].std()
     sys.stdout = system_std_out
 
-    # Append junction and reservior general information to WaterDistributionNetwork_det  # noqa: E501
+    # Append junction and reservior general information to WaterDistributionNetwork_det
     det_json_path = cur_json_file_path = (
         Path(run_directory)
         / 'Results'
@@ -782,10 +782,10 @@ if __name__ == '__main__':
                             ],
                         }
                     )
-                # location = dict()  # noqa: ERA001
-                # location.update({'latitude':ft['geometry']['coordinates'][1],\  # noqa: ERA001
+                # location = dict()
+                # location.update({'latitude':ft['geometry']['coordinates'][1],\
                 #                 'longitude':ft['geometry']['coordinates'][0]})
-                # generalInfo.update({'location':location})  # noqa: ERA001
+                # generalInfo.update({'location':location})
                 json_to_attach.update(
                     {id: {'GeneralInformation': generalInfo, 'R2Dres': R2Dres}}
                 )

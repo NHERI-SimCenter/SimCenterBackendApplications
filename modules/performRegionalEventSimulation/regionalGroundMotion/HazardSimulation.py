@@ -117,7 +117,7 @@ def site_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912
         print(f'HazardSimulation: site data are fetched and saved in {output_file}.')  # noqa: T201
     else:
         print(  # noqa: T201
-            'HazardSimulation: please check the "Input" directory in the configuration json file.'  # noqa: E501
+            'HazardSimulation: please check the "Input" directory in the configuration json file.'
         )
         exit()  # noqa: PLR1722
 
@@ -159,10 +159,10 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         print('HazardSimulation: stations created.')  # noqa: T201
     else:
         print(  # noqa: T201
-            'HazardSimulation: please check the "Input" directory in the configuration json file.'  # noqa: E501
+            'HazardSimulation: please check the "Input" directory in the configuration json file.'
         )
         exit()  # noqa: PLR1722
-    # print(stations)  # noqa: ERA001
+    # print(stations)
 
     # Scenarios
     print('HazardSimulation: creating scenarios.')  # noqa: T201
@@ -185,7 +185,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
     else:
         # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
         print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
-    # print(scenarios)  # noqa: ERA001
+    # print(scenarios)
     print('HazardSimulation: scenarios created.')  # noqa: T201
 
     # Computing intensity measures
@@ -213,7 +213,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             if not filePath_ini:
                 # Error in ini file
                 sys.exit(
-                    'HazardSimulation: errors in preparing the OpenQuake configuration file.'  # noqa: E501
+                    'HazardSimulation: errors in preparing the OpenQuake configuration file.'
                 )
             if scenario_info['EqRupture']['Type'] in [
                 'OpenQuakeClassicalPSHA',
@@ -221,7 +221,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 'OpenQuakeClassicalPSHA-User',
             ]:
                 # Calling openquake to run classical PSHA
-                # oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)  # noqa: ERA001, E501
+                # oq_version = scenario_info['EqRupture'].get('OQVersion',default_oq_version)
                 oq_run_flag = oq_run_classical_psha(  # noqa: F405
                     filePath_ini,
                     exports='csv',
@@ -233,7 +233,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                     if not new_db_sqlite3:
                         err_msg = (
                             err_msg
-                            + ' Please see if there is leaked python threads in background still occupying {}.'.format(  # noqa: E501
+                            + ' Please see if there is leaked python threads in background still occupying {}.'.format(
                                 os.path.expanduser('~/oqdata/db.sqlite3')  # noqa: PTH111
                             )
                         )
@@ -249,7 +249,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                     ln_im_mr = []
                     mag_maf = []
                     im_list = []
-                # stn_new = stations['Stations']  # noqa: ERA001
+                # stn_new = stations['Stations']
 
             elif scenario_info['EqRupture']['Type'] == 'OpenQuakeScenario':
                 # Creating and conducting OpenQuake calculations
@@ -258,18 +258,18 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 )
                 oq_calc.run_calc()
                 im_raw = [oq_calc.eval_calc()]
-                # stn_new = stations['Stations']  # noqa: ERA001
+                # stn_new = stations['Stations']
                 print('HazardSimulation: OpenQuake Scenario calculation completed.')  # noqa: T201
 
             else:
                 sys.exit(
-                    'HazardSimulation: OpenQuakeClassicalPSHA, OpenQuakeUserConfig and OpenQuakeScenario are supported.'  # noqa: E501
+                    'HazardSimulation: OpenQuakeClassicalPSHA, OpenQuakeUserConfig and OpenQuakeScenario are supported.'
                 )
 
         # KZ-08/23/22: adding method to do hazard occurrence model
-        # im_type = 'SA'  # noqa: ERA001
-        # period = 1.0  # noqa: ERA001
-        # im_level = 0.2*np.ones((len(im_raw[0].get('GroundMotions')),1))  # noqa: ERA001
+        # im_type = 'SA'
+        # period = 1.0
+        # im_level = 0.2*np.ones((len(im_raw[0].get('GroundMotions')),1))
         occurrence_sampling = scenario_info.get('EqRupture').get(
             'OccurrenceSampling', False
         )
@@ -277,7 +277,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             # read all configurations
             occurrence_info = scenario_info.get('EqRupture').get('HazardOccurrence')
             reweight_only = occurrence_info.get('ReweightOnly', False)
-            # KZ-10/31/22: adding a flag for whether to re-sample ground motion maps or just monte-carlo  # noqa: E501
+            # KZ-10/31/22: adding a flag for whether to re-sample ground motion maps or just monte-carlo
             sampling_gmms = occurrence_info.get('SamplingGMMs', True)
             occ_dict = configure_hazard_occurrence(  # noqa: F405
                 input_dir,
@@ -312,7 +312,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 reweight_only,
                 occurrence_rate_origin,
             )
-            # print(occurrence_model)  # noqa: ERA001
+            # print(occurrence_model)
             P, Z = occurrence_model.get_selected_earthquake()  # noqa: N806
             # now update the im_raw with selected eqs with Z > 0
             id_selected_eqs = []
@@ -326,9 +326,9 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             _ = export_sampled_earthquakes(id_selected_eqs, scenarios, P, output_dir)  # noqa: F405
 
         # Updating station information
-        # stations['Stations'] = stn_new  # noqa: ERA001
+        # stations['Stations'] = stn_new
         print('HazardSimulation: uncorrelated response spectra computed.')  # noqa: T201
-        # print(im_raw)  # noqa: ERA001
+        # print(im_raw)
         # KZ-08/23/22: adding method to do hazard occurrence model
         if occurrence_sampling and sampling_gmms:
             num_gm_per_site = num_per_eq_avg
@@ -352,7 +352,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         # KZ-08/23/22: adding method to do hazard occurrence model
         if occurrence_sampling and sampling_gmms:
             # get im exceedance probabilities for individual ground motions
-            # print('im_list = ',im_list)  # noqa: ERA001
+            # print('im_list = ',im_list)
             im_exceedance_prob_gmm = get_im_exceedance_probability_gm(  # noqa: F405
                 np.exp(ln_im_mr), im_list, im_type, period, hc_curves
             )
@@ -360,7 +360,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             occurrence_model_gmm = sample_earthquake_occurrence(  # noqa: F405
                 model_type, num_target_gmms, return_periods, im_exceedance_prob_gmm
             )
-            # print(occurrence_model)  # noqa: ERA001
+            # print(occurrence_model)
             P_gmm, Z_gmm = occurrence_model_gmm.get_selected_earthquake()  # noqa: N806
             # now update the im_raw with selected eqs with Z > 0
             id_selected_gmms = []
@@ -400,8 +400,8 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
             print('HazardSimulation: simulated intensity measures saved.')  # noqa: T201
         else:
             print('HazardSimulation: IM is not required to saved or no IM is found.')  # noqa: T201
-        # print(np.exp(ln_im_mr[0][0, :, 1]))  # noqa: ERA001
-        # print(np.exp(ln_im_mr[0][1, :, 1]))  # noqa: ERA001
+        # print(np.exp(ln_im_mr[0][0, :, 1]))
+        # print(np.exp(ln_im_mr[0][1, :, 1]))
     else:
         # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
         print('HazardSimulation currently only supports earthquake simulations.')  # noqa: T201
@@ -426,9 +426,9 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 stations['Stations'],
             )
             print(  # noqa: T201
-                f'HazardSimulation: ground motion records selected  ({time.time() - start_time} s).'  # noqa: E501
+                f'HazardSimulation: ground motion records selected  ({time.time() - start_time} s).'
             )
-            # print(gm_id)  # noqa: ERA001
+            # print(gm_id)
             gm_id = [int(i) for i in np.unique(gm_id)]
             gm_file = [i for i in np.unique(gm_file)]  # noqa: C416
             runtag = output_all_ground_motion_info(  # noqa: F405
@@ -438,7 +438,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
                 print('HazardSimulation: the ground motion list saved.')  # noqa: T201
             else:
                 sys.exit(
-                    'HazardSimulation: warning - issues with saving the ground motion list.'  # noqa: E501
+                    'HazardSimulation: warning - issues with saving the ground motion list.'
                 )
             # Downloading records
             user_name = event_info.get('UserName', None)
@@ -547,7 +547,7 @@ if __name__ == '__main__':
             jpype.startJVM(f'-Xmx{memory_request}G', convertStrings=False)
         except:  # noqa: E722
             print(  # noqa: T201
-                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'  # noqa: E501
+                f'StartJVM of ./lib/OpenSHA-1.5.2.jar with {memory_request} GB Memory fails. Try again after releasing some memory'
             )
     if oq_flag:
         # clear up old db.sqlite3 if any
@@ -559,17 +559,18 @@ if __name__ == '__main__':
                 new_db_sqlite3 = False
         # data dir
         os.environ['OQ_DATADIR'] = os.path.join(  # noqa: PTH118
-            os.path.abspath(output_dir), 'oqdata'  # noqa: PTH100
+            os.path.abspath(output_dir),  # noqa: PTH100
+            'oqdata',
         )
         print('HazardSimulation: local OQ_DATADIR = ' + os.environ.get('OQ_DATADIR'))  # noqa: T201
         if os.path.exists(os.environ.get('OQ_DATADIR')):  # noqa: PTH110
             print(  # noqa: T201
-                'HazardSimulation: local OQ folder already exists, overwiting it now...'  # noqa: E501
+                'HazardSimulation: local OQ folder already exists, overwiting it now...'
             )
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103
 
-    # import modules  # noqa: ERA001
+    # import modules
     from ComputeIntensityMeasure import *  # noqa: F403
     from CreateScenario import *  # noqa: F403
     from CreateStation import *  # noqa: F403
@@ -579,7 +580,7 @@ if __name__ == '__main__':
     from SelectGroundMotion import *  # noqa: F403
 
     if oq_flag:
-        # import FetchOpenQuake  # noqa: ERA001
+        # import FetchOpenQuake
         from FetchOpenQuake import *  # noqa: F403
 
     # Initial process list

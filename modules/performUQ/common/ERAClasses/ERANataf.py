@@ -115,7 +115,7 @@ class ERANataf:
             )
         if not np.all(np.diag(self.Rho_X) == 1):
             raise RuntimeError(  # noqa: TRY003
-                'Not all diagonal entries of the given correlation matrix are equal to one '  # noqa: EM101, E501
+                'Not all diagonal entries of the given correlation matrix are equal to one '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
 
@@ -288,7 +288,7 @@ class ERANataf:
                 'poisson',
             ]:
                 raise RuntimeError(  # noqa: TRY003
-                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101, E501
+                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101
                     'the transformation X2U is therefore not possible.'
                 )
 
@@ -296,7 +296,7 @@ class ERANataf:
         if X.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003
@@ -335,7 +335,7 @@ class ERANataf:
         if U.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('U must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(U)[1] == 1 and n_dim != 1:
-            # in case that only one point U is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point U is given, he can be defined either as row or column vector
             U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003
@@ -392,7 +392,7 @@ class ERANataf:
                 'poisson',
             ]:
                 raise RuntimeError(  # noqa: TRY003
-                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101, E501
+                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101
                     'the transformation X2U is therefore not possible.'
                 )
 
@@ -400,7 +400,7 @@ class ERANataf:
         if X.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('X must have not more than two dimensions.')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003
@@ -454,7 +454,7 @@ class ERANataf:
         if X.ndim > 2:  # noqa: PLR2004
             raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            # in case that only one point X is given, he can be defined either as row or column vector
             X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
             raise RuntimeError(  # noqa: TRY003

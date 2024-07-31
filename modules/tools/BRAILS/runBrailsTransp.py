@@ -29,7 +29,7 @@ latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[ 
 ]['version']
 if importlib.metadata.version('BRAILS') != latestBrailsVersion:
     print(  # noqa: T201
-        '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'  # noqa: E501
+        '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'
     )
     subprocess.check_call(  # noqa: S603
         [python, '-m', 'pip', 'install', 'BRAILS', '-U'], stdout=subprocess.DEVNULL
@@ -65,7 +65,13 @@ def log_msg(msg):  # noqa: ANN001, ANN201, D103
 
 # Define a way to call BRAILS TranspInventoryGenerator:
 def runBrails(  # noqa: ANN201, N802, D103, PLR0913
-    latMin, latMax, longMin, longMax, minimumHAZUS, maxRoadLength, lengthUnit  # noqa: ANN001, N803
+    latMin,  # noqa: ANN001, N803
+    latMax,  # noqa: ANN001, N803
+    longMin,  # noqa: ANN001, N803
+    longMax,  # noqa: ANN001, N803
+    minimumHAZUS,  # noqa: ANN001, N803
+    maxRoadLength,  # noqa: ANN001, N803
+    lengthUnit,  # noqa: ANN001, N803
 ):
     # Initialize TranspInventoryGenerator:
     invGenerator = TranspInventoryGenerator(  # noqa: N806
@@ -75,7 +81,7 @@ def runBrails(  # noqa: ANN201, N802, D103, PLR0913
     # Run TranspInventoryGenerator to generate an inventory for the entered location:
     invGenerator.generate()
 
-    # Combine and format the generated inventory to SimCenter transportation network inventory json format  # noqa: E501
+    # Combine and format the generated inventory to SimCenter transportation network inventory json format
     invGenerator.combineAndFormat_HWY(
         minimumHAZUS=minimumHAZUS, maxRoadLength=maxRoadLength, lengthUnit=lengthUnit
     )

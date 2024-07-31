@@ -17,7 +17,12 @@ def directionToDof(direction):  # noqa: ANN001, ANN201, N802
 
 
 def addFloorForceToEvent(  # noqa: ANN201, N802, PLR0913
-    timeSeriesArray, patternsArray, force, direction, floor, dT  # noqa: ANN001, N803
+    timeSeriesArray,  # noqa: ANN001, N803
+    patternsArray,  # noqa: ANN001, N803
+    force,  # noqa: ANN001
+    direction,  # noqa: ANN001
+    floor,  # noqa: ANN001
+    dT,  # noqa: ANN001, N803
 ):
     """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
     seriesName = 'HydroForceSeries_' + str(floor) + direction  # noqa: N806
@@ -66,10 +71,10 @@ def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
     hydroEventJson = {  # noqa: N806
         'type': 'Hydro',  # Using HydroUQ
         'subtype': 'MPM',  # Using ClaymoreUW Material Point Method
-        # "timeSeries": [], # From GeoClawOpenFOAM  # noqa: ERA001
+        # "timeSeries": [], # From GeoClawOpenFOAM
         'pattern': patternsArray,
         'pressure': pressureArray,
-        # "dT": deltaT, # From GeoClawOpenFOAM  # noqa: ERA001
+        # "dT": deltaT, # From GeoClawOpenFOAM
         'numSteps': len(forces[0].X),
         'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
@@ -82,7 +87,7 @@ def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
         floor = forces.index(floorForces) + 1
         addFloorForceToEvent(patternsArray, floorForces.X, 'X', floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, 'Y', floor)
-        # addFloorPressure(pressureArray, floor) # From GeoClawOpenFOAM  # noqa: ERA001
+        # addFloorPressure(pressureArray, floor) # From GeoClawOpenFOAM
 
     with open(eventFilePath, 'w', encoding='utf-8') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
@@ -97,7 +102,7 @@ def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
 if __name__ == '__main__':
     """
     Entry point to generate event file using HydroUQ MPM (ClaymoreUW Material Point Method)
-    """  # noqa: E501
+    """
     # CLI parser
     parser = argparse.ArgumentParser(
         description='Get sample EVENT file produced by HydroUQ MPM'
@@ -113,7 +118,8 @@ if __name__ == '__main__':
 
     if arguments.getRV == True:  # noqa: E712
         # Read the number of floors
-        floorsCount = GetFloorsCount(arguments.filenameAIM)  # Reads BIM file  # noqa: N816
+        # Reads BIM file
+        floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         forces = []
         for i in range(floorsCount):  # noqa: B007
             forces.append(FloorForces())  # noqa: PERF401

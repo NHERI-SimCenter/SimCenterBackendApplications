@@ -94,7 +94,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
     x_max = (street_width_x + plan_x) * n_grid_x - street_width_x
     y_max = (street_width_y + plan_y) * n_grid_y - street_width_y
 
-    # bound_radius = max(x_max, y_max)/2.0  # noqa: ERA001
+    # bound_radius = max(x_max, y_max)/2.0
 
     for ix in range(n_grid_x):
         for iy in range(n_grid_y):
@@ -105,7 +105,7 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
             center_x = -x_max / 2.0 + ix * street_width_x + plan_x * (ix + 0.5)
             center_y = -y_max / 2.0 + iy * street_width_y + plan_y * (iy + 0.5)
 
-            # bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)  # noqa: ERA001, E501
+            # bldg_R = np.sqrt((abs(center_x) + sur_bldg_depth)**2.0 + (abs(center_y) + sur_bldg_width)**2.0)
             bldg_R = np.sqrt(center_x**2.0 + center_y**2.0)  # noqa: N806
 
             # Add the building if it's within bounding radius
@@ -119,71 +119,71 @@ def create_surroundings_geometry(  # noqa: ANN201, D103, PLR0913
 
                 buildings.append(bldg)
 
-    # table = create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius)  # noqa: ERA001
-    # copies.append(table)  # noqa: ERA001
+    # table = create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius)
+    # copies.append(table)
 
     return buildings
 
 
 # def create_turn_table(sur_bldg_width, sur_bldg_depth, bound_radius):
 
-#     table_radius = bound_radius + max(sur_bldg_width, sur_bldg_depth)/2.0  # noqa: ERA001
+#     table_radius = bound_radius + max(sur_bldg_width, sur_bldg_depth)/2.0
 
-#     epsilon = 0.001*min(sur_bldg_width, sur_bldg_depth)  # noqa: ERA001
+#     epsilon = 0.001*min(sur_bldg_width, sur_bldg_depth)
 
-#     table_h = 0.01*bound_radius  # noqa: ERA001
+#     table_h = 0.01*bound_radius
 
-#     n = 36  # noqa: ERA001
-#     vertices = np.zeros((n*2 + 2, 3))  # noqa: ERA001
+#     n = 36
+#     vertices = np.zeros((n*2 + 2, 3))
 
 #     # Define the sector as polygon vertices of around the turn table
 #     for i in range(n):
-#         x = table_radius*np.cos(i*2.0*np.pi/n)  # noqa: ERA001
-#         y = table_radius*np.sin(i*2.0*np.pi/n)  # noqa: ERA001
+#         x = table_radius*np.cos(i*2.0*np.pi/n)
+#         y = table_radius*np.sin(i*2.0*np.pi/n)
 
-#         vertices[i, 0] = x  # noqa: ERA001
-#         vertices[i, 1] = y  # noqa: ERA001
-#         vertices[i, 2] = -2*epsilon - table_h  # noqa: ERA001
+#         vertices[i, 0] = x
+#         vertices[i, 1] = y
+#         vertices[i, 2] = -2*epsilon - table_h
 
-#         vertices[n + i, 0] = x  # noqa: ERA001
-#         vertices[n + i, 1] = y  # noqa: ERA001
-#         vertices[n + i, 2] = 0  # noqa: ERA001
+#         vertices[n + i, 0] = x
+#         vertices[n + i, 1] = y
+#         vertices[n + i, 2] = 0
 
 #     # bottom and top center
-#     vertices[2*n, 2] = -2*epsilon - table_h  # noqa: ERA001
-#     vertices[2*n + 1, 2] = 0  # noqa: ERA001
+#     vertices[2*n, 2] = -2*epsilon - table_h
+#     vertices[2*n + 1, 2] = 0
 
 #     # Define triangles composing the turn table
-#     faces = np.zeros((n*4, 3), dtype=int)  # noqa: ERA001
+#     faces = np.zeros((n*4, 3), dtype=int)
 
 #     for i in range(n):
 #         #triangle 1
-#         faces[i, 0] = i  # noqa: ERA001
-#         faces[i, 1] = i + 1  # noqa: ERA001
-#         faces[i, 2] = n + i  # noqa: ERA001
+#         faces[i, 0] = i
+#         faces[i, 1] = i + 1
+#         faces[i, 2] = n + i
 
 #         #triangle 2
-#         faces[n + i, 0] = n + i  # noqa: ERA001
-#         faces[n + i, 1] = i + 1  # noqa: ERA001
-#         faces[n + i, 2] = n + i + 1  # noqa: ERA001
+#         faces[n + i, 0] = n + i
+#         faces[n + i, 1] = i + 1
+#         faces[n + i, 2] = n + i + 1
 
 #         #triangle 3
-#         faces[2*n + i, 0] = i  # noqa: ERA001
-#         faces[2*n + i, 1] = i + 1  # noqa: ERA001
-#         faces[2*n + i, 2] = 2*n  # noqa: ERA001
+#         faces[2*n + i, 0] = i
+#         faces[2*n + i, 1] = i + 1
+#         faces[2*n + i, 2] = 2*n
 
 #         #triangle 4
-#         faces[3*n + i, 0] = n + i  # noqa: ERA001
-#         faces[3*n + i, 1] = n + i + 1  # noqa: ERA001
-#         faces[3*n + i, 2] = 2*n + 1  # noqa: ERA001
+#         faces[3*n + i, 0] = n + i
+#         faces[3*n + i, 1] = n + i + 1
+#         faces[3*n + i, 2] = 2*n + 1
 
 #     # Create the mesh
-#     table = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))  # noqa: ERA001
+#     table = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
 #     for i, f in enumerate(faces):
 #         for j in range(3):
-#             table.vectors[i][j] = vertices[f[j],:]  # noqa: ERA001
+#             table.vectors[i][j] = vertices[f[j],:]
 
-#     return table  # noqa: ERA001
+#     return table
 
 
 def write_main_building_stl_file(input_json_path, case_path):  # noqa: ANN001, ANN201, D103
@@ -409,7 +409,10 @@ def write_block_mesh_dict(input_json_path, template_dict_path, case_path):  # no
 
 
 def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
-    input_json_path, template_dict_path, case_path, n_surr_bldgs  # noqa: ANN001
+    input_json_path,  # noqa: ANN001
+    template_dict_path,  # noqa: ANN001
+    case_path,  # noqa: ANN001
+    n_surr_bldgs,  # noqa: ANN001
 ):
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
@@ -476,8 +479,8 @@ def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
         added_part += f'    {refinement_boxes[i][0]}\n'
         added_part += '    {\n'
         added_part += '         type searchableBox;\n'
-        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'  # noqa: E501
-        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'  # noqa: E501
+        added_part += f'         min ({refinement_boxes[i][2]:.4f} {refinement_boxes[i][3]:.4f} {refinement_boxes[i][4]:.4f});\n'
+        added_part += f'         max ({refinement_boxes[i][5]:.4f} {refinement_boxes[i][6]:.4f} {refinement_boxes[i][7]:.4f});\n'
         added_part += '    }\n'
     dict_lines.insert(start_index, added_part)
 
@@ -514,13 +517,13 @@ def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
     # Write 'insidePoint'
     start_index = foam.find_keyword_line(dict_lines, 'insidePoint')
     dict_lines[start_index] = (
-        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    insidePoint ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # For compatibility with OpenFOAM-9 and older
     start_index = foam.find_keyword_line(dict_lines, 'locationInMesh')
     dict_lines[start_index] = (
-        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'  # noqa: E501
+        f'    locationInMesh ({inside_point[0]:.4f} {inside_point[1]:.4f} {inside_point[2]:.4f});\n'
     )
 
     # Write 'outsidePoint' on Frontera snappyHex will fail without this keyword
@@ -583,15 +586,15 @@ def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
 
     # #Add surface refinement around the building as a refinement region
     # if surface_refinements[-1]["minLevel"] > refinement_boxes[-1][1]:
-    #     added_part = ""  # noqa: ERA001
-    #     added_part += "         {}\n".format(refinement_surface_name)  # noqa: ERA001
-    #     added_part += "         {\n"  # noqa: ERA001
-    #     added_part += "             mode   distance;\n"  # noqa: ERA001
-    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)  # noqa: ERA001, E501
-    #     added_part += "         }\n"  # noqa: ERA001
+    #     added_part = ""
+    #     added_part += "         {}\n".format(refinement_surface_name)
+    #     added_part += "         {\n"
+    #     added_part += "             mode   distance;\n"
+    #     added_part += "             levels  (({:.4f} {}));\n".format(surface_refinement_distance, refinement_boxes[-1][1] + 1)
+    #     added_part += "         }\n"
 
-    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #     start_index = foam.find_keyword_line(dict_lines, "refinementRegions") + 2
+    #     dict_lines.insert(start_index, added_part)
 
     # Add box refinements
     added_part = ''
@@ -646,7 +649,10 @@ def write_snappy_hex_mesh_dict(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
 
 
 def write_surfaceFeaturesDict_file(  # noqa: ANN201, N802, D103
-    input_json_path, template_dict_path, case_path, n_surr_bldgs  # noqa: ANN001
+    input_json_path,  # noqa: ANN001
+    template_dict_path,  # noqa: ANN001
+    case_path,  # noqa: ANN001
+    n_surr_bldgs,  # noqa: ANN001
 ):
     # Read JSON data
     with open(input_json_path + '/SurroundedBuildingCFD.json') as json_file:  # noqa: PTH123
@@ -764,7 +770,7 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     # Initialize the internal fields frow a lower velocity to avoid Courant number
     # instability when the solver starts. Now %10 of roof-height wind speed is set
     start_index = foam.find_keyword_line(dict_lines, 'internalField')
-    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)  # noqa: ERA001, E501
+    # dict_lines[start_index] = "internalField   uniform ({:.4f} 0 0);\n".format(1.0*wind_speed)
 
     # Set the internal field to zero to make it easy for the solver to start
     dict_lines[start_index] = 'internalField   uniform (0 0 0);\n'
@@ -807,10 +813,10 @@ def write_U_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     added_part = ''
     added_part += '\t type \t inletOutlet;\n'
     added_part += '\t inletValue \t uniform (0 0 0);\n'
-    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)  # noqa: ERA001
+    # added_part += "\t value \t uniform ({:.4f} 0 0);\n".format(wind_speed)
     added_part += '\t value \t uniform (0 0 0);\n'
 
-    # added_part += "\t type    zeroGradient;\n"  # noqa: ERA001
+    # added_part += "\t type    zeroGradient;\n"
 
     dict_lines.insert(start_index, added_part)
 
@@ -958,8 +964,8 @@ def write_nut_file(input_json_path, template_dict_path, case_path):  # noqa: ANN
     top_BC_type = boundary_data['topBoundaryCondition']  # noqa: N806
     ground_BC_type = boundary_data['groundBoundaryCondition']  # noqa: N806
 
-    # wind_speed = wind_data['roofHeightWindSpeed']  # noqa: ERA001
-    # building_height = wind_data['buildingHeight']  # noqa: ERA001
+    # wind_speed = wind_data['roofHeightWindSpeed']
+    # building_height = wind_data['buildingHeight']
     roughness_length = wind_data['aerodynamicRoughnessLength']
 
     # Open the template file (OpenFOAM file) for manipulation
@@ -1192,7 +1198,7 @@ def write_k_file(input_json_path, template_dict_path, case_path):  # noqa: ANN00
     dict_file.close()
 
     # BC and initial condition (you may need to scale to model scale)
-    # k0 = 1.3 #not in model scale  # noqa: ERA001
+    # k0 = 1.3 #not in model scale
 
     I = 0.1  # noqa: N806, E741
     k0 = 1.5 * (I * wind_speed) ** 2
@@ -1297,10 +1303,10 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
     max_courant_number = ns_data['maxCourantNumber']
     adjust_time_step = ns_data['adjustTimeStep']
 
-    # monitor_wind_profiles = rm_data['monitorWindProfile']  # noqa: ERA001
-    # monitor_vtk_planes = rm_data['monitorVTKPlane']  # noqa: ERA001
-    # wind_profiles = rm_data['windProfiles']  # noqa: ERA001
-    # vtk_planes = rm_data['vtkPlanes']  # noqa: ERA001
+    # monitor_wind_profiles = rm_data['monitorWindProfile']
+    # monitor_vtk_planes = rm_data['monitorVTKPlane']
+    # wind_profiles = rm_data['windProfiles']
+    # vtk_planes = rm_data['vtkPlanes']
 
     # Need to change this for
     max_delta_t = 10 * time_step
@@ -1367,17 +1373,17 @@ def write_controlDict_file(input_json_path, template_dict_path, case_path):  # n
 
     # #Write wind profile monitoring functionObjects
     # if monitor_wind_profiles:
-    #     added_part = ""  # noqa: ERA001
+    #     added_part = ""
     #     for prof in wind_profiles:
-    #         added_part += "    #includeFunc  {}\n".format(prof["name"])  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #         added_part += "    #includeFunc  {}\n".format(prof["name"])
+    #     dict_lines.insert(start_index, added_part)
 
     # #Write VTK sampling sampling points
     # if monitor_vtk_planes:
-    #     added_part = ""  # noqa: ERA001
+    #     added_part = ""
     #     for pln in vtk_planes:
-    #         added_part += "    #includeFunc  {}\n".format(pln["name"])  # noqa: ERA001
-    #     dict_lines.insert(start_index, added_part)  # noqa: ERA001
+    #         added_part += "    #includeFunc  {}\n".format(pln["name"])
+    #     dict_lines.insert(start_index, added_part)
 
     # Write edited dict to file
     write_file_name = case_path + '/system/controlDict'
@@ -1480,7 +1486,7 @@ def write_pressure_probes_file(input_json_path, template_dict_path, case_path): 
     added_part = ''
 
     for i in range(len(pressure_sampling_points)):
-        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'  # noqa: E501
+        added_part += f' ({pressure_sampling_points[i][0]:.6f} {pressure_sampling_points[i][1]:.6f} {pressure_sampling_points[i][2]:.6f})\n'
 
     dict_lines.insert(start_index, added_part)
 
@@ -1581,7 +1587,7 @@ def write_wind_profiles_file(input_json_path, template_dict_path, case_path):  #
         added_part = ''
 
         for pi in range(n_points):
-            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'  # noqa: E501
+            added_part += f'    ({start_x + pi * dx:.6f} {start_y + pi * dy:.6f} {start_z + pi * dz:.6f})\n'
 
         dict_lines.insert(start_index, added_part)
 
@@ -1991,9 +1997,9 @@ if __name__ == '__main__':
     write_controlDict_file(input_json_path, template_dict_path, case_path)
 
     # Write results to be monitored
-    # write_wind_profiles_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_wind_profiles_file(input_json_path, template_dict_path, case_path)
 
-    # write_vtk_plane_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_vtk_plane_file(input_json_path, template_dict_path, case_path)
 
     # Write fvSolution dict
     write_fvSolution_file(input_json_path, template_dict_path, case_path)
@@ -2007,14 +2013,14 @@ if __name__ == '__main__':
     # Write physicalProperties dict
     write_physicalProperties_file(input_json_path, template_dict_path, case_path)
 
-    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below  # noqa: E501
+    # Write transportProperties (physicalProperties in OF-10) dict for OpenFOAM-9 and below
     write_transportProperties_file(input_json_path, template_dict_path, case_path)
 
     # Write decomposeParDict
     write_decomposeParDict_file(input_json_path, template_dict_path, case_path)
 
     # Write DFSRTurb dict
-    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)  # noqa: ERA001
+    # write_DFSRTurbDict_file(input_json_path, template_dict_path, case_path)
 
     # Write TInf files
-    # write_boundary_data_files(input_json_path, case_path)  # noqa: ERA001
+    # write_boundary_data_files(input_json_path, case_path)

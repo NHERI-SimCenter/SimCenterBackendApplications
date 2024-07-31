@@ -22,7 +22,12 @@ class EpanetException(Exception):  # noqa: N818, D101
 
 class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
     def __init__(  # noqa: ANN204, C901, D107, PLR0912
-        self, inpfile='', rptfile='', binfile='', changed_epanet=False, version=2.2  # noqa: ANN001, FBT002
+        self,
+        inpfile='',  # noqa: ANN001
+        rptfile='',  # noqa: ANN001
+        binfile='',  # noqa: ANN001
+        changed_epanet=False,  # noqa: ANN001, FBT002
+        version=2.2,  # noqa: ANN001
     ):
         if changed_epanet == False or changed_epanet == True:  # noqa: E712, PLR1714
             self.changed_epanet = changed_epanet
@@ -49,17 +54,20 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
                 try:
                     if os.name in ['nt', 'dos']:
                         libepanet = resource_filename(
-                            __name__, 'Windows/%s.dll' % lib  # noqa: UP031
+                            __name__,
+                            'Windows/%s.dll' % lib,  # noqa: UP031
                         )
                         self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                     elif sys.platform in ['darwin']:
                         libepanet = resource_filename(
-                            __name__, 'Darwin/lib%s.dylib' % lib  # noqa: UP031
+                            __name__,
+                            'Darwin/lib%s.dylib' % lib,  # noqa: UP031
                         )
                         self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                     else:
                         libepanet = resource_filename(
-                            __name__, 'Linux/lib%s.so' % lib  # noqa: UP031
+                            __name__,
+                            'Linux/lib%s.so' % lib,  # noqa: UP031
                         )
                         self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                     return  # noqa: TRY300
@@ -103,5 +111,5 @@ class ENepanet(wntrfr.epanet.toolkit.ENepanet):  # noqa: D101
                 + str(ignore_flag)
             )
         flag = ctypes.c_int(int(ignore_flag))  # noqa: F841
-        # print('++++++++++++++++++++++')  # noqa: ERA001
-        # self.ENlib.ENEXTENDEDsetignoreflag(flag)  # noqa: ERA001
+        # print('++++++++++++++++++++++')
+        # self.ENlib.ENEXTENDEDsetignoreflag(flag)

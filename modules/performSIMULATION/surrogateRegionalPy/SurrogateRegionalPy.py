@@ -38,7 +38,7 @@
 #
 
 # Description:
-# Read SAM and GI, add it to params.in, run surrogate model, and write the results to EDP.json  # noqa: E501
+# Read SAM and GI, add it to params.in, run surrogate model, and write the results to EDP.json
 #
 #
 
@@ -144,7 +144,7 @@ def runDefault(root_AIM, aimName, samName, evtName, edpName, simName, getRV=Fals
     #
     # run correct backend app
     #
-    # print(newAimName)  # noqa: ERA001
+    # print(newAimName)
     sys.path.insert(0, mySimAppPath)
     sim_module = importlib.__import__(
         mySimAppName[:-3], globals(), locals(), ['main'], 0
@@ -354,9 +354,9 @@ if __name__ == '__main__':
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEDP')
     parser.add_argument('--filenameSIM')
-    # parser.add_argument('--defaultModule', default=None)  # noqa: ERA001
-    # parser.add_argument('--fileName', default=None)  # noqa: ERA001
-    # parser.add_argument('--filePath', default=None)  # noqa: ERA001
+    # parser.add_argument('--defaultModule', default=None)
+    # parser.add_argument('--fileName', default=None)
+    # parser.add_argument('--filePath', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 

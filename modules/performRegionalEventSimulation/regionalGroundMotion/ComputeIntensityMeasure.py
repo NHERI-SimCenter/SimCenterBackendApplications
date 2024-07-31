@@ -119,9 +119,9 @@ class IM_Calculator:  # noqa: N801, D101
     CY = None
     # Abrahamson, Silvar, & Kamai (2014)
     ASK = None
-    # Boore, Stewart, Seyhan & Atkinson (2014)  # noqa: ERA001
+    # Boore, Stewart, Seyhan & Atkinson (2014)
     BSSA = None
-    # Campbell & Bozorgnia (2014)  # noqa: ERA001
+    # Campbell & Bozorgnia (2014)
     CB = None
 
     # profile
@@ -141,7 +141,7 @@ class IM_Calculator:  # noqa: N801, D101
         self.set_im_gmpe(im_dict, gmpe_dict, gmpe_weights_dict)
         self.set_im_type(im_type)
         self.set_sites(site_info)
-        # self.set_source(source_info)  # noqa: ERA001
+        # self.set_source(source_info)
 
     def set_source(self, source_info):  # noqa: ANN001, ANN201, D102
         # set seismic source
@@ -158,11 +158,11 @@ class IM_Calculator:  # noqa: N801, D101
             ):
                 source_index = source_info.get('SourceIndex', None)
                 rupture_index = source_info.get('RuptureIndex', None)
-                # start = time.process_time_ns()  # noqa: ERA001
+                # start = time.process_time_ns()
                 site_rup_dict, station_info = get_rupture_info_CY2014(  # noqa: F405
                     self.erf, source_index, rupture_index, self.site_info
                 )
-                # self.timeGetRuptureInfo += time.process_time_ns() - start  # noqa: ERA001
+                # self.timeGetRuptureInfo += time.process_time_ns() - start
         elif source_info['Type'] == 'PointSource':
             if (
                 'Chiou & Youngs (2014)' in gmpe_list
@@ -170,11 +170,11 @@ class IM_Calculator:  # noqa: N801, D101
                 or 'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list
                 or 'Campbell & Bozorgnia (2014)' in gmpe_list
             ):
-                # start = time.process_time_ns()  # noqa: ERA001
+                # start = time.process_time_ns()
                 site_rup_dict, station_info = get_PointSource_info_CY2014(  # noqa: F405
                     source_info, self.site_info
                 )
-                # self.timeGetRuptureInfo += time.process_time_ns() - start  # noqa: ERA001
+                # self.timeGetRuptureInfo += time.process_time_ns() - start
         elif source_info['Type'] == 'oqSourceXML':  # noqa: SIM102
             if (
                 'Chiou & Youngs (2014)' in gmpe_list
@@ -182,11 +182,11 @@ class IM_Calculator:  # noqa: N801, D101
                 or 'Boore, Stewart, Seyhan & Atkinson (2014)' in gmpe_list
                 or 'Campbell & Bozorgnia (2014)' in gmpe_list
             ):
-                # start = time.process_time_ns()  # noqa: ERA001
+                # start = time.process_time_ns()
                 site_rup_dict, station_info = get_site_rup_info_oq(
                     source_info, self.site_info
                 )
-                # self.timeGetRuptureInfo += time.process_time_ns() - start  # noqa: ERA001
+                # self.timeGetRuptureInfo += time.process_time_ns() - start
         self.site_rup_dict = site_rup_dict
         self.site_info = station_info
 
@@ -204,7 +204,7 @@ class IM_Calculator:  # noqa: N801, D101
             im_type not in list(self.im_dict.keys())
         ):
             print(  # noqa: T201
-                f'IM_Calculator.set_im_type: warning - {im_type} is not in the defined IM lists.'  # noqa: E501
+                f'IM_Calculator.set_im_type: warning - {im_type} is not in the defined IM lists.'
             )
             self.im_type = None
         else:
@@ -227,7 +227,7 @@ class IM_Calculator:  # noqa: N801, D101
         gmpe_list = self.gmpe_dict.get(im_type, None)
         if gmpe_list is None:
             print(  # noqa: T201
-                f'IM_Calculator.calculate_im: error - no GMPE list found for {im_type}.'  # noqa: E501
+                f'IM_Calculator.calculate_im: error - no GMPE list found for {im_type}.'
             )
             return None
         # get gmpe weights
@@ -252,7 +252,7 @@ class IM_Calculator:  # noqa: N801, D101
                     gmpe_weights_list_opensha = None
             else:
                 print(  # noqa: T201
-                    f'IM_Calculator.calculate_im: error - {cur_gmpe} is not supported.'  # noqa: E501
+                    f'IM_Calculator.calculate_im: error - {cur_gmpe} is not supported.'
                 )
                 return None
         # now compute im values
@@ -283,7 +283,7 @@ class IM_Calculator:  # noqa: N801, D101
         # collect/combine im results
         if len(res_local) + len(res_opensha) == 0:
             print(  # noqa: T201
-                'IM_Calculator.calculate_im: error - no results available... please check GMPE availability'  # noqa: E501
+                'IM_Calculator.calculate_im: error - no results available... please check GMPE availability'
             )
             return dict()  # noqa: C408
         if len(res_local) == 0:
@@ -296,7 +296,7 @@ class IM_Calculator:  # noqa: N801, D101
                 [np.sum(gmpe_weights_list_local, np.sum(gmpe_weights_list_opensha))],
             )
 
-        # return  # noqa: ERA001
+        # return
         return res
 
     def get_im_from_opensha(  # noqa: ANN201, D102, PLR0913
@@ -338,11 +338,16 @@ class IM_Calculator:  # noqa: N801, D101
             res = compute_weighted_res(res_list, gmpe_weights)
         else:
             res = res_list[0]
-        # return  # noqa: ERA001
+        # return
         return res
 
     def get_im_from_local(  # noqa: ANN201, C901, D102, PLR0912, PLR0915
-        self, source_info, gmpe_list, im_type, im_info, gmpe_weights=None  # noqa: ANN001
+        self,
+        source_info,  # noqa: ANN001
+        gmpe_list,  # noqa: ANN001
+        im_type,  # noqa: ANN001
+        im_info,  # noqa: ANN001
+        gmpe_weights=None,  # noqa: ANN001
     ):
         # initiate
         res_list = []
@@ -350,7 +355,7 @@ class IM_Calculator:  # noqa: N801, D101
         # check IM type
         if im_type not in list(LOCAL_IM_GMPE.keys()):
             print(  # noqa: T201
-                f'ComputeIntensityMeasure.get_im_from_local: error - IM type {im_type} not supported'  # noqa: E501
+                f'ComputeIntensityMeasure.get_im_from_local: error - IM type {im_type} not supported'
             )
             return res
         # get availabel gmpe list
@@ -373,22 +378,22 @@ class IM_Calculator:  # noqa: N801, D101
             rupture_index = source_info.get('RuptureIndex', None)
             if None in [source_index, rupture_index]:
                 print(  # noqa: T201
-                    'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'  # noqa: E501
+                    'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
                 return res
             # magnitude
-            # eq_magnitude = erf.getSource(source_index).getRupture(rupture_index).getMag()  # noqa: ERA001, E501
+            # eq_magnitude = erf.getSource(source_index).getRupture(rupture_index).getMag()
             eq_magnitude = source_info['Magnitude']
             # maf
-            # timeSpan = erf.getTimeSpan()  # noqa: ERA001
-            # meanAnnualRate = erf.getSource(source_index).getRupture(rupture_index).getMeanAnnualRate(timeSpan.getDuration())  # noqa: ERA001, E501
+            # timeSpan = erf.getTimeSpan()
+            # meanAnnualRate = erf.getSource(source_index).getRupture(rupture_index).getMeanAnnualRate(timeSpan.getDuration())
             meanAnnualRate = source_info['MeanAnnualRate']  # noqa: N806
         elif source_info['Type'] == 'oqSourceXML':
             source_index = source_info.get('SourceIndex', None)
             rupture_index = source_info.get('RuptureIndex', None)
             if None in [source_index, rupture_index]:
                 print(  # noqa: T201
-                    'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'  # noqa: E501
+                    'ComputeIntensityMeasure.get_im_from_local: error - source/rupture index not given.'
                 )
                 return res
             # magnitude
@@ -397,7 +402,7 @@ class IM_Calculator:  # noqa: N801, D101
             meanAnnualRate = source_info['MeanAnnualRate']  # noqa: N806
         else:
             print(  # noqa: T201
-                'ComputeIntensityMeasure.get_im_from_local: error - source type {} not supported'.format(  # noqa: E501
+                'ComputeIntensityMeasure.get_im_from_local: error - source type {} not supported'.format(
                     source_info['Type']
                 )
             )
@@ -406,7 +411,7 @@ class IM_Calculator:  # noqa: N801, D101
             gm_collector = []
             if cur_gmpe not in avail_gmpe:
                 print(  # noqa: T201
-                    f'ComputeIntensityMeasure.get_im_from_local: warning - {cur_gmpe} is not available.'  # noqa: E501
+                    f'ComputeIntensityMeasure.get_im_from_local: warning - {cur_gmpe} is not available.'
                 )
                 continue
             for cur_site in self.site_info:
@@ -446,39 +451,39 @@ class IM_Calculator:  # noqa: N801, D101
                     tmpResult['InterEvStdDev'].append(float(interEvStdDev))
                     tmpResult['IntraEvStdDev'].append(float(intraEvStdDev))
                 elif cur_gmpe == 'Chiou & Youngs (2014)':
-                    # start = time.process_time_ns()  # noqa: ERA001
+                    # start = time.process_time_ns()
                     tmpResult = self.CY.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
-                    # self.timeGetIM += time.process_time_ns() - start  # noqa: ERA001
+                    # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Abrahamson, Silva & Kamai (2014)':
-                    # start = time.process_time_ns()  # noqa: ERA001
+                    # start = time.process_time_ns()
                     tmpResult = self.ASK.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
-                    # self.timeGetIM += time.process_time_ns() - start  # noqa: ERA001
+                    # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Boore, Stewart, Seyhan & Atkinson (2014)':
-                    # start = time.process_time_ns()  # noqa: ERA001
+                    # start = time.process_time_ns()
                     tmpResult = self.BSSA.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
-                    # self.timeGetIM += time.process_time_ns() - start  # noqa: ERA001
+                    # self.timeGetIM += time.process_time_ns() - start
                 elif cur_gmpe == 'Campbell & Bozorgnia (2014)':
-                    # start = time.process_time_ns()  # noqa: ERA001
+                    # start = time.process_time_ns()
                     tmpResult = self.CB.get_IM(  # noqa: N806
                         eq_magnitude, self.site_rup_dict, cur_site, im_info
                     )
-                    # self.timeGetIM += time.process_time_ns() - start  # noqa: ERA001
+                    # self.timeGetIM += time.process_time_ns() - start
                 else:
                     print(  # noqa: T201
-                        f'ComputeIntensityMeasure.get_im_from_local: gmpe_name {cur_gmpe} is not supported.'  # noqa: E501
+                        f'ComputeIntensityMeasure.get_im_from_local: gmpe_name {cur_gmpe} is not supported.'
                     )
                 # collect sites
                 # gm_collector.append({
-                # 	"Location": {'Latitude':cur_site['lat'], 'Longitude':cur_site['lon']},  # noqa: E501
-                #              "SiteData": {key: cur_site[key] for key in cur_site if key not in ['lat','lon']},  # noqa: ERA001, E501
+                # 	"Location": {'Latitude':cur_site['lat'], 'Longitude':cur_site['lon']},
+                #              "SiteData": {key: cur_site[key] for key in cur_site if key not in ['lat','lon']},
                 # 			 'ln'+im_type: tmpResult
-                # 			 })  # noqa: ERA001
+                # 			 })
                 gm_collector.append({'ln' + im_type: tmpResult})
 
             # Final results
@@ -499,7 +504,7 @@ class IM_Calculator:  # noqa: N801, D101
             res = compute_weighted_res(res_list, gmpe_weights)
         else:
             res = res_list[0]
-        # return  # noqa: ERA001
+        # return
         return res
 
 
@@ -543,7 +548,7 @@ def collect_multi_im_res(res_dict):  # noqa: ANN001, ANN201, C901, D103, PLR0912
                     {'ln{}'.format(cur_res['IM']): tmp_res}
                 )
 
-    # return  # noqa: ERA001
+    # return
     return res
 
 
@@ -614,7 +619,7 @@ def collect_multi_im_res_hdf5(res_list, im_list):  # noqa: ANN001, ANN201, D103
     res.update({'Mean': collected_mean})
     res.update({'InterEvStdDev': collected_interStd})
     res.update({'IntraEvStdDev': collected_intraStd})
-    # return  # noqa: ERA001
+    # return
     return res
 
 
@@ -629,7 +634,7 @@ def get_im_dict(im_info):  # noqa: ANN001, ANN201, D103
         # back compatibility
         im_dict = {im_info.get('Type'): im_info.copy()}
 
-    # return  # noqa: ERA001
+    # return
     return im_dict
 
 
@@ -639,7 +644,7 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: ANN001, ANN201, D103
     # check IM info type
     if im_info.get('Type', None) != 'Vector':
         print(  # noqa: T201
-            'ComputeIntensityMeasure.get_gmpe_from_im_vector: error: IntensityMeasure Type should be Vector.'  # noqa: E501
+            'ComputeIntensityMeasure.get_gmpe_from_im_vector: error: IntensityMeasure Type should be Vector.'
         )
         return gmpe_dict, gmpe_weights_dict
     else:  # noqa: RET505
@@ -650,7 +655,7 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: ANN001, ANN201, D103
             cur_weights = im_info[cur_im].get('GMPEWeights', None)
             if cur_gmpe is None:
                 print(  # noqa: T201
-                    f'ComputeIntensityMeasure.get_gmpe_from_im_vector: warning: GMPE not found for {cur_im}'  # noqa: E501
+                    f'ComputeIntensityMeasure.get_gmpe_from_im_vector: warning: GMPE not found for {cur_im}'
                 )
             elif type(cur_gmpe) == str:  # noqa: E721
                 if cur_gmpe == 'NGAWest2 2014 Averaged':
@@ -668,7 +673,7 @@ def get_gmpe_from_im_vector(im_info, gmpe_info):  # noqa: ANN001, ANN201, D103
             gmpe_weights_dict.update({cur_im: cur_weights})
     # global parameters if any
     gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})  # noqa: C408
-    # return  # noqa: ERA001
+    # return
     return gmpe_dict, gmpe_weights_dict
 
 
@@ -696,7 +701,7 @@ def get_gmpe_from_im_legency(im_info, gmpe_info, gmpe_weights=None):  # noqa: AN
         gmpe_weights_dict = {im_type: gmpe_weights}
     # global parameters if any
     gmpe_dict.update({'Parameters': gmpe_info.get('Parameters', dict())})  # noqa: C408
-    # return  # noqa: ERA001
+    # return
     return gmpe_dict, gmpe_weights_dict
 
 
@@ -743,13 +748,13 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
     station_info = {'Type': 'SiteList', 'SiteList': station_list}
     # hazard occurrent model
     if generator_info['method'] == 'Subsampling':  # noqa: SIM102
-        # check if the period in the hazard curve is in the period list in the intensity measure  # noqa: E501
+        # check if the period in the hazard curve is in the period list in the intensity measure
         if generator_info['Parameters'].get('IntensityMeasure') == 'SA':
             ho_period = generator_info['Parameters'].get('Period')
             if im_info['Type'] == 'Vector':
                 if im_info.get('SA') is None:
                     sys.exit(
-                        'SA is used in hazard downsampling but not defined in the intensity measure tab'  # noqa: E501
+                        'SA is used in hazard downsampling but not defined in the intensity measure tab'
                     )
                 elif ho_period in im_info['SA'].get('Periods'):
                     pass
@@ -797,7 +802,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 im_calculator.BSSA = openSHAGMPE.boore_etal_2014()
             if gmpe == 'Campbell & Bozorgnia (2014)':
                 im_calculator.CB = openSHAGMPE.campbell_bozorgnia_2014()
-        # for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):  # noqa: E501
+        # for i in tqdm(range(len(scenarios.keys())), desc=f"Evaluate GMPEs for {len(scenarios.keys())} scenarios"):
         # Initialize an hdf5 file for IMmeanStd
         if os.path.exists(filename):  # noqa: PTH110
             os.remove(filename)  # noqa: PTH107
@@ -806,7 +811,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             desc=f'Evaluate GMPEs for {len(scenarios.keys())} scenarios',
         ):
             # for i, key in enumerate(scenarios.keys()):
-            # print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(scenarios)))  # noqa: ERA001, E501
+            # print('ComputeIntensityMeasure: Scenario #{}/{}'.format(i+1,len(scenarios)))
             # Rupture
             key = int(list(scenarios.keys())[i])
             source_info = scenarios[key]
@@ -817,7 +822,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 im_calculator.set_im_type(cur_im_type)
                 res_list.update({cur_im_type: im_calculator.calculate_im()})
             # Collecting outputs
-            # collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})  # noqa: ERA001, E501
+            # collectedResult.update({'SourceIndex':source_info['SourceIndex'], 'RuptureIndex':source_info['RuptureIndex']})
             if saveInJson:
                 collectedResult = collect_multi_im_res(res_list)  # noqa: N806
                 im_raw.update({key: collectedResult})
@@ -836,7 +841,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     )
             # if (i % 250 == 0):
             # 	if saveInJson:
-            # 		print(f"Size of im_raw for {i} scenario is {sys.getsizeof(im_raw)}")  # noqa: E501
+            # 		print(f"Size of im_raw for {i} scenario is {sys.getsizeof(im_raw)}")
             # 	else:
             # 		print(f"Another 250 scenarios computed")
 
@@ -852,7 +857,7 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             scen_list.append(
                 [scenarios[x] for x in list(scenarios.keys())[k : k + bin_size]]
             )
-        # print(ids_list)  # noqa: ERA001
+        # print(ids_list)
         for i in range(len(ids_list)):
             th = threading.Thread(
                 target=compute_im_para,
@@ -878,13 +883,13 @@ def compute_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             im_raw.append(cur_res)
 
     print(  # noqa: T201
-        f'ComputeIntensityMeasure: mean and standard deviation of intensity measures {time.time() - t_start} sec'  # noqa: E501
+        f'ComputeIntensityMeasure: mean and standard deviation of intensity measures {time.time() - t_start} sec'
     )
 
     if saveInJson:
         with open(filename, 'w') as f:  # noqa: PTH123
             ujson.dump(im_raw, f, indent=1)
-    # return  # noqa: ERA001
+    # return
     return filename, im_list
 
 
@@ -920,7 +925,7 @@ def compute_im_para(  # noqa: ANN201, D103, PLR0913
         res = collect_multi_im_res(res_list)
         # append res to res_dcit
         res_dict[id] = res
-    # return  # noqa: ERA001
+    # return
 
 
 def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
@@ -940,7 +945,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             im_list[i] = (
                 im_list[i].split('(')[0] + '_' + im_list[i].split('(')[1][:-1]
             )
-    # try:  # noqa: ERA001
+    # try:
     # Station number
     num_stations = len(stations)
     # Scenario number
@@ -1041,21 +1046,22 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         ]
         lat = [stations[j]['lat'] for j in range(len(stations))]
         lon = [stations[j]['lon'] for j in range(len(stations))]
-        # vs30 = [stations[j]['vs30'] for j in range(len(stations))]  # noqa: ERA001
-        # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]  # noqa: ERA001
+        # vs30 = [stations[j]['vs30'] for j in range(len(stations))]
+        # zTR = [stations[j]['DepthToRock'] for j in range(len(stations))]
         df = pd.DataFrame(  # noqa: PD901
             {
                 'GP_file': station_name,
                 'Longitude': lon,
                 'Latitude': lat,
-                # 'Vs30': vs30,  # noqa: ERA001
+                # 'Vs30': vs30,
                 # 'DepthToRock': zTR
             }
         )
         # if cur_eq[2]:
         # 	df['SiteSourceDistance'] = cur_eq[2]
         output_dir = os.path.join(  # noqa: PTH118
-            os.path.dirname(Path(output_dir)), os.path.basename(Path(output_dir))  # noqa: PTH119, PTH120
+            os.path.dirname(Path(output_dir)),  # noqa: PTH120
+            os.path.basename(Path(output_dir)),  # noqa: PTH119
         )
         # seperate directory for IM
         output_dir = os.path.join(output_dir, 'IMs')  # noqa: PTH118
@@ -1076,7 +1082,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                     os.mkdir(os.path.join(output_dir, cur_scen_folder))  # noqa: PTH102, PTH118
                 except:  # noqa: S110, E722
                     pass
-                    # print('ComputeIntensityMeasure: scenario folder already exists.')  # noqa: ERA001, E501
+                    # print('ComputeIntensityMeasure: scenario folder already exists.')
                 cur_output_dir = os.path.join(output_dir, cur_scen_folder)  # noqa: PTH118
             else:
                 cur_output_dir = output_dir
@@ -1202,16 +1208,16 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
                 df.drop(columns=colToDrop, inplace=True)  # noqa: PD002
                 df.fillna('NaN', inplace=True)  # noqa: PD002
                 df.to_csv(os.path.join(output_dir, site_id), index=False)  # noqa: PTH118
-    # return  # noqa: ERA001
+    # return
     return 0
-    # except:  # noqa: ERA001
-    # return  # noqa: ERA001
-    # return 1  # noqa: ERA001
+    # except:
+    # return
+    # return 1
 
 
 def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901, D103, PLR0912
     # compute weighted average of gmpe results
-    # initialize the return res (these three attributes are identical in different gmpe results)  # noqa: E501
+    # initialize the return res (these three attributes are identical in different gmpe results)
     res = {
         'Magnitude': res_list[0]['Magnitude'],
         'MeanAnnualRate': res_list[0]['MeanAnnualRate'],
@@ -1282,5 +1288,5 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901,
         gm_collector.append(tmp_res)
     # res
     res.update({'GroundMotions': gm_collector})
-    # return  # noqa: ERA001
+    # return
     return res

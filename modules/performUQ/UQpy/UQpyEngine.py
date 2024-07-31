@@ -67,7 +67,7 @@ def main(workflowinput, workflowoutput, driverfile, runtype):  # noqa: ANN001, A
     )
 
     # 1. Create the UQy analysis python script
-    preprocessorCommand = f"'{python}' '{thisScriptDir}/preprocessUQpy.py' --workflowInput {workflowinput} --driverFile {driverfile} --runType {runtype} --osType {osType}"  # noqa: N806, E501
+    preprocessorCommand = f"'{python}' '{thisScriptDir}/preprocessUQpy.py' --workflowInput {workflowinput} --driverFile {driverfile} --runType {runtype} --osType {osType}"  # noqa: N806
 
     subprocess.run(preprocessorCommand, shell=True, check=False)  # noqa: S602
 

@@ -14,7 +14,7 @@ import wntrfr
 from Output.Crew_Report import Crew_Report
 from Output.Curve import Curve
 
-# import Report_Reading  # noqa: ERA001
+# import Report_Reading
 from Output.Map import Helper, Map
 from Output.Raw_Data import Raw_Data
 from Output.Result_Time import Result_Time
@@ -40,8 +40,8 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             self.project.project_settings.process.settings['result_directory'] = (
                 result_file_dir
             )
-            # self.project.scenario_list = io.read_damage_list(self.project.project_settings.process['pipe_damage_file_list'   ], self.project.project_settings.process['pipe_damage_file_directory'])  # noqa: ERA001, E501
-        # print(self.project.scenario_list)  # noqa: ERA001
+            # self.project.scenario_list = io.read_damage_list(self.project.project_settings.process['pipe_damage_file_list'   ], self.project.project_settings.process['pipe_damage_file_directory'])
+        # print(self.project.scenario_list)
         self.project.scenario_list = self.project.scenario_list.set_index(
             'Scenario Name'
         )
@@ -52,13 +52,13 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
         self.node_damages = {}
         self.pump_damages = {}
         self.tank_damages = {}
-        # self.time_size                = {}  # noqa: ERA001
+        # self.time_size                = {}
         self.demand_node_size = {}
         self.index_to_scen_name = {}
         self.data = OrderedDict()
         self.registry = OrderedDict()
         self.scenario_prob = {}
-        # self.scenario_set             = {}  # noqa: ERA001
+        # self.scenario_set             = {}
         self.empty_scenario_name_list = set()
         self._delivery_data = None
         self._quality_data = None
@@ -81,7 +81,8 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             self.result_directory = result_directory
 
         to_neglect = []
-        if to_neglect_file != None and False:  # sina hereeeee bug dadi amedane  # noqa: SIM223, E711
+        # sina hereeeee bug dadi amedane
+        if to_neglect_file != None and False:  # noqa: SIM223, E711
             raise  # noqa: PLE0704
             file_data = pd.read_excel(to_neglect_file)
             to_neglect = file_data[node_col].to_list()
@@ -114,11 +115,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
         self.scn_name_list_that_result_file_not_found = []
 
         result_directory = self.result_directory
-        # print(self.project.scenario_list)  # noqa: ERA001
+        # print(self.project.scenario_list)
         for scn_name, row in self.project.scenario_list.iterrows():  # noqa: B007
             scenario_registry_file_name = scn_name + '_registry.pkl'
-            # print(result_directory)  # noqa: ERA001
-            # print(scenario_registry_file_name)  # noqa: ERA001
+            # print(result_directory)
+            # print(scenario_registry_file_name)
             registry_file_data_addr = os.path.join(  # noqa: PTH118
                 result_directory, scenario_registry_file_name
             )
@@ -127,10 +128,10 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         if len(self.scn_name_list_that_result_file_not_found) > 0:
             if ignore_not_found:
-                # print(str(len(self.scn_name_list_that_result_file_not_found)) +" out of "+ repr(len(self.project.scenario_list)) +" Result Files are not found and ignored" )  # noqa: ERA001, E501
-                # print(self.scn_name_list_that_result_file_not_found)  # noqa: ERA001
+                # print(str(len(self.scn_name_list_that_result_file_not_found)) +" out of "+ repr(len(self.project.scenario_list)) +" Result Files are not found and ignored" )
+                # print(self.scn_name_list_that_result_file_not_found)
                 pass
-                # self.project.scenario_list.drop(self.scn_name_list_that_result_file_not_found, inplace=True)  # noqa: ERA001, E501
+                # self.project.scenario_list.drop(self.scn_name_list_that_result_file_not_found, inplace=True)
             else:
                 raise ValueError(
                     'Res File Not Found: '
@@ -141,19 +142,19 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
     def prepareData(self):  # noqa: ANN201, N802, D102
         i = 0
-        # result_directory = self.project.project_settings.process['result_directory']  # noqa: ERA001, E501
-        # self.project.scenario_list = self.project.scenario_list.iloc[0:20]  # noqa: ERA001
+        # result_directory = self.project.project_settings.process['result_directory']
+        # self.project.scenario_list = self.project.scenario_list.iloc[0:20]
         for scn_name, row in self.project.scenario_list.iterrows():  # noqa: B007
             self._RequiredDemandForAllNodesandtime[scn_name] = None
-            # settings_file_name = scn_name+'.xlsx'  # noqa: ERA001
-            # settings_file_addr = os.path.join(result_directory, settings_file_name)  # noqa: ERA001
-            # scenario_set       = pd.read_excel(settings_file_addr)  # noqa: ERA001
-            # self.scenario_set[scn_name] = scenario_set  # noqa: ERA001
+            # settings_file_name = scn_name+'.xlsx'
+            # settings_file_addr = os.path.join(result_directory, settings_file_name)
+            # scenario_set       = pd.read_excel(settings_file_addr)
+            # self.scenario_set[scn_name] = scenario_set
 
             self.data[scn_name] = None
             self.registry[scn_name] = None
 
-            # self.time_size[scn_name]      = len(self.data[scn_name].node['demand'].index)  # noqa: ERA001, E501
+            # self.time_size[scn_name]      = len(self.data[scn_name].node['demand'].index)
             self.index_to_scen_name[i] = scn_name
             i += 1  # noqa: SIM113
 
@@ -170,13 +171,13 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             return
         print('loading scenario ' + str(scn_name))  # noqa: T201
         result_directory = self.result_directory
-        # scenario_registry_file_name = scn_name+"_registry.pkl"  # noqa: ERA001
-        # registry_file_data_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: ERA001, E501
+        # scenario_registry_file_name = scn_name+"_registry.pkl"
+        # registry_file_data_addr = os.path.join(result_directory, scenario_registry_file_name)
         scenario_registry_file_name = scn_name + '_registry.pkl'
         reg_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: PTH118
         try:
             with open(reg_addr, 'rb') as f:  # noqa: PTH123
-                # print(output_addr)  # noqa: ERA001
+                # print(output_addr)
                 reg_file_data = pickle.load(f)  # noqa: S301
             self.registry[scn_name] = reg_file_data
             res_file_data = self.registry[scn_name].result
@@ -185,19 +186,19 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             res_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: PTH118
             with open(res_addr, 'rb') as f:  # noqa: PTH123
                 res_file_data = pickle.load(f)  # noqa: S301
-        # scenario_registry_file_name = scn_name+".res"  # noqa: ERA001
-        # res_addr = os.path.join(result_directory, scenario_registry_file_name)  # noqa: ERA001
+        # scenario_registry_file_name = scn_name+".res"
+        # res_addr = os.path.join(result_directory, scenario_registry_file_name)
         # with open(res_addr, 'rb') as f:
-        # print(output_addr)  # noqa: ERA001
-        # res_file_data = pickle.load(f)  # noqa: ERA001
-        # res_file_data.node['head']    = None  # noqa: ERA001
-        # res_file_data.node['quality'] = None  # noqa: ERA001
-        # res_file_data = self.registry[scn_name].result  # noqa: ERA001
+        # print(output_addr)
+        # res_file_data = pickle.load(f)
+        # res_file_data.node['head']    = None
+        # res_file_data.node['quality'] = None
+        # res_file_data = self.registry[scn_name].result
         self.remove_maximum_trials(res_file_data)
         self.data[scn_name] = res_file_data
 
     def readData(self):  # noqa: ANN201, N802, D102
-        # i=0  # noqa: ERA001
+        # i=0
         self.project.scenario_list = self.project.scenario_list.iloc[0:2]
         result_directory = self.result_directory
 
@@ -215,30 +216,30 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
                     )
                 self.registry[scn_name] = pickle.load(f)  # noqa: S301
 
-            # self.pipe_damages[scn_name] = current_scenario_registry.damage.pipe_all_damages  # noqa: ERA001, E501
-            # self.node_damages[scn_name] = current_scenario_registry.node_damage  # noqa: ERA001
-            # self.pump_damages[scn_name] = current_scenario_registry.damaged_pumps  # noqa: ERA001
-            # self.tank_damages[scn_name] = current_scenario_registry.tank_damage  # noqa: ERA001
+            # self.pipe_damages[scn_name] = current_scenario_registry.damage.pipe_all_damages
+            # self.node_damages[scn_name] = current_scenario_registry.node_damage
+            # self.pump_damages[scn_name] = current_scenario_registry.damaged_pumps
+            # self.tank_damages[scn_name] = current_scenario_registry.tank_damage
 
-            # res_addr = os.path.join(result_directory, scn_name+'.res')  # noqa: ERA001
+            # res_addr = os.path.join(result_directory, scn_name+'.res')
 
             # with open(res_addr, 'rb') as f:
-            # print(output_addr)  # noqa: ERA001
-            # res_file_data = pickle.load(f)  # noqa: ERA001
+            # print(output_addr)
+            # res_file_data = pickle.load(f)
 
-            # settings_file_name = scn_name+'.xlsx'  # noqa: ERA001
-            # settings_file_addr = os.path.join(result_directory, settings_file_name)  # noqa: ERA001
-            # scenario_set       = pd.read_excel(settings_file_addr)  # noqa: ERA001
-            # self.scenario_set[scn_name] = scenario_set  # noqa: ERA001
+            # settings_file_name = scn_name+'.xlsx'
+            # settings_file_addr = os.path.join(result_directory, settings_file_name)
+            # scenario_set       = pd.read_excel(settings_file_addr)
+            # self.scenario_set[scn_name] = scenario_set
 
-            # res_file_data.node['head']    = None  # noqa: ERA001
-            # res_file_data.node['quality'] = None  # noqa: ERA001
+            # res_file_data.node['head']    = None
+            # res_file_data.node['quality'] = None
             res_file_data = self.registry[scn_name]
             self.remove_maximum_trials(res_file_data)
             self.data[scn_name] = res_file_data
-            # self.time_size[scn_name]      = len(self.data[scn_name].node['demand'].index)  # noqa: ERA001, E501
-            # self.index_to_scen_name[i]    = scn_name  # noqa: ERA001
-            # i+=1  # noqa: ERA001
+            # self.time_size[scn_name]      = len(self.data[scn_name].node['demand'].index)
+            # self.index_to_scen_name[i]    = scn_name
+            # i+=1
 
             self.scenario_prob[scn_name] = self.project.scenario_list.loc[
                 scn_name, 'Probability'
@@ -264,7 +265,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             )
             result_time_max_trailed_list.sort()
             if len(result_time_max_trailed_list) > 0:
-                # print(result_time_max_trailed_list)  # noqa: ERA001
+                # print(result_time_max_trailed_list)
                 att_data = data.node[att]
                 att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.node[att] = att_data
@@ -283,24 +284,24 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
 
-        # result_time_list = data.node['demand'].index.to_list()  # noqa: ERA001
+        # result_time_list = data.node['demand'].index.to_list()
         # = [ time for time in result_time_list if time in all_time_list]
 
         for att in data.node:
-            # all_time_list = data.maximum_trial_time  # noqa: ERA001
+            # all_time_list = data.maximum_trial_time
             result_time_list = data.node[att].index.to_list()
             result_time_max_trailed_list = list(
                 set(result_time_list).intersection(set(time_to_drop))
             )
             result_time_max_trailed_list.sort()
             if len(result_time_max_trailed_list) > 0:
-                # print(result_time_max_trailed_list)  # noqa: ERA001
+                # print(result_time_max_trailed_list)
                 att_data = data.node[att]
                 att_data.drop(result_time_max_trailed_list, inplace=True)  # noqa: PD002
                 data.node[att] = att_data
 
         for att in data.link:
-            # all_time_list = data.maximum_trial_time  # noqa: ERA001
+            # all_time_list = data.maximum_trial_time
             result_time_list = data.link[att].index.to_list()
             result_time_max_trailed_list = list(
                 set(result_time_list).intersection(set(time_to_drop))
@@ -316,11 +317,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         time_to_drop = flow_balance[abs(flow_balance) >= 0.01].index  # noqa: PLR2004
 
-        # result_time_list = data.node['demand'].index.to_list()  # noqa: ERA001
+        # result_time_list = data.node['demand'].index.to_list()
         # = [ time for time in result_time_list if time in all_time_list]
 
         for att in data.node:
-            # all_time_list = data.maximum_trial_time  # noqa: ERA001
+            # all_time_list = data.maximum_trial_time
             result_time_list = data.node[att].index.to_list()
             result_time_max_trailed_list = [
                 time for time in result_time_list if time in time_to_drop
@@ -331,7 +332,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             data.node[att] = att_data
 
         for att in data.link:
-            # all_time_list = data.maximum_trial_time  # noqa: ERA001
+            # all_time_list = data.maximum_trial_time
             result_time_list = data.link[att].index.to_list()
             result_time_max_trailed_list = [
                 time for time in result_time_list if time in time_to_drop
@@ -380,21 +381,21 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
             return self._RequiredDemandForAllNodesandtime[scn_name]
         undamaged_wn = self.wn
         time_index = self.data[scn_name].node['demand'].index
-        # req_node_demand   = pd.DataFrame(index=time_index.unique())  # noqa: ERA001
+        # req_node_demand   = pd.DataFrame(index=time_index.unique())
         default_pattern = undamaged_wn.options.hydraulic.pattern
         node_pattern_list = pd.Series(
             index=undamaged_wn.junction_name_list, dtype=str
         )
         _size = len(self.demand_node_name_list)
         i = 0
-        # req_node_demand = req_node_demand.transpose()  # noqa: ERA001
+        # req_node_demand = req_node_demand.transpose()
 
         all_base_demand = []
         all_node_name_list = []
 
         while i < _size:
             node_name = self.demand_node_name_list[i]
-            # print(i)  # noqa: ERA001
+            # print(i)
             i += 1
             node = undamaged_wn.get_node(node_name)
             pattern_list = node.demand_timeseries_list.pattern_list()
@@ -407,9 +408,9 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
                 base_demand = node.base_demand * demand_ratio
                 all_base_demand.append([base_demand for i in time_index])
                 all_node_name_list.append(node_name)
-                # temp=pd.DataFrame(data = base_demand, index = time_index, columns = [node_name])  # noqa: ERA001, E501
-                # req_node_demand = req_node_demand.append(temp.transpose())  # noqa: ERA001
-        # constant_base_demand = [constant_base_demand for i in time_index]  # noqa: ERA001
+                # temp=pd.DataFrame(data = base_demand, index = time_index, columns = [node_name])
+                # req_node_demand = req_node_demand.append(temp.transpose())
+        # constant_base_demand = [constant_base_demand for i in time_index]
         node_pattern_list = node_pattern_list.dropna()
 
         patterns_list = node_pattern_list.unique()
@@ -434,33 +435,33 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
             all_node_name_list.append(node_name)
             all_base_demand.append(cur_node_req_demand.to_list())
-            # cur_node_req_demand.name = node_name  # noqa: ERA001
-            # cur_node_req_demand=pd.DataFrame(cur_node_req_demand).transpose()  # noqa: ERA001
-            # req_node_demand = req_node_demand.append(cur_node_req_demand)  # noqa: ERA001
-        # variable_base_demand = np.array(variable_base_demand).transpose().tolist()  # noqa: ERA001
+            # cur_node_req_demand.name = node_name
+            # cur_node_req_demand=pd.DataFrame(cur_node_req_demand).transpose()
+            # req_node_demand = req_node_demand.append(cur_node_req_demand)
+        # variable_base_demand = np.array(variable_base_demand).transpose().tolist()
         req_node_demand = pd.DataFrame(
             columns=time_index, index=all_node_name_list, data=all_base_demand
         )
         req_node_demand = req_node_demand.transpose()
-        # constant_node_demand_df = pd.DataFrame(data = constant_base_demand, index = time_index, columns = constant_node_name_list)  # noqa: ERA001, E501
-        # variable_node_demand_df = pd.DataFrame(data = variable_base_demand, index = time_index, columns = variable_node_name_list)  # noqa: ERA001, E501
+        # constant_node_demand_df = pd.DataFrame(data = constant_base_demand, index = time_index, columns = constant_node_name_list)
+        # variable_node_demand_df = pd.DataFrame(data = variable_base_demand, index = time_index, columns = variable_node_name_list)
         # if len(variable_base_demand) > 0 and len(variable_base_demand) == 0:
-        # req_node_demand = constant_node_demand_df  # noqa: ERA001
-        # elif len(variable_base_demand) == 0 and len(variable_base_demand) > 0:  # noqa: ERA001
-        # req_node_demand = variable_base_demand  # noqa: ERA001
-        # elif    len(variable_base_demand) == 0 and len(variable_base_demand) == 0:  # noqa: ERA001
-        # req_node_demand = constant_node_demand_df  # noqa: ERA001
-        # else:  # noqa: ERA001
-        # req_node_demand = pd.concat([constant_node_demand_df.transpose(), variable_node_demand_df.transpose()]).transpose()  # noqa: ERA001, E501
+        # req_node_demand = constant_node_demand_df
+        # elif len(variable_base_demand) == 0 and len(variable_base_demand) > 0:
+        # req_node_demand = variable_base_demand
+        # elif    len(variable_base_demand) == 0 and len(variable_base_demand) == 0:
+        # req_node_demand = constant_node_demand_df
+        # else:
+        # req_node_demand = pd.concat([constant_node_demand_df.transpose(), variable_node_demand_df.transpose()]).transpose()
 
-        # print(len(all_node_name_list))  # noqa: ERA001
-        # print(len(constant_base_demand))  # noqa: ERA001
-        # print(len(variant_base_demand))  # noqa: ERA001
-        # print("************************")  # noqa: ERA001
-        # all_base_demand = constant_base_demand  # noqa: ERA001
+        # print(len(all_node_name_list))
+        # print(len(constant_base_demand))
+        # print(len(variant_base_demand))
+        # print("************************")
+        # all_base_demand = constant_base_demand
 
-        # req_node_demand = pd.DataFrame(index=time_index, columns=all_node_name_list, data=all_base_demand)  # noqa: ERA001, E501
-        # req_node_demand = req_node_demand.transpose()  # noqa: ERA001
+        # req_node_demand = pd.DataFrame(index=time_index, columns=all_node_name_list, data=all_base_demand)
+        # req_node_demand = req_node_demand.transpose()
         self._RequiredDemandForAllNodesandtime[scn_name] = req_node_demand.filter(
             self.demand_node_name_list
         )
@@ -471,7 +472,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
         return self._RequiredDemandForAllNodesandtime[scn_name]
 
     def AS_getDLIndexPopulation(  # noqa: ANN201, N802, D102
-        self, iPopulation='No', ratio=False, consider_leak=False, leak_ratio=0.75  # noqa: ANN001, FBT002, N803
+        self,
+        iPopulation='No',  # noqa: ANN001, N803
+        ratio=False,  # noqa: ANN001, FBT002
+        consider_leak=False,  # noqa: ANN001, FBT002
+        leak_ratio=0.75,  # noqa: ANN001
     ):
         scenario_list = list(self.data.keys())
         all_scenario_DL_data = {}  # noqa: N806
@@ -489,7 +494,11 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
         return pd.DataFrame.from_dict(all_scenario_DL_data)
 
     def AS_getQNIndexPopulation(  # noqa: ANN201, N802, D102
-        self, iPopulation='No', ratio=False, consider_leak=False, leak_ratio=0.75  # noqa: ANN001, FBT002, N803
+        self,
+        iPopulation='No',  # noqa: ANN001, N803
+        ratio=False,  # noqa: ANN001, FBT002
+        consider_leak=False,  # noqa: ANN001, FBT002
+        leak_ratio=0.75,  # noqa: ANN001
     ):
         scenario_list = list(self.data.keys())
         all_scenario_QN_data = {}  # noqa: N806
@@ -659,7 +668,8 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
         table = pd.DataFrame.from_dict(table_temp).set_index('index')
         res = pd.DataFrame(
-            index=[i for i in range(len(table.index))], dtype=np.float64  # noqa: C416
+            index=[i for i in range(len(table.index))],  # noqa: C416
+            dtype=np.float64,
         )
         for dmg_name in dmg_index_list:
             select_columns = ['prob']

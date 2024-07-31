@@ -42,11 +42,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
     except:  # noqa: E722
         raise ValueError('AutoSDA - structural information missing')  # noqa: B904, EM101, TRY003
 
-    # Extract the path for the directory containing the folder with the building data .csv files  # noqa: E501
-    #    pathDataFolder = rootSIM['pathDataFolder']  # noqa: ERA001
+    # Extract the path for the directory containing the folder with the building data .csv files
+    #    pathDataFolder = rootSIM['pathDataFolder']
     pathDataFolder = os.path.join(os.getcwd(), rootSIM['folderName'])  # noqa: PTH109, PTH118, N806
 
-    #    pathDataFolder = workingDirectory + "/" + rootSIM['folderName']  # noqa: ERA001
+    #    pathDataFolder = workingDirectory + "/" + rootSIM['folderName']
 
     # Get the random variables from the input file
     try:
@@ -78,23 +78,23 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
         print('Seismic design complete')  # noqa: T201
 
         # ******************* Nonlinear Model Generation Starts Here ******
-        # Nonlinear .tcl models are generated for EigenValue, Pushover, and Dynamic Analysis  # noqa: E501
+        # Nonlinear .tcl models are generated for EigenValue, Pushover, and Dynamic Analysis
         print('Generating nonlinear model')  # noqa: T201
         model_generation(baseDirectory, pathDataFolder, workingDirectory)
 
         # ******************* Perform Eigen Value Analysis ****************
-        # print("Eigen Value Analysis for Building")  # noqa: ERA001
-        # analysis_type = 'EigenValueAnalysis'  # noqa: ERA001
-        # target_model = pathDataFolder + "/BuildingNonlinearModels/"+ analysis_type  # noqa: ERA001
-        # os.chdir(target_model)  # noqa: ERA001
-        # subprocess.Popen("OpenSees Model.tcl", shell=True).wait()  # noqa: ERA001
+        # print("Eigen Value Analysis for Building")
+        # analysis_type = 'EigenValueAnalysis'
+        # target_model = pathDataFolder + "/BuildingNonlinearModels/"+ analysis_type
+        # os.chdir(target_model)
+        # subprocess.Popen("OpenSees Model.tcl", shell=True).wait()
         #
         # ******************* Perform Nonlinear Pushover Analysis *********
-        # print("Pushover Analysis for Building")  # noqa: ERA001
-        # analysis_type = 'PushoverAnalysis'  # noqa: ERA001
-        # target_model = pathDataFolder + "/BuildingNonlinearModels/" + analysis_type  # noqa: ERA001
-        # os.chdir(target_model)  # noqa: ERA001
-        # subprocess.Popen("OpenSees Model.tcl", shell=True).wait()  # noqa: ERA001
+        # print("Pushover Analysis for Building")
+        # analysis_type = 'PushoverAnalysis'
+        # target_model = pathDataFolder + "/BuildingNonlinearModels/" + analysis_type
+        # os.chdir(target_model)
+        # subprocess.Popen("OpenSees Model.tcl", shell=True).wait()
 
         print('The design and model construction has been accomplished.')  # noqa: T201
 
@@ -124,13 +124,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):  # noqa: 
     node_map = []
 
     # Using nodes on column #1 to calculate story drift
-    # (1, i, 1, 0)      # Node tag at ground floor (different from those on upper stories)  # noqa: ERA001, E501
-    # (1, i, 1, 1)      # Node at bottom of current story  # noqa: ERA001
-    # (1, i + 1, 1, 1)  # Node at top of current story  # noqa: ERA001
+    # (1, i, 1, 0)      # Node tag at ground floor (different from those on upper stories)
+    # (1, i, 1, 1)      # Node at bottom of current story
+    # (1, i + 1, 1, 1)  # Node at top of current story
     for i in range(1, numStories + 2):
         nodeTagBot = 0  # noqa: N806
         if i == 1:
-            # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)  # noqa: E501
+            # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)
             nodeTagBot = 1010 + 100 * i  # noqa: N806
         elif i > 9:  # noqa: PLR2004
             nodeTagBot = 10011 + 100 * i  # noqa: N806

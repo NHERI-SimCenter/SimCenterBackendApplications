@@ -124,7 +124,11 @@ class Curve:  # noqa: D101
         return pd.Series(time_action_done)
 
     def getInputWaterFlowCurve(  # noqa: ANN201, C901, N802, D102, PLR0912
-        self, scn_name, tank_name_list=None, reservoir_name_list=None, mode='all'  # noqa: ANN001
+        self,
+        scn_name,  # noqa: ANN001
+        tank_name_list=None,  # noqa: ANN001
+        reservoir_name_list=None,  # noqa: ANN001
+        mode='all',  # noqa: ANN001
     ):
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
@@ -147,14 +151,14 @@ class Curve:  # noqa: D101
         )
         if len(not_known_reservoir) > 0:
             raise ValueError(
-                'The folliwng reservoirs in the input are not known in the water network'  # noqa: E501
+                'The folliwng reservoirs in the input are not known in the water network'
                 + repr(reservoir_name_list)
             )
 
         outbound_flow = pd.Series(0, index=res.node['demand'].index)
         inbound_flow = pd.Series(0, index=res.node['demand'].index)
-        # inbound_flow  = 0  # noqa: ERA001
-        # outbound_flow = 0  # noqa: ERA001
+        # inbound_flow  = 0
+        # outbound_flow = 0
 
         waterFlow = None  # noqa: N806
 
@@ -164,7 +168,7 @@ class Curve:  # noqa: D101
             else:
                 continue
             for time, flow in flow_in_time.iteritems():
-                # print(flow)  # noqa: ERA001
+                # print(flow)
                 if flow > 0:
                     outbound_flow.loc[time] += -1 * flow
                 elif flow < 0:
@@ -185,7 +189,7 @@ class Curve:  # noqa: D101
             else:
                 continue
             for time, flow in flow_in_time.iteritems():
-                # print(flow)  # noqa: ERA001
+                # print(flow)
                 if flow > 0:
                     outbound_flow.loc[time] += -1 * flow
                 elif flow < 0:
@@ -218,7 +222,7 @@ class Curve:  # noqa: D101
         sat_node_demands = (
             self.data[scn_name].node['demand'].filter(demand_node_name_list)
         )
-        # sat_node_demands = sat_node_demands.applymap(hhelper)  # noqa: ERA001
+        # sat_node_demands = sat_node_demands.applymap(hhelper)
         s = sat_node_demands.sum(axis=1)
 
         return s  # noqa: RET504

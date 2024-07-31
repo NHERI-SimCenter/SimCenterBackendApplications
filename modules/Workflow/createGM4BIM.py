@@ -134,7 +134,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
         os.mkdir(outputDir)  # noqa: PTH102
 
     #
-    # FMK bug fix - have to copy AIM files back to the inputDir dir as code below assumes they are there  # noqa: E501
+    # FMK bug fix - have to copy AIM files back to the inputDir dir as code below assumes they are there
     #
 
     extension = 'AIM.json'
@@ -148,7 +148,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
                     bim_path = os.path.join(template_dir, the_file)  # noqa: PTH118
                     shutil.copy(bim_path, the_dir)
 
-    # siteFiles = glob(f"{inputDir}/*BIM.json")  # noqa: ERA001
+    # siteFiles = glob(f"{inputDir}/*BIM.json")
     # KZ: changing BIM to AIM
     siteFiles = glob(f'{inputDir}/*AIM.json')  # noqa: PTH207, N806
 
@@ -255,7 +255,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
             generalInfo = All_json['GeneralInformation']  # noqa: N806
             Longitude.append(generalInfo['Longitude'])
             Latitude.append(generalInfo['Latitude'])
-            # siteID = generalInfo['BIM_id']  # noqa: ERA001
+            # siteID = generalInfo['BIM_id']
             # KZ: changing BIM to AIM
             siteID = generalInfo['AIM_id']  # noqa: N806
             # get unit info (needed for determining the simulated acc unit)
@@ -298,10 +298,10 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
 
             for workdir in workdirs:
                 head, sep, sampleID = workdir.partition('workdir.')  # noqa: N806
-                # print(sampleID)  # noqa: ERA001
+                # print(sampleID)
 
                 eventName = f'Event_{siteID}_{sampleID}'  # noqa: N806
-                # print(eventName)  # noqa: ERA001
+                # print(eventName)
                 shutil.copy(f'{workdir}/fmkEVENT', f'{outputDir}/{eventName}.json')
 
                 siteEventFiles.append(eventName)
@@ -468,7 +468,7 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):  # noqa: ANN00
     else:
         # EventGrid.csv to be created
         gridDF.to_csv(f'{outputDir}/EventGrid.csv', index=False)
-    # gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)  # noqa: ERA001
+    # gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
     print(f'EventGrid.csv saved to {outputDir}')  # noqa: T201
 
     # create pandas

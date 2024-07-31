@@ -28,7 +28,7 @@ def configureAndRunUQ(  # noqa: ANN201, N802, PLR0913
     runType:        Specifies whether computations are being run locally or on an HPC cluster
     localAppDir:    Directory containing apps for local run
     remoteAppDir:   Directory containing apps for remote run
-    """  # noqa: E501, D205, D400, D401, D404, D415
+    """  # noqa: D205, D400, D401, D404, D415
     uqDriverOptions = ['UQpy', 'HeirBayes']  # noqa: N806
 
     for val in uqData['Parameters']:

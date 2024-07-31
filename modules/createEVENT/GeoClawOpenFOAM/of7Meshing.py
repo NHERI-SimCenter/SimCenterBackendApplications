@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -119,10 +119,10 @@ class of7Meshing:  # noqa: N801
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: E501, W291
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"system";\n\tobject\t"""  # noqa: W291
             + fileobjec
             + """;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
         )
 
         # Return the header for meshing file
@@ -294,7 +294,7 @@ FoamFile
         ---------
                 data: all the JSON data
 
-        """  # noqa: E501, D400, D401, D415
+        """  # noqa: D400, D401, D415
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 
@@ -330,7 +330,7 @@ FoamFile
         ---------
                 None
 
-        """  # noqa: E501, D400, D401, D415
+        """  # noqa: D400, D401, D415
         # Read the geometry data file
         data_geoext = np.genfromtxt('temp_geometry.txt', dtype=(float))
 

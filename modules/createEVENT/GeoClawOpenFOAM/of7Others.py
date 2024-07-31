@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""  # noqa: E501, D400, D415
+"""  # noqa: D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -66,7 +66,7 @@ class of7Others:  # noqa: N801
 |	   | O |
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
-{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\t"""  # noqa: E501, W291
+{\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\t"""  # noqa: W291
             + fileclas
             + """;\n\tlocation\t"""
             + '"'
@@ -74,7 +74,7 @@ FoamFile
             + """";\n\tobject\t"""
             + fileobjec
             + """;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
         )
 
         # Return the header for U file

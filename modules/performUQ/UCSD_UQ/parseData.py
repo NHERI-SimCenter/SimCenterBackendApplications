@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, and Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""  # noqa: INP001, E501, D205, D400, D415
+"""  # noqa: INP001, D205, D400, D415
 
 import itertools
 import json
@@ -17,7 +17,7 @@ class DataProcessingError(Exception):
     ----------
         message -- explanation of the error
 
-    """  # noqa: E501
+    """
 
     def __init__(self, message):  # noqa: ANN001, ANN204, D107
         self.message = message
@@ -37,26 +37,26 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     uqInputs = jsonInputs['UQ']  # noqa: N806
     femInputs = jsonInputs['FEM']  # noqa: N806, F841
     rvInputs = jsonInputs['randomVariables']  # noqa: N806
-    # localAppDirInputs = jsonInputs['localAppDir']  # noqa: ERA001
-    # pythonInputs = jsonInputs['python']  # noqa: ERA001
-    # remoteAppDirInputs = jsonInputs['remoteAppDir']  # noqa: ERA001
-    # uqResultsInputs = jsonInputs['uqResults']  # noqa: ERA001
+    # localAppDirInputs = jsonInputs['localAppDir']
+    # pythonInputs = jsonInputs['python']
+    # remoteAppDirInputs = jsonInputs['remoteAppDir']
+    # uqResultsInputs = jsonInputs['uqResults']
     # if uqResultsInputs:
-    #    resultType = uqResultsInputs['resultType']  # noqa: ERA001
+    #    resultType = uqResultsInputs['resultType']
     #    if resultType == 'UCSD_Results':
-    #        spreadsheet = uqResultsInputs['spreadsheet']  # noqa: ERA001
-    #        dataValues = spreadsheet['data']  # noqa: ERA001
-    #        headings = spreadsheet['headings']  # noqa: ERA001
-    #        numCol = spreadsheet['numCol']  # noqa: ERA001
-    #        numRow = spreadsheet['numRow']  # noqa: ERA001
-    #        summary = uqResultsInputs['summary']  # noqa: ERA001
+    #        spreadsheet = uqResultsInputs['spreadsheet']
+    #        dataValues = spreadsheet['data']
+    #        headings = spreadsheet['headings']
+    #        numCol = spreadsheet['numCol']
+    #        numRow = spreadsheet['numRow']
+    #        summary = uqResultsInputs['summary']
     workingDir = jsonInputs['workingDir']  # noqa: N806, F841
 
     # Processing UQ inputs
     logFile.write('\n\t\tProcessing UQ inputs')
     seedValue = uqInputs['seed']  # noqa: N806
     nSamples = uqInputs['numParticles']  # noqa: N806
-    # maxRunTime = uqInputs["maxRunTime"]  # noqa: ERA001
+    # maxRunTime = uqInputs["maxRunTime"]
     if 'maxRunTime' in uqInputs.keys():  # noqa: SIM118
         maxRunTime = uqInputs['maxRunTime']  # noqa: N806
     else:
@@ -69,31 +69,31 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         parallelizeMCMC = uqInputs['parallelExecution']  # noqa: N806, F841
 
     logFile.write('\n\t\t\tProcessing the log-likelihood script options')
-    # If log-likelihood script is provided, use that, otherwise, use default log-likelihood function  # noqa: E501
+    # If log-likelihood script is provided, use that, otherwise, use default log-likelihood function
     if (
         len(logLikelihoodFile) > 0
     ):  # if the log-likelihood file is not an empty string
         logFile.write(
-            f"\n\t\t\t\tSearching for a user-defined log-likelihood script '{logLikelihoodFile}'"  # noqa: E501
+            f"\n\t\t\t\tSearching for a user-defined log-likelihood script '{logLikelihoodFile}'"
         )
         if os.path.exists(os.path.join(tmpSimCenterDir, logLikelihoodFile)):  # noqa: PTH110, PTH118
             logFile.write(
-                f"\n\t\t\t\tFound log-likelihood file '{logLikelihoodFile}' in {tmpSimCenterDir}."  # noqa: E501
+                f"\n\t\t\t\tFound log-likelihood file '{logLikelihoodFile}' in {tmpSimCenterDir}."
             )
             logLikeModuleName = os.path.splitext(logLikelihoodFile)[0]  # noqa: PTH122, N806
             try:
                 import_module(logLikeModuleName)
             except:
                 logFile.write(
-                    f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118, E501
+                    f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118
                 )
                 raise
         else:
             logFile.write(
-                f"\n\t\t\t\tERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."  # noqa: E501
+                f"\n\t\t\t\tERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."
             )
             raise FileNotFoundError(  # noqa: TRY003
-                f"ERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."  # noqa: EM102, E501
+                f"ERROR: The log-likelihood script '{logLikelihoodFile}' cannot be found in {tmpSimCenterDir}."  # noqa: EM102
             )
     else:
         defaultLogLikeFileName = 'defaultLogLikeScript.py'  # noqa: N806
@@ -102,13 +102,13 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         logLikeModuleName = os.path.splitext(defaultLogLikeFileName)[0]  # noqa: PTH122, N806
         logFile.write('\n\t\t\t\tLog-likelihood script not provided.')
         logFile.write(
-            f'\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)}'  # noqa: PTH118, E501
+            f'\n\t\t\t\tUsing the default log-likelihood script: \n\t\t\t\t\t{os.path.join(defaultLogLikeDirectoryPath, defaultLogLikeFileName)}'  # noqa: PTH118
         )
         try:
             import_module(logLikeModuleName)
         except:
             logFile.write(
-                f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118, E501
+                f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(tmpSimCenterDir, logLikelihoodFile)}' cannot be imported."  # noqa: PTH118
             )
             raise
     logLikeModule = import_module(logLikeModuleName)  # noqa: N806
@@ -129,7 +129,7 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
             f"Name: '{edpNamesList[i]}', Length: {edpLengthsList[i]}\n\t\t\t\t"
         )
     logFile.write(printString)
-    # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))  # noqa: ERA001, E501
+    # logFile.write("\tExpected length of each line in data file: {}".format(lineLength))
 
     # Processing model inputs
     logFile.write('\n\n\t\tProcessing application inputs')
@@ -147,9 +147,9 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         else:
             appl = appInputs[0]['Application'].lower()
         if appl in ['multimodel']:
-            # runMultiModel = True  # noqa: ERA001
+            # runMultiModel = True
             logFile.write(
-                f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}'  # noqa: E501
+                f'\n\t\t\t\tFound a multimodel application - {app}: {appInputs["Application"]}'
             )
             modelRVName = jsonInputs[app]['modelToRun'][3:]  # noqa: N806
             appModels = jsonInputs[app]['models']  # noqa: N806
@@ -169,17 +169,17 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
     for _, data in modelsDict.items():  # noqa: PERF102
         nModels = nModels * data['nModels']  # noqa: N806
     cartesianProductOfModelIndices = list(itertools.product(*modelIndicesList))  # noqa: N806
-    # logFile.write("\n\t\t\tNO LONGER Getting the number of models")  # noqa: ERA001
-    # inputFileList = []  # noqa: ERA001
-    # nModels = femInputs['numInputs']  # noqa: ERA001
-    # nModels = 1  # noqa: ERA001
+    # logFile.write("\n\t\t\tNO LONGER Getting the number of models")
+    # inputFileList = []
+    # nModels = femInputs['numInputs']
+    # nModels = 1
     # if nModels > 1:
-    #    fileInfo = femInputs['fileInfo']  # noqa: ERA001
+    #    fileInfo = femInputs['fileInfo']
     #    for m in range(nModels):
-    #        inputFileList.append(fileInfo[m]['inputFile'])  # noqa: ERA001
-    # else:  # noqa: ERA001
-    #    inputFileList.append(femInputs['inputFile'])  # noqa: ERA001
-    # logFile.write('\n\t\t\t\tThe number of models is: {}'.format(nModels))  # noqa: ERA001
+    #        inputFileList.append(fileInfo[m]['inputFile'])
+    # else:
+    #    inputFileList.append(femInputs['inputFile'])
+    # logFile.write('\n\t\t\t\tThe number of models is: {}'.format(nModels))
     writeFEMOutputs = True  # noqa: N806
 
     # Variables
@@ -245,12 +245,12 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
                     rv['alphas'], rv['betas'], rv['lowerbound'], rv['upperbound']
                 )
             elif rv['distribution'] == 'Lognormal':
-                # meanValue = rv["mean"]  # noqa: ERA001
-                # stdevValue = rv["stdDev"]  # noqa: ERA001
-                # mu = np.log(  # noqa: ERA001
-                #     pow(meanValue, 2) / np.sqrt(pow(stdevValue, 2) + pow(meanValue, 2))  # noqa: ERA001, E501
-                # )  # noqa: ERA001
-                # sig = np.sqrt(np.log(pow(stdevValue / meanValue, 2) + 1))  # noqa: ERA001
+                # meanValue = rv["mean"]
+                # stdevValue = rv["stdDev"]
+                # mu = np.log(
+                #     pow(meanValue, 2) / np.sqrt(pow(stdevValue, 2) + pow(meanValue, 2))
+                # )
+                # sig = np.sqrt(np.log(pow(stdevValue / meanValue, 2) + 1))
                 mu = rv['lambda']
                 sigma = rv['zeta']
                 variablesList[ind]['Par1'].append(mu)
@@ -335,16 +335,16 @@ def parseDataFunction(dakotaJsonFile, logFile, tmpSimCenterDir, mainscriptDir): 
         # if runMultiModel:
         #     variablesList[ind][]
 
-        # Adding one prior distribution per EDP for the error covariance multiplier term  # noqa: E501
+        # Adding one prior distribution per EDP for the error covariance multiplier term
         logFile.write(
-            '\n\t\t\t\t\t\tAdding one prior distribution per EDP for the error covariance multiplier '  # noqa: E501
+            '\n\t\t\t\t\t\tAdding one prior distribution per EDP for the error covariance multiplier '
             'term'
         )
-        # logFile.write("\n\t\t\tThe prior on the error covariance multipliers is an inverse gamma distribution \n"  # noqa: E501
-        #       "\t\twith parameters a and b set to 100. This corresponds to a variable whose mean \n"  # noqa: E501
-        #       "\t\tand mode are approximately 1.0 and whose standard deviation is approximately 0.1.")  # noqa: E501
-        # a = 100  # noqa: ERA001
-        # b = 100  # noqa: ERA001
+        # logFile.write("\n\t\t\tThe prior on the error covariance multipliers is an inverse gamma distribution \n"
+        #       "\t\twith parameters a and b set to 100. This corresponds to a variable whose mean \n"
+        #       "\t\tand mode are approximately 1.0 and whose standard deviation is approximately 0.1.")
+        # a = 100
+        # b = 100
         # The prior with parameters = 100 is too narrow. Using these values instead:
         a = 3
         b = 2

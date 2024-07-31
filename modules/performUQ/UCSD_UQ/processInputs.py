@@ -23,10 +23,10 @@ if __name__ == '__main__':
     cwd = os.getcwd()  # noqa: PTH109
     workdir_main = str(Path(cwd).parents[0])  # noqa: F821
 
-    # mainScriptPath = inputArgs[0]  # noqa: ERA001
-    # tmpSimCenterDir = inputArgs[1]  # noqa: ERA001
-    # templateDir = inputArgs[2]  # noqa: ERA001
-    # runType = inputArgs[3]  # either "runningLocal" or "runningRemote"  # noqa: ERA001
+    # mainScriptPath = inputArgs[0]
+    # tmpSimCenterDir = inputArgs[1]
+    # templateDir = inputArgs[2]
+    # runType = inputArgs[3]  # either "runningLocal" or "runningRemote"
 
     mainScriptPath = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
     templateDir = cwd  # noqa: N816
@@ -58,9 +58,9 @@ if __name__ == '__main__':
             pythonCommand = jsonInputs['python']  # noqa: N816
 
         # Get the path to the mainscript.py of TMCMC
-        #        mainScriptDir = os.path.split(mainScriptPath)[0]  # noqa: ERA001
+        #        mainScriptDir = os.path.split(mainScriptPath)[0]
         mainScript = os.path.join(mainScriptPath, 'mainscript.py')  # noqa: PTH118, N816
-        command = f'{pythonCommand} {mainScript} {tmpSimCenterDir} {templateDir} {runType} {workflowDriver} {inputFile}'  # noqa: E501
+        command = f'{pythonCommand} {mainScript} {tmpSimCenterDir} {templateDir} {runType} {workflowDriver} {inputFile}'
         try:
             result = subprocess.check_output(  # noqa: S602
                 command, stderr=subprocess.STDOUT, shell=True

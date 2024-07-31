@@ -102,7 +102,7 @@ def main(args):  # noqa: ANN001, ANN201, D103, PLR0915
     ):  # this happens with new applications, workflow to change
         print('RUNNING PREPROCESSOR\n')  # noqa: T201
         osType = platform.system()  # noqa: N806
-        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {aimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'  # noqa: N806, E501
+        preprocessorCommand = f'"{myScriptDir}/preprocessDakota" {aimName} {samName} {evtName} {edpName} {simName} {driverFile} {runDakota} {osType}'  # noqa: N806
         subprocess.Popen(preprocessorCommand, shell=True).wait()  # noqa: S602
         print('DONE RUNNING PREPROCESSOR\n')  # noqa: T201
 

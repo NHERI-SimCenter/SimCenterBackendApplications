@@ -67,16 +67,16 @@ def log_likelihood(  # noqa: ANN201, PLR0913
     distribution and a user-supplied covariance structure. Block-diagonal covariance structures are supported. The value
     of multipliers on the covariance block corresponding to each response quantity is also calibrated.
     :rtype: float
-    """  # noqa: E501, D400, D415
+    """  # noqa: D400, D415
     # Check if the correct number of covariance terms has been passed in
     numResponses = len(edpLengthsList)  # noqa: N806
     if len(covarianceMatrixList) != numExperiments * numResponses:
         print(  # noqa: T201
-            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: E501
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '
             'in.'
         )
         raise CovError(  # noqa: TRY003
-            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102, E501
+            f'ERROR: The expected number of covariance matrices is {numExperiments * numResponses}, but only {len(covarianceMatrixList)} were passed '  # noqa: EM102
             'in.'
         )
 
@@ -111,12 +111,12 @@ def log_likelihood(  # noqa: ANN201, PLR0913
             cov = np.atleast_2d(covarianceMatrixList[covListIndex])
             covListIndex = covListIndex + 1  # noqa: N806
 
-            # Multiply the covariance matrix by the value of the covariance multiplier  # noqa: E501
+            # Multiply the covariance matrix by the value of the covariance multiplier
             cov = cov * covarianceMultiplierList[j]
 
             if np.shape(cov)[0] == np.shape(cov)[1] == 1:
-                # If there is a single variance value that is constant for all residual terms, then this is the case of  # noqa: E501
-                # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be  # noqa: E501
+                # If there is a single variance value that is constant for all residual terms, then this is the case of
+                # having a sample of i.i.d. zero-mean normally distributed observations, and the log-likelihood can be
                 # computed more efficiently
                 var = cov[0][0]
                 ll = (
@@ -128,7 +128,7 @@ def log_likelihood(  # noqa: ANN201, PLR0913
                 if np.shape(cov)[0] != np.shape(cov)[1]:
                     cov = np.diag(cov.flatten())
                 # The multivariate normal log-pdf is made up of three terms:
-                # logpdf = -1/2*[(d*log(2*pi)) + (log(abs(det(cov)))) + (residual.T * inverse(cov) * residual) i.e.,  # noqa: E501
+                # logpdf = -1/2*[(d*log(2*pi)) + (log(abs(det(cov)))) + (residual.T * inverse(cov) * residual) i.e.,
                 # Mahalanobis distance]
                 #                = -1/2*[t1 + t2 + t3]
                 t1 = length * np.log(2 * np.pi)

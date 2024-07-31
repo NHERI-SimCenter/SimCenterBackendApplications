@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Main_Help_Window.ui'  # noqa: N999, D100
+# Form implementation generated from reading ui file 'Main_Help_Window.ui'  # noqa: D100, N999
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -71,7 +71,7 @@ class Ui_Main_Help_Window:  # noqa: N801, D101
         self.label.setText(
             _translate(
                 'Main_Help_Window',
-                'REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.',  # noqa: E501
+                'REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.',
             )
         )
 

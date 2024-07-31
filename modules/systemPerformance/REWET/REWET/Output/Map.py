@@ -23,7 +23,7 @@ import pandas as pd
 import shapely
 from Output import Helper
 
-# import time  # noqa: ERA001
+# import time
 
 
 class Map:  # noqa: D101
@@ -32,7 +32,8 @@ class Map:  # noqa: D101
 
     # def loadShapeFile(shapeFileAddr='Northridge\GIS\Demand\demand_polygons.shp'):
     def loadShapeFile(  # noqa: ANN201, N802, D102
-        self, shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp'  # noqa: ANN001, N803
+        self,
+        shapeFileAddr=r'Northridge\GIS\Demand\demand_polygons.shp',  # noqa: ANN001, N803
     ):
         shape_file = gpd.read_file(shapeFileAddr)
         return shape_file  # noqa: RET504
@@ -58,7 +59,7 @@ class Map:  # noqa: D101
     def getDLQNExceedenceProbabilityMap(self, data_frame, ihour, param):  # noqa: ANN001, ANN201, N802, D102, PLR0915
         data = data_frame.transpose()
         scn_prob_list = self.scenario_prob
-        # DLQN_dmg = pd.DataFrame(data=0, index=data.index, columns=data.columns)  # noqa: ERA001
+        # DLQN_dmg = pd.DataFrame(data=0, index=data.index, columns=data.columns)
 
         scn_prob = [scn_prob_list[scn_name] for scn_name in data.index]
         data['prob'] = scn_prob
@@ -69,27 +70,27 @@ class Map:  # noqa: D101
             for node_name in data_frame.index:
                 loop_dmg = data[[node_name, 'prob']]
                 loop_dmg = loop_dmg.sort_values(node_name, ascending=False)
-                # t1 = time.time()  # noqa: ERA001
-                # loop_ep  = Helper.EPHelper(loop_dmg['prob'].to_numpy())  # noqa: ERA001
+                # t1 = time.time()
+                # loop_ep  = Helper.EPHelper(loop_dmg['prob'].to_numpy())
                 loop_ep = Helper.EPHelper(loop_dmg['prob'].to_numpy(), old=False)
-                # loop_ep_2  = Helper.EPHelper(loop_dmg['prob'].to_numpy(), old=True)  # noqa: ERA001
-                # return (loop_ep, loop_ep_2)  # noqa: ERA001
-                # t2 = time.time()  # noqa: ERA001
-                # dt = t2-t1  # noqa: ERA001
-                # tt += dt  # noqa: ERA001
+                # loop_ep_2  = Helper.EPHelper(loop_dmg['prob'].to_numpy(), old=True)
+                # return (loop_ep, loop_ep_2)
+                # t2 = time.time()
+                # dt = t2-t1
+                # tt += dt
                 loop_dmg['ep'] = loop_ep
                 inter_ind = param
                 if inter_ind >= loop_dmg['ep'].max():
                     max_ind = loop_dmg[loop_dmg['ep'] == loop_dmg['ep'].max()].index[
                         0
                     ]
-                    # max_ind = loop_dmg.idxmax()  # noqa: ERA001
+                    # max_ind = loop_dmg.idxmax()
                     inter_value = loop_dmg.loc[max_ind, node_name]
                 elif inter_ind <= loop_dmg['ep'].min():
                     min_ind = loop_dmg[loop_dmg['ep'] == loop_dmg['ep'].min()].index[
                         0
                     ]
-                    # min_ind = loop_dmg.idxmin()  # noqa: ERA001
+                    # min_ind = loop_dmg.idxmin()
                     inter_value = loop_dmg.loc[min_ind, node_name]
                 else:
                     loop_dmg.loc['inter', 'ep'] = inter_ind
@@ -146,13 +147,13 @@ class Map:  # noqa: D101
         s = self.createGeopandasPointDataFrameForNodes()
         s['res'] = res
 
-        # polygon = gpd.read_file('Northridge\GIS\Demand\demand_polygons.shp')  # noqa: ERA001
-        # s = s.set_crs(epsg=polygon.crs.to_epsg())  # noqa: ERA001
-        # joined_map = gpd.sjoin(polygon, s)  # noqa: ERA001
-        # joined_map.plot(column='res', legend=True, categorical=True, cmap='Accent', ax=ax)  # noqa: ERA001, E501
-        # ax.get_legend().set_title('Hours without service')  # noqa: ERA001
-        # ax.get_legend()._loc=3  # noqa: ERA001
-        # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)  # noqa: ERA001
+        # polygon = gpd.read_file('Northridge\GIS\Demand\demand_polygons.shp')
+        # s = s.set_crs(epsg=polygon.crs.to_epsg())
+        # joined_map = gpd.sjoin(polygon, s)
+        # joined_map.plot(column='res', legend=True, categorical=True, cmap='Accent', ax=ax)
+        # ax.get_legend().set_title('Hours without service')
+        # ax.get_legend()._loc=3
+        # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         print(tt)  # noqa: T201
         return s
 
@@ -164,7 +165,7 @@ class Map:  # noqa: D101
         leak_ratio=0,  # noqa: ANN001
         consistency_time_window=7200,  # noqa: ANN001
     ):
-        # print(repr(LOS) + "   " + repr(iConsider_leak)+"  "+ repr(leak_ratio)+"   "+repr(consistency_time_window  ) )  # noqa: ERA001, E501
+        # print(repr(LOS) + "   " + repr(iConsider_leak)+"  "+ repr(leak_ratio)+"   "+repr(consistency_time_window  ) )
         self.loadScneariodata(scn_name)
         res = self.data[scn_name]
         map_res = pd.Series(data=0, index=self.demand_node_name_list, dtype=np.int64)
@@ -236,7 +237,7 @@ class Map:  # noqa: D101
                 rolled_DL_res_MET.ge(time_window - 1)
             )
             # if name == "SM323":
-            # return DL_res_MET[name], rolled_DL_res_MET, false_found, rolled_DL_res_MET.index[found_index], rolled_DL_res_MET.ge(time_window-1), found_index  # noqa: ERA001, E501
+            # return DL_res_MET[name], rolled_DL_res_MET, false_found, rolled_DL_res_MET.index[found_index], rolled_DL_res_MET.ge(time_window-1), found_index
             if false_found == False:  # noqa: E712
                 latest_time = 0
             else:
@@ -248,7 +249,7 @@ class Map:  # noqa: D101
 
             map_res.loc[name] = latest_time
 
-        # map_res = map_res/(3600*24)  # noqa: ERA001
+        # map_res = map_res/(3600*24)
         geopandas_df = self.createGeopandasPointDataFrameForNodes()
         geopandas_df.loc[map_res.index.to_list(), 'restoration_time'] = (
             map_res.to_list()
@@ -290,7 +291,7 @@ class Map:  # noqa: D101
         delivered_demand.sort_index(inplace=True)  # noqa: PD002
         leak_res.sort_index(inplace=True)  # noqa: PD002
 
-        # return delivered_demand, required_demand, leak_res  # noqa: ERA001
+        # return delivered_demand, required_demand, leak_res
 
         if bsc == 'DL':
             bsc_res_not_met_bool = (
@@ -304,7 +305,7 @@ class Map:  # noqa: D101
             raise ValueError('Unknown BSC= ' + str(bsc))
 
         if iConsider_leak:
-            # return leak_res, required_demand  # noqa: ERA001
+            # return leak_res, required_demand
             leak_res_non_available_time_list = set(
                 required_demand[leak_res.columns].index
             ) - set(leak_res.index)
@@ -320,7 +321,7 @@ class Map:  # noqa: D101
                     index=leak_res_non_available_time_list,
                     columns=leak_res.columns,
                 )
-                # leak_res.loc[leak_res_non_available_time_list, : ] = temp_data  # noqa: ERA001
+                # leak_res.loc[leak_res_non_available_time_list, : ] = temp_data
                 leak_res = leak_res.append(temp_data)
                 leak_res.sort_index(inplace=True)  # noqa: PD002
             leak_criteria_exceeded = (
@@ -329,24 +330,24 @@ class Map:  # noqa: D101
             combined_negative_result = (
                 bsc_res_not_met_bool | leak_criteria_exceeded
             ).dropna(axis=1)
-            # return combined_negative_result  # noqa: ERA001
+            # return combined_negative_result
             bsc_res_not_met_bool.loc[:, combined_negative_result.columns] = (
                 combined_negative_result
             )
 
-        # end_time = delivered_demand.min()  # noqa: ERA001
+        # end_time = delivered_demand.min()
         end_time = delivered_demand.index.max()
         if consistency_time_window > 1:
             time_beg_step_list = np.arange(0, end_time, consistency_time_window)
 
-            # time_beg_step_list = np.append(time_beg_step_list, [end_time])  # noqa: ERA001
+            # time_beg_step_list = np.append(time_beg_step_list, [end_time])
             time_end_step_list = time_beg_step_list  # + consistency_time_window
             window_bsc_not_met = pd.DataFrame(
                 index=time_end_step_list,
                 columns=bsc_res_not_met_bool.columns,
                 dtype=bool,
             )
-            # return bsc_res_not_met_bool#, delivered_demand, required_demand  # noqa: ERA001
+            # return bsc_res_not_met_bool#, delivered_demand, required_demand
             for step_time_beg in time_beg_step_list:
                 step_time_end = step_time_beg + consistency_time_window
                 window_data = bsc_res_not_met_bool.loc[step_time_beg:step_time_end]
@@ -356,7 +357,7 @@ class Map:  # noqa: D101
                         window_data
                     )
                 else:
-                    # print(step_time_beg)  # noqa: ERA001
+                    # print(step_time_beg)
                     window_bsc_not_met.drop(step_time_beg, inplace=True)  # noqa: PD002
         else:
             window_bsc_not_met = bsc_res_not_met_bool
@@ -366,8 +367,8 @@ class Map:  # noqa: D101
 
         not_met_node_name_list = window_bsc_not_met.any()
 
-        # ("****************")  # noqa: ERA001
-        # print(not_met_node_name_list[not_met_node_name_list==True])  # noqa: ERA001
+        # ("****************")
+        # print(not_met_node_name_list[not_met_node_name_list==True])
 
         not_met_node_name_list = not_met_node_name_list[
             not_met_node_name_list == True  # noqa: E712
@@ -402,8 +403,8 @@ class Map:  # noqa: D101
         window_bsc_not_met = window_bsc_not_met.loc[:cut_time]
         window_bsc_not_met = window_bsc_not_met.loc[:cut_time]
 
-        # return window_bsc_not_met  # noqa: ERA001
-        # print(not_met_node_name_list)  # noqa: ERA001
+        # return window_bsc_not_met
+        # print(not_met_node_name_list)
         time_bsc_not_met_time = window_bsc_not_met.sort_index(
             ascending=False
         ).idxmax()
@@ -440,8 +441,8 @@ class Map:  # noqa: D101
         polygon = gpd.read_file(r'Northridge\GIS\Demand\demand_polygons.shp')
         s = s.set_crs(crs=polygon.crs)
         joined_map = gpd.sjoin(polygon, s)
-        # return   joined_map  # noqa: ERA001
-        # joined_map.loc[map_res.index.to_list(), 'restoration_time'] = (map_res/3600/24).to_list()  # noqa: ERA001, E501
+        # return   joined_map
+        # joined_map.loc[map_res.index.to_list(), 'restoration_time'] = (map_res/3600/24).to_list()
 
         return joined_map  # noqa: RET504
 
@@ -476,7 +477,7 @@ class Map:  # noqa: D101
         delivered_demand.sort_index(inplace=True)  # noqa: PD002
         leak_res.sort_index(inplace=True)  # noqa: PD002
 
-        # return delivered_demand, required_demand, leak_res  # noqa: ERA001
+        # return delivered_demand, required_demand, leak_res
 
         if bsc == 'DL':
             bsc_res_not_met_bool = (
@@ -490,7 +491,7 @@ class Map:  # noqa: D101
             raise ValueError('Unknown BSC= ' + str(bsc))
 
         if iConsider_leak:
-            # return leak_res, required_demand  # noqa: ERA001
+            # return leak_res, required_demand
             leak_res_non_available_time_list = set(
                 required_demand[leak_res.columns].index
             ) - set(leak_res.index)
@@ -506,7 +507,7 @@ class Map:  # noqa: D101
                     index=leak_res_non_available_time_list,
                     columns=leak_res.columns,
                 )
-                # leak_res.loc[leak_res_non_available_time_list, : ] = temp_data  # noqa: ERA001
+                # leak_res.loc[leak_res_non_available_time_list, : ] = temp_data
                 leak_res = leak_res.append(temp_data)
                 leak_res.sort_index(inplace=True)  # noqa: PD002
             leak_criteria_exceeded = (
@@ -515,23 +516,23 @@ class Map:  # noqa: D101
             combined_negative_result = (
                 bsc_res_not_met_bool | leak_criteria_exceeded
             ).dropna(axis=1)
-            # return combined_negative_result  # noqa: ERA001
+            # return combined_negative_result
             bsc_res_not_met_bool.loc[:, combined_negative_result.columns] = (
                 combined_negative_result
             )
 
-        # end_time = delivered_demand.min()  # noqa: ERA001
+        # end_time = delivered_demand.min()
         end_time = delivered_demand.index.max()
         time_beg_step_list = np.arange(0, end_time, consistency_time_window)
 
-        # time_beg_step_list = np.append(time_beg_step_list, [end_time])  # noqa: ERA001
+        # time_beg_step_list = np.append(time_beg_step_list, [end_time])
         time_end_step_list = time_beg_step_list  # + consistency_time_window
         window_bsc_not_met = pd.DataFrame(
             index=time_end_step_list,
             columns=bsc_res_not_met_bool.columns,
             dtype=bool,
         )
-        # return bsc_res_not_met_bool#, delivered_demand, required_demand  # noqa: ERA001
+        # return bsc_res_not_met_bool#, delivered_demand, required_demand
         for step_time_beg in time_beg_step_list:
             step_time_end = step_time_beg + consistency_time_window
             window_data = bsc_res_not_met_bool.loc[step_time_beg:step_time_end]
@@ -541,9 +542,9 @@ class Map:  # noqa: D101
                     window_data
                 )
             else:
-                # print(step_time_beg)  # noqa: ERA001
+                # print(step_time_beg)
                 window_bsc_not_met.drop(step_time_beg, inplace=True)  # noqa: PD002
-        # return window_bsc_not_met  # noqa: ERA001
+        # return window_bsc_not_met
         pre_incident = (window_bsc_not_met.loc[: 3600 * 3]).any()
         non_incident = pre_incident[pre_incident == False].index  # noqa: E712
 
@@ -551,8 +552,8 @@ class Map:  # noqa: D101
 
         not_met_node_name_list = window_bsc_not_met.any()
 
-        # ("****************")  # noqa: ERA001
-        # print(not_met_node_name_list[not_met_node_name_list==True])  # noqa: ERA001
+        # ("****************")
+        # print(not_met_node_name_list[not_met_node_name_list==True])
 
         not_met_node_name_list = not_met_node_name_list[
             not_met_node_name_list == True  # noqa: E712
@@ -581,8 +582,8 @@ class Map:  # noqa: D101
             window_bsc_not_met[non_incident].loc[14400].sum()
         )
         percent_init = number_of_bad_node_at_damage / number_of_good_nodes * 100
-        # return window_bsc_not_met  # noqa: ERA001
-        # print(not_met_node_name_list)  # noqa: ERA001
+        # return window_bsc_not_met
+        # print(not_met_node_name_list)
         time_bsc_not_met_time = window_bsc_not_met.sort_index(
             ascending=False
         ).idxmax()

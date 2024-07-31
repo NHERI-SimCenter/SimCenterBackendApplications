@@ -11,8 +11,8 @@ from UQpy.run_model.model_execution.ThirdPartyModel import ThirdPartyModel
 from UQpy.run_model.RunModel import RunModel
 
 # THIS IS FOR WHEN MESSING AROUND WITH UQpy SOURCE
-# import sys  # noqa: ERA001
-# sys.path.append(os.path.abspath("/home/michael/UQpy/src"))  # noqa: ERA001
+# import sys
+# sys.path.append(os.path.abspath("/home/michael/UQpy/src"))
 from UQpy.sampling.MonteCarloSampling import MonteCarloSampling as MCS  # noqa: N817
 from uqRunner import UqRunner
 
@@ -44,8 +44,8 @@ class UQpyRunner(UqRunner):  # noqa: D101
         runType:        Specifies whether computations are being run locally or on an HPC cluster
         localAppDir:    Directory containing apps for local run
         remoteAppDir:   Directory containing apps for remote run
-        """  # noqa: E501, D205, D400, D401, D404, D415
-        # There is still plenty of configuration that can and should be added here. This currently does MCS sampling with Uniform  # noqa: E501
+        """  # noqa: D205, D400, D401, D404, D415
+        # There is still plenty of configuration that can and should be added here. This currently does MCS sampling with Uniform
         # distributions only, though this is easily expanded
 
         # Copy required python files to template directory
@@ -78,7 +78,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
         numberOfSamples = 0  # noqa: N806
         modelScript = 'runWorkflowDriver.py'  # noqa: N806
         inputTemplate = 'params.template'  # noqa: N806
-        # outputObjectName = 'OutputProcessor'  # noqa: ERA001
+        # outputObjectName = 'OutputProcessor'
         outputObjectName = 'output_function'  # noqa: N806
         outputScript = 'processUQpyOutput.py'  # noqa: N806
         numberOfTasks = 1  # noqa: N806
@@ -88,7 +88,7 @@ class UQpyRunner(UqRunner):  # noqa: D101
         resumeRun = False  # noqa: N806, F841
         seed = 1
 
-        # If computations are being executed on HPC, enable UQpy to start computations using srun  # noqa: E501
+        # If computations are being executed on HPC, enable UQpy to start computations using srun
         if runType == 'runningRemote':
             clusterRun = True  # noqa: N806, F841
 
@@ -150,10 +150,10 @@ class UQpyRunner(UqRunner):  # noqa: D101
         # Run model based on input config
         startTime = time.time()  # noqa: N806
         # model = RunModel(samples=samples.samples, model_script=modelScript,
-        #                  input_template=inputTemplate, var_names=variableNames,  # noqa: ERA001
-        #                  output_script=outputScript, output_object_name=outputObjectName,  # noqa: ERA001, E501
+        #                  input_template=inputTemplate, var_names=variableNames,
+        #                  output_script=outputScript, output_object_name=outputObjectName,
         #                  verbose=True, ntasks=numberOfTasks,
-        #                  nodes=numberOfNodes, cores_per_task=coresPerTask,  # noqa: ERA001
+        #                  nodes=numberOfNodes, cores_per_task=coresPerTask,
         #                  cluster=clusterRun, resume=resumeRun)
         model = ThirdPartyModel(
             model_script=modelScript,

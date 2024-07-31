@@ -88,7 +88,7 @@ if __name__ == '__main__':
         print('HurricaneSimulation: stations created.')  # noqa: T201
     else:
         print(  # noqa: T201
-            'HurricaneSimulation: please check the "Input" directory in the configuration json file.'  # noqa: E501
+            'HurricaneSimulation: please check the "Input" directory in the configuration json file.'
         )
         exit()  # noqa: PLR1722
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
                 )
             else:
                 print(  # noqa: T201
-                    'HurricaneSimulation: currently supporting LinearAnalytical model type.'  # noqa: E501
+                    'HurricaneSimulation: currently supporting LinearAnalytical model type.'
                 )
             # converting peak wind speed
             pws = convert_wind_speed(event_info, storm_simu)  # noqa: F405
@@ -136,6 +136,6 @@ if __name__ == '__main__':
             print('HurricaneSimulation: currently only supporting wind simulations.')  # noqa: T201
     else:
         print(  # noqa: T201
-            'HurricaneSimulation currently only supports earthquake and wind simulations.'  # noqa: E501
+            'HurricaneSimulation currently only supports earthquake and wind simulations.'
         )
     print('HurricaneSimulation: intensity measures computed.')  # noqa: T201

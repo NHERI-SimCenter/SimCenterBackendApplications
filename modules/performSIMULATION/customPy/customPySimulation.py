@@ -103,10 +103,10 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
         EDP_in = json.load(f)  # noqa: N806
 
     # KZ: commented out --> we're running at the current workdir
-    # sys.path.insert(0, SAM_in['modelPath'])  # noqa: ERA001
-    # os.chdir(SAM_in['modelPath'])  # noqa: ERA001
-    # print(os.listdir(os.getcwd()))  # noqa: ERA001
-    # print(os.getcwd())  # noqa: ERA001
+    # sys.path.insert(0, SAM_in['modelPath'])
+    # os.chdir(SAM_in['modelPath'])
+    # print(os.listdir(os.getcwd()))
+    # print(os.getcwd())
 
     custom_script_path = SAM_in['mainScript']
 
@@ -189,11 +189,11 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
         except:  # noqa: E722
             response['scalar_data'] = ['NaN']
             results_txt += 'NaN '
-        # edp = EDP_res[response['type']][response['id']]  # noqa: ERA001
-        # print(edp)  # noqa: ERA001
+        # edp = EDP_res[response['type']][response['id']]
+        # print(edp)
 
-        # response['scalar_data'] = edp # [val for dof, val in edp.items()]  # noqa: ERA001
-        # print(response)  # noqa: ERA001
+        # response['scalar_data'] = edp # [val for dof, val in edp.items()]
+        # print(response)
     results_txt = results_txt[:-1]
 
     with open(EDP_input_path, 'w', encoding='utf-8') as f:  # noqa: PTH123
@@ -302,7 +302,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_p
 
     with open(EDP_input_path, 'w', encoding="utf-8") as f:
         json.dump(EDP_in, f, indent=2)
-    """  # noqa: E501
+    """
 
     log_msg('Simulation script finished.')  # noqa: F405
 

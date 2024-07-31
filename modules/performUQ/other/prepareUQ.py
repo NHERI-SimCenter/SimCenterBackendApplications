@@ -1,10 +1,10 @@
 # written: Michael Gardner @ UNR  # noqa: INP001, D100
 
-# import sys  # noqa: ERA001
+# import sys
 
 
 def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: ANN001, ANN201, C901, N802, N803, D103
-    # These are the delimiter choices, which can expanded as more UQ programs are added. Remember to also  # noqa: E501
+    # These are the delimiter choices, which can expanded as more UQ programs are added. Remember to also
     # extend the factory in rvDelimiter to handle addtional cases
     rvDelimiterChoices = ['SimCenterDelimiter', 'UQpyDelimiter']  # noqa: N806
 
@@ -14,8 +14,8 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: ANN001, 
         # JVM
         # Commenting out the following, since it is invalid.
 
-        # except IOError:  # noqa: ERA001
-        #     print("ERROR: preProcessUQ.py: Symbol identifying value as random variable not recognized : ", rvSpecifier)  # noqa: ERA001, E501
+        # except IOError:
+        #     print("ERROR: preProcessUQ.py: Symbol identifying value as random variable not recognized : ", rvSpecifier)
 
         pass
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +44,7 @@ def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: ANN001, 
     except OSError:
         print('ERROR: preProcessUQ.py could not open parameters file: ' + paramsFile)  # noqa: T201
 
-    # Next, open input file and search for random variables that need to be replaced by parameter realizations  # noqa: E501
+    # Next, open input file and search for random variables that need to be replaced by parameter realizations
     inputTemplate = 'inputTemplate'  # noqa: N806
     realizationOutput = 'outputFile'  # noqa: N806
     try:

@@ -22,7 +22,7 @@ class Crew_Report:  # noqa: N801, D101
     def getCrewTableAt(self, scn_name, time, crew_type_name, crew_zone=None):  # noqa: ANN001, ANN201, N802, D102
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
-        # crew_type  = self.getCrewForTime(scn_name, time)  # noqa: ERA001
+        # crew_type  = self.getCrewForTime(scn_name, time)
         crew_table = reg.restoration_log_book.crew_history[time]
         typed_crew_table = crew_table[crew_table['type'] == crew_type_name]
 
@@ -46,7 +46,10 @@ class Crew_Report:  # noqa: N801, D101
         return typed_crew_table
 
     def getCrewAvailabilityThroughTime(  # noqa: ANN201, N802, D102
-        self, scn_name, crew_type_name, crew_zone=None  # noqa: ANN001
+        self,
+        scn_name,  # noqa: ANN001
+        crew_type_name,  # noqa: ANN001
+        crew_zone=None,  # noqa: ANN001
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -70,7 +73,11 @@ class Crew_Report:  # noqa: N801, D101
         return total_number, crew_number
 
     def getCrewOnShiftThroughTime(  # noqa: ANN201, N802, D102
-        self, scn_name, crew_type_name, crew_zone=None, not_on_shift=False  # noqa: ANN001, FBT002
+        self,
+        scn_name,  # noqa: ANN001
+        crew_type_name,  # noqa: ANN001
+        crew_zone=None,  # noqa: ANN001
+        not_on_shift=False,  # noqa: ANN001, FBT002
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -101,7 +108,11 @@ class Crew_Report:  # noqa: N801, D101
         return total_number, crew_number
 
     def getCrewWorkingThroughTime(  # noqa: ANN201, N802, D102
-        self, scn_name, crew_type_name, crew_zone=None, not_on_working=False  # noqa: ANN001, FBT002
+        self,
+        scn_name,  # noqa: ANN001
+        crew_type_name,  # noqa: ANN001
+        crew_zone=None,  # noqa: ANN001
+        not_on_working=False,  # noqa: ANN001, FBT002
     ):
         self.loadScneariodata(scn_name)
         reg = self.registry[scn_name]
@@ -116,7 +127,7 @@ class Crew_Report:  # noqa: N801, D101
                 scn_name, time, crew_type_name, crew_zone
             )
             total_number = len(crew_table_time)
-            # available_number_time = crew_table_time[crew_table_time['available']==True]  # noqa: ERA001, E501
+            # available_number_time = crew_table_time[crew_table_time['available']==True]
             available_number_time = crew_table_time[
                 crew_table_time['active'] == True  # noqa: E712
             ]
@@ -166,7 +177,7 @@ class Crew_Report:  # noqa: N801, D101
                 else:
                     crew_report.loc[time, 'off-duty'] += 1
 
-                # iAvailable = agent_row['available']  # noqa: ERA001
+                # iAvailable = agent_row['available']
                 if agent_row['available'] or agent_row['active']:
                     crew_report.loc[time, 'Reported'] += 1
                     if agent_row['active'] and agent_row['ready']:

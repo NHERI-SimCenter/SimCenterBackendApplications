@@ -20,12 +20,12 @@ def M9(information):  # noqa: ANN001, ANN201, N802
         'grid_type'
     ]  # grid type (options: A, B, C, D, E, Y, and Z, can be "all")
 
-    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806, E501
+    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806
     maxnumSiteGM = 30  # noqa: N806
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
     # changing realizations order
-    # indicies = list(range(maxnumSiteGM));  # noqa: ERA001
+    # indicies = list(range(maxnumSiteGM));
     Realizations = [f'{i:03}' for i in range(1, 33)]  # noqa: N806
     indicies = np.arange(32)
     if randomFLag:
@@ -73,7 +73,7 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     if LocationFlag:
         gdf = gdf.loc[[0]]
 
-    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"  # noqa: E501
+    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"
     gdf[['filename', 'Latitude', 'Longitude']].to_csv(
         f'{directory}/sites.csv', index=False
     )

@@ -74,9 +74,9 @@ class generalAIMGenerator:  # noqa: N801
     def createAIM(self, asset_idx, component_type=None):  # noqa: ANN001, ANN201, ARG002, N802, D102
         # initialize the AIM file
         # if component_type is not None:
-        #     asset_id = component_type+"_"+str(asset_idx)  # noqa: ERA001
-        # else:  # noqa: ERA001
-        #     asset_id = str(asset_idx)  # noqa: ERA001
+        #     asset_id = component_type+"_"+str(asset_idx)
+        # else:
+        #     asset_id = str(asset_idx)
         asset_id = asset_idx
         asset = self.gdf.loc[asset_idx, :]
         AIM_i = {  # noqa: N806
@@ -95,11 +95,11 @@ class generalAIMGenerator:  # noqa: N801
             'geometry'
         ].wkt
         # if component_type is not None:
-        #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})  # noqa: ERA001
+        #     AIM_i["GeneralInformation"].update({"assetSubtype":component_type})
         return AIM_i
 
     def dumpAIM(self, AIM_i):  # noqa: ANN001, ANN201, N802, N803, D102
-        # assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)  # noqa: ERA001
+        # assetSubtype = AIM_i['GeneralInformation'].get("assetSubtype", None)
         componentType = AIM_i['GeneralInformation'].get('type', None)  # noqa: N806
         outDir = os.path.dirname(self.output_file)  # noqa: PTH120, N806
         if componentType:
@@ -119,7 +119,7 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
         newEdges = []  # noqa: N806
         crs = edges.crs
         edgesOrig = edges.copy()  # noqa: N806
-        # edgesOrig["IDbase"] = edgesOrig["OID"].apply(lambda x: x.split('_')[0])  # noqa: ERA001
+        # edgesOrig["IDbase"] = edgesOrig["OID"].apply(lambda x: x.split('_')[0])
         edgesOrig['IDbase'] = edgesOrig.index
         num_segExistingMap = edgesOrig.groupby('IDbase').count().iloc[:, 0].to_dict()  # noqa: N806
         edges_dict = edges.reset_index().to_crs('epsg:6500')
@@ -144,11 +144,11 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
             for sLS_ind, sLS in enumerate(splittedLS):  # noqa: N806
                 # create new edge
                 # if sLS_ind ==0:
-                #     newID = currentEdge["id"]  # noqa: ERA001
-                # else:  # noqa: ERA001
-                #     newID = currentEdge["id"]+"_"+str(num_segExisting)  # noqa: ERA001
-                #     num_segExisting +=1  # noqa: ERA001
-                #     num_segExistingMap[currentEdge["id"]] += 1  # noqa: ERA001
+                #     newID = currentEdge["id"]
+                # else:
+                #     newID = currentEdge["id"]+"_"+str(num_segExisting)
+                #     num_segExisting +=1
+                #     num_segExistingMap[currentEdge["id"]] += 1
                 newID = currentEdge['id']  # noqa: N806
                 newGeom = sLS  # noqa: N806
                 newEdge = currentEdge.copy()  # noqa: N806
@@ -167,23 +167,26 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
                 .rename(columns={'id': 'idBeforeSegment', 'index': 'id'})
                 .drop(columns=['segID'])
             )
-        # self.gdf = edges.reset_index().rename(columns={"index":"AIM_id"})  # noqa: ERA001
+        # self.gdf = edges.reset_index().rename(columns={"index":"AIM_id"})
         self.gdf = edges
 
     def defineConnectivities(  # noqa: ANN201, N802, D102
-        self, AIM_id_prefix=None, edges_file_name=None, nodes_file_name=None  # noqa: ANN001, N803
+        self,
+        AIM_id_prefix=None,  # noqa: ANN001, N803
+        edges_file_name=None,  # noqa: ANN001
+        nodes_file_name=None,  # noqa: ANN001
     ):
         # Convert find connectivity and add start_node, end_node attributes
         edges = self.gdf
         datacrs = edges.crs
         graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
-        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph  # noqa: E501
+        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
             warnings.simplefilter('ignore')
             nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
             )
-        # edges = edges.set_index('ind')  # noqa: ERA001
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder  # noqa: E501
+        # edges = edges.set_index('ind')
+        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -200,16 +203,16 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
             else:
                 print(  # noqa: T201
                     ind,
-                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',  # noqa: E501
+                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',
                 )
-        # locationGS = gpd.GeoSeries(edges["geometry"].apply(lambda x: x.centroid),crs = edges.crs).to_crs(datacrs)  # noqa: ERA001, E501
+        # locationGS = gpd.GeoSeries(edges["geometry"].apply(lambda x: x.centroid),crs = edges.crs).to_crs(datacrs)
         edges = (
             edges.drop('mm_len', axis=1)
             .rename(columns={'node_start': 'StartNode', 'node_end': 'EndNode'})
             .to_crs(datacrs)
         )
-        # edges["location_lon"] = locationGS.apply(lambda x:x.x)  # noqa: ERA001
-        # edges["location_lat"] = locationGS.apply(lambda x:x.y)  # noqa: ERA001
+        # edges["location_lon"] = locationGS.apply(lambda x:x.x)
+        # edges["location_lat"] = locationGS.apply(lambda x:x.y)
         edges = edges.rename(columns={'id': 'AIM_id'})
         if AIM_id_prefix is not None:
             edges['AIM_id'] = edges['AIM_id'].apply(
@@ -218,7 +221,8 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
         outDir = os.path.dirname(self.output_file)  # noqa: PTH120, N806
         if edges_file_name is not None:
             edges.to_file(
-                os.path.join(outDir, f'{edges_file_name}.geojson'), driver='GeoJSON'  # noqa: PTH118
+                os.path.join(outDir, f'{edges_file_name}.geojson'),  # noqa: PTH118
+                driver='GeoJSON',
             )
         if nodes_file_name is not None:
             nodesNeeded = list(  # noqa: N806
@@ -230,7 +234,8 @@ class lineAIMGenerator(generalAIMGenerator):  # noqa: N801, D101
             nodes = nodes.loc[nodesNeeded, :]
             nodes = nodes.to_crs(datacrs)[['nodeID', 'geometry']]
             nodes.to_file(
-                os.path.join(outDir, f'{nodes_file_name}.geojson'), driver='GeoJSON'  # noqa: PTH118
+                os.path.join(outDir, f'{nodes_file_name}.geojson'),  # noqa: PTH118
+                driver='GeoJSON',
             )
         self.gdf = edges
 
@@ -298,7 +303,11 @@ def init_workdir(component_dict, outDir):  # noqa: ANN001, ANN201, N803, D103
 
 
 def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
-    output_file, asset_source_file, asset_type, input_file, doParallel  # noqa: ANN001, N803
+    output_file,  # noqa: ANN001
+    asset_source_file,  # noqa: ANN001
+    asset_type,  # noqa: ANN001
+    input_file,  # noqa: ANN001
+    doParallel,  # noqa: ANN001, N803
 ):
     # check if running parallel
     numP = 1  # noqa: N806
@@ -328,9 +337,9 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
         'ApplicationData'
     ]
     # if input_config.get("Roadway", None):
-    #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))  # noqa: ERA001, E501
+    #     roadSegLength = float(input_config['Roadway'].get('maxRoadLength_m', "100000"))
 
-    # assetSourceFile passed through command may be different from input_config when run on designsafe  # noqa: E501
+    # assetSourceFile passed through command may be different from input_config when run on designsafe
     component_dict = split_and_select_components(input_config, asset_source_file)
     component_dir = init_workdir(component_dict, outDir)  # noqa: F841
     assets_array = []
@@ -341,17 +350,17 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
             AIMgenerator = generalAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
             selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
-        # elif component_type in ["Roadway"]:  # noqa: ERA001
+        # elif component_type in ["Roadway"]:
         elif geom_type in [shapely.LineString]:
             AIMgenerator = lineAIMGenerator(output_file)  # noqa: N806
             AIMgenerator.set_asset_gdf(component_data)
             selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: N806
-            # AIMgenerator.breakDownLongLines(roadSegLength)  # noqa: ERA001
-            # # AIMgenerator.defineConnectivities(None, "hwy_edges",\  # noqa: ERA001
+            # AIMgenerator.breakDownLongLines(roadSegLength)
+            # # AIMgenerator.defineConnectivities(None, "hwy_edges",\
             # #                                   "hwy_nodes")
             # # Because the number of asset changes after break long lines.
             # # Run this to select all assets
-            # selected_Asset_idxs = AIMgenerator.selectAssets(None)  # noqa: ERA001
+            # selected_Asset_idxs = AIMgenerator.selectAssets(None)
         else:
             sys.exit(
                 (f'The geometry type {geom_type} defined for the')  # noqa: ISC003
@@ -379,7 +388,7 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
         comm.Barrier()
     else:
         if runParallel == True:  # noqa: E712
-            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append  # noqa: E501
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
             comm.Barrier()
             for i in range(1, numP):
                 fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
@@ -389,9 +398,9 @@ def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
                 assets_array += assetsToAppend
         with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=2, cls=NpEncoder)
-    # else:  # noqa: ERA001
-    #     print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")  # noqa: ERA001, E501
-    #     sys.exit(1)  # noqa: ERA001
+    # else:
+    #     print(f"The asset_type {asset_type} is not one of Buildings, TransportationNetwork or WaterNetwork, and is currently not supported")
+    #     sys.exit(1)
 
 
 if __name__ == '__main__':

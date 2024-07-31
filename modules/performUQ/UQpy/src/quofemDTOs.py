@@ -64,7 +64,7 @@ class Model(BaseModel):  # noqa: D101
     EDP: List[EDPItem]  # noqa: UP006
     FEM: Dict[str, Any]  # noqa: UP006
     UQ: ModuleDTO
-    # correlationMatrix: List[int]  # noqa: ERA001
+    # correlationMatrix: List[int]
     localAppDir: str  # noqa: N815
     randomVariables: List[DistributionDTO]  # noqa: N815, UP006
     remoteAppDir: str  # noqa: N815

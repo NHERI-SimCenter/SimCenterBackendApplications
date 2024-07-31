@@ -107,7 +107,7 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
         log_msg(f'Loading {res_type} files...')
 
         files = glob.glob(f'./results/{res_type}/*/{res_type}_*.csv')  # noqa: PTH207
-        # files = files[:1000]  # noqa: ERA001
+        # files = files[:1000]
 
         if len(files) > 0:
             if use_dask:
@@ -118,7 +118,7 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
                 print(f'Creating threads for {file_count} files...')  # noqa: T201
 
                 for t_i in range(threads):
-                    # print(t_i)  # noqa: ERA001
+                    # print(t_i)
 
                     if t_i * chunk < file_count - 1:
                         df_list_i = delayed(read_csv_files)(
@@ -165,7 +165,7 @@ def main(threads=1):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
                 complevel=1,
                 complib='blosc:blosclz',
             )
-            # df_all.to_csv('{}.csv'.format(res_type))  # noqa: ERA001
+            # df_all.to_csv('{}.csv'.format(res_type))
 
         else:
             print(f'No {res_type} files found')  # noqa: T201

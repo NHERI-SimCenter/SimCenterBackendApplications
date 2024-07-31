@@ -94,7 +94,7 @@ class Hydraulic_Tab_Designer:  # noqa: N801, D101
             self.demand_ratio_line.setText(self.last_demand_ratio_value)
         else:
             self.last_demand_ratio_value = x
-        # print(x)  # noqa: ERA001
+        # print(x)
 
     def hydraulicTimeStepValidatorHelper(self, x):  # noqa: ANN001, ANN201, ARG002, N802, D102
         try:

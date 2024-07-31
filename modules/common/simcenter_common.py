@@ -71,7 +71,8 @@ def log_msg(msg='', prepend_timestamp=True):  # noqa: ANN001, ANN201, FBT002, D4
     """  # noqa: D400, D415
     if prepend_timestamp:
         formatted_msg = '{} {}'.format(
-            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg  # noqa: DTZ003
+            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4],  # noqa: DTZ003
+            msg,
         )
     else:
         formatted_msg = msg

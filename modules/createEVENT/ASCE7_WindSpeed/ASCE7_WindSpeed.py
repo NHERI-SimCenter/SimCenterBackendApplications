@@ -18,7 +18,7 @@ def write_RV(BIM_input_path, EVENT_input_path):  # noqa: ANN001, ANN201, ARG001,
     with open(EVENT_input_path, 'w') as f:  # noqa: PTH123
         json.dump(EVENT_in, f, indent=2)
 
-    # TODO: if there are multiple events, we need to create a random variable for them  # noqa: FIX002, TD002, TD003, E501
+    # TODO: if there are multiple events, we need to create a random variable for them  # noqa: FIX002, TD002, TD003
 
 
 def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity):  # noqa: ANN001, ANN201, N803, D103

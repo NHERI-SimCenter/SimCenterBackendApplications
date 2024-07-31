@@ -19,7 +19,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
     samplingMethod: SamplingMethod  # noqa: N815
 
     # def __post_init__(self):
-    # self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)  # noqa: ERA001, E501
+    # self.samplingMethod.n_chains=int(self.samples_per_subset*self.conditionalProbability)
 
     def init_to_text(self):  # noqa: ANN201, D102
         from UQpy.reliability.SubsetSimulation import SubsetSimulation
@@ -28,7 +28,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
         c = SubsetSimulation
 
         self.__create_postprocess_script()
-        # output_script = Path('postprocess_script.py')  # noqa: ERA001
+        # output_script = Path('postprocess_script.py')
 
         initial_sampler = (
             'from '
@@ -37,7 +37,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
             + MonteCarloSampling.__module__.split('.')[-1]
             + '\n'
         )
-        initial_sampler += f"monte_carlo = {MonteCarloSampling.__module__.split('.')[-1]}(distributions=marginals, nsamples={self.samples_per_subset}, random_state=sampling.random_state)\n"  # noqa: E501
+        initial_sampler += f"monte_carlo = {MonteCarloSampling.__module__.split('.')[-1]}(distributions=marginals, nsamples={self.samples_per_subset}, random_state=sampling.random_state)\n"
 
         class_name = c.__module__.split('.')[-1]
         import_statement = 'from ' + c.__module__ + ' import ' + class_name
@@ -65,7 +65,7 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
             "\n\t'time_to_completion_in_minutes': f'{(time.time() - t1)/60}', "
             "\n\t'number_of_model_evaluations': len(run_model.qoi_list), "
             "\n\t'num_levels': f'{len(subset.samples)}', "
-            "\n\t'performance_threshold_per_level': subset.performance_threshold_per_level, "  # noqa: E501
+            "\n\t'performance_threshold_per_level': subset.performance_threshold_per_level, "
             "\n\t'sample_values_per_level': samples_list, "
             "\n\t'performance_function_per_level': performance_function_list, "
             "\n\t'independent_chains_CoV': f'{subset.independent_chains_CoV}', "
@@ -99,13 +99,13 @@ class SubsetSimulationDTO(ReliabilityMethodBaseDTO):  # noqa: D101
             '\t\ttry:',
             '\t\t\tres = float(res)',
             '\t\texcept ValueError:',
-            "\t\t\traise ValueError(f'Result should be a single float value, check results.out file for sample evaluation {index}')",  # noqa: E501
+            "\t\t\traise ValueError(f'Result should be a single float value, check results.out file for sample evaluation {index}')",
             '\t\texcept Exception:',
             '\t\t\traise',
             '\t\telse:',
             f'\t\t\treturn {self.failure_threshold} - res',
             '\telse:',
-            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "  # noqa: ISC003, E501
+            "\t\traise ValueError(f'Result not found in results.out file for sample evaluation "  # noqa: ISC003
             + "{index}')",
         ]
 

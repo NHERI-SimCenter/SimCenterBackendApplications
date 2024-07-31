@@ -18,7 +18,7 @@ class DataProcessingError(Exception):
     ----------
         message -- explanation of the error
 
-    """  # noqa: E501
+    """
 
     def __init__(self, message):  # noqa: ANN001, ANN204, D107
         self.message = message
@@ -46,31 +46,31 @@ class CovarianceMatrixPreparer:  # noqa: D101
         self.logFile.write('\n\n==========================')
         self.logFile.write('\nProcessing options for variance/covariance:')
         self.logFile.write(
-            '\n\tOne variance value or covariance matrix will be used per response quantity per experiment.'  # noqa: E501
+            '\n\tOne variance value or covariance matrix will be used per response quantity per experiment.'
         )
         self.logFile.write(
-            '\n\tIf the user does not supply variance or covariance data, a default variance value will be\n\t'  # noqa: E501
-            'used per response quantity, which is constant across experiments. The default variance is\n\t'  # noqa: E501
-            'computed as the variance of the transformed data, if there is data from more than one '  # noqa: E501
+            '\n\tIf the user does not supply variance or covariance data, a default variance value will be\n\t'
+            'used per response quantity, which is constant across experiments. The default variance is\n\t'
+            'computed as the variance of the transformed data, if there is data from more than one '
             'experiment.\n\t'
-            'If there is data from only one experiment, then a default variance value is computed by \n\t'  # noqa: E501
-            'assuming that the standard deviation of the error is 5% of the absolute maximum value of \n\t'  # noqa: E501
+            'If there is data from only one experiment, then a default variance value is computed by \n\t'
+            'assuming that the standard deviation of the error is 5% of the absolute maximum value of \n\t'
             'the corresponding transformed response data.'
         )
 
     def getDefaultErrorVariances(self):  # noqa: ANN201, N802, D102
-        # For each response variable, compute the variance of the data. These will be the default error variance  # noqa: E501
-        # values used in the calibration process. Values of the multiplier on these default error variance values will be  # noqa: E501
-        # calibrated. There will be one such error variance value per response quantity. If there is only data from one  # noqa: E501
-        # experiment,then the default error std.dev. value is assumed to be 5% of the absolute maximum value of the data  # noqa: E501
+        # For each response variable, compute the variance of the data. These will be the default error variance
+        # values used in the calibration process. Values of the multiplier on these default error variance values will be
+        # calibrated. There will be one such error variance value per response quantity. If there is only data from one
+        # experiment,then the default error std.dev. value is assumed to be 5% of the absolute maximum value of the data
         # corresponding to that response quantity.
         defaultErrorVariances = 1e-12 * np.ones_like(  # noqa: N806
             self.edpLengthsList, dtype=float
         )
-        # defaultErrorVariances = np.zeros_like(self.edpLengthsList, dtype=float)  # noqa: ERA001
+        # defaultErrorVariances = np.zeros_like(self.edpLengthsList, dtype=float)
         if (
             np.shape(self.calibrationData)[0] > 1
-        ):  # if there are more than 1 rows of data, i.e. data from multiple experiments  # noqa: E501
+        ):  # if there are more than 1 rows of data, i.e. data from multiple experiments
             currentIndex = 0  # noqa: N806
             for i in range(len(self.edpLengthsList)):
                 dataSlice = self.calibrationData[  # noqa: N806
@@ -110,7 +110,7 @@ class CovarianceMatrixPreparer:  # noqa: D101
                 covarianceFileName = f'{edpName}.{expNum}.sigma'  # noqa: N806
                 covarianceFile = os.path.join(workdirMain, covarianceFileName)  # noqa: PTH118, N806
                 logFile.write(
-                    f"\n\t\tChecking to see if user-supplied file '{covarianceFileName}' exists in '{workdirMain}'"  # noqa: E501
+                    f"\n\t\tChecking to see if user-supplied file '{covarianceFileName}' exists in '{workdirMain}'"
                 )
                 if os.path.isfile(covarianceFile):  # noqa: PTH113
                     logFile.write('\n\t\tFound a user supplied file.')
@@ -118,12 +118,12 @@ class CovarianceMatrixPreparer:  # noqa: D101
                         src = covarianceFile
                         dst = os.path.join(workdirMain, covarianceFileName)  # noqa: PTH118
                         logFile.write(
-                            f'\n\t\tCopying user-supplied covariance file from {src} to {dst}'  # noqa: E501
+                            f'\n\t\tCopying user-supplied covariance file from {src} to {dst}'
                         )
                         shutil.copyfile(src, dst)
                         covarianceFile = dst  # noqa: N806
                     logFile.write(
-                        f"\n\t\tReading in user supplied covariance matrix from file: '{covarianceFile}'"  # noqa: E501
+                        f"\n\t\tReading in user supplied covariance matrix from file: '{covarianceFile}'"
                     )
                     # Check the data in the covariance matrix file
                     tmpCovFile = os.path.join(  # noqa: PTH118, N806
@@ -146,17 +146,17 @@ class CovarianceMatrixPreparer:  # noqa: D101
                                         numCols = len(words)  # noqa: N806
                                     elif numCols != len(words):
                                         logFile.write(
-                                            f'\nERROR: The number of columns in line {numRows} do not match the '  # noqa: E501
-                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'  # noqa: E501
+                                            f'\nERROR: The number of columns in line {numRows} do not match the '
+                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'
                                         )
                                         raise DataProcessingError(  # noqa: TRY003
-                                            f'ERROR: The number of columns in line {numRows} do not match the '  # noqa: EM102, E501
-                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'  # noqa: E501
+                                            f'ERROR: The number of columns in line {numRows} do not match the '  # noqa: EM102
+                                            f'number of columns in line {numRows - 1} of file {covarianceFile}.'
                                         )
                                     tempLine = ''  # noqa: N806
                                     for w in words:
                                         tempLine += f'{w} '  # noqa: N806
-                                    # logFile.write("\ncovMatrixLine {}: ".format(linenum), tempLine)  # noqa: ERA001, E501
+                                    # logFile.write("\ncovMatrixLine {}: ".format(linenum), tempLine)
                                     if numRows == 0:
                                         f1.write(tempLine)
                                     else:
@@ -165,37 +165,37 @@ class CovarianceMatrixPreparer:  # noqa: D101
                                     numRows += 1  # noqa: N806
                     covMatrix = np.genfromtxt(tmpCovFile)  # noqa: N806
                     covarianceMatrixList.append(covMatrix)
-                    # os.remove(tmpCovFile)  # noqa: ERA001
+                    # os.remove(tmpCovFile)
                     logFile.write(
-                        '\n\t\tFinished reading the file. Checking the dimensions of the covariance data.'  # noqa: E501
+                        '\n\t\tFinished reading the file. Checking the dimensions of the covariance data.'
                     )
                     if numRows == 1:
                         if numCols == 1:
                             covarianceTypeList.append('scalar')
                             logFile.write(
-                                '\n\t\tScalar variance value provided. The covariance matrix is an identity matrix '  # noqa: E501
+                                '\n\t\tScalar variance value provided. The covariance matrix is an identity matrix '
                                 'multiplied by this value.'
                             )
                         elif numCols == self.edpLengthsList[i]:
                             covarianceTypeList.append('diagonal')
                             logFile.write(
-                                '\n\t\tA row vector provided. This will be treated as the diagonal entries of the '  # noqa: E501
+                                '\n\t\tA row vector provided. This will be treated as the diagonal entries of the '
                                 'covariance matrix.'
                             )
                         else:
                             logFile.write(
-                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: E501
-                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'  # noqa: E501
+                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                             raise DataProcessingError(  # noqa: TRY003
-                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: EM102, E501
-                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'  # noqa: E501
+                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: EM102
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                     elif numRows == self.edpLengthsList[i]:
                         if numCols == 1:
                             covarianceTypeList.append('diagonal')
                             logFile.write(
-                                '\t\tA column vector provided. This will be treated as the diagonal entries of the '  # noqa: E501
+                                '\t\tA column vector provided. This will be treated as the diagonal entries of the '
                                 'covariance matrix.'
                             )
                         elif numCols == self.edpLengthsList[i]:
@@ -203,29 +203,29 @@ class CovarianceMatrixPreparer:  # noqa: D101
                             logFile.write('\n\t\tA full covariance matrix provided.')
                         else:
                             logFile.write(
-                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: E501
-                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'  # noqa: E501
+                                f'\nERROR: The number of columns of data in the covariance matrix file {covarianceFile}'
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                             raise DataProcessingError(  # noqa: TRY003
-                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: EM102, E501
-                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'  # noqa: E501
+                                f'ERROR: The number of columns of data in the covariance matrix file {covarianceFile}'  # noqa: EM102
+                                f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} columns'
                             )
                     else:
                         logFile.write(
-                            f'\nERROR: The number of rows of data in the covariance matrix file {covarianceFile}'  # noqa: E501
-                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'  # noqa: E501
+                            f'\nERROR: The number of rows of data in the covariance matrix file {covarianceFile}'
+                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'
                         )
                         raise DataProcessingError(  # noqa: TRY003
-                            f'ERROR: The number of rows of data in the covariance matrix file {covarianceFile}'  # noqa: EM102, E501
-                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'  # noqa: E501
+                            f'ERROR: The number of rows of data in the covariance matrix file {covarianceFile}'  # noqa: EM102
+                            f' must be either 1 or {self.edpLengthsList[i]}. Found {numCols} rows'
                         )
                     logFile.write(f'\n\t\tCovariance matrix: {covMatrix}')
                 else:
                     logFile.write(
-                        '\n\t\tDid not find a user supplied file. Using the default variance value.'  # noqa: E501
+                        '\n\t\tDid not find a user supplied file. Using the default variance value.'
                     )
                     logFile.write(
-                        '\n\t\tThe covariance matrix is an identity matrix multiplied by this value.'  # noqa: E501
+                        '\n\t\tThe covariance matrix is an identity matrix multiplied by this value.'
                     )
                     scalarVariance = np.array(self.defaultErrorVariances[i])  # noqa: N806
                     covarianceMatrixList.append(scalarVariance)
@@ -305,16 +305,16 @@ class CalDataPreparer:  # noqa: D101
                         for w in words:
                             tempLine += f'{w} '  # noqa: N806
                         self.logFile.write(
-                            f'\n\tLine {linenum}, length {len(words)}: \n\t\t{tempLine}'  # noqa: E501
+                            f'\n\tLine {linenum}, length {len(words)}: \n\t\t{tempLine}'
                         )
                         f1.write(f'\n{tempLine}')
                     else:
                         self.logFile.write(
-                            f"\nERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "  # noqa: E501
+                            f"\nERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "
                             f'does not match the expected length {self.lineLength}'
                         )
                         raise DataProcessingError(  # noqa: TRY003
-                            f"ERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "  # noqa: EM102, E501
+                            f"ERROR: The number of entries ({len(words)}) in line num {linenum} of the file '{calDataFile}' "  # noqa: EM102
                             f'does not match the expected length {self.lineLength}'
                         )
         f1.close()
@@ -370,14 +370,16 @@ class DataTransformer:  # noqa: D101
             self.transformStrategy = transformStrategy
 
         logFile.write(
-            '\n\nFor numerical convenience, a transformation is applied to the calibration data \nand model '  # noqa: E501
-            'prediction corresponding to each response quantity. \nThe calibration data and model prediction for '  # noqa: E501
-            'each response variable will \nfirst be shifted (a scalar value will be added to the data and '  # noqa: E501
-            'prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value).'  # noqa: E501
+            '\n\nFor numerical convenience, a transformation is applied to the calibration data \nand model '
+            'prediction corresponding to each response quantity. \nThe calibration data and model prediction for '
+            'each response variable will \nfirst be shifted (a scalar value will be added to the data and '
+            'prediction) and \nthen scaled (the data and prediction will be divided by a positive scalar value).'
         )
 
     def computeScaleAndShiftFactors(  # noqa: ANN201, N802, D102
-        self, calibrationData: np.ndarray, edpLengthsList: list[int]  # noqa: FA102, N803
+        self,
+        calibrationData: np.ndarray,  # noqa: N803
+        edpLengthsList: list[int],  # noqa: FA102, N803
     ):
         self.calibrationData = calibrationData
         self.edpLengthsList = edpLengthsList
@@ -387,13 +389,13 @@ class DataTransformer:  # noqa: D101
         currentPosition = 0  # noqa: N806
         locShift = 0.0  # noqa: N806
         if self.transformStrategy in ['absMaxScaling']:
-            # Compute the scale factors - absolute maximum of the data for each response variable  # noqa: E501
+            # Compute the scale factors - absolute maximum of the data for each response variable
             self.logFile.write(
                 '\n\nComputing scale and shift factors. '
                 '\n\tThe shift factors are set to 0.0 by default.'
-                '\n\tThe scale factors used are the absolute maximum of the data for each response variable.'  # noqa: E501
-                '\n\tIf the absolute maximum of the data for any response variable is 0.0, '  # noqa: E501
-                '\n\tthen the scale factor is set to 1.0, and the shift factor is set to 1.0.'  # noqa: E501
+                '\n\tThe scale factors used are the absolute maximum of the data for each response variable.'
+                '\n\tIf the absolute maximum of the data for any response variable is 0.0, '
+                '\n\tthen the scale factor is set to 1.0, and the shift factor is set to 1.0.'
             )
             for j in range(len(self.edpLengthsList)):
                 calibrationDataSlice = calibrationData[  # noqa: N806
@@ -410,9 +412,9 @@ class DataTransformer:  # noqa: D101
         else:
             self.logFile.write(
                 '\n\nComputing scale and shift factors. '
-                '\n\tThe shift factors are set to the negative of the mean value for each response variable.'  # noqa: E501
-                '\n\tThe scale factors used are the standard deviation of the data for each response variable.'  # noqa: E501
-                '\n\tIf the standard deviation of the data for any response variable is 0.0, '  # noqa: E501
+                '\n\tThe shift factors are set to the negative of the mean value for each response variable.'
+                '\n\tThe scale factors used are the standard deviation of the data for each response variable.'
+                '\n\tIf the standard deviation of the data for any response variable is 0.0, '
                 '\n\tthen the scale factor is set to 1.0.'
             )
             for j in range(len(self.edpLengthsList)):
@@ -619,7 +621,7 @@ class LogLikelihoodHandler:  # noqa: D101
             try:
                 shutil.copyfile(src, dst)
             except Exception:  # noqa: BLE001
-                msg = f"ERROR: The log-likelihood script '{src}' cannot be copied to '{dst}'."  # noqa: E501
+                msg = f"ERROR: The log-likelihood script '{src}' cannot be copied to '{dst}'."
                 raise Exception(msg)  # noqa: B904, TRY002
 
     def _get_num_experiments(self) -> int:
@@ -634,7 +636,7 @@ class LogLikelihoodHandler:  # noqa: D101
         try:
             module = import_module(log_likelihood_module_name)
         except:  # noqa: E722
-            msg = f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(self.workdir_main, self.log_likelihood_file_name)}' cannot be imported."  # noqa: PTH118, E501
+            msg = f"\n\t\t\t\tERROR: The log-likelihood script '{os.path.join(self.workdir_main, self.log_likelihood_file_name)}' cannot be imported."  # noqa: PTH118
             raise ImportError(msg)  # noqa: B904
         return module  # type: ignore  # noqa: PGH003
 
@@ -695,7 +697,9 @@ class LogLikelihoodHandler:  # noqa: D101
         return loglike
 
     def evaluate_log_likelihood(  # noqa: D102
-        self, prediction: NDArray, list_of_covariance_multipliers: list[float]  # noqa: FA102
+        self,
+        prediction: NDArray,
+        list_of_covariance_multipliers: list[float],  # noqa: FA102
     ) -> float:
         return self._loop_for_log_likelihood(
             prediction=prediction,

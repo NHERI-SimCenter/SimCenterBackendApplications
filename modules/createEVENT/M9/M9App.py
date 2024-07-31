@@ -36,20 +36,20 @@ def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
 
     print('Uploading files to designsafe storage')  # noqa: T201
     call(
-        f'tapis files mkdir agave://designsafe.storage.default/{username}/  physics_based'  # noqa: E501
+        f'tapis files mkdir agave://designsafe.storage.default/{username}/  physics_based'
     )
     call(
-        f'tapis files mkdir agave://designsafe.storage.default/{username}/physics_based  M9'  # noqa: E501
+        f'tapis files mkdir agave://designsafe.storage.default/{username}/physics_based  M9'
     )
 
     call(
-        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/M9.py '  # noqa: E501
+        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/M9.py '
     )
     call(
-        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/information.json '  # noqa: E501
+        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/information.json '
     )
     call(
-        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/selectedSites.csv '  # noqa: E501
+        f'tapis files upload agave://designsafe.storage.default/{username}/physics_based/M9/  TapisFiles/selectedSites.csv '
     )
 
     jobdict = {
@@ -84,7 +84,7 @@ def Submit_tapis_job():  # noqa: ANN201, N802, D103, PLR0915
     res = call(f'tapis jobs submit -F {jobfile}')
 
     # delete the job file
-    # os.remove(jobfile)  # noqa: ERA001
+    # os.remove(jobfile)
 
     res = call(f'tapis jobs search --name eq {jobname}')
     jobid = res[0]['id']

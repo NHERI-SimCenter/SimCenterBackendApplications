@@ -76,7 +76,7 @@ if missing:
     )
     print('Successfully installed the required packages')  # noqa: T201
 
-# If requests and BRAILS were previously installed ensure they are at their latest versions:  # noqa: E501
+# If requests and BRAILS were previously installed ensure they are at their latest versions:
 subprocess.check_call(  # noqa: S603
     [python, '-m', 'pip', 'install', 'requests', '-U'], stdout=subprocess.DEVNULL
 )
@@ -88,7 +88,7 @@ latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[ 
 ]['version']
 if importlib_metadata.version('BRAILS') != latestBrailsVersion:
     print(  # noqa: T201
-        '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'  # noqa: E501
+        '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'
     )
     subprocess.check_call(  # noqa: S603
         [python, '-m', 'pip', 'install', 'BRAILS', '-U'], stdout=subprocess.DEVNULL

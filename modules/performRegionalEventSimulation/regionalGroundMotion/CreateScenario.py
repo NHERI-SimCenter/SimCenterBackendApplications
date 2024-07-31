@@ -99,7 +99,7 @@ def get_rups_to_run(scenario_info, user_scenarios, num_scenarios):  # noqa: ANN0
         rups_to_run = list(range(num_scenarios))
     else:
         sys.exit(
-            f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available'  # noqa: E501
+            f'The scenario selection method {scenario_info["Generator"].get("method", None)} is not available'
         )
     return rups_to_run
 
@@ -175,7 +175,7 @@ def load_earthquake_rupFile(scenario_info, rupFilePath):  # noqa: ANN001, ANN201
                 rupID = rupID + 1  # noqa: N806
             except:  # noqa: PERF203, E722
                 print('Please check point-source inputs.')  # noqa: T201
-    # return  # noqa: ERA001
+    # return
     return scenario_data
 
 
@@ -212,12 +212,12 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
         dict(  # noqa: C408
             calculation_mode='classical',
             inputs={'site_model': [siteFile]},
-            intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}",  # place holder for initiating oqparam. Not used in ERF  # noqa: E501
+            intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}",  # place holder for initiating oqparam. Not used in ERF
             investigation_time=str(
                 scenario_info['EqRupture'].get('investigation_time', '50.0')
             ),
-            gsim='AbrahamsonEtAl2014',  # place holder for initiating oqparam, not used in ERF  # noqa: E501
-            truncation_level='99.0',  # place holder for initiating oqparam. not used in ERF  # noqa: E501
+            gsim='AbrahamsonEtAl2014',  # place holder for initiating oqparam, not used in ERF
+            truncation_level='99.0',  # place holder for initiating oqparam. not used in ERF
             maximum_distance=str(
                 scenario_info['EqRupture'].get('maximum_distance', '2000')
             ),
@@ -320,7 +320,7 @@ def load_ruptures_openquake(scenario_info, stations, work_dir, siteFile, rupFile
     sort_ids = np.argsort(maf_list_n)
     rups_df = rups_df.iloc[sort_ids]
     rups_df.reset_index(drop=True, inplace=True)  # noqa: PD002
-    # rups_df = rups_df = rups_df.sort_values(['MeanAnnualRate'], ascending = (False))  # noqa: ERA001, E501
+    # rups_df = rups_df = rups_df.sort_values(['MeanAnnualRate'], ascending = (False))
     rups_df = rups_df.loc[rups_to_run, :]
     scenario_data = {}
     for ind in rups_df.index:
@@ -387,7 +387,7 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: ANN00
         cur_id_rupture = cur_rup.get('properties').get('Rupture', None)
         if cur_id_rupture is None or cur_id_source is None:
             print(  # noqa: T201
-                f'CreateScenario: rupture #{rup_tag} does not have valid source/rupture ID - skipped.'  # noqa: E501
+                f'CreateScenario: rupture #{rup_tag} does not have valid source/rupture ID - skipped.'
             )
             continue
         cur_source, cur_rupture = get_source_rupture(  # noqa: F405
@@ -417,21 +417,24 @@ def load_earthquake_scenarios(scenario_info, stations, dir_info):  # noqa: ANN00
             }
         )
 
-    # return  # noqa: ERA001
+    # return
     return scenario_data
 
 
 def create_earthquake_scenarios(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
-    scenario_info, stations, work_dir, openquakeSiteFile=None  # noqa: ANN001, N803
+    scenario_info,  # noqa: ANN001
+    stations,  # noqa: ANN001
+    work_dir,  # noqa: ANN001
+    openquakeSiteFile=None,  # noqa: ANN001, N803
 ):
     # # Number of scenarios
-    # source_num = scenario_info.get('Number', 1)  # noqa: ERA001
+    # source_num = scenario_info.get('Number', 1)
     # if source_num == 'All':
     #     # Large number to consider all sources in the ERF
-    #     source_num = 10000000  # noqa: ERA001
+    #     source_num = 10000000
     out_dir = os.path.join(work_dir, 'Output')  # noqa: PTH118
     if scenario_info['Generator'] == 'Simulation':
-        # TODO:  # noqa: FIX002, TD002, TD003, TD005
+        # TODO:  # noqa: FIX002, TD002, TD003
         print('Physics-based earthquake simulation is under development.')  # noqa: T201
         return 1
     # Searching earthquake ruptures that fulfill the request
@@ -467,7 +470,7 @@ def create_earthquake_scenarios(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
                     rup_index_list = scenario_info['EqRupture']['RuptureIndex']
                 if len(source_index_list) != len(rup_index_list):
                     print(  # noqa: T201
-                        f'CreateScenario: source number {len(source_index_list)} should be matched by rupture number {len(rup_index_list)}'  # noqa: E501
+                        f'CreateScenario: source number {len(source_index_list)} should be matched by rupture number {len(rup_index_list)}'
                     )
                     return dict()  # noqa: C408
                 # loop over all scenarios
@@ -514,38 +517,38 @@ def create_earthquake_scenarios(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
                     maxDistance=max_R,
                 )
                 # Parsing data
-                # feat = erf_data['features']  # noqa: ERA001
+                # feat = erf_data['features']
                 # """
-                # tag = []  # noqa: ERA001
+                # tag = []
                 # for i, cur_f in enumerate(feat):
-                #     if source_name and (source_name not in cur_f['properties']['Name']):  # noqa: E501
-                #         continue  # noqa: ERA001
+                #     if source_name and (source_name not in cur_f['properties']['Name']):
+                #         continue
                 #     if min_M > cur_f['properties']['Magnitude']:
-                #         continue  # noqa: ERA001
-                #     tag.append(i)  # noqa: ERA001
+                #         continue
+                #     tag.append(i)
                 # # Abstracting desired ruptures
-                # s_tag = random.sample(tag, min(source_num, len(tag)))  # noqa: ERA001
+                # s_tag = random.sample(tag, min(source_num, len(tag)))
                 # """
-                # t_start = time.time()  # noqa: ERA001
-                # s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)  # noqa: ERA001, E501
-                # print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))  # noqa: ERA001, E501
-                # #erf_data['features'] = list(feat[i] for i in s_tag)  # noqa: ERA001
-                # erf_data['features'] = [feat[i] for i in range(source_num)]  # noqa: ERA001
-                # scenario_data = dict()  # noqa: ERA001
-                # t_start = time.time()  # noqa: ERA001
+                # t_start = time.time()
+                # s_tag = sample_scenarios(rup_info=feat, sample_num=source_num, sample_type=samp_method, source_name=source_name, min_M=min_M)
+                # print('CreateScenario: scenarios sampled {0} sec'.format(time.time() - t_start))
+                # #erf_data['features'] = list(feat[i] for i in s_tag)
+                # erf_data['features'] = [feat[i] for i in range(source_num)]
+                # scenario_data = dict()
+                # t_start = time.time()
                 # for i, rup in enumerate(erf_data['features']):
                 #     scenario_data.update({i: {
-                #         'Type': source_type,  # noqa: ERA001
-                #         'RuptureForecast': source_model,  # noqa: ERA001
-                #         'Name': rup['properties']['Name'],  # noqa: ERA001
-                #         'Magnitude': rup['properties']['Magnitude'],  # noqa: ERA001
-                #         'MeanAnnualRate': rup['properties']['MeanAnnualRate'],  # noqa: ERA001
-                #         'SourceIndex': rup['properties']['Source'],  # noqa: ERA001
-                #         'RuptureIndex': rup['properties']['Rupture'],  # noqa: ERA001
-                #         'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),  # noqa: ERA001, E501
-                #         'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)  # noqa: E501
-                #     }})  # noqa: ERA001
-                # print('CreateScenario: scenarios collected {0} sec'.format(time.time() - t_start))  # noqa: ERA001, E501
+                #         'Type': source_type,
+                #         'RuptureForecast': source_model,
+                #         'Name': rup['properties']['Name'],
+                #         'Magnitude': rup['properties']['Magnitude'],
+                #         'MeanAnnualRate': rup['properties']['MeanAnnualRate'],
+                #         'SourceIndex': rup['properties']['Source'],
+                #         'RuptureIndex': rup['properties']['Rupture'],
+                #         'SiteSourceDistance': get_source_distance(eq_source, rup['properties']['Source'], lat, lon),
+                #         'SiteRuptureDistance': get_rupture_distance(eq_source, rup['properties']['Source'], rup['properties']['Rupture'], lat, lon)
+                #     }})
+                # print('CreateScenario: scenarios collected {0} sec'.format(time.time() - t_start))
                 # # Cleaning tmp outputs
                 # del erf_data
         elif source_type == 'PointSource':
@@ -591,16 +594,20 @@ def create_earthquake_scenarios(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
         print(  # noqa: T201
             f'CreateScenario: all scenarios configured {time.time() - t_start} sec'
         )
-    # return  # noqa: ERA001
+    # return
     return None
 
 
 def sample_scenarios(  # noqa: ANN201, D103
-    rup_info=[], sample_num=1, sample_type='Random', source_name=None, min_M=0.0  # noqa: ANN001, B006, N803
+    rup_info=[],  # noqa: ANN001, B006
+    sample_num=1,  # noqa: ANN001
+    sample_type='Random',  # noqa: ANN001
+    source_name=None,  # noqa: ANN001
+    min_M=0.0,  # noqa: ANN001, N803
 ):
     if len(rup_info) == 0:
         print(  # noqa: T201
-            'CreateScenario.sample_scenarios: no available scenario provided - please relax earthquake filters.'  # noqa: E501
+            'CreateScenario.sample_scenarios: no available scenario provided - please relax earthquake filters.'
         )
         return []
 
@@ -629,7 +636,7 @@ def sample_scenarios(  # noqa: ANN201, D103
         print('CreateScenario.sample_scenarios: please specify a sampling method.')  # noqa: T201
         s_tag = []
 
-    # return  # noqa: ERA001
+    # return
     return s_tag
 
 

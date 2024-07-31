@@ -17,7 +17,7 @@ from Sim.Simulation import Hydraulic_Simulation
 from timeline import Timeline
 from wntrfr.network.model import LinkStatus
 
-# from wntrplus import WNTRPlus  # noqa: ERA001
+# from wntrplus import WNTRPlus
 from wntrfr.utils.ordered_set import OrderedSet
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class StochasticModel:  # noqa: D101
             self.simulation_mode = 'PDD'
         self._linear_result = registry.result
         self.registry = registry
-        # self.wp                      = WNTRPlus(restoration._registry)  # noqa: ERA001
+        # self.wp                      = WNTRPlus(restoration._registry)
         self.restoration = restoration
         self._min_correction_time = 900
         self.simulation_time = 0
@@ -80,13 +80,13 @@ class StochasticModel:  # noqa: D101
         -------
         Result.
 
-        """  # noqa: E501, D205, D400, D401, D415
+        """  # noqa: D205, D400, D401, D415
         while self.timeline.iContinue():
             sys.stdout.flush()
             current_stop_time = self.timeline.getCurrentStopTime()
             print('--------------------------------------')  # noqa: T201
             print('At stop Time: ' + repr(current_stop_time / 3600))  # noqa: T201
-            # =============================================================================  # noqa: E501
+            # =============================================================================
             # Restoration event Block
             if (
                 self.timeline.iCurenttimeRestorationEvent()
@@ -100,13 +100,13 @@ class StochasticModel:  # noqa: D101
 
                 self.timeline.addEventTime(event_time_list, event_type='rst')
 
-            # =============================================================================  # noqa: E501
+            # =============================================================================
             #           Damage (earthquake) event block
             if self.timeline.iCurrentTimeDamageEvent():
                 self.ttemp = pd.DataFrame()
                 self.registry.if_first_event_occured = True
                 logger.debug('\t DAMAGE EVENT')
-                # pipe_list = self.restoration.getPipeListForHydraulicSignificant()  # noqa: ERA001
+                # pipe_list = self.restoration.getPipeListForHydraulicSignificant()
                 if len(self.restoration.getHydSigPipeList()) > 0:
                     last_demand_node_pressure = None
                     pipe_list = damage.getPipeDamageListAt(current_stop_time)
@@ -158,15 +158,16 @@ class StochasticModel:  # noqa: D101
                         try:  # Run with modified EPANET V2.2
                             print('Performing method 1')  # noqa: T201
                             rr, i_run_successful = hyd_sim.performSimulation(
-                                current_stop_time, True  # noqa: FBT003
+                                current_stop_time,
+                                True,  # noqa: FBT003
                             )
                             if current_stop_time in rr.maximum_trial_time:
                                 pass
-                                # self.registry.hydraulic_significance.loc[pipe_name] = -20000  # noqa: ERA001, E501
-                                # pipe.initial_status = initial_pipe_status  # noqa: ERA001
-                                # self._prev_isolated_junctions = hyd_sim._prev_isolated_junctions  # noqa: ERA001, E501
-                                # self._prev_isolated_links     = hyd_sim._prev_isolated_links  # noqa: ERA001, E501
-                                # continue  # noqa: ERA001
+                                # self.registry.hydraulic_significance.loc[pipe_name] = -20000
+                                # pipe.initial_status = initial_pipe_status
+                                # self._prev_isolated_junctions = hyd_sim._prev_isolated_junctions
+                                # self._prev_isolated_links     = hyd_sim._prev_isolated_links
+                                # continue
                             demand_node_list = self.registry.demand_node_name_list
                             demand_node_list = set(demand_node_list).intersection(
                                 rr.node['pressure'].columns
@@ -214,7 +215,7 @@ class StochasticModel:  # noqa: D101
                     )  # starts restoration
                     self.timeline.addEventTime(event_time_list, event_type='rst')
 
-            # =============================================================================  # noqa: E501
+            # =============================================================================
             #           This is for updatng the pipe damage log
             if settings['record_damage_table_logs'] == True:  # noqa: E712
                 self.restoration._registry.updatePipeDamageTableTimeSeries(  # noqa: SLF001
@@ -223,7 +224,7 @@ class StochasticModel:  # noqa: D101
                 self.restoration._registry.updateNodeDamageTableTimeSeries(  # noqa: SLF001
                     current_stop_time
                 )
-            # =============================================================================  # noqa: E501
+            # =============================================================================
             #           runing the model
             next_event_time = self.timeline.getNextTime()
             logger.debug('next event time is: ' + repr(next_event_time))  # noqa: G003
@@ -249,41 +250,44 @@ class StochasticModel:  # noqa: D101
             try:  # Run with modified EPANET V2.2
                 print('Performing method 1')  # noqa: T201
                 rr, i_run_successful = hyd_sim.performSimulation(
-                    next_event_time, True  # noqa: FBT003
+                    next_event_time,
+                    True,  # noqa: FBT003
                 )
             except Exception as epa_err_1:
                 if epa_err_1.args[0] == 'EPANET Error 110':
                     print('Method 1 failed. Performing method 2')  # noqa: T201
-                    try:  # Remove Non-Demand Node by Python-Side iterative algorythm with closing  # noqa: E501
-                        # self.wn.options.time.duration        = duration  # noqa: ERA001
-                        # self.wn.options.time.report_timestep = report_time_step  # noqa: ERA001
-                        # hyd_sim.removeNonDemandNegativeNodeByPythonClose(1000)  # noqa: ERA001
-                        # rr, i_run_successful = hyd_sim.performSimulation(next_event_time, False)  # noqa: ERA001, E501
-                        # hyd_sim.rollBackPipeClose()  # noqa: ERA001
+                    try:  # Remove Non-Demand Node by Python-Side iterative algorythm with closing
+                        # self.wn.options.time.duration        = duration
+                        # self.wn.options.time.report_timestep = report_time_step
+                        # hyd_sim.removeNonDemandNegativeNodeByPythonClose(1000)
+                        # rr, i_run_successful = hyd_sim.performSimulation(next_event_time, False)
+                        # hyd_sim.rollBackPipeClose()
                         raise
                     except Exception as epa_err_2:
                         if True:  # epa_err_2.args[0] == 'EPANET Error 110':
-                            try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2  # noqa: E501
-                                # print("Method 2 failed. Performing method 3")  # noqa: ERA001
+                            try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
+                                # print("Method 2 failed. Performing method 3")
                                 self.wn.options.time.duration = duration
                                 self.wn.options.time.report_timestep = (
                                     report_time_step
                                 )
-                                # hyd_sim.rollBackPipeClose()  # noqa: ERA001
+                                # hyd_sim.rollBackPipeClose()
                                 rr, i_run_successful = hyd_sim.estimateRun(
-                                    next_event_time, True  # noqa: FBT003
+                                    next_event_time,
+                                    True,  # noqa: FBT003
                                 )
                             except Exception as epa_err_3:
                                 if epa_err_3.args[0] == 'EPANET Error 110':
                                     print('Method 3 failed. Performing method 4')  # noqa: T201
-                                    try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2  # noqa: E501
+                                    try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
                                         self.wn.options.time.duration = duration
                                         self.wn.options.time.report_timestep = (
                                             report_time_step
                                         )
                                         rr, i_run_successful = (
                                             hyd_sim.performSimulation(
-                                                next_event_time, False  # noqa: FBT003
+                                                next_event_time,
+                                                False,  # noqa: FBT003
                                             )
                                         )
                                     except Exception as epa_err_4:
@@ -292,14 +296,15 @@ class StochasticModel:  # noqa: D101
                                                 self.wn.options.time.duration = (
                                                     duration
                                                 )
-                                                self.wn.options.time.report_timestep = report_time_step  # noqa: E501
+                                                self.wn.options.time.report_timestep = report_time_step
                                                 print(  # noqa: T201
-                                                    'Method 4 failed. Performing method 5'  # noqa: E501
+                                                    'Method 4 failed. Performing method 5'
                                                 )
-                                                # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2  # noqa: E501
+                                                # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
                                                 rr, i_run_successful = (
                                                     hyd_sim.estimateRun(
-                                                        next_event_time, False  # noqa: FBT003
+                                                        next_event_time,
+                                                        False,  # noqa: FBT003
                                                     )
                                                 )
                                             except Exception as epa_err_5:
@@ -309,10 +314,10 @@ class StochasticModel:  # noqa: D101
                                                 ):
                                                     try:
                                                         print(  # noqa: T201
-                                                            'Method 5 failed. Performing method 6'  # noqa: E501
+                                                            'Method 5 failed. Performing method 6'
                                                         )
-                                                        self.wn.options.time.duration = duration  # noqa: E501
-                                                        self.wn.options.time.report_timestep = report_time_step  # noqa: E501
+                                                        self.wn.options.time.duration = duration
+                                                        self.wn.options.time.report_timestep = report_time_step
                                                         rr, i_run_successful = (
                                                             hyd_sim.estimateWithoutRun(
                                                                 self._linear_result,
@@ -359,11 +364,11 @@ class StochasticModel:  # noqa: D101
             )
             if self.registry.settings['limit_result_file_size'] > 0:
                 self.dumpPartOfResult()
-            # self.wp.unlinkBreackage(self.registry)  # noqa: ERA001
+            # self.wp.unlinkBreackage(self.registry)
             self.wn.resetExplicitLeak()
 
-        # =============================================================================  # noqa: E501
-        # self.resoration._registry.updateTankTimeSeries(self.wn, current_stop_time)  # noqa: ERA001
+        # =============================================================================
+        # self.resoration._registry.updateTankTimeSeries(self.wn, current_stop_time)
         self.restoration._registry.updateRestorationIncomeWaterTimeSeries(  # noqa: SLF001
             self.wn, current_stop_time
         )
@@ -384,9 +389,9 @@ class StochasticModel:  # noqa: D101
             )
 
         # if node_attributes == None:
-        # node_attributes = ['pressure','head','demand','quality']  # noqa: ERA001
+        # node_attributes = ['pressure','head','demand','quality']
         # if link_attributes == None:
-        # link_attributes = ['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate']  # noqa: ERA001, E501
+        # link_attributes = ['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate']
 
         just_initialized_flag = False
         if self._linear_result == None:  # noqa: E711
@@ -506,8 +511,8 @@ class StochasticModel:  # noqa: D101
             ].index.min()
             if (
                 abs(to_be_saved_min_time - saved_max_time) != 0
-            ):  # >= min(self.wn.options.time.hydraulic_timestep, self.wn.options.time.report_timestep):  # noqa: E501
-                # logger.error(repr(to_be_saved_min_time)+ '  ' + repr(saved_max_time))  # noqa: ERA001, E501
+            ):  # >= min(self.wn.options.time.hydraulic_timestep, self.wn.options.time.report_timestep):
+                # logger.error(repr(to_be_saved_min_time)+ '  ' + repr(saved_max_time))
                 raise ValueError(
                     'saved result and to be saved result are not the same. '
                     + repr(saved_max_time)
@@ -522,7 +527,7 @@ class StochasticModel:  # noqa: D101
                 leak_first_time_result = None
                 if (
                     att == 'leak' and 'leak' in result.node
-                ):  # the second condition is not needed. It's there only for assurance  # noqa: E501
+                ):  # the second condition is not needed. It's there only for assurance
                     former_nodes_list = set(self._linear_result.node['leak'].columns)
                     to_add_nodes_list = set(result.node[att].columns)
                     complete_result_node_list = to_add_nodes_list - former_nodes_list
@@ -581,7 +586,7 @@ class StochasticModel:  # noqa: D101
                 att_result = self._linear_result.node[att]
                 if att_result.empty:
                     continue
-                # first_time_index = att_result.index[0]  # noqa: ERA001
+                # first_time_index = att_result.index[0]
                 last_valid_time = []
                 att_time_index = att_result.index.to_list()
                 last_valid_time = [
@@ -602,7 +607,8 @@ class StochasticModel:  # noqa: D101
                     last_valid_time
                 )
                 self._linear_result.node[att].drop(
-                    att_result.index[: last_valid_time_index + 1], inplace=True  # noqa: PD002
+                    att_result.index[: last_valid_time_index + 1],
+                    inplace=True,  # noqa: PD002
                 )
 
             for att in self._linear_result.link:
@@ -612,7 +618,7 @@ class StochasticModel:  # noqa: D101
                 att_result = self._linear_result.link[att]
                 if att_result.empty:
                     continue
-                # first_time_index = att_result.index[0]  # noqa: ERA001
+                # first_time_index = att_result.index[0]
                 last_valid_time = []
                 att_time_index = att_result.index.to_list()
                 last_valid_time = [
@@ -632,7 +638,8 @@ class StochasticModel:  # noqa: D101
                     last_valid_time
                 )
                 self._linear_result.link[att].drop(
-                    att_result.index[: last_valid_time_index + 1], inplace=True  # noqa: PD002
+                    att_result.index[: last_valid_time_index + 1],
+                    inplace=True,  # noqa: PD002
                 )
 
             dump_file_index = len(self.registry.result_dump_file_list) + 1

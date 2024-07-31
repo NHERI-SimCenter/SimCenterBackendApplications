@@ -100,7 +100,7 @@ def _draw_one_sample(  # noqa: ANN202, PLR0913, PLR0915
         proposed_state = current_state + move
         x = transformation_function(proposed_state)
         model_iterable = [0, x]
-        # model_iterable = [sample_number, x]  # noqa: ERA001
+        # model_iterable = [sample_number, x]
         inputs = [
             list_of_model_evaluation_functions[dataset_number],
             model_iterable,

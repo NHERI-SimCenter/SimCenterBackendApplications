@@ -47,7 +47,11 @@ import numpy as np
 
 
 def generate_workflow_tasks(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
-    bldg_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
+    bldg_filter,  # noqa: ANN001
+    config_file,  # noqa: ANN001
+    out_dir,  # noqa: ANN001
+    task_size,  # noqa: ANN001
+    rWHALE_dir,  # noqa: ANN001, N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
@@ -55,7 +59,9 @@ def generate_workflow_tasks(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
     with open(f'{rWHALE_dir}/{config_file}') as f:  # noqa: PTH123
         settings = json.load(f)
     output_types = [
-        out_type for out_type, val in settings['outputs'].items() if val == True  # noqa: E712
+        out_type
+        for out_type, val in settings['outputs'].items()
+        if val == True  # noqa: E712
     ]
 
     # KZ@220324: check if regional site response is requested
@@ -187,7 +193,11 @@ def generate_workflow_tasks(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
 
 
 def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
-    bldg_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
+    bldg_filter,  # noqa: ANN001
+    config_file,  # noqa: ANN001
+    out_dir,  # noqa: ANN001
+    task_size,  # noqa: ANN001
+    rWHALE_dir,  # noqa: ANN001, N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
@@ -195,7 +205,9 @@ def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
     with open(f'{rWHALE_dir}/{config_file}') as f:  # noqa: PTH123
         settings = json.load(f)
     output_types = [  # noqa: F841
-        out_type for out_type, val in settings['outputs'].items() if val == True  # noqa: E712
+        out_type
+        for out_type, val in settings['outputs'].items()
+        if val == True  # noqa: E712
     ]
 
     # get the list of buildings requested to run
@@ -308,11 +320,15 @@ def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
 
 
 def generate_workflow_tasks_regionalsiteresponse(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
-    site_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
+    site_filter,  # noqa: ANN001
+    config_file,  # noqa: ANN001
+    out_dir,  # noqa: ANN001
+    task_size,  # noqa: ANN001
+    rWHALE_dir,  # noqa: ANN001, N803
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
-    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step  # noqa: E501
+    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step
     output_valid = ['IM']
 
     # get the type of outputs requested

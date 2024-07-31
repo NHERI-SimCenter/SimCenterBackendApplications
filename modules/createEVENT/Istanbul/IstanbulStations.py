@@ -8,7 +8,7 @@ from shapely.geometry import Point, Polygon
 
 
 def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, PLR0912, PLR0915
-    """This function is used to retreive the information of the Istanbul physics-based simulations"""  # noqa: E501, D400, D401, D404, D415
+    """This function is used to retreive the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404, D415
     RegionFlag = information['RegionFlag']  # noqa: N806
     LocationFlag = information['LocationFlag']  # noqa: N806
 
@@ -64,7 +64,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         gdf['distance'] = gdf.distance(Point(lon, lat))
         gdf = gdf.sort_values('distance')
 
-        # create a coulmn of the distance color and make the first 4 nearest sites red  # noqa: E501
+        # create a coulmn of the distance color and make the first 4 nearest sites red
         gdf['Color'] = 'blue'
         gdf.loc[gdf.index[:4], 'Color'] = 'red'
 
@@ -84,17 +84,17 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
             withinindicies = gdf.within(RegionofInterset)
             gdf['Color'] = 'blue'
             gdf.loc[withinindicies, 'Color'] = 'red'
-            # gdf = gdf[gdf.within(RegionofInterset)]  # noqa: ERA001
+            # gdf = gdf[gdf.within(RegionofInterset)]
 
             # check if the gdf is empty
             if withinindicies.sum() == 0:
                 print(  # noqa: T201
-                    'No sites are found in the selected region please change the region of interest'  # noqa: E501
+                    'No sites are found in the selected region please change the region of interest'
                 )
                 return
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
+            # chage the gdf to calculte the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -156,7 +156,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         )
 
         # save the html file
-        # fig.write_html("Istanbul.html")  # noqa: ERA001
+        # fig.write_html("Istanbul.html")
         if show:
             fig.show()
 

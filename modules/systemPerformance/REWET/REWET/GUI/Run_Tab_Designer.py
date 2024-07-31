@@ -30,7 +30,7 @@ class Run_Tab_Designer:  # noqa: N801, D101
         if if_saved == False:  # noqa: E712
             return False
         self.ouput_textedit.clear()
-        # start = Starter()  # noqa: ERA001
+        # start = Starter()
         if self.project_file_addr == None:  # noqa: E711
             self.errorMSG(
                 'REWET',
@@ -48,20 +48,20 @@ class Run_Tab_Designer:  # noqa: N801, D101
         )
 
         for line in iter(self.rewet_sub_process.stdout.readline, b''):
-            # sys.stdout.flush()  # noqa: ERA001
+            # sys.stdout.flush()
             self.cobject.outSignal.emit(line)
         self.rewet_sub_process.stdout.close()
 
     def setAllTabsEnabled(self, enabled):  # noqa: ANN001, ANN201, N802, D102
-        # self.ouput_textedit.setEnabled(enabled)  # noqa: ERA001
+        # self.ouput_textedit.setEnabled(enabled)
         self.main_tab.setTabEnabled(1, enabled)
         self.main_process1.setTabEnabled(0, enabled)
         self.main_process1.setTabEnabled(1, enabled)
         self.main_process1.setTabEnabled(2, enabled)
         self.main_process1.setTabEnabled(3, enabled)
         self.run_button.setEnabled(enabled)
-        # self.results_tabs_widget.setEnabled(enabled)  # noqa: ERA001
-        # self.stop_button.setEnabled(True)  # noqa: ERA001
+        # self.results_tabs_widget.setEnabled(enabled)
+        # self.stop_button.setEnabled(True)
 
     # @pyqtSlot(bytes)
     def updateRunOuput(self, string):  # noqa: ANN001, ANN201, N802, D102
@@ -90,7 +90,7 @@ class Run_Tab_Designer:  # noqa: N801, D101
         self.if_run_in_progress = False
         self.errorMSG(
             'REWET',
-            'An error happened during the simulation. Please look at the log for further information.',  # noqa: E501
+            'An error happened during the simulation. Please look at the log for further information.',
         )
         self.ouput_textedit.appendPlainText(end_message)
 

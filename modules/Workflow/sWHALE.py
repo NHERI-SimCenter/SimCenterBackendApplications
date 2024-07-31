@@ -66,23 +66,23 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
 ):
     # update the runDir, if needed
     #    with open(input_file, 'r', encoding="utf-8") as f:
-    #        inputs = json.load(f)  # noqa: ERA001
-    #    runDir = inputs['runDir']  # noqa: ERA001
+    #        inputs = json.load(f)
+    #    runDir = inputs['runDir']
     #
     #    if working_dir is not None:
-    #        runDir = working_dir  # noqa: ERA001
-    #    else:  # noqa: ERA001
-    #        runDir = inputs['runDir']  # noqa: ERA001
+    #        runDir = working_dir
+    #    else:
+    #        runDir = inputs['runDir']
     #
     #
-    #    whale.log_file = runDir + '/log.txt'  # noqa: ERA001
+    #    whale.log_file = runDir + '/log.txt'
     #
     #    # initialize log file
     #    whale.set_options({
-    #        "LogFile": runDir + '/log.txt',  # noqa: ERA001
-    #        "LogShowMS": False,  # noqa: ERA001
+    #        "LogFile": runDir + '/log.txt',
+    #        "LogShowMS": False,
     #        "PrintLog": True
-    #        })  # noqa: ERA001
+    #        })
     #
 
     log_msg(
@@ -91,7 +91,7 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
         prepend_blank_space=False,
     )
 
-    #    whale.print_system_info()  # noqa: ERA001
+    #    whale.print_system_info()
 
     # echo the inputs
     log_div(prepend_blank_space=False)
@@ -101,7 +101,7 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
 
     if WF.run_type != 'loss_only':
         # initialize the working directory
-        #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'  # noqa: E501
+        #  assetID is a unique asset identifier, assetAIM is the asset information model, e.g., 'AIM.json'
         WF.init_simdir(assetID, assetAIM)
 
         # prepare the input files for the simulation
@@ -135,7 +135,7 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
             copy_resources=copy_resources,
         )
 
-    # When used in rWhale, delete the origional AIM since it is the same with asset_id/templatedir/AIM  # noqa: E501
+    # When used in rWhale, delete the origional AIM since it is the same with asset_id/templatedir/AIM
     if assetAIM != 'AIM.json':
         os.remove(assetAIM)  # noqa: PTH107
     if force_cleanup:
@@ -218,7 +218,7 @@ if __name__ == '__main__':
         exit(1)
 
     main(run_type=sys.argv[1], input_file=sys.argv[2], app_registry=sys.argv[3])
-    """  # noqa: E501
+    """
 
     # Defining the command line arguments
 
@@ -236,7 +236,8 @@ if __name__ == '__main__':
     workflowArgParser.add_argument(
         'registry',
         default=os.path.join(  # noqa: PTH118
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
+            os.path.dirname(os.path.abspath(__file__)),  # noqa: PTH100, PTH120
+            'WorkflowApplications.json',
         ),
         help='Path to file containing registered workflow applications',
     )
