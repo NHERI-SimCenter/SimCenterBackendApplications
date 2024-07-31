@@ -604,11 +604,15 @@ class Shifting:  # noqa: D101
         if name in self._shift_data:
             raise ValueError('Shift name already registered')  # noqa: EM101, TRY003
         if type(beginning) != int and type(beginning) != float:  # noqa: E721
-            raise ValueError('Beginning time must be integer: ' + str(type(beginning)))
+            raise ValueError(
+                'Beginning time must be integer: ' + str(type(beginning))
+            )
         if type(ending) != int and type(ending) != float:  # noqa: E721
             raise ValueError('Ending time must be integer: ' + str(type(ending)))
         if beginning > 24 * 3600:
-            raise ValueError('beginning time is bigger than 24*3600' + str(beginning))
+            raise ValueError(
+                'beginning time is bigger than 24*3600' + str(beginning)
+            )
         if ending > 24 * 3600:
             raise ValueError('Ending time is bigger than 24*3600' + str(ending))
         beginning = int(beginning)

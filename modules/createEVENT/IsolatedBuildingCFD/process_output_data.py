@@ -41,7 +41,7 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
     # U, v, w in at roof height
     Uh = inf.U[H_loc, :, :].T  # noqa: N806
 
-    s_uh = []  # noqa: N806
+    s_uh = []
 
     for i in range(3):
         f, s = cwe.psd(Uh[:, i], 0.0025, 8)
@@ -55,7 +55,7 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
     fmt = f'%.{write_precision}e'
 
     prof_path = case_path + '/constant/simCenter/output/windProfiles.txt'
-    s_uh_path = case_path + '/constant/simCenter/output/Suh.txt'  # noqa: N806
+    s_uh_path = case_path + '/constant/simCenter/output/Suh.txt'
 
     np.savetxt(prof_path, prof, fmt=fmt)
     np.savetxt(s_uh_path, Suhout, fmt=fmt)

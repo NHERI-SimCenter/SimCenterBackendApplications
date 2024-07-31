@@ -122,7 +122,7 @@ class Starter:  # noqa: D101
             self.run_mpi(settings)
         else:
             raise ValueError('Number of processor must be equal to or more than 1')  # noqa: EM101, TRY003
-        
+
     def run_local_single(  # noqa: ANN201, C901, PLR0912, PLR0913
         self,
         file_name,  # noqa: ANN001
