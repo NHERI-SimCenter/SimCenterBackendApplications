@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2024 The Regents of the University of California
 #
 # This file is a part of SimCenter backend applications.
@@ -49,55 +49,55 @@ from brails.workflow.NSIParser import NSIParser
 
 
 # Define a standard way of printing program outputs:
-def log_msg(msg):
+def log_msg(msg):  # noqa: ANN001, ANN201, D103
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
-    print(formatted_msg)
+    print(formatted_msg)  # noqa: T201
 
 
 # Define a way to call BRAILS FootprintHandler and NSIParser:
-def runBrails(
-    latMin,
-    latMax,
-    longMin,
-    longMax,
-    locationStr,
-    fpSrc,
-    invInp,
-    invAttrMap,
-    outputDataType,
-    outputfile,
-    lengthunit,
+def runBrails(  # noqa: ANN201, N802, D103, PLR0913
+    latMin,  # noqa: ANN001, N803
+    latMax,  # noqa: ANN001, N803
+    longMin,  # noqa: ANN001, N803
+    longMax,  # noqa: ANN001, N803
+    locationStr,  # noqa: ANN001, N803
+    fpSrc,  # noqa: ANN001, N803
+    invInp,  # noqa: ANN001, N803
+    invAttrMap,  # noqa: ANN001, N803
+    outputDataType,  # noqa: ANN001, N803
+    outputfile,  # noqa: ANN001
+    lengthunit,  # noqa: ANN001
 ):
     # Initialize FootprintHandler:
-    fpHandler = FootprintHandler()
+    fpHandler = FootprintHandler()  # noqa: N806
     if locationStr == '""':
-        locationStr = ''
+        locationStr = ''  # noqa: N806
 
     if invInp == 'NSI':
-        nsiParser = NSIParser()
+        nsiParser = NSIParser()  # noqa: N806
         # Format location input based on the GUI input:
         if 'geojson' in fpSrc.lower() or 'csv' in fpSrc.lower():
             location = fpSrc
-            fpSrc = 'osm'
-            fpUserSpecified = True
+            fpSrc = 'osm'  # noqa: N806
+            fpUserSpecified = True  # noqa: N806
         elif locationStr == '':
             location = (longMin, latMin, longMax, latMax)
-            fpUserSpecified = False
+            fpUserSpecified = False  # noqa: N806
         else:
             location = locationStr
-            fpUserSpecified = False
+            fpUserSpecified = False  # noqa: N806
 
         # Get raw NSI data:
         if outputDataType == 'raw':
             if not fpUserSpecified:
-                # Run FootprintHandler to generate the boundary polygon for the entered location:
+                # Run FootprintHandler to generate the boundary polygon for the entered location:  # noqa: E501
                 if locationStr == '':
                     (
                         bpoly,
                         _,
-                    ) = fpHandler._FootprintHandler__bbox2poly(location)
+                    ) = fpHandler._FootprintHandler__bbox2poly(location)  # noqa: SLF001
                 else:
-                    bpoly, _, _ = fpHandler._FootprintHandler__fetch_roi(location)
+                    bpoly, _, _ = fpHandler._FootprintHandler__fetch_roi(location)  # noqa: SLF001
                 nsiParser.GetRawDataROI(bpoly, outputfile)
             else:
                 fpHandler.fetch_footprint_data(
@@ -129,7 +129,7 @@ def runBrails(
 
 
 # Define a way to collect GUI input:
-def main(args):
+def main(args):  # noqa: ANN001, ANN201, D103
     parser = argparse.ArgumentParser()
     parser.add_argument('--latMin', default=None, type=float)
     parser.add_argument('--latMax', default=None, type=float)
@@ -146,10 +146,10 @@ def main(args):
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(
+    outdir = os.path.abspath(args.outputFile).replace(  # noqa: PTH100
         os.path.split(args.outputFile)[-1], ''
     )
-    os.makedirs(outdir, exist_ok=True)
+    os.makedirs(outdir, exist_ok=True)  # noqa: PTH103
 
     # Run BRAILS  with the user-defined arguments:
     runBrails(

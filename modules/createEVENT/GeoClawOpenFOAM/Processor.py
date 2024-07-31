@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -18,7 +18,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -42,7 +42,7 @@ from openfoam7 import openfoam7
 ####################################################################
 # Main function
 ####################################################################
-def main():
+def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     """This is the primary function
 
     Objects:
@@ -53,7 +53,7 @@ def main():
 
     Variables:
             fipath: Path to dakota.json
-    """
+    """  # noqa: D400, D401, D404, D415
     # Get the system argument
     # Create a parser Object
     h2oparser = argparse.ArgumentParser(description='Get the Dakota.json file')
@@ -104,14 +104,14 @@ def main():
     args = h2oparser.parse_args()
 
     # Get the path
-    # fipath = args.b.replace('/dakota.json','')
+    # fipath = args.b.replace('/dakota.json','')  # noqa: ERA001
     fipath = Path(args.b)
     if fipath.is_file():
         fipath = fipath.parent
     fipath = str(fipath)
 
     # Open the JSON file and load all objects
-    with open(args.b) as f:
+    with open(args.b) as f:  # noqa: PTH123
         data = json.load(f)
 
     # Create a utilities object
@@ -122,7 +122,7 @@ def main():
     projname = ', '.join(projname)
 
     # Initialize a log ID number
-    logID = 0
+    logID = 0  # noqa: N806
 
     # Initialize the log
     hydroutil.hydrolog(projname, fipath)
@@ -130,9 +130,9 @@ def main():
     # Start the log file with header and time and date
     logfiletext = hydroutil.general_header()
     hydroutil.flog.write(logfiletext)
-    logID += 1
+    logID += 1  # noqa: N806
     hydroutil.flog.write(
-        '%d (%s): This log has started.\n' % (logID, datetime.datetime.now())
+        '%d (%s): This log has started.\n' % (logID, datetime.datetime.now())  # noqa: DTZ005
     )
 
     # Get the simulation type
@@ -142,7 +142,7 @@ def main():
     if int(simtype) == 0:
         hydroutil.flog.write(
             '%d (%s): No simulation type selected in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('No simulation type selected in EVT.')
 
@@ -152,17 +152,17 @@ def main():
     )
 
     # Find the solver
-    # 0 - OpenFoam7 (+ olaFlow)
+    # 0 - OpenFoam7 (+ olaFlow)  # noqa: ERA001
     # 1 - OpenFoam 8 (+ olaFlow)
-    # default - OpenFoam7 (+ olaFlow)
+    # default - OpenFoam7 (+ olaFlow)  # noqa: ERA001
     # Create related object
     if int(hydrosolver) == 0:
         solver = openfoam7()
 
     elif int(hydrosolver) == 1:
-        print('This is not yet available')
+        print('This is not yet available')  # noqa: T201
         # OpenFoam 8 + olaFlow
-        # solver = openfoam8()
+        # solver = openfoam8()  # noqa: ERA001
 
     else:
         # Default is Openfoam7 + olaFlow
@@ -171,151 +171,151 @@ def main():
     # Call the important routines
     # Create folders and files
     ecode = solver.createfolder(data, fipath, args)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error creating folders required for EVT solver.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error creating folders required for EVT solver.')
     else:
         hydroutil.flog.write(
             '%d (%s): Folders required for EVT solver created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Create Geometry
     ecode = solver.creategeometry(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error creating geometry required for EVT solver.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error creating geometry required for EVT solver')
     else:
         hydroutil.flog.write(
             '%d (%s): Geometry required for EVT solver created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Create meshing
     ecode = solver.createmesh(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode == 0:
         hydroutil.flog.write(
             '%d (%s): Files required for EVT meshing created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
     else:
         hydroutil.flog.write(
             '%d (%s): Error in Files required for EVT meshing.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Material
     ecode = solver.materials(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with material parameters in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with material parameters in EVT.')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for materials definition successfully created.\n'
-            % (logID, datetime.datetime.now())
+            '%d (%s): Files required for materials definition successfully created.\n'  # noqa: E501
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Create initial condition
     ecode = solver.initial(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with initial condition definition in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Issues with definition of initial condition in EVT')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for initial condition definition successfully created.\n'
-            % (logID, datetime.datetime.now())
+            '%d (%s): Files required for initial condition definition successfully created.\n'  # noqa: E501
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Create boundary condition - to do (alpha, k, omega, nut, nuTilda)
     ecode = solver.boundary(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with boundary condition definition in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Issues with definition of boundary condition in EVT')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for boundary condition definition successfully created.\n'
-            % (logID, datetime.datetime.now())
+            '%d (%s): Files required for boundary condition definition successfully created.\n'  # noqa: E501
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Turbulence
     ecode = solver.turbulence(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with turbulence parameters in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with turbulence parameters in EVT.')
     else:
         hydroutil.flog.write(
-            '%d (%s): Files required for turbulence definition successfully created.\n'
-            % (logID, datetime.datetime.now())
+            '%d (%s): Files required for turbulence definition successfully created.\n'  # noqa: E501
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Parallelization
     ecode = solver.parallelize(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with parallelization parameters in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with parallelization parameters in EVT.')
     else:
         hydroutil.flog.write(
             '%d (%s): Files required for parallelization successfully created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Solver settings
     ecode = solver.solve(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with solver parameters in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with solver parameters in EVT.')
     else:
         hydroutil.flog.write(
             '%d (%s): Files required for solver successfully created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Other files
     ecode = solver.others(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with creating auxillary files in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with creating auxillary files in EVT.')
     else:
         hydroutil.flog.write(
             '%d (%s): Auxillary files required successfully created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Dakota scripts
@@ -323,17 +323,17 @@ def main():
 
     # Event post processing
     ecode = solver.postprocessing(data, fipath)
-    logID += 1
+    logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
             '%d (%s): Error with creating postprocessing files in EVT.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
         sys.exit('Error with creating postprocessing files in EVT.')
     else:
         hydroutil.flog.write(
             '%d (%s): Postprocessing files required for EVT successfully created.\n'
-            % (logID, datetime.datetime.now())
+            % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 
     # Cleaning scripts
@@ -341,7 +341,7 @@ def main():
 
     # Write to caserun file
     caseruntext = 'echo HydroUQ complete'
-    scriptfile = open('caserun.sh', 'a')
+    scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
     scriptfile.write(caseruntext)
     scriptfile.close()
 

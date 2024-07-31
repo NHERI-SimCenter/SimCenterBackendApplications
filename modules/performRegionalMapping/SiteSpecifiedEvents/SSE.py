@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -50,11 +50,11 @@ import pandas as pd
 from scipy.cluster.vq import vq
 
 
-def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
+def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
     # check if running parallel
-    numP = 1
-    procID = 0
-    runParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    runParallel = False  # noqa: N806
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
@@ -62,15 +62,15 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
         if found:
             from mpi4py import MPI
 
-            runParallel = True
+            runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()
-            procID = comm.Get_rank()
-            if numP < 2:
-                doParallel = 'False'
-                runParallel = False
-                numP = 1
-                procID = 0
+            numP = comm.Get_size()  # noqa: N806
+            procID = comm.Get_rank()  # noqa: N806
+            if numP < 2:  # noqa: PLR2004
+                doParallel = 'False'  # noqa: N806
+                runParallel = False  # noqa: N806
+                numP = 1  # noqa: N806
+                procID = 0  # noqa: N806
 
     # read the event grid data file
     event_grid_path = Path(event_grid_file).resolve()
@@ -80,23 +80,23 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
     grid_df = pd.read_csv(event_dir / event_grid_file, header=0)
 
     # store the locations of the grid points in X
-    lat_E = grid_df['Latitude']
-    lon_E = grid_df['Longitude']
-    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])
+    lat_E = grid_df['Latitude']  # noqa: N806
+    lon_E = grid_df['Longitude']  # noqa: N806
+    X = np.array([[lo, la] for lo, la in zip(lon_E, lat_E)])  # noqa: N806
 
     # load the asset data file
-    with open(asset_file, encoding='utf-8') as f:
+    with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
         asset_dict = json.load(f)
 
     # prepare a dataframe that holds asset filenames and locations
-    AIM_df = pd.DataFrame(
+    AIM_df = pd.DataFrame(  # noqa: N806
         columns=['Latitude', 'Longitude', 'file'], index=np.arange(len(asset_dict))
     )
 
     count = 0
     for i, asset in enumerate(asset_dict):
-        if runParallel == False or (i % numP) == procID:
-            with open(asset['file'], encoding='utf-8') as f:
+        if runParallel == False or (i % numP) == procID:  # noqa: E712
+            with open(asset['file'], encoding='utf-8') as f:  # noqa: PTH123
                 asset_data = json.load(f)
 
             asset_loc = asset_data['GeneralInformation']['location']
@@ -106,7 +106,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
             count = count + 1
 
     # store asset locations in Y
-    Y = np.array(
+    Y = np.array(  # noqa: N806
         [
             [lo, la]
             for lo, la in zip(AIM_df['Longitude'], AIM_df['Latitude'])
@@ -114,25 +114,25 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
         ]
     )
 
-    # print(Y)
-    # print(sub_grid)
+    # print(Y)  # noqa: ERA001
+    # print(sub_grid)  # noqa: ERA001
 
-    # Find the index of the closest point - each index corresponds to the gridpoint index
+    # Find the index of the closest point - each index corresponds to the gridpoint index  # noqa: E501
     closest, distances = vq(Y, X)
 
-    #    print("****closest",closest)
-    #    print("****distances",distances)
+    #    print("****closest",closest)  # noqa: ERA001
+    #    print("****distances",distances)  # noqa: ERA001
     #
-    #    print("****num found",len(closest))
-    #    print("****num Y",np.size(Y, 0))
-    #    print("****num X",np.size(X, 0))
+    #    print("****num found",len(closest))  # noqa: ERA001
+    #    print("****num Y",np.size(Y, 0))  # noqa: ERA001
+    #    print("****num X",np.size(X, 0))  # noqa: ERA001
 
     # check to ensure we found all of the assets
     if len(closest) != np.size(Y, 0):
-        print(
-            'Error, the number of assets needs to be equal to the number of grid points'
+        print(  # noqa: T201
+            'Error, the number of assets needs to be equal to the number of grid points'  # noqa: E501
         )
-        print(
+        print(  # noqa: T201
             'The number of assets is '
             + str(np.size(Y, 0))
             + ' and the number of grid points is '
@@ -141,11 +141,11 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
         return 1
 
     # iterate through the assets and store the selected events in the AIM
-    for idx, AIM_id in enumerate(AIM_df.index):
+    for idx, AIM_id in enumerate(AIM_df.index):  # noqa: RET503, N806
         # open the AIM file
         asset_file = AIM_df.iloc[AIM_id]['file']
 
-        with open(asset_file, encoding='utf-8') as f:
+        with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
             asset_data = json.load(f)
 
         # this is the preferred behavior, the else caluse is left for legacy inputs
@@ -167,13 +167,13 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
             else:
                 event_type = 'intensityMeasure'
 
-            event_count = first_file.shape[0]
+            event_count = first_file.shape[0]  # noqa: F841
 
             # collect the list of events and scale factors
             event_list = []
             scale_list = []
 
-            closestPnt = grid_df.iloc[closest[idx]]
+            closestPnt = grid_df.iloc[closest[idx]]  # noqa: N806
 
             # if the grid has ground motion records...
             if event_type == 'timeHistory':
@@ -192,7 +192,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
                     scale_list.append(1.0)
 
                 # If GP_file contains multiple events
-                if multipleEvents:
+                if multipleEvents:  # noqa: SIM102
                     # Read the GP_file
                     if event_df.shape[0] > 1:
                         for row in range(1, event_df.shape[0]):
@@ -214,17 +214,17 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
                 # If GP_file contains multiple events
                 if multipleEvents:
                     # Read the GP_file
-                    GP_file = os.path.join(event_dir, closestPnt['GP_file'])
-                    GP_file_df = pd.read_csv(GP_file, header=0)
+                    GP_file = os.path.join(event_dir, closestPnt['GP_file'])  # noqa: PTH118, N806
+                    GP_file_df = pd.read_csv(GP_file, header=0)  # noqa: N806
                     if GP_file_df.shape[0] > 1:
                         for row in range(1, GP_file_df.shape[0]):
                             event_list.append(closestPnt['GP_file'] + f'x{row}')
                             scale_list.append(1.0)
 
-        # TODO: update the LLNL input data and remove this clause
+        # TODO: update the LLNL input data and remove this clause  # noqa: FIX002, TD002, TD003
         else:
             event_list = []
-            for e, i in zip(nbr_samples, ind_list):
+            for e, i in zip(nbr_samples, ind_list):  # noqa: B007, F821
                 event_list += [
                     closestPnt['GP_file'],
                 ] * e
@@ -235,11 +235,11 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
         event_list_json = []
         for e_i, event in enumerate(event_list):
             # event_list_json.append({
-            #    #"EventClassification": "Earthquake",
-            #    "fileName": f'{event}x{e_i:05d}',
-            #    "factor": scale_list[e_i],
+            #    #"EventClassification": "Earthquake",  # noqa: ERA001
+            #    "fileName": f'{event}x{e_i:05d}',  # noqa: ERA001
+            #    "factor": scale_list[e_i],  # noqa: ERA001
             #    #"type": event_type
-            #    })
+            #    })  # noqa: ERA001
             event_list_json.append([f'{event}x{e_i:05d}', scale_list[e_i]])
 
         # save the event dictionary to the AIM
@@ -247,14 +247,14 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):
         # save the event dictionary to the BIM
         asset_data['Events'] = [{}]
         asset_data['Events'][0] = {
-            # "EventClassification": "Earthquake",
+            # "EventClassification": "Earthquake",  # noqa: ERA001
             'EventFolderPath': str(event_dir),
             'Events': event_list_json,
             'type': event_type,
             # "type": "SimCenterEvents"
         }
 
-        with open(asset_file, 'w', encoding='utf-8') as f:
+        with open(asset_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(asset_data, f, indent=2)
 
 

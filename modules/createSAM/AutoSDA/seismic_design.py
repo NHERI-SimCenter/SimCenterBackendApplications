@@ -5,7 +5,7 @@ Revised in Feb. 2019
 
 # Modified by: Stevan Gavrilovic @ SimCenter, UC Berkeley
 # Last revision: 09/2020
-"""
+"""  # noqa: INP001, E501, D400, D404, D415
 
 ##########################################################################
 #                       Load Built-in Packages                           #
@@ -38,10 +38,10 @@ from global_variables import (
 ##########################################################################
 
 
-def seismic_design(base_directory, pathDataFolder, workingDirectory):
+def seismic_design(base_directory, pathDataFolder, workingDirectory):  # noqa: ANN001, ANN201, C901, N803, D103, PLR0912, PLR0915
     # **************** Debug using only **********************************
-    # building_id = 'Test3'
-    # from global_variables import base_directory
+    # building_id = 'Test3'  # noqa: ERA001
+    # from global_variables import base_directory  # noqa: ERA001
     # ///////////////// Start Seismic Design /////////////////////////////
     # Create an instance using "Building" class
     building_1 = Building(base_directory, pathDataFolder, workingDirectory)
@@ -53,14 +53,14 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # building_1.member_size['interior column'] = ['W33X387', 'W36X282', 'W36X282',
     #                                              'W30X357', 'W36X262', 'W36X262',
     #                                              'W36X210', 'W30X191', 'W27X102']
-    # # building_1.member_size['interior column'] = ['W14X38', 'W14X38', 'W14X38', 'W14X38', 'W14X38']
+    # # building_1.member_size['interior column'] = ['W14X38', 'W14X38', 'W14X38', 'W14X38', 'W14X38']  # noqa: ERA001, E501
     # building_1.member_size['beam'] = ['W24X207', 'W24X207', 'W24X207',
     #                                   'W24X207', 'W24X207', 'W24X207',
     #                                   'W24X207', 'W33X152', 'W21X182']
-    # # building_1.member_size['beam'] = ['W21X44', 'W21X44', 'W21X44', 'W21X44', 'W21X44']
-    # building_1.member_size['exterior column'] = ['W33X241', 'W36X652', 'W33X241']
-    # building_1.member_size['interior column'] = ['36X282', 'W36X652', 'W33X318']
-    # building_1.member_size['beam'] = ['W36X210', 'W36X282', 'W36X232']
+    # # building_1.member_size['beam'] = ['W21X44', 'W21X44', 'W21X44', 'W21X44', 'W21X44']  # noqa: ERA001, E501
+    # building_1.member_size['exterior column'] = ['W33X241', 'W36X652', 'W33X241']  # noqa: ERA001
+    # building_1.member_size['interior column'] = ['36X282', 'W36X652', 'W33X318']  # noqa: ERA001
+    # building_1.member_size['beam'] = ['W36X210', 'W36X282', 'W36X232']  # noqa: ERA001
     # building_1.member_size['exterior column'] = ['W14X426','W14X426','W14X426',
     #                                              'W14X426','W14X426','W14X426',
     #                                              'W14X426','W14X398','W14X370',
@@ -84,7 +84,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Compute the seismic story forces based on modal period and CuTa
     building_1.compute_seismic_force()
 
-    # Create an elastic analysis model for building instance above using "ElasticAnalysis" class
+    # Create an elastic analysis model for building instance above using "ElasticAnalysis" class  # noqa: E501
     model_1 = ElasticAnalysis(
         building_1, for_drift_only=False, for_period_only=False
     )
@@ -105,12 +105,12 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
         * RBS_STIFFNESS_FACTOR
         <= 0.025 / building_1.elf_parameters['rho']
     ):
-        print('Member size after optimization %i' % iteration)
-        print('Exterior column:', building_1.member_size['exterior column'])
-        print('Interior column:', building_1.member_size['interior column'])
-        print('Beam:', building_1.member_size['beam'])
-        print('Current story drifts: (%)')
-        print(
+        print('Member size after optimization %i' % iteration)  # noqa: T201
+        print('Exterior column:', building_1.member_size['exterior column'])  # noqa: T201
+        print('Interior column:', building_1.member_size['interior column'])  # noqa: T201
+        print('Beam:', building_1.member_size['beam'])  # noqa: T201
+        print('Current story drifts: (%)')  # noqa: T201
+        print(  # noqa: T201
             building_1.elastic_response['story drift']
             * 5.5
             * RBS_STIFFNESS_FACTOR
@@ -136,7 +136,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Assign the last member size to building instance
     building_1.member_size = copy.deepcopy(last_member)
     # Add a check here: if the program does not go into previous while loop,
-    # probably the initial size is not strong enough ==> not necessary to go into following codes
+    # probably the initial size is not strong enough ==> not necessary to go into following codes  # noqa: E501
     if iteration == 0:
         sys.stderr.write('Initial section size is not strong enough!')
         sys.stderr.write('Please increase initial depth!')
@@ -145,7 +145,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # *******************************************************************
     # ///////////////// Check Column Strength ///////////////////////////
     # *******************************************************************
-    # Create the elastic model using the last member size -> obtain period and seismic force first
+    # Create the elastic model using the last member size -> obtain period and seismic force first  # noqa: E501
     model_1 = ElasticAnalysis(building_1, for_drift_only=False, for_period_only=True)
     building_1.read_modal_period()
     building_1.compute_seismic_force()
@@ -162,7 +162,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
         [0] * (building_1.geometry['number of X bay'] + 1)
         for story in range(building_1.geometry['number of story'])
     ]
-    not_feasible_column = []  # Used to record which column [story][column_no] is not feasible
+    not_feasible_column = []  # Used to record which column [story][column_no] is not feasible  # noqa: E501
     for story in range(building_1.geometry['number of story']):
         for column_no in range(building_1.geometry['number of X bay'] + 1):
             axial_demand = abs(
@@ -199,10 +199,10 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             # Check the flag of each column
             if not column_set[story][column_no].check_flag():
                 sys.stderr.write(
-                    'column_%s%s is not feasible!!!\n' % (story, column_no)
+                    'column_%s%s is not feasible!!!\n' % (story, column_no)  # noqa: UP031
                 )
                 not_feasible_column.append([story, column_no])
-                # sys.exit(1)
+                # sys.exit(1)  # noqa: ERA001
 
     # *******************************************************************
     # ///////// Revise Column to Satisfy Strength Requirement ///////////
@@ -279,7 +279,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
         [0] * building_1.geometry['number of X bay']
         for story in range(building_1.geometry['number of story'])
     ]
-    not_feasible_beam = []  # Used to record which beam [story, bay] does not have enough strength.
+    not_feasible_beam = []  # Used to record which beam [story, bay] does not have enough strength.  # noqa: E501
     for story in range(building_1.geometry['number of story']):
         for bay in range(building_1.geometry['number of X bay']):
             length = building_1.geometry['X bay width']
@@ -300,9 +300,9 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             )
             # Check the flag of each beam
             if not beam_set[story][bay].check_flag():
-                sys.stderr.write('beam_%s%s is not feasible!!!\n' % (story, bay))
+                sys.stderr.write('beam_%s%s is not feasible!!!\n' % (story, bay))  # noqa: UP031
                 not_feasible_beam.append([story, bay])
-                # sys.exit(1)
+                # sys.exit(1)  # noqa: ERA001
 
     # *******************************************************************
     # ////////// Revise Beam to Satisfy Strength Requirement ////////////
@@ -323,7 +323,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             )
             building_1.read_story_drift()
             elastic_demand = ElasticOutput(building_1)
-            # Re-construct the beam objects (only for those revised by previous upscale activity)
+            # Re-construct the beam objects (only for those revised by previous upscale activity)  # noqa: E501
             for bay in range(building_1.geometry['number of X bay']):
                 length = building_1.geometry['X bay width']
                 shear_demand = abs(
@@ -449,10 +449,10 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 )
             if not connection_set[story][connection_no].check_flag():
                 sys.stderr.write(
-                    'connection_%s%s is not feasible!!!\n' % (story, connection_no)
+                    'connection_%s%s is not feasible!!!\n' % (story, connection_no)  # noqa: UP031
                 )
                 not_feasible_connection.append([story, connection_no])
-            #   sys.exit(1)
+            #   sys.exit(1)  # noqa: ERA001
 
     # ********************************************************************
     # ///////// Revise Member to Satisfy Connection Requirement //////////
@@ -462,11 +462,11 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
         while not connection_set[target_story_index][
             target_connection_no
         ].is_feasible['geometry limits']:
-            # This would never be achieved as all beams and columns have been selected from a database that non-prequalified
+            # This would never be achieved as all beams and columns have been selected from a database that non-prequalified  # noqa: E501
             # sizes have been removed.
             pass
 
-        # For connection not satisfy the shear or flexural strength requirement -> upscale the beam
+        # For connection not satisfy the shear or flexural strength requirement -> upscale the beam  # noqa: E501
         while (
             not connection_set[target_story_index][target_connection_no].is_feasible[
                 'shear strength'
@@ -490,7 +490,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             )
             building_1.read_story_drift()
             elastic_demand = ElasticOutput(building_1)
-            # Re-construct the beam objects (only for those revised by previous upscale activity)
+            # Re-construct the beam objects (only for those revised by previous upscale activity)  # noqa: E501
             for bay in range(building_1.geometry['number of X bay']):
                 length = building_1.geometry['X bay width']
                 shear_demand = abs(
@@ -512,7 +512,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     moment_right,
                     steel,
                 )
-            # Re-construct the connection objects (only for those affected by updated beam object)
+            # Re-construct the connection objects (only for those affected by updated beam object)  # noqa: E501
             for story in range(target_story_index, target_story_index + 1):
                 for connection_no in range(
                     building_1.geometry['number of X bay'] + 1
@@ -608,17 +608,17 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                         )
 
         i = 0
-        # For connection not satisfy the strong-column-weak beam -> upscale the column
+        # For connection not satisfy the strong-column-weak beam -> upscale the column  # noqa: E501
         while not connection_set[target_story_index][
             target_connection_no
         ].is_feasible['SCWB']:  # Not feasible connection -> go into loop
             # Determine which story should upscale
-            # If it is roof connection which does not satisfy SCWB, we can only upscale top story column
+            # If it is roof connection which does not satisfy SCWB, we can only upscale top story column  # noqa: E501
             # because no column exists upper than roof.
             if target_story_index == building_1.geometry['number of story'] - 1:
                 target_story = target_story_index
-            # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column
-            # If that's the case, we should pick up the smaller upper column to upscale.
+            # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column  # noqa: E501
+            # If that's the case, we should pick up the smaller upper column to upscale.  # noqa: E501
             elif (
                 column_set[target_story_index + 1][target_connection_no].section[
                     'Zx'
@@ -645,23 +645,23 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             building_1.read_modal_period()
             building_1.compute_seismic_force()
             # Re-perform the elastic analysis to obtain the updated demand
-            model_1 = ElasticAnalysis(
+            model_1 = ElasticAnalysis(  # noqa: F841
                 building_1, for_drift_only=False, for_period_only=False
             )
             building_1.read_story_drift()
 
-            # **************************** Debug Using Only *************************************
+            # **************************** Debug Using Only *************************************  # noqa: E501
             i += 1
-            print('Optimal member size after upscale column%i' % i)
-            print('Exterior column:', building_1.member_size['exterior column'])
-            print('Interior column:', building_1.member_size['interior column'])
-            print('Beam:', building_1.member_size['beam'])
-            print('After upscale column, current story drift is: ')
-            print(building_1.elastic_response['story drift'] * 5.5 * 1.1 * 100)
-            # **************************** Debug Ends Here **************************************
+            print('Optimal member size after upscale column%i' % i)  # noqa: T201
+            print('Exterior column:', building_1.member_size['exterior column'])  # noqa: T201
+            print('Interior column:', building_1.member_size['interior column'])  # noqa: T201
+            print('Beam:', building_1.member_size['beam'])  # noqa: T201
+            print('After upscale column, current story drift is: ')  # noqa: T201
+            print(building_1.elastic_response['story drift'] * 5.5 * 1.1 * 100)  # noqa: T201
+            # **************************** Debug Ends Here **************************************  # noqa: E501
 
             elastic_demand = ElasticOutput(building_1)
-            # Re-construct the column objects in the target_story (only update those revised by the previous algorithm)
+            # Re-construct the column objects in the target_story (only update those revised by the previous algorithm)  # noqa: E501
             for column_no in range(building_1.geometry['number of X bay'] + 1):
                 axial_demand = abs(
                     elastic_demand.dominate_load['column axial'][
@@ -701,7 +701,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     length,
                     steel,
                 )
-            # Re-construct the connection-objects (only update the joint connections that the column connects)
+            # Re-construct the connection-objects (only update the joint connections that the column connects)  # noqa: E501
             for story in range(target_story - 1 >= 0, target_story + 1):
                 for connection_no in range(
                     building_1.geometry['number of X bay'] + 1
@@ -798,8 +798,8 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # ********************************************************************
     # /////// Revise Beam Member to Consider Constructability ////////////
     # ********************************************************************
-    # After performing all checks, finalize the design by considering constructability
-    # building_1.constructability()
+    # After performing all checks, finalize the design by considering constructability  # noqa: E501
+    # building_1.constructability()  # noqa: ERA001
     # Adjust beam for constructability
     building_1.constructability_beam()
     # Define a new building object to copy the construction size into member size
@@ -845,7 +845,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             # Check the flag of each beam (might not be necessary)
             if not construction_beam_set[story][bay].check_flag():
                 sys.stderr.write(
-                    'Construction beam_%s%s is not feasible!!!\n' % (story, bay)
+                    'Construction beam_%s%s is not feasible!!!\n' % (story, bay)  # noqa: UP031
                 )
 
     # Construct new column objects after considering constructability
@@ -889,7 +889,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             # Check the flag of each column (May not be necessary)
             if not construction_column_set[story][column_no].check_flag():
                 sys.stderr.write(
-                    'Construction column_%s%s is not feasible!!!\n'
+                    'Construction column_%s%s is not feasible!!!\n'  # noqa: UP031
                     % (story, column_no)
                 )
 
@@ -996,7 +996,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 connection_no
             ].check_flag():  # (Might not be necessary)
                 sys.stderr.write(
-                    'Construction connection_%s%s is not feasible!!!\n'
+                    'Construction connection_%s%s is not feasible!!!\n'  # noqa: UP031
                     % (story, connection_no)
                 )
                 not_feasible_construction_connection.append([story, connection_no])
@@ -1010,11 +1010,11 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
         while not construction_connection_set[target_story_index][
             target_connection_no
         ].is_feasible['geometry limits']:
-            # This would never be achieved as all beams and columns have been selected from a database that non-prequalified
+            # This would never be achieved as all beams and columns have been selected from a database that non-prequalified  # noqa: E501
             # sizes have been removed.
             pass
 
-        # For connection not satisfy the shear or flexural strength requirement -> upscale the beam
+        # For connection not satisfy the shear or flexural strength requirement -> upscale the beam  # noqa: E501
         while (
             not construction_connection_set[target_story_index][
                 target_connection_no
@@ -1038,7 +1038,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             )
             building_2.read_story_drift()
             elastic_demand_2 = ElasticOutput(building_2)
-            # Re-construct the beam objects (only for those revised by previous upscale activity)
+            # Re-construct the beam objects (only for those revised by previous upscale activity)  # noqa: E501
             for bay in range(building_2.geometry['number of X bay']):
                 length = building_2.geometry['X bay width']
                 shear_demand = abs(
@@ -1060,7 +1060,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     moment_right,
                     steel,
                 )
-            # Re-construct the connection objects (only for those affected by updated beam object)
+            # Re-construct the connection objects (only for those affected by updated beam object)  # noqa: E501
             for story in range(target_story_index, target_story_index + 1):
                 for connection_no in range(
                     building_2.geometry['number of X bay'] + 1
@@ -1202,17 +1202,17 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                         )
 
         i = 0
-        # For connection not satisfy the strong-column-weak beam -> upscale the column
+        # For connection not satisfy the strong-column-weak beam -> upscale the column  # noqa: E501
         while not construction_connection_set[target_story_index][
             target_connection_no
         ].is_feasible['SCWB']:  # Not feasible connection -> go into loop
             # Determine which story should upscale
-            # If it is roof connection which does not satisfy SCWB, we can only upscale top story column
+            # If it is roof connection which does not satisfy SCWB, we can only upscale top story column  # noqa: E501
             # because no column exists upper than roof.
             if target_story_index == building_2.geometry['number of story'] - 1:
                 target_story = target_story_index
-            # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column
-            # If that's the case, we should pick up the smaller upper column to upscale.
+            # If it is not roof connection: we need to see whether upper column is significantly smaller than lower column  # noqa: E501
+            # If that's the case, we should pick up the smaller upper column to upscale.  # noqa: E501
             elif (
                 column_set[target_story_index + 1][target_connection_no].section[
                     'Zx'
@@ -1239,23 +1239,23 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             building_2.read_modal_period()
             building_2.compute_seismic_force()
             # Re-perform the elastic analysis to obtain the updated demand
-            model_2 = ElasticAnalysis(
+            model_2 = ElasticAnalysis(  # noqa: F841
                 building_2, for_drift_only=False, for_period_only=False
             )
             building_2.read_story_drift()
 
-            # **************************** Debug Using Only *************************************
+            # **************************** Debug Using Only *************************************  # noqa: E501
             i += 1
-            print('Construction#1 member size after upscale column%i' % iteration)
-            print('Exterior column:', building_1.member_size['exterior column'])
-            print('Interior column:', building_1.member_size['interior column'])
-            print('Beam:', building_1.member_size['beam'])
-            print('After upscale column, current story drift is: ')
-            print(building_1.elastic_response['story drift'] * 5.5 * 1.1 * 100)
-            # **************************** Debug Ends Here **************************************
+            print('Construction#1 member size after upscale column%i' % iteration)  # noqa: T201
+            print('Exterior column:', building_1.member_size['exterior column'])  # noqa: T201
+            print('Interior column:', building_1.member_size['interior column'])  # noqa: T201
+            print('Beam:', building_1.member_size['beam'])  # noqa: T201
+            print('After upscale column, current story drift is: ')  # noqa: T201
+            print(building_1.elastic_response['story drift'] * 5.5 * 1.1 * 100)  # noqa: T201
+            # **************************** Debug Ends Here **************************************  # noqa: E501
 
             elastic_demand_2 = ElasticOutput(building_2)
-            # Re-construct the column objects in the target_story (only update those revised by the previous algorithm)
+            # Re-construct the column objects in the target_story (only update those revised by the previous algorithm)  # noqa: E501
             for column_no in range(building_2.geometry['number of X bay'] + 1):
                 axial_demand = abs(
                     elastic_demand_2.dominate_load['column axial'][
@@ -1295,7 +1295,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                     length,
                     steel,
                 )
-            # Re-construct the connection-objects (only update the joint connections that the column connects)
+            # Re-construct the connection-objects (only update the joint connections that the column connects)  # noqa: E501
             for story in range(target_story - 1 >= 0, target_story + 1):
                 for connection_no in range(
                     building_2.geometry['number of X bay'] + 1
@@ -1438,7 +1438,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # building_1.construction_size is after adjusting beam for constructability.
     # building_2.member_size is firstly the same as building_1.construction_size
     # then consider the SCWB requirement to update column based on construction beam
-    # building_2.construction_size is consider column constructability, which is construction sizes.
+    # building_2.construction_size is consider column constructability, which is construction sizes.  # noqa: E501
     # To facilitate elastic analysis, building_3 is created.
     # building_3.member_size is final construction results.
 
@@ -1452,7 +1452,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     building_3.compute_seismic_force()
 
     # Perform elastic analysis for construction sizes
-    model_3 = ElasticAnalysis(
+    model_3 = ElasticAnalysis(  # noqa: F841
         building_3, for_drift_only=False, for_period_only=False
     )
     building_3.read_story_drift()
@@ -1496,7 +1496,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             # Check the flag of each column (May not be necessary)
             if not construction_column_set[story][column_no].check_flag():
                 sys.stderr.write(
-                    'Construction column_%s%s is not feasible!!!\n'
+                    'Construction column_%s%s is not feasible!!!\n'  # noqa: UP031
                     % (story, column_no)
                 )
 
@@ -1537,7 +1537,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
             # Check the flag of each column (May not be necessary)
             if not construction_column_set[story][column_no].check_flag():
                 sys.stderr.write(
-                    'Construction column_%s%s is not feasible!!!\n'
+                    'Construction column_%s%s is not feasible!!!\n'  # noqa: UP031
                     % (story, column_no)
                 )
 
@@ -1550,7 +1550,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
                 construction_column_set[story][col_no].section['bf']
                 < construction_beam_set[story][0].section['bf']
             ):
-                print('Column width in Story %i is less than beam' % (story))
+                print('Column width in Story %i is less than beam' % (story))  # noqa: T201
 
     # ********************************************************************
     # ///////////////// Store Design Results /////////////////////////////
@@ -1566,35 +1566,35 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Change the working directory for the design results
     os.chdir(building_1.directory['building design results'])
 
-    # Nonlinear model generation may require information for building, beam/column hinge, and panel zone thickness.
+    # Nonlinear model generation may require information for building, beam/column hinge, and panel zone thickness.  # noqa: E501
     # Store the building class to "building.pkl"
-    with open('optimal_building.pkl', 'wb') as output_file:
+    with open('optimal_building.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(building_1, output_file)
 
-    with open('construction_building.pkl', 'wb') as output_file:
+    with open('construction_building.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(building_3, output_file)
 
     # Store the beam set to "beam_set.pkl"
-    with open('optimal_beam_set.pkl', 'wb') as output_file:
+    with open('optimal_beam_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(beam_set, output_file)
 
     # Store the column set to "column_set.pkl"
-    with open('optimal_column_set.pkl', 'wb') as output_file:
+    with open('optimal_column_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(column_set, output_file)
 
     # Store the connection set to "connection_set.pkl"
-    with open('optimal_connection_set.pkl', 'wb') as output_file:
+    with open('optimal_connection_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(connection_set, output_file)
 
     # Store the construction beam set
-    with open('construction_beam_set.pkl', 'wb') as output_file:
+    with open('construction_beam_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(construction_beam_set, output_file)
 
     # Store the construction column set
-    with open('construction_column_set.pkl', 'wb') as output_file:
+    with open('construction_column_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(construction_column_set, output_file)
 
-    with open('construction_connection_set.pkl', 'wb') as output_file:
+    with open('construction_connection_set.pkl', 'wb') as output_file:  # noqa: PTH123
         pickle.dump(construction_connection_set, output_file)
 
     # Store the member sizes and story drift into csv files.
@@ -1639,7 +1639,7 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Store the doubler plate thickness
     header = []
     for bay in range(building_1.geometry['number of X bay'] + 1):
-        header.append('connection %s' % bay)
+        header.append('connection %s' % bay)  # noqa: PERF401, UP031
     # Initialize the dataframe to store doubler plate thickness
     optimal_doubler_plate = pd.DataFrame(columns=header)
     construction_doubler_plate = pd.DataFrame(columns=header)
@@ -1707,14 +1707,14 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Define the headers for the columns DC ratio
     header = []
     for bay in range(building_1.geometry['number of X bay'] + 1):
-        header.extend(['column %s' % bay])
+        header.extend(['column %s' % bay])  # noqa: UP031
     force_list = ['axial', 'shear', 'flexural']
     for force in force_list:
-        column_DC = [
+        column_DC = [  # noqa: N806
             [0] * (building_1.geometry['number of X bay'] + 1)
             for story in range(building_1.geometry['number of story'])
         ]
-        construction_column_DC = [
+        construction_column_DC = [  # noqa: N806
             [0] * (building_1.geometry['number of X bay'] + 1)
             for story in range(building_1.geometry['number of story'])
         ]
@@ -1743,14 +1743,14 @@ def seismic_design(base_directory, pathDataFolder, workingDirectory):
     # Define the headers for the beams DC ratio
     header = []
     for bay in range(building_1.geometry['number of X bay']):
-        header.extend(['beam %s' % bay])
+        header.extend(['beam %s' % bay])  # noqa: UP031
     force_list = ['shear', 'flexural']
     for force in force_list:
-        beam_DC = [
+        beam_DC = [  # noqa: N806
             [0] * (building_1.geometry['number of X bay'])
             for story in range(building_1.geometry['number of story'])
         ]
-        construction_beam_DC = [
+        construction_beam_DC = [  # noqa: N806
             [0] * (building_1.geometry['number of X bay'])
             for story in range(building_1.geometry['number of story'])
         ]

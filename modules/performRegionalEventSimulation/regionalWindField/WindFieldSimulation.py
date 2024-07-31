@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -53,8 +53,8 @@ import numpy as np
 from shapely.geometry import Point, Polygon
 
 
-class LinearAnalyticalModel_SnaikiWu_2017:
-    def __init__(self, cyclone_param=[], storm_track=[]):
+class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
+    def __init__(self, cyclone_param=[], storm_track=[]):  # noqa: ANN001, ANN204, B006
         """__init__: initializing the tropical cyclone
         cyclone_param: 6-dimensional array
         - cyclone_param[0]: landfall Latitude
@@ -66,7 +66,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         storm_track:
         - storm_track['Latitude']: latitude values of the storm track
         - storm_track['Longittude']: longitude values of the storm track
-        """
+        """  # noqa: D205, D400, D415
         # constants
         self.R = 6371.0 * 1e3
         self.EDDY_VISCOCITY = 75.0
@@ -88,16 +88,16 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 + 0.00184 * self.cyclone_pres / 100.0
                 - 0.00309 * self.cyclone_radi
             )
-        except:
-            print('WindFieldSimulaiton: please check the cyclone_param input.')
+        except:  # noqa: E722
+            print('WindFieldSimulaiton: please check the cyclone_param input.')  # noqa: T201
 
         # saving storm track data
         try:
             self.track_lat = storm_track['Latitude']
             self.track_lon = storm_track['Longitude']
             if len(self.track_lat) != len(self.track_lon):
-                print(
-                    'WindFieldSimulation: warning - storm track Latitude and Longitude sizes are different, data truncated.'
+                print(  # noqa: T201
+                    'WindFieldSimulation: warning - storm track Latitude and Longitude sizes are different, data truncated.'  # noqa: E501
                 )
                 self.track_lat = self.track_lat[
                     0 : int(min(len(self.track_lat), len(self.track_lon)))
@@ -105,8 +105,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 self.track_lon = self.track_lon[
                     0 : int(min(len(self.track_lat), len(self.track_lon)))
                 ]
-        except:
-            print('WindFieldSimulaiton: please check the strom_track input.')
+        except:  # noqa: E722
+            print('WindFieldSimulaiton: please check the strom_track input.')  # noqa: T201
 
         # initiation
         self.station_num = 0
@@ -125,18 +125,18 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         self.zp = []
         self.mesh_info = []
 
-    def set_delta_path(self, delta_path):
-        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""
-        if len(delta_path) == 3:
+    def set_delta_path(self, delta_path):  # noqa: ANN001, ANN201
+        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""  # noqa: E501, D400, D415
+        if len(delta_path) == 3:  # noqa: PLR2004
             self.delta_path = delta_path
         else:
-            print(
-                'WindFieldSimulation: the delta_path should have a size of 3, default delta_path used.'
+            print(  # noqa: T201
+                'WindFieldSimulation: the delta_path should have a size of 3, default delta_path used.'  # noqa: E501
             )
 
-    def set_delta_feat(self, delta_feat):
-        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""
-        if len(delta_feat) == 3:
+    def set_delta_feat(self, delta_feat):  # noqa: ANN001, ANN201
+        """set_delta_feat: perturbing the central pressure difference, traslational speed, and max-wind-speed radius"""  # noqa: E501, D400, D415
+        if len(delta_feat) == 3:  # noqa: PLR2004
             self.cyclone_pres = delta_feat[0] * 100.0
             self.cyclone_sped = delta_feat[1] * 1000.0 / 3600.0
             self.cyclone_radi = delta_feat[2]
@@ -147,31 +147,31 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 - 0.00309 * self.cyclone_radi
             )
         else:
-            print(
-                'WindFieldSimulation: the delta_feat should have a size of 3, default delta_feat used.'
+            print(  # noqa: T201
+                'WindFieldSimulation: the delta_feat should have a size of 3, default delta_feat used.'  # noqa: E501
             )
 
-    def __interp_z0(self, lat, lon):
-        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""
+    def __interp_z0(self, lat, lon):  # noqa: ANN001, ANN202
+        """__interp_z0: finding the z0 at (lat, lon) by interpolating reference terrain polygons"""  # noqa: E501, D400, D415
         z0 = []
         if not self.terrain_z0:
             # no reference terrain provided, using default reference z0 = 0.03
             z0 = 0.03
         else:
-            # pt = Point(lat, lon)
+            # pt = Point(lat, lon)  # noqa: ERA001
             pt = Point(lon, lat)
             for p, z in zip(self.terrain_poly, self.terrain_z0):
                 if pt.within(p):
                     z0 = z
             if not z0:
                 z0 = 0.01
-        # return
+        # return  # noqa: ERA001
         return z0
 
-    def add_reference_terrain(self, terrain_info):
+    def add_reference_terrain(self, terrain_info):  # noqa: ANN001, ANN201
         """add_reference_terrainL specifying reference z0 values for a set of polygons
         terrain_info: geojson formatted polygon and z0 data
-        """
+        """  # noqa: E501, D205, D400, D415
         for p in terrain_info['features']:
             if p['geometry']['type'] == 'Polygon':
                 # creating a new polygon
@@ -180,7 +180,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 self.terrain_z0.append(p['properties']['z0'])
                 self.terrain_num += 1
 
-    def set_cyclone_mesh(self, mesh_info):
+    def set_cyclone_mesh(self, mesh_info):  # noqa: ANN001, ANN201
         """set_cyclone_meesh: meshing the cyclone in radius and cycle
         mesh_info[0]: interal R
         mesh_info[1]: interval delta_R
@@ -188,7 +188,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         mesh_info[3]: starting angle (usually 0)
         mesh_info[4]: interval angle
         mesh_info[5]: ending angle (usually 360)
-        """
+        """  # noqa: D205, D400, D415
         try:
             self.mesh_info = mesh_info
             self.r = np.arange(
@@ -197,29 +197,29 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             self.theta = np.arange(
                 mesh_info[3], mesh_info[5] + mesh_info[4], mesh_info[4]
             )
-            print('WindFieldSimulation: cyclone meshed.')
-        except:
-            print('WindFieldSimulation: input format error in set_cyclone_mesh.')
+            print('WindFieldSimulation: cyclone meshed.')  # noqa: T201
+        except:  # noqa: E722
+            print('WindFieldSimulation: input format error in set_cyclone_mesh.')  # noqa: T201
 
-    def set_track_mesh(self, mesh_lat):
+    def set_track_mesh(self, mesh_lat):  # noqa: ANN001, ANN201
         """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
-        """
+        """  # noqa: D205, D400, D415
         try:
             lat0 = mesh_lat[0]
             dlat = mesh_lat[1]
             lat1 = mesh_lat[2]
-        except:
-            print('WindFieldSimulation: input format error in set_track_mesh.')
+        except:  # noqa: E722
+            print('WindFieldSimulation: input format error in set_track_mesh.')  # noqa: T201
 
         # boundary checks
         if (max(lat0, lat1) > max(self.track_lat)) or (
             min(lat0, lat1) < min(self.track_lat)
         ):
-            print(
-                'WindFieldSimulation: warning - forcing the track mesh consistent with the original track boundary.'
+            print(  # noqa: T201
+                'WindFieldSimulation: warning - forcing the track mesh consistent with the original track boundary.'  # noqa: E501
             )
             lat0 = min(lat0, max(self.track_lat))
             lat1 = min(lat1, max(self.track_lat))
@@ -231,40 +231,40 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         self.track_lon_m = np.abs(
             np.interp(self.track_lat_m, self.track_lat, self.track_lon)
         )
-        print('WindFieldSimulation: track meshed.')
+        print('WindFieldSimulation: track meshed.')  # noqa: T201
 
-    def define_track(self, track_lat):
+    def define_track(self, track_lat):  # noqa: ANN001, ANN201
         """set_track_meesh: meshing the storm track
         mesh_lat[0]: starting latitude value of the meshed track
         mesh_lat[1]: interval latitude value
         mesh_lat[2]: ending latitude value of the meshed track
-        """
+        """  # noqa: D205, D400, D415
         # computing meshed track's Latitude and Longitude values
         self.track_lat_m = track_lat
         self.track_lon_m = np.abs(
             np.interp(self.track_lat_m, self.track_lat, self.track_lon)
         )
-        print('WindFieldSimulation: track defined.')
+        print('WindFieldSimulation: track defined.')  # noqa: T201
 
-    def set_measure_height(self, measure_info):
-        """set_measure_height: defining the height for calculating wind speed"""
+    def set_measure_height(self, measure_info):  # noqa: ANN001, ANN201
+        """set_measure_height: defining the height for calculating wind speed"""  # noqa: D400, D415
         try:
             self.zp = np.arange(
                 measure_info[0], measure_info[2] + measure_info[1], measure_info[1]
             ).tolist()
-            print('WindFieldSimulation: measurement height defined.')
-        except:
-            print('WindFieldSimulation: input format error in set_measure_height.')
+            print('WindFieldSimulation: measurement height defined.')  # noqa: T201
+        except:  # noqa: E722
+            print('WindFieldSimulation: input format error in set_measure_height.')  # noqa: T201
 
-    def add_stations(self, station_list):
+    def add_stations(self, station_list):  # noqa: ANN001, ANN201
         """add_stations: adding stations to the model
         station_list:
         - station_list['Latitude']: latitude values of stations
         - station_list['Longitude']: longitude values of stations
         - station_list['z0']: surface roughness (optional)
-        """
+        """  # noqa: D205, D400, D415
         # z0 default
-        if 'z0' not in station_list.keys():
+        if 'z0' not in station_list.keys():  # noqa: SIM118
             # default value = 0 (no specified z0)
             station_list['z0'] = np.zeros(len(station_list['Latitude']))
 
@@ -282,11 +282,11 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             # updating station number
             self.station_num += 1
 
-    def __calculate_heading(self):
-        """__calculate_heading: computing the heading path"""
+    def __calculate_heading(self):  # noqa: ANN202
+        """__calculate_heading: computing the heading path"""  # noqa: D400, D415
         self.beta_c = np.zeros(len(self.track_lat_m))
         for i in range(len(self.track_lat_m) - 1):
-            Delta = self.track_lon_m[i + 1] - self.track_lon_m[i] + self.EPS**2
+            Delta = self.track_lon_m[i + 1] - self.track_lon_m[i] + self.EPS**2  # noqa: N806
             self.beta_c[i] = (
                 -self.delta_path[2]
                 + 90.0
@@ -306,9 +306,9 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         # fixing the last value
         self.beta_c[-1] = self.beta_c[-2]
 
-    def compute_wind_field(self):
-        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""
-        print('WindFieldSimulation: running linear analytical model.')
+    def compute_wind_field(self):  # noqa: ANN201, PLR0915
+        """compute_wind_field: computing the peak wind speed (10-min gust duraiton)"""  # noqa: E501, D400, D415
+        print('WindFieldSimulation: running linear analytical model.')  # noqa: T201
         # checking if all parameters are defined
 
         # calculating heading
@@ -333,13 +333,13 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             f = 2.0 * omega * np.sin(lat * np.pi / 180.0)
             # looping over different polar coordinates theta
             for j in range(len(self.theta)):
-                Ctheta = -self.cyclone_sped * np.sin(
+                Ctheta = -self.cyclone_sped * np.sin(  # noqa: N806
                     (self.theta[j] - beta) / self.RA
                 )
-                if (self.theta[j] >= 0) and (self.theta[j] <= 90):
-                    THETA = 90.0 - self.theta[j]
+                if (self.theta[j] >= 0) and (self.theta[j] <= 90):  # noqa: PLR2004
+                    THETA = 90.0 - self.theta[j]  # noqa: N806
                 else:
-                    THETA = 450 - self.theta[j]
+                    THETA = 450 - self.theta[j]  # noqa: N806
 
                 lat_t = self.RA * np.arcsin(
                     np.sin(lat / self.RA) * np.cos(self.r / self.R)
@@ -358,11 +358,11 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     z0[k] = self.__interp_z0(lat_t[k], lon_t[k])
                 # configuring coefficients
                 z10 = 10.0
-                A = 11.4
+                A = 11.4  # noqa: N806
                 h = A * z0**0.86
                 d = 0.75 * h
                 kappa = 0.40
-                Cd = kappa**2 / (np.log((z10 + h - d) / z0)) ** 2
+                Cd = kappa**2 / (np.log((z10 + h - d) / z0)) ** 2  # noqa: N806
                 der_p = (
                     self.Holland_B
                     * self.cyclone_radm**self.Holland_B
@@ -405,38 +405,38 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     (0.5 * (Ctheta - f * self.r)) ** 2.0
                     + (self.r / self.AIR_DENSITY) * der_p
                 ) ** (-0.5)
-                BB = 1.0 / (2.0 * self.EDDY_VISCOCITY * self.r) * der_vg1_theta
-                Eta = (
+                BB = 1.0 / (2.0 * self.EDDY_VISCOCITY * self.r) * der_vg1_theta  # noqa: N806
+                Eta = (  # noqa: N806
                     (0.5 * (Ctheta - f * self.r)) ** 2.0
                     + (self.r / self.AIR_DENSITY) * der_p
                 ) ** 0.5
-                ALPHA = (
+                ALPHA = (  # noqa: N806
                     1.0
                     / (2.0 * self.EDDY_VISCOCITY)
                     * (f + 2.0 * vg1[j, :] / self.r)
                 )
-                BETA = (
+                BETA = (  # noqa: N806
                     1.0
                     / (2.0 * self.EDDY_VISCOCITY)
                     * (f + vg1[j, :] / self.r + der_vg1_r)
                 )
-                GAMMA = 1.0 / (2.0 * self.EDDY_VISCOCITY) * vg1[j, :] / self.r
-                ALPHA = np.array(
+                GAMMA = 1.0 / (2.0 * self.EDDY_VISCOCITY) * vg1[j, :] / self.r  # noqa: N806
+                ALPHA = np.array(  # noqa: N806
                     [complex(x, y) for x, y in zip(np.real(ALPHA), np.imag(ALPHA))]
                 )
-                BETA = np.array(
+                BETA = np.array(  # noqa: N806
                     [complex(x, y) for x, y in zip(np.real(BETA), np.imag(BETA))]
                 )
-                XXX = -((ALPHA * BETA) ** 0.25)
-                YYY = -((ALPHA * BETA) ** 0.25)
-                PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])
-                PP_one = -complex(1, 1) * (
+                XXX = -((ALPHA * BETA) ** 0.25)  # noqa: N806
+                YYY = -((ALPHA * BETA) ** 0.25)  # noqa: N806
+                PP_zero = np.array([complex(x, y) for x, y in zip(XXX, YYY)])  # noqa: N806
+                PP_one = -complex(1, 1) * (  # noqa: N806
                     (GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
-                PP_minus_one = -complex(1, 1) * (
+                PP_minus_one = -complex(1, 1) * (  # noqa: N806
                     (-GAMMA + np.sqrt(ALPHA * BETA) - BB) ** 0.5
                 )
-                X1 = (
+                X1 = (  # noqa: N806
                     PP_zero
                     + f * self.r * Cd / self.EDDY_VISCOCITY
                     - 2.0 * Eta * Cd / self.EDDY_VISCOCITY
@@ -456,7 +456,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     )
                 )
 
-                X2 = (
+                X2 = (  # noqa: N806
                     -np.conj(PP_zero)
                     - f * self.r * Cd / self.EDDY_VISCOCITY
                     + 2.0 * Eta * Cd / self.EDDY_VISCOCITY
@@ -476,14 +476,14 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     )
                 )
 
-                X3 = (
+                X3 = (  # noqa: N806
                     complex(0, -2)
                     * Cd
                     / self.EDDY_VISCOCITY
                     * (Eta - f * self.r / 2.0) ** 2.0
                 )
 
-                X4 = -(
+                X4 = -(  # noqa: N806
                     -PP_zero
                     - f * self.r * Cd / (2.0 * self.EDDY_VISCOCITY)
                     + Eta * Cd / self.EDDY_VISCOCITY
@@ -493,8 +493,8 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     + Eta * Cd / self.EDDY_VISCOCITY
                 )
 
-                A_zero = -X3 / (X1 + X2 * X4)
-                A_one = (
+                A_zero = -X3 / (X1 + X2 * X4)  # noqa: N806
+                A_one = (  # noqa: N806
                     complex(0, 1)
                     * self.cyclone_sped
                     * Cd
@@ -502,7 +502,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                     / (4.0 * self.EDDY_VISCOCITY * (PP_one - np.conj(PP_minus_one)))
                     * (A_zero + np.conj(A_zero))
                 )
-                A_minus_one = -np.conj(A_one)
+                A_minus_one = -np.conj(A_one)  # noqa: N806
                 # looping over different heights zp
                 for ii in range(len(self.zp)):
                     u_zero = np.sqrt(ALPHA / BETA) * np.real(
@@ -551,7 +551,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
             v1 = v
             for m in range(v.shape[2]):
                 v1[:, :, m] = v1[:, :, m] + vg1
-            U = (v1**2.0 + u**2.0) ** 0.5
+            U = (v1**2.0 + u**2.0) ** 0.5  # noqa: N806
 
             # mapping to staitons
             dd = (
@@ -567,7 +567,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:
                 / self.RA
                 * 1000.0
             )
-            Delta = np.abs(np.array(station_lon)) - lon + self.EPS**2.0
+            Delta = np.abs(np.array(station_lon)) - lon + self.EPS**2.0  # noqa: N806
             bearing = 90.0 + self.RA * np.arctan2(
                 np.sin(Delta / self.RA) * np.cos(np.array(station_lat) / self.RA),
                 np.cos(lat / self.RA) * np.sin(np.array(station_lat) / self.RA)
@@ -588,9 +588,9 @@ class LinearAnalyticalModel_SnaikiWu_2017:
         # copying results
         self.station['PWS']['height'] = self.zp
         self.station['PWS']['windspeed'] = station_umax.tolist()
-        print('WindFieldSimulation: linear analytical simulation completed.')
+        print('WindFieldSimulation: linear analytical simulation completed.')  # noqa: T201
 
-    def get_station_data(self):
-        """get_station_data: returning station data"""
+    def get_station_data(self):  # noqa: ANN201
+        """get_station_data: returning station data"""  # noqa: D400, D415
         # return station dictionary
         return self.station

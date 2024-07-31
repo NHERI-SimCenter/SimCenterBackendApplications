@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -46,21 +46,21 @@ from pathlib import Path
 import numpy as np
 
 # import the common constants and methods
-this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+this_dir = Path(os.path.dirname(os.path.abspath(__file__))).resolve()  # noqa: PTH100, PTH120
 main_dir = this_dir.parents[1]
 
 sys.path.insert(0, str(main_dir / 'common'))
 
-from simcenter_common import get_scale_factors, get_unit_bases
+from simcenter_common import get_scale_factors, get_unit_bases  # noqa: E402
 
 
-def write_RV(AIM_file, EVENT_file):
+def write_RV(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N802, N803, D103
     # load the AIM file to get information about the assigned events
-    with open(AIM_file, encoding='utf-8') as f:
+    with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
         aim_file = json.load(f)
 
     input_units = None
-    if 'RegionalEvent' in aim_file.keys():
+    if 'RegionalEvent' in aim_file.keys():  # noqa: SIM118
         input_units = aim_file['RegionalEvent'].get('units', None)
 
     output_units = aim_file.get('units', None)
@@ -72,7 +72,7 @@ def write_RV(AIM_file, EVENT_file):
     input_unit_bases = get_unit_bases(input_units)
 
     # get the location of the event input files
-    # TODO: assuming a single event for now
+    # TODO: assuming a single event for now  # noqa: FIX002, TD002, TD003
     aim_event_input = aim_file['Events'][0]
     data_dir = Path(aim_event_input['EventFolderPath'])
 
@@ -110,12 +110,12 @@ def write_RV(AIM_file, EVENT_file):
         )
 
         # collect the filenames
-        RV_elements = np.array(events).T[0].tolist()
+        RV_elements = np.array(events).T[0].tolist()  # noqa: N806
         # for event in events:
         #    #if event['EventClassification'] in ['Earthquake', 'Hurricane',
         #    #                                    'Flood']:
-        #    #RV_elements.append(event['fileName'])
-        #    RV_elements.append(event[0])
+        #    #RV_elements.append(event['fileName'])  # noqa: ERA001
+        #    RV_elements.append(event[0])  # noqa: ERA001
 
         # and add them to the list of randomVariables
         event_file['randomVariables'][0]['elements'] = RV_elements
@@ -126,7 +126,7 @@ def write_RV(AIM_file, EVENT_file):
         # initialize the Events part of the EVENT file
         event_file['Events'].append(
             {
-                #'type': 'Seismic',
+                #'type': 'Seismic',  # noqa: ERA001
                 'type': aim_event_input['type'],
                 'event_id': events[0][0],
                 'unitScaleFactor': f_scale_units,
@@ -136,7 +136,7 @@ def write_RV(AIM_file, EVENT_file):
         )
 
     # if time histories are used, then load the first event
-    # TODO: this is needed by some other code that should be fixed and this
+    # TODO: this is needed by some other code that should be fixed and this  # noqa: FIX002, TD002, TD003
     #  part should be removed.
 
     if aim_event_input['type'] == 'timeHistory':
@@ -146,12 +146,12 @@ def write_RV(AIM_file, EVENT_file):
         # , event_class = event_class))
 
     # save the EVENT dictionary to a json file
-    with open(EVENT_file, 'w', encoding='utf-8') as f:
+    with open(EVENT_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
-def load_record(
-    file_name, data_dir, f_scale_user=1.0, f_scale_units={'ALL': 1.0}, empty=False
+def load_record(  # noqa: ANN201, D103
+    file_name, data_dir, f_scale_user=1.0, f_scale_units={'ALL': 1.0}, empty=False  # noqa: ANN001, FBT002, B006
 ):
     # event_class=None):
 
@@ -163,22 +163,22 @@ def load_record(
 
     # open the input event data file
     # (SimCenter json format is assumed here)
-    with open(data_dir / f'{file_name}.json', encoding='utf-8') as f:
+    with open(data_dir / f'{file_name}.json', encoding='utf-8') as f:  # noqa: PTH123
         event_data = json.load(f)
 
     # check if Event File is already in EVENT format
-    isEventFile = False
+    isEventFile = False  # noqa: N806
     if event_data.__contains__('Events'):
         event_dic = event_data['Events'][0]
-        # event_dic['dT'] = event_data['Events'][0]['dT']
-        # event_dic['numSteps'] = event_data['Events'][0]['numSteps']
-        # event_dic['timeSeries'] = event_data['Events'][0]['timeSeries']
-        # event_dic['pattern'] = event_data['Events'][0]['pattern']
-        return event_dic
+        # event_dic['dT'] = event_data['Events'][0]['dT']  # noqa: ERA001
+        # event_dic['numSteps'] = event_data['Events'][0]['numSteps']  # noqa: ERA001
+        # event_dic['timeSeries'] = event_data['Events'][0]['timeSeries']  # noqa: ERA001
+        # event_dic['pattern'] = event_data['Events'][0]['pattern']  # noqa: ERA001
+        return event_dic  # noqa: RET504
 
-        isEventFile = True
+        isEventFile = True  # noqa: N806
 
-    else:
+    else:  # noqa: RET505
         # initialize the internal EVENT file structure
         event_dic = {
             'name': file_name,
@@ -191,18 +191,18 @@ def load_record(
     if not isEventFile:
         f_scale_units = f_scale_units.get('TH_file', f_scale_units.get('ALL', None))
         if f_scale_units is None:
-            raise ValueError('No unit scaling is defined for time history data.')
+            raise ValueError('No unit scaling is defined for time history data.')  # noqa: EM101, TRY003
 
         f_scale = float(f_scale_units) * float(f_scale_user)
 
         # generate the event files
-        # TODO: add 'z' later
+        # TODO: add 'z' later  # noqa: FIX002, TD002, TD003
         for i, dir_ in enumerate(['x', 'y']):
             src_label = 'data_' + dir_
             tar_label = src_label
 
             # if there is data in the given direction in the input file
-            if src_label in event_data.keys():
+            if src_label in event_data.keys():  # noqa: SIM118
                 # then load that data into the output EVENT file and scale it
                 event_dic['timeSeries'].append(
                     {
@@ -217,7 +217,7 @@ def load_record(
                 if empty:
                     event_dic['timeSeries'][-1]['data'] = []
 
-                # TODO: We will need to generalize this as soon as we add
+                # TODO: We will need to generalize this as soon as we add  # noqa: FIX002, TD002, TD003
                 # different types of time histories
                 # Assuming acceleration time history for now.
                 event_dic['pattern'].append(
@@ -231,20 +231,20 @@ def load_record(
     return event_dic
 
 
-def get_records(AIM_file, EVENT_file):
+def get_records(AIM_file, EVENT_file):  # noqa: ANN001, ANN201, N803
     """This function is only called if UQ is part of the workflow. That is, it is
     not called if we are using IMasEDP and skipping the response simulation.
 
-    """
+    """  # noqa: D205, D401, D404
     # load the AIM file
-    with open(AIM_file, encoding='utf-8') as f:
-        AIM_file = json.load(f)
+    with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
+        AIM_file = json.load(f)  # noqa: N806
 
     # load the EVENT file
-    with open(EVENT_file, encoding='utf-8') as f:
+    with open(EVENT_file, encoding='utf-8') as f:  # noqa: PTH123
         event_file = json.load(f)
 
-    # event_class = AIM_file['Events']['Events'][0]['EventClassification']
+    # event_class = AIM_file['Events']['Events'][0]['EventClassification']  # noqa: ERA001
 
     # get the event_id to identify which event to load
     # (the event id might have been randomly generated earlier)
@@ -271,7 +271,7 @@ def get_records(AIM_file, EVENT_file):
     )  # , event_class = event_class))
 
     # save the updated EVENT file
-    with open(EVENT_file, 'w', encoding='utf-8') as f:
+    with open(EVENT_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 

@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Main_Help_Window.ui'
+# Form implementation generated from reading ui file 'Main_Help_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Main_Help_Window:
-    def setupUi(self, Main_Help_Window):
+class Ui_Main_Help_Window:  # noqa: N801, D101
+    def setupUi(self, Main_Help_Window):  # noqa: ANN001, ANN201, N802, N803, D102
         Main_Help_Window.setObjectName('Main_Help_Window')
         Main_Help_Window.resize(680, 320)
         Main_Help_Window.setMinimumSize(QtCore.QSize(680, 320))
@@ -31,11 +31,11 @@ class Ui_Main_Help_Window:
         self.gridLayout_4 = QtWidgets.QGridLayout()
         self.gridLayout_4.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.gridLayout_4.setObjectName('gridLayout_4')
-        spacerItem = QtWidgets.QSpacerItem(
+        spacerItem = QtWidgets.QSpacerItem(  # noqa: N806
             50, 0, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.gridLayout_4.addItem(spacerItem, 1, 1, 1, 1)
-        spacerItem1 = QtWidgets.QSpacerItem(
+        spacerItem1 = QtWidgets.QSpacerItem(  # noqa: N806
             40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.gridLayout_4.addItem(spacerItem1, 0, 0, 1, 1)
@@ -44,14 +44,14 @@ class Ui_Main_Help_Window:
         self.label_4.setPixmap(QtGui.QPixmap(':/resources/resources/both_logos.jpg'))
         self.label_4.setObjectName('label_4')
         self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
-        spacerItem2 = QtWidgets.QSpacerItem(
+        spacerItem2 = QtWidgets.QSpacerItem(  # noqa: N806
             40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.gridLayout_4.addItem(spacerItem2, 0, 2, 1, 1)
         self.main_layout.addLayout(self.gridLayout_4)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName('horizontalLayout_2')
-        spacerItem3 = QtWidgets.QSpacerItem(
+        spacerItem3 = QtWidgets.QSpacerItem(  # noqa: N806
             40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.horizontalLayout_2.addItem(spacerItem3)
@@ -65,13 +65,13 @@ class Ui_Main_Help_Window:
         self.retranslateUi(Main_Help_Window)
         QtCore.QMetaObject.connectSlotsByName(Main_Help_Window)
 
-    def retranslateUi(self, Main_Help_Window):
+    def retranslateUi(self, Main_Help_Window):  # noqa: ANN001, ANN201, N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Main_Help_Window.setWindowTitle(_translate('Main_Help_Window', 'Help'))
         self.label.setText(
             _translate(
                 'Main_Help_Window',
-                'REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.',
+                'REstoration of Water after an Event Tool (REWET) is created by Sina Naeimi and Rachel Davidson at University of Delaware. REWET is as it as and developers gurantee neither the usability of the software nor the validity of data it produce in any way.',  # noqa: E501
             )
         )
 

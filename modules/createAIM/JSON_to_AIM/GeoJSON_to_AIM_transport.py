@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -55,17 +55,17 @@ import shapely
 
 
 # Break down long roads according to delta
-def breakDownLongEdges(edges, delta, tolerance=10e-3):
-    dropedEdges = []
-    newEdges = []
+def breakDownLongEdges(edges, delta, tolerance=10e-3):  # noqa: ANN001, ANN201, N802, D103
+    dropedEdges = []  # noqa: N806
+    newEdges = []  # noqa: N806
     crs = edges.crs
-    edgesOrig = edges.copy()
+    edgesOrig = edges.copy()  # noqa: N806
     edgesOrig['IDbase'] = edgesOrig['ID'].apply(lambda x: x.split('_')[0])
-    num_segExistingMap = edgesOrig.groupby('IDbase').count()['ID'].to_dict()
+    num_segExistingMap = edgesOrig.groupby('IDbase').count()['ID'].to_dict()  # noqa: N806
     edges_dict = edges.reset_index().to_crs('epsg:6500')
     edges_dict = edges_dict.to_dict(orient='records')
     for row_ind in range(len(edges_dict)):
-        LS = edges_dict[row_ind]['geometry']
+        LS = edges_dict[row_ind]['geometry']  # noqa: N806
         num_seg = int(np.ceil(LS.length / delta))
         if num_seg == 1:
             continue
@@ -74,24 +74,24 @@ def breakDownLongEdges(edges, delta, tolerance=10e-3):
             [LS.interpolate(distance) for distance in distances[:-1]]
             + [LS.boundary.geoms[1]]
         )
-        LS = shapely.ops.snap(LS, points, tolerance)
-        splittedLS = shapely.ops.split(LS, points).geoms
-        currentEdge = edges_dict[row_ind].copy()
-        num_segExisting = num_segExistingMap[currentEdge['ID'].split('_')[0]]
-        for sLS_ind, sLS in enumerate(splittedLS):
+        LS = shapely.ops.snap(LS, points, tolerance)  # noqa: N806
+        splittedLS = shapely.ops.split(LS, points).geoms  # noqa: N806
+        currentEdge = edges_dict[row_ind].copy()  # noqa: N806
+        num_segExisting = num_segExistingMap[currentEdge['ID'].split('_')[0]]  # noqa: N806
+        for sLS_ind, sLS in enumerate(splittedLS):  # noqa: N806
             # create new edge
             if sLS_ind == 0:
-                newID = currentEdge['ID']
+                newID = currentEdge['ID']  # noqa: N806
             else:
-                newID = (
+                newID = (  # noqa: N806
                     currentEdge['ID'].split('_')[0] + '_' + str(num_segExisting + 1)
                 )
-                num_segExisting += 1
+                num_segExisting += 1  # noqa: N806
                 num_segExistingMap[currentEdge['ID'].split('_')[0]] = (
                     num_segExistingMap[currentEdge['ID'].split('_')[0]] + 1
                 )
-            newGeom = sLS
-            newEdge = currentEdge.copy()
+            newGeom = sLS  # noqa: N806
+            newEdge = currentEdge.copy()  # noqa: N806
             newEdge.update(
                 {
                     'ID': newID,
@@ -105,30 +105,30 @@ def breakDownLongEdges(edges, delta, tolerance=10e-3):
         dropedEdges.append(row_ind)
     edges = edges.drop(dropedEdges)
     if len(newEdges) > 0:
-        newEdges = gpd.GeoDataFrame(newEdges, crs='epsg:6500').to_crs(crs)
+        newEdges = gpd.GeoDataFrame(newEdges, crs='epsg:6500').to_crs(crs)  # noqa: N806
         edges = pd.concat([edges, newEdges], ignore_index=True)
     edges = edges.reset_index(drop=True)
-    return edges
+    return edges  # noqa: RET504
 
 
-def create_asset_files(
-    output_file,
-    asset_source_road,
-    asset_source_bridge,
-    asset_source_tunnel,
-    bridge_filter,
-    tunnel_filter,
-    road_filter,
-    doParallel,
-    roadSegLength,
+def create_asset_files(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+    output_file,  # noqa: ANN001
+    asset_source_road,  # noqa: ANN001
+    asset_source_bridge,  # noqa: ANN001
+    asset_source_tunnel,  # noqa: ANN001
+    bridge_filter,  # noqa: ANN001
+    tunnel_filter,  # noqa: ANN001
+    road_filter,  # noqa: ANN001
+    doParallel,  # noqa: ANN001, N803
+    roadSegLength,  # noqa: ANN001, N803
 ):
     # these imports are here to save time when the app is called without
     # the -getRV flag
 
     # check if running parallel
-    numP = 1
-    procID = 0
-    runParallel = False
+    numP = 1  # noqa: N806
+    procID = 0  # noqa: N806
+    runParallel = False  # noqa: N806
 
     if doParallel == 'True':
         mpi_spec = importlib.util.find_spec('mpi4py')
@@ -136,18 +136,18 @@ def create_asset_files(
         if found:
             from mpi4py import MPI
 
-            runParallel = True
+            runParallel = True  # noqa: N806
             comm = MPI.COMM_WORLD
-            numP = comm.Get_size()
-            procID = comm.Get_rank()
-            if numP < 2:
-                doParallel = 'False'
-                runParallel = False
-                numP = 1
-                procID = 0
+            numP = comm.Get_size()  # noqa: N806
+            procID = comm.Get_rank()  # noqa: N806
+            if numP < 2:  # noqa: PLR2004
+                doParallel = 'False'  # noqa: N806
+                runParallel = False  # noqa: N806
+                numP = 1  # noqa: N806
+                procID = 0  # noqa: N806
 
-    # Get the out dir, may not always be in the results folder if multiple assets are used
-    outDir = os.path.dirname(output_file)
+    # Get the out dir, may not always be in the results folder if multiple assets are used  # noqa: E501
+    outDir = os.path.dirname(output_file)  # noqa: PTH120, N806
 
     # check if a filter is provided for bridges
     if bridge_filter is not None:
@@ -182,49 +182,49 @@ def create_asset_files(
 
     # load the GeoJSON file with the asset information
     if asset_source_road is not None:
-        roadsGDF = gpd.read_file(asset_source_road)
+        roadsGDF = gpd.read_file(asset_source_road)  # noqa: N806
         datacrs = roadsGDF.crs
     else:
-        roadsGDF = gpd.GeoDataFrame.from_dict({})
+        roadsGDF = gpd.GeoDataFrame.from_dict({})  # noqa: N806
     if asset_source_bridge is not None:
-        bridgesGDF = gpd.read_file(asset_source_bridge)
+        bridgesGDF = gpd.read_file(asset_source_bridge)  # noqa: N806
     else:
-        bridgesGDF = gpd.GeoDataFrame.from_dict({})
+        bridgesGDF = gpd.GeoDataFrame.from_dict({})  # noqa: N806
     if asset_source_tunnel is not None:
-        tunnelsGDF = gpd.read_file(asset_source_tunnel)
+        tunnelsGDF = gpd.read_file(asset_source_tunnel)  # noqa: N806
     else:
-        tunnelsGDF = gpd.GeoDataFrame.from_dict({})
+        tunnelsGDF = gpd.GeoDataFrame.from_dict({})  # noqa: N806
 
     # if there is a filter, then pull out only the required bridges
     if bridge_filter is not None:
-        assets_available = bridgesGDF.index.values
+        assets_available = bridgesGDF.index.values  # noqa: PD011
         bridges_to_run = bridges_requested[
             np.where(np.isin(bridges_requested, assets_available))[0]
         ]
         selected_bridges = bridgesGDF.loc[bridges_to_run]
     else:
         selected_bridges = bridgesGDF
-        bridges_to_run = bridgesGDF.index.values
+        bridges_to_run = bridgesGDF.index.values  # noqa: PD011
     # if there is a filter, then pull out only the required tunnels
     if tunnel_filter is not None:
-        assets_available = tunnelsGDF.index.values
+        assets_available = tunnelsGDF.index.values  # noqa: PD011
         tunnels_to_run = tunnels_requested[
             np.where(np.isin(tunnels_requested, assets_available))[0]
         ]
         selected_tunnels = tunnelsGDF.loc[tunnels_to_run]
     else:
         selected_tunnels = tunnelsGDF
-        tunnels_to_run = tunnelsGDF.index.values
+        tunnels_to_run = tunnelsGDF.index.values  # noqa: PD011
     # if there is a filter, then pull out only the required roads
     if road_filter is not None:
-        assets_available = roadsGDF.index.values
+        assets_available = roadsGDF.index.values  # noqa: PD011
         roads_to_run = roads_requested[
             np.where(np.isin(roads_requested, assets_available))[0]
         ]
         selected_roads = roadsGDF.loc[roads_to_run]
     else:
         selected_roads = roadsGDF
-        roads_to_run = roadsGDF.index.values
+        roads_to_run = roadsGDF.index.values  # noqa: PD011
 
     if len(selected_roads) > 0:
         # Break down road network
@@ -232,12 +232,12 @@ def create_asset_files(
 
         # Convert find connectivity and add start_node, end_node attributes
         graph = momepy.gdf_to_nx(edges.to_crs('epsg:6500'), approach='primal')
-        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph
+        with warnings.catch_warnings():  # Suppress the warning of disconnected components in the graph  # noqa: E501
             warnings.simplefilter('ignore')
             nodes, edges, sw = momepy.nx_to_gdf(
                 graph, points=True, lines=True, spatial_weights=True
             )
-        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder
+        ### Some edges has start_node as the last point in the geometry and end_node as the first point, check and reorder  # noqa: E501
         for ind in edges.index:
             start = nodes.loc[edges.loc[ind, 'node_start'], 'geometry']
             end = nodes.loc[edges.loc[ind, 'node_end'], 'geometry']
@@ -246,17 +246,17 @@ def create_asset_files(
             # check if first and last are the same
             if start == first and end == last:
                 continue
-            elif start == last and end == first:
-                newStartID = edges.loc[ind, 'node_end']
-                newEndID = edges.loc[ind, 'node_start']
+            elif start == last and end == first:  # noqa: RET507
+                newStartID = edges.loc[ind, 'node_end']  # noqa: N806
+                newEndID = edges.loc[ind, 'node_start']  # noqa: N806
                 edges.loc[ind, 'node_start'] = newStartID
                 edges.loc[ind, 'node_end'] = newEndID
             else:
-                print(
+                print(  # noqa: T201
                     ind,
-                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',
+                    'th row of edges has wrong start/first, end/last pairs, likely a bug of momepy.gdf_to_nx function',  # noqa: E501
                 )
-        locationGS = gpd.GeoSeries(
+        locationGS = gpd.GeoSeries(  # noqa: N806
             edges['geometry'].apply(lambda x: x.centroid), crs=edges.crs
         ).to_crs(datacrs)
         edges = (
@@ -269,19 +269,19 @@ def create_asset_files(
         edges = edges.reset_index().rename(columns={'index': 'AIM_id'})
         edges['AIM_id'] = edges['AIM_id'].apply(lambda x: 'r' + str(x))
         edges.to_file(
-            os.path.join(outDir, 'roadNetworkEdgesSelected.geojson'),
+            os.path.join(outDir, 'roadNetworkEdgesSelected.geojson'),  # noqa: PTH118
             driver='GeoJSON',
         )
-        nodesNeeded = list(
+        nodesNeeded = list(  # noqa: N806
             set(
-                edges['start_node'].values.tolist()
-                + edges['end_node'].values.tolist()
+                edges['start_node'].values.tolist()  # noqa: PD011
+                + edges['end_node'].values.tolist()  # noqa: PD011
             )
         )
         nodes = nodes.loc[nodesNeeded, :]
         nodes = nodes.to_crs(datacrs)[['nodeID', 'geometry']]
         nodes.to_file(
-            os.path.join(outDir, 'roadNetworkNodesSelected.geojson'),
+            os.path.join(outDir, 'roadNetworkNodesSelected.geojson'),  # noqa: PTH118
             driver='GeoJSON',
         )
     else:
@@ -292,13 +292,13 @@ def create_asset_files(
     assets_array = []
     for ind, asset in selected_bridges.iterrows():
         asset_id = 'b' + str(bridges_to_run[ind])
-        ind += 1
-        if runParallel == False or (count % numP) == procID:
+        ind += 1  # noqa: PLW2901
+        if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            # locationNodeID = str(asset["location"])
-            AIM_i = {
+            # locationNodeID = str(asset["location"])  # noqa: ERA001
+            AIM_i = {  # noqa: N806
                 'RandomVariables': [],
-                'GeneralInformation': dict(
+                'GeneralInformation': dict(  # noqa: C408
                     AIM_id=asset_id,
                     location={
                         'latitude': asset['geometry'].centroid.coords[0][1],
@@ -309,29 +309,29 @@ def create_asset_files(
             asset.pop('geometry')
             # save every label as-is
             AIM_i['GeneralInformation'].update(asset)
-            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
+            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})  # noqa: ERA001
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwyBridge'})
-            AIM_file_name = f'{asset_id}-AIM.json'
+            AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
-            AIM_file_name = os.path.join(outDir, AIM_file_name)
+            AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
 
-            with open(AIM_file_name, 'w', encoding='utf-8') as f:
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(AIM_i, f, indent=2)
 
-            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
         count = count + 1
 
     ind = 0
     for ind, asset in selected_tunnels.iterrows():
         asset_id = 't' + str(tunnels_to_run[ind])
-        ind += 1
-        if runParallel == False or (count % numP) == procID:
+        ind += 1  # noqa: PLW2901
+        if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            # locationNodeID = str(asset["location"])
-            AIM_i = {
+            # locationNodeID = str(asset["location"])  # noqa: ERA001
+            AIM_i = {  # noqa: N806
                 'RandomVariables': [],
-                'GeneralInformation': dict(
+                'GeneralInformation': dict(  # noqa: C408
                     AIM_id=asset_id,
                     location={
                         'latitude': asset['geometry'].centroid.coords[0][1],
@@ -342,16 +342,16 @@ def create_asset_files(
             asset.pop('geometry')
             # save every label as-is
             AIM_i['GeneralInformation'].update(asset)
-            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})
+            # AIM_i["GeneralInformation"].update({"locationNode":locationNodeID})  # noqa: ERA001
             AIM_i['GeneralInformation'].update({'assetSubtype': 'hwyTunnel'})
-            AIM_file_name = f'{asset_id}-AIM.json'
+            AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
-            AIM_file_name = os.path.join(outDir, AIM_file_name)
+            AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
 
-            with open(AIM_file_name, 'w', encoding='utf-8') as f:
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(AIM_i, f, indent=2)
 
-            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
         count = count + 1
 
@@ -359,11 +359,11 @@ def create_asset_files(
     for row_ind in edges.index:
         asset_id = 'r' + str(row_ind)
         ind += 1
-        if runParallel == False or (count % numP) == procID:
+        if runParallel == False or (count % numP) == procID:  # noqa: E712
             # initialize the AIM file
-            AIM_i = {
+            AIM_i = {  # noqa: N806
                 'RandomVariables': [],
-                'GeneralInformation': dict(
+                'GeneralInformation': dict(  # noqa: C408
                     AIM_id=asset_id,
                     location={
                         'latitude': edges.loc[row_ind, 'location_lat'],
@@ -385,40 +385,40 @@ def create_asset_files(
             }
             AIM_i['GeneralInformation'].update({'geometry': str(geom)})
             AIM_i['GeneralInformation'].update({'assetSubtype': 'roadway'})
-            AIM_file_name = f'{asset_id}-AIM.json'
+            AIM_file_name = f'{asset_id}-AIM.json'  # noqa: N806
 
-            AIM_file_name = os.path.join(outDir, AIM_file_name)
+            AIM_file_name = os.path.join(outDir, AIM_file_name)  # noqa: PTH118, N806
 
-            with open(AIM_file_name, 'w', encoding='utf-8') as f:
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:  # noqa: PTH123
                 json.dump(AIM_i, f, indent=2)
 
-            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
+            assets_array.append(dict(id=str(asset_id), file=AIM_file_name))  # noqa: C408
 
         count = count + 1
 
     if procID != 0:
         # if not P0, write data to output file with procID in name and barrier
 
-        output_file = os.path.join(outDir, f'tmp_{procID}.json')
+        output_file = os.path.join(outDir, f'tmp_{procID}.json')  # noqa: PTH118
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=0)
 
         comm.Barrier()
 
     else:
-        if runParallel == True:
-            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
+        if runParallel == True:  # noqa: E712
+            # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append  # noqa: E501
             comm.Barrier()
 
             for i in range(1, numP):
-                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
-                with open(fileToAppend, encoding='utf-8') as data_file:
+                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')  # noqa: PTH118, N806
+                with open(fileToAppend, encoding='utf-8') as data_file:  # noqa: PTH123
                     json_data = data_file.read()
-                assetsToAppend = json.loads(json_data)
+                assetsToAppend = json.loads(json_data)  # noqa: N806
                 assets_array += assetsToAppend
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(assets_array, f, indent=2)
 
 
@@ -473,8 +473,8 @@ if __name__ == '__main__':
         const=True,
     )
     # parser.add_argument('--saveFullNetwork',
-    #     help = "Save the full network into edges and nodes.",
-    #     default=False,
+    #     help = "Save the full network into edges and nodes.",  # noqa: ERA001
+    #     default=False,  # noqa: ERA001
     #     type=bool)
 
     args = parser.parse_args()

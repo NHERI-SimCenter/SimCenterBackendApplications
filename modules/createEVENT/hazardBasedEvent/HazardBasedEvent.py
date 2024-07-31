@@ -1,4 +1,4 @@
-# This python script process the input and will use it to run SHA and ground motion selection
+# This python script process the input and will use it to run SHA and ground motion selection  # noqa: INP001, E501, D100
 # In addition to providing the event file
 
 import glob
@@ -9,15 +9,15 @@ import subprocess
 import sys
 
 
-def computeScenario(gmConfig, location):
-    scriptDir = os.path.dirname(os.path.realpath(__file__))
-    eqHazardPath = f'{scriptDir}/GMU/EQHazard.jar'
-    simulateIMPath = f'{scriptDir}/GMU/SimulateIM'
-    selectRecordPath = f'{scriptDir}/GMU/SelectRecord'
-    recordDatabasePath = f'{scriptDir}/GMU/NGAWest2-1000.csv'
+def computeScenario(gmConfig, location):  # noqa: ANN001, ANN201, N802, N803, D103
+    scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
+    eqHazardPath = f'{scriptDir}/GMU/EQHazard.jar'  # noqa: N806
+    simulateIMPath = f'{scriptDir}/GMU/SimulateIM'  # noqa: N806
+    selectRecordPath = f'{scriptDir}/GMU/SelectRecord'  # noqa: N806
+    recordDatabasePath = f'{scriptDir}/GMU/NGAWest2-1000.csv'  # noqa: N806
 
     # Separate Selection Config
-    selectionConfig = gmConfig['RecordSelection']
+    selectionConfig = gmConfig['RecordSelection']  # noqa: N806
     del gmConfig['RecordSelection']
 
     gmConfig['Site'] = {}
@@ -28,20 +28,20 @@ def computeScenario(gmConfig, location):
 
     # Adding the required output
     gmConfig['IntensityMeasure']['EnableJsonOutput'] = True
-    with open(
+    with open(  # noqa: PTH123
         './HazardWorkDir/Hazard_Scenario.json', 'w', encoding='utf-8'
-    ) as hazardFile:
+    ) as hazardFile:  # noqa: N806
         json.dump(gmConfig, hazardFile, indent=4)
 
     # Now we need to run the EQHazard Process
-    hazardCommand = [
+    hazardCommand = [  # noqa: N806
         'java',
         '-jar',
         eqHazardPath,
         './HazardWorkDir/Hazard_Scenario.json',
         './HazardWorkDir/Hazard_Output.json',
     ]
-    hazardResult = subprocess.call(hazardCommand)
+    hazardResult = subprocess.call(hazardCommand)  # noqa: S603, N806
 
     if hazardResult != 0:
         sys.stderr.write('Hazard analysis failed!')
@@ -49,22 +49,22 @@ def computeScenario(gmConfig, location):
 
     # Now we need to run the SimulateIM Process
     # First we create a simulation config
-    simConfig = {
+    simConfig = {  # noqa: N806
         'GroundMotions': {'File': './HazardWorkDir/Hazard_Output.json'},
         'NumSimulations': 1,
         'SpatialCorrelation': True,
     }
 
-    with open(
+    with open(  # noqa: PTH123
         './HazardWorkDir/Sim_Config.json', 'w', encoding='utf-8'
-    ) as simConfigFile:
+    ) as simConfigFile:  # noqa: N806
         json.dump(simConfig, simConfigFile, indent=4)
-    simulateCommand = [
+    simulateCommand = [  # noqa: N806
         simulateIMPath,
         './HazardWorkDir/Sim_Config.json',
         './HazardWorkDir/Hazard_Sim.json',
     ]
-    simResult = subprocess.call(simulateCommand)
+    simResult = subprocess.call(simulateCommand)  # noqa: S603, N806
 
     if simResult != 0:
         sys.stderr.write('Intensity measure simulation failed!')
@@ -74,27 +74,27 @@ def computeScenario(gmConfig, location):
     #
     selectionConfig['Target']['File'] = './HazardWorkDir/Hazard_Sim.json'
     selectionConfig['Database']['File'] = recordDatabasePath
-    with open(
+    with open(  # noqa: PTH123
         './HazardWorkDir/Selection_Config.json', 'w', encoding='utf-8'
-    ) as selectionConfigFile:
+    ) as selectionConfigFile:  # noqa: N806
         json.dump(selectionConfig, selectionConfigFile, indent=4)
-    selectionCommand = [
+    selectionCommand = [  # noqa: N806
         selectRecordPath,
         './HazardWorkDir/Selection_Config.json',
         './HazardWorkDir/Records_Selection.json',
     ]
-    simResult = subprocess.call(selectionCommand)
+    simResult = subprocess.call(selectionCommand)  # noqa: S603, N806
 
-    if simResult != 0:
+    if simResult != 0:  # noqa: RET503
         sys.stderr.write('Intensity measure simulation failed!')
         return -2
 
 
-def readNGAWest2File(ngaW2FilePath, scaleFactor):
+def readNGAWest2File(ngaW2FilePath, scaleFactor):  # noqa: ANN001, ANN201, N802, N803, D103
     series = []
     dt = 0.0
-    with open(ngaW2FilePath) as recordFile:
-        canRead = False  # We need to process the header first
+    with open(ngaW2FilePath) as recordFile:  # noqa: PTH123, N806
+        canRead = False  # We need to process the header first  # noqa: N806
         for line in recordFile:
             if canRead:
                 series.extend(
@@ -105,42 +105,42 @@ def readNGAWest2File(ngaW2FilePath, scaleFactor):
                 dt = float(
                     re.match(r'NPTS=.+, DT=\s+([0-9\.]+)\s+SEC', line).group(1)
                 )
-                canRead = True
+                canRead = True  # noqa: N806
 
     return series, dt
 
 
-def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):
-    pattern = os.path.join(recordsFolder, 'RSN') + str(rsn) + '_*.AT2'
-    recordFiles = glob.glob(pattern)
-    if len(recordFiles) != 2:
-        print(
+def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+    pattern = os.path.join(recordsFolder, 'RSN') + str(rsn) + '_*.AT2'  # noqa: PTH118
+    recordFiles = glob.glob(pattern)  # noqa: PTH207, N806
+    if len(recordFiles) != 2:  # noqa: PLR2004
+        print(  # noqa: T201
             'Error finding NGA West 2 files.\n'
             f'Please download the files for record {rsn} '
-            f'from NGA West 2 website and place them in the records folder ({recordsFolder})'
+            f'from NGA West 2 website and place them in the records folder ({recordsFolder})'  # noqa: E501
         )
-        exit(-1)
+        exit(-1)  # noqa: PLR1722
 
     h1, dt1 = readNGAWest2File(recordFiles[0], scaleFactor)
     h2, dt2 = readNGAWest2File(recordFiles[1], scaleFactor)
 
-    patternH1 = {}
+    patternH1 = {}  # noqa: N806
     patternH1['type'] = 'UniformAcceleration'
     patternH1['timeSeries'] = 'accel_X'
     patternH1['dof'] = 1
 
-    patternH2 = {}
+    patternH2 = {}  # noqa: N806
     patternH2['type'] = 'UniformAcceleration'
     patternH2['timeSeries'] = 'accel_Y'
     patternH2['dof'] = 2
 
-    seriesH1 = {}
+    seriesH1 = {}  # noqa: N806
     seriesH1['name'] = 'accel_X'
     seriesH1['type'] = 'Value'
     seriesH1['dT'] = dt1
     seriesH1['data'] = h1
 
-    seriesH2 = {}
+    seriesH2 = {}  # noqa: N806
     seriesH2['name'] = 'accel_Y'
     seriesH2['type'] = 'Value'
     seriesH2['dT'] = dt2
@@ -161,52 +161,52 @@ def createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath):
     event['pattern'] = [patternH1, patternH2]
     event['units'] = {'length': 'm', 'time': 'sec'}
 
-    eventsDict = {}
+    eventsDict = {}  # noqa: N806
     eventsDict['Events'] = [event]
     eventsDict['RandomVariables'] = []
 
-    with open(eventFilePath, 'w', encoding='utf-8') as eventFile:
+    with open(eventFilePath, 'w', encoding='utf-8') as eventFile:  # noqa: PTH123, N806
         json.dump(eventsDict, eventFile, indent=4)
 
 
-def main():
-    inputArgs = sys.argv
+def main():  # noqa: ANN201, D103
+    inputArgs = sys.argv  # noqa: N806
 
     # Process only if --getRV is passed
     if '--getRV' not in inputArgs:
         sys.exit(0)
 
     # First let's process the arguments
-    argBIM = inputArgs.index('--filenameAIM') + 1
-    bimFilePath = inputArgs[argBIM]
-    argEVENT = inputArgs.index('--filenameEVENT') + 1
-    eventFilePath = inputArgs[argEVENT]
+    argBIM = inputArgs.index('--filenameAIM') + 1  # noqa: N806
+    bimFilePath = inputArgs[argBIM]  # noqa: N806
+    argEVENT = inputArgs.index('--filenameEVENT') + 1  # noqa: N806
+    eventFilePath = inputArgs[argEVENT]  # noqa: N806
 
     # Ensure a hazard cache folder exist
-    if not os.path.exists('./HazardWorkDir'):
-        os.mkdir('./HazardWorkDir')
+    if not os.path.exists('./HazardWorkDir'):  # noqa: PTH110
+        os.mkdir('./HazardWorkDir')  # noqa: PTH102
 
-    with open(bimFilePath, encoding='utf-8') as bimFile:
+    with open(bimFilePath, encoding='utf-8') as bimFile:  # noqa: PTH123, N806
         bim = json.load(bimFile)
         location = [
             bim['GeneralInformation']['location']['latitude'],
             bim['GeneralInformation']['location']['longitude'],
         ]
 
-    scriptDir = os.path.dirname(os.path.realpath(__file__))
-    recordsFolder = f'{scriptDir}/GMU/NGAWest2Records'
+    scriptDir = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N806
+    recordsFolder = f'{scriptDir}/GMU/NGAWest2Records'  # noqa: N806
 
     computeScenario(bim['Events'][0]['GroundMotion'], location)
 
     # We need to read the building location
 
     # Now we can start processing the event
-    with open('./HazardWorkDir/Records_Selection.json') as selectionFile:
-        recordSelection = json.load(selectionFile)
+    with open('./HazardWorkDir/Records_Selection.json') as selectionFile:  # noqa: PTH123, N806
+        recordSelection = json.load(selectionFile)  # noqa: N806
 
-    selectedRecord = recordSelection['GroundMotions'][0]
+    selectedRecord = recordSelection['GroundMotions'][0]  # noqa: N806
     rsn = selectedRecord['Record']['Id']
-    scaleFactor = selectedRecord['ScaleFactor']
+    scaleFactor = selectedRecord['ScaleFactor']  # noqa: N806
 
     createNGAWest2Event(rsn, scaleFactor, recordsFolder, eventFilePath)
 

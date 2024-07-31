@@ -1,4 +1,4 @@
-#
+#  # noqa: EXE002, INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 #
 # This file is part of the SimCenter Backend Applications.
@@ -40,7 +40,7 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
 
 from whale.main import (
     _parse_app_registry,
@@ -49,64 +49,64 @@ from whale.main import (
 )
 
 
-def main(
-    inputFile,
-    appKey,
-    getRV,
-    samFile,
-    evtFile,
-    edpFile,
-    simFile,
-    registryFile,
-    appDir,
+def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
+    inputFile,  # noqa: ANN001, N803
+    appKey,  # noqa: ANN001, N803
+    getRV,  # noqa: ANN001, N803
+    samFile,  # noqa: ANN001, ARG001, N803
+    evtFile,  # noqa: ANN001, ARG001, N803
+    edpFile,  # noqa: ANN001, ARG001, N803
+    simFile,  # noqa: ANN001, ARG001, N803
+    registryFile,  # noqa: ANN001, N803
+    appDir,  # noqa: ANN001, N803
 ):
     #
     # get some dir paths, load input file and get data for app, appKey
     #
 
-    inputDir = os.path.dirname(inputFile)
-    inputFileName = os.path.basename(inputFile)
+    inputDir = os.path.dirname(inputFile)  # noqa: PTH120, N806
+    inputFileName = os.path.basename(inputFile)  # noqa: PTH119, N806
     if inputDir != '':
         os.chdir(inputDir)
 
-    with open(inputFileName) as f:
+    with open(inputFileName) as f:  # noqa: PTH123
         inputs = json.load(f)
 
-    if 'referenceDir' in inputs:
+    if 'referenceDir' in inputs:  # noqa: SIM108, SIM401
         reference_dir = inputs['referenceDir']
     else:
         reference_dir = inputDir
 
-    appData = {}
+    appData = {}  # noqa: N806
     if appKey in inputs:
-        appData = inputs[appKey]
+        appData = inputs[appKey]  # noqa: N806
     else:
-        raise KeyError(
-            f'No data for "{appKey}" application in the input file "{inputFile}"'
+        raise KeyError(  # noqa: TRY003
+            f'No data for "{appKey}" application in the input file "{inputFile}"'  # noqa: EM102
         )
 
-    eventApp = False
+    eventApp = False  # noqa: N806
     if appKey == 'Events':
-        eventApp = True
-        appData = appData[0]
+        eventApp = True  # noqa: N806, F841
+        appData = appData[0]  # noqa: N806
 
-    print('appKEY: ', appKey)
-    print('appDATA: ', appData)
-    print('HELLO ')
+    print('appKEY: ', appKey)  # noqa: T201
+    print('appDATA: ', appData)  # noqa: T201
+    print('HELLO ')  # noqa: T201
 
     if 'models' not in appData:
-        print('NO models in: ', appData)
-        raise KeyError(
-            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'
+        print('NO models in: ', appData)  # noqa: T201
+        raise KeyError(  # noqa: TRY003
+            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'  # noqa: EM102, E501
         )
 
-    if len(appData['models']) < 2:
-        raise RuntimeError(
-            f'At least two models must be provided if the multimodel {appKey} application is used'
+    if len(appData['models']) < 2:  # noqa: PLR2004
+        raise RuntimeError(  # noqa: TRY003
+            f'At least two models must be provided if the multimodel {appKey} application is used'  # noqa: EM102, E501
         )
 
     models = appData['models']
-    modelToRun = appData['modelToRun']
+    modelToRun = appData['modelToRun']  # noqa: N806
 
     if not getRV:
         #
@@ -114,57 +114,57 @@ def main(
         #
 
         if isinstance(modelToRun, str):
-            rvName = 'MultiModel-' + appKey
+            rvName = 'MultiModel-' + appKey  # noqa: N806
             # if not here, try opening params.in and getting var from there
-            with open('params.in') as params:
+            with open('params.in') as params:  # noqa: PTH123
                 # Read the file line by line
                 for line in params:
                     values = line.strip().split()
-                    print(values)
+                    print(values)  # noqa: T201
                     if values[0] == rvName:
-                        modelToRun = values[1]
+                        modelToRun = values[1]  # noqa: N806
 
-        modelToRun = int(float(modelToRun))
+        modelToRun = int(float(modelToRun))  # noqa: N806
 
-    appsInMultiModel = []
-    appDataInMultiModel = []
-    appRunDataInMultiModel = []
+    appsInMultiModel = []  # noqa: N806
+    appDataInMultiModel = []  # noqa: N806
+    appRunDataInMultiModel = []  # noqa: N806
     beliefs = []
-    sumBeliefs = 0
+    sumBeliefs = 0  # noqa: N806
 
-    numModels = 0
+    numModels = 0  # noqa: N806
 
     for model in models:
         belief = model['belief']
-        appName = model['Application']
-        appData = model['ApplicationData']
-        appRunData = model['data']
+        appName = model['Application']  # noqa: N806
+        appData = model['ApplicationData']  # noqa: N806
+        appRunData = model['data']  # noqa: N806
         beliefs.append(belief)
-        sumBeliefs = sumBeliefs + belief
+        sumBeliefs = sumBeliefs + belief  # noqa: N806
         appsInMultiModel.append(appName)
         appDataInMultiModel.append(appData)
         appRunDataInMultiModel.append(appRunData)
-        numModels = numModels + 1
+        numModels = numModels + 1  # noqa: N806
 
     for i in range(numModels):
         beliefs[i] = beliefs[i] / sumBeliefs
 
     #
     # parse WorkflowApplications to get possible applications
-    # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!
+    # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!  # noqa: E501
     #
 
-    if appKey == 'Events':
-        appTypes = ['Event']
+    if appKey == 'Events':  # noqa: SIM108
+        appTypes = ['Event']  # noqa: N806
     else:
-        appTypes = [appKey]
+        appTypes = [appKey]  # noqa: N806
 
-    parsedRegistry = _parse_app_registry(registryFile, appTypes)
+    parsedRegistry = _parse_app_registry(registryFile, appTypes)  # noqa: N806
 
     if appKey == 'Events':
-        appsRegistry = parsedRegistry[0]['Event']
+        appsRegistry = parsedRegistry[0]['Event']  # noqa: N806
     else:
-        appsRegistry = parsedRegistry[0][appKey]
+        appsRegistry = parsedRegistry[0][appKey]  # noqa: N806
 
     #
     # now we run the application
@@ -173,7 +173,7 @@ def main(
     #
 
     if getRV:
-        print('MultiModel - getRV')
+        print('MultiModel - getRV')  # noqa: T201
 
         #
         # launch each application with getRV and add any new RandomVariable
@@ -182,15 +182,15 @@ def main(
         #
 
         for i in range(numModels):
-            appName = appsInMultiModel[i]
-            print('appsRegistry:', appsRegistry)
+            appName = appsInMultiModel[i]  # noqa: N806
+            print('appsRegistry:', appsRegistry)  # noqa: T201
             application = appsRegistry[appName]
             application.set_pref(appDataInMultiModel[i], reference_dir)
 
             asset_command_list = application.get_command_list(appDir)
             asset_command_list.append('--getRV')
             command = create_command(asset_command_list)
-            # thinking to store aplications commands in a file so don't have to repeat this!
+            # thinking to store aplications commands in a file so don't have to repeat this!  # noqa: E501
 
         #
         # update input file
@@ -200,12 +200,12 @@ def main(
         # for NOW, add RV to input file
         #
 
-        randomVariables = inputs['randomVariables']
-        rvName = 'MultiModel-' + appKey
-        rvValue = 'RV.MultiModel-' + appKey
-        # nrv = len(randomVariables)
+        randomVariables = inputs['randomVariables']  # noqa: N806
+        rvName = 'MultiModel-' + appKey  # noqa: N806
+        rvValue = 'RV.MultiModel-' + appKey  # noqa: N806
+        # nrv = len(randomVariables)  # noqa: ERA001
 
-        thisRV = {
+        thisRV = {  # noqa: N806
             'distribution': 'Discrete',
             'inputType': 'Parameters',
             'name': rvName,
@@ -223,72 +223,72 @@ def main(
         #
 
         # if 'correlationMatrix' in inputs:
-        #     corrVec = inputs['correlationMatrix']
-        #     corrMat = np.reshape(corrVec, (nrv, nrv))
-        #     newCorrMat = np.identity(nrv+1)
-        #     newCorrMat[0:nrv,0:nrv] = corrMat
-        #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
+        #     corrVec = inputs['correlationMatrix']  # noqa: ERA001
+        #     corrMat = np.reshape(corrVec, (nrv, nrv))  # noqa: ERA001
+        #     newCorrMat = np.identity(nrv+1)  # noqa: ERA001
+        #     newCorrMat[0:nrv,0:nrv] = corrMat  # noqa: ERA001
+        #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()  # noqa: ERA001
 
-        with open(inputFile, 'w') as outfile:
+        with open(inputFile, 'w') as outfile:  # noqa: PTH123
             json.dump(inputs, outfile)
 
-        print('UPDATING INPUT FILE:', inputFile)
+        print('UPDATING INPUT FILE:', inputFile)  # noqa: T201
 
         #
-        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
+        # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)  # noqa: E501
         #
 
         # create input file for application
 
-        tmpFile = 'MultiModel.' + appKey + '.json'
+        tmpFile = 'MultiModel.' + appKey + '.json'  # noqa: N806
         inputs[appKey] = appRunDataInMultiModel[numModels - 1]
 
-        with open(tmpFile, 'w') as outfile:
+        with open(tmpFile, 'w') as outfile:  # noqa: PTH123
             json.dump(inputs, outfile)
 
         # run the application
         asset_command_list = application.get_command_list(appDir)
-        indexInputFile = asset_command_list.index('--filenameAIM') + 1
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1  # noqa: N806
         asset_command_list[indexInputFile] = tmpFile
         asset_command_list.append('--getRV')
         command = create_command(asset_command_list)
         run_command(command)
-        print('RUNNING --getRV:', command)
+        print('RUNNING --getRV:', command)  # noqa: T201
 
     else:
-        print('MultiModel - run')
-        modelToRun = modelToRun - 1
+        print('MultiModel - run')  # noqa: T201
+        modelToRun = modelToRun - 1  # noqa: N806
         # get app data given model
-        appName = appsInMultiModel[modelToRun]
+        appName = appsInMultiModel[modelToRun]  # noqa: N806
         application = appsRegistry[appName]
         application.set_pref(appDataInMultiModel[modelToRun], reference_dir)
 
         # create modified input file for app
-        tmpFile = 'MultiModel.' + appKey + '.json'
+        tmpFile = 'MultiModel.' + appKey + '.json'  # noqa: N806
 
         # if appKey == "Events":
-        #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]
+        #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]  # noqa: ERA001
 
-        # else:
-        #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]
+        # else:  # noqa: ERA001
+        #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]  # noqa: ERA001
         inputs[appKey] = appRunDataInMultiModel[modelToRun]
 
-        print('model to run:', modelToRun)
+        print('model to run:', modelToRun)  # noqa: T201
 
-        with open(tmpFile, 'w') as outfile:
+        with open(tmpFile, 'w') as outfile:  # noqa: PTH123
             json.dump(inputs, outfile)
 
-        print('INPUTS', inputs)
+        print('INPUTS', inputs)  # noqa: T201
 
         # run application
         asset_command_list = application.get_command_list(appDir)
-        indexInputFile = asset_command_list.index('--filenameAIM') + 1
+        indexInputFile = asset_command_list.index('--filenameAIM') + 1  # noqa: N806
         asset_command_list[indexInputFile] = tmpFile
         command = create_command(asset_command_list)
         run_command(command)
-        print('RUNNING:', command)
+        print('RUNNING:', command)  # noqa: T201
 
-    print('Finished MultiModelApplication')
+    print('Finished MultiModelApplication')  # noqa: T201
 
 
 if __name__ == '__main__':
@@ -307,16 +307,16 @@ if __name__ == '__main__':
     parser.add_argument('--appKey', default=None)
     parser.add_argument(
         '--registry',
-        default=os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'
+        default=os.path.join(  # noqa: PTH118
+            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'  # noqa: PTH100, PTH120
         ),
         help='Path to file containing registered workflow applications',
     )
     parser.add_argument(
         '-a',
         '--appDir',
-        default=os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        default=os.path.dirname(  # noqa: PTH120
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
         ),
         help='Absolute path to the local application directory.',
     )

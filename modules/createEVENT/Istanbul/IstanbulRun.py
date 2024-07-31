@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import os
 
 import IstanbulApp2
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         information['number_of_realizations'] = int(args.number)
 
     # change the directory to the file location
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
     IstanbulStations.getStations(information, plot=False, show=False)
     IstanbulApp2.Submit_tapis_job()
-    exit()
+    exit()  # noqa: PLR1722

@@ -1,4 +1,4 @@
-import json
+import json  # noqa: INP001, D100
 import pickle
 import warnings
 
@@ -17,19 +17,19 @@ list_default_headers = [
 acceptable_override_list = ['POINTS']
 
 
-class base:
-    def __init__(self):
+class base:  # noqa: N801, D101
+    def __init__(self):  # noqa: ANN204, D107
         self.settings = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
         return self.settings[key]
 
-    def __setitem__(self, key, data):
+    def __setitem__(self, key, data):  # noqa: ANN001, ANN204, D105
         self.settings[key] = data
 
 
-class Process_Settings(base):
-    def __init__(self):
+class Process_Settings(base):  # noqa: N801, D101
+    def __init__(self):  # noqa: ANN204, D107
         super().__init__()
         """
         simulation settings
@@ -38,7 +38,7 @@ class Process_Settings(base):
         self.settings['minimum_simulation_time'] = (10 + 24 * 2) * 3600  # seconds
         self.settings['simulation_time_step'] = 3600  # seconds
         self.settings['number_of_damages'] = (
-            'multiple'  # single or multiple. If single, indicate single damage files. If multiple, indicate "pipe_damage_file_list"
+            'multiple'  # single or multiple. If single, indicate single damage files. If multiple, indicate "pipe_damage_file_list"  # noqa: E501
         )
         self.settings['result_directory'] = 'Result'  # "Net3//Result"
         self.settings['temp_directory'] = 'RunFiles'
@@ -66,13 +66,13 @@ class Process_Settings(base):
         Hydraulic settings
         """
         self.settings['WN_INP'] = (
-            'Example/net3.inp'  #'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"
+            'Example/net3.inp'  #'giraffe386-4-1.inp' #"Anytown.inp"#'giraffe386-4-1.inp' #"Net3/net3.inp"  # noqa: E501
         )
         self.settings['demand_ratio'] = 1
         self.settings['solver'] = (
             'ModifiedEPANETV2.2'  # sina needs to be implemented
         )
-        # self.settings['hydraulic_time_step'] = 3600
+        # self.settings['hydraulic_time_step'] = 3600  # noqa: ERA001
         self.settings['solver_type'] = 'ModifiedEPANETV2.2'
 
         """
@@ -80,10 +80,10 @@ class Process_Settings(base):
         """
 
         self.settings['pipe_damage_file_list'] = (
-            'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'
+            'Example/example_list.xlsx'  # "Nafiseh Damage Data/9_final_akhar/list_1_final.xlsx" #"preprocess/list2-3.xlsx"#"preprocess/list2-3.xlsx" #"list_akhar_with_prob_pgv_epicenter_1.xlsx"#"preprocess/list2-3.xlsx" #"Net3/list.xlsx" #"preprocess/list2-3.xlsx" #"list_W147_6.xlsx" #'Nafiseh Damage Data/list.xlsx'  # noqa: E501
         )
         self.settings['pipe_damage_file_directory'] = (
-            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"
+            r'Example\Damages'  #'Nafiseh Damage Data/9_final_akhar'#"" #'Net3' #'Nafiseh Damage Data/out'"X:\\Sina Naeimi\\anytown_damage\\"  # noqa: E501
         )
         self.settings['pump_damage_relative_time'] = (
             True  # needs to be implemented in the code
@@ -101,7 +101,7 @@ class Process_Settings(base):
         """
         None GUI settings
         """
-        # self.settings['job_assign_time_limit'     ]=None # time in seconds or None
+        # self.settings['job_assign_time_limit'     ]=None # time in seconds or None  # noqa: ERA001
         self.settings['maximun_worker_idle_time'] = 60
         self.settings['number_of_proccessor'] = 1
 
@@ -123,8 +123,8 @@ class Process_Settings(base):
         self.settings['limit_result_file_size'] = -1  # in Mb. 0 means no limit
 
 
-class Scenario_Settings(base):
-    def __init__(self):
+class Scenario_Settings(base):  # noqa: N801, D101
+    def __init__(self):  # noqa: ANN204, D107
         super().__init__()
         """
         Hydraulic settings
@@ -132,7 +132,7 @@ class Scenario_Settings(base):
         self.settings['minimum_pressure'] = 8
         self.settings['required_pressure'] = 25
         self.settings['pressure_exponent'] = 0.75  # sina add it to teh code and GUI
-        # Sina also take care of the nodal damage formula in terms of exponents [Urgent]
+        # Sina also take care of the nodal damage formula in terms of exponents [Urgent]  # noqa: E501
         self.settings['hydraulic_time_step'] = 900
 
         """
@@ -204,12 +204,12 @@ class Scenario_Settings(base):
         # Sina, there is no x in the GUI. Impelment it
         """
         Restoration settings 
-        """
+        """  # noqa: W291
         self.settings['Restoraion_policy_type'] = (
             'script'  # sina needs to be implemented in the code
         )
         self.settings['Restortion_config_file'] = (
-            'Example/exampe_config.txt'  # "config-ghab-az-tayid.txt" #'X:\\Sina Naeimi\\anytown_damage\\config-base_base.txt'#'config-base_hydsig.txt' #'Net3/config.txt' #
+            'Example/exampe_config.txt'  # "config-ghab-az-tayid.txt" #'X:\\Sina Naeimi\\anytown_damage\\config-base_base.txt'#'config-base_hydsig.txt' #'Net3/config.txt' #  # noqa: E501
         )
         self.settings['pipe_damage_discovery_model'] = {
             'method': 'leak_based',
@@ -241,20 +241,20 @@ class Scenario_Settings(base):
             False  # sina needs to be implemented in the code
         )
         self.settings['crew_travel_speed'] = (
-            16.66666  # unit: ft/s approximately 18 km/h. The unit is [coordinate unit] per seconds. # sina needs to be implemented in the code
+            16.66666  # unit: ft/s approximately 18 km/h. The unit is [coordinate unit] per seconds. # sina needs to be implemented in the code  # noqa: E501
         )
 
         self.settings['equavalant_damage_diameter'] = 1
         self.settings['pipe_damage_diameter_factor'] = 1
 
 
-class Settings:
-    def __init__(self):
+class Settings:  # noqa: D101
+    def __init__(self):  # noqa: ANN204, D107
         self.process = Process_Settings()
         self.scenario = Scenario_Settings()
         self.overrides = {}
 
-    def __setitem__(self, key, data):
+    def __setitem__(self, key, data):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
             self.process.settings[key] = data
         elif key in self.scenario.settings:
@@ -262,53 +262,53 @@ class Settings:
         else:
             raise AttributeError(repr(key) + ' is not in the Settings.')
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
-            if self.scenario != None:
+            if self.scenario != None:  # noqa: SIM102, E711
                 if key in self.scenario.settings:
                     raise ValueError(
                         str(key) + ' in the both process and scneario settings.'
                     )
 
             return self.process.settings[key]
-        elif self.scenario != None:
+        elif self.scenario != None:  # noqa: RET505, E711
             if key in self.scenario.settings:
                 return self.scenario.settings[key]
 
         raise ValueError(str(key) + ' NOT in either process and scneario settings.')
 
-    def __contains__(self, key):
+    def __contains__(self, key):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
             return True
-        elif self.scenario != None:
+        elif self.scenario != None:  # noqa: RET505, SIM102, E711
             if key in self.scenario.settings:
                 return True
 
         return False
 
-    def importJsonSettings(self, json_file_path):
+    def importJsonSettings(self, json_file_path):  # noqa: ANN001, ANN201, N802
         """Read a settinsg json file and import the data
 
         Args:
         ----
             json_file_path (path): JSON file path
 
-        """
-        with open(json_file_path) as f:
+        """  # noqa: D400, D415
+        with open(json_file_path) as f:  # noqa: PTH123
             settings_data = json.load(f)
 
         if not isinstance(settings_data, dict):
-            raise ValueError(
-                'Wrong JSON file type for teh settings. The settings JSOn file must be an OBJECT file type.'
+            raise ValueError(  # noqa: TRY003, TRY004
+                'Wrong JSON file type for teh settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101, E501
             )
 
         for key, val in settings_data.items():
             if key not in self:
-                raise ValueError(
-                    f'REWET settinsg does not have "{key}" as a settings key'
+                raise ValueError(  # noqa: TRY003
+                    f'REWET settinsg does not have "{key}" as a settings key'  # noqa: EM102
                 )
 
-            print(key, val)
+            print(key, val)  # noqa: T201
             if (
                 key
                 in [
@@ -326,18 +326,18 @@ class Settings:
 
             self[key] = val
 
-    def importProject(self, project_addr):
-        with open(project_addr, 'rb') as f:
-            project = pickle.load(f)
+    def importProject(self, project_addr):  # noqa: ANN001, ANN201, N802, D102
+        with open(project_addr, 'rb') as f:  # noqa: PTH123
+            project = pickle.load(f)  # noqa: S301
         # for k in project.project_settings.scenario.settings:
-        # new_value = project.project_settings.scenario[k]
-        # old_value = self.scenario[k]
-        # print(k + ": " + repr(new_value) + " --> " + repr(old_value) + "\n"+"-----" + repr(type(new_value)) )
+        # new_value = project.project_settings.scenario[k]  # noqa: ERA001
+        # old_value = self.scenario[k]  # noqa: ERA001
+        # print(k + ": " + repr(new_value) + " --> " + repr(old_value) + "\n"+"-----" + repr(type(new_value)) )  # noqa: ERA001, E501
         self.process = project.project_settings.process
         self.scenario = project.project_settings.scenario
 
-    def initializeScenarioSettings(self, scenario_index):
-        if self.process['Parameter_override'] == False:
+    def initializeScenarioSettings(self, scenario_index):  # noqa: ANN001, ANN201, C901, N802, D102, PLR0912, PLR0915
+        if self.process['Parameter_override'] == False:  # noqa: E712
             return
 
         list_file = pd.read_excel(self['pipe_damage_file_list'])
@@ -353,8 +353,8 @@ class Settings:
 
             if parameter_name in self:
                 try:
-                    if type(override_value) != str and np.isnan(override_value):
-                        warnings.warn(
+                    if type(override_value) != str and np.isnan(override_value):  # noqa: E721
+                        warnings.warn(  # noqa: B028
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
@@ -363,11 +363,11 @@ class Settings:
                             + ' is empty. The override is IGNORED!'
                         )
                         continue
-                except:
+                except:  # noqa: S110, E722
                     pass
 
                 if override_value == '':
-                    warnings.warn(
+                    warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -385,7 +385,7 @@ class Settings:
                 override_key1 = splited_parameter_name[0]
                 override_key2 = splited_parameter_name[1]
 
-                if number_of_words != 2:
+                if number_of_words != 2:  # noqa: PLR2004
                     raise ValueError(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -395,7 +395,7 @@ class Settings:
                         + ' is not an acceptable parameter'
                     )
 
-                if override_key1 == None:
+                if override_key1 == None:  # noqa: E711
                     raise ValueError(
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
@@ -405,7 +405,7 @@ class Settings:
                     )
 
                 if override_key1.upper() not in acceptable_override_list:
-                    warnings.warn(
+                    warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -418,8 +418,8 @@ class Settings:
                     continue
 
                 try:
-                    if type(override_value) != str and np.isnan(override_value):
-                        warnings.warn(
+                    if type(override_value) != str and np.isnan(override_value):  # noqa: E721
+                        warnings.warn(  # noqa: B028
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
@@ -428,11 +428,11 @@ class Settings:
                             + ' is empty. The override is IGNORED!'
                         )
                         continue
-                except:
+                except:  # noqa: S110, E722
                     pass
 
                 if override_value == '':
-                    warnings.warn(
+                    warnings.warn(  # noqa: B028
                         'REWET Input ERROR in scenario: '
                         + repr(scenario_name)
                         + '\n'
@@ -443,12 +443,12 @@ class Settings:
                     continue
 
                 if override_key1.upper() == 'POINTS':
-                    if override_key2 == None:
+                    if override_key2 == None:  # noqa: E711
                         raise ValueError(
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
-                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name missmatch, it may not take any efffect'
+                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name missmatch, it may not take any efffect'  # noqa: E501
                             + '\n'
                         )
 
@@ -461,28 +461,28 @@ class Settings:
                         else:
                             self.overrides['POINTS'] = {override_key2: point_list}
                     else:
-                        warnings.warn(
+                        warnings.warn(  # noqa: B028
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
-                            + 'The Override Point Group has no valid input; thus, the override is ignored!'
+                            + 'The Override Point Group has no valid input; thus, the override is ignored!'  # noqa: E501
                         )
 
-                # =============================================================================
-                #                 elif override_key1.upper() == "CREWSPEED":
+                # =============================================================================  # noqa: E501
+                #                 elif override_key1.upper() == "CREWSPEED":  # noqa: ERA001
                 #                     if override_key2 == None:
-                #                         raise ValueError("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "You should provide a Crew Speed for CREWSPEED override key." + "\n")
+                #                         raise ValueError("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "You should provide a Crew Speed for CREWSPEED override key." + "\n")  # noqa: ERA001, E501
                 #
-                #                     crew_speed = self.getOverrideCrewSpeed(override_value, scenario_name)
+                #                     crew_speed = self.getOverrideCrewSpeed(override_value, scenario_name)  # noqa: ERA001, E501
                 #                     if crew_speed != None:
-                #                         self.overrides["CREWSPEED"] = crew_speed
-                #                     else:
-                #                         warnings.warn("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "SPEEDCREW is not valid; thus, the override is ignored!")
-                # =============================================================================
+                #                         self.overrides["CREWSPEED"] = crew_speed  # noqa: ERA001
+                #                     else:  # noqa: ERA001
+                #                         warnings.warn("REWET Input ERROR in scenario: " + repr(scenario_name) + "\n" + "SPEEDCREW is not valid; thus, the override is ignored!")  # noqa: ERA001, E501
+                # =============================================================================  # noqa: E501
                 else:
-                    raise ValueError('Unknown overrise key')
+                    raise ValueError('Unknown overrise key')  # noqa: EM101, TRY003
 
-    def getOverridePointsList(self, points_list_str, scenario_name):
+    def getOverridePointsList(self, points_list_str, scenario_name):  # noqa: ANN001, ANN201, N802, D102
         point_list = []
 
         points_list_str = points_list_str.strip()
@@ -490,12 +490,12 @@ class Settings:
 
         for word in points_list_str:
             if ':' not in word:
-                warnings.warn(
+                warnings.warn(  # noqa: B028
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
                     + word
-                    + " must be two numbeers speerated by one ':' showing X:Y coordinate. "
+                    + " must be two numbeers speerated by one ':' showing X:Y coordinate. "  # noqa: E501
                     + word
                     + ' is ignored!'
                 )
@@ -503,13 +503,13 @@ class Settings:
 
             splited_word = word.split(':')
 
-            if len(splited_word) > 2:
-                warnings.warn(
+            if len(splited_word) > 2:  # noqa: PLR2004
+                warnings.warn(  # noqa: B028
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
                     + word
-                    + " must be two numbeers speerated by ONE ':' showing X:Y coordinate. "
+                    + " must be two numbeers speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
                     + word
                     + ' is ignored!'
                 )
@@ -520,15 +520,15 @@ class Settings:
 
             try:
                 x_coord = float(x_coord)
-            except:
-                warnings.warn(
+            except:  # noqa: E722
+                warnings.warn(  # noqa: B028
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
                     + x_coord
                     + ' in '
                     + word
-                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "
+                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
                     + word
                     + ' is ignored!'
                 )
@@ -536,15 +536,15 @@ class Settings:
 
             try:
                 y_coord = float(y_coord)
-            except:
-                warnings.warn(
+            except:  # noqa: E722
+                warnings.warn(  # noqa: B028
                     'REWET Input ERROR in scenario: '
                     + repr(scenario_name)
                     + '\n'
                     + y_coord
                     + ' in '
                     + word
-                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "
+                    + " must be a number speerated by ONE ':' showing X:Y coordinate. "  # noqa: E501
                     + word
                     + ' is ignored!'
                 )
@@ -554,11 +554,11 @@ class Settings:
 
         return point_list
 
-    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):
+    def getOverrideCrewSpeed(self, crew_speed_str, scenario_name):  # noqa: ANN001, ANN201, N802, D102
         crew_speed_str = crew_speed_str.strip()
 
         if len(crew_speed_str.split()) > 1:
-            warnings.warn(
+            warnings.warn(  # noqa: B028
                 'REWET Input ERROR in scenario: '
                 + repr(scenario_name)
                 + '\n'
@@ -569,8 +569,8 @@ class Settings:
 
         try:
             crew_speed = float(crew_speed_str)
-        except:
-            warnings.warn(
+        except:  # noqa: E722
+            warnings.warn(  # noqa: B028
                 'REWET Input ERROR in scenario: '
                 + repr(scenario_name)
                 + '\n'

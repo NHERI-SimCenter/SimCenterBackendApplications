@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Opening.ui'
+# Form implementation generated from reading ui file 'Opening.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Opening_Window:
-    def setupUi(self, Opening_Window):
+class Ui_Opening_Window:  # noqa: N801, D101
+    def setupUi(self, Opening_Window):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
         Opening_Window.setObjectName('Opening_Window')
         Opening_Window.resize(830, 780)
         self.centralwidget = QtWidgets.QWidget(Opening_Window)
@@ -892,7 +892,7 @@ class Ui_Opening_Window:
         self.results_tabs_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Opening_Window)
 
-    def retranslateUi(self, Opening_Window):
+    def retranslateUi(self, Opening_Window):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
         _translate = QtCore.QCoreApplication.translate
         Opening_Window.setWindowTitle(_translate('Opening_Window', 'REWET'))
         self.groupBox_4.setTitle(_translate('Opening_Window', 'Temp File Settings'))
@@ -901,7 +901,7 @@ class Ui_Opening_Window:
         self.label_30.setText(
             _translate(
                 'Opening_Window',
-                'WARNING: Producing INP files for each event time can produce too many files',
+                'WARNING: Producing INP files for each event time can produce too many files',  # noqa: E501
             )
         )
         self.save_time_step_no_radio.setText(_translate('Opening_Window', 'No'))
@@ -970,10 +970,10 @@ class Ui_Opening_Window:
             _translate(
                 'Opening_Window',
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'  # noqa: E501
                 'p, li { white-space: pre-wrap; }\n'
-                '</style></head><body style=" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:400; font-style:normal;">\n'
-                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
+                '</style></head><body style=" font-family:\'MS Shell Dlg 2\'; font-size:9pt; font-weight:400; font-style:normal;">\n'  # noqa: E501
+                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',  # noqa: E501
             )
         )
         self.remove_scenario_button.setText(_translate('Opening_Window', 'Remove'))
@@ -1102,7 +1102,7 @@ class Ui_Opening_Window:
         item.setText(_translate('Opening_Window', 'Time Shift'))
         item = self.curve_settings_table.horizontalHeaderItem(0)
         item.setText(_translate('Opening_Window', 'Values'))
-        __sortingEnabled = self.curve_settings_table.isSortingEnabled()
+        __sortingEnabled = self.curve_settings_table.isSortingEnabled()  # noqa: N806
         self.curve_settings_table.setSortingEnabled(False)
         self.curve_settings_table.setSortingEnabled(__sortingEnabled)
         self.label_25.setText(_translate('Opening_Window', 'Scenario'))
@@ -1123,7 +1123,7 @@ class Ui_Opening_Window:
         item.setText(_translate('Opening_Window', 'Time Shift'))
         item = self.map_settings_table.horizontalHeaderItem(0)
         item.setText(_translate('Opening_Window', 'Values'))
-        __sortingEnabled = self.map_settings_table.isSortingEnabled()
+        __sortingEnabled = self.map_settings_table.isSortingEnabled()  # noqa: N806
         self.map_settings_table.setSortingEnabled(False)
         self.map_settings_table.setSortingEnabled(__sortingEnabled)
         self.label_36.setText(_translate('Opening_Window', 'Settings'))
@@ -1174,7 +1174,7 @@ class Ui_Opening_Window:
         )
 
 
-from .MplWidget import MplWidget
+from .MplWidget import MplWidget  # noqa: E402
 
 if __name__ == '__main__':
     import sys

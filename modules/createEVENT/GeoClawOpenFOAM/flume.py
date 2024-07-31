@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -39,13 +39,13 @@ import triangle as tr
 from shapely.geometry import Point, Polygon
 
 # Other custom modules
-# from hydroUtils import hydroUtils
+# from hydroUtils import hydroUtils  # noqa: ERA001
 
 
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class flume:
+class flume:  # noqa: N801
     """This class includes the methods related to wave flume
 
     Methods
@@ -53,10 +53,10 @@ class flume:
             generateflume: Create STL files for the flume
             extremedata: Get the extreme values and building information
 
-    """
+    """  # noqa: D400, D404, D415
 
     #############################################################
-    def generateflume(self, breadth, path):
+    def generateflume(self, breadth, path):  # noqa: ANN001, ANN201
         """Creates the STL files for the flume
 
         Arguments:
@@ -64,7 +64,7 @@ class flume:
                 breadth: Breadth f the flume
                 path: Path where dakota.json exists - where we need to put STL files
 
-        """
+        """  # noqa: D400, D401, D415
         # Get the triangulated flume
         extremeval = self.flumedata('FlumeData.txt')
         self.breadth = breadth
@@ -113,14 +113,14 @@ class flume:
         return extremeval
 
     #############################################################
-    def flumedata(self, IpPTFile):
+    def flumedata(self, IpPTFile):  # noqa: ANN001, ANN201, N803
         """Gets information about the flume to create STL files
 
         Arguments:
         ---------
                 IpPTFile: File with points of the flume
 
-        """
+        """  # noqa: D400, D401, D415
         # Get the data for the boundary
         data_boun = np.genfromtxt(IpPTFile, delimiter=',', dtype=(float, float))
 
@@ -132,7 +132,7 @@ class flume:
         )
 
         # Initialize segments for left and right
-        segmentLR = []
+        segmentLR = []  # noqa: N806
 
         # Loop over all coordinates and create coordinates
         for ii in range(data_boun.shape[0]):
@@ -143,8 +143,8 @@ class flume:
                 segmentLR.extend([(ii, 0)])
 
         # Triangulate the polygon
-        ALR = dict(vertices=data_boun, segments=segmentLR)
-        BLR = tr.triangulate(ALR)
+        ALR = dict(vertices=data_boun, segments=segmentLR)  # noqa: C408, N806
+        BLR = tr.triangulate(ALR)  # noqa: N806
 
         # Get the tringles and vertices
         nm_triangle = BLR['triangles'].tolist()
@@ -162,10 +162,10 @@ class flume:
             n0 = self.npt[ii, 0]
             n1 = self.npt[ii, 1]
             n2 = self.npt[ii, 2]
-            centroidX = (1 / 3) * (
+            centroidX = (1 / 3) * (  # noqa: N806
                 self.npa[n0, 0] + self.npa[n1, 0] + self.npa[n2, 0]
             )
-            centroidZ = (1 / 3) * (
+            centroidZ = (1 / 3) * (  # noqa: N806
                 self.npa[n0, 1] + self.npa[n1, 1] + self.npa[n2, 1]
             )
             po = Point(centroidX, centroidZ)
@@ -181,54 +181,54 @@ class flume:
         return extremeval
 
     ####################################################################
-    def right(self):
+    def right(self):  # noqa: ANN201
         """Gets information/nodes about to create right face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D401, D415
         self.npa_right = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_right[:, 0] = self.npa[:, 0]
         self.npa_right[:, 2] = self.npa[:, 1]
         self.npa_right[:, 1] = -self.breadth / 2
 
     ####################################################################
-    def left(self):
+    def left(self):  # noqa: ANN201
         """Gets information/nodes about to create left face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D401, D415
         self.npa_left = np.zeros(shape=(self.npa.shape[0], 3))
         self.npa_left[:, 0] = self.npa[:, 0]
         self.npa_left[:, 2] = self.npa[:, 1]
         self.npa_left[:, 1] = self.breadth / 2
 
     ####################################################################
-    def lefttri(self):
+    def lefttri(self):  # noqa: ANN201
         """Define triangles of the left face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npt_left = np.array(self.npt)
         self.npt_left[:, [1, 0]] = self.npt_left[:, [0, 1]]
 
     ####################################################################
-    def front(self):
+    def front(self):  # noqa: ANN201
         """Define information/nodes of the front face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npa_front = np.zeros(shape=(4, 3))
         self.npa_front[0, :] = self.npa_right[0, :]
         self.npa_front[1, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
@@ -236,25 +236,25 @@ class flume:
         self.npa_front[3, :] = self.npa_left[self.npa_left.shape[0] - 1, :]
 
     ####################################################################
-    def fronttri(self):
+    def fronttri(self):  # noqa: ANN201
         """Define triangles of the front face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npt_front = np.array([[0, 1, 2], [1, 3, 2]])
 
     ####################################################################
-    def back(self):
+    def back(self):  # noqa: ANN201
         """Define information/nodes of the back face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npa_back = np.zeros(shape=(4, 3))
         self.npa_back[0, :] = self.npa_right[self.npa_right.shape[0] - 3, :]
         self.npa_back[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -262,25 +262,25 @@ class flume:
         self.npa_back[3, :] = self.npa_left[self.npa_left.shape[0] - 2, :]
 
     ####################################################################
-    def backtri(self):
+    def backtri(self):  # noqa: ANN201
         """Define triangles of the back face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npt_back = np.array([[3, 1, 0], [0, 2, 3]])
 
     ####################################################################
-    def top(self):
+    def top(self):  # noqa: ANN201
         """Define information/nodes of the top face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npa_top = np.zeros(shape=(4, 3))
         self.npa_top[0, :] = self.npa_right[self.npa_right.shape[0] - 1, :]
         self.npa_top[1, :] = self.npa_right[self.npa_right.shape[0] - 2, :]
@@ -288,25 +288,25 @@ class flume:
         self.npa_top[3, :] = self.npa_left[self.npa_left.shape[0] - 2, :]
 
     ####################################################################
-    def toptri(self):
+    def toptri(self):  # noqa: ANN201
         """Define triangles of the top face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         self.npt_top = np.array([[2, 0, 1], [2, 1, 3]])
 
     ####################################################################
-    def bottom(self):
+    def bottom(self):  # noqa: ANN201
         """Define information/nodes of the bottom face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         # Create the coordinate vector
         self.npa_bottom = []
 
@@ -334,14 +334,14 @@ class flume:
                 )
 
     ####################################################################
-    def bottomtri(self):
+    def bottomtri(self):  # noqa: ANN201
         """Define triangles of the bottom face of the flume
 
         Arguments:
         ---------
                 none
 
-        """
+        """  # noqa: D400, D415
         # Create the coordinate vector
         self.npt_bottom = []
         ntri = 2
@@ -361,7 +361,7 @@ class flume:
                 self.npt_bottom = np.concatenate((self.npt_bottom, npt_temp), axis=0)
 
     #############################################################
-    def writeSTL(self, base_filename, npa, npt, path):
+    def writeSTL(self, base_filename, npa, npt, path):  # noqa: ANN001, ANN201, N802
         """Write the STL files for each patch
 
         Arguments:
@@ -371,26 +371,26 @@ class flume:
                 npt: List of triangles
                 path: Location where dakota.json file exists
 
-        """
+        """  # noqa: D400, D415
         # Create a filename
         filename = base_filename + '.stl'
         # Create the STL file
         cells = [('triangle', npt)]
         meshio.write_points_cells(filename, npa, cells)
         # Modify first and last line
-        with open(filename) as f:
+        with open(filename) as f:  # noqa: PTH123
             lines = f.readlines()
             lines[0] = 'solid ' + base_filename + '\n'
             lines[len(lines) - 1] = 'endsolid ' + base_filename + '\n'
         # Write the updated file
-        with open(filename, 'w') as f:
+        with open(filename, 'w') as f:  # noqa: PTH123
             f.writelines(lines)
         # Move the file to constant/triSurface folder
-        newfilepath = os.path.join(path, 'constant', 'triSurface', filename)
-        os.replace(filename, newfilepath)
+        newfilepath = os.path.join(path, 'constant', 'triSurface', filename)  # noqa: PTH118
+        os.replace(filename, newfilepath)  # noqa: PTH105
 
     #############################################################
-    def extremedata(self, extreme, breadth):
+    def extremedata(self, extreme, breadth):  # noqa: ANN001, ANN201
         """Creates the STL files for the flume
 
         Arguments:
@@ -399,20 +399,20 @@ class flume:
                 extreme: Maximum limits
                 breadth: Breadth of the flume
 
-        """
+        """  # noqa: D400, D401, D415
         # Write the Max-Min values for the blockMesh
-        BMXmin = extreme[0] - 0.25 * (extreme[1] - extreme[0])
-        BMXmax = extreme[1] + 0.25 * (extreme[1] - extreme[0])
-        BMYmin = -0.625 * breadth
-        BMYmax = 0.625 * breadth
-        BMZmin = extreme[2] - 0.25 * (extreme[3] - extreme[2])
-        BMZmax = extreme[3] + 0.25 * (extreme[3] - extreme[2])
+        BMXmin = extreme[0] - 0.25 * (extreme[1] - extreme[0])  # noqa: N806
+        BMXmax = extreme[1] + 0.25 * (extreme[1] - extreme[0])  # noqa: N806
+        BMYmin = -0.625 * breadth  # noqa: N806
+        BMYmax = 0.625 * breadth  # noqa: N806
+        BMZmin = extreme[2] - 0.25 * (extreme[3] - extreme[2])  # noqa: N806
+        BMZmax = extreme[3] + 0.25 * (extreme[3] - extreme[2])  # noqa: N806
 
         # Write the temporary file
         filename = 'temp_geometry.txt'
-        if os.path.exists(filename):
-            os.remove(filename)
-        tempfileID = open('temp_geometry.txt', 'w')
+        if os.path.exists(filename):  # noqa: PTH110
+            os.remove(filename)  # noqa: PTH107
+        tempfileID = open('temp_geometry.txt', 'w')  # noqa: SIM115, PTH123, N806
 
         # Write the extreme values to the files
         tempfileID.write(
@@ -429,6 +429,6 @@ class flume:
             + str(BMZmax)
             + '\n'
         )
-        tempfileID.close
+        tempfileID.close  # noqa: B018
 
         return 0

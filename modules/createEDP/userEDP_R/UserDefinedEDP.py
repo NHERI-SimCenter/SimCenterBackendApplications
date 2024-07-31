@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -42,29 +42,29 @@ import json
 import sys
 
 
-def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
+def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201, N802, N803, D103
     # We do this to provide an option for different behavior under setup,
     # even though it is unlikely to have random variables for EDPs.
     write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs)
 
 
-def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
-    with open(AIM_file) as f:
+def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):  # noqa: ANN001, ANN201, N802, N803, D103
+    with open(AIM_file) as f:  # noqa: PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:
-        event_file = json.load(f)
+    with open(EVENT_file) as f:  # noqa: PTH123
+        event_file = json.load(f)  # noqa: F841
 
     stories = bim_file['GeneralInformation']['NumberOfStories']
 
-    with open(EDP_specs) as f:
+    with open(EDP_specs) as f:  # noqa: PTH123
         edp_specs = json.load(f)
 
-    EDP_locs = edp_specs['locations']
-    EDP_types = edp_specs['EDP_types']
+    EDP_locs = edp_specs['locations']  # noqa: N806
+    EDP_types = edp_specs['EDP_types']  # noqa: N806
 
-    EDP_list = []
-    total_EDP_num = 0
+    EDP_list = []  # noqa: N806
+    total_EDP_num = 0  # noqa: N806
 
     for edp_name, edp_data in EDP_types.items():
         for loc_id, loc_data in edp_data.items():
@@ -85,7 +85,7 @@ def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
                                 'scalar_data': [],
                             }
                         )
-                        total_EDP_num += len(loc_data)
+                        total_EDP_num += len(loc_data)  # noqa: N806
                 else:
                     EDP_list.append(
                         {
@@ -98,7 +98,7 @@ def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
                             'scalar_data': [],
                         }
                     )
-                    total_EDP_num += len(loc_data)
+                    total_EDP_num += len(loc_data)  # noqa: N806
 
     edp_file = {
         'RandomVariables': [],
@@ -106,7 +106,7 @@ def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
         'EngineeringDemandParameters': [{'name': '...', 'responses': EDP_list}],
     }
 
-    with open(EDP_file, 'w') as f:
+    with open(EDP_file, 'w') as f:  # noqa: PTH123
         json.dump(edp_file, f, indent=2)
 
 

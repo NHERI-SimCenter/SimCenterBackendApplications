@@ -1,4 +1,4 @@
-import json
+import json  # noqa: INP001, D100
 import os
 import pickle
 
@@ -6,7 +6,7 @@ import pandas as pd
 
 
 ##################### Read files From json #####################
-def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
+def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN001, ANN201
     """Read pipe damage of a single scenario.
 
     Args:
@@ -27,13 +27,13 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
     pipe_damaage = []
     pipe_time = []
 
-    file_dest = os.path.join(directory, pipe_file_name)
+    file_dest = os.path.join(directory, pipe_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in PIPE damage file')
+        raise ValueError('Wrong inpout in PIPE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pipe_time.append(each_damage.get('time'))
@@ -50,7 +50,7 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):
     return pd.Series(index=pipe_time, data=pipe_damaage)
 
 
-def read_node_damage_seperate_json_file(directory, node_file_name):
+def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN001, ANN201, D417
     """Read node damage of a single scenario.
 
     Args:
@@ -71,13 +71,13 @@ def read_node_damage_seperate_json_file(directory, node_file_name):
     node_damage = []
     node_time = []
 
-    file_dest = os.path.join(directory, node_file_name)
+    file_dest = os.path.join(directory, node_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in NODE damage file')
+        raise ValueError('Wrong inpout in NODE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         node_time.append(each_damage.get('time'))
@@ -93,7 +93,7 @@ def read_node_damage_seperate_json_file(directory, node_file_name):
     return pd.Series(index=node_time, data=node_damage)
 
 
-def read_tank_damage_seperate_json_file(directory, tank_file_name):
+def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN001, ANN201, D417
     """Read tank damage of a single scenario.
 
     Args:
@@ -114,13 +114,13 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):
     tank_damage = []
     tank_time = []
 
-    file_dest = os.path.join(directory, tank_file_name)
+    file_dest = os.path.join(directory, tank_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in TANK damage file')
+        raise ValueError('Wrong inpout in TANK damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         tank_time.append(each_damage.get('time'))
@@ -135,7 +135,7 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):
     return pd.Series(index=tank_time, data=tank_damage)
 
 
-def read_pump_damage_seperate_json_file(directory, pump_file_name):
+def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN001, ANN201, D417
     """Read pump damage of a single scenario.
 
     Args:
@@ -156,13 +156,13 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):
     pump_damage = []
     pump_time = []
 
-    file_dest = os.path.join(directory, pump_file_name)
+    file_dest = os.path.join(directory, pump_file_name)  # noqa: PTH118
 
-    with open(file_dest) as f:
+    with open(file_dest) as f:  # noqa: PTH123
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in PUMP damage file')
+        raise ValueError('Wrong inpout in PUMP damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pump_time.append(each_damage.get('time'))
@@ -178,94 +178,94 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):
 
 
 ##################### Read files From Pickle #####################
-def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):
-    file_dest = os.path.join(directory, all_damages_file_name)
-    with open(file_dest, 'rb') as f:
-        _all_damages = pickle.load(f)
+def read_pipe_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
+    file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
+    with open(file_dest, 'rb') as f:  # noqa: PTH123
+        _all_damages = pickle.load(f)  # noqa: S301
 
-    return _all_damages
-
-
-def read_node_damage_seperate_pickle_file(directory, all_damages_file_name):
-    file_dest = os.path.join(directory, all_damages_file_name)
-    with open(file_dest, 'rb') as f:
-        _node_damages = pickle.load(f)
-
-    return _node_damages
+    return _all_damages  # noqa: RET504
 
 
-def read_tank_damage_seperate_pickle_file(directory, tank_damages_file_name):
-    file_dest = os.path.join(directory, tank_damages_file_name)
-    with open(file_dest, 'rb') as f:
-        _tank_damages = pickle.load(f)
+def read_node_damage_seperate_pickle_file(directory, all_damages_file_name):  # noqa: ANN001, ANN201, D103
+    file_dest = os.path.join(directory, all_damages_file_name)  # noqa: PTH118
+    with open(file_dest, 'rb') as f:  # noqa: PTH123
+        _node_damages = pickle.load(f)  # noqa: S301
 
-    return _tank_damages
+    return _node_damages  # noqa: RET504
 
 
-def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):
-    file_dest = os.path.join(directory, pump_damages_file_name)
-    with open(file_dest, 'rb') as f:
-        _pump_damages = pickle.load(f)
+def read_tank_damage_seperate_pickle_file(directory, tank_damages_file_name):  # noqa: ANN001, ANN201, D103
+    file_dest = os.path.join(directory, tank_damages_file_name)  # noqa: PTH118
+    with open(file_dest, 'rb') as f:  # noqa: PTH123
+        _tank_damages = pickle.load(f)  # noqa: S301
 
-    return _pump_damages
+    return _tank_damages  # noqa: RET504
+
+
+def read_pump_damage_seperate_pickle_file(directory, pump_damages_file_name):  # noqa: ANN001, ANN201, D103
+    file_dest = os.path.join(directory, pump_damages_file_name)  # noqa: PTH118
+    with open(file_dest, 'rb') as f:  # noqa: PTH123
+        _pump_damages = pickle.load(f)  # noqa: S301
+
+    return _pump_damages  # noqa: RET504
 
 
 ##################### Read files From Excel #####################
 
 
-def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):
+def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
     ss = None
-    file_dest = os.path.join(directory, pipe_damages_file_name)
+    file_dest = os.path.join(directory, pipe_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
     ss.sort_values(
         ['pipe_id', 'time', 'damage_loc'],
         ascending=[True, True, False],
         ignore_index=True,
-        inplace=True,
+        inplace=True,  # noqa: PD002
     )
     unique_time = ss.groupby(['pipe_id']).time.unique()
     if 1 in [
         0 if len(i) <= 1 else 1 for i in unique_time
     ]:  # checks if there are any pipe id with more than two unqiue time values
-        raise ValueError(
-            'All damage location for one pipe should happen at the same time'
+        raise ValueError(  # noqa: TRY003
+            'All damage location for one pipe should happen at the same time'  # noqa: EM101
         )
-    ss.set_index('time', inplace=True)
+    ss.set_index('time', inplace=True)  # noqa: PD002
     ss.pipe_id = ss.pipe_id.astype(str)
     return pd.Series(ss.to_dict('records'), index=ss.index)
 
 
-def read_node_damage_seperate_EXCEL_file(directory, node_damages_file_name):
+def read_node_damage_seperate_EXCEL_file(directory, node_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
     ss = None
-    file_dest = os.path.join(directory, node_damages_file_name)
+    file_dest = os.path.join(directory, node_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
-    ss.set_index('time', inplace=True)
+    ss.set_index('time', inplace=True)  # noqa: PD002
     ss.node_name = ss.node_name.astype(str)
     return pd.Series(ss.to_dict('records'), index=ss.index)
 
 
-def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):
+def read_tank_damage_seperate_EXCEL_file(directory, tank_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
     ss = None
-    file_dest = os.path.join(directory, tank_damages_file_name)
+    file_dest = os.path.join(directory, tank_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
-    #    ss.set_index('Tank_ID', inplace=True)
-    ss.set_index('time', inplace=True)
+    #    ss.set_index('Tank_ID', inplace=True)  # noqa: ERA001
+    ss.set_index('time', inplace=True)  # noqa: PD002
     ss.Tank_ID = ss.Tank_ID.astype(str)
-    # ss = ss['Tank_ID']
+    # ss = ss['Tank_ID']  # noqa: ERA001
 
     return ss
 
 
-def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):
+def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # noqa: ANN001, ANN201, N802, D103
     ss = None
-    file_dest = os.path.join(directory, pump_damages_file_name)
+    file_dest = os.path.join(directory, pump_damages_file_name)  # noqa: PTH118
     ss = pd.read_excel(file_dest)
-    ss.set_index('time', inplace=True)
+    ss.set_index('time', inplace=True)  # noqa: PD002
     ss.Pump_ID = ss.Pump_ID.astype(str)
     return ss
 
 
-def read_damage_list(list_file_addr, file_directory, iCheck=False):
+def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN001, ANN201, FBT002, ARG001, N803
     """Reads damage sceanrio list.
 
     Parameters
@@ -287,22 +287,22 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):
     damage_list : Pandas Dataframe
         DESCRIPTION.
 
-    """
+    """  # noqa: D401
     damage_list = None
     error_file_name = []
 
-    with open(list_file_addr, 'rb') as f:
+    with open(list_file_addr, 'rb') as f:  # noqa: PTH123
         damage_list = pd.read_excel(f)
 
-    iError = False
+    iError = False  # noqa: N806
     temp = damage_list['Pipe Damage'].tolist()
 
-    if iCheck == False:
+    if iCheck == False:  # noqa: E712
         return damage_list
 
     for file_name in temp:
-        if not os.path.exists(file_name):
-            iError = True
+        if not os.path.exists(file_name):  # noqa: PTH110
+            iError = True  # noqa: N806
             error_file_name.append(file_name)
 
     if iError:
@@ -315,15 +315,15 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):
 ##################### Save Results #####################
 
 
-def save_single(settings, result, name, restoration_data):
+def save_single(settings, result, name, restoration_data):  # noqa: ANN001, ANN201, D103
     result_file_directory = settings.process['result_directory']
-    # print(result_file_directory)
+    # print(result_file_directory)  # noqa: ERA001
     result_name = name + '.res'
     settings_name = name + '.xlsx'
 
-    file_dest = os.path.join(result_file_directory, result_name)
-    print('Saving: ' + str(file_dest))
-    with open(file_dest, 'wb') as f:
+    file_dest = os.path.join(result_file_directory, result_name)  # noqa: PTH118
+    print('Saving: ' + str(file_dest))  # noqa: T201
+    with open(file_dest, 'wb') as f:  # noqa: PTH123
         pickle.dump(result, f)
 
     process_set = pd.Series(settings.process.settings)
@@ -332,14 +332,14 @@ def save_single(settings, result, name, restoration_data):
         process_set.to_list() + scenario_set.to_list(),
         index=process_set.index.to_list() + scenario_set.index.to_list(),
     )
-    file_dest = os.path.join(result_file_directory, settings_name)
+    file_dest = os.path.join(result_file_directory, settings_name)  # noqa: PTH118
     _set.to_excel(file_dest)
 
     if settings.process['dmg_rst_data_save']:
-        # file_dest = os.path.join(result_file_directory, 'restoration_file.pkl')
-        # rest_data_out = pd.DataFrame.from_dict(restoration_data)
-        # rest_data_out.to_pickle(file_dest)
-        file_dest = os.path.join(result_file_directory, name + '_registry.pkl')
-        print('Saving: ' + str(file_dest))
-        with open(file_dest, 'wb') as f:
+        # file_dest = os.path.join(result_file_directory, 'restoration_file.pkl')  # noqa: ERA001
+        # rest_data_out = pd.DataFrame.from_dict(restoration_data)  # noqa: ERA001
+        # rest_data_out.to_pickle(file_dest)  # noqa: ERA001
+        file_dest = os.path.join(result_file_directory, name + '_registry.pkl')  # noqa: PTH118
+        print('Saving: ' + str(file_dest))  # noqa: T201
+        with open(file_dest, 'wb') as f:  # noqa: PTH123
             pickle.dump(restoration_data, f)

@@ -1,25 +1,25 @@
 """Created on Thu Nov 10 18:00:55 2022
 
 @author: snaeimi
-"""
+"""  # noqa: INP001, D400, D415
 
 import numpy as np
 import pandas as pd
 
 
-class Result_Time:
-    def __init__():
+class Result_Time:  # noqa: N801, D101
+    def __init__():  # noqa: ANN204, D107
         pass
 
-    def convertTimeSecondToDay(self, data, column, time_shift=0):
+    def convertTimeSecondToDay(self, data, column, time_shift=0):  # noqa: ANN001, ANN201, N802, D102
         data.loc[:, column] = data.loc[:, column] - time_shift
         data.loc[:, column] = data.loc[:, column] / 24 / 3600
 
-    def convertTimeSecondToHour(self, data, column, time_shift=0):
+    def convertTimeSecondToHour(self, data, column, time_shift=0):  # noqa: ANN001, ANN201, N802, D102
         data.loc[:, column] = data.loc[:, column] - time_shift
         data.loc[:, column] = data.loc[:, column] / 3600
 
-    def averageOverDaysCrewTotalReport(self, crew_report):
+    def averageOverDaysCrewTotalReport(self, crew_report):  # noqa: ANN001, ANN201, N802, D102
         time_max_seconds = crew_report.index.max()
         time_max_days = int(np.ceil(time_max_seconds / 24 / 3600))
         daily_crew_report = pd.DataFrame(

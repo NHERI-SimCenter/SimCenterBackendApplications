@@ -1,4 +1,4 @@
-# This script contains functions for reading and writing
+# This script contains functions for reading and writing  # noqa: INP001, D100
 # OpenFoam dictionaries and filses.
 #
 import os
@@ -6,34 +6,34 @@ import os
 import numpy as np
 
 
-def find_keyword_line(dict_lines, keyword):
+def find_keyword_line(dict_lines, keyword):  # noqa: ANN001, ANN201, D103
     start_line = -1
 
     count = 0
     for line in dict_lines:
-        l = line.lstrip(' ')
+        l = line.lstrip(' ')  # noqa: E741
 
         if l.startswith(keyword):
             start_line = count
             break
 
-        count += 1
+        count += 1  # noqa: SIM113
 
     return start_line
 
 
-def write_foam_field(field, file_name):
+def write_foam_field(field, file_name):  # noqa: ANN001, ANN201
     """Writes a given numpy two dimensional array to OpenFOAM
     field format. It can handel the following formats:
         pointField,
         vectorField,
         tensorField,
         symmTensorField
-    """
-    if os.path.exists(file_name):
-        os.remove(file_name)
+    """  # noqa: D205, D400, D401, D415
+    if os.path.exists(file_name):  # noqa: PTH110
+        os.remove(file_name)  # noqa: PTH107
 
-    foam_file = open(file_name, 'w+')
+    foam_file = open(file_name, 'w+')  # noqa: SIM115, PTH123
 
     size = np.shape(field)
 
@@ -51,14 +51,14 @@ def write_foam_field(field, file_name):
     foam_file.close()
 
 
-def write_scalar_field(field, file_name):
+def write_scalar_field(field, file_name):  # noqa: ANN001, ANN201
     """Writes a given one dimensional numpy array to OpenFOAM
     scalar field format.
-    """
-    if os.path.exists(file_name):
-        os.remove(file_name)
+    """  # noqa: D205, D401
+    if os.path.exists(file_name):  # noqa: PTH110
+        os.remove(file_name)  # noqa: PTH107
 
-    foam_file = open(file_name, 'w+')
+    foam_file = open(file_name, 'w+')  # noqa: SIM115, PTH123
 
     size = np.shape(field)
 

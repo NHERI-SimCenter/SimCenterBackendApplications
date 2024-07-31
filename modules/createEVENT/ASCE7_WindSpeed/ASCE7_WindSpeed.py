@@ -1,9 +1,9 @@
-import os
+import os  # noqa: INP001, D100
 import sys
 
 if sys.version.startswith('2'):
-    range = xrange
-    string_types = basestring
+    range = xrange  # noqa: A001, F821
+    string_types = basestring  # noqa: F821
 else:
     string_types = str
 
@@ -11,31 +11,31 @@ import argparse
 import json
 
 
-def write_RV(BIM_input_path, EVENT_input_path):
+def write_RV(BIM_input_path, EVENT_input_path):  # noqa: ANN001, ANN201, ARG001, N802, N803, D103
     # create the empty EVENT.json file
-    EVENT_in = {'Events': []}
+    EVENT_in = {'Events': []}  # noqa: N806
 
-    with open(EVENT_input_path, 'w') as f:
+    with open(EVENT_input_path, 'w') as f:  # noqa: PTH123
         json.dump(EVENT_in, f, indent=2)
 
-    # TODO: if there are multiple events, we need to create a random variable for them
+    # TODO: if there are multiple events, we need to create a random variable for them  # noqa: FIX002, TD002, TD003, E501
 
 
-def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity):
-    sys.path.insert(0, os.getcwd())
+def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity):  # noqa: ANN001, ANN201, N803, D103
+    sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
     # load the BIM file
-    with open(BIM_input_path) as f:
-        BIM_in = json.load(f)
+    with open(BIM_input_path) as f:  # noqa: PTH123
+        BIM_in = json.load(f)  # noqa: N806
 
     # load the EVENT file
-    with open(EVENT_input_path) as f:
-        EVENT_in = json.load(f)
+    with open(EVENT_input_path) as f:  # noqa: PTH123
+        EVENT_in = json.load(f)  # noqa: N806
 
     # if there is a wind database path provided
     if wind_database_path is not None:
         # then we need to load the wind data from there
-        with open(wind_database_path) as f:
+        with open(wind_database_path) as f:  # noqa: PTH123
             wind_db = json.load(f)
 
         # the location id is stored in the BIM file
@@ -54,7 +54,7 @@ def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity
                 event['Events'][0]['type'] == 'ASCE7_WindSpeed'
             ):
                 event_info = event['Events'][0]
-                with open(event_info['fileName']) as f:
+                with open(event_info['fileName']) as f:  # noqa: PTH123
                     wind_speed_in = json.load(f)
 
     event_id = wind_speed_in['id']
@@ -76,7 +76,7 @@ def get_windspeed(BIM_input_path, EVENT_input_path, wind_database_path, severity
     }
     EVENT_in['Events'].append(event_json)
 
-    with open(EVENT_input_path, 'w') as f:
+    with open(EVENT_input_path, 'w') as f:  # noqa: PTH123
         json.dump(EVENT_in, f, indent=2)
 
 

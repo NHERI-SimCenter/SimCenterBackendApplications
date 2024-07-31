@@ -1,7 +1,7 @@
 """Created on Thu Dec 29 15:41:03 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400, D415
 
 import os
 
@@ -10,22 +10,22 @@ from PyQt5 import QtWidgets
 from Result_Project import Project_Result
 
 
-class PP_Data_Tab:
-    def __init__(self, project):
+class PP_Data_Tab:  # noqa: N801, D101
+    def __init__(self, project):  # noqa: ANN001, ANN204, D107
         self.pp_project = project
-        # self.__settings            = settings
+        # self.__settings            = settings  # noqa: ERA001
         self.result_scenarios = []
         self.population_data = None
-        # self.pp_result_folder_addr = result_folder_addr
+        # self.pp_result_folder_addr = result_folder_addr  # noqa: ERA001
         self.load_results_button.clicked.connect(self.resultLoadButtonPressed)
         self.population_browser_button.clicked.connect(self.browsePopulationData)
         self.population_load_button.clicked.connect(self.loadPopulationData)
-        # self.results_tabs_widget.setTabEnabled(1, False)
+        # self.results_tabs_widget.setTabEnabled(1, False)  # noqa: ERA001
         self.project_result = None
         self.current_population_directory = ''
 
-    def initalizeResultData(self):
-        if self.project == None:
+    def initalizeResultData(self):  # noqa: ANN201, N802, D102
+        if self.project == None:  # noqa: E711
             self.errorMSG(
                 'Error', 'No project is found. open or save a new project.'
             )
@@ -39,8 +39,8 @@ class PP_Data_Tab:
         )
         self.clearResultData()
 
-        print(self.project_result.scn_name_list_that_result_file_not_found)
-        for index, row in self.scenario_list.iterrows():
+        print(self.project_result.scn_name_list_that_result_file_not_found)  # noqa: T201
+        for index, row in self.scenario_list.iterrows():  # noqa: B007
             number_of_rows = self.result_file_status_table.rowCount()
             scenario_name = row['Scenario Name']
             scenario_item = QtWidgets.QTableWidgetItem(scenario_name)
@@ -61,32 +61,32 @@ class PP_Data_Tab:
             for scenario_name in self.result_scenarios:
                 try:
                     self.project_result.loadScneariodata(scenario_name)
-                except Exception:
+                except Exception:  # noqa: BLE001, PERF203
                     self.errorMSG('Error', 'Error occured in reading data')
                     self.clearResultData()
-                    raise Exception
+                    raise Exception  # noqa: B904, TRY002
                     return
 
-        self.results_tabs_widget.setTabEnabled(1, True)
+        self.results_tabs_widget.setTabEnabled(1, True)  # noqa: FBT003
 
-    def clearResultData(self):
-        for i in range(self.result_file_status_table.rowCount()):
+    def clearResultData(self):  # noqa: ANN201, N802, D102
+        for i in range(self.result_file_status_table.rowCount()):  # noqa: B007
             self.result_file_status_table.removeRow(0)
 
-    def resultLoadButtonPressed(self):
-        # data_retrived = False
+    def resultLoadButtonPressed(self):  # noqa: ANN201, N802, D102
+        # data_retrived = False  # noqa: ERA001
         # if self.getSimulationSettings():
         # if self.getHydraulicSettings():
         # if self.getDamageSettings():
         # if self.getRestorationSettings():
-        # data_retrived = True
+        # data_retrived = True  # noqa: ERA001
 
         # if not data_retrived:
-        # return
+        # return  # noqa: ERA001
 
         self.initalizeResultData()
 
-    def browsePopulationData(self):
+    def browsePopulationData(self):  # noqa: ANN201, N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self.asli_MainWindow,
             'Open file',
@@ -100,7 +100,7 @@ class PP_Data_Tab:
 
         self.population_addr_line.setText(file[0])
 
-        print(file)
+        print(file)  # noqa: T201
         if file[1] == 'Excel file (*.xlsx)':
             self.population_data = pd.read_excel(file[0])
         elif file[1] == 'CSV File (*.csv)':
@@ -117,10 +117,10 @@ class PP_Data_Tab:
             self.population_data.columns.to_list()
         )
 
-        if len(self.population_data.columns.to_list()) >= 2:
+        if len(self.population_data.columns.to_list()) >= 2:  # noqa: PLR2004
             self.population_population_header_combo.setCurrentIndex(1)
 
-    def loadPopulationData(self):
+    def loadPopulationData(self):  # noqa: ANN201, N802, D102
         node_id_header = self.population_node_ID_header_combo.currentText()
         population_header = self.population_population_header_combo.currentText()
 
@@ -133,11 +133,11 @@ class PP_Data_Tab:
         if node_id_header == '' or population_header == '':
             self.errorMSG(
                 'Error',
-                'Node ID Header or/and Population Header is not selected. Maybe an empty population file?',
+                'Node ID Header or/and Population Header is not selected. Maybe an empty population file?',  # noqa: E501
             )
             return
 
-        if self.project_result == None:
+        if self.project_result == None:  # noqa: E711
             self.errorMSG(
                 'Error', 'No project and data is loaded. Please load the data first.'
             )
@@ -147,12 +147,12 @@ class PP_Data_Tab:
             self.population_data, node_id_header, population_header
         )
 
-    def errorMSG(self, error_title, error_msg, error_more_msg=None):
+    def errorMSG(self, error_title, error_msg, error_more_msg=None):  # noqa: ANN001, ANN201, N802, D102
         error_widget = QtWidgets.QMessageBox()
         error_widget.setIcon(QtWidgets.QMessageBox.Critical)
         error_widget.setText(error_msg)
         error_widget.setWindowTitle(error_title)
         error_widget.setStandardButtons(QtWidgets.QMessageBox.Ok)
-        if error_more_msg != None:
+        if error_more_msg != None:  # noqa: E711
             error_widget.setInformativeText(error_more_msg)
         error_widget.exec_()

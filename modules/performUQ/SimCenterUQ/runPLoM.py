@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2021 Leland Stanford Junior University
 # Copyright (c) 2021 The Regents of the University of California
 #
@@ -34,7 +34,7 @@
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # This module is modified from the surrogateBuild.py to use PLoM for surrogate
-# modeling while maintaining similar input/output formats compatable with the current workflow
+# modeling while maintaining similar input/output formats compatable with the current workflow  # noqa: E501
 #
 # Contributors:
 # Kuanshi Zhong
@@ -49,12 +49,12 @@ import sys
 
 import numpy as np
 import pandas as pd
-from PLoM.PLoM import *
+from PLoM.PLoM import *  # noqa: F403
 
-# ==========================================================================================
+# ==========================================================================================  # noqa: E501
 
 
-class runPLoM:
+class runPLoM:  # noqa: N801
     """runPLoM: class for run a PLoM job
     methods:
         __init__: initialization
@@ -64,17 +64,17 @@ class runPLoM:
         _load_variables: load training data
         train_model: model training
         save_model: model saving
-    """
+    """  # noqa: D205, D400, D415
 
-    def __init__(
+    def __init__(  # noqa: ANN204, PLR0913
         self,
-        work_dir,
-        run_type,
-        os_type,
-        job_config,
-        errlog,
-        input_file,
-        workflow_driver,
+        work_dir,  # noqa: ANN001
+        run_type,  # noqa: ANN001
+        os_type,  # noqa: ANN001
+        job_config,  # noqa: ANN001
+        errlog,  # noqa: ANN001
+        input_file,  # noqa: ANN001
+        workflow_driver,  # noqa: ANN001
     ):
         """__init__
         input:
@@ -83,7 +83,7 @@ class runPLoM:
             os_type: operating system type
             job_config: configuration (dtype = dict)
             errlog: error log object
-        """
+        """  # noqa: D205, D400, D415
         # read inputs
         self.work_dir = work_dir
         self.run_type = run_type
@@ -94,16 +94,16 @@ class runPLoM:
         self.workflow_driver = workflow_driver
 
         # initialization
-        self.rv_name = list()
-        self.g_name = list()
+        self.rv_name = list()  # noqa: C408
+        self.g_name = list()  # noqa: C408
         self.x_dim = 0
         self.y_dim = 0
 
         # read variable names
-        # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)
+        # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(job_config)  # noqa: ERA001, E501
 
         # read PLoM parameters
-        surrogateInfo = job_config['UQ']['surrogateMethodInfo']
+        surrogateInfo = job_config['UQ']['surrogateMethodInfo']  # noqa: N806
         if self._parse_plom_parameters(surrogateInfo):
             msg = 'runPLoM.__init__: Error in reading PLoM parameters.'
             self.errlog.exit(msg)
@@ -123,10 +123,10 @@ class runPLoM:
             do_sampling = False
             do_simulation = not surrogateInfo['outputData']
             self.doe_method = 'None'  # default
-            do_doe = False
-            self.inpData = os.path.join(work_dir, 'templatedir/inpFile.in')
+            do_doe = False  # noqa: F841
+            self.inpData = os.path.join(work_dir, 'templatedir/inpFile.in')  # noqa: PTH118
             if not do_simulation:
-                self.outData = os.path.join(work_dir, 'templatedir/outFile.in')
+                self.outData = os.path.join(work_dir, 'templatedir/outFile.in')  # noqa: PTH118
             self._create_variables_from_input()
         elif surrogateInfo['method'] == 'Sampling and Simulation':
             # run simulation first to generate training data
@@ -138,48 +138,48 @@ class runPLoM:
             errlog.exit(msg)
 
         # read variable names
-        # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])
+        # self.x_dim, self.y_dim, self.rv_name, self.g_name = self._create_variables(surrogateInfo["method"])  # noqa: ERA001, E501
 
         # load variables
         if self._load_variables(do_sampling, do_simulation):
             msg = 'runPLoM.__init__: Error in loading variables.'
             self.errlog.exit(msg)
 
-    def _run_simulation(self):
+    def _run_simulation(self):  # noqa: ANN202, C901, PLR0912, PLR0915
         """_run_simulation: running simulation to get training data
         input:
             job_config: job configuration dictionary
         output:
             None
-        """
+        """  # noqa: D205, D400, D415
         import platform
 
         job_config = self.job_config
 
         # get python instance
-        runType = job_config.get('runType', 'runningLocal')
+        runType = job_config.get('runType', 'runningLocal')  # noqa: N806
         if (
             sys.platform == 'darwin'
             or sys.platform == 'linux'
             or sys.platform == 'linux2'
         ):
-            pythonEXE = 'python3'
+            pythonEXE = 'python3'  # noqa: N806
         else:
-            pythonEXE = 'python'
+            pythonEXE = 'python'  # noqa: N806
         if runType == 'runningLocal' and platform.system() == 'Windows':
-            localAppDir = job_config.get('localAppDir', None)
+            localAppDir = job_config.get('localAppDir', None)  # noqa: N806
             if localAppDir is None:
                 # no local app directory is found, let's try to use system python
                 pass
             else:
-                # pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')
-                pythonEXE = '"' + sys.executable + '"'
+                # pythonEXE = os.path.join(localAppDir,'applications','python','python.exe')  # noqa: ERA001, E501
+                pythonEXE = '"' + sys.executable + '"'  # noqa: N806
         else:
             # for remote run and macOS, let's use system python
             pass
 
         # move into the templatedir
-        run_dir = job_config.get('runDir', os.getcwd())
+        run_dir = job_config.get('runDir', os.getcwd())  # noqa: PTH109
         os.chdir(run_dir)
         # training is done for single building (for now)
         bldg_id = None
@@ -188,65 +188,65 @@ class runPLoM:
         os.chdir('templatedir')
 
         # dakota script path
-        dakotaScript = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        dakotaScript = os.path.join(  # noqa: PTH118, N806
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),  # noqa: PTH100, PTH120
             'dakota',
             'DakotaUQ.py',
         )
 
-        print('dakotaScript = ', dakotaScript)
+        print('dakotaScript = ', dakotaScript)  # noqa: T201
 
         # write a new dakota.json for forward propogation
         ## KZ modified 0331
-        with open(self.input_file, encoding='utf-8') as f:
+        with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             tmp = json.load(f)
         tmp['UQ']['uqType'] = 'Forward Propagation'
         tmp['UQ']['parallelExecution'] = True
-        samplingObj = tmp['UQ']['surrogateMethodInfo']['samplingMethod']
-        tmp['UQ']['samplingMethodData'] = dict()
+        samplingObj = tmp['UQ']['surrogateMethodInfo']['samplingMethod']  # noqa: N806
+        tmp['UQ']['samplingMethodData'] = dict()  # noqa: C408
         ## KZ modified 0331
         tmp['UQ']['uqEngine'] = 'Dakota'
         tmp['Applications']['UQ']['Application'] = 'Dakota-UQ'
         for key, item in samplingObj.items():
             tmp['UQ']['samplingMethodData'][key] = item
-        with open('sc_dakota_plom.json', 'w', encoding='utf-8') as f:
+        with open('sc_dakota_plom.json', 'w', encoding='utf-8') as f:  # noqa: PTH123
             json.dump(tmp, f, indent=2)
 
         # command line
         ## KZ modified 0331
-        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'
-        print(command_line)
+        command_line = f'{pythonEXE} {dakotaScript} --workflowInput sc_dakota_plom.json --driverFile {os.path.splitext(self.workflow_driver)[0]} --workflowOutput EDP.json --runType {runType}'  # noqa: PTH122, E501
+        print(command_line)  # noqa: T201
         # run command
-        dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')
-        print(dakotaTabPath)
+        dakotaTabPath = os.path.join(self.work_dir, 'dakotaTab.out')  # noqa: PTH118, N806
+        print(dakotaTabPath)  # noqa: T201
 
         try:
-            os.system(command_line)
-        except:
-            print(
-                'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+            os.system(command_line)  # noqa: S605
+        except:  # noqa: E722
+            print(  # noqa: T201
+                'runPLoM._run_simulation: error in running dakota to generate the initial sample.'  # noqa: E501
             )
-            print(
-                'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+            print(  # noqa: T201
+                'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'  # noqa: E501
             )
 
-        if not os.path.exists(dakotaTabPath):
+        if not os.path.exists(dakotaTabPath):  # noqa: PTH110
             try:
-                subprocess.call(command_line)
-            except:
-                print(
-                    'runPLoM._run_simulation: error in running dakota to generate the initial sample.'
+                subprocess.call(command_line)  # noqa: S603
+            except:  # noqa: E722
+                print(  # noqa: T201
+                    'runPLoM._run_simulation: error in running dakota to generate the initial sample.'  # noqa: E501
                 )
-                print(
-                    'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'
+                print(  # noqa: T201
+                    'runPLoM._run_simulation: please check if the dakota is installed correctly on the system.'  # noqa: E501
                 )
 
-        if not os.path.exists(dakotaTabPath):
+        if not os.path.exists(dakotaTabPath):  # noqa: PTH110
             msg = 'Dakota preprocessor did not run successfully'
             self.errlog.exit(msg)
 
         # remove the new dakota.json
-        # os.remove('sc_dakota_plom.json')
+        # os.remove('sc_dakota_plom.json')  # noqa: ERA001
 
         if runType in ['run', 'runningLocal']:
             # create the response.csv file from the dakotaTab.out file
@@ -260,11 +260,11 @@ class runPLoM:
             dakota_out.to_csv('response.csv')
             # create a IM.csv file
             self._compute_IM(run_dir, pythonEXE)
-            # collect IMs and RVs to the PLoM_variables.csv and EDPs to PLoM_responses.csv
+            # collect IMs and RVs to the PLoM_variables.csv and EDPs to PLoM_responses.csv  # noqa: E501
             self.inpData, self.outData = self._prepare_training_data(run_dir)
             # update job_config['randomVariables']
             cur_rv_list = [x.get('name') for x in job_config['randomVariables']]
-            for curRV in self.rv_name:
+            for curRV in self.rv_name:  # noqa: N806
                 if curRV not in cur_rv_list:
                     job_config['randomVariables'].append(
                         {'distribution': 'Normal', 'name': curRV}
@@ -274,42 +274,42 @@ class runPLoM:
         elif self.run_type in ['set_up', 'runningRemote']:
             pass
 
-    def _prepare_training_data(self, run_dir):
+    def _prepare_training_data(self, run_dir):  # noqa: ANN001, ANN202, C901, PLR0912, PLR0915
         # load IM.csv if exists
-        df_IM = pd.DataFrame()
-        if os.path.exists(os.path.join(run_dir, 'IM.csv')):
-            df_IM = pd.read_csv(os.path.join(run_dir, 'IM.csv'), index_col=None)
+        df_IM = pd.DataFrame()  # noqa: N806
+        if os.path.exists(os.path.join(run_dir, 'IM.csv')):  # noqa: PTH110, PTH118
+            df_IM = pd.read_csv(os.path.join(run_dir, 'IM.csv'), index_col=None)  # noqa: PTH118, N806
         else:
             msg = f'runPLoM._prepare_training_data: no IM.csv in {run_dir}.'
-            print(msg)
+            print(msg)  # noqa: T201
 
         # load response.csv if exists
-        df_SIMU = pd.DataFrame()
-        if os.path.exists(os.path.join(run_dir, 'response.csv')):
-            df_SIMU = pd.read_csv(
-                os.path.join(run_dir, 'response.csv'), index_col=None
+        df_SIMU = pd.DataFrame()  # noqa: N806
+        if os.path.exists(os.path.join(run_dir, 'response.csv')):  # noqa: PTH110, PTH118
+            df_SIMU = pd.read_csv(  # noqa: N806
+                os.path.join(run_dir, 'response.csv'), index_col=None  # noqa: PTH118
             )
         else:
-            msg = f'runPLoM._prepare_training_data: response.csv not found in {run_dir}.'
+            msg = f'runPLoM._prepare_training_data: response.csv not found in {run_dir}.'  # noqa: E501
             self.errlog.exit(msg)
 
         # read BIM to get RV names
         # KZ modified 0331
-        with open(
-            os.path.join(run_dir, 'templatedir', self.input_file),
+        with open(  # noqa: PTH123
+            os.path.join(run_dir, 'templatedir', self.input_file),  # noqa: PTH118
             encoding='utf-8',
         ) as f:
             tmp = json.load(f)
-        rVs = tmp.get('randomVariables', None)
-        if rVs is None:
+        rVs = tmp.get('randomVariables', None)  # noqa: N806
+        if rVs is None:  # noqa: SIM108
             rv_names = []
         else:
             rv_names = [x.get('name') for x in rVs]
 
         # collect rv columns from df_SIMU
-        df_RV = pd.DataFrame()
+        df_RV = pd.DataFrame()  # noqa: N806
         if len(rv_names) > 0:
-            df_RV = df_SIMU[rv_names]
+            df_RV = df_SIMU[rv_names]  # noqa: N806
             for cur_rv in rv_names:
                 df_SIMU.pop(cur_rv)
         if '%eval_id' in list(df_SIMU.columns):
@@ -322,10 +322,10 @@ class runPLoM:
             self.multipleEvent = None
 
         # concat df_RV and df_IM
-        if not df_IM.empty:
-            df_X = pd.concat([df_IM, df_RV], axis=1)
+        if not df_IM.empty:  # noqa: SIM108
+            df_X = pd.concat([df_IM, df_RV], axis=1)  # noqa: N806
         else:
-            df_X = df_RV
+            df_X = df_RV  # noqa: N806
         if not df_X.empty and '%eval_id' in list(df_X.columns):
             df_X.pop('%eval_id')
         if not df_X.empty and '%MultipleEvent' in list(df_X.columns):
@@ -335,17 +335,17 @@ class runPLoM:
 
         # make the first column name start with %
         if not df_X.empty:
-            df_X = df_X.rename(
-                {list(df_X.columns)[0]: '%' + list(df_X.columns)[0]}, axis='columns'
+            df_X = df_X.rename(  # noqa: N806
+                {list(df_X.columns)[0]: '%' + list(df_X.columns)[0]}, axis='columns'  # noqa: RUF015
             )
-        df_SIMU = df_SIMU.rename(
-            {list(df_SIMU.columns)[0]: '%' + list(df_SIMU.columns)[0]},
+        df_SIMU = df_SIMU.rename(  # noqa: N806
+            {list(df_SIMU.columns)[0]: '%' + list(df_SIMU.columns)[0]},  # noqa: RUF015
             axis='columns',
         )
 
         # save to csvs
-        inpData = os.path.join(run_dir, 'PLoM_variables.csv')
-        outData = os.path.join(run_dir, 'PLoM_responses.csv')
+        inpData = os.path.join(run_dir, 'PLoM_variables.csv')  # noqa: PTH118, N806
+        outData = os.path.join(run_dir, 'PLoM_responses.csv')  # noqa: PTH118, N806
         df_X.to_csv(inpData, index=False)
         df_SIMU.to_csv(outData, index=False)
 
@@ -357,14 +357,14 @@ class runPLoM:
 
         return inpData, outData
 
-    def _compute_IM(self, run_dir, pythonEXE):
+    def _compute_IM(self, run_dir, pythonEXE):  # noqa: ANN001, ANN202, N802, N803
         # find workdirs
         workdir_list = [x for x in os.listdir(run_dir) if x.startswith('workdir')]
 
         # intensity measure app
-        computeIM = os.path.join(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        computeIM = os.path.join(  # noqa: PTH118, N806
+            os.path.dirname(  # noqa: PTH120
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
             'createEVENT',
             'groundMotionIM',
@@ -374,21 +374,21 @@ class runPLoM:
         # compute IMs
         for cur_workdir in workdir_list:
             os.chdir(cur_workdir)
-            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
-                os.system(
-                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json'
+            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):  # noqa: PTH110
+                os.system(  # noqa: S605
+                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json'  # noqa: E501
                 )
             os.chdir(run_dir)
 
         # collect IMs from different workdirs
         for i, cur_workdir in enumerate(workdir_list):
             cur_id = int(cur_workdir.split('.')[-1])
-            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
+            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):  # noqa: PTH110, PTH118
                 try:
                     tmp1 = pd.read_csv(
-                        os.path.join(cur_workdir, 'IM.csv'), index_col=None
+                        os.path.join(cur_workdir, 'IM.csv'), index_col=None  # noqa: PTH118
                     )
-                except:
+                except:  # noqa: E722
                     return
                 if tmp1.empty:
                     return
@@ -405,7 +405,7 @@ class runPLoM:
         im_collector = im_collector.sort_values(by=['%eval_id'])
         im_collector.to_csv('IM.csv', index=False)
 
-    def _create_variables(self, training_data):
+    def _create_variables(self, training_data):  # noqa: ANN001, ANN202
         """create_variables: creating X and Y variables
         input:
             training_data: training data source
@@ -414,7 +414,7 @@ class runPLoM:
             y_dim: dimension of Y data
             rv_name: random variable name (X data)
             g_name: variable name (Y data)
-        """
+        """  # noqa: D205, D400, D415
         job_config = self.job_config
 
         # initialization
@@ -429,27 +429,27 @@ class runPLoM:
 
         # read X and Y variable names
         for rv in job_config['randomVariables']:
-            rv_name = rv_name + [rv['name']]
+            rv_name = rv_name + [rv['name']]  # noqa: RUF005
             x_dim += 1
         if x_dim == 0:
             msg = 'Error reading json: RV is empty'
             self.errlog.exit(msg)
         for g in job_config['EDP']:
             if g['length'] == 1:  # scalar
-                g_name = g_name + [g['name']]
+                g_name = g_name + [g['name']]  # noqa: RUF005
                 y_dim += 1
             else:  # vector
                 for nl in range(g['length']):
-                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]
+                    g_name = g_name + ['{}_{}'.format(g['name'], nl + 1)]  # noqa: RUF005
                     y_dim += 1
         if y_dim == 0:
             msg = 'Error reading json: EDP(QoI) is empty'
             self.errlog.exit(msg)
 
-        # return
+        # return  # noqa: ERA001
         return x_dim, y_dim, rv_name, g_name
 
-    def _create_variables_from_input(self):
+    def _create_variables_from_input(self):  # noqa: ANN202
         df_variables = pd.read_csv(self.inpData, header=0)
         df_responses = pd.read_csv(self.outData, header=0)
 
@@ -468,13 +468,13 @@ class runPLoM:
         else:
             self.multipleEvent = None
 
-    def _parse_plom_parameters(self, surrogateInfo):
+    def _parse_plom_parameters(self, surrogateInfo):  # noqa: ANN001, ANN202, C901, N803, PLR0912
         """_parse_plom_parameters: parse PLoM parameters from surrogateInfo
         input:
             surrogateInfo: surrogate information dictionary
         output:
             run_flag: 0 - sucess, 1: failure
-        """
+        """  # noqa: D205, D400, D415
         run_flag = 0
         try:
             self.n_mc = int(surrogateInfo['newSampleRatio'])
@@ -491,13 +491,13 @@ class runPLoM:
                 )
                 if self.smootherKDE_file and self.smootherKDE_dir:
                     # KZ, 07/24: both file and file path received
-                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.smootherKDE_file
-                    self.smootherKDE_file = os.path.join(
+                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.smootherKDE_file  # noqa: E501
+                    self.smootherKDE_file = os.path.join(  # noqa: PTH118
                         work_dir, 'templatedir', self.smootherKDE_file
                     )
-                    if not os.path.isfile(self.smootherKDE_file):
+                    if not os.path.isfile(self.smootherKDE_file):  # noqa: PTH113
                         # not found the file
-                        msg = f'Error finding user-defined function file for KDE: {self.smootherKDE_file}.'
+                        msg = f'Error finding user-defined function file for KDE: {self.smootherKDE_file}.'  # noqa: E501
                         errlog.exit(msg)
                 else:
                     # KZ, 07/24: missing user-defined file
@@ -506,7 +506,7 @@ class runPLoM:
             else:
                 # KZ, 07/24: get user defined smootherKDE
                 self.smootherKDE = surrogateInfo.get('smootherKDE', 25)
-            # self.smootherKDE = surrogateInfo.get("smootherKDE",25)
+            # self.smootherKDE = surrogateInfo.get("smootherKDE",25)  # noqa: ERA001
             self.randomSeed = surrogateInfo.get('randomSeed', None)
             self.diffMap = surrogateInfo.get('diffusionMaps', True)
             self.logTransform = surrogateInfo.get('logTransform', False)
@@ -521,13 +521,13 @@ class runPLoM:
                 self.kdeTolerance_dir = surrogateInfo.get('tolKDE_pathPath', False)
                 if self.kdeTolerance_file and self.kdeTolerance_dir:
                     # KZ, 07/24: both file and file path received
-                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.kdeTolerance_file
-                    self.kdeTolerance_file = os.path.join(
+                    # Note that the file is saved by the frontend to the work_dir -> overwrite self.kdeTolerance_file  # noqa: E501
+                    self.kdeTolerance_file = os.path.join(  # noqa: PTH118
                         work_dir, 'templatedir', self.kdeTolerance_file
                     )
-                    if not os.path.isfile(self.kdeTolerance_file):
+                    if not os.path.isfile(self.kdeTolerance_file):  # noqa: PTH113
                         # not found the file
-                        msg = f'Error finding user-defined function file for KDE: {self.kdeTolerance_file}.'
+                        msg = f'Error finding user-defined function file for KDE: {self.kdeTolerance_file}.'  # noqa: E501
                         errlog.exit(msg)
                 else:
                     # KZ, 07/24: missing user-defined file
@@ -537,37 +537,37 @@ class runPLoM:
                     errlog.exit(msg)
             else:
                 self.kdeTolerance = surrogateInfo.get('kdeTolerance', 0.1)
-            # self.kdeTolerance = surrogateInfo.get("kdeTolerance",0.1)
+            # self.kdeTolerance = surrogateInfo.get("kdeTolerance",0.1)  # noqa: ERA001
             if self.constraintsFlag:
-                self.constraintsFile = os.path.join(
+                self.constraintsFile = os.path.join(  # noqa: PTH118
                     work_dir, 'templatedir/plomConstraints.py'
                 )
             self.numIter = surrogateInfo.get('numIter', 50)
             self.tolIter = surrogateInfo.get('tolIter', 0.02)
             self.preTrained = surrogateInfo.get('preTrained', False)
             if self.preTrained:
-                self.preTrainedModel = os.path.join(
+                self.preTrainedModel = os.path.join(  # noqa: PTH118
                     work_dir, 'templatedir/surrogatePLoM.h5'
                 )
 
-            # KZ, 07/24: loading hyperparameter functions (evaluating self.kdeTolerance and self.smootherKDE from user-defined case)
+            # KZ, 07/24: loading hyperparameter functions (evaluating self.kdeTolerance and self.smootherKDE from user-defined case)  # noqa: E501
             if self._load_hyperparameter():
-                msg = 'runPLoM._parse_plom_parameters: Error in loading hyperparameter functions.'
+                msg = 'runPLoM._parse_plom_parameters: Error in loading hyperparameter functions.'  # noqa: E501
                 self.errlog.exit(msg)
 
-        except:
+        except:  # noqa: E722
             run_flag = 1
 
-        # return
+        # return  # noqa: ERA001
         return run_flag
 
-    def _set_up_parallel(self):
+    def _set_up_parallel(self):  # noqa: ANN202
         """_set_up_parallel: set up modules and variables for parallel jobs
         input:
             none
         output:
             run_flag: 0 - sucess, 1 - failure
-        """
+        """  # noqa: D205, D400, D415
         run_flag = 0
         try:
             if self.run_type.lower() == 'runninglocal':
@@ -582,16 +582,16 @@ class runPLoM:
                 self.world = MPI.COMM_WORLD
                 self.pool = MPIPoolExecutor()
                 self.n_processor = self.world.Get_size()
-            print('nprocessor :')
-            print(self.n_processor)
+            print('nprocessor :')  # noqa: T201
+            print(self.n_processor)  # noqa: T201
             self.cal_interval = self.n_processor
-        except:
+        except:  # noqa: E722
             run_flag = 1
 
-        # return
+        # return  # noqa: ERA001
         return run_flag
 
-    def _load_variables(self, do_sampling, do_simulation):
+    def _load_variables(self, do_sampling, do_simulation):  # noqa: ANN001, ANN202, C901, PLR0912
         """_load_variables: load variables
         input:
             do_sampling: sampling flag
@@ -599,43 +599,43 @@ class runPLoM:
             job_config: job configuration dictionary
         output:
             run_flag: 0 - sucess, 1 - failure
-        """
+        """  # noqa: D205, D400, D415
         job_config = self.job_config
 
         run_flag = 0
-        # try:
+        # try:  # noqa: ERA001
         if do_sampling:
             pass
         else:
-            X = read_txt(self.inpData, self.errlog)
-            print('X = ', X)
-            print(X.columns)
+            X = read_txt(self.inpData, self.errlog)  # noqa: N806
+            print('X = ', X)  # noqa: T201
+            print(X.columns)  # noqa: T201
             if len(X.columns) != self.x_dim:
-                msg = f'Error importing input data: Number of dimension inconsistent: have {self.x_dim} RV(s) but {len(X.columns)} column(s).'
+                msg = f'Error importing input data: Number of dimension inconsistent: have {self.x_dim} RV(s) but {len(X.columns)} column(s).'  # noqa: E501
                 errlog.exit(msg)
             if self.logTransform:
-                X = np.log(X)
+                X = np.log(X)  # noqa: N806
 
         if do_simulation:
             pass
         else:
-            Y = read_txt(self.outData, self.errlog)
+            Y = read_txt(self.outData, self.errlog)  # noqa: N806
             if Y.shape[1] != self.y_dim:
-                msg = f'Error importing input data: Number of dimension inconsistent: have {self.y_dim} QoI(s) but {len(Y.columns)} column(s).'
+                msg = f'Error importing input data: Number of dimension inconsistent: have {self.y_dim} QoI(s) but {len(Y.columns)} column(s).'  # noqa: E501
                 errlog.exit(msg)
             if self.logTransform:
-                Y = np.log(Y)
+                Y = np.log(Y)  # noqa: N806
 
             if X.shape[0] != Y.shape[0]:
-                msg = f'Warning importing input data: numbers of samples of inputs ({len(X.columns)}) and outputs ({len(Y.columns)}) are inconsistent'
-                print(msg)
+                msg = f'Warning importing input data: numbers of samples of inputs ({len(X.columns)}) and outputs ({len(Y.columns)}) are inconsistent'  # noqa: E501
+                print(msg)  # noqa: T201
 
             n_samp = Y.shape[0]
             # writing a data file for PLoM input
             self.X = X.to_numpy()
             self.Y = Y.to_numpy()
-            inputXY = os.path.join(work_dir, 'templatedir/inputXY.csv')
-            X_Y = pd.concat([X, Y], axis=1)
+            inputXY = os.path.join(work_dir, 'templatedir/inputXY.csv')  # noqa: PTH118, N806
+            X_Y = pd.concat([X, Y], axis=1)  # noqa: N806
             X_Y.to_csv(inputXY, sep=',', header=True, index=False)
             self.inputXY = inputXY
             self.n_samp = n_samp
@@ -647,66 +647,66 @@ class runPLoM:
             self.rvVal = []
             try:
                 for nx in range(self.x_dim):
-                    rvInfo = job_config['randomVariables'][nx]
-                    self.rvName = self.rvName + [rvInfo['name']]
-                    self.rvDist = self.rvDist + [rvInfo['distribution']]
+                    rvInfo = job_config['randomVariables'][nx]  # noqa: N806
+                    self.rvName = self.rvName + [rvInfo['name']]  # noqa: RUF005
+                    self.rvDist = self.rvDist + [rvInfo['distribution']]  # noqa: RUF005
                     if do_sampling:
-                        self.rvVal = self.rvVal + [
+                        self.rvVal = self.rvVal + [  # noqa: RUF005
                             (rvInfo['upperbound'] + rvInfo['lowerbound']) / 2
                         ]
                     else:
-                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]
-            except:
-                msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
-                print(msg)
-        # except:
-        #    run_flag = 1
+                        self.rvVal = self.rvVal + [np.mean(self.X[:, nx])]  # noqa: RUF005
+            except:  # noqa: E722
+                msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'  # noqa: E501
+                print(msg)  # noqa: T201
+        # except:  # noqa: ERA001
+        #    run_flag = 1  # noqa: ERA001
 
-        # return
+        # return  # noqa: ERA001
         return run_flag
 
     # KZ, 07/24: loading user-defined hyper-parameter files
-    def _load_hyperparameter(self):
+    def _load_hyperparameter(self):  # noqa: ANN202
         run_flag = 0
         try:
             # load constraints first
-            constr_file = Path(self.constraintsFile).resolve()
+            constr_file = Path(self.constraintsFile).resolve()  # noqa: F405
             sys.path.insert(0, str(constr_file.parent) + '/')
-            constr_script = importlib.__import__(
+            constr_script = importlib.__import__(  # noqa: F405
                 constr_file.name[:-3], globals(), locals(), [], 0
             )
             self.beta_c = constr_script.beta_c()
-            print('beta_c = ', self.beta_c)
+            print('beta_c = ', self.beta_c)  # noqa: T201
             # if smootherKDE
             if self.smootherKDE_Customize:
-                kde_file = Path(self.smootherKDE_file).resolve()
+                kde_file = Path(self.smootherKDE_file).resolve()  # noqa: F405
                 sys.path.insert(0, str(kde_file.parent) + '/')
-                kde_script = importlib.__import__(
+                kde_script = importlib.__import__(  # noqa: F405
                     kde_file.name[:-3], globals(), locals(), [], 0
                 )
                 self.get_epsilon_k = kde_script.get_epsilon_k
                 # evaluating the function
                 self.smootherKDE = self.get_epsilon_k(self.beta_c)
-                print('epsilon_k = ', self.smootherKDE)
+                print('epsilon_k = ', self.smootherKDE)  # noqa: T201
             # if tolKDE
             if self.kdeTolerance_Customize:
-                beta_file = Path(self.kdeTolerance_file).resolve()
+                beta_file = Path(self.kdeTolerance_file).resolve()  # noqa: F405
                 sys.path.insert(0, str(beta_file.parent) + '/')
-                beta_script = importlib.__import__(
+                beta_script = importlib.__import__(  # noqa: F405
                     beta_file.name[:-3], globals(), locals(), [], 0
                 )
                 self.get_epsilon_db = beta_script.get_epsilon_db
                 # evaluating the function
                 self.kdeTolerance = self.get_epsilon_db(self.beta_c)
-                print('epsilon_db = ', self.kdeTolerance)
-        except:
+                print('epsilon_db = ', self.kdeTolerance)  # noqa: T201
+        except:  # noqa: E722
             run_flag = 1
         return run_flag
 
-    def train_model(self, model_name='SurrogatePLoM'):
-        db_path = os.path.join(self.work_dir, 'templatedir')
+    def train_model(self, model_name='SurrogatePLoM'):  # noqa: ANN001, ANN201, D102
+        db_path = os.path.join(self.work_dir, 'templatedir')  # noqa: PTH118
         if not self.preTrained:
-            self.modelPLoM = PLoM(
+            self.modelPLoM = PLoM(  # noqa: F405
                 model_name=model_name,
                 data=self.inputXY,
                 separator=',',
@@ -718,7 +718,7 @@ class runPLoM:
                 plot_tag=True,
             )
         else:
-            self.modelPLoM = PLoM(
+            self.modelPLoM = PLoM(  # noqa: F405
                 model_name=model_name,
                 data=self.preTrainedModel,
                 db_path=db_path,
@@ -753,17 +753,17 @@ class runPLoM:
         if self.constraintsFlag:
             self.Errors = self.modelPLoM.errors
 
-    def save_model(self):
+    def save_model(self):  # noqa: ANN201, C901, D102, PLR0912, PLR0915
         # copy the h5 model file to the main work dir
         shutil.copy2(
-            os.path.join(
+            os.path.join(  # noqa: PTH118
                 self.work_dir, 'templatedir', 'SurrogatePLoM', 'SurrogatePLoM.h5'
             ),
             self.work_dir,
         )
         if self.n_mc > 0:
             shutil.copy2(
-                os.path.join(
+                os.path.join(  # noqa: PTH118
                     self.work_dir,
                     'templatedir',
                     'SurrogatePLoM',
@@ -786,15 +786,15 @@ class runPLoM:
         )
         header_string = header_string_x[:-1] + header_string_y
 
-        # xy_data = np.concatenate((np.asmatrix(np.arange(1, self.n_samp + 1)).T, self.X, self.Y), axis=1)
-        # np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')
-        # np.savetxt(self.work_dir + '/inputTab.out', self.X, header=header_string_x[1:-1], fmt='%1.4e', comments='%')
-        # np.savetxt(self.work_dir + '/outputTab.out', self.Y, header=header_string_y[1:], fmt='%1.4e', comments='%')
-        df_inputTab = pd.DataFrame(data=self.X, columns=self.rv_name)
-        df_outputTab = pd.DataFrame(data=self.Y, columns=self.g_name)
-        df_inputTab.to_csv(os.path.join(self.work_dir, 'inputTab.out'), index=False)
+        # xy_data = np.concatenate((np.asmatrix(np.arange(1, self.n_samp + 1)).T, self.X, self.Y), axis=1)  # noqa: ERA001, E501
+        # np.savetxt(self.work_dir + '/dakotaTab.out', xy_data, header=header_string, fmt='%1.4e', comments='%')  # noqa: ERA001, E501
+        # np.savetxt(self.work_dir + '/inputTab.out', self.X, header=header_string_x[1:-1], fmt='%1.4e', comments='%')  # noqa: ERA001, E501
+        # np.savetxt(self.work_dir + '/outputTab.out', self.Y, header=header_string_y[1:], fmt='%1.4e', comments='%')  # noqa: ERA001, E501
+        df_inputTab = pd.DataFrame(data=self.X, columns=self.rv_name)  # noqa: N806
+        df_outputTab = pd.DataFrame(data=self.Y, columns=self.g_name)  # noqa: N806
+        df_inputTab.to_csv(os.path.join(self.work_dir, 'inputTab.out'), index=False)  # noqa: PTH118
         df_outputTab.to_csv(
-            os.path.join(self.work_dir, 'outputTab.out'), index=False
+            os.path.join(self.work_dir, 'outputTab.out'), index=False  # noqa: PTH118
         )
 
         results = {}
@@ -826,13 +826,13 @@ class runPLoM:
                 rvs['name'] = self.rvName[nx]
                 rvs['distribution'] = self.rvDist[nx]
                 rvs['value'] = self.rvVal[nx]
-                rv_list = rv_list + [rvs]
+                rv_list = rv_list + [rvs]  # noqa: RUF005
             results['randomVariables'] = rv_list
-        except:
-            msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'
-            print(msg)
-        results['dirPLoM'] = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), 'PLoM'
+        except:  # noqa: E722
+            msg = 'Warning: randomVariables attributes in configuration file are not consistent with x_dim'  # noqa: E501
+            print(msg)  # noqa: T201
+        results['dirPLoM'] = os.path.join(  # noqa: PTH118
+            os.path.dirname(os.path.abspath(__file__)), 'PLoM'  # noqa: PTH100, PTH120
         )
 
         results['pcaEigen'] = self.pcaEigen.tolist()
@@ -843,9 +843,9 @@ class runPLoM:
         results['Errors'] = self.Errors
 
         if self.n_mc > 0:
-            Xnew = pd.read_csv(self.work_dir + '/X_new.csv', header=0, index_col=0)
+            Xnew = pd.read_csv(self.work_dir + '/X_new.csv', header=0, index_col=0)  # noqa: N806
             if self.logTransform:
-                Xnew = np.exp(Xnew)
+                Xnew = np.exp(Xnew)  # noqa: N806
             for nx in range(self.x_dim):
                 results['xPredict'][self.rv_name[nx]] = Xnew.iloc[:, nx].tolist()
 
@@ -874,43 +874,43 @@ class runPLoM:
         # KZ: adding MultipleEvent if any
         if self.multipleEvent is not None:
             tmp = pd.read_csv(
-                os.path.join(self.work_dir, 'dakotaTab.out'), index_col=None, sep=' '
+                os.path.join(self.work_dir, 'dakotaTab.out'), index_col=None, sep=' '  # noqa: PTH118
             )
             tmp = pd.concat([tmp, self.multipleEvent], axis=1)
             tmp.to_csv(
-                os.path.join(self.work_dir, 'dakotaTab.out'), index=False, sep=' '
+                os.path.join(self.work_dir, 'dakotaTab.out'), index=False, sep=' '  # noqa: PTH118
             )
 
             # if not self.do_logtransform:
-            # results["yPredict_CI_lb"][self.g_name[ny]] = norm.ppf(0.25, loc = results["yPredict"][self.g_name[ny]] , scale = np.sqrt(self.Y_loo_var[:, ny])).tolist()
-            # results["yPredict_CI_ub"][self.g_name[ny]] = norm.ppf(0.75, loc = results["yPredict"][self.g_name[ny]] , scale = np.sqrt(self.Y_loo_var[:, ny])).tolist()
-            # else:
-            #    mu = np.log(self.Y_loo[:, ny] )
-            #    sig = np.sqrt(np.log(self.Y_loo_var[:, ny]/pow(self.Y_loo[:, ny] ,2)+1))
-            #    results["yPredict_CI_lb"][self.g_name[ny]] =  lognorm.ppf(0.25, s = sig, scale = np.exp(mu)).tolist()
-            #    results["yPredict_CI_ub"][self.g_name[ny]] =  lognorm.ppf(0.75, s = sig, scale = np.exp(mu)).tolist()
+            # results["yPredict_CI_lb"][self.g_name[ny]] = norm.ppf(0.25, loc = results["yPredict"][self.g_name[ny]] , scale = np.sqrt(self.Y_loo_var[:, ny])).tolist()  # noqa: ERA001, E501
+            # results["yPredict_CI_ub"][self.g_name[ny]] = norm.ppf(0.75, loc = results["yPredict"][self.g_name[ny]] , scale = np.sqrt(self.Y_loo_var[:, ny])).tolist()  # noqa: ERA001, E501
+            # else:  # noqa: ERA001
+            #    mu = np.log(self.Y_loo[:, ny] )  # noqa: ERA001
+            #    sig = np.sqrt(np.log(self.Y_loo_var[:, ny]/pow(self.Y_loo[:, ny] ,2)+1))  # noqa: ERA001, E501
+            #    results["yPredict_CI_lb"][self.g_name[ny]] =  lognorm.ppf(0.25, s = sig, scale = np.exp(mu)).tolist()  # noqa: ERA001, E501
+            #    results["yPredict_CI_ub"][self.g_name[ny]] =  lognorm.ppf(0.75, s = sig, scale = np.exp(mu)).tolist()  # noqa: ERA001, E501
 
         # over-write the data with Xnew if any
         if self.n_mc > 0:
             Xnew.insert(0, '%', [x + 1 for x in list(Xnew.index)])
             Xnew.to_csv(self.work_dir + '/dakotaTab.out', index=False, sep=' ')
 
-        if os.path.exists('dakota.out'):
-            os.remove('dakota.out')
+        if os.path.exists('dakota.out'):  # noqa: PTH110
+            os.remove('dakota.out')  # noqa: PTH107
 
-        with open('dakota.out', 'w', encoding='utf-8') as fp:
+        with open('dakota.out', 'w', encoding='utf-8') as fp:  # noqa: PTH123
             json.dump(results, fp, indent=2)
 
-        print('Results Saved')
+        print('Results Saved')  # noqa: T201
 
 
-def read_txt(text_dir, errlog):
-    if not os.path.exists(text_dir):
+def read_txt(text_dir, errlog):  # noqa: ANN001, ANN201, D103
+    if not os.path.exists(text_dir):  # noqa: PTH110
         msg = 'Error: file does not exist: ' + text_dir
         errlog.exit(msg)
 
     header_line = []
-    with open(text_dir) as f:
+    with open(text_dir) as f:  # noqa: PTH123
         # Iterate through the file until the table starts
         header_count = 0
         for line in f:
@@ -918,58 +918,58 @@ def read_txt(text_dir, errlog):
                 header_count = header_count + 1
                 header_line = line[1:]  # remove '%'
         try:
-            with open(text_dir) as f:
-                X = np.loadtxt(f, skiprows=header_count)
+            with open(text_dir) as f:  # noqa: PTH123, PLW2901
+                X = np.loadtxt(f, skiprows=header_count)  # noqa: N806
         except ValueError:
             try:
-                with open(text_dir) as f:
-                    X = np.genfromtxt(f, skip_header=header_count, delimiter=',')
+                with open(text_dir) as f:  # noqa: PTH123, PLW2901
+                    X = np.genfromtxt(f, skip_header=header_count, delimiter=',')  # noqa: N806
                 # if there are extra delimiter, remove nan
                 if np.isnan(X[-1, -1]):
-                    X = np.delete(X, -1, 1)
+                    X = np.delete(X, -1, 1)  # noqa: N806
             except ValueError:
                 msg = 'Error: file format is not supported ' + text_dir
                 errlog.exit(msg)
 
     if X.ndim == 1:
-        X = np.array([X]).transpose()
+        X = np.array([X]).transpose()  # noqa: N806
 
-    print('X = ', X)
+    print('X = ', X)  # noqa: T201
 
-    # df_X = pd.DataFrame(data=X, columns=["V"+str(x) for x in range(X.shape[1])])
+    # df_X = pd.DataFrame(data=X, columns=["V"+str(x) for x in range(X.shape[1])])  # noqa: ERA001
     if len(header_line) > 0:
-        df_X = pd.DataFrame(data=X, columns=header_line.replace('\n', '').split(','))
+        df_X = pd.DataFrame(data=X, columns=header_line.replace('\n', '').split(','))  # noqa: N806
     else:
-        df_X = pd.DataFrame()
+        df_X = pd.DataFrame()  # noqa: N806
 
-    print('df_X = ', df_X)
+    print('df_X = ', df_X)  # noqa: T201
 
     return df_X
 
 
-class errorLog:
-    def __init__(self, work_dir):
-        self.file = open(f'{work_dir}/dakota.err', 'w')
+class errorLog:  # noqa: N801, D101
+    def __init__(self, work_dir):  # noqa: ANN001, ANN204, D107
+        self.file = open(f'{work_dir}/dakota.err', 'w')  # noqa: SIM115, PTH123
 
-    def exit(self, msg):
-        print(msg)
+    def exit(self, msg):  # noqa: ANN001, ANN201, D102
+        print(msg)  # noqa: T201
         self.file.write(msg)
         self.file.close()
-        exit(-1)
+        exit(-1)  # noqa: PLR1722
 
 
-def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):
+def build_surrogate(work_dir, os_type, run_type, input_file, workflow_driver):  # noqa: ANN001, ANN201
     """build_surrogate: built surrogate model
     input:
         work_dir: working directory
         run_type: job type
         os_type: operating system type
-    """
-    # t_total = time.process_time()
+    """  # noqa: D205, D400, D415
+    # t_total = time.process_time()  # noqa: ERA001
     # default filename
-    filename = 'PLoM_Model'
+    filename = 'PLoM_Model'  # noqa: F841
     # read the configuration file
-    f = open(work_dir + '/templatedir/' + input_file)
+    f = open(work_dir + '/templatedir/' + input_file)  # noqa: SIM115, PTH123
     try:
         job_config = json.load(f)
     except ValueError:
@@ -1005,10 +1005,10 @@ if __name__ == '__main__':
     """
 
     # collect arguments
-    inputArgs = sys.argv
+    inputArgs = sys.argv  # noqa: N816
     # working diretory
     work_dir = inputArgs[1].replace(os.sep, '/')
-    print(f'work_dir = {work_dir}')
+    print(f'work_dir = {work_dir}')  # noqa: T201
     # print the work_dir
     errlog = errorLog(work_dir)
     # job type
@@ -1018,8 +1018,8 @@ if __name__ == '__main__':
     # default output file: results.out
     result_file = 'results.out'
     # input file name
-    input_file = os.path.basename(inputArgs[2])
-    print(f'input_file = {input_file}')
+    input_file = os.path.basename(inputArgs[2])  # noqa: PTH119
+    print(f'input_file = {input_file}')  # noqa: T201
     # workflowDriver
     workflow_driver = inputArgs[3]
     # start build the surrogate

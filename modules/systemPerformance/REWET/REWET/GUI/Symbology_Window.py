@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'Symbology_Window.ui'
+# Form implementation generated from reading ui file 'Symbology_Window.ui'  # noqa: N999, D100
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -8,8 +8,8 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-class Ui_Symbology_Dialog:
-    def setupUi(self, Symbology_Dialog):
+class Ui_Symbology_Dialog:  # noqa: N801, D101
+    def setupUi(self, Symbology_Dialog):  # noqa: ANN001, ANN201, N802, N803, D102, PLR0915
         Symbology_Dialog.setObjectName('Symbology_Dialog')
         Symbology_Dialog.resize(491, 410)
         self.buttonBox = QtWidgets.QDialogButtonBox(Symbology_Dialog)
@@ -92,7 +92,7 @@ class Ui_Symbology_Dialog:
         self.buttonBox.rejected.connect(Symbology_Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Symbology_Dialog)
 
-    def retranslateUi(self, Symbology_Dialog):
+    def retranslateUi(self, Symbology_Dialog):  # noqa: ANN001, ANN201, N802, N803, D102
         _translate = QtCore.QCoreApplication.translate
         Symbology_Dialog.setWindowTitle(_translate('Symbology_Dialog', 'Dialog'))
         item = self.range_table.horizontalHeaderItem(0)

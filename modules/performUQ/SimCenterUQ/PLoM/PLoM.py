@@ -1,37 +1,37 @@
-# JGA
+# JGA  # noqa: N999, D100
 import importlib
 import os
 import sys
 
-# import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt  # noqa: ERA001
 # export DISPLAY=localhost:0.0
-from ctypes import *
+from ctypes import *  # noqa: F403
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import PLoM_library as plom
-from general import *
+from general import *  # noqa: F403
 
 
-class PLoM:
-    def __init__(
+class PLoM:  # noqa: D101
+    def __init__(  # noqa: ANN204, D107, PLR0913
         self,
-        model_name='plom',
-        data='',
-        separator=',',
-        col_header=False,
-        constraints=None,
-        run_tag=False,
-        plot_tag=False,
-        num_rlz=5,
-        tol_pca=1e-6,
-        epsilon_kde=25,
-        tol_PCA2=1e-5,
-        tol=1e-6,
-        max_iter=50,
-        runDiffMaps=True,
-        db_path=None,
+        model_name='plom',  # noqa: ANN001
+        data='',  # noqa: ANN001
+        separator=',',  # noqa: ANN001
+        col_header=False,  # noqa: ANN001, FBT002
+        constraints=None,  # noqa: ANN001
+        run_tag=False,  # noqa: ANN001, FBT002
+        plot_tag=False,  # noqa: ANN001, FBT002
+        num_rlz=5,  # noqa: ANN001
+        tol_pca=1e-6,  # noqa: ANN001
+        epsilon_kde=25,  # noqa: ANN001
+        tol_PCA2=1e-5,  # noqa: ANN001, N803
+        tol=1e-6,  # noqa: ANN001
+        max_iter=50,  # noqa: ANN001
+        runDiffMaps=True,  # noqa: ANN001, FBT002, N803
+        db_path=None,  # noqa: ANN001
     ):
         # basic setups
         self._basic_config(model_name=model_name, db_path=db_path)
@@ -55,8 +55,8 @@ class PLoM:
                     ax.set_ylabel(ax.get_ylabel(), fontsize = 6, rotation = 45)
                 plt.savefig(os.path.join(self.vl_path,'ScatterMatrix_X0.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('ScatterMatrix_X0.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-            """
-        if not self.constraints:
+            """  # noqa: E501
+        if not self.constraints:  # noqa: SIM102
             if self.add_constraints(constraints_file=constraints):
                 self.logfile.write_msg(
                     msg='PLoM: constraints input failed.',
@@ -83,40 +83,40 @@ class PLoM:
             )
         else:
             self.logfile.write_msg(
-                msg='PLoM: using ConfigTasks(task_list = FULL_TASK_LIST) to schedule a run.',
+                msg='PLoM: using ConfigTasks(task_list = FULL_TASK_LIST) to schedule a run.',  # noqa: E501
                 msg_type='RUNNING',
                 msg_level=0,
             )
             self.logfile.write_msg(
-                msg='PLoM: using RunAlgorithm(n_mc=n_mc,epsilon_pca=epsilon_pca,epsilon_kde) to run simulations.',
+                msg='PLoM: using RunAlgorithm(n_mc=n_mc,epsilon_pca=epsilon_pca,epsilon_kde) to run simulations.',  # noqa: E501
                 msg_type='RUNNING',
                 msg_level=0,
             )
 
-    def _basic_config(self, model_name=None, db_path=None):
+    def _basic_config(self, model_name=None, db_path=None):  # noqa: ANN001, ANN202
         """Basic setups
         - model_name: job name (used for database name)
-        """
+        """  # noqa: D205, D400, D401, D415
         if not db_path:
-            self.dir_log = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), 'RunDir'
+            self.dir_log = os.path.join(  # noqa: PTH118
+                os.path.dirname(os.path.abspath(__file__)), 'RunDir'  # noqa: PTH100, PTH120
             )
-            self.dir_run = os.path.join(
-                os.path.dirname(os.path.abspath(__file__)), 'RunDir', model_name
+            self.dir_run = os.path.join(  # noqa: PTH118
+                os.path.dirname(os.path.abspath(__file__)), 'RunDir', model_name  # noqa: PTH100, PTH120
             )
         else:
             self.dir_log = db_path
-            self.dir_run = os.path.join(db_path, model_name)
+            self.dir_run = os.path.join(db_path, model_name)  # noqa: PTH118
         # initialize logfile
         try:
-            os.makedirs(self.dir_run, exist_ok=True)
-            self.logfile = Logfile(logfile_dir=self.dir_log)
+            os.makedirs(self.dir_run, exist_ok=True)  # noqa: PTH103
+            self.logfile = Logfile(logfile_dir=self.dir_log)  # noqa: F405
             self.logfile.write_msg(
                 msg=f'PLoM: Running directory {self.dir_run} initialized.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg=f'PLoM: Running directory {self.dir_run} cannot be initialized.',
                 msg_type='ERROR',
@@ -124,10 +124,10 @@ class PLoM:
             )
         # initialize database server
         self.dbserver = None
-        self.dbserver = DBServer(db_dir=self.dir_run, db_name=model_name + '.h5')
+        self.dbserver = DBServer(db_dir=self.dir_run, db_name=model_name + '.h5')  # noqa: F405
         try:
-            self.dbserver = DBServer(db_dir=self.dir_run, db_name=model_name + '.h5')
-        except:
+            self.dbserver = DBServer(db_dir=self.dir_run, db_name=model_name + '.h5')  # noqa: F405
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg='PLoM: database server initialization failed.',
                 msg_type='ERROR',
@@ -140,22 +140,22 @@ class PLoM:
                 msg_level=0,
             )
         # initialize visualization output path
-        self.vl_path = os.path.join(self.dir_run, 'FigOut')
+        self.vl_path = os.path.join(self.dir_run, 'FigOut')  # noqa: PTH118
         try:
-            os.makedirs(self.vl_path, exist_ok=True)
+            os.makedirs(self.vl_path, exist_ok=True)  # noqa: PTH103
             self.logfile.write_msg(
                 msg=f'PLoM: visualization folder {self.vl_path} initialized.',
                 msg_type='RUNNING',
                 msg_level=0,
             )
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg=f'PLoM: visualization folder {self.vl_path} not initialized.',
                 msg_type='WARNING',
                 msg_level=0,
             )
 
-    def add_constraints(self, constraints_file=None):
+    def add_constraints(self, constraints_file=None):  # noqa: ANN001, ANN201, D102
         if not constraints_file:
             self.g_c = None
             self.D_x_g_c = None
@@ -164,7 +164,7 @@ class PLoM:
             self.lambda_i = 0
             self.psi = 0
             self.logfile.write_msg(
-                msg='PLoM.add_constraints: no user-defined constraint - please use add_constraints(constraints_file=X) to add new constraints if any.',
+                msg='PLoM.add_constraints: no user-defined constraint - please use add_constraints(constraints_file=X) to add new constraints if any.',  # noqa: E501
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -178,9 +178,9 @@ class PLoM:
             new_constraints = importlib.__import__(
                 path_constraints.name[:-3], globals(), locals(), [], 0
             )
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
-                msg=f'PLoM.add_constraints: could not add constraints {constraints_file}',
+                msg=f'PLoM.add_constraints: could not add constraints {constraints_file}',  # noqa: E501
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -210,22 +210,22 @@ class PLoM:
             self.dbserver.add_item(
                 item=[constraints_file], data_type='ConstraintsFile'
             )
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
-                msg=f'PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {constraints_file}',
+                msg=f'PLoM.add_constraints: at least one attribute (i.e., g_c, D_x_gc, beta_c, or beta_c_aux) missing in {constraints_file}',  # noqa: E501
                 msg_type='ERROR',
                 msg_level=0,
             )
             return 1
         return 0
 
-    def switch_constraints(self, constraint_tag=1):
+    def switch_constraints(self, constraint_tag=1):  # noqa: ANN001, ANN201
         """Selecting different constraints
         - constraint_tag: the tag of selected constraint
-        """
+        """  # noqa: D205, D400, D401, D415
         if constraint_tag > self.num_constraints:
             self.logfile.write_msg(
-                msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',
+                msg=f'PLoM.switch_constraints: sorry the maximum constraint tag is {self.num_constraints}',  # noqa: E501
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -250,30 +250,30 @@ class PLoM:
                 ],
                 data_type='ConstraintsFile',
             )
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg='PLoM.get_constraints: cannot get constraints',
                 msg_type='ERROR',
                 msg_level=0,
             )
 
-    def delete_constraints(self):
-        """Removing all current constraints"""
+    def delete_constraints(self):  # noqa: ANN201
+        """Removing all current constraints"""  # noqa: D400, D401, D415
         self.g_c = None
         self.D_x_g_c = None
         self.beta_c = []
         self.dbserver.add_item(item=[''], data_type='ConstraintsFile')
 
-    def load_data(self, filename, separator=',', col_header=False):
+    def load_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, C901, D102, PLR0912
         # initialize the matrix and data size
-        X = []
-        N = 0
+        X = []  # noqa: N806
+        N = 0  # noqa: N806
         n = 0
 
         # check if the file exist
         import os
 
-        if not os.path.exists(filename):
+        if not os.path.exists(filename):  # noqa: PTH110
             self.logfile.write_msg(
                 msg=f'load_data: the input file {filename} is not found',
                 msg_type='ERROR',
@@ -282,7 +282,7 @@ class PLoM:
             return X, N, n
 
         # read data
-        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:
+        if os.path.splitext(filename)[-1] in ['.csv', '.dat', '.txt']:  # noqa: PTH122
             # txt data
             col = None
             if col_header:
@@ -292,11 +292,11 @@ class PLoM:
             for cur_col in self.X0.columns:
                 if all(np.isnan(self.X0.loc[:, cur_col])):
                     self.X0.drop(columns=cur_col)
-            X = self.X0.to_numpy()
+            X = self.X0.to_numpy()  # noqa: N806
 
-        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:
+        elif os.path.splitext(filename)[-1] in ['.mat', '.json']:  # noqa: PTH122
             # json or mat
-            if os.path.splitext(filename)[-1] == '.mat':
+            if os.path.splitext(filename)[-1] == '.mat':  # noqa: PTH122
                 import scipy.io as scio
 
                 matdata = scio.loadmat(filename)
@@ -305,7 +305,7 @@ class PLoM:
                 ]
                 if len(var_names) == 1:
                     # single matrix
-                    X = matdata[var_names[0]]
+                    X = matdata[var_names[0]]  # noqa: N806
                     self.X0 = pd.DataFrame(
                         X, columns=['Var' + str(x) for x in X.shape[1]]
                     )
@@ -314,25 +314,25 @@ class PLoM:
                     # multiple columns
                     for cur_var in var_names:
                         X.append(matdata[cur_var].tolist())
-                    X = np.array(X).T
-                    X = X[0, :, :]
+                    X = np.array(X).T  # noqa: N806
+                    X = X[0, :, :]  # noqa: N806
                     self.X0 = pd.DataFrame(X, columns=var_names)
             else:
                 import json
 
-                with open(filename, encoding='utf-8') as f:
+                with open(filename, encoding='utf-8') as f:  # noqa: PTH123
                     jsondata = json.load(f)
                 var_names = list(jsondata.keys())
                 # multiple columns
                 for cur_var in var_names:
                     X.append(jsondata[cur_var])
-                X = np.array(X).T
+                X = np.array(X).T  # noqa: N806
                 self.X0 = pd.DataFrame(X, columns=var_names)
 
-        elif os.path.splitext(filename)[-1] in ['.h5']:
+        elif os.path.splitext(filename)[-1] in ['.h5']:  # noqa: PTH122
             # this h5 can be either formatted by PLoM or not
             # a separate method to deal with this file
-            X = self.load_h5(filename)
+            X = self.load_h5(filename)  # noqa: N806
 
         else:
             self.logfile.write_msg(
@@ -341,13 +341,13 @@ class PLoM:
                 msg_level=0,
             )
             self.logfile.write_msg(
-                msg='PLoM.load_data: accepted data formats - csv, dat, txt, mat, json.',
+                msg='PLoM.load_data: accepted data formats - csv, dat, txt, mat, json.',  # noqa: E501
                 msg_type='WARNING',
                 msg_level=0,
             )
 
         # Update data sizes
-        N, n = X.shape
+        N, n = X.shape  # noqa: N806
         self.logfile.write_msg(
             msg=f'PLoM.load_data: loaded data size = ({N}, {n}).',
             msg_type='RUNNING',
@@ -359,26 +359,26 @@ class PLoM:
 
     # def check_var_name():
 
-    def get_data(self):
+    def get_data(self):  # noqa: ANN201, D102
         # return data and data sizes
         return self.X, self.N, self.n
 
-    def _load_h5_plom(self, filename):
-        """Loading PLoM-formatted h5 database"""
+    def _load_h5_plom(self, filename):  # noqa: ANN001, ANN202
+        """Loading PLoM-formatted h5 database"""  # noqa: D400, D401, D415
         try:
             store = pd.HDFStore(filename, 'r')
-            for cur_var in store.keys():
-                if cur_var in self.dbserver.get_item_adds() and ATTR_MAP[cur_var]:
+            for cur_var in store.keys():  # noqa: SIM118
+                if cur_var in self.dbserver.get_item_adds() and ATTR_MAP[cur_var]:  # noqa: F405
                     # read in
                     cur_data = store[cur_var]
                     cur_dshape = tuple(
-                        [x[0] for x in store['/DS_' + cur_var[1:]].values.tolist()]
+                        [x[0] for x in store['/DS_' + cur_var[1:]].values.tolist()]  # noqa: PD011
                     )
                     if cur_dshape == (1,):
-                        item_value = np.array(sum(cur_data.values.tolist(), []))
-                        col_headers = list(cur_data.columns)[0]
+                        item_value = np.array(sum(cur_data.values.tolist(), []))  # noqa: PD011, RUF017
+                        col_headers = list(cur_data.columns)[0]  # noqa: RUF015
                     else:
-                        item_value = cur_data.values
+                        item_value = cur_data.values  # noqa: PD011
                         col_headers = list(cur_data.columns)
                     self.dbserver.add_item(
                         item_name=cur_var.replace('/', ''),
@@ -390,19 +390,19 @@ class PLoM:
                 if cur_var == '/constraints_file':
                     cur_data = store[cur_var]
                     self.dbserver.add_item(
-                        item=cur_data.values.tolist()[0], data_type='ConstraintsFile'
+                        item=cur_data.values.tolist()[0], data_type='ConstraintsFile'  # noqa: PD011
                     )
             store.close()
 
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg=f'PLoM._load_h5_plom: data in {filename} not compatible.',
                 msg_type='ERROR',
                 msg_level=0,
             )
 
-    def _load_h5_data_X(self, filename):
-        """Loading a h5 data which is expected to contain X data"""
+    def _load_h5_data_X(self, filename):  # noqa: ANN001, ANN202, N802
+        """Loading a h5 data which is expected to contain X data"""  # noqa: D400, D401, D415
         try:
             store = pd.HDFStore(filename, 'r')
             # Note a table is expected for the variable
@@ -413,11 +413,11 @@ class PLoM:
             )
 
             return self.X0.to_numpy()
-        except:
+        except:  # noqa: E722
             return None
 
-    def _sync_data(self):
-        """Sync database data to current attributes"""
+    def _sync_data(self):  # noqa: ANN202
+        """Sync database data to current attributes"""  # noqa: D400, D415
         avail_name_list = self.dbserver.get_name_list()
         if not avail_name_list:
             # empty database
@@ -431,12 +431,12 @@ class PLoM:
                 if cur_item.startswith('/DS_'):
                     # skipping the data-shape attributes
                     continue
-                if type(ATTR_MAP[cur_item]) is str:
+                if type(ATTR_MAP[cur_item]) is str:  # noqa: F405
                     self.__setattr__(
-                        ATTR_MAP[cur_item], self.dbserver.get_item(cur_item[1:])
+                        ATTR_MAP[cur_item], self.dbserver.get_item(cur_item[1:])  # noqa: F405
                     )
                     self.logfile.write_msg(
-                        msg=f'PLoM._sync_data: self.{ATTR_MAP[cur_item]} synced.',
+                        msg=f'PLoM._sync_data: self.{ATTR_MAP[cur_item]} synced.',  # noqa: F405
                         msg_type='RUNNING',
                         msg_level=0,
                     )
@@ -448,8 +448,8 @@ class PLoM:
                         msg_level=0,
                     )
 
-    def _sync_constraints(self):
-        """Sync constraints from dbserver to the attributes"""
+    def _sync_constraints(self):  # noqa: ANN202
+        """Sync constraints from dbserver to the attributes"""  # noqa: D400, D415
         avail_name_list = self.dbserver.get_name_list()
         if '/constraints_file' not in avail_name_list:
             # empty constraints
@@ -464,8 +464,8 @@ class PLoM:
             # add the constraints
             self.add_constraints(constraints_file=cfile)
 
-    def load_h5(self, filename):
-        """Loading h5 database"""
+    def load_h5(self, filename):  # noqa: ANN001, ANN201
+        """Loading h5 database"""  # noqa: D400, D401, D415
         try:
             self._load_h5_plom(filename)
             self.logfile.write_msg(
@@ -487,15 +487,15 @@ class PLoM:
             if '/X0' in self.dbserver.get_name_list():
                 self.X0 = self.dbserver.get_item('X0', table_like=True)
                 return self.X0.to_numpy()
-            else:
+            else:  # noqa: RET505
                 self.logfile.write_msg(
-                    msg='PLoM.load_h5: the original X0 data not found in the loaded data.',
+                    msg='PLoM.load_h5: the original X0 data not found in the loaded data.',  # noqa: E501
                     msg_type='ERROR',
                     msg_level=0,
                 )
                 return None
-        except:
-            X = self._load_h5_data_X(filename)
+        except:  # noqa: E722
+            X = self._load_h5_data_X(filename)  # noqa: N806
             if X is None:
                 self.logfile.write_msg(
                     msg=f'PLoM.load_h5: cannot load {filename}.',
@@ -503,16 +503,16 @@ class PLoM:
                     msg_level=0,
                 )
                 return None
-            else:
+            else:  # noqa: RET505
                 return X
 
-    def add_data(self, filename, separator=',', col_header=False):
+    def add_data(self, filename, separator=',', col_header=False):  # noqa: ANN001, ANN201, FBT002, D102
         # load new data
-        new_X, new_N, new_n = self.load_data(filename, separator, col_header)
+        new_X, new_N, new_n = self.load_data(filename, separator, col_header)  # noqa: N806
         # check data sizes
         if new_n != self.n:
             self.logfile.write_msg(
-                msg=f'PLoM.add_data: incompatible column size when loading {filename}',
+                msg=f'PLoM.add_data: incompatible column size when loading {filename}',  # noqa: E501
                 msg_type='ERROR',
                 msg_level=0,
             )
@@ -528,13 +528,13 @@ class PLoM:
             msg_level=0,
         )
 
-    def initialize_data(
-        self, filename, separator=',', col_header=False, constraints=''
+    def initialize_data(  # noqa: ANN201, D102
+        self, filename, separator=',', col_header=False, constraints=''  # noqa: ANN001, FBT002, ARG002
     ):
         # initialize the data and data sizes
         try:
             self.X, self.N, self.n = self.load_data(filename, separator, col_header)
-        except:
+        except:  # noqa: E722
             self.logfile.write_msg(
                 msg=f'PLoM.initialize_data: cannot initialize data with {filename}',
                 msg_type='ERROR',
@@ -564,19 +564,19 @@ class PLoM:
 
         return 0
 
-    def _init_indv_tasks(self):
-        """Initializing tasks"""
-        for cur_task in FULL_TASK_LIST:
-            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))
+    def _init_indv_tasks(self):  # noqa: ANN202
+        """Initializing tasks"""  # noqa: D400, D401, D415
+        for cur_task in FULL_TASK_LIST:  # noqa: F405
+            self.__setattr__('task_' + cur_task, Task(task_name=cur_task))  # noqa: F405
 
-    def ConfigTasks(self, task_list=FULL_TASK_LIST):
+    def ConfigTasks(self, task_list=FULL_TASK_LIST):  # noqa: ANN001, ANN201, C901, N802, F405
         """Creating a task list object
         - task_list: a string list of tasks to run
-        """
+        """  # noqa: D205, D400, D401, D415
         config_flag = True
         self.cur_task_list = task_list
         # check task orders
-        if not all([x in FULL_TASK_LIST for x in self.cur_task_list]):
+        if not all([x in FULL_TASK_LIST for x in self.cur_task_list]):  # noqa: C419, F405
             self.logfile.write_msg(
                 msg='PLoM.config_tasks: task name not recognized.',
                 msg_type='ERROR',
@@ -584,13 +584,13 @@ class PLoM:
             )
             self.logfile.write_msg(
                 msg='PLoM.config_tasks: acceptable task names: {}.'.format(
-                    ','.join(FULL_TASK_LIST)
+                    ','.join(FULL_TASK_LIST)  # noqa: F405
                 ),
                 msg_type='WARNING',
                 msg_level=0,
             )
             return False
-        map_order = [FULL_TASK_LIST.index(x) for x in self.cur_task_list]
+        map_order = [FULL_TASK_LIST.index(x) for x in self.cur_task_list]  # noqa: F405
         if map_order != sorted(map_order):
             self.logfile.write_msg(
                 msg='PLoM.config_tasks: task order error.',
@@ -599,17 +599,17 @@ class PLoM:
             )
             self.logfile.write_msg(
                 msg='PLoM.config_tasks: please follow this order: {}.'.format(
-                    '->'.join(FULL_TASK_LIST)
+                    '->'.join(FULL_TASK_LIST)  # noqa: F405
                 ),
                 msg_type='WARNING',
                 msg_level=0,
             )
             return False
         if (max(map_order) - min(map_order) + 1) != len(map_order):
-            # intermediate tasks missing -> since the jobs are in chain, so here the default is to automatically fill in any missing tasks in the middle
-            self.cur_task_list = FULL_TASK_LIST[min(map_order) : max(map_order) + 1]
+            # intermediate tasks missing -> since the jobs are in chain, so here the default is to automatically fill in any missing tasks in the middle  # noqa: E501
+            self.cur_task_list = FULL_TASK_LIST[min(map_order) : max(map_order) + 1]  # noqa: F405
             self.logfile.write_msg(
-                msg='PLoM.config_tasks: intermediate task(s) missing and being filled in automatically.',
+                msg='PLoM.config_tasks: intermediate task(s) missing and being filled in automatically.',  # noqa: E501
                 msg_type='WARNING',
                 msg_level=0,
             )
@@ -621,14 +621,14 @@ class PLoM:
                 msg_level=0,
             )
         # intializing the task list
-        self.task_list = TaskList()
+        self.task_list = TaskList()  # noqa: F405
         # intializing individual tasks and refreshing status
         self._init_indv_tasks()
-        for cur_task in FULL_TASK_LIST:
-            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[
+        for cur_task in FULL_TASK_LIST:  # noqa: F405
+            self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405
                 cur_task
             ]
-            for cur_item in TASK_ITEM_MAP[cur_task]:
+            for cur_item in TASK_ITEM_MAP[cur_task]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
                     self.__getattribute__('task_' + cur_task).avail_var_list.append(
                         cur_item
@@ -643,38 +643,38 @@ class PLoM:
         self.task_list.refresh_status()
         # need to check the task chain if all dependent tasks completed to go
         # otherwise, the current run could not be completed
-        pre_task_list = FULL_TASK_LIST[: FULL_TASK_LIST.index(self.cur_task_list[0])]
+        pre_task_list = FULL_TASK_LIST[: FULL_TASK_LIST.index(self.cur_task_list[0])]  # noqa: F405
         if len(pre_task_list):
             for cur_task in pre_task_list:
                 if not self.__getattribute__('task_' + cur_task).refresh_status():
                     config_flag = False
                     self.logfile.write_msg(
-                        msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',
+                        msg=f'PLoM.config_tasks: configuration failed with dependent task {cur_task} not completed.',  # noqa: E501
                         msg_type='ERROR',
                         msg_level=0,
                     )
 
-        if config_flag:
-            self.logfile.write_msg(
-                msg='PLoM.config_tasks: the following tasks is configured to run: {}.'.format(
+        if config_flag:  # noqa: RET503
+            self.logfile.write_msg(  # noqa: RET503
+                msg='PLoM.config_tasks: the following tasks is configured to run: {}.'.format(  # noqa: E501
                     '->'.join(self.cur_task_list)
                 ),
                 msg_type='RUNNING',
                 msg_level=0,
             )
 
-    def RunAlgorithm(
+    def RunAlgorithm(  # noqa: ANN201, C901, N802, PLR0912, PLR0913, PLR0915
         self,
-        n_mc=5,
-        epsilon_pca=1e-6,
-        epsilon_kde=25,
-        tol_PCA2=1e-5,
-        tol=1e-6,
-        max_iter=50,
-        plot_tag=False,
-        runDiffMaps=None,
-        seed_num=None,
-        tolKDE=0.1,
+        n_mc=5,  # noqa: ANN001
+        epsilon_pca=1e-6,  # noqa: ANN001
+        epsilon_kde=25,  # noqa: ANN001
+        tol_PCA2=1e-5,  # noqa: ANN001, N803
+        tol=1e-6,  # noqa: ANN001
+        max_iter=50,  # noqa: ANN001
+        plot_tag=False,  # noqa: ANN001, FBT002
+        runDiffMaps=None,  # noqa: ANN001, N803
+        seed_num=None,  # noqa: ANN001
+        tolKDE=0.1,  # noqa: ANN001, N803
     ):
         """Running the PLoM algorithm to train the model and generate new realizations
         - n_mc: realization/sample size ratio
@@ -682,9 +682,9 @@ class PLoM:
         - epsilon_kde: smoothing parameter in the kernel density estimation
         - tol: tolerance in the PLoM iterations
         - max_iter: maximum number of iterations of the PLoM algorithm
-        """
-        if runDiffMaps == None:
-            runDiffMaps = self.runDiffMaps
+        """  # noqa: E501, D205, D400, D401, D415
+        if runDiffMaps == None:  # noqa: E711
+            runDiffMaps = self.runDiffMaps  # noqa: N806
         else:
             self.runDiffMaps = runDiffMaps
 
@@ -727,7 +727,7 @@ class PLoM:
                     data_shape=self.x_mean.shape,
                 )
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: X_range, X_min, X_scaled and X_scaled_mean saved.',
+                    msg='PLoM.RunAlgorithm: X_range, X_min, X_scaled and X_scaled_mean saved.',  # noqa: E501
                     msg_type='RUNNING',
                     msg_level=0,
                 )
@@ -770,7 +770,7 @@ class PLoM:
                     item_name='Error_PCA', item=np.array(self.errPCA)
                 )
                 self.logfile.write_msg(
-                    msg='PLoM.RunAlgorithm: X_PCA, EigenValue_PCA and EigenVector_PCA saved.',
+                    msg='PLoM.RunAlgorithm: X_PCA, EigenValue_PCA and EigenVector_PCA saved.',  # noqa: E501
                     msg_type='RUNNING',
                     msg_level=0,
                 )
@@ -835,7 +835,7 @@ class PLoM:
                         data_shape=self.eigenKDE.shape,
                     )
                     self.logfile.write_msg(
-                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',
+                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',  # noqa: E501
                         msg_type='RUNNING',
                         msg_level=0,
                     )
@@ -874,7 +874,7 @@ class PLoM:
                         data_shape=self.eigenKDE.shape,
                     )
                     self.logfile.write_msg(
-                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',
+                        msg='PLoM.RunAlgorithm: KDE_g, KDE_m, KDE_a, KDE_Z, and KDE_Eigen saved.',  # noqa: E501
                         msg_type='RUNNING',
                         msg_level=0,
                     )
@@ -914,14 +914,14 @@ class PLoM:
                 )
                 break
             # refresh status
-            for cur_item in TASK_ITEM_MAP[cur_task.task_name]:
+            for cur_item in TASK_ITEM_MAP[cur_task.task_name]:  # noqa: F405
                 if '/' + cur_item in self.dbserver.get_name_list():
                     self.__getattribute__(
                         'task_' + cur_task.task_name
                     ).avail_var_list.append(cur_item)
             if not cur_task.refresh_status():
                 self.logfile.write_msg(
-                    msg=f'PLoM.RunAlgorithm: simulation stopped with task {cur_task.task_name} not fully completed.',
+                    msg=f'PLoM.RunAlgorithm: simulation stopped with task {cur_task.task_name} not fully completed.',  # noqa: E501
                     msg_type='ERROR',
                     msg_level=0,
                 )
@@ -931,7 +931,7 @@ class PLoM:
 
         if self.task_list.refresh_status():
             self.logfile.write_msg(
-                msg='PLoM.RunAlgorithm: simulation completed with task(s) {} done.'.format(
+                msg='PLoM.RunAlgorithm: simulation completed with task(s) {} done.'.format(  # noqa: E501
                     '->'.join(self.cur_task_list)
                 ),
                 msg_type='RUNNING',
@@ -944,19 +944,19 @@ class PLoM:
                 msg_level=0,
             )
 
-    def DataNormalization(self, X):
+    def DataNormalization(self, X):  # noqa: ANN001, ANN201, N802, N803
         """Normalizing the X
         - X: the data matrix to be normalized
-        """
+        """  # noqa: D205, D400, D401, D415
         # scaling
-        X_scaled, alpha, x_min = plom.scaling(X)
+        X_scaled, alpha, x_min = plom.scaling(X)  # noqa: N806
         x_mean = plom.mean(X_scaled)
 
         return X_scaled, alpha, x_min, x_mean
 
-    def RunPCA(self, X_origin, epsilon_pca):
+    def RunPCA(self, X_origin, epsilon_pca):  # noqa: ANN001, ANN201, N802, N803, D102
         # ...PCA...
-        (H, mu, phi, errors) = plom.PCA(X_origin, epsilon_pca)
+        (H, mu, phi, errors) = plom.PCA(X_origin, epsilon_pca)  # noqa: N806
         nu = len(H)
         self.logfile.write_msg(
             msg=f'PLoM.RunPCA: considered number of PCA components = {nu}',
@@ -975,28 +975,28 @@ class PLoM:
             cbar = fig.colorbar(ctp)
             plt.savefig(os.path.join(self.vl_path,'PCA_CovarianceMatrix.png'),dpi=480)
             self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('PCA_CovarianceMatrix.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-        """
+        """  # noqa: E501
         return H, mu, phi, nu, errors
 
-    def RunKDE(self, X, epsilon_kde):
+    def RunKDE(self, X, epsilon_kde):  # noqa: ANN001, ANN201, N802, N803
         """Running Kernel Density Estimation
         - X: the data matrix to be reduced
         - epsilon_kde: smoothing parameter in the kernel density estimation
-        """
+        """  # noqa: D205, D400, D401, D415
         (s_v, c_v, hat_s_v) = plom.parameters_kde(X)
-        K, b = plom.K(X, epsilon_kde)
+        K, b = plom.K(X, epsilon_kde)  # noqa: N806
 
         return s_v, c_v, hat_s_v, K, b
 
-    def DiffMaps(self, H, K, b, tol=0.1):
+    def DiffMaps(self, H, K, b, tol=0.1):  # noqa: ANN001, ANN201, N802, N803, D102
         # ..diff maps basis...
-        # self.Z = PCA(self.H)
+        # self.Z = PCA(self.H)  # noqa: ERA001
         try:
             g, eigenvalues = plom.g(K, b)  # diffusion maps
             g = g.real
             m = plom.m(eigenvalues, tol=tol)
             a = g[:, 0:m].dot(np.linalg.inv(np.transpose(g[:, 0:m]).dot(g[:, 0:m])))
-            Z = H.dot(a)
+            Z = H.dot(a)  # noqa: N806
             """
             if self.plot_tag:
                 fig, ax = plt.subplots(figsize=(6,4))
@@ -1006,12 +1006,12 @@ class PLoM:
                 ax.set_title('Eigen value (KDE)')
                 plt.savefig(os.path.join(self.vl_path,'KDE_EigenValue.png'),dpi=480)
                 self.logfile.write_msg(msg='PLoM: {} saved in {}.'.format('KDE_EigenValue.png',self.vl_path),msg_type='RUNNING',msg_level=0)
-            """
-        except:
+            """  # noqa: E501
+        except:  # noqa: E722
             g = None
             m = 0
             a = None
-            Z = None
+            Z = None  # noqa: N806
             eigenvalues = []
             self.logfile.write_msg(
                 msg='PLoM.DiffMaps: diffusion maps failed.',
@@ -1021,12 +1021,12 @@ class PLoM:
 
         return g, m, a, Z, eigenvalues
 
-    def ISDEGeneration(
-        self, n_mc=5, tol_PCA2=1e-5, tol=0.02, max_iter=50, seed_num=None
+    def ISDEGeneration(  # noqa: ANN201, N802
+        self, n_mc=5, tol_PCA2=1e-5, tol=0.02, max_iter=50, seed_num=None  # noqa: ANN001, N803
     ):
-        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""
+        """The construction of a nonlinear Ito Stochastic Differential Equation (ISDE) to generate realizations of random variable H"""  # noqa: E501, D400, D401, D415
         if seed_num:
-            np.random.seed(seed_num)
+            np.random.seed(seed_num)  # noqa: NPY002
         # constraints
         if self.g_c:
             self.C_h_hat_eta = plom.covariance(
@@ -1034,7 +1034,7 @@ class PLoM:
             )
 
             # scaling beta
-            # self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)
+            # self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.x_min, self.alpha)  # noqa: ERA001, E501
             # KZ, 07/24
             self.beta_c_normalized = self.beta_c_aux(self.beta_c, self.X)
             self.b_c, self.psi = plom.PCA2(
@@ -1055,7 +1055,7 @@ class PLoM:
 
             self.errors = [plom.err(self.gradient, self.b_c)]
             iteration = 0
-            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))
+            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))  # noqa: NPY002
             self.Y = nu_init.dot(self.a)
 
             error_ratio = 0
@@ -1064,14 +1064,14 @@ class PLoM:
             while (
                 iteration < max_iter
                 and self.errors[iteration] > tol * self.errors[0]
-                and (increasing_iterations < 3)
+                and (increasing_iterations < 3)  # noqa: PLR2004
             ):
                 self.logfile.write_msg(
                     msg=f'PLoM.ISDEGeneration: running iteration {iteration + 1}.',
                     msg_type='RUNNING',
                     msg_level=0,
                 )
-                Hnewvalues, nu_lambda, x_, x_2 = plom.generator(
+                Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: N806
                     self.Z,
                     self.Y,
                     self.a,
@@ -1127,16 +1127,16 @@ class PLoM:
 
             if iteration == max_iter:
                 self.logfile.write_msg(
-                    msg='PLoM.ISDEGeneration: max. iteration reached and convergence not achieved.',
+                    msg='PLoM.ISDEGeneration: max. iteration reached and convergence not achieved.',  # noqa: E501
                     msg_type='WARNING',
                     msg_level=0,
                 )
 
         # no constraints
         else:
-            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))
+            nu_init = np.random.normal(size=(int(self.nu), int(self.N)))  # noqa: NPY002
             self.Y = nu_init.dot(self.a)
-            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(
+            Hnewvalues, nu_lambda, x_, x_2 = plom.generator(  # noqa: N806
                 self.Z,
                 self.Y,
                 self.a,
@@ -1170,11 +1170,11 @@ class PLoM:
         # unscale
         self.Xnew = np.diag(self.alpha).dot(self.Xnew) + self.x_min
 
-    def export_results(self, data_list=[], file_format_list=['csv']):
+    def export_results(self, data_list=[], file_format_list=['csv']):  # noqa: ANN001, ANN201, B006
         """Exporting results by the data names
         - data_list: list of data names
         - file_format_list: list of output formats
-        """
+        """  # noqa: D205, D400, D401, D415
         avail_name_list = self.dbserver.get_name_list()
         if not data_list:
             # print available data names
@@ -1195,33 +1195,33 @@ class PLoM:
             for tag, data_i in enumerate(data_list):
                 if data_i not in avail_name_list:
                     self.logfile.write_msg(
-                        msg=f'PLoM.export_results: {data_i} is not found and skipped.',
+                        msg=f'PLoM.export_results: {data_i} is not found and skipped.',  # noqa: E501
                         msg_type='WARNING',
                         msg_level=0,
                     )
                 else:
                     try:
                         ff_i = file_format_list[tag]
-                    except:
+                    except:  # noqa: E722
                         ff_i = file_format_list[-1]
                     ex_flag = self.dbserver.export(
                         data_name=data_i, file_format=ff_i
                     )
-                    if type(ex_flag) == int and ex_flat == 1:
+                    if type(ex_flag) == int and ex_flat == 1:  # noqa: E721, F405
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {data_i} is not found and skipped.',
+                            msg=f'PLoM.export_results: {data_i} is not found and skipped.',  # noqa: E501
                             msg_type='WARNING',
                             msg_level=0,
                         )
-                    elif type(ex_flag) == int and ex_flag == 2:
+                    elif type(ex_flag) == int and ex_flag == 2:  # noqa: E721, PLR2004
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {ff_i} is not supported yest.',
+                            msg=f'PLoM.export_results: {ff_i} is not supported yest.',  # noqa: E501
                             msg_type='ERROR',
                             msg_level=0,
                         )
                     else:
                         self.logfile.write_msg(
-                            msg=f'PLoM.export_results: {data_i} is exported in {ex_flag}.',
+                            msg=f'PLoM.export_results: {data_i} is exported in {ex_flag}.',  # noqa: E501
                             msg_type='RUNNING',
                             msg_level=0,
                         )
@@ -1288,4 +1288,4 @@ class PLoM:
         blue_patch = mpatches.Patch(color='blue', label='X')
         plt.legend(handles=[red_patch, blue_patch])
         plt.show()
-    """
+    """  # noqa: E101

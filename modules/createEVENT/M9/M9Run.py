@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import os
 
 import M9API
@@ -56,13 +56,13 @@ if __name__ == '__main__':
     #
     # go get the motions
     #
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
     if information['APIFLAG']:
-        print(
-            'Using API for extracting motions:\n This may take a while. Please be patient.'
+        print(  # noqa: T201
+            'Using API for extracting motions:\n This may take a while. Please be patient.'  # noqa: E501
         )
         M9API.M9(information)
     else:
         M9Stations.getStations(information, plot=False, show=False)
         M9App2.Submit_tapis_job()
-    exit()
+    exit()  # noqa: PLR1722

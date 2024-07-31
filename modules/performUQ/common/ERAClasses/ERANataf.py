@@ -1,4 +1,4 @@
-# import of modules
+# import of modules  # noqa: INP001, D100
 import numpy as np
 from scipy import optimize, stats
 
@@ -58,7 +58,7 @@ References:
 models with prescribed marginals and covariances.
 Probabilistic Engineering Mechanics 1(2), 105-112
 ---------------------------------------------------------------------------
-"""
+"""  # noqa: W291
 
 
 # %%
@@ -78,12 +78,12 @@ class ERANataf:
     correlation matrix, the input matrix must be symmetric, the matrix entries
     on the diagonal must be equal to one, all other entries (correlation
     coefficients) can have values between -1 and 1.
-    """
+    """  # noqa: D205, D400, D415
 
-    def __init__(self, M, Correlation):
+    def __init__(self, M, Correlation):  # noqa: ANN001, ANN204, C901, N803, PLR0912, PLR0915
         """Constructor method, for more details have a look at the
         class description.
-        """
+        """  # noqa: D205, D401
         self.Marginals = np.array(M, ndmin=1)
         self.Marginals = self.Marginals.ravel()
         self.Rho_X = np.array(Correlation, ndmin=2)
@@ -95,8 +95,8 @@ class ERANataf:
                 np.isfinite(self.Marginals[i].mean())
                 and np.isfinite(self.Marginals[i].std())
             ):
-                raise RuntimeError(
-                    'The marginal distributions need to have '
+                raise RuntimeError(  # noqa: TRY003
+                    'The marginal distributions need to have '  # noqa: EM101
                     'finite mean and variance'
                 )
 
@@ -104,18 +104,18 @@ class ERANataf:
         try:
             np.linalg.cholesky(self.Rho_X)
         except np.linalg.LinAlgError:
-            raise RuntimeError(
-                'The given correlation matrix is not positive definite'
+            raise RuntimeError(  # noqa: B904, TRY003
+                'The given correlation matrix is not positive definite'  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(self.Rho_X - self.Rho_X.T == 0):
-            raise RuntimeError(
-                'The given correlation matrix is not symmetric '
+            raise RuntimeError(  # noqa: TRY003
+                'The given correlation matrix is not symmetric '  # noqa: EM101
                 '--> Nataf transformation is not applicable.'
             )
         if not np.all(np.diag(self.Rho_X) == 1):
-            raise RuntimeError(
-                'Not all diagonal entries of the given correlation matrix are equal to one '
+            raise RuntimeError(  # noqa: TRY003
+                'Not all diagonal entries of the given correlation matrix are equal to one '  # noqa: EM101, E501
                 '--> Nataf transformation is not applicable.'
             )
 
@@ -150,7 +150,7 @@ class ERANataf:
                     if self.Rho_X[i, j] == 0:
                         continue
 
-                    elif (
+                    elif (  # noqa: RET507
                         (self.Marginals[i].Name == 'standardnormal')
                         and (self.Marginals[j].Name == 'standardnormal')
                         or (self.Marginals[i].Name == 'normal')
@@ -163,7 +163,7 @@ class ERANataf:
                     elif (self.Marginals[i].Name == 'normal') and (
                         self.Marginals[j].Name == 'lognormal'
                     ):
-                        Vj = self.Marginals[j].std() / self.Marginals[j].mean()
+                        Vj = self.Marginals[j].std() / self.Marginals[j].mean()  # noqa: N806
                         self.Rho_Z[i, j] = (
                             self.Rho_X[i, j] * Vj / np.sqrt(np.log(1 + Vj**2))
                         )
@@ -173,7 +173,7 @@ class ERANataf:
                     elif (self.Marginals[i].Name == 'lognormal') and (
                         self.Marginals[j].Name == 'normal'
                     ):
-                        Vi = self.Marginals[i].std() / self.Marginals[i].mean()
+                        Vi = self.Marginals[i].std() / self.Marginals[i].mean()  # noqa: N806
                         self.Rho_Z[i, j] = (
                             self.Rho_X[i, j] * Vi / np.sqrt(np.log(1 + Vi**2))
                         )
@@ -183,8 +183,8 @@ class ERANataf:
                     elif (self.Marginals[i].Name == 'lognormal') and (
                         self.Marginals[j].Name == 'lognormal'
                     ):
-                        Vi = self.Marginals[i].std() / self.Marginals[i].mean()
-                        Vj = self.Marginals[j].std() / self.Marginals[j].mean()
+                        Vi = self.Marginals[i].std() / self.Marginals[i].mean()  # noqa: N806
+                        Vj = self.Marginals[j].std() / self.Marginals[j].mean()  # noqa: N806
                         self.Rho_Z[i, j] = np.log(
                             1 + self.Rho_X[i, j] * Vi * Vj
                         ) / np.sqrt(np.log(1 + Vi**2) * np.log(1 + Vj**2))
@@ -202,10 +202,10 @@ class ERANataf:
                     ) / self.Marginals[i].std()
                     coef = tmp_f_xi * tmp_f_eta * w2d
 
-                    def fun(rho0):
+                    def fun(rho0):  # noqa: ANN001, ANN202
                         return (
-                            coef * self.bivariateNormalPdf(xi, eta, rho0)
-                        ).sum() - self.Rho_X[i, j]
+                            coef * self.bivariateNormalPdf(xi, eta, rho0)  # noqa: B023
+                        ).sum() - self.Rho_X[i, j]  # noqa: B023
 
                     x0, r = optimize.brentq(
                         f=fun,
@@ -231,8 +231,8 @@ class ERANataf:
                                 self.Rho_Z[i, j] = sol[0]
                                 self.Rho_Z[j, i] = self.Rho_Z[i, j]
                             else:
-                                for i in range(10):
-                                    init = 2 * np.random.rand() - 1
+                                for i in range(10):  # noqa: B007, PLW2901
+                                    init = 2 * np.random.rand() - 1  # noqa: NPY002
                                     sol = optimize.fsolve(
                                         func=fun, x0=init, full_output=True
                                     )
@@ -242,8 +242,8 @@ class ERANataf:
                                     self.Rho_Z[i, j] = sol[0]
                                     self.Rho_Z[j, i] = self.Rho_Z[i, j]
                                 else:
-                                    raise RuntimeError(
-                                        'brentq and fsolve coul'
+                                    raise RuntimeError(  # noqa: TRY003
+                                        'brentq and fsolve coul'  # noqa: EM101
                                         'd not converge to a '
                                         'solution of the Nataf '
                                         'integral equation'
@@ -251,8 +251,8 @@ class ERANataf:
         try:
             self.A = np.linalg.cholesky(self.Rho_Z)
         except np.linalg.LinAlgError:
-            raise RuntimeError(
-                'Transformed correlation matrix is not positive'
+            raise RuntimeError(  # noqa: B904, TRY003
+                'Transformed correlation matrix is not positive'  # noqa: EM101
                 ' definite --> Nataf transformation is not '
                 'applicable.'
             )
@@ -267,7 +267,7 @@ class ERANataf:
     Jacobian of this Transformation if it is needed.
     """
 
-    def X2U(self, X, Jacobian=False):
+    def X2U(self, X, Jacobian=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
         """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
@@ -275,9 +275,9 @@ class ERANataf:
         The Jacobian of the transformation of the first given data
         point is only given as an output in case that the input
         argument Jacobian=True .
-        """
+        """  # noqa: D205
         n_dim = len(self.Marginals)
-        X = np.array(X, ndmin=2)
+        X = np.array(X, ndmin=2)  # noqa: N806
 
         # check if all marginal distributions are continuous
         for i in range(n_dim):
@@ -287,39 +287,39 @@ class ERANataf:
                 'negativebinomial',
                 'poisson',
             ]:
-                raise RuntimeError(
-                    'At least one of the marginal distributions is a discrete distribution,'
+                raise RuntimeError(  # noqa: TRY003
+                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101, E501
                     'the transformation X2U is therefore not possible.'
                 )
 
         # check of the dimensions of input X
-        if X.ndim > 2:
-            raise RuntimeError('X must have not more than two dimensions. ')
+        if X.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            X = X.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(
-                'X must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
 
-        Z = np.zeros(np.flip(X.shape))
+        Z = np.zeros(np.flip(X.shape))  # noqa: N806
         for i in range(n_dim):
             Z[i, :] = stats.norm.ppf(self.Marginals[i].cdf(X[:, i]))
-        U = np.linalg.solve(self.A, Z.squeeze()).T
+        U = np.linalg.solve(self.A, Z.squeeze()).T  # noqa: N806
 
         if Jacobian:
             diag = np.zeros([n_dim, n_dim])
             for i in range(n_dim):
                 diag[i, i] = self.Marginals[i].pdf(X[0, i]) / stats.norm.pdf(Z[i, 0])
-            Jac = np.linalg.solve(self.A, diag)
+            Jac = np.linalg.solve(self.A, diag)  # noqa: N806
             return np.squeeze(U), Jac
-        else:
+        else:  # noqa: RET505
             return np.squeeze(U)
 
     # %%
-    def U2X(self, U, Jacobian=False):
+    def U2X(self, U, Jacobian=False):  # noqa: ANN001, ANN201, FBT002, N802, N803
         """Carries out the transformation from standard normal space U
         to physical space X.
         U must be a [n,d]-shaped array (n = number of data points,
@@ -327,26 +327,26 @@ class ERANataf:
         The Jacobian of the transformation of the first given data
         point is only given as an output in case that the input
         argument Jacobian=True .
-        """
+        """  # noqa: D205
         n_dim = len(self.Marginals)
-        U = np.array(U, ndmin=2)
+        U = np.array(U, ndmin=2)  # noqa: N806
 
         # check of the dimensions of input U
-        if U.ndim > 2:
-            raise RuntimeError('U must have not more than two dimensions. ')
+        if U.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('U must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(U)[1] == 1 and n_dim != 1:
-            # in case that only one point U is given, he can be defined either as row or column vector
-            U = U.T
+            # in case that only one point U is given, he can be defined either as row or column vector  # noqa: E501
+            U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
-            raise RuntimeError(
-                'U must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'U must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
-        else:
-            U = U.T
-        Z = self.A @ U
+        else:  # noqa: RET506
+            U = U.T  # noqa: N806
+        Z = self.A @ U  # noqa: N806
 
-        X = np.zeros(np.flip(U.shape))
+        X = np.zeros(np.flip(U.shape))  # noqa: N806
         for i in range(n_dim):
             X[:, i] = self.Marginals[i].icdf(stats.norm.cdf(Z[i, :]))
 
@@ -354,20 +354,20 @@ class ERANataf:
             diag = np.zeros([n_dim, n_dim])
             for i in range(n_dim):
                 diag[i, i] = stats.norm.pdf(Z[i, 0]) / self.Marginals[i].pdf(X[0, i])
-            Jac = np.dot(diag, self.A)
+            Jac = np.dot(diag, self.A)  # noqa: N806
             return np.squeeze(X), Jac
-        else:
+        else:  # noqa: RET505
             return np.squeeze(X)
 
     # %%
-    def random(self, n=1):
+    def random(self, n=1):  # noqa: ANN001, ANN201
         """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
-        """
+        """  # noqa: D205, D401
         n = int(n)
         n_dim = np.size(self.Marginals)
-        U = np.random.randn(n_dim, n)
-        Z = np.dot(self.A, U)
+        U = np.random.randn(n_dim, n)  # noqa: NPY002, N806
+        Z = np.dot(self.A, U)  # noqa: N806
         jr = np.zeros([n, n_dim])
         for i in range(n_dim):
             jr[:, i] = self.Marginals[i].icdf(stats.norm.cdf(Z[i, :]))
@@ -375,13 +375,13 @@ class ERANataf:
         return np.squeeze(jr)
 
     # %%
-    def pdf(self, X):
+    def pdf(self, X):  # noqa: ANN001, ANN201, C901, N803
         """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
-        """
+        """  # noqa: D205, D401
         n_dim = len(self.Marginals)
-        X = np.array(X, ndmin=2)
+        X = np.array(X, ndmin=2)  # noqa: N806
 
         # check if all marginal distributions are continuous
         for i in range(n_dim):
@@ -391,25 +391,25 @@ class ERANataf:
                 'negativebinomial',
                 'poisson',
             ]:
-                raise RuntimeError(
-                    'At least one of the marginal distributions is a discrete distribution,'
+                raise RuntimeError(  # noqa: TRY003
+                    'At least one of the marginal distributions is a discrete distribution,'  # noqa: EM101, E501
                     'the transformation X2U is therefore not possible.'
                 )
 
         # check of the dimensions of input X
-        if X.ndim > 2:
-            raise RuntimeError('X must have not more than two dimensions.')
+        if X.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('X must have not more than two dimensions.')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            X = X.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(
-                'X must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
 
-        n_X = np.shape(X)[0]
-        U = np.zeros([n_X, n_dim])
+        n_X = np.shape(X)[0]  # noqa: N806
+        U = np.zeros([n_X, n_dim])  # noqa: N806
         phi = np.zeros([n_dim, n_X])
         f = np.zeros([n_dim, n_X])
         mu = np.zeros(n_dim)
@@ -424,7 +424,7 @@ class ERANataf:
                 jointpdf[i] = (
                     np.prod(f[:, i]) / (np.prod(phi[:, i]) + realmin)
                 ) * phi_n[i]
-            except IndexError:
+            except IndexError:  # noqa: PERF203
                 # In case of n=1, phi_n is a scalar.
                 jointpdf[i] = (
                     np.prod(f[:, i]) / (np.prod(phi[:, i]) + realmin)
@@ -434,11 +434,11 @@ class ERANataf:
 
         if np.size(jointpdf) == 1:
             return jointpdf[0]
-        else:
+        else:  # noqa: RET505
             return jointpdf
 
     # %%
-    def cdf(self, X):
+    def cdf(self, X):  # noqa: ANN001, ANN201, N803
         """Computes the joint CDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
@@ -446,23 +446,23 @@ class ERANataf:
         In scipy the multivariate normal cdf is computed by Monte Carlo
         sampling, the output of this method is therefore also a
         stochastic quantity.
-        """
+        """  # noqa: D205, D401
         n_dim = len(self.Marginals)
-        X = np.array(X, ndmin=2)
+        X = np.array(X, ndmin=2)  # noqa: N806
 
         # check of the dimensions of input X
-        if X.ndim > 2:
-            raise RuntimeError('X must have not more than two dimensions. ')
+        if X.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            X = X.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(
-                'X must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
-        n_X = np.shape(X)[0]
-        U = np.zeros([n_X, n_dim])
+        n_X = np.shape(X)[0]  # noqa: N806
+        U = np.zeros([n_X, n_dim])  # noqa: N806
         for i in range(n_dim):
             U[:, i] = stats.norm.ppf(self.Marginals[i].cdf(X[:, i]))
         mu = np.zeros(n_dim)
@@ -470,11 +470,11 @@ class ERANataf:
             U, mean=mu, cov=np.matrix(self.Rho_Z)
         )
 
-        return jointcdf
+        return jointcdf  # noqa: RET504
 
     # %%
     @staticmethod
-    def bivariateNormalPdf(x1, x2, rho):
+    def bivariateNormalPdf(x1, x2, rho):  # noqa: ANN001, ANN205, N802, D102
         return (
             1
             / (2 * np.pi * np.sqrt(1 - rho**2))

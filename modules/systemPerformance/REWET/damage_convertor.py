@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
 #
@@ -45,7 +45,7 @@ import preprocessorIO
 CBIG_int = int(1e9)
 
 
-def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):
+def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802, D417
     """Creates REWET-style piep damage file.
 
     Parameters
@@ -65,8 +65,8 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
     pipe_damage_list : Pandas Series
         REWET-style pipe damage file.
 
-    """
-    pipe_id_list = [key for key in pipe_damage_data]
+    """  # noqa: D401
+    pipe_id_list = [key for key in pipe_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = event_time
@@ -84,18 +84,18 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
         cur_data = pipe_damage_data[pipe_id]
 
         cur_damage = cur_data['Damage']
-        cur_demand = cur_data['Demand']
+        cur_demand = cur_data['Demand']  # noqa: F841
 
         aim_data = findAndReadAIMFile(
             pipe_id,
-            os.path.join('Results', 'WaterDistributionNetwork', 'Pipe'),
+            os.path.join('Results', 'WaterDistributionNetwork', 'Pipe'),  # noqa: PTH118
             run_dir,
         )
 
         material = aim_data['GeneralInformation'].get('Material', None)
 
-        if material == None:
-            # raise ValueError("Material is none")
+        if material == None:  # noqa: E711
+            # raise ValueError("Material is none")  # noqa: ERA001
             material = 'CI'
 
         aggregates_list = [
@@ -110,15 +110,15 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
             if damage_val > 0:
                 if damage_val == 1:
                     damage_type = 'leak'
-                elif damage_val == 2:
+                elif damage_val == 2:  # noqa: PLR2004
                     damage_type = 'break'
                 else:
-                    raise ValueError('The damage type must be eother 1 or 2')
+                    raise ValueError('The damage type must be eother 1 or 2')  # noqa: EM101, TRY003
             else:
                 continue
 
             cur_loc = c * segment_step + segment_step / 2
-            # print(cur_loc)
+            # print(cur_loc)  # noqa: ERA001
             c += 1
             damage_list.append(
                 {
@@ -133,13 +133,13 @@ def createPipeDamageInputForREWET(pipe_damage_data, run_dir, event_time, sc_geoj
         data=damage_list, index=[damage_time for val in damage_list], dtype='O'
     )
 
-    # REWET_input_data["Pipe_damage_list"] =  pipe_damage_list
-    # REWET_input_data["AIM"] =  aim_data
+    # REWET_input_data["Pipe_damage_list"] =  pipe_damage_list  # noqa: ERA001
+    # REWET_input_data["AIM"] =  aim_data  # noqa: ERA001
 
-    return pipe_damage_list
+    return pipe_damage_list  # noqa: RET504
 
 
-def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
+def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):  # noqa: ANN001, ANN201, N802, D417
     """Creates REWET-style node damage file.
 
     Parameters
@@ -154,8 +154,8 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
     node_damage_list : Pandas Series
         REWET-style node damage file.
 
-    """
-    node_id_list = [key for key in node_damage_data]
+    """  # noqa: D401
+    node_id_list = [key for key in node_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = event_time
@@ -172,11 +172,11 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
         cur_data = node_damage_data[node_id]
 
         cur_damage = cur_data['Damage']
-        cur_demand = cur_data['Demand']
+        cur_demand = cur_data['Demand']  # noqa: F841
 
         aim_data = findAndReadAIMFile(
             node_id,
-            os.path.join('Results', 'WaterDistributionNetwork', 'Node'),
+            os.path.join('Results', 'WaterDistributionNetwork', 'Node'),  # noqa: PTH118
             run_dir,
         )
 
@@ -195,10 +195,10 @@ def createNodeDamageInputForREWET(node_damage_data, run_dir, event_time):
         data=damage_list, index=[damage_time for val in damage_list], dtype='O'
     )
 
-    return node_damage_list
+    return node_damage_list  # noqa: RET504
 
 
-def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
+def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):  # noqa: ANN001, ANN201, N802, N803
     """Creates REWET-style pump damage file.
 
     Parameters
@@ -213,8 +213,8 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
     pump_damage_list : Pandas Series
         REWET-style pump damage file.
 
-    """
-    pump_id_list = [key for key in pump_damage_data]
+    """  # noqa: D401
+    pump_id_list = [key for key in pump_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = REWET_input_data['event_time']
@@ -230,12 +230,12 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
 
         # I'm not sure if we need any data about the pump at this point
 
-        # aim_data = findAndReadAIMFile(tank_id, os.path.join(
+        # aim_data = findAndReadAIMFile(tank_id, os.path.join(  # noqa: ERA001
         # "Results", "WaterDistributionNetwork", "Pump"),
         # REWET_input_data["run_dir"])
 
         # We are getting this data from PELICUN
-        # restore_time = getPumpRetsoreTime(cur_damage)
+        # restore_time = getPumpRetsoreTime(cur_damage)  # noqa: ERA001
         damage_list.append(
             {
                 'pump_id': pump_id,
@@ -247,10 +247,10 @@ def createPumpDamageInputForREWET(pump_damage_data, REWET_input_data):
         index=[damage_time for val in damage_list], data=damage_list
     )
 
-    return pump_damage_list
+    return pump_damage_list  # noqa: RET504
 
 
-def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
+def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):  # noqa: ANN001, ANN201, N802, N803
     """Creates REWET-style Tank damage file.
 
     Parameters
@@ -265,8 +265,8 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
     tank_damage_list : Pandas Series
         REWET-style tank damage file.
 
-    """
-    tank_id_list = [key for key in tank_damage_data]
+    """  # noqa: D401
+    tank_id_list = [key for key in tank_damage_data]  # noqa: C416
 
     damage_list = []
     damage_time = REWET_input_data['event_time']
@@ -280,15 +280,15 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
         if cur_damage == 0:
             continue  # cur_damage_state = 0 meeans undamged tank
 
-        # =============================================================================
+        # =============================================================================  # noqa: E501
         #         # We are getting his data from REWET
         #
-        #         aim_data = findAndReadAIMFile(tank_id, os.path.join(
+        #         aim_data = findAndReadAIMFile(tank_id, os.path.join(  # noqa: ERA001
         #             "Results", "WaterDistributionNetwork", "Tank"),
         #                                            REWET_input_data["run_dir"])
-        #         tank_type = aim_data["GeneralInformation"].get("Type", None)
-        #         restore_time = getTankRetsoreTime(tank_type, cur_damage)
-        # =============================================================================
+        #         tank_type = aim_data["GeneralInformation"].get("Type", None)  # noqa: ERA001
+        #         restore_time = getTankRetsoreTime(tank_type, cur_damage)  # noqa: ERA001
+        # =============================================================================  # noqa: E501
 
         damage_list.append(
             {
@@ -302,10 +302,10 @@ def createTankDamageInputForREWET(tank_damage_data, REWET_input_data):
         index=[damage_time for val in damage_list], data=damage_list
     )
 
-    return tank_damage_list
+    return tank_damage_list  # noqa: RET504
 
 
-def findAndReadAIMFile(asset_id, asset_type, run_dir):
+def findAndReadAIMFile(asset_id, asset_type, run_dir):  # noqa: ANN001, ANN201, N802
     """Finds and read the AIM file for an asset.
 
     Parameters
@@ -322,15 +322,15 @@ def findAndReadAIMFile(asset_id, asset_type, run_dir):
     aim_file_data : dict
         AIM file data as a dict.
 
-    """
+    """  # noqa: D401
     file_path = Path(
         run_dir, asset_type, str(asset_id), 'templatedir', f'{asset_id}-AIM.json'
     )
     aim_file_data = preprocessorIO.readJSONFile(str(file_path))
-    return aim_file_data
+    return aim_file_data  # noqa: RET504
 
 
-def getPumpRetsoreTime(damage_state):
+def getPumpRetsoreTime(damage_state):  # noqa: ANN001, ANN201, N802
     """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
@@ -350,10 +350,10 @@ def getPumpRetsoreTime(damage_state):
     Retstor time : int
 
 
-    """
+    """  # noqa: D400, D415
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
-    elif damage_state == 2:
+    elif damage_state == 2:  # noqa: PLR2004
         restore_time = int(7 * 24 * 3600)
     else:
         restore_time = CBIG_int
@@ -361,7 +361,7 @@ def getPumpRetsoreTime(damage_state):
     return restore_time
 
 
-def getTankRetsoreTime(tank_type, damage_state):
+def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001, N802
     """NOT USED! WE WILL GET IT FROM PELICUN
 
     Provides the restore time based on HAZUS repair time or any other
@@ -383,10 +383,10 @@ def getTankRetsoreTime(tank_type, damage_state):
     Retstor time : int
 
 
-    """
+    """  # noqa: D400, D415
     if damage_state == 1:
         restore_time = int(3 * 24 * 3600)
-    elif damage_state == 2:
+    elif damage_state == 2:  # noqa: PLR2004
         restore_time = int(7 * 24 * 3600)
     else:
         restore_time = CBIG_int
@@ -394,7 +394,7 @@ def getTankRetsoreTime(tank_type, damage_state):
     return restore_time
 
 
-def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
+def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001, ANN201, N802, D417
     """Reads PELICUN damage files and create REWET-Style damage for all
     WaterDistributionNetwork elements
 
@@ -412,10 +412,10 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):
     damage_data : dict
         Damage data in PELICUN dict format.
 
-    """
-    # TODO: Make reading once for each scneario
+    """  # noqa: D205, D400, D401, D415
+    # TODO: Make reading once for each scneario  # noqa: FIX002, TD002, TD003
 
-    # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
+    # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )  # noqa: ERA001
 
     damage_data = preprocessorIO.readJSONFile(file_addr)
 

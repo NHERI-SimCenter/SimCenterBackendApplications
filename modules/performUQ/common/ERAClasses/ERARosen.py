@@ -1,4 +1,4 @@
-# import of modules
+# import of modules  # noqa: INP001, D100
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -59,7 +59,7 @@ References:
 
 3. Documentation of the ERA Distribution Classes
 ---------------------------------------------------------------------------
-"""
+"""  # noqa: W291
 
 
 # %%
@@ -83,20 +83,20 @@ class ERARosen:
     distributions the order of the indices within one of the arrays
     corresponds to the order of the variables of the respective function
     handle of the respective ERACond object.
-    """
+    """  # noqa: D205, D400, D415
 
-    def __init__(self, dist, depend):
+    def __init__(self, dist, depend):  # noqa: ANN001, ANN204
         """Constructor method, for more details have a look at the
         class description.
-        """
+        """  # noqa: D205, D401
         self.Dist = dist
         self.Parents = depend
 
         n_dist = len(dist)
         n_dist_dep = len(depend)
         if n_dist != n_dist_dep:
-            raise RuntimeError(
-                'The number of distributions according to the inputs'
+            raise RuntimeError(  # noqa: TRY003
+                'The number of distributions according to the inputs'  # noqa: EM101
                 " dist and depend doesn't match."
             )
 
@@ -105,8 +105,8 @@ class ERARosen:
             if isinstance(dist[i], ERACond):
                 n_parents[i] = dist[i].Param.__code__.co_argcount
             elif not isinstance(dist[i], ERADist):
-                raise RuntimeError(
-                    'The objects in dist must be either ERADist or ERACond objects.'
+                raise RuntimeError(  # noqa: TRY003, TRY004
+                    'The objects in dist must be either ERADist or ERACond objects.'  # noqa: EM101
                 )
 
         # build adjacency matrix
@@ -115,18 +115,18 @@ class ERARosen:
             adj_mat[i, depend[i]] = 1
         # check if obtained network represents a directed acyclical graph
         adj_prod = np.identity(n_dist)
-        for i in range(n_dist + 1):
+        for i in range(n_dist + 1):  # noqa: B007
             adj_prod = np.matmul(adj_prod, adj_mat)
             if sum(np.diag(adj_prod)) != 0:
-                raise RuntimeError(
-                    'The graph defining the dependence between the different '
+                raise RuntimeError(  # noqa: TRY003
+                    'The graph defining the dependence between the different '  # noqa: EM101
                     'distributions must be directed and acyclical.'
                 )
 
         self.Adjacency = np.matrix(adj_mat)
 
         # sort distributions according to dependencies
-        layers = list()
+        layers = list()  # noqa: C408
         rem_dist = np.arange(0, n_dist)
         while len(rem_dist) > 0:
             n_dep_rem = np.sum(adj_mat, 1)
@@ -141,13 +141,13 @@ class ERARosen:
             self.Order = [layers[0], np.concatenate(layers[1:])]
             self.Layers = layers
         else:
-            raise RuntimeError(
-                'The defined joint distribution consists only of independent distributions.'
+            raise RuntimeError(  # noqa: TRY003
+                'The defined joint distribution consists only of independent distributions.'  # noqa: EM101, E501
                 'This type of joint distribution is not supported by ERARosen.'
             )
 
     # %%
-    def X2U(self, X, error=True):
+    def X2U(self, X, error=True):  # noqa: ANN001, ANN201, FBT002, N802, N803
         """Carries out the transformation from physical space X to
         standard normal space U.
         X must be a [n,d]-shaped array (n = number of data points,
@@ -155,9 +155,9 @@ class ERARosen:
         If no error message should be given in case of the detection
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
-        """
+        """  # noqa: D205
         n_dim = len(self.Dist)
-        X = np.array(X, ndmin=2, dtype=float)
+        X = np.array(X, ndmin=2, dtype=float)  # noqa: N806
 
         # check if all marginal and conditional distributions are continuous
         for i in range(n_dim):
@@ -167,25 +167,25 @@ class ERARosen:
                 'negativebinomial',
                 'poisson',
             ]:
-                raise RuntimeError(
-                    'At least one of the marginal distributions or conditional distributions '
-                    'is a discrete distribution, the transformation X2U is therefore not possible.'
+                raise RuntimeError(  # noqa: TRY003
+                    'At least one of the marginal distributions or conditional distributions '  # noqa: EM101, E501
+                    'is a discrete distribution, the transformation X2U is therefore not possible.'  # noqa: E501
                 )
 
         # check of the dimensions of input X
-        if X.ndim > 2:
-            raise RuntimeError('X must have not more than two dimensions. ')
+        if X.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            X = X.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(
-                'X must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
 
-        n_X = np.shape(X)[0]
-        U = np.zeros([n_X, n_dim])
+        n_X = np.shape(X)[0]  # noqa: N806
+        U = np.zeros([n_X, n_dim])  # noqa: N806
 
         for i in self.Order[0]:
             U[:, i] = stats.norm.ppf(self.Dist[i].cdf(X[:, i]))
@@ -200,14 +200,14 @@ class ERARosen:
 
         if error:
             if not all(np.logical_not(lin_ind)):
-                raise RuntimeError('Invalid joint distribution was created.')
+                raise RuntimeError('Invalid joint distribution was created.')  # noqa: EM101, TRY003
         else:
             U[lin_ind, :] = np.nan
 
         return np.squeeze(U)
 
     # %%
-    def U2X(self, U, error=True):
+    def U2X(self, U, error=True):  # noqa: ANN001, ANN201, FBT002, N802, N803
         """Carries out the transformation from standard normal space U
         to physical space X .
         U must be a [n,d]-shaped array (n = number of data points,
@@ -215,25 +215,25 @@ class ERARosen:
         If no error message should be given in case of the detection
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
-        """
+        """  # noqa: D205
         n_dim = len(self.Dist)
-        U = np.array(U, ndmin=2, dtype=float)
+        U = np.array(U, ndmin=2, dtype=float)  # noqa: N806
 
         # check of the dimensions of input U
-        if U.ndim > 2:
-            raise RuntimeError('U must have not more than two dimensions. ')
+        if U.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('U must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(U)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            U = U.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            U = U.T  # noqa: N806
         if np.shape(U)[1] != n_dim:
-            raise RuntimeError(
-                'U must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'U must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
 
-        n_U = np.shape(U)[0]
-        X = np.zeros([n_U, n_dim])
-        CDF_values = stats.norm.cdf(U)
+        n_U = np.shape(U)[0]  # noqa: N806
+        X = np.zeros([n_U, n_dim])  # noqa: N806
+        CDF_values = stats.norm.cdf(U)  # noqa: N806
 
         for i in self.Order[0]:
             X[:, i] = self.Dist[i].icdf(CDF_values[:, i])
@@ -246,37 +246,37 @@ class ERARosen:
 
         if error:
             if not np.all(np.logical_not(lin_ind)):
-                raise RuntimeError('Invalid joint distribution was created.')
+                raise RuntimeError('Invalid joint distribution was created.')  # noqa: EM101, TRY003
         else:
             X[lin_ind, :] = np.nan
 
         return np.squeeze(X)
 
     # %%
-    def pdf(self, X, error=True):
+    def pdf(self, X, error=True):  # noqa: ANN001, ANN201, FBT002, N803
         """Computes the joint PDF.
         X must be a [n,d]-shaped array (n = number of data points,
         d = dimensions).
         If no error message should be given in case of the detection
         of an improper distribution, give error=False as second input.
         The output for the improper data points is then given as nan.
-        """
+        """  # noqa: D205, D401
         n_dim = len(self.Dist)
-        X = np.array(X, ndmin=2, dtype=float)
+        X = np.array(X, ndmin=2, dtype=float)  # noqa: N806
 
         # check of the dimensions of input X
-        if X.ndim > 2:
-            raise RuntimeError('X must have not more than two dimensions. ')
+        if X.ndim > 2:  # noqa: PLR2004
+            raise RuntimeError('X must have not more than two dimensions. ')  # noqa: EM101, TRY003
         if np.shape(X)[1] == 1 and n_dim != 1:
-            # in case that only one point X is given, he can be defined either as row or column vector
-            X = X.T
+            # in case that only one point X is given, he can be defined either as row or column vector  # noqa: E501
+            X = X.T  # noqa: N806
         if np.shape(X)[1] != n_dim:
-            raise RuntimeError(
-                'X must be an array of size [n,d], where d is the'
+            raise RuntimeError(  # noqa: TRY003
+                'X must be an array of size [n,d], where d is the'  # noqa: EM101
                 ' number of dimensions of the joint distribution.'
             )
 
-        n_X = np.shape(X)[0]
+        n_X = np.shape(X)[0]  # noqa: N806
         pdf_values = np.zeros([n_X, n_dim])
 
         for i in self.Order[0]:
@@ -288,22 +288,22 @@ class ERARosen:
         jointpdf = np.prod(pdf_values, 1)
         nan_ind = np.isnan(jointpdf)
 
-        if error:
+        if error:  # noqa: SIM102
             if not np.all(np.logical_not(nan_ind)):
-                raise RuntimeError('Invalid joint distribution was created.')
+                raise RuntimeError('Invalid joint distribution was created.')  # noqa: EM101, TRY003
 
         if np.size(jointpdf) == 1:
             return jointpdf[0]
-        else:
+        else:  # noqa: RET505
             return jointpdf
 
     # %%
-    def random(self, n=1):
+    def random(self, n=1):  # noqa: ANN001, ANN201
         """Creates n samples of the joint distribution.
         Every row in the output array corresponds to one sample.
-        """
+        """  # noqa: D205, D401
         n_dim = len(self.Dist)
-        X = np.zeros([n, n_dim])
+        X = np.zeros([n, n_dim])  # noqa: N806
 
         for i in self.Order[0]:
             X[:, i] = self.Dist[i].random(n)
@@ -311,13 +311,13 @@ class ERARosen:
         for i in self.Order[1]:
             try:
                 X[:, i] = self.Dist[i].condRandom(X[:, self.Parents[i]])
-            except ValueError:
-                raise RuntimeError('Invalid joint distribution was created.')
+            except ValueError:  # noqa: PERF203
+                raise RuntimeError('Invalid joint distribution was created.')  # noqa: B904, EM101, TRY003
 
         return np.squeeze(X)
 
     # %%
-    def plotGraph(self, opt=False):
+    def plotGraph(self, opt=False):  # noqa: ANN001, ANN201, FBT002, C901, N802
         """Plots the Bayesian network which defines the dependency
         between the different distributions.
         If opt is given as 'numbering' the nodes are named according
@@ -326,11 +326,11 @@ class ERARosen:
         distribution, the distribution is also named according to its
         position in dist, otherwise the property ID is taken as the
         name of the distribution.
-        """
+        """  # noqa: D205, D401
         n_layer = len(self.Layers)
         vert = np.flip(np.linspace(0, 1, n_layer))
-        pos_n = dict()
-        pos_l = dict()
+        pos_n = dict()  # noqa: C408
+        pos_l = dict()  # noqa: C408
         for i in range(n_layer):
             cur_l = self.Layers[i]
             n_cur = len(cur_l)
@@ -340,7 +340,7 @@ class ERARosen:
                 pos_l[cur_l[j]] = (horiz[j + 1] + 0.06, vert[i])
 
         n_dim = len(self.Dist)
-        labels = dict()
+        labels = dict()  # noqa: C408
         if not opt:
             for i in range(n_dim):
                 if self.Dist[i].ID:
@@ -351,10 +351,10 @@ class ERARosen:
             for i in range(n_dim):
                 labels[i] = '#' + str(i)
         else:
-            raise RuntimeError("opt must be given as 'numbering'.")
+            raise RuntimeError("opt must be given as 'numbering'.")  # noqa: EM101, TRY003
 
-        G_Adj = nx.from_numpy_matrix(self.Adjacency)
-        G = nx.DiGraph()
+        G_Adj = nx.from_numpy_matrix(self.Adjacency)  # noqa: N806
+        G = nx.DiGraph()  # noqa: N806
         for i in range(1, n_layer):
             cur_l = self.Layers[i]
             n_cur = len(cur_l)

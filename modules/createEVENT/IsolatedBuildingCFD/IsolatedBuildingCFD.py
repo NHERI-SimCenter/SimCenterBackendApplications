@@ -1,25 +1,25 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import json
 
 
-class FloorForces:
-    def __init__(self):
+class FloorForces:  # noqa: D101
+    def __init__(self):  # noqa: ANN204, D107
         self.X = [0]
         self.Y = [0]
         self.Z = [0]
 
 
-def directionToDof(direction):
-    """Converts direction to degree of freedom"""
-    directioMap = {'X': 1, 'Y': 2, 'Z': 3}
+def directionToDof(direction):  # noqa: ANN001, ANN201, N802
+    """Converts direction to degree of freedom"""  # noqa: D400, D401, D415
+    directioMap = {'X': 1, 'Y': 2, 'Z': 3}  # noqa: N806
 
     return directioMap[direction]
 
 
-def addFloorForceToEvent(patternsArray, force, direction, floor):
-    """Add force (one component) time series and pattern in the event file"""
-    seriesName = 'WindForceSeries_' + str(floor) + direction
-    patternName = 'WindForcePattern_' + str(floor) + direction
+def addFloorForceToEvent(patternsArray, force, direction, floor):  # noqa: ANN001, ANN201, ARG001, N802, N803
+    """Add force (one component) time series and pattern in the event file"""  # noqa: D400, D415
+    seriesName = 'WindForceSeries_' + str(floor) + direction  # noqa: N806
+    patternName = 'WindForcePattern_' + str(floor) + direction  # noqa: N806
     pattern = {
         'name': patternName,
         'timeSeries': seriesName,
@@ -31,10 +31,10 @@ def addFloorForceToEvent(patternsArray, force, direction, floor):
     patternsArray.append(pattern)
 
 
-def writeEVENT(forces, eventFilePath):
-    """This method writes the EVENT.json file"""
-    patternsArray = []
-    windEventJson = {
+def writeEVENT(forces, eventFilePath):  # noqa: ANN001, ANN201, N802, N803
+    """This method writes the EVENT.json file"""  # noqa: D400, D401, D404, D415
+    patternsArray = []  # noqa: N806
+    windEventJson = {  # noqa: N806
         'type': 'Wind',
         'subtype': 'IsolatedBuildingCFD',
         'pattern': patternsArray,
@@ -44,20 +44,20 @@ def writeEVENT(forces, eventFilePath):
     }
 
     # Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {'randomVariables': [], 'Events': [windEventJson]}
+    eventDict = {'randomVariables': [], 'Events': [windEventJson]}  # noqa: N806
 
     # Adding floor forces
-    for floorForces in forces:
+    for floorForces in forces:  # noqa: N806
         floor = forces.index(floorForces) + 1
         addFloorForceToEvent(patternsArray, floorForces.X, 'X', floor)
         addFloorForceToEvent(patternsArray, floorForces.Y, 'Y', floor)
 
-    with open(eventFilePath, 'w') as eventsFile:
+    with open(eventFilePath, 'w') as eventsFile:  # noqa: PTH123, N806
         json.dump(eventDict, eventsFile)
 
 
-def GetFloorsCount(BIMFilePath):
-    with open(BIMFilePath, encoding='utf-8') as BIMFile:
+def GetFloorsCount(BIMFilePath):  # noqa: ANN001, ANN201, N802, N803, D103
+    with open(BIMFilePath, encoding='utf-8') as BIMFile:  # noqa: PTH123, N806
         bim = json.load(BIMFile)
 
     return int(bim['GeneralInformation']['stories'])
@@ -78,11 +78,11 @@ if __name__ == '__main__':
     # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
-    if arguments.getRV == True:
+    if arguments.getRV == True:  # noqa: E712
         # Read the number of floors
-        floorsCount = GetFloorsCount(arguments.filenameAIM)
+        floorsCount = GetFloorsCount(arguments.filenameAIM)  # noqa: N816
         forces = []
-        for i in range(floorsCount):
-            forces.append(FloorForces())
+        for i in range(floorsCount):  # noqa: B007
+            forces.append(FloorForces())  # noqa: PERF401
         # write the event file
         writeEVENT(forces, arguments.filenameEVENT)

@@ -1,6 +1,6 @@
 """Simple Python Script to integrate a strong motion record using
 the Newmark-Beta method
-"""
+"""  # noqa: INP001, D205, D400, D415
 
 import numpy as np
 from scipy.constants import g
@@ -8,7 +8,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
-def convert_accel_units(acceleration, from_, to_='cm/s/s'):
+def convert_accel_units(acceleration, from_, to_='cm/s/s'):  # noqa: ANN001, ANN201, C901, PLR0911
     """Converts acceleration from/to different units
     :param acceleration: the acceleration (numeric or numpy array)
     :param from_: unit of `acceleration`: string in "g", "m/s/s", "m/s**2",
@@ -17,7 +17,7 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):
         "m/s^2", "cm/s/s", "cm/s**2" or "cm/s^2". When missing, it defaults
         to "cm/s/s"
     :return: acceleration converted to the given units (by default, 'cm/s/s')
-    """
+    """  # noqa: D205, D400, D401, D415
     m_sec_square = ('m/s/s', 'm/s**2', 'm/s^2')
     cm_sec_square = ('cm/s/s', 'cm/s**2', 'cm/s^2')
     acceleration = np.asarray(acceleration)
@@ -43,14 +43,14 @@ def convert_accel_units(acceleration, from_, to_='cm/s/s'):
         if to_ in cm_sec_square:
             return acceleration
 
-    raise ValueError(
-        'Unrecognised time history units. '
+    raise ValueError(  # noqa: TRY003
+        'Unrecognised time history units. '  # noqa: EM101
         "Should take either ''g'', ''m/s/s'' or ''cm/s/s''"
     )
 
 
-def get_velocity_displacement(
-    time_step, acceleration, units='cm/s/s', velocity=None, displacement=None
+def get_velocity_displacement(  # noqa: ANN201
+    time_step, acceleration, units='cm/s/s', velocity=None, displacement=None  # noqa: ANN001
 ):
     """Returns the velocity and displacment time series using simple integration
     :param float time_step:
@@ -60,7 +60,7 @@ def get_velocity_displacement(
     :returns:
         velocity - Velocity Time series (cm/s)
         displacement - Displacement Time series (cm)
-    """
+    """  # noqa: D205, D400, D401, D415
     acceleration = convert_accel_units(acceleration, units)
     if velocity is None:
         velocity = time_step * cumtrapz(acceleration, initial=0.0)
@@ -70,16 +70,16 @@ def get_velocity_displacement(
 
 
 class NewmarkBeta:
-    """Evaluates the response spectrum using the Newmark-Beta methodology"""
+    """Evaluates the response spectrum using the Newmark-Beta methodology"""  # noqa: D400, D415
 
-    def __init__(
+    def __init__(  # noqa: ANN204, PLR0913
         self,
-        acceleration,
-        time_step,
-        periods,
-        damping=0.05,
-        dt_disc=0.002,
-        units='g',
+        acceleration,  # noqa: ANN001
+        time_step,  # noqa: ANN001
+        periods,  # noqa: ANN001
+        damping=0.05,  # noqa: ANN001
+        dt_disc=0.002,  # noqa: ANN001
+        units='g',  # noqa: ANN001
     ):
         """Setup the response spectrum calculator
         :param numpy.ndarray time_hist:
@@ -92,7 +92,7 @@ class NewmarkBeta:
             Sampling rate of the acceleartion
         :param str units:
             Units of the acceleration time history {"g", "m/s", "cm/s/s"}
-        """
+        """  # noqa: D205, D400, D401, D415
         self.periods = periods
         self.num_per = len(periods)
         self.acceleration = convert_accel_units(acceleration, units)
@@ -106,7 +106,7 @@ class NewmarkBeta:
         self.response_spectrum = None
         self.dt_disc = dt_disc
 
-    def run(self):
+    def run(self):  # noqa: ANN201
         """Evaluates the response spectrum
         :returns:
             Response Spectrum - Dictionary containing all response spectrum
@@ -129,7 +129,7 @@ class NewmarkBeta:
             accel - Acceleration response of Single Degree of Freedom Oscillator
             vel - Velocity response of Single Degree of Freedom Oscillator
             disp - Displacement response of Single Degree of Freedom Oscillator
-        """
+        """  # noqa: D205, D400, D401, D415
         omega = (2.0 * np.pi) / self.periods
         cval = self.damping * 2.0 * omega
         kval = ((2.0 * np.pi) / self.periods) ** 2.0
@@ -158,7 +158,7 @@ class NewmarkBeta:
         }
         return self.response_spectrum, time_series, accel, vel, disp
 
-    def _newmark_beta(self, omega, cval, kval):
+    def _newmark_beta(self, omega, cval, kval):  # noqa: ANN001, ANN202, ARG002
         """Newmark-beta integral
         :param numpy.ndarray omega:
             Angular period - (2 * pi) / T
@@ -171,7 +171,7 @@ class NewmarkBeta:
             vel - Velocity response of a SDOF oscillator
             disp - Displacement response of a SDOF oscillator
             a_t - Acceleration response of a SDOF oscillator
-        """
+        """  # noqa: D205, D400, D415
         # Parameters
         dt = self.d_t
         ground_acc = self.acceleration

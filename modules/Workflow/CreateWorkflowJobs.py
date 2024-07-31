@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -46,16 +46,16 @@ import os
 import numpy as np
 
 
-def generate_workflow_tasks(
-    bldg_filter, config_file, out_dir, task_size, rWHALE_dir
+def generate_workflow_tasks(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
+    bldg_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
 ):
-    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later
+    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:  # noqa: PTH123
         settings = json.load(f)
     output_types = [
-        out_type for out_type, val in settings['outputs'].items() if val == True
+        out_type for out_type, val in settings['outputs'].items() if val == True  # noqa: E712
     ]
 
     # KZ@220324: check if regional site response is requested
@@ -76,8 +76,8 @@ def generate_workflow_tasks(
         )
 
         if bldg_filter == '':
-            raise ValueError(
-                'Running a regional simulation on DesignSafe requires either '
+            raise ValueError(  # noqa: TRY003
+                'Running a regional simulation on DesignSafe requires either '  # noqa: EM101
                 "the 'buildingFilter' parameter to be set for the workflow "
                 "application or the 'filter' parameter set for the Building "
                 'application in the workflow configuration file. Neither was '
@@ -98,9 +98,9 @@ def generate_workflow_tasks(
 
     count = len(bldgs_requested)
 
-    tasksCount = int(math.ceil(count / task_size))
+    tasksCount = int(math.ceil(count / task_size))  # noqa: N806
 
-    workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/rWHALE.py'
+    workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/rWHALE.py'  # noqa: S108, N806
 
     subfolder = 0
     for i in range(tasksCount):
@@ -108,8 +108,8 @@ def generate_workflow_tasks(
 
         # do not try to run sims if there are no bldgs to run
         if len(bldg_list) > 0:
-            min_ID = bldg_list[0]
-            max_ID = bldg_list[-1]
+            min_ID = bldg_list[0]  # noqa: N806
+            max_ID = bldg_list[-1]  # noqa: N806
 
             max_ids = np.where(np.diff(bldg_list) != 1)[0]
             max_ids = np.append(
@@ -122,19 +122,19 @@ def generate_workflow_tasks(
             min_ids = np.zeros(max_ids.shape, dtype=int)
             min_ids[1:] = max_ids[:-1] + 1
 
-            filter = ''
+            filter = ''  # noqa: A001
             for i_min, i_max in zip(min_ids, max_ids):
                 if i_min == i_max:
-                    filter += f',{bldg_list[i_min]}'
+                    filter += f',{bldg_list[i_min]}'  # noqa: A001
                 else:
-                    filter += f',{bldg_list[i_min]}-{bldg_list[i_max]}'
-            filter = filter[1:]  # to remove the initial comma
+                    filter += f',{bldg_list[i_min]}-{bldg_list[i_max]}'  # noqa: A001
+            filter = filter[1:]  # to remove the initial comma  # noqa: A001
 
             if (i % 500) == 0:
                 subfolder = subfolder + 1
 
             run_dir = (
-                f'/tmp/{rWHALE_dir}'
+                f'/tmp/{rWHALE_dir}'  # noqa: S108
                 f'/applications/Workflow/RunDir{min_ID}-{max_ID}'
             )
 
@@ -150,7 +150,7 @@ def generate_workflow_tasks(
             # run the simulation
             task_list += (
                 f'python3 {workflowScript} '
-                f'/tmp/{rWHALE_dir}/{config_file} '
+                f'/tmp/{rWHALE_dir}/{config_file} '  # noqa: S108
                 f'-d /tmp/{rWHALE_dir}/input_data '
                 f'-w {run_dir} -l {log_path} '
                 f'--filter {filter} '
@@ -182,20 +182,20 @@ def generate_workflow_tasks(
             task_list += f'rm -rf {run_dir} \n'
 
             # write the tasks to the output file
-            with open('WorkflowJobs.txt', 'a+') as tasksFile:
+            with open('WorkflowJobs.txt', 'a+') as tasksFile:  # noqa: PTH123, N806
                 tasksFile.write(task_list)
 
 
-def generate_workflow_tasks_siteresponse(
-    bldg_filter, config_file, out_dir, task_size, rWHALE_dir
+def generate_workflow_tasks_siteresponse(  # noqa: ANN201, D103
+    bldg_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
 ):
-    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later
+    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:  # noqa: PTH123
         settings = json.load(f)
-    output_types = [
-        out_type for out_type, val in settings['outputs'].items() if val == True
+    output_types = [  # noqa: F841
+        out_type for out_type, val in settings['outputs'].items() if val == True  # noqa: E712
     ]
 
     # get the list of buildings requested to run
@@ -206,8 +206,8 @@ def generate_workflow_tasks_siteresponse(
         )
 
         if bldg_filter == '':
-            raise ValueError(
-                'Running a regional simulation on DesignSafe requires either '
+            raise ValueError(  # noqa: TRY003
+                'Running a regional simulation on DesignSafe requires either '  # noqa: EM101
                 "the 'buildingFilter' parameter to be set for the workflow "
                 "application or the 'filter' parameter set for the Building "
                 'application in the workflow configuration file. Neither was '
@@ -228,12 +228,12 @@ def generate_workflow_tasks_siteresponse(
 
     count = len(bldgs_requested)
 
-    tasksCount = int(math.ceil(count / task_size))
+    tasksCount = int(math.ceil(count / task_size))  # noqa: N806
 
-    print(f'tasksCount = {tasksCount}')
+    print(f'tasksCount = {tasksCount}')  # noqa: T201
 
-    workflowScript = (
-        f'/tmp/{rWHALE_dir}/applications/Workflow/SiteResponse_workflow.py'
+    workflowScript = (  # noqa: N806
+        f'/tmp/{rWHALE_dir}/applications/Workflow/SiteResponse_workflow.py'  # noqa: S108
     )
 
     subfolder = 0
@@ -242,8 +242,8 @@ def generate_workflow_tasks_siteresponse(
 
         # do not try to run sims if there are no bldgs to run
         if len(bldg_list) > 0:
-            min_ID = bldg_list[0]
-            max_ID = bldg_list[-1]
+            min_ID = bldg_list[0]  # noqa: N806
+            max_ID = bldg_list[-1]  # noqa: N806
 
             max_ids = np.where(np.diff(bldg_list) != 1)[0]
             max_ids = np.append(
@@ -256,19 +256,19 @@ def generate_workflow_tasks_siteresponse(
             min_ids = np.zeros(max_ids.shape, dtype=int)
             min_ids[1:] = max_ids[:-1] + 1
 
-            filter = ''
+            filter = ''  # noqa: A001
             for i_min, i_max in zip(min_ids, max_ids):
                 if i_min == i_max:
-                    filter += f',{bldg_list[i_min]}'
+                    filter += f',{bldg_list[i_min]}'  # noqa: A001
                 else:
-                    filter += f',{bldg_list[i_min]}-{bldg_list[i_max]}'
-            filter = filter[1:]  # to remove the initial comma
+                    filter += f',{bldg_list[i_min]}-{bldg_list[i_max]}'  # noqa: A001
+            filter = filter[1:]  # to remove the initial comma  # noqa: A001
 
             if (i % 500) == 0:
                 subfolder = subfolder + 1
 
             run_dir = (
-                f'/tmp/{rWHALE_dir}'
+                f'/tmp/{rWHALE_dir}'  # noqa: S108
                 f'/applications/Workflow/RunDir{min_ID}-{max_ID}'
             )
 
@@ -284,7 +284,7 @@ def generate_workflow_tasks_siteresponse(
             # run the simulation
             task_list += (
                 f'python3 {workflowScript} '
-                f'/tmp/{rWHALE_dir}/{config_file} '
+                f'/tmp/{rWHALE_dir}/{config_file} '  # noqa: S108
                 f'-d /tmp/{rWHALE_dir}/input_data '
                 f'-w {run_dir} -l {log_path} '
                 f'--filter {filter} && '
@@ -303,25 +303,25 @@ def generate_workflow_tasks_siteresponse(
             task_list += "echo 'cmd generated. Currend dir: '$PWD \n"
 
             # write the tasks to the output file
-            with open('WorkflowJobs_siteResponse.txt', 'a+') as tasksFile:
+            with open('WorkflowJobs_siteResponse.txt', 'a+') as tasksFile:  # noqa: PTH123, N806
                 tasksFile.write(task_list)
 
 
-def generate_workflow_tasks_regionalsiteresponse(
-    site_filter, config_file, out_dir, task_size, rWHALE_dir
+def generate_workflow_tasks_regionalsiteresponse(  # noqa: ANN201, C901, D103, PLR0912, PLR0915
+    site_filter, config_file, out_dir, task_size, rWHALE_dir  # noqa: ANN001, N803
 ):
-    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later
+    jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
-    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step
+    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step  # noqa: E501
     output_valid = ['IM']
 
     # get the type of outputs requested
-    with open(f'{rWHALE_dir}/{config_file}') as f:
+    with open(f'{rWHALE_dir}/{config_file}') as f:  # noqa: PTH123
         settings = json.load(f)
     output_types = [
         out_type
         for out_type, val in settings['outputs'].items()
-        if (val == True and out_type in output_valid)
+        if (val == True and out_type in output_valid)  # noqa: E712
     ]
 
     # get the list of sites requested to run
@@ -332,8 +332,8 @@ def generate_workflow_tasks_regionalsiteresponse(
         ].get('filter', '')
 
         if site_filter == '':
-            raise ValueError(
-                'Running a regional simulation on DesignSafe requires either '
+            raise ValueError(  # noqa: TRY003
+                'Running a regional simulation on DesignSafe requires either '  # noqa: EM101
                 "the 'buildingFilter' parameter to be set for the workflow "
                 "application or the 'filter' parameter set for the Building "
                 'application in the workflow configuration file. Neither was '
@@ -354,9 +354,9 @@ def generate_workflow_tasks_regionalsiteresponse(
 
     count = len(sites_requested)
 
-    tasksCount = int(math.ceil(count / task_size))
+    tasksCount = int(math.ceil(count / task_size))  # noqa: N806
 
-    workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/siteResponseWHALE.py'
+    workflowScript = f'/tmp/{rWHALE_dir}/applications/Workflow/siteResponseWHALE.py'  # noqa: S108, N806
 
     subfolder = 0
     for i in range(tasksCount):
@@ -364,8 +364,8 @@ def generate_workflow_tasks_regionalsiteresponse(
 
         # do not try to run sims if there are no bldgs to run
         if len(site_list) > 0:
-            min_ID = site_list[0]
-            max_ID = site_list[-1]
+            min_ID = site_list[0]  # noqa: N806
+            max_ID = site_list[-1]  # noqa: N806
 
             max_ids = np.where(np.diff(site_list) != 1)[0]
             max_ids = np.append(
@@ -378,19 +378,19 @@ def generate_workflow_tasks_regionalsiteresponse(
             min_ids = np.zeros(max_ids.shape, dtype=int)
             min_ids[1:] = max_ids[:-1] + 1
 
-            filter = ''
+            filter = ''  # noqa: A001
             for i_min, i_max in zip(min_ids, max_ids):
                 if i_min == i_max:
-                    filter += f',{site_list[i_min]}'
+                    filter += f',{site_list[i_min]}'  # noqa: A001
                 else:
-                    filter += f',{site_list[i_min]}-{site_list[i_max]}'
-            filter = filter[1:]  # to remove the initial comma
+                    filter += f',{site_list[i_min]}-{site_list[i_max]}'  # noqa: A001
+            filter = filter[1:]  # to remove the initial comma  # noqa: A001
 
             if (i % 500) == 0:
                 subfolder = subfolder + 1
 
             run_dir = (
-                f'/tmp/{rWHALE_dir}'
+                f'/tmp/{rWHALE_dir}'  # noqa: S108
                 f'/applications/Workflow/RunDirSite{min_ID}-{max_ID}'
             )
 
@@ -439,14 +439,14 @@ def generate_workflow_tasks_regionalsiteresponse(
             task_list += f'rm -rf {run_dir} \n'
 
             # write the tasks to the output file
-            with open('WorkflowJobs_SiteResponse.txt', 'a+') as tasksFile:
+            with open('WorkflowJobs_SiteResponse.txt', 'a+') as tasksFile:  # noqa: PTH123, N806
                 tasksFile.write(task_list)
 
 
 if __name__ == '__main__':
     # Defining the command line arguments
 
-    workflowArgParser = argparse.ArgumentParser(
+    workflowArgParser = argparse.ArgumentParser(  # noqa: N816
         'Create the workflow tasks for rWHALE.'
     )
 
@@ -514,4 +514,4 @@ if __name__ == '__main__':
         )
     else:
         # currently supporting building and siteresponse
-        print('-workflowName has to be building or siteResponse')
+        print('-workflowName has to be building or siteResponse')  # noqa: T201

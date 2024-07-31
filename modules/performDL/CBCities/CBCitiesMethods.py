@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2019 The Regents of the University of California
 # Copyright (c) 2019 Leland Stanford Junior University
 #
@@ -47,33 +47,33 @@ import pandas as pd
 from scipy.spatial import cKDTree
 
 
-def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):
-    A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])
-    B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]
-    B_ix = tuple(
+def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):  # noqa: ANN001, ANN201, B006, N803, D103
+    A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])  # noqa: N806
+    B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]  # noqa: N806
+    B_ix = tuple(  # noqa: N806
         itertools.chain.from_iterable(
             [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
         )
     )
-    B = np.concatenate(B)
+    B = np.concatenate(B)  # noqa: N806
     ckd_tree = cKDTree(B)
     dist, idx = ckd_tree.query(A, k=1)
     idx = itemgetter(*idx)(B_ix)
     gdf = pd.concat([gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
-    return gdf
+    return gdf  # noqa: RET504
 
 
 # def pgv_node2pipe(pipe_info,node_info):
-#     pgvs = []
+#     pgvs = []  # noqa: ERA001
 #     for index, row in pipe_info.iterrows():
-#         nodes = [str(row['node1']),str(row['node2'])]
-#         end_nodes_info = node_info.loc[node_info['node_id'].isin(nodes)]
-#         pgv = np.mean(end_nodes_info['pgv'])
-#         pgvs.append(pgv)
-#     return pgvs
+#         nodes = [str(row['node1']),str(row['node2'])]  # noqa: ERA001
+#         end_nodes_info = node_info.loc[node_info['node_id'].isin(nodes)]  # noqa: ERA001
+#         pgv = np.mean(end_nodes_info['pgv'])  # noqa: ERA001
+#         pgvs.append(pgv)  # noqa: ERA001
+#     return pgvs  # noqa: ERA001
 
 
-def pgv_node2pipe(pipe_info, node_info):
+def pgv_node2pipe(pipe_info, node_info):  # noqa: ANN001, ANN201, D103
     res = []
 
     node_ids = np.array(node_info['node_id'])
@@ -88,14 +88,14 @@ def pgv_node2pipe(pipe_info, node_info):
     return res
 
 
-def get_prefix(file_path):
+def get_prefix(file_path):  # noqa: ANN001, ANN201, D103
     file_name = file_path.split('/')[-1]
     prefix = file_name.split('.')[0]
-    return prefix
+    return prefix  # noqa: RET504
 
 
 # Get the PGV value for the pipe
-def add_pgv2pipe(pipe):
+def add_pgv2pipe(pipe):  # noqa: ANN001, ANN201, D103
     reg_event = pipe['RegionalEvent']
     events = pipe['Events'][0]
 
@@ -107,27 +107,27 @@ def add_pgv2pipe(pipe):
 
     pgvs = np.array([])
 
-    for eventFile, scaleFactor in event_array:
+    for eventFile, scaleFactor in event_array:  # noqa: N806
         # Discard the numbering at the end of the csv file name
-        eventFile = eventFile[: len(eventFile) - 8]
+        eventFile = eventFile[: len(eventFile) - 8]  # noqa: N806, PLW2901
 
         # Get the path to the event file
-        path_Event_File = posixpath.join(event_folder_path, eventFile)
+        path_Event_File = posixpath.join(event_folder_path, eventFile)  # noqa: N806
 
         # Read in the event file IM List
-        eventIMList = pd.read_csv(path_Event_File, header=0)
+        eventIMList = pd.read_csv(path_Event_File, header=0)  # noqa: N806
 
-        PGVCol = eventIMList.loc[:, 'PGV']
+        PGVCol = eventIMList.loc[:, 'PGV']  # noqa: N806
 
         pgv_unit = event_units['PGV']
 
-        # Scale the PGVs and account for units - fragility functions are in inch per second
+        # Scale the PGVs and account for units - fragility functions are in inch per second  # noqa: E501
         if pgv_unit == 'cmps':
-            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)
+            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)  # noqa: B023, N806
         elif pgv_unit == 'inps':
             continue
         else:
-            print("Error, only 'cmps' and 'inps' units are supported for PGV")
+            print("Error, only 'cmps' and 'inps' units are supported for PGV")  # noqa: T201
 
         pgvs = np.append(pgvs, PGVCol.values)
 
@@ -136,14 +136,14 @@ def add_pgv2pipe(pipe):
     return pipe
 
 
-#    pgv_info = pd.read_csv(pgv_path)
-#    gd_pgv = gpd.GeoDataFrame(
+#    pgv_info = pd.read_csv(pgv_path)  # noqa: ERA001
+#    gd_pgv = gpd.GeoDataFrame(  # noqa: ERA001
 #        pgv_info, geometry=gpd.points_from_xy(pgv_info.lon, pgv_info.lat))
-#    df = ckdnearest(node_info,gd_pgv)
-#    pgvs = pgv_node2pipe(pipe_info,df)
-#    pipe_info['pgv'] = pgvs
+#    df = ckdnearest(node_info,gd_pgv)  # noqa: ERA001
+#    pgvs = pgv_node2pipe(pipe_info,df)  # noqa: ERA001
+#    pipe_info['pgv'] = pgvs  # noqa: ERA001
 #
-#    return pipe_info
+#    return pipe_info  # noqa: ERA001
 
 
 k_dict = {
@@ -163,28 +163,28 @@ k_dict = {
 }
 
 
-def cm2inch(cm):
+def cm2inch(cm):  # noqa: ANN001, ANN201, D103
     return 39.3701 * cm / 100
 
 
-def calculate_fail_repairrate(k, pgv, l):
+def calculate_fail_repairrate(k, pgv, l):  # noqa: ANN001, ANN201, E741, D103
     rr = k * 0.00187 * pgv / 1000
     failure_rate = 1 - np.power(np.e, -rr * l)
 
-    return failure_rate
+    return failure_rate  # noqa: RET504
 
 
-def get_pipe_failrate(pipe):
-    pipe_GI = pipe['GeneralInformation']
+def get_pipe_failrate(pipe):  # noqa: ANN001, ANN201, D103
+    pipe_GI = pipe['GeneralInformation']  # noqa: N806
 
-    m, l, pgv = pipe_GI['material'], pipe_GI['length'], pipe['pgv']
+    m, l, pgv = pipe_GI['material'], pipe_GI['length'], pipe['pgv']  # noqa: E741
 
-    pipeRR = calculate_fail_repairrate(k_dict[m], l, pgv)
+    pipeRR = calculate_fail_repairrate(k_dict[m], l, pgv)  # noqa: N806
 
-    return pipeRR
+    return pipeRR  # noqa: RET504
 
 
-def add_failrate2pipe(pipe):
+def add_failrate2pipe(pipe):  # noqa: ANN001, ANN201, D103
     pipe = add_pgv2pipe(pipe)
 
     pipe['fail_prob'] = get_pipe_failrate(pipe)
@@ -194,36 +194,36 @@ def add_failrate2pipe(pipe):
 
 #
 #
-#    pgv_prefix = get_prefix(pgv_path)
-#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'
-#    pipe_info.to_file(save_path, driver="GeoJSON")
-#    print (f'saved to {save_path}')
+#    pgv_prefix = get_prefix(pgv_path)  # noqa: ERA001
+#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'  # noqa: ERA001
+#    pipe_info.to_file(save_path, driver="GeoJSON")  # noqa: ERA001
+#    print (f'saved to {save_path}')  # noqa: ERA001
 
 
-#    pipe_info['fail_prob'] = get_pipe_failrate(pipe_info)
+#    pipe_info['fail_prob'] = get_pipe_failrate(pipe_info)  # noqa: ERA001
 #
 #
-#    pgv_prefix = get_prefix(pgv_path)
-#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'
-#    pipe_info.to_file(save_path, driver="GeoJSON")
-#    print (f'saved to {save_path}')
+#    pgv_prefix = get_prefix(pgv_path)  # noqa: ERA001
+#    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'  # noqa: ERA001
+#    pipe_info.to_file(save_path, driver="GeoJSON")  # noqa: ERA001
+#    print (f'saved to {save_path}')  # noqa: ERA001
 
 
-def get_bar_ranges(space):
+def get_bar_ranges(space):  # noqa: ANN001, ANN201, D103
     ranges = []
     for i in range(1, len(space)):
-        ranges.append((space[i - 1], space[i]))
+        ranges.append((space[i - 1], space[i]))  # noqa: PERF401
     return ranges
 
 
-def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):
+def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):  # noqa: ANN001, ANN201, D103
     valid_fails = [fail_prob for fail_prob in fail_probs if fail_prob > min_thre]
     count, space = np.histogram(valid_fails, num_groups)
     ranges = get_bar_ranges(space)
-    return ranges
+    return ranges  # noqa: RET504
 
 
-def get_failed_pipes_mask(pipe_info, groups):
+def get_failed_pipes_mask(pipe_info, groups):  # noqa: ANN001, ANN201, D103
     broken_pipes = np.zeros(len(pipe_info))
 
     for r in groups:
@@ -234,19 +234,19 @@ def get_failed_pipes_mask(pipe_info, groups):
         valid_indices = np.nonzero(pipes_mask)[0]
         num_fails = int(np.mean(r) * sum(pipes_mask))
 
-        fail_indices = np.random.choice(valid_indices, num_fails, replace=False)
+        fail_indices = np.random.choice(valid_indices, num_fails, replace=False)  # noqa: NPY002
 
         broken_pipes[fail_indices] = 1
 
     return broken_pipes
 
 
-def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):
-    r = np.random.uniform(min_ratio, max_ratio)
+def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):  # noqa: ANN001, ANN201, D103
+    r = np.random.uniform(min_ratio, max_ratio)  # noqa: NPY002
     return pipe_diam * r
 
 
-def get_leak_sizes(pipe_info):
+def get_leak_sizes(pipe_info):  # noqa: ANN001, ANN201, D103
     leak_size = np.zeros(len(pipe_info))
     for index, row in pipe_info.iterrows():
         d, repair = row['diameter'], row['repair']
@@ -256,11 +256,11 @@ def get_leak_sizes(pipe_info):
     return leak_size
 
 
-def fail_pipes_number(pipe_info):
+def fail_pipes_number(pipe_info):  # noqa: ANN001, ANN201, D103
     fail_probs = np.array(pipe_info['fail_prob'])
     groups = get_failure_groups(fail_probs)
 
     failed_pipes_mask = get_failed_pipes_mask(pipe_info, groups)
     num_failed_pipes = sum(failed_pipes_mask)
-    print(f'number of failed pipes are : {num_failed_pipes}')
+    print(f'number of failed pipes are : {num_failed_pipes}')  # noqa: T201
     return num_failed_pipes

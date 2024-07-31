@@ -1,9 +1,9 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, Prof. J.P. Conte, Aakash Bangalore Satish*
 affiliation: University of California, San Diego, *SimCenter, University of California, Berkeley
 
-"""
+"""  # noqa: INP001, E501, D205, D400, D415
 
-# ======================================================================================================================
+# ======================================================================================================================  # noqa: E501
 import json
 import shlex
 import sys
@@ -13,18 +13,18 @@ path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
 
 
-# ======================================================================================================================
-def main(input_args):
+# ======================================================================================================================  # noqa: E501
+def main(input_args):  # noqa: ANN001, ANN201, D103
     # # Initialize analysis
-    # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent
-    # path_to_working_directory = Path(input_args[3]).resolve()
-    # path_to_template_directory = Path(input_args[4]).resolve()
-    # run_type = input_args[5]  # either "runningLocal" or "runningRemote"
-    # driver_file_name = input_args[6]
-    # input_file_name = input_args[7]
+    # path_to_UCSD_UQ_directory = Path(input_args[2]).resolve().parent  # noqa: ERA001
+    # path_to_working_directory = Path(input_args[3]).resolve()  # noqa: ERA001
+    # path_to_template_directory = Path(input_args[4]).resolve()  # noqa: ERA001
+    # run_type = input_args[5]  # either "runningLocal" or "runningRemote"  # noqa: ERA001
+    # driver_file_name = input_args[6]  # noqa: ERA001
+    # input_file_name = input_args[7]  # noqa: ERA001
 
     # Initialize analysis
-    path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent
+    path_to_UCSD_UQ_directory = Path(input_args[0]).resolve().parent  # noqa: N806, F841
     path_to_working_directory = Path(input_args[1]).resolve()
     path_to_template_directory = Path(input_args[2]).resolve()
     run_type = input_args[3]  # either "runningLocal" or "runningRemote"
@@ -36,7 +36,7 @@ def main(input_args):
 
     input_file_full_path = path_to_template_directory / input_file_name
 
-    with open(input_file_full_path, encoding='utf-8') as f:
+    with open(input_file_full_path, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']
@@ -57,10 +57,10 @@ def main(input_args):
     main_function(command_list)
 
 
-# ======================================================================================================================
+# ======================================================================================================================  # noqa: E501
 
 if __name__ == '__main__':
     input_args = sys.argv
     main(input_args)
 
-# ======================================================================================================================
+# ======================================================================================================================  # noqa: E501

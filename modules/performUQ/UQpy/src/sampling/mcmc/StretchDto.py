@@ -1,4 +1,4 @@
-from __future__ import annotations
+from __future__ import annotations  # noqa: INP001, D100
 
 from typing import Literal, Union
 
@@ -9,16 +9,16 @@ from src.sampling.mcmc.ModifiedMetropolisHastingsDto import (
 from src.UQpyDTO import UQpyDTO
 
 
-class StretchDto(UQpyDTO):
+class StretchDto(UQpyDTO):  # noqa: D101
     method: Literal['Stretch'] = 'Stretch'
     burn_length: int = Field(default=0, alias='burn-in', ge=0)
     jump: int = Field(default=1, ge=0)
-    # dimension: int = Field(..., gt=0)
-    # n_chains: int = Field(default=2, alias='numChains', ge=2)
+    # dimension: int = Field(..., gt=0)  # noqa: ERA001
+    # n_chains: int = Field(default=2, alias='numChains', ge=2)  # noqa: ERA001
     random_state: int = Field(..., alias='randomState')
     scale: float = Field(..., gt=0)
 
-    def init_to_text(self):
+    def init_to_text(self):  # noqa: ANN201, D102
         from UQpy.sampling.mcmc.Stretch import Stretch
 
         c = Stretch
@@ -29,7 +29,7 @@ class StretchDto(UQpyDTO):
         stretch_parameters = self.dict()
         stretch_parameters.pop('method')
         stretch_parameters['log_pdf_target'] = 'marginals.log_pdf'
-        # stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"
+        # stretch_parameters["seed"] = f"list(marginals.rvs({self.n_chains},))"  # noqa: ERA001
         stretch_parameters['seed'] = 'list(marginals.rvs(numRV,))'
         str_parameters = ''
         for key in stretch_parameters:
@@ -37,7 +37,7 @@ class StretchDto(UQpyDTO):
                 continue
             str_parameters += key + '=' + str(stretch_parameters[key]) + ', '
 
-        # prerequisite_str = import_statement + import_likehood_statement
+        # prerequisite_str = import_statement + import_likehood_statement  # noqa: ERA001
         prerequisite_str = import_statement
         prerequisite_str += 'sampling = ' + class_name + '(' + str_parameters + ')'
         sampling_str = 'sampling'
@@ -45,5 +45,5 @@ class StretchDto(UQpyDTO):
         return (prerequisite_str, sampling_str)
 
 
-# SamplingMethod = Annotated[Union[StretchDto, ModifiedMetropolisHastingsDto], Field(discriminator='method')]
+# SamplingMethod = Annotated[Union[StretchDto, ModifiedMetropolisHastingsDto], Field(discriminator='method')]  # noqa: ERA001, E501
 SamplingMethod = Union[StretchDto, ModifiedMetropolisHastingsDto]

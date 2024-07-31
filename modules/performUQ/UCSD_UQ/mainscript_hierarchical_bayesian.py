@@ -1,4 +1,4 @@
-import json
+import json  # noqa: INP001, D100
 import sys
 from pathlib import Path
 
@@ -9,15 +9,15 @@ import scipy.stats
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import mwg_sampler
-import uq_utilities
+import mwg_sampler  # noqa: E402
+import uq_utilities  # noqa: E402
 
 
-def generate_initial_states(
-    num_edp,
-    num_rv,
-    num_datasets,
-    restart_file,
+def generate_initial_states(  # noqa: ANN201, D103
+    num_edp,  # noqa: ANN001
+    num_rv,  # noqa: ANN001
+    num_datasets,  # noqa: ANN001
+    restart_file,  # noqa: ANN001
 ):
     list_of_initial_states_of_model_parameters = [
         np.zeros((num_rv, 1)) for _ in range(num_datasets)
@@ -58,7 +58,7 @@ def generate_initial_states(
     )
 
 
-def loglikelihood_function(residual, error_variance_sample):
+def loglikelihood_function(residual, error_variance_sample):  # noqa: ANN001, ANN201, D103
     mean = 0
     var = error_variance_sample
     standard_deviation = np.sqrt(var)
@@ -68,17 +68,17 @@ def loglikelihood_function(residual, error_variance_sample):
     return ll
 
 
-def main(input_args):
+def main(input_args):  # noqa: ANN001, ANN201, D103, PLR0915
     # Initialize analysis
     working_directory = Path(input_args[0]).resolve()
-    template_directory = Path(input_args[1]).resolve()
+    template_directory = Path(input_args[1]).resolve()  # noqa: F841
     run_type = input_args[2]  # either "runningLocal" or "runningRemote"
-    workflow_driver = input_args[3]
+    workflow_driver = input_args[3]  # noqa: F841
     input_file = input_args[4]
 
-    # input_file_full_path = template_directory / input_file
+    # input_file_full_path = template_directory / input_file  # noqa: ERA001
 
-    with open(input_file, encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:  # noqa: PTH123
         inputs = json.load(f)
 
     uq_inputs = inputs['UQ']
@@ -124,12 +124,12 @@ def main(input_args):
         restart_file,
     )
 
-    # TODO: get_initial_states():
+    # TODO: get_initial_states():  # noqa: FIX002, TD002, TD003
     # either:
     # read them from file or
     # use LHS to explore the space and find the best starting points out of
     # those sampled values for the different chains
-    # TODO: get_initial_proposal_covariance_matrix():
+    # TODO: get_initial_proposal_covariance_matrix():  # noqa: FIX002, TD002, TD003
     # either:
     # read them from file or
     # adaptively tune the proposal covariance matrix by running the chain for
@@ -140,7 +140,7 @@ def main(input_args):
     # rate within 20%-40%
 
     num_accepts_list = [0] * num_datasets
-    # scale = np.square(1 / 50)
+    # scale = np.square(1 / 50)  # noqa: ERA001
     scale = 2.38**2 / num_rv
     proposal_scale_list = [scale] * num_datasets
 
@@ -173,7 +173,7 @@ def main(input_args):
         )
         list_of_prior_logpdf_values.append(logpdf_of_initial_state)
         model_iterable = [0, x]
-        # model_iterable = [sample_number, x]
+        # model_iterable = [sample_number, x]  # noqa: ERA001
         inputs = [
             list_of_model_evaluation_functions[model_number],
             model_iterable,
@@ -237,26 +237,26 @@ def main(input_args):
         list_of_initial_states_of_error_variance_per_dataset
     )
 
-    with open(results_directory_path / 'sample_0.json', 'w', encoding='utf-8') as f:
+    with open(results_directory_path / 'sample_0.json', 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(results_to_write, f, indent=4)
 
     adaptivity_results = {}
     # adaptivity_results["list_of_acceptance_rates"] = (
     #     list_of_acceptance_rates
-    # )
+    # )  # noqa: ERA001
     adaptivity_results['proposal_scale_list'] = proposal_scale_list
     cov_kernels_list = []
     for cov_kernel in list_of_proposal_covariance_kernels:
-        cov_kernels_list.append(cov_kernel.tolist())
+        cov_kernels_list.append(cov_kernel.tolist())  # noqa: PERF401
     adaptivity_results['list_of_proposal_covariance_kernels'] = cov_kernels_list
-    with open(
+    with open(  # noqa: PTH123
         results_directory_path.parent / f'adaptivity_results_{0}.json',
         'w',
         encoding='utf-8',
     ) as f:
         json.dump(adaptivity_results, f, indent=4)
 
-    samples = mwg_sampler.metropolis_within_gibbs_sampler(
+    samples = mwg_sampler.metropolis_within_gibbs_sampler(  # noqa: F841
         uq_inputs,
         parallel_evaluation_function,
         function_to_evaluate,

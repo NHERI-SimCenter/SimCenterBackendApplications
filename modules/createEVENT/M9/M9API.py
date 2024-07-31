@@ -1,19 +1,19 @@
-# %%
+# %%  # noqa: INP001, D100
 
 import subprocess
 import sys
 from importlib import metadata as importlib_metadata
 
 #
-# need to make sure we have some python modules .. identify missing and install with python -m pip
+# need to make sure we have some python modules .. identify missing and install with python -m pip  # noqa: E501
 #
 
 modules_reqd = {'numpy', 'pandas', 'geopandas', 'shapely', 'requests', 'argparse'}
 modules_installed = set()
 for x in importlib_metadata.distributions():
-    try:
+    try:  # noqa: SIM105
         modules_installed.add(x.name)
-    except:
+    except:  # noqa: S110, PERF203, E722
         pass
 
 # If installed packages could not be detected, use importlib_metadata backport:
@@ -21,43 +21,43 @@ if not modules_installed:
     import importlib_metadata
 
     for x in importlib_metadata.distributions():
-        try:
+        try:  # noqa: SIM105
             modules_installed.add(x.name)
-        except:
+        except:  # noqa: S110, PERF203, E722
             pass
 
 missing = modules_reqd - modules_installed
 
 if missing:
     python = sys.executable
-    print('\nInstalling packages required for running this widget...')
-    subprocess.check_call(
+    print('\nInstalling packages required for running this widget...')  # noqa: T201
+    subprocess.check_call(  # noqa: S603
         [python, '-m', 'pip', 'install', '--user', *missing],
         stdout=subprocess.DEVNULL,
     )
-    print('Successfully installed the required packages')
+    print('Successfully installed the required packages')  # noqa: T201
 
 #
 # now import our packages
 #
 
-import json
-import math
-import os
+import json  # noqa: E402
+import math  # noqa: E402
+import os  # noqa: E402
 
-import geopandas as gpd
-import numpy as np
-import pandas as pd
-import requests
-from shapely.geometry import Point, Polygon
+import geopandas as gpd  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import requests  # noqa: E402
+from shapely.geometry import Point, Polygon  # noqa: E402
 
 
 # %%
-def M9(information):
+def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
     """The default is to select sites from all M9 sites, but
     grid type (options: A, B, C, D, E, Y, and Z, can be empty)
     (ref: https://sites.uw.edu/pnet/m9-simulations/about-m9-simulations/extent-of-model/)
-    """
+    """  # noqa: D205, D400, D401, D415
     site_location = information['LocationFlag']
 
     if site_location:
@@ -84,31 +84,31 @@ def M9(information):
         'grid_type'
     ]  # grid type (options: A, B, C, D, E, Y, and Z, can be "all")
 
-    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected
-    numSiteGM = information['number_of_realizations']  # number of realizations
-    maxnumSiteGM = 30
-    numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations
+    randomFLag = True  # if True, the realizations are selected randomly, otherwise, the first numSiteGM sites are selected  # noqa: N806, E501
+    numSiteGM = information['number_of_realizations']  # number of realizations  # noqa: N806
+    maxnumSiteGM = 30  # noqa: N806
+    numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
     # changing realizations order
     indicies = list(range(maxnumSiteGM))
     if randomFLag:
-        np.random.shuffle(indicies)
+        np.random.shuffle(indicies)  # noqa: NPY002
     indicies = indicies[:numSiteGM]
 
     directory = information['directory']  # directory to save the data
     # create the directory if it does not exist
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    if not os.path.exists(directory):  # noqa: PTH110
+        os.makedirs(directory)  # noqa: PTH103
 
     ## remove the files in the directory
-    # os.system(f'rm -r {directory}/*')
+    # os.system(f'rm -r {directory}/*')  # noqa: ERA001
 
     # load the sites information
-    path_script = os.path.dirname(os.path.abspath(__file__))
+    path_script = os.path.dirname(os.path.abspath(__file__))  # noqa: PTH100, PTH120
     path_site_file = path_script + '/M9_sites.csv'
 
-    print(path_site_file)
-    df_allSites = pd.read_csv(path_site_file, index_col=False)
+    print(path_site_file)  # noqa: T201
+    df_allSites = pd.read_csv(path_site_file, index_col=False)  # noqa: N806
 
     # create a geopandas dataframe
     gdf = gpd.GeoDataFrame(
@@ -120,7 +120,7 @@ def M9(information):
     del df_allSites
 
     # limitation of each grid type (minx, miny, maxx, maxy)
-    Gridboxes = {
+    Gridboxes = {  # noqa: N806
         'A': (-123.2147269, 46.90566609, -121.1246222, 48.31489086),
         'B': (-128.4741831, 40.26059707, -121.0785236, 49.1785082),
         'C': (-123.2568915, 45.19862425, -122.2252305, 45.92126901),
@@ -150,12 +150,12 @@ def M9(information):
     if site_location:
         # first check if the location is inner the regoin
         if not region.contains(Point(lon, lat)):
-            print('The location is not in the selected grid region')
-            print(
-                'Please select a location in the region or change the grid type to "All"'
+            print('The location is not in the selected grid region')  # noqa: T201
+            print(  # noqa: T201
+                'Please select a location in the region or change the grid type to "All"'  # noqa: E501
             )
             return
-        else:
+        else:  # noqa: RET505
             # find the nearest site to the location
             gdf['distance'] = gdf.distance(Point(lon, lat))
             gdf = gdf.sort_values('distance')
@@ -166,7 +166,7 @@ def M9(information):
 
         if information['RegionShape'] == 'Rectangle':
             # Create a polygton using min_lat, max_lat, min_lon, max_lon
-            RegionofInterset = Polygon(
+            RegionofInterset = Polygon(  # noqa: N806
                 [
                     (min_lon, min_lat),
                     (min_lon, max_lat),
@@ -177,23 +177,23 @@ def M9(information):
 
             # Check that if the RegionofInterset and the region has intersection
             if not region.intersects(RegionofInterset):
-                print('The selected region is not in the selected grid region')
-                print(
-                    'Please select a region in in the or change the grid type to "All"'
+                print('The selected region is not in the selected grid region')  # noqa: T201
+                print(  # noqa: T201
+                    'Please select a region in in the or change the grid type to "All"'  # noqa: E501
                 )
                 return
-            else:
+            else:  # noqa: RET505
                 # Check if the RegionofInterset is in the region
                 if not region.contains(RegionofInterset):
-                    print(
-                        'The selected region is not entirely in the selected grid region'
+                    print(  # noqa: T201
+                        'The selected region is not entirely in the selected grid region'  # noqa: E501
                     )
-                    print(
-                        'The selected region will be changed to the intersection of the selected region and the grid region'
+                    print(  # noqa: T201
+                        'The selected region will be changed to the intersection of the selected region and the grid region'  # noqa: E501
                     )
-                    RegionofInterset = region.intersection(RegionofInterset)
+                    RegionofInterset = region.intersection(RegionofInterset)  # noqa: N806
                 else:
-                    print(
+                    print(  # noqa: T201
                         'The selected region is entirely in the selected grid region'
                     )
                 # now filter the sites that are in the regionofInterset
@@ -204,7 +204,7 @@ def M9(information):
                 gdf = gdf[gdf.within(RegionofInterset)]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -215,31 +215,31 @@ def M9(information):
             ]
             gdf = gdf[gdf['distance'] < radius]
 
-    APIFLAG = information[
+    APIFLAG = information[  # noqa: N806
         'APIFLAG'
     ]  # if the APIFLAG is True, we use M9 API to get the motion data
 
     if APIFLAG:
         # query flags
-        ResponseSpectra = True
+        ResponseSpectra = True  # noqa: N806
 
         # get the motion data from the API
         for _, site in gdf.iterrows():
             # get the motion data from the API
             site_name = site['Station Name']
-            jobURL = f'https://m9-broadband-download-rwqks6gbba-uc.a.run.app/getMotionFromStationName?StationName={site_name}&ResponseSpectra={ResponseSpectra}'
+            jobURL = f'https://m9-broadband-download-rwqks6gbba-uc.a.run.app/getMotionFromStationName?StationName={site_name}&ResponseSpectra={ResponseSpectra}'  # noqa: N806
             res_success = False
             iter_num = 0
             max_iter = 5
-            print(f'Getting the motion data for {site_name}')
+            print(f'Getting the motion data for {site_name}')  # noqa: T201
 
             while not (res_success) and (iter_num < max_iter):
-                res = requests.get(jobURL)
-                res_success = res.status_code == 200
+                res = requests.get(jobURL)  # noqa: S113
+                res_success = res.status_code == 200  # noqa: PLR2004
                 iter_num = iter_num + 1
 
             if res_success:
-                gmData = res.json()
+                gmData = res.json()  # noqa: N806
                 for i in indicies:
                     write_motion(site_name, directory, i, gmData[i], APIFLAG)
                     gdf['filename'] = f'{site_name}_{i}'
@@ -247,13 +247,13 @@ def M9(information):
                 if site_location:
                     break
             else:
-                print(f'URL not replied for {site_name}, skipping for now')
+                print(f'URL not replied for {site_name}, skipping for now')  # noqa: T201
                 if site_location:
-                    print('trying the next nearest site')
+                    print('trying the next nearest site')  # noqa: T201
 
             if site_location and not (res_success):
-                print('None of the nearest sites have motion data')
-                print('Please check your internet connection or try again later')
+                print('None of the nearest sites have motion data')  # noqa: T201
+                print('Please check your internet connection or try again later')  # noqa: T201
 
     if not (APIFLAG):
         indicies = ['030']
@@ -263,30 +263,30 @@ def M9(information):
                 site_name = site['Station Name']
                 lat = site['Latitude']
                 lon = site['Longitude']
-                firstLetter = site_name[0]
+                firstLetter = site_name[0]  # noqa: N806
                 filename = f'./csz{indicies[0]}/{firstLetter}/Xarray.nc'
 
                 # reading the nc file
-                data = xr.open_dataset(filename)
+                data = xr.open_dataset(filename)  # noqa: F821
                 subset = data.sel(lat=lat, lon=lon, method='nearest')
-                dt = data.coords['time'].values
+                dt = data.coords['time'].values  # noqa: PD011
                 dt = dt[1] - dt[0]
                 sitedata = {
                     'dT': dt,
-                    'accel_x': subset['acc_x'].values.tolist(),
-                    'accel_y': subset['acc_y'].values.tolist(),
-                    'accel_z': subset['acc_z'].values.tolist(),
+                    'accel_x': subset['acc_x'].values.tolist(),  # noqa: PD011
+                    'accel_y': subset['acc_y'].values.tolist(),  # noqa: PD011
+                    'accel_z': subset['acc_z'].values.tolist(),  # noqa: PD011
                 }
                 write_motion(site_name, directory, i, sitedata, APIFLAG)
                 gdf['filename'] = f'{site_name}_{i}'
 
-    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"
+    # save the gdf to a csv file in the directory just "Station Name", "Latitude", "Longitude"  # noqa: E501
     gdf[['filename', 'Latitude', 'Longitude']].to_csv(
         f'{directory}/sites.csv', index=False
     )
 
 
-def write_motion(site_name, directory, i, motiondict, APIFLAG):
+def write_motion(site_name, directory, i, motiondict, APIFLAG):  # noqa: ANN001, ANN201, N803, D103
     filename = f'{directory}/{site_name}_{i}.json'
 
     if APIFLAG:
@@ -308,14 +308,14 @@ def write_motion(site_name, directory, i, motiondict, APIFLAG):
         datatowrite['Data'] = 'Time history generated using M9 simulations'
         datatowrite['name'] = f'{site_name}_{i}'
 
-    with open(filename, 'w') as f:
+    with open(filename, 'w') as f:  # noqa: PTH123
         json.dump(datatowrite, f, indent=2)
 
 
-def haversine(lat1, lon1, lat2, lon2):
+def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
-    """
+    """  # noqa: D205
     # Convert decimal degrees to radians
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
 
@@ -330,4 +330,4 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance
+    return distance  # noqa: RET504

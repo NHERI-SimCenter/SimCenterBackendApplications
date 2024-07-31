@@ -1,4 +1,4 @@
-"""The wntrfr.morph.link module contains functions to split/break pipes."""
+"""The wntrfr.morph.link module contains functions to split/break pipes."""  # noqa: INP001
 
 import copy
 import logging
@@ -8,14 +8,14 @@ from wntrfr.network.elements import Pipe, Reservoir
 logger = logging.getLogger(__name__)
 
 
-def split_pipe(
-    wn,
-    pipe_name_to_split,
-    new_pipe_name,
-    new_junction_name,
-    add_pipe_at_end=True,
-    split_at_point=0.5,
-    return_copy=True,
+def split_pipe(  # noqa: ANN201, PLR0913
+    wn,  # noqa: ANN001
+    pipe_name_to_split,  # noqa: ANN001
+    new_pipe_name,  # noqa: ANN001
+    new_junction_name,  # noqa: ANN001
+    add_pipe_at_end=True,  # noqa: ANN001, FBT002
+    split_at_point=0.5,  # noqa: ANN001
+    return_copy=True,  # noqa: ANN001, FBT002
 ):
     """Split a pipe by adding a junction and one new pipe segment.
 
@@ -65,7 +65,7 @@ def split_pipe(
     wntr WaterNetworkModel
         Water network model with split pipe
 
-    """
+    """  # noqa: E501
     wn2 = _split_or_break_pipe(
         wn,
         pipe_name_to_split,
@@ -77,18 +77,18 @@ def split_pipe(
         return_copy,
     )
 
-    return wn2
+    return wn2  # noqa: RET504
 
 
-def break_pipe(
-    wn,
-    pipe_name_to_split,
-    new_pipe_name,
-    new_junction_name_old_pipe,
-    new_junction_name_new_pipe,
-    add_pipe_at_end=True,
-    split_at_point=0.5,
-    return_copy=True,
+def break_pipe(  # noqa: ANN201, PLR0913
+    wn,  # noqa: ANN001
+    pipe_name_to_split,  # noqa: ANN001
+    new_pipe_name,  # noqa: ANN001
+    new_junction_name_old_pipe,  # noqa: ANN001
+    new_junction_name_new_pipe,  # noqa: ANN001
+    add_pipe_at_end=True,  # noqa: ANN001, FBT002
+    split_at_point=0.5,  # noqa: ANN001
+    return_copy=True,  # noqa: ANN001, FBT002
 ):
     """Break a pipe by adding a two unconnected junctions and one new pipe segment.
 
@@ -144,7 +144,7 @@ def break_pipe(
     wntr WaterNetworkModel
         Water network model with pipe break
 
-    """
+    """  # noqa: E501
     wn2 = _split_or_break_pipe(
         wn,
         pipe_name_to_split,
@@ -156,20 +156,20 @@ def break_pipe(
         return_copy,
     )
 
-    return wn2
+    return wn2  # noqa: RET504
 
 
-def _split_or_break_pipe(
-    wn,
-    pipe_name_to_split,
-    new_pipe_name,
-    new_junction_names,
-    add_pipe_at_end,
-    split_at_point,
-    flag,
-    return_copy,
+def _split_or_break_pipe(  # noqa: ANN202, C901, PLR0912, PLR0913
+    wn,  # noqa: ANN001
+    pipe_name_to_split,  # noqa: ANN001
+    new_pipe_name,  # noqa: ANN001
+    new_junction_names,  # noqa: ANN001
+    add_pipe_at_end,  # noqa: ANN001
+    split_at_point,  # noqa: ANN001
+    flag,  # noqa: ANN001
+    return_copy,  # noqa: ANN001
 ):
-    if return_copy:  # Get a copy of the WaterNetworkModel
+    if return_copy:  # Get a copy of the WaterNetworkModel  # noqa: SIM108
         wn2 = copy.deepcopy(wn)
     else:
         wn2 = wn
@@ -178,18 +178,18 @@ def _split_or_break_pipe(
 
     # Do sanity checks
     if not isinstance(pipe, Pipe):
-        raise ValueError('You can only split pipes.')
+        raise ValueError('You can only split pipes.')  # noqa: EM101, TRY003, TRY004
     if split_at_point < 0 or split_at_point > 1:
-        raise ValueError('split_at_point must be between 0 and 1')
+        raise ValueError('split_at_point must be between 0 and 1')  # noqa: EM101, TRY003
     # Sina edited here
-    # node_list = [node_name for node_name, node in wn2.nodes()]
-    # link_list = [link_name for link_name, link in wn2.links()]
+    # node_list = [node_name for node_name, node in wn2.nodes()]  # noqa: ERA001
+    # link_list = [link_name for link_name, link in wn2.links()]  # noqa: ERA001
     # for new_junction_name in new_junction_names:
     # if new_junction_name in wn.node_name_list:
-    # raise RuntimeError('The junction name you provided is already \
+    # raise RuntimeError('The junction name you provided is already \  # noqa: ERA001
     # being used for another node.')
     # if new_pipe_name in wn.link_name_list:
-    # raise RuntimeError('The new link name you provided is already being \
+    # raise RuntimeError('The new link name you provided is already being \  # noqa: ERA001
     # used for another link.')
 
     # Get start and end node info
@@ -222,7 +222,7 @@ def _split_or_break_pipe(
         elevation=junction_elevation,
         coordinates=junction_coordinates,
     )
-    if len(new_junction_names) == 2:
+    if len(new_junction_names) == 2:  # noqa: PLR2004
         wn2.add_junction(
             new_junction_names[1],
             base_demand=0.0,

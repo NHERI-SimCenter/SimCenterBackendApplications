@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import json
 import shutil
 import sys
@@ -9,7 +9,7 @@ import numpy as np
 
 path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
-import uq_utilities
+import uq_utilities  # noqa: E402
 
 InputsType = tuple[
     Path,
@@ -20,7 +20,7 @@ InputsType = tuple[
 ]
 
 
-class CommandLineArguments:
+class CommandLineArguments:  # noqa: D101
     working_directory_path: Path
     template_directory_path: Path
     run_type: Literal['runningLocal', 'runningRemote']
@@ -36,7 +36,7 @@ def _handle_arguments(
     run_type = command_line_arguments.run_type
     driver_file = command_line_arguments.driver_file
     input_file = command_line_arguments.input_file
-    with open(input_file) as f:
+    with open(input_file) as f:  # noqa: PTH123
         inputs = json.load(f)
     return (
         working_directory_path,
@@ -96,22 +96,22 @@ def _create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _print_start_message(demarcation_string: str = '=', start_space: str = ''):
+def _print_start_message(demarcation_string: str = '=', start_space: str = ''):  # noqa: ANN202
     msg = f"'{Path(__file__).name}' started running"
-    print()
-    print(start_space + demarcation_string * len(msg))
-    print(start_space + msg)
-    print()
+    print()  # noqa: T201
+    print(start_space + demarcation_string * len(msg))  # noqa: T201
+    print(start_space + msg)  # noqa: T201
+    print()  # noqa: T201
 
 
-def _print_end_message(demarcation_string: str = '=', start_space: str = ''):
+def _print_end_message(demarcation_string: str = '=', start_space: str = ''):  # noqa: ANN202
     msg = f"'{Path(__file__).name}' finished running"
-    print()
-    print(start_space + msg)
-    print(start_space + demarcation_string * len(msg))
+    print()  # noqa: T201
+    print(start_space + msg)  # noqa: T201
+    print(start_space + demarcation_string * len(msg))  # noqa: T201
 
 
-def main(arguments: InputsType):
+def main(arguments: InputsType):  # noqa: ANN201, D103
     (
         working_directory_path,
         template_directory_path,
@@ -119,28 +119,28 @@ def main(arguments: InputsType):
         driver_file,
         inputs,
     ) = arguments
-    # applications_inputs = inputs["Applications"]
+    # applications_inputs = inputs["Applications"]  # noqa: ERA001
     edp_inputs = inputs['EDP']
-    # fem_inputs = inputs["FEM"]
+    # fem_inputs = inputs["FEM"]  # noqa: ERA001
     uq_inputs = inputs['UQ']
     correlation_matrix_inputs = inputs['correlationMatrix']
-    # local_applications_directory = inputs["localAppDir"]
+    # local_applications_directory = inputs["localAppDir"]  # noqa: ERA001
     rv_inputs = inputs['randomVariables']
-    # remote_applications_directory = inputs["remoteAppDir"]
-    # run_type = inputs["runType"]
-    # working_directory = inputs["workingDir"]
+    # remote_applications_directory = inputs["remoteAppDir"]  # noqa: ERA001
+    # run_type = inputs["runType"]  # noqa: ERA001
+    # working_directory = inputs["workingDir"]  # noqa: ERA001
 
-    # path_to_common_uq = main_script_directory.parent / "common"
-    # sys.path.append(str(path_to_common_uq))
+    # path_to_common_uq = main_script_directory.parent / "common"  # noqa: ERA001
+    # sys.path.append(str(path_to_common_uq))  # noqa: ERA001
 
     joint_distribution = uq_utilities.ERANatafJointDistribution(
         rv_inputs,
         correlation_matrix_inputs,
     )
-    # joint_distribution = uq_utilities.get_ERANataf_joint_distribution_instance(
-    #     list_of_rv_data=rv_inputs,
-    #     correlation_matrix_data=correlation_matrix_inputs,
-    # )
+    # joint_distribution = uq_utilities.get_ERANataf_joint_distribution_instance(  # noqa: ERA001
+    #     list_of_rv_data=rv_inputs,  # noqa: ERA001
+    #     correlation_matrix_data=correlation_matrix_inputs,  # noqa: ERA001
+    # )  # noqa: ERA001
 
     num_rv = len(rv_inputs)
     num_edp = len(edp_inputs)
@@ -153,7 +153,7 @@ def main(arguments: InputsType):
     list_of_dataset_lengths = []
 
     for sample_number, dir_name_string in enumerate(list_of_dataset_subdirs):
-        dir_name_string = list_of_dataset_subdirs[sample_number]
+        dir_name_string = list_of_dataset_subdirs[sample_number]  # noqa: PLW2901
         dir_name = Path(dir_name_string).stem
         source_dir_name = template_directory_path / dir_name
         destination_dir_name = working_directory_path / dir_name
@@ -184,7 +184,7 @@ def main(arguments: InputsType):
         )
 
     parallel_pool = uq_utilities.get_parallel_pool_instance(run_type)
-    # parallel_evaluation_function = parallel_pool.run
+    # parallel_evaluation_function = parallel_pool.run  # noqa: ERA001
     function_to_evaluate = uq_utilities.model_evaluation_function
 
     restart_file_name = Path(uq_inputs['Restart File Name']).name
@@ -205,15 +205,15 @@ def main(arguments: InputsType):
     )
 
 
-def _parse_arguments(args) -> InputsType:
+def _parse_arguments(args) -> InputsType:  # noqa: ANN001
     parser = _create_parser()
     command_line_arguments = CommandLineArguments()
     parser.parse_args(args=args, namespace=command_line_arguments)
     arguments = _handle_arguments(command_line_arguments)
-    return arguments
+    return arguments  # noqa: RET504
 
 
-def preprocess_arguments(args):
+def preprocess_arguments(args):  # noqa: ANN001, ANN201, D103
     arguments = _parse_arguments(args)
     return main(arguments=arguments)
 

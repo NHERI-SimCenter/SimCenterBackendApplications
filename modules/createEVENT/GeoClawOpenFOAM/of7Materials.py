@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -39,7 +39,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Materials:
+class of7Materials:  # noqa: N801
     """This class includes the methods related to
     material properties for openfoam7.
 
@@ -47,17 +47,17 @@ class of7Materials:
     -------
             mattext: Get all the text for the transportProperties
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
-    def mattext(self, data):
+    def mattext(self, data):  # noqa: ANN001, ANN201
         """Creates the necessary files for materials for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401, D415
         # Create a utilities object
         hydroutil = hydroUtils()
 
@@ -120,16 +120,16 @@ class of7Materials:
 
         mattext = mattext + 'sigma\t[1 0 -2 0 0 0 0]\t' + sigma + ';\n'
 
-        return mattext
+        return mattext  # noqa: RET504
 
     #############################################################
-    def matheader(self):
+    def matheader(self):  # noqa: ANN201
         """Creates the text for the header
 
         Variable
         -----------
                 header: Header for the transportProp-file
-        """
+        """  # noqa: D400, D401, D415
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -139,20 +139,20 @@ class of7Materials:
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tdictionary;\n\tlocation\t"constant";\n\tobject\ttransportProperties;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
 
         # Return the header for U file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
-    def matcheck(self, data):
+    def matcheck(self, data):  # noqa: ANN001, ANN201, PLR0911
         """Checks for material properties for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401, D415
         # Create a utilities object
         hydroutil = hydroUtils()
 

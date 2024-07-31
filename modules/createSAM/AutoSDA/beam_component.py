@@ -1,4 +1,4 @@
-# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column
+# This file is used to define the class of beam, which includes the axial, shear, and flexural strengths of column  # noqa: INP001, E501, D100
 # Developed by GUAN, XINGQUAN @ UCLA in Apr. 2018
 # Updated in Oct. 2018
 
@@ -17,16 +17,16 @@ class Beam:
     (2) Beam demand, a dictionary including shear and flexural demands.
     (3) Beam strength, a dictionary including shear and flexural strengths.
     (4) Beam flag, a boolean variable with True or False. If it is True, the beam is feasible.
-    """
+    """  # noqa: E501, D205, D404
 
-    def __init__(
+    def __init__(  # noqa: ANN204, PLR0913
         self,
-        section_size,
-        length,
-        shear_demand,
-        moment_demand_left,
-        moment_demand_right,
-        steel,
+        section_size,  # noqa: ANN001
+        length,  # noqa: ANN001
+        shear_demand,  # noqa: ANN001
+        moment_demand_left,  # noqa: ANN001
+        moment_demand_right,  # noqa: ANN001
+        steel,  # noqa: ANN001
     ):
         """This function initializes the attributes of the beam class.
         :param section_size: a string specifying the section size for the beam.
@@ -34,7 +34,7 @@ class Beam:
         :param shear_demand: a float number denoting the shear demand.
         :param moment_demand_left: a float number denoting the moment demand at right end.
         :param moment_demand_right: a float number denoting the moment demand at left end.
-        """
+        """  # noqa: E501, D205, D401, D404
         # Assign the necessary information for column class
         self.section = search_section_property(section_size, SECTION_DATABASE)
         self.demand = {
@@ -45,20 +45,20 @@ class Beam:
         self.length = length
 
         # Initialize the following variables
-        self.RBS_dimension = {}  # a dictionary used to store the dimensions for reduced beam section
+        self.RBS_dimension = {}  # a dictionary used to store the dimensions for reduced beam section  # noqa: E501
         self.spacing = (
             None  # a scalar indicating the spacing between two lateral supports
         )
-        self.strength = {}  # a dictionary used to store the strength of beam component
-        self.demand_capacity_ratio = {}  # a dictionary to store the demand to capacity ratio
-        self.is_feasible = {}  # a dictionary used to store the failure mode of beam (if any)
+        self.strength = {}  # a dictionary used to store the strength of beam component  # noqa: E501
+        self.demand_capacity_ratio = {}  # a dictionary to store the demand to capacity ratio  # noqa: E501
+        self.is_feasible = {}  # a dictionary used to store the failure mode of beam (if any)  # noqa: E501
         # Define a boolean flag which denotes the overall check results
         self.flag = None
 
         # Define a hinge dictionary to store all modeling parameters
         self.plastic_hinge = {}
 
-        # Using the following methods to compute strength and check whether strength is sufficient
+        # Using the following methods to compute strength and check whether strength is sufficient  # noqa: E501
         self.initialize_reduced_beam_section()
         self.check_flange(steel)
         self.check_web(steel)
@@ -68,26 +68,26 @@ class Beam:
         self.compute_demand_capacity_ratio()
         self.calculate_hinge_parameters(steel)
 
-    def initialize_reduced_beam_section(self):
+    def initialize_reduced_beam_section(self):  # noqa: ANN201
         """This method is used to initialize RBS dimensions.
         :return: a dictionary including a, b, and c values describing RBS dimensions.
-        """
+        """  # noqa: D205, D401, D404
         # Use the lower bound as the initial value for a and b
         self.RBS_dimension['a'] = 0.5 * self.section['bf']
         self.RBS_dimension['b'] = 0.65 * self.section['d']
-        # self.RBS_dimension['c'] = 0.1 * self.section['bf']
+        # self.RBS_dimension['c'] = 0.1 * self.section['bf']  # noqa: ERA001
         self.RBS_dimension['c'] = 0.25 * self.section['bf']
 
-    def check_flange(self, steel):
+    def check_flange(self, steel):  # noqa: ANN001, ANN201
         """This method is used to check whether the flange is satisfied with highly ductile requirement.
         : steel: a class defined in "steel_material.py" file
         : return: a flag (integer) which denotes the flange check result.
-        """
+        """  # noqa: E501, D205, D401, D404
         # Calculate equivalent flange width at reduced beam section
-        R = (4 * self.RBS_dimension['c'] ** 2 + self.RBS_dimension['b'] ** 2) / (
+        R = (4 * self.RBS_dimension['c'] ** 2 + self.RBS_dimension['b'] ** 2) / (  # noqa: N806
             8 * self.RBS_dimension['c']
         )
-        bf_RBS = (
+        bf_RBS = (  # noqa: N806
             2 * (R - self.RBS_dimension['c'])
             + self.section['bf']
             - 2 * np.sqrt(R**2 - (self.RBS_dimension['b'] / 3) ** 2)
@@ -102,11 +102,11 @@ class Beam:
         else:
             self.is_feasible['flange limit'] = False
 
-    def check_web(self, steel):
+    def check_web(self, steel):  # noqa: ANN001, ANN201
         """This method is used to check whether the web is satisfied with highly ductile requirement.
         :param steel: a class defined in "steel_material.py" file.
         :return: a flag (integer) which denotes the web check result.
-        """
+        """  # noqa: E501, D205, D401, D404
         # Compute limit for web depth-to-width ratio
         web_limit = 2.45 * np.sqrt(steel.E / steel.Fy)
         # Check whether web is satisfied with the requirement or not
@@ -115,35 +115,35 @@ class Beam:
         else:
             self.is_feasible['web limit'] = False
 
-    def determine_spacing_between_lateral_support(self, steel):
+    def determine_spacing_between_lateral_support(self, steel):  # noqa: ANN001, ANN201
         """This method is used to compute the spacing between two lateral supports.
         :param steel: a class defined in "steel_material.py" file.
         :return: a float number indicating the spacing.
-        """
+        """  # noqa: D205, D401, D404
         # Compute limit for spacing (Remember to convert from inches to feet)
         spacing_limit = 0.086 * self.section['ry'] * steel.E / steel.Fy * 1 / 12.0
         # Start with the number of lateral support equal to 1
         # Check whether the current lateral support is enough
-        # If it is not sufficient, increase the number of lateral support until the requirement is satisfied
+        # If it is not sufficient, increase the number of lateral support until the requirement is satisfied  # noqa: E501
         number_lateral_support = 1
         while self.length / (number_lateral_support + 1) > spacing_limit:
             number_lateral_support += 1
         # Check whether the spacing is less than Lp
-        # If the spacing greater than Lp, then reduce the spacing such that the flexural strength is governed by
+        # If the spacing greater than Lp, then reduce the spacing such that the flexural strength is governed by  # noqa: E501
         # plastic yielding.
-        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)
+        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)  # noqa: N806
         while (self.length / number_lateral_support + 1) > Lp:
             number_lateral_support += 1
         self.spacing = self.length / (number_lateral_support + 1)
 
-    def check_shear_strength(self, steel):
+    def check_shear_strength(self, steel):  # noqa: ANN001, ANN201
         """This method is used to check whether the shear strength of column is sufficient or not
         :param steel: a class defined in "steel_material.py" file
         :return: a float number denoting the shear strength and a flag denoting whether shear strength is sufficient
-        """
+        """  # noqa: E501, D205, D400, D401, D404, D415
         # Compute shear strength of beam
-        Cv = 1.0
-        Vn = 0.6 * steel.Fy * (self.section['tw'] * self.section['d']) * Cv
+        Cv = 1.0  # noqa: N806
+        Vn = 0.6 * steel.Fy * (self.section['tw'] * self.section['d']) * Cv  # noqa: N806
         phi = 1.0
         self.strength['shear'] = phi * Vn
         # Check whether shear strength is sufficient
@@ -152,20 +152,20 @@ class Beam:
         else:
             self.is_feasible['shear strength'] = False
 
-    def check_flexural_strength(self, steel):
+    def check_flexural_strength(self, steel):  # noqa: ANN001, ANN201
         """This method is used to check whether the beam has enough flexural strength.
         :return: a float number denoting flexural strength and a flag denoting whether the flexural strength is enough
-        """
+        """  # noqa: E501, D205, D400, D401, D404, D415
         # Compute plastic modulus at center of RBS
-        Z_RBS = self.section['Zx'] - 2 * self.RBS_dimension['c'] * self.section[
+        Z_RBS = self.section['Zx'] - 2 * self.RBS_dimension['c'] * self.section[  # noqa: N806
             'tf'
         ] * (self.section['d'] - self.section['tf'])
         # Calculate the moment capacity governed by plastic yielding at RBS
-        Mn_RBS = steel.Fy * Z_RBS
+        Mn_RBS = steel.Fy * Z_RBS  # noqa: N806
         phi = 0.9
         self.strength['flexural RBS'] = phi * Mn_RBS
         # Check whether the flexural strength is sufficient
-        M_max = np.max(
+        M_max = np.max(  # noqa: N806
             [abs(self.demand['moment right']), abs(self.demand['moment left'])]
         )
         if self.strength['flexural RBS'] >= M_max:
@@ -173,20 +173,20 @@ class Beam:
         else:
             self.is_feasible['flexural strength'] = False
 
-    def check_flag(self):
+    def check_flag(self):  # noqa: ANN201
         """This method is used to test whether beam passes all checks.
         :return: a bool variable. True ==> passed
-        """
+        """  # noqa: D205, D400, D401, D404, D415
         self.flag = True
-        for key in self.is_feasible.keys():
-            if self.is_feasible[key] == False:
+        for key in self.is_feasible.keys():  # noqa: SIM118
+            if self.is_feasible[key] == False:  # noqa: E712
                 self.flag = False
         return self.flag
 
-    def compute_demand_capacity_ratio(self):
+    def compute_demand_capacity_ratio(self):  # noqa: ANN201
         """This method is used to compute demand to capacity ratios.
         :return: a dictionary which includes the ratios for shear force and flexural moment.
-        """
+        """  # noqa: E501, D205, D401, D404
         self.demand_capacity_ratio['shear'] = (
             self.demand['shear'] / self.strength['shear']
         )
@@ -195,31 +195,31 @@ class Beam:
             / self.strength['flexural RBS']
         )
 
-    def calculate_hinge_parameters(self, steel):
+    def calculate_hinge_parameters(self, steel):  # noqa: ANN001, ANN201
         """This method is used to compute the modeling parameters for plastic hinge using modified IMK material model.
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
-        """
+        """  # noqa: E501, D205, D401, D404
         # Following content is based on the following reference:
         # [1] Hysteretic models tha incorporate strength and stiffness deterioration
-        # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under
+        # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under  # noqa: E501
         #     earthquake loading
         # [3] Global collapse of frame structures under seismic excitations
-        # [4] Sidesway collapse of deteriorating structural systems under seismic excitations
+        # [4] Sidesway collapse of deteriorating structural systems under seismic excitations  # noqa: E501
         # dictionary keys explanations:
         #                              K0: beam stiffness, 6*E*Iz/L
-        #                              Myp: bending strength, product of section modulus and material yield strength
-        #                              My: effective yield strength, 1.06 * bending strength
+        #                              Myp: bending strength, product of section modulus and material yield strength  # noqa: E501
+        #                              My: effective yield strength, 1.06 * bending strength  # noqa: E501
         #                              Lambda: reference cumulative plastic rotation
         #                              theta_p: pre-capping plastic rotation
         #                              theta_pc: post-capping plastic rotation
-        #                              as: strain hardening before modified by n (=10)
-        #                              residual: residual strength ratio, use 0.40 per Lignos' OpenSees example
-        #                              theta_u: ultimate rotation, use 0.40 per Lignos' OpenSees example
+        #                              as: strain hardening before modified by n (=10)  # noqa: E501
+        #                              residual: residual strength ratio, use 0.40 per Lignos' OpenSees example  # noqa: E501
+        #                              theta_u: ultimate rotation, use 0.40 per Lignos' OpenSees example  # noqa: E501
         # unit: kips, inches
         # beam spacing and length is in feet, remember to convert it to inches
         c1 = 25.4  # c1_unit
         c2 = 6.895  # c2_unit
-        McMy = 1.10  # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.
+        McMy = 1.10  # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.  # noqa: N806, E501
         h = self.section['d'] - 2 * self.section['tf']  # Web depth
         self.plastic_hinge['K0'] = (
             6 * steel.E * self.section['Ix'] / (self.length * 12.0)

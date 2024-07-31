@@ -1,4 +1,4 @@
-# import of modules
+# import of modules  # noqa: INP001, D100
 import types
 
 import numpy as np
@@ -45,7 +45,7 @@ The class is meant to be an auxiliary class for the ERARosen class.
 References:
 1. Documentation of the ERA Distribution Classes
 ---------------------------------------------------------------------------
-"""
+"""  # noqa: W291
 
 
 # %%
@@ -124,34 +124,34 @@ class ERACond:
       Uniform:                    Obj = ERADist('uniform','MOM',lambda ... :[mean,std])
       Weibull:                    Obj = ERADist('weibull','MOM',lambda ... :[mean,std])
 
-    """
+    """  # noqa: E501, D205
 
-    def __init__(self, name, opt, param, ID=False):
+    def __init__(self, name, opt, param, ID=False):  # noqa: ANN001, ANN204, FBT002, N803
         """Constructor method, for more details have a look at the
         class description.
-        """
+        """  # noqa: D205, D401
         self.Name = name.lower()
 
         if opt.upper() == 'PAR' or opt.upper() == 'MOM':
             self.Opt = opt.upper()
         else:
-            raise RuntimeError(
-                'Conditional distributions can only be defined '
+            raise RuntimeError(  # noqa: TRY003
+                'Conditional distributions can only be defined '  # noqa: EM101
                 "by moments (opt = 'MOM') or by parameters (opt = 'PAR')."
             )
 
         self.ID = ID
 
         # check if param is a lambda function
-        if type(param) == types.LambdaType:
+        if type(param) == types.LambdaType:  # noqa: E721
             self.Param = param
         else:
-            raise RuntimeError('The input param must be a lambda function.')
+            raise RuntimeError('The input param must be a lambda function.')  # noqa: EM101, TRY003
 
         self.modParam = param
 
     # %%
-    def condParam(self, cond):
+    def condParam(self, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
         """Evaluates the parameters of the distribution for the
         different given conditions.
         In case that the distribution is described by its moments,
@@ -159,57 +159,57 @@ class ERACond:
         parameters.
         This method is used by the ERACond methods condCDF, condPDF,
         condiCDF and condRandom.
-        """
+        """  # noqa: D205, D401
         cond = np.array(cond, ndmin=2, dtype=float).T
         par = self.modParam(cond)
         n_cond = np.shape(cond)[0]
 
-        # ----------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------  # noqa: E501
         # for the case of Opt == PAR
         if self.Opt == 'PAR':
             if self.Name == 'beta':
-                Par = [par[0], par[1], par[2], par[3] - par[2]]
+                Par = [par[0], par[1], par[2], par[3] - par[2]]  # noqa: N806
             elif self.Name == 'binomial':
-                Par = [par[0].astype(int), par[1]]
+                Par = [par[0].astype(int), par[1]]  # noqa: N806
             elif self.Name == 'chisquare':
-                Par = np.around(par, 0)
+                Par = np.around(par, 0)  # noqa: N806
             elif self.Name == 'exponential':
-                Par = 1 / par
+                Par = 1 / par  # noqa: N806
             elif self.Name == 'frechet':
-                Par = [-1 / par[1], par[0] / par[1], par[0]]
+                Par = [-1 / par[1], par[0] / par[1], par[0]]  # noqa: N806
             elif self.Name == 'gamma':
-                Par = [par[1], 1 / par[0]]
+                Par = [par[1], 1 / par[0]]  # noqa: N806
             elif self.Name == 'geometric':
-                Par = par
+                Par = par  # noqa: N806
             elif self.Name == 'gev':
-                Par = [-par[0], par[1], par[2]]
+                Par = [-par[0], par[1], par[2]]  # noqa: N806
             elif self.Name == 'gevmin':
-                Par = [-par[0], par[1], -par[2]]
-            elif self.Name == 'gumbel' or self.Name == 'gumbelmin':
-                Par = par
+                Par = [-par[0], par[1], -par[2]]  # noqa: N806
+            elif self.Name == 'gumbel' or self.Name == 'gumbelmin':  # noqa: PLR1714
+                Par = par  # noqa: N806
             elif self.Name == 'lognormal':
-                Par = [par[1], np.exp(par[0])]
-            elif self.Name == 'negativebinomial' or self.Name == 'normal':
-                Par = par
+                Par = [par[1], np.exp(par[0])]  # noqa: N806
+            elif self.Name == 'negativebinomial' or self.Name == 'normal':  # noqa: PLR1714
+                Par = par  # noqa: N806
             elif self.Name == 'pareto':
-                Par = [1 / par[1], par[0] / par[1], par[0]]
+                Par = [1 / par[1], par[0] / par[1], par[0]]  # noqa: N806
             elif self.Name == 'poisson':
-                if isinstance(par, list):
-                    Par = par[0] * par[1]
+                if isinstance(par, list):  # noqa: SIM108
+                    Par = par[0] * par[1]  # noqa: N806
                 else:
-                    Par = par
+                    Par = par  # noqa: N806
             elif self.Name == 'rayleigh':
-                Par = par
+                Par = par  # noqa: N806
             elif self.Name == 'truncatednormal':
                 a = (par[2] - par[0]) / par[1]
                 b = (par[3] - par[0]) / par[1]
-                Par = [par[0], par[1], a, b]
+                Par = [par[0], par[1], a, b]  # noqa: N806
             elif self.Name == 'uniform':
-                Par = [par[0], par[1] - par[0]]
+                Par = [par[0], par[1] - par[0]]  # noqa: N806
             elif self.Name == 'weibull':
-                Par = par
+                Par = par  # noqa: N806
 
-        # ----------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------  # noqa: E501
         # for the case of Opt == MOM
         elif self.Name == 'beta':
             r = (
@@ -218,15 +218,15 @@ class ERACond:
                 / (par[3] - par[2])
             )
             s = r * (par[3] - par[0]) / (par[0] - par[2])
-            Par = [r, s, par[2], par[3] - par[2]]
+            Par = [r, s, par[2], par[3] - par[2]]  # noqa: N806
         elif self.Name == 'binomial':
             p = 1 - (par[1]) ** 2 / par[0]
             n = par[0] / p
-            Par = [n.astype(int), p]
+            Par = [n.astype(int), p]  # noqa: N806
         elif self.Name == 'chisquare':
-            Par = np.around(par, 0)
+            Par = np.around(par, 0)  # noqa: N806
         elif self.Name == 'exponential':
-            Par = par
+            Par = par  # noqa: N806
         elif self.Name == 'frechet':
             c = np.zeros(n_cond)
             scale = np.zeros(n_cond)
@@ -234,14 +234,14 @@ class ERACond:
             for i in range(n_cond):
                 param0 = 2.0001
 
-                def equation(param):
+                def equation(param):  # noqa: ANN001, ANN202
                     return (
                         np.sqrt(
                             special.gamma(1 - 2 / param)
                             - special.gamma(1 - 1 / param) ** 2
                         )
                         / special.gamma(1 - 1 / param)
-                        - par[1][i] / par[0][i]
+                        - par[1][i] / par[0][i]  # noqa: B023
                     )
 
                 sol = optimize.fsolve(equation, x0=param0, full_output=True)
@@ -255,11 +255,11 @@ class ERACond:
                     c[i] = np.nan
                     scale[i] = np.nan
                     loc[i] = np.nan
-            Par = [c, scale, loc]
+            Par = [c, scale, loc]  # noqa: N806
         elif self.Name == 'gamma':
-            Par = [(par[0] / par[1]) ** 2, par[1] ** 2 / par[0]]
+            Par = [(par[0] / par[1]) ** 2, par[1] ** 2 / par[0]]  # noqa: N806
         elif self.Name == 'geometric':
-            Par = 1 / par
+            Par = 1 / par  # noqa: N806
         elif self.Name == 'gev':
             beta = par[2]
             alpha = (
@@ -268,7 +268,7 @@ class ERACond:
                 / np.sqrt(special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2)
             )
             epsilon = par[0] - (alpha / beta * (special.gamma(1 - beta) - 1))
-            Par = [-beta, alpha, epsilon]
+            Par = [-beta, alpha, epsilon]  # noqa: N806
         elif self.Name == 'gevmin':
             beta = par[2]
             alpha = (
@@ -277,36 +277,36 @@ class ERACond:
                 / np.sqrt(special.gamma(1 - 2 * beta) - special.gamma(1 - beta) ** 2)
             )
             epsilon = par[0] + (alpha / beta * (special.gamma(1 - beta) - 1))
-            Par = [-beta, alpha, -epsilon]
+            Par = [-beta, alpha, -epsilon]  # noqa: N806
         elif self.Name == 'gumbel':
             a_n = par[1] * np.sqrt(6) / np.pi
             b_n = par[0] - np.euler_gamma * a_n
-            Par = [a_n, b_n]
+            Par = [a_n, b_n]  # noqa: N806
         elif self.Name == 'gumbelmin':
             a_n = par[1] * np.sqrt(6) / np.pi
             b_n = par[0] + np.euler_gamma * a_n
-            Par = [a_n, b_n]
+            Par = [a_n, b_n]  # noqa: N806
         elif self.Name == 'lognormal':
             mu_lnx = np.log(par[0] ** 2 / np.sqrt(par[1] ** 2 + par[0] ** 2))
             sig_lnx = np.sqrt(np.log(1 + (par[1] / par[0]) ** 2))
-            Par = [sig_lnx, np.exp(mu_lnx)]
+            Par = [sig_lnx, np.exp(mu_lnx)]  # noqa: N806
         elif self.Name == 'negativebinomial':
             p = par[0] / (par[0] + par[1] ** 2)
             k = par[0] * p
-            Par = [k, p]
+            Par = [k, p]  # noqa: N806
         elif self.Name == 'normal':
-            Par = par
+            Par = par  # noqa: N806
         elif self.Name == 'pareto':
             alpha = 1 + np.sqrt(1 + (par[0] / par[1]) ** 2)
             x_m = par[0] * (alpha - 1) / alpha
-            Par = [1 / alpha, x_m / alpha, x_m]
+            Par = [1 / alpha, x_m / alpha, x_m]  # noqa: N806
         elif self.Name == 'poisson':
-            if isinstance(par, list):
-                Par = par[0]
+            if isinstance(par, list):  # noqa: SIM108
+                Par = par[0]  # noqa: N806
             else:
-                Par = par
+                Par = par  # noqa: N806
         elif self.Name == 'rayleigh':
-            Par = par / np.sqrt(np.pi / 2)
+            Par = par / np.sqrt(np.pi / 2)  # noqa: N806
         elif self.Name == 'truncatednormal':
             mu = np.zeros(n_cond)
             sig = np.zeros(n_cond)
@@ -322,29 +322,29 @@ class ERACond:
                     sig[i] = np.nan
                     continue
 
-                def equation(param):
-                    f = lambda x: stats.norm.pdf(x, param[0], param[1]) / (
-                        stats.norm.cdf(b[i], param[0], param[1])
-                        - stats.norm.cdf(a[i], param[0], param[1])
+                def equation(param):  # noqa: ANN001, ANN202
+                    f = lambda x: stats.norm.pdf(x, param[0], param[1]) / (  # noqa: E731
+                        stats.norm.cdf(b[i], param[0], param[1])  # noqa: B023
+                        - stats.norm.cdf(a[i], param[0], param[1])  # noqa: B023
                     )
                     expec_eq = (
-                        integrate.quadrature(lambda x: x * f(x), a[i], b[i])[0]
-                        - mean
+                        integrate.quadrature(lambda x: x * f(x), a[i], b[i])[0]  # noqa: B023
+                        - mean  # noqa: B023
                     )
                     std_eq = (
                         np.sqrt(
-                            integrate.quadrature(lambda x: x**2 * f(x), a[i], b[i])[
+                            integrate.quadrature(lambda x: x**2 * f(x), a[i], b[i])[  # noqa: B023
                                 0
                             ]
-                            - (integrate.quadrature(lambda x: x * f(x), a[i], b[i]))[
+                            - (integrate.quadrature(lambda x: x * f(x), a[i], b[i]))[  # noqa: B023
                                 0
                             ]
                             ** 2
                         )
-                        - std
+                        - std  # noqa: B023
                     )
                     eq = [expec_eq, std_eq]
-                    return eq
+                    return eq  # noqa: RET504
 
                 x0 = [mean, std]
                 sol = optimize.fsolve(equation, x0=x0, full_output=True)
@@ -356,24 +356,24 @@ class ERACond:
                     b[i] = np.nan
                     mu[i] = np.nan
                     sig[i] = np.nan
-            Par = [mu, sig, (a - mu) / sig, (b - mu) / sig]
+            Par = [mu, sig, (a - mu) / sig, (b - mu) / sig]  # noqa: N806
         elif self.Name == 'uniform':
             lower = par[0] - np.sqrt(12) * par[1] / 2
             upper = par[0] + np.sqrt(12) * par[1] / 2
-            Par = [lower, upper - lower]
+            Par = [lower, upper - lower]  # noqa: N806
         elif self.Name == 'weibull':
             a_n = np.zeros(n_cond)
             k = np.zeros(n_cond)
             for i in range(n_cond):
 
-                def equation(param):
+                def equation(param):  # noqa: ANN001, ANN202
                     return (
                         np.sqrt(
                             special.gamma(1 + 2 / param)
                             - (special.gamma(1 + 1 / param)) ** 2
                         )
                         / special.gamma(1 + 1 / param)
-                        - par[1][i] / par[0][i]
+                        - par[1][i] / par[0][i]  # noqa: B023
                     )
 
                 sol = optimize.fsolve(equation, x0=0.02, full_output=True)
@@ -383,7 +383,7 @@ class ERACond:
                 else:
                     k[i] = np.nan
                     a_n[i] = np.nan
-            Par = [a_n, k]
+            Par = [a_n, k]  # noqa: N806
 
         for i in range(len(Par)):
             Par[i] = np.squeeze(Par[i])
@@ -391,215 +391,215 @@ class ERACond:
         return Par
 
     # %%
-    def condCDF(self, x, cond):
+    def condCDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
         """Evaluates the CDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method X2U.
-        """
+        """  # noqa: D205, D401
         par = self.condParam(cond)  # computation of the conditional parameters
         x = np.array(x, ndmin=1, dtype=float)
 
         if self.Name == 'beta':
-            CDF = stats.beta.cdf(x, a=par[0], b=par[1], loc=par[2], scale=par[3])
+            CDF = stats.beta.cdf(x, a=par[0], b=par[1], loc=par[2], scale=par[3])  # noqa: N806
         elif self.Name == 'binomial':
-            CDF = stats.binom.cdf(x, n=par[0], p=par[1])
+            CDF = stats.binom.cdf(x, n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'chisquare':
-            CDF = stats.chi2.cdf(x, df=par)
+            CDF = stats.chi2.cdf(x, df=par)  # noqa: N806
         elif self.Name == 'exponential':
-            CDF = stats.expon.cdf(x, scale=par)
+            CDF = stats.expon.cdf(x, scale=par)  # noqa: N806
         elif self.Name == 'frechet':
-            CDF = stats.genextreme.cdf(x, c=par[0], scale=par[1], loc=par[2])
+            CDF = stats.genextreme.cdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gamma':
-            CDF = stats.gamma.cdf(x, a=par[0], scale=par[1])
+            CDF = stats.gamma.cdf(x, a=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'geometric':
-            CDF = stats.geom.cdf(x, p=par)
+            CDF = stats.geom.cdf(x, p=par)  # noqa: N806
         elif self.Name == 'gev':
-            CDF = stats.genextreme.cdf(x, c=par[0], scale=par[1], loc=par[2])
+            CDF = stats.genextreme.cdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gevmin':
-            CDF = 1 - stats.genextreme.cdf(-x, c=par[0], scale=par[1], loc=par[2])
+            CDF = 1 - stats.genextreme.cdf(-x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gumbel':
-            CDF = stats.gumbel_r.cdf(x, scale=par[0], loc=par[1])
+            CDF = stats.gumbel_r.cdf(x, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'gumbelmin':
-            CDF = stats.gumbel_l.cdf(x, scale=par[0], loc=par[1])
+            CDF = stats.gumbel_l.cdf(x, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'lognormal':
-            CDF = stats.lognorm.cdf(x, s=par[0], scale=par[1])
+            CDF = stats.lognorm.cdf(x, s=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'negativebinomial':
-            CDF = stats.nbinom.cdf(x - par[0], n=par[0], p=par[1])
+            CDF = stats.nbinom.cdf(x - par[0], n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'normal':
-            CDF = stats.norm.cdf(x, loc=par[0], scale=par[1])
+            CDF = stats.norm.cdf(x, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'pareto':
-            CDF = stats.genpareto.cdf(x, c=par[0], scale=par[1], loc=par[2])
+            CDF = stats.genpareto.cdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'poisson':
-            CDF = stats.poisson.cdf(x, mu=par)
+            CDF = stats.poisson.cdf(x, mu=par)  # noqa: N806
         elif self.Name == 'rayleigh':
-            CDF = stats.rayleigh.cdf(x, scale=par)
+            CDF = stats.rayleigh.cdf(x, scale=par)  # noqa: N806
         elif self.Name == 'truncatednormal':
-            CDF = stats.truncnorm.cdf(
+            CDF = stats.truncnorm.cdf(  # noqa: N806
                 x, loc=par[0], scale=par[1], a=par[2], b=par[3]
             )
         elif self.Name == 'uniform':
-            CDF = stats.uniform.cdf(x, loc=par[0], scale=par[1])
+            CDF = stats.uniform.cdf(x, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'weibull':
-            CDF = stats.weibull_min.cdf(x, c=par[1], scale=par[0])
+            CDF = stats.weibull_min.cdf(x, c=par[1], scale=par[0])  # noqa: N806
 
         return CDF
 
     # %%
-    def condiCDF(self, y, cond):
+    def condiCDF(self, y, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
         """Evaluates the inverse CDF of the conditional distribution at
         y for the given conditions.
         This method is used by the ERARosen method U2X.
-        """
+        """  # noqa: D205, D401
         par = self.condParam(cond)  # computation of the conditional parameters
         y = np.array(y, ndmin=1, dtype=float)
 
         if self.Name == 'beta':
-            iCDF = stats.beta.ppf(y, a=par[0], b=par[1], loc=par[2], scale=par[3])
+            iCDF = stats.beta.ppf(y, a=par[0], b=par[1], loc=par[2], scale=par[3])  # noqa: N806
         elif self.Name == 'binomial':
-            iCDF = stats.binom.ppf(y, n=par[0], p=par[1])
+            iCDF = stats.binom.ppf(y, n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'chisquare':
-            iCDF = stats.chi2.ppf(y, df=par)
+            iCDF = stats.chi2.ppf(y, df=par)  # noqa: N806
         elif self.Name == 'exponential':
-            iCDF = stats.expon.ppf(y, scale=par)
+            iCDF = stats.expon.ppf(y, scale=par)  # noqa: N806
         elif self.Name == 'frechet':
-            iCDF = stats.genextreme.ppf(y, c=par[0], scale=par[1], loc=par[2])
+            iCDF = stats.genextreme.ppf(y, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gamma':
-            iCDF = stats.gamma.ppf(y, a=par[0], scale=par[1])
+            iCDF = stats.gamma.ppf(y, a=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'geometric':
-            iCDF = stats.geom.ppf(y, p=par)
+            iCDF = stats.geom.ppf(y, p=par)  # noqa: N806
         elif self.Name == 'gev':
-            iCDF = stats.genextreme.ppf(y, c=par[0], scale=par[1], loc=par[2])
+            iCDF = stats.genextreme.ppf(y, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gevmin':
-            iCDF = -stats.genextreme.ppf(1 - y, c=par[0], scale=par[1], loc=par[2])
+            iCDF = -stats.genextreme.ppf(1 - y, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gumbel':
-            iCDF = stats.gumbel_r.ppf(y, scale=par[0], loc=par[1])
+            iCDF = stats.gumbel_r.ppf(y, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'gumbelmin':
-            iCDF = stats.gumbel_l.ppf(y, scale=par[0], loc=par[1])
+            iCDF = stats.gumbel_l.ppf(y, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'lognormal':
-            iCDF = stats.lognorm.ppf(y, s=par[0], scale=par[1])
+            iCDF = stats.lognorm.ppf(y, s=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'negativebinomial':
-            iCDF = stats.nbinom.ppf(y, n=par[0], p=par[1]) + par[0]
+            iCDF = stats.nbinom.ppf(y, n=par[0], p=par[1]) + par[0]  # noqa: N806
         elif self.Name == 'normal':
-            iCDF = stats.norm.ppf(y, loc=par[0], scale=par[1])
+            iCDF = stats.norm.ppf(y, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'pareto':
-            iCDF = stats.genpareto.ppf(y, c=par[0], scale=par[1], loc=par[2])
+            iCDF = stats.genpareto.ppf(y, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'poisson':
-            iCDF = stats.poisson.ppf(y, mu=par)
+            iCDF = stats.poisson.ppf(y, mu=par)  # noqa: N806
         elif self.Name == 'rayleigh':
-            iCDF = stats.rayleigh.ppf(y, scale=par)
+            iCDF = stats.rayleigh.ppf(y, scale=par)  # noqa: N806
         elif self.Name == 'truncatednormal':
-            iCDF = stats.truncnorm.ppf(
+            iCDF = stats.truncnorm.ppf(  # noqa: N806
                 y, loc=par[0], scale=par[1], a=par[2], b=par[3]
             )
         elif self.Name == 'uniform':
-            iCDF = stats.uniform.ppf(y, loc=par[0], scale=par[1])
+            iCDF = stats.uniform.ppf(y, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'weibull':
-            iCDF = stats.weibull_min.ppf(y, c=par[1], scale=par[0])
+            iCDF = stats.weibull_min.ppf(y, c=par[1], scale=par[0])  # noqa: N806
 
         return iCDF
 
     # %%
-    def condPDF(self, x, cond):
+    def condPDF(self, x, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
         """Evaluates the PDF of the conditional distribution at x for
         the given conditions.
         This method is used by the ERARosen method pdf.
-        """
+        """  # noqa: D205, D401
         par = self.condParam(cond)  # computation of the conditional parameters
         x = np.array(x, ndmin=1, dtype=float)
 
         if self.Name == 'beta':
-            PDF = stats.beta.pdf(x, a=par[0], b=par[1], loc=par[2], scale=par[3])
+            PDF = stats.beta.pdf(x, a=par[0], b=par[1], loc=par[2], scale=par[3])  # noqa: N806
         elif self.Name == 'binomial':
-            PDF = stats.binom.pmf(x, n=par[0], p=par[1])
+            PDF = stats.binom.pmf(x, n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'chisquare':
-            PDF = stats.chi2.pdf(x, df=par)
+            PDF = stats.chi2.pdf(x, df=par)  # noqa: N806
         elif self.Name == 'exponential':
-            PDF = stats.expon.pdf(x, scale=par)
+            PDF = stats.expon.pdf(x, scale=par)  # noqa: N806
         elif self.Name == 'frechet':
-            PDF = stats.genextreme.pdf(x, c=par[0], scale=par[1], loc=par[2])
+            PDF = stats.genextreme.pdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gamma':
-            PDF = stats.gamma.pdf(x, a=par[0], scale=par[1])
+            PDF = stats.gamma.pdf(x, a=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'geometric':
-            PDF = stats.geom.pmf(x, p=par)
+            PDF = stats.geom.pmf(x, p=par)  # noqa: N806
         elif self.Name == 'gev':
-            PDF = stats.genextreme.pdf(x, c=par[0], scale=par[1], loc=par[2])
+            PDF = stats.genextreme.pdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gevmin':
-            PDF = stats.genextreme.pdf(-x, c=par[0], scale=par[1], loc=par[2])
+            PDF = stats.genextreme.pdf(-x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gumbel':
-            PDF = stats.gumbel_r.pdf(x, scale=par[0], loc=par[1])
+            PDF = stats.gumbel_r.pdf(x, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'gumbelmin':
-            PDF = stats.gumbel_l.pdf(x, scale=par[0], loc=par[1])
+            PDF = stats.gumbel_l.pdf(x, scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'lognormal':
-            PDF = stats.lognorm.pdf(x, s=par[0], scale=par[1])
+            PDF = stats.lognorm.pdf(x, s=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'negativebinomial':
-            PDF = stats.nbinom.pmf(x - par[0], n=par[0], p=par[1])
+            PDF = stats.nbinom.pmf(x - par[0], n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'normal':
-            PDF = stats.norm.pdf(x, loc=par[0], scale=par[1])
+            PDF = stats.norm.pdf(x, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'pareto':
-            PDF = stats.genpareto.pdf(x, c=par[0], scale=par[1], loc=par[2])
+            PDF = stats.genpareto.pdf(x, c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'poisson':
-            PDF = stats.poisson.pmf(x, mu=par)
+            PDF = stats.poisson.pmf(x, mu=par)  # noqa: N806
         elif self.Name == 'rayleigh':
-            PDF = stats.rayleigh.pdf(x, scale=par)
+            PDF = stats.rayleigh.pdf(x, scale=par)  # noqa: N806
         elif self.Name == 'truncatednormal':
-            PDF = stats.truncnorm.pdf(
+            PDF = stats.truncnorm.pdf(  # noqa: N806
                 x, loc=par[0], scale=par[1], a=par[2], b=par[3]
             )
         elif self.Name == 'uniform':
-            PDF = stats.uniform.pdf(x, loc=par[0], scale=par[1])
+            PDF = stats.uniform.pdf(x, loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'weibull':
-            PDF = stats.weibull_min.pdf(x, c=par[1], scale=par[0])
+            PDF = stats.weibull_min.pdf(x, c=par[1], scale=par[0])  # noqa: N806
 
         return PDF
 
     # %%
-    def condRandom(self, cond):
+    def condRandom(self, cond):  # noqa: ANN001, ANN201, C901, N802, PLR0912
         """Creates one random sample for each given condition.
         This method is used by the ERARosen method random.
-        """
+        """  # noqa: D205, D401
         par = self.condParam(cond)  # computation of the conditional parameters
 
         if self.Name == 'beta':
-            Random = stats.beta.rvs(a=par[0], b=par[1], loc=par[2], scale=par[3])
+            Random = stats.beta.rvs(a=par[0], b=par[1], loc=par[2], scale=par[3])  # noqa: N806
         elif self.Name == 'binomial':
-            Random = stats.binom.rvs(n=par[0], p=par[1])
+            Random = stats.binom.rvs(n=par[0], p=par[1])  # noqa: N806
         elif self.Name == 'chisquare':
-            Random = stats.chi2.rvs(df=par)
+            Random = stats.chi2.rvs(df=par)  # noqa: N806
         elif self.Name == 'exponential':
-            Random = stats.expon.rvs(scale=par)
+            Random = stats.expon.rvs(scale=par)  # noqa: N806
         elif self.Name == 'frechet':
-            Random = stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])
+            Random = stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gamma':
-            Random = stats.gamma.rvs(a=par[0], scale=par[1])
+            Random = stats.gamma.rvs(a=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'geometric':
-            Random = stats.geom.rvs(p=par)
+            Random = stats.geom.rvs(p=par)  # noqa: N806
         elif self.Name == 'gev':
-            Random = stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])
+            Random = stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gevmin':
-            Random = -stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])
+            Random = -stats.genextreme.rvs(c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'gumbel':
-            Random = stats.gumbel_r.rvs(scale=par[0], loc=par[1])
+            Random = stats.gumbel_r.rvs(scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'gumbelmin':
-            Random = stats.gumbel_l.rvs(scale=par[0], loc=par[1])
+            Random = stats.gumbel_l.rvs(scale=par[0], loc=par[1])  # noqa: N806
         elif self.Name == 'lognormal':
-            Random = stats.lognorm.rvs(s=par[0], scale=par[1])
+            Random = stats.lognorm.rvs(s=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'negativebinomial':
-            Random = stats.nbinom.rvs(n=par[0], p=par[1]) + par[0]
+            Random = stats.nbinom.rvs(n=par[0], p=par[1]) + par[0]  # noqa: N806
         elif self.Name == 'normal':
-            Random = stats.norm.rvs(loc=par[0], scale=par[1])
+            Random = stats.norm.rvs(loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'pareto':
-            Random = stats.genpareto.rvs(c=par[0], scale=par[1], loc=par[2])
+            Random = stats.genpareto.rvs(c=par[0], scale=par[1], loc=par[2])  # noqa: N806
         elif self.Name == 'poisson':
-            Random = stats.poisson.rvs(mu=par)
+            Random = stats.poisson.rvs(mu=par)  # noqa: N806
         elif self.Name == 'rayleigh':
-            Random = stats.rayleigh.rvs(scale=par)
+            Random = stats.rayleigh.rvs(scale=par)  # noqa: N806
         elif self.Name == 'truncatednormal':
-            Random = stats.truncnorm.rvs(
+            Random = stats.truncnorm.rvs(  # noqa: N806
                 loc=par[0], scale=par[1], a=par[2], b=par[3]
             )
         elif self.Name == 'uniform':
-            Random = stats.uniform.rvs(loc=par[0], scale=par[1])
+            Random = stats.uniform.rvs(loc=par[0], scale=par[1])  # noqa: N806
         elif self.Name == 'weibull':
-            Random = stats.weibull_min.rvs(c=par[1], scale=par[0])
+            Random = stats.weibull_min.rvs(c=par[1], scale=par[0])  # noqa: N806
 
         return Random

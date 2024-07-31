@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2024 The Regents of the University of California
 # Copyright (c) 2024 Leland Stanford Junior University
 #
@@ -42,7 +42,7 @@ import os
 import pandas as pd
 
 
-def readJSONFile(file_addr):
+def readJSONFile(file_addr):  # noqa: ANN001, ANN201, N802
     """Reads a json file.
 
     Parameters
@@ -60,14 +60,14 @@ def readJSONFile(file_addr):
     data : dict
         JSON File data as a dict.
 
-    """
-    if not os.path.exists(file_addr):
-        raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))
+    """  # noqa: D401
+    if not os.path.exists(file_addr):  # noqa: PTH110
+        raise ValueError('INPUT WHALE FILE is not found.', repr(file_addr))  # noqa: EM101, TRY003
 
-    with open(file_addr) as f:
+    with open(file_addr) as f:  # noqa: PTH123
         data = json.load(f)
 
-    return data
+    return data  # noqa: RET504
 
 
 # =============================================================================
@@ -78,35 +78,35 @@ def readJSONFile(file_addr):
 #
 #     Parameters
 #     ----------
-#     file_addr : Path
+#     file_addr : Path  # noqa: ERA001
 #         rwhale input file path.
-#     REWET_input_data : dict
+#     REWET_input_data : dict  # noqa: ERA001
 #         REWET input data.
 #
 #     Returns
 #     -------
-#     rwhale_data : dict
+#     rwhale_data : dict  # noqa: ERA001
 #         rwhale inoput data as a dict.
 #
 #     """
 #
 #
-#     water_asset_data = rwhale_data["Applications"]\
-#         ["Assets"]["WaterDistributionNetwork"]
-#     inp_file_addr = water_asset_data["ApplicationData"]["inpFile"]
-#     run_directory = rwhale_data["runDir"]
-#     number_of_realization = rwhale_data["Applications"]\
-#         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]
+#     water_asset_data = rwhale_data["Applications"]\  # noqa: ERA001
+#         ["Assets"]["WaterDistributionNetwork"]  # noqa: ERA001
+#     inp_file_addr = water_asset_data["ApplicationData"]["inpFile"]  # noqa: ERA001
+#     run_directory = rwhale_data["runDir"]  # noqa: ERA001
+#     number_of_realization = rwhale_data["Applications"]\  # noqa: ERA001
+#         ["DL"]["WaterDistributionNetwork"]["ApplicationData"]["Realizations"]  # noqa: ERA001
 #
-#     REWET_input_data["inp_file" ] = inp_file_addr
-#     REWET_input_data["run_dir"] = run_directory
-#     REWET_input_data["number_of_realizations"] = number_of_realization
+#     REWET_input_data["inp_file" ] = inp_file_addr  # noqa: ERA001
+#     REWET_input_data["run_dir"] = run_directory  # noqa: ERA001
+#     REWET_input_data["number_of_realizations"] = number_of_realization  # noqa: ERA001
 #
-#     return rwhale_data
+#     return rwhale_data  # noqa: ERA001
 # =============================================================================
 
 
-def save_damage_data(damage_save_path, damage_data, scn_number):
+def save_damage_data(damage_save_path, damage_data, scn_number):  # noqa: ANN001, ANN201, D103
     pipe_damage_data = damage_data['Pipe']
     node_damage_data = damage_data['Node']
     pump_damage_data = damage_data['Pump']
@@ -117,10 +117,10 @@ def save_damage_data(damage_save_path, damage_data, scn_number):
     pump_damage_file_name = f'pump_damage_{scn_number}'
     tank_damage_file_name = f'tank_damage_{scn_number}'
 
-    pipe_damage_file_path = os.path.join(damage_save_path, pipe_damage_file_name)
-    node_damage_file_path = os.path.join(damage_save_path, node_damage_file_name)
-    pump_damage_file_path = os.path.join(damage_save_path, pump_damage_file_name)
-    tank_damage_file_path = os.path.join(damage_save_path, tank_damage_file_name)
+    pipe_damage_file_path = os.path.join(damage_save_path, pipe_damage_file_name)  # noqa: PTH118
+    node_damage_file_path = os.path.join(damage_save_path, node_damage_file_name)  # noqa: PTH118
+    pump_damage_file_path = os.path.join(damage_save_path, pump_damage_file_name)  # noqa: PTH118
+    tank_damage_file_path = os.path.join(damage_save_path, tank_damage_file_name)  # noqa: PTH118
 
     pipe_damage_data.to_pickle(pipe_damage_file_path)
     node_damage_data.to_pickle(node_damage_file_path)
@@ -134,10 +134,10 @@ def save_damage_data(damage_save_path, damage_data, scn_number):
         'Tank': tank_damage_file_name,
     }
 
-    return damage_file_name_list
+    return damage_file_name_list  # noqa: RET504
 
 
-def create_scneario_table():
+def create_scneario_table():  # noqa: ANN201, D103
     scenario_table = pd.DataFrame(
         dtype='O',
         columns=[
@@ -149,16 +149,16 @@ def create_scneario_table():
             'Probability',
         ],
     )
-    return scenario_table
+    return scenario_table  # noqa: RET504
 
 
-def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):
+def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number):  # noqa: ANN001, ANN201, D103
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         scenario_table = scenario_table.to_dict('records')
     elif isinstance(scenario_table, list):
         pass
     else:
-        raise ValueError('This is an unknown behavior.')
+        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
 
     new_row = {
         'Scenario Name': f'SCN_{scn_number}',
@@ -174,7 +174,7 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
     return scenario_table
 
 
-def save_scenario_table(scenario_table, scenario_table_file_path):
+def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN001, ANN201, D417
     """Saves the scneario data including scneario table and damaghe data acording
     to the table data/
 
@@ -187,22 +187,22 @@ def save_scenario_table(scenario_table, scenario_table_file_path):
     -------
     None.
 
-    """
+    """  # noqa: D205, D400, D401, D415
     if isinstance(scenario_table, pd.core.frame.DataFrame):
         pass
     elif isinstance(scenario_table, list):
         scenario_table = pd.DataFrame(scenario_table)
     else:
-        raise ValueError('This is an unknown behavior.')
+        raise ValueError('This is an unknown behavior.')  # noqa: EM101, TRY003, TRY004
 
     scenario_table = scenario_table.set_index('Scenario Name')
 
-    # scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)
+    # scenario_list_file_path = os.path.join(damage_save_path, scenario_list_file_name)  # noqa: ERA001, E501
 
     scenario_table.to_excel(scenario_table_file_path)
 
 
-def saveSettingsFile(REWET_input_data, save_directory, prefix):
+def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001, ANN201, N802, N803, D417
     """Saves seetings data that REWET NEEDs.
 
     Parameters
@@ -214,14 +214,14 @@ def saveSettingsFile(REWET_input_data, save_directory, prefix):
     -------
     None.
 
-    """
+    """  # noqa: D401
     settings = REWET_input_data['settings']
-    if prefix == None:
+    if prefix == None:  # noqa: E711
         settings_file_name = 'settings.json'
     else:
         settings_file_name = prefix + '_' + 'settings.json'
     damage_save_path = save_directory / settings_file_name
-    with open(damage_save_path, 'w') as f:
+    with open(damage_save_path, 'w') as f:  # noqa: PTH123
         json.dump(settings, f, indent=4)
 
     return damage_save_path

@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -42,7 +42,7 @@ from flume import flume
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class osuFlume:
+class osuFlume:  # noqa: N801
     """This class includes the methods related to
     creating a standard OSU flume
 
@@ -50,17 +50,17 @@ class osuFlume:
     -------
             creategeom: Create geometry and STL files
 
-    """
+    """  # noqa: D205, D400, D404, D415
 
     #############################################################
-    def creategeom(self, data, path):
+    def creategeom(self, data, path):  # noqa: ANN001, ANN201, ARG002, D417
         """Creates the geometry for OSU flume
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401, D415
         # Number of flume points
         numflumepoints = 9
 
@@ -87,9 +87,9 @@ class osuFlume:
 
         # Create temporary file
         filename = 'FlumeData.txt'
-        if os.path.exists(filename):
-            os.remove(filename)
-        f = open(filename, 'a')
+        if os.path.exists(filename):  # noqa: PTH110
+            os.remove(filename)  # noqa: PTH107
+        f = open(filename, 'a')  # noqa: SIM115, PTH123
         for ii in range(int(numflumepoints)):
             f.write(str(nums[2 * ii]) + ',' + str(nums[2 * ii + 1]) + '\n')
         f.close()
@@ -97,7 +97,7 @@ class osuFlume:
         # Add breadth of the flume
         breadth = 3.70
 
-        # Create the STL file and get extreme file (needed for blockmesh and building)
+        # Create the STL file and get extreme file (needed for blockmesh and building)  # noqa: E501
         flumeobj = flume()
         extreme = flumeobj.generateflume(breadth, path)
 

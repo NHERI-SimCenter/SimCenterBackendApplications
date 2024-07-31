@@ -1,7 +1,7 @@
 """Created on Thu Jan  5 16:31:32 2023
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400, D415
 
 import os
 
@@ -11,13 +11,13 @@ from GUI.Subsitute_Layer_Window import Ui_subsitite_layer_dialoge
 from PyQt5 import QtWidgets
 
 
-class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
-    def __init__(
+class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):  # noqa: N801, D101
+    def __init__(  # noqa: ANN204, D107
         self,
-        subsitute_layer_addr,
-        subsitute_layer,
-        iUse_substitute_layer,
-        demand_node_layers,
+        subsitute_layer_addr,  # noqa: ANN001
+        subsitute_layer,  # noqa: ANN001
+        iUse_substitute_layer,  # noqa: ANN001, N803
+        demand_node_layers,  # noqa: ANN001
     ):
         super().__init__()
         self._window = QtWidgets.QDialog()
@@ -31,7 +31,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
         self.iUse_substitute_layer = iUse_substitute_layer
         self.demand_node_layers.to_file(r'Northridge\demand_node_layer.shp')
         self.subsitute_layer_addr_line.setText(self.subsitute_layer_addr)
-        if type(self.subsitute_layer) != type(None):
+        if type(self.subsitute_layer) != type(None):  # noqa: E721
             self.subsitute_layer_projection_name_line.setText(
                 self.subsitute_layer.crs.name
             )
@@ -52,18 +52,18 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
             self.iUseSubstituteCheckBoxStateChanged
         )
 
-    def iUseSubstituteCheckBoxStateChanged(self, state):
+    def iUseSubstituteCheckBoxStateChanged(self, state):  # noqa: ANN001, ANN201, N802, D102
         if state == 0:
             self.iUse_substitute_layer = False
-        elif state == 2:
+        elif state == 2:  # noqa: PLR2004
             self.iUse_substitute_layer = True
 
-    def applyNewSubsituteLayer(self):
-        # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)
-        if type(self.subsitute_layer) == type(None):
+    def applyNewSubsituteLayer(self):  # noqa: ANN201, N802, D102
+        # demand_node_layers = self.createGeopandasPointDataFrameForNodes(self, self.wn, self.demand_node_name)  # noqa: ERA001, E501
+        if type(self.subsitute_layer) == type(None):  # noqa: E721
             return
 
-    def substituteLayerBrowseButton(self):
+    def substituteLayerBrowseButton(self):  # noqa: ANN201, N802, D102
         file = QtWidgets.QFileDialog.getOpenFileName(
             self._window,
             'Open file',
@@ -92,7 +92,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
         joined_map = gpd.sjoin(self.subsitute_layer, self.demand_node_layers)
 
         number_list = pd.Series(index=self.demand_node_layers.index, data=0)
-        for ind, val in joined_map['index_right'].iteritems():
+        for ind, val in joined_map['index_right'].iteritems():  # noqa: B007
             number_list.loc[val] = number_list.loc[val] + 1
 
         number_list = number_list[number_list > 1]
@@ -100,7 +100,7 @@ class Subsitute_Layer_Designer(Ui_subsitite_layer_dialoge):
 
         text = ''
         if len(number_list) > 0:
-            text += 'The following nodes is joined with more than 1 substitute layer feature\n'
+            text += 'The following nodes is joined with more than 1 substitute layer feature\n'  # noqa: E501
 
         for ind, num in number_list.iteritems():
             text += repr(ind) + ' : ' + repr(num) + '\n'

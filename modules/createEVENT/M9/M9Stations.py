@@ -1,4 +1,4 @@
-# %%
+# %%  # noqa: INP001, D100
 # required libraries numpy, geoandas,pandas,plotly
 import json
 import math
@@ -8,9 +8,9 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-def getStations(information, plot=False, show=False):
-    RegionFlag = information['RegionFlag']
-    LocationFlag = information['LocationFlag']
+def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, D103, PLR0912, PLR0915
+    RegionFlag = information['RegionFlag']  # noqa: N806
+    LocationFlag = information['LocationFlag']  # noqa: N806
 
     if LocationFlag:
         # get the location of the site
@@ -36,7 +36,7 @@ def getStations(information, plot=False, show=False):
     ]  # grid type (options: A, B, C, D, E, Y, and Z, can be "all")
 
     # load the sites information
-    df_allSites = pd.read_csv('M9_sites.csv', index_col=False)
+    df_allSites = pd.read_csv('M9_sites.csv', index_col=False)  # noqa: N806
 
     # create a geopandas dataframe
     gdf = gpd.GeoDataFrame(
@@ -48,7 +48,7 @@ def getStations(information, plot=False, show=False):
     del df_allSites
 
     # limitation of each grid type (minx, miny, maxx, maxy)
-    Gridboxes = {
+    Gridboxes = {  # noqa: N806
         'A': (-123.2147269, 46.90566609, -121.1246222, 48.31489086),
         'B': (-128.4741831, 40.26059707, -121.0785236, 49.1785082),
         'C': (-123.2568915, 45.19862425, -122.2252305, 45.92126901),
@@ -78,12 +78,12 @@ def getStations(information, plot=False, show=False):
     if LocationFlag:
         # first check if the location is inner the regoin
         if not region.contains(Point(lon, lat)):
-            print('The location is not in the selected grid region')
-            print(
-                'Please select a location in the region or change the grid type to "All"'
+            print('The location is not in the selected grid region')  # noqa: T201
+            print(  # noqa: T201
+                'Please select a location in the region or change the grid type to "All"'  # noqa: E501
             )
             return
-        else:
+        else:  # noqa: RET505
             # find the nearest site to the location
             gdf['distance'] = gdf.distance(Point(lon, lat))
             gdf = gdf.sort_values('distance')
@@ -94,7 +94,7 @@ def getStations(information, plot=False, show=False):
     if RegionFlag:
         if information['RegionShape'] == 'Rectangle':
             # Create a polygton using min_lat, max_lat, min_lon, max_lon
-            RegionofInterset = Polygon(
+            RegionofInterset = Polygon(  # noqa: N806
                 [
                     (min_lon, min_lat),
                     (min_lon, max_lat),
@@ -105,23 +105,23 @@ def getStations(information, plot=False, show=False):
 
             # Check that if the RegionofInterset and the region has intersection
             if not region.intersects(RegionofInterset):
-                print('The selected region is not in the selected grid region')
-                print(
-                    'Please select a region in in the or change the grid type to "All"'
+                print('The selected region is not in the selected grid region')  # noqa: T201
+                print(  # noqa: T201
+                    'Please select a region in in the or change the grid type to "All"'  # noqa: E501
                 )
                 return
-            else:
+            else:  # noqa: RET505
                 # Check if the RegionofInterset is in the region
                 if not region.contains(RegionofInterset):
-                    print(
-                        'The selected region is not entirely in the selected grid region'
+                    print(  # noqa: T201
+                        'The selected region is not entirely in the selected grid region'  # noqa: E501
                     )
-                    print(
-                        'The selected region will be changed to the intersection of the selected region and the grid region'
+                    print(  # noqa: T201
+                        'The selected region will be changed to the intersection of the selected region and the grid region'  # noqa: E501
                     )
-                    RegionofInterset = region.intersection(RegionofInterset)
+                    RegionofInterset = region.intersection(RegionofInterset)  # noqa: N806
                 else:
-                    print(
+                    print(  # noqa: T201
                         'The selected region is entirely in the selected grid region'
                     )
                 # now filter the sites that are in the regionofInterset
@@ -131,7 +131,7 @@ def getStations(information, plot=False, show=False):
                 ]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -191,10 +191,10 @@ def getStations(information, plot=False, show=False):
             zoom=10,
             mapbox_style='open-street-map',
         )
-        # fig.show()
+        # fig.show()  # noqa: ERA001
         # save the html file
-        # fig.write_html("M9_sites.html")
-        # fig.write_image("M9_sites.png")
+        # fig.write_html("M9_sites.html")  # noqa: ERA001
+        # fig.write_image("M9_sites.png")  # noqa: ERA001
         # fig.
         if show:
             fig.show()
@@ -207,14 +207,14 @@ def getStations(information, plot=False, show=False):
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
         'TapisFiles/selectedSites.csv', index=True
     )
-    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)
-    # fig.show()
+    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: SIM115, PTH123
+    # fig.show()  # noqa: ERA001
 
 
-def haversine(lat1, lon1, lat2, lon2):
+def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
-    """
+    """  # noqa: D205
     # Convert decimal degrees to radians
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
 
@@ -229,4 +229,4 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance
+    return distance  # noqa: RET504

@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2018 Leland Stanford Junior University
 # Copyright (c) 2018 The Regents of the University of California
 #
@@ -43,16 +43,16 @@ import numpy as np
 import pandas as pd
 
 
-def get_label(options, labels, label_name):
+def get_label(options, labels, label_name):  # noqa: ANN001, ANN201, D103
     for option in options:
         if option in labels:
             labels = labels[labels != option]
             return option, labels
 
-    print(f'WARNING: Could not identify the label for the {label_name}')
+    print(f'WARNING: Could not identify the label for the {label_name}')  # noqa: T201, RET503
 
 
-def create_stations(input_file, output_file, min_id, max_id):
+def create_stations(input_file, output_file, min_id, max_id):  # noqa: ANN001, ANN201
     """Reading input csv file for stations and saving data to output json file
     Input:
         input_file: the filename of the station csv file
@@ -61,14 +61,14 @@ def create_stations(input_file, output_file, min_id, max_id):
         max_id: the max ID to end
     Output:
         run_tag: 0 - success, 1 - input failure, 2 - outupt failure
-    """
+    """  # noqa: D205, D400, D401, D415
     # Reading csv data
     run_tag = 1
     try:
         stn_df = pd.read_csv(input_file, header=0, index_col=0)
-    except:
+    except:  # noqa: E722
         run_tag = 0
-        return run_tag
+        return run_tag  # noqa: RET504
     # Max and Min IDs
     stn_ids_min = np.min(stn_df.index.values)
     stn_ids_max = np.max(stn_df.index.values)
@@ -80,7 +80,7 @@ def create_stations(input_file, output_file, min_id, max_id):
     max_id = np.min([stn_ids_max, max_id])
     selected_stn = stn_df.loc[min_id:max_id, :]
     # Extracting data
-    labels = selected_stn.columns.values
+    labels = selected_stn.columns.values  # noqa: PD011
     lon_label, labels = get_label(
         ['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude'
     )
@@ -94,7 +94,7 @@ def create_stations(input_file, output_file, min_id, max_id):
         stn_file['Stations'].append(tmp)
     # Saving data to the output file
     if output_file:
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w') as f:  # noqa: PTH123
             json.dump(stn_file, f, indent=2)
     # Returning the final run state
     return stn_file

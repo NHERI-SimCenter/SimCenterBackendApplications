@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -54,17 +54,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # read the hazard configuration file
-    with open(args.hazard_config) as f:
+    with open(args.hazard_config) as f:  # noqa: PTH123
         hazard_info = json.load(f)
 
     # directory (back compatibility here)
     work_dir = hazard_info['Directory']
-    input_dir = os.path.join(work_dir, 'Input')
-    output_dir = os.path.join(work_dir, 'Output')
+    input_dir = os.path.join(work_dir, 'Input')  # noqa: PTH118
+    output_dir = os.path.join(work_dir, 'Output')  # noqa: PTH118
     try:
-        os.mkdir(f'{output_dir}')
-    except:
-        print('HazardSimulation: output folder already exists.')
+        os.mkdir(f'{output_dir}')  # noqa: PTH102
+    except:  # noqa: E722
+        print('HazardSimulation: output folder already exists.')  # noqa: T201
 
     # parse job type for set up environment and constants
     try:
@@ -72,14 +72,14 @@ if __name__ == '__main__':
             'PointSource',
             'ERF',
         ]
-    except:
+    except:  # noqa: E722
         opensha_flag = False
     try:
         oq_flag = (
             'OpenQuake' in hazard_info['Scenario']['EqRupture']['Type']
             or 'oqSourceXML' in hazard_info['Scenario']['EqRupture']['Type']
         )
-    except:
+    except:  # noqa: E722
         oq_flag = False
 
     # dependencies
@@ -88,18 +88,18 @@ if __name__ == '__main__':
         if importlib.util.find_spec(p) is None:
             # print(f"""The Python package {p} is required but not found.
             #        Please install it by running
-            #       "{sys.executable} -m pip install -q {p}"
+            #       "{sys.executable} -m pip install -q {p}"  # noqa: ERA001
             #        in your terminal or command prompt""")
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', p])  # noqa: S603
 
     # set up environment
     import socket
 
     if 'stampede2' not in socket.gethostname():
         if importlib.util.find_spec('jpype') is None:
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'JPype1'])  # noqa: S603
         import jpype
-        from jpype.types import *
+        from jpype.types import *  # noqa: F403
 
         memory_total = psutil.virtual_memory().total / (1024.0**3)
         memory_request = int(memory_total * 0.75)
@@ -114,22 +114,22 @@ if __name__ == '__main__':
     # if oq_flag:
     #     # clear up old db.sqlite3 if any
     #     if os.path.isfile(os.path.expanduser('~/oqdata/db.sqlite3')):
-    #         new_db_sqlite3 = True
-    #         try:
-    #             os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))
-    #         except:
-    #             new_db_sqlite3 = False
+    #         new_db_sqlite3 = True  # noqa: ERA001
+    #         try:  # noqa: ERA001
+    #             os.remove(os.path.expanduser('~/oqdata/db.sqlite3'))  # noqa: ERA001
+    #         except:  # noqa: ERA001
+    #             new_db_sqlite3 = False  # noqa: ERA001
     #     # data dir
-    #     os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')
-    #     print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))
+    #     os.environ['OQ_DATADIR'] = os.path.join(os.path.abspath(output_dir), 'oqdata')  # noqa: ERA001, E501
+    #     print('HazardSimulation: local OQ_DATADIR = '+os.environ.get('OQ_DATADIR'))  # noqa: ERA001
     #     if os.path.exists(os.environ.get('OQ_DATADIR')):
-    #         print('HazardSimulation: local OQ folder already exists, overwiting it now...')
-    #         shutil.rmtree(os.environ.get('OQ_DATADIR'))
-    #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")
+    #         print('HazardSimulation: local OQ folder already exists, overwiting it now...')  # noqa: ERA001, E501
+    #         shutil.rmtree(os.environ.get('OQ_DATADIR'))  # noqa: ERA001
+    #     os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: ERA001
 
     if oq_flag:
-        # import FetchOpenQuake
-        from FetchOpenQuake import *
+        # import FetchOpenQuake  # noqa: ERA001
+        from FetchOpenQuake import *  # noqa: F403
 
     # untar site databases
     site_database = [
@@ -137,20 +137,20 @@ if __name__ == '__main__':
         'global_zTR_4km.tar.gz',
         'thompson_vs30_4km.tar.gz',
     ]
-    print('HazardSimulation: Extracting site databases.')
-    cwd = os.path.dirname(os.path.realpath(__file__))
+    print('HazardSimulation: Extracting site databases.')  # noqa: T201
+    cwd = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120
     for cur_database in site_database:
-        # subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])
+        # subprocess.run(["tar","-xvzf",cwd+"/database/site/"+cur_database,"-C",cwd+"/database/site/"])  # noqa: ERA001, E501
         tar = tarfile.open(cwd + '/database/site/' + cur_database, 'r:gz')
-        tar.extractall(cwd + '/database/site/')
+        tar.extractall(cwd + '/database/site/')  # noqa: S202
         tar.close()
 
     # # Initial process list
-    # import psutil
-    # proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]
+    # import psutil  # noqa: ERA001
+    # proc_list_init = [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'python' in p.info['name']]  # noqa: ERA001, E501
 
     # Sites and stations
-    print('HazardSimulation: creating stations.')
+    print('HazardSimulation: creating stations.')  # noqa: T201
     site_info = hazard_info['Site']
     z1_tag = 0
     z25_tag = 0
@@ -164,11 +164,11 @@ if __name__ == '__main__':
     site_info['Z1pt0'].update({'z1_tag': z1_tag})
     site_info['Z2pt5'].update({'z25_tag': z25_tag})
     if site_info['Type'] == 'From_CSV':
-        input_file = os.path.join(input_dir, site_info['input_file'])
+        input_file = os.path.join(input_dir, site_info['input_file'])  # noqa: PTH118
         output_file = site_info.get('output_file', False)
         if output_file:
-            output_file = os.path.join(input_dir, output_file)
-        filter = site_info['filter']
+            output_file = os.path.join(input_dir, output_file)  # noqa: PTH118
+        filter = site_info['filter']  # noqa: A001
         # Creating stations from the csv input file
         stations = create_stations(
             input_file,
@@ -179,17 +179,17 @@ if __name__ == '__main__':
             site_info['Z2pt5'],
         )
     else:
-        print("""Only From_CSV site_info['Type'] is supported now""")
+        print("""Only From_CSV site_info['Type'] is supported now""")  # noqa: T201
     if stations:
-        print('ScenarioForecast: stations created.')
+        print('ScenarioForecast: stations created.')  # noqa: T201
     else:
-        print(
-            'HazardSimulation: please check the "Input" directory in the configuration json file.'
+        print(  # noqa: T201
+            'HazardSimulation: please check the "Input" directory in the configuration json file.'  # noqa: E501
         )
-        exit()
+        exit()  # noqa: PLR1722
 
     # Scenarios
-    print('HazardSimulation: creating scenarios.')
+    print('HazardSimulation: creating scenarios.')  # noqa: T201
     scenario_info = hazard_info['Scenario']
     if scenario_info['Type'] == 'Earthquake':
         # KZ-10/31/2022: checking user-provided scenarios
@@ -211,10 +211,10 @@ if __name__ == '__main__':
         # Creating wind scenarios
         create_wind_scenarios(scenario_info, stations, input_dir)
     else:
-        # TODO: extending this to other hazards
-        print('HazardSimulation: currently only supports EQ and Wind simulations.')
-    # print(scenarios)
-    print('HazardSimulation: scenarios created.')
+        # TODO: extending this to other hazards  # noqa: FIX002, TD002, TD003
+        print('HazardSimulation: currently only supports EQ and Wind simulations.')  # noqa: T201
+    # print(scenarios)  # noqa: ERA001
+    print('HazardSimulation: scenarios created.')  # noqa: T201
 
     # Closing the current process
     sys.exit(0)

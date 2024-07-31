@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2023 Leland Stanford Junior University
 # Copyright (c) 2023 The Regents of the University of California
 #
@@ -54,24 +54,24 @@ from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 from scipy.stats import norm
 
-# start_time = time.time()
+# start_time = time.time()  # noqa: ERA001
 
 
-def plot_fragility(comp_db_path, output_path, create_zip='0'):
+def plot_fragility(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
     if create_zip == '1':
         output_path = output_path[:-4]
 
-    if os.path.exists(output_path):
+    if os.path.exists(output_path):  # noqa: PTH110
         shutil.rmtree(output_path)
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    # frag_df = convert_to_MultiIndex(pd.read_csv(resource_dir + '/' + frag_DB_file, index_col=0), axis=1)
+    # frag_df = convert_to_MultiIndex(pd.read_csv(resource_dir + '/' + frag_DB_file, index_col=0), axis=1)  # noqa: ERA001, E501
     frag_df = convert_to_MultiIndex(pd.read_csv(comp_db_path, index_col=0), axis=1)
 
     comp_db_meta = comp_db_path[:-3] + 'json'
 
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta) as f:
+        with open(comp_db_meta) as f:  # noqa: PTH123
             frag_meta = json.load(f)
     else:
         frag_meta = None
@@ -82,14 +82,14 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
     # for comp_id in frag_df.index[695:705]:
     for comp_id in frag_df.index:
         comp_data = frag_df.loc[comp_id]
-        if frag_meta != None:
-            if comp_id in frag_meta.keys():
+        if frag_meta != None:  # noqa: E711
+            if comp_id in frag_meta.keys():  # noqa: SIM108, SIM118
                 comp_meta = frag_meta[comp_id]
             else:
                 comp_meta = None
         else:
             comp_meta = None
-        # print(json.dumps(comp_meta, indent=2))
+        # print(json.dumps(comp_meta, indent=2))  # noqa: ERA001
 
         fig = go.Figure()
         fig = make_subplots(
@@ -121,8 +121,8 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
             d_min = np.inf
             d_max = -np.inf
 
-            LS_count = 0
-            for LS in limit_states:
+            LS_count = 0  # noqa: N806
+            for LS in limit_states:  # noqa: N806
                 if comp_data.loc[(LS, 'Family')] == 'normal':
                     d_min_i, d_max_i = norm.ppf(
                         [p_min, p_max],
@@ -141,14 +141,14 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                 else:
                     continue
 
-                LS_count += 1
+                LS_count += 1  # noqa: N806
 
                 d_min = np.min([d_min, d_min_i])
                 d_max = np.max([d_max, d_max_i])
 
             demand_vals = np.linspace(d_min, d_max, num=100)
 
-            for i_ls, LS in enumerate(limit_states):
+            for i_ls, LS in enumerate(limit_states):  # noqa: N806
                 if comp_data.loc[(LS, 'Family')] == 'normal':
                     cdf_vals = norm.cdf(
                         demand_vals,
@@ -170,7 +170,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         x=demand_vals,
                         y=cdf_vals,
                         mode='lines',
-                        line=dict(width=3, color=colors[LS_count][i_ls]),
+                        line=dict(width=3, color=colors[LS_count][i_ls]),  # noqa: C408
                         name=LS,
                     ),
                     row=1,
@@ -187,7 +187,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         0,
                     ],
                     mode='lines',
-                    line=dict(width=3, color=colors[1][0]),
+                    line=dict(width=3, color=colors[1][0]),  # noqa: C408
                     name='Incomplete Fragility Data',
                 ),
                 row=1,
@@ -196,9 +196,9 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
 
         table_vals = []
 
-        for LS in limit_states:
+        for LS in limit_states:  # noqa: N806
             if (
-                np.all(
+                np.all(  # noqa: E712
                     pd.isna(
                         comp_data[LS][
                             ['Theta_0', 'Family', 'Theta_1', 'DamageStateWeights']
@@ -207,7 +207,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                 )
                 == False
             ):
-                table_vals.append(
+                table_vals.append(  # noqa: PERF401
                     np.insert(
                         comp_data[LS][
                             ['Theta_0', 'Family', 'Theta_1', 'DamageStateWeights']
@@ -222,7 +222,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
         ds_list = []
         ds_i = 1
         for dsw in table_vals[-1]:
-            if pd.isna(dsw) == True:
+            if pd.isna(dsw) == True:  # noqa: E712
                 ds_list.append(f'DS{ds_i}')
                 ds_i += 1
 
@@ -243,13 +243,13 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
         table_vals[1] = np.array(ds_list)
 
         font_size = 16
-        if ds_i > 8:
+        if ds_i > 8:  # noqa: PLR2004
             font_size = 8.5
 
         fig.add_trace(
             go.Table(
                 columnwidth=[50, 70, 65, 95, 80],
-                header=dict(
+                header=dict(  # noqa: C408
                     values=[
                         '<b>Limit<br>State</b>',
                         '<b>Damage State(s)</b>',
@@ -258,17 +258,17 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         '<b>  Capacity<br>Dispersion</b>',
                     ],
                     align=['center', 'left', 'center', 'center', 'center'],
-                    fill=dict(color='rgb(200,200,200)'),
-                    line=dict(color='black'),
-                    font=dict(color='black', size=16),
+                    fill=dict(color='rgb(200,200,200)'),  # noqa: C408
+                    line=dict(color='black'),  # noqa: C408
+                    font=dict(color='black', size=16),  # noqa: C408
                 ),
-                cells=dict(
+                cells=dict(  # noqa: C408
                     values=table_vals,
                     height=30,
                     align=['center', 'left', 'center', 'center', 'center'],
-                    fill=dict(color='rgba(0,0,0,0)'),
-                    line=dict(color='black'),
-                    font=dict(color='black', size=font_size),
+                    fill=dict(color='rgba(0,0,0,0)'),  # noqa: C408
+                    line=dict(color='black'),  # noqa: C408
+                    font=dict(color='black', size=font_size),  # noqa: C408
                 ),
             ),
             row=1,
@@ -280,14 +280,14 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
         ds_offset = 0.086
         info_font_size = 10
 
-        if ds_i > 8:
+        if ds_i > 8:  # noqa: PLR2004
             x_loc = 0.4928
             y_loc = 0.705 + 0.123
             ds_offset = 0.0455
             info_font_size = 9
 
         for i_ls, ds_desc in enumerate(ds_list):
-            if comp_meta != None:
+            if comp_meta != None:  # noqa: E711
                 ls_meta = comp_meta['LimitStates'][f'LS{i_ls+1}']
 
                 y_loc = y_loc - 0.123
@@ -295,17 +295,17 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                 if '<br>' in ds_desc:
                     ds_vals = ds_desc.split('<br>')
 
-                    for i_ds, ds_name in enumerate(ds_vals):
+                    for i_ds, ds_name in enumerate(ds_vals):  # noqa: B007
                         ds_id = list(ls_meta.keys())[i_ds]
 
-                        if ls_meta[ds_id].get('Description', False) != False:
+                        if ls_meta[ds_id].get('Description', False) != False:  # noqa: E712
                             ds_description = '<br>'.join(
                                 wrap(ls_meta[ds_id]['Description'], width=70)
                             )
                         else:
                             ds_description = ''
 
-                        if ls_meta[ds_id].get('RepairAction', False) != False:
+                        if ls_meta[ds_id].get('RepairAction', False) != False:  # noqa: E712
                             ds_repair = '<br>'.join(
                                 wrap(ls_meta[ds_id]['RepairAction'], width=70)
                             )
@@ -313,7 +313,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                             ds_repair = ''
 
                         if ds_repair != '':
-                            ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                            ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
                         else:
                             ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
@@ -328,7 +328,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                             ayref='pixel',
                             xanchor='left',
                             yanchor='bottom',
-                            font=dict(size=info_font_size),
+                            font=dict(size=info_font_size),  # noqa: C408
                             showarrow=False,
                             ax=0,
                             ay=0,
@@ -340,16 +340,16 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
 
                 else:
                     # assuming a single Damage State
-                    ds_id = list(ls_meta.keys())[0]
+                    ds_id = list(ls_meta.keys())[0]  # noqa: RUF015
 
-                    if ls_meta[ds_id].get('Description', False) != False:
+                    if ls_meta[ds_id].get('Description', False) != False:  # noqa: E712
                         ds_description = '<br>'.join(
                             wrap(ls_meta[ds_id]['Description'], width=70)
                         )
                     else:
                         ds_description = ''
 
-                    if ls_meta[ds_id].get('RepairAction', False) != False:
+                    if ls_meta[ds_id].get('RepairAction', False) != False:  # noqa: E712
                         ds_repair = '<br>'.join(
                             wrap(ls_meta[ds_id]['RepairAction'], width=70)
                         )
@@ -357,7 +357,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         ds_repair = ''
 
                     if ds_repair != '':
-                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                        ds_text = f'<b>{ds_id}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
                     else:
                         ds_text = f'<b>{ds_id}</b><br>{ds_description}'
 
@@ -370,7 +370,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         ayref='pixel',
                         xanchor='left',
                         yanchor='bottom',
-                        font=dict(size=info_font_size),
+                        font=dict(size=info_font_size),  # noqa: C408
                         showarrow=False,
                         ax=0,
                         ay=0,
@@ -378,7 +378,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
                         y=y_loc,
                     )
 
-        shared_ax_props = dict(
+        shared_ax_props = dict(  # noqa: C408
             showgrid=True,
             linecolor='black',
             gridwidth=0.05,
@@ -398,8 +398,8 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
         )
 
         fig.update_layout(
-            # title = f'{comp_id}',
-            margin=dict(b=5, r=5, l=5, t=5),
+            # title = f'{comp_id}',  # noqa: ERA001
+            margin=dict(b=5, r=5, l=5, t=5),  # noqa: C408
             height=300,
             width=950,
             paper_bgcolor='rgba(0,0,0,0)',
@@ -407,7 +407,7 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
             showlegend=False,
         )
 
-        with open(f'{output_path}/{comp_id}.html', 'w') as f:
+        with open(f'{output_path}/{comp_id}.html', 'w') as f:  # noqa: PTH123
             f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
 
     # store the source database file(s) in the output directory for future reference
@@ -419,17 +419,17 @@ def plot_fragility(comp_db_path, output_path, create_zip='0'):
     if create_zip == '1':
         files = [f'{output_path}/{file}' for file in os.listdir(output_path)]
 
-        with ZipFile(output_path + '.zip', 'w') as zip:
+        with ZipFile(output_path + '.zip', 'w') as zip:  # noqa: A001
             for file in files:
                 zip.write(file, arcname=Path(file).name)
 
         shutil.rmtree(output_path)
 
-    print('Successfully generated component vulnerability figures.')
+    print('Successfully generated component vulnerability figures.')  # noqa: T201
 
 
-def plot_repair(comp_db_path, output_path, create_zip='0'):
-    # TODO:
+def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR0915
+    # TODO:  # noqa: FIX002, TD002, TD003, TD005
     # change limit_states names
 
     if create_zip == '1':
@@ -438,7 +438,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
     # initialize the output dir
 
     # if exists, remove it
-    if os.path.exists(output_path):
+    if os.path.exists(output_path):  # noqa: PTH110
         shutil.rmtree(output_path)
 
     # then create it
@@ -454,7 +454,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
 
     # check if the metadata is there and open it
     if Path(comp_db_meta).is_file():
-        with open(comp_db_meta) as f:
+        with open(comp_db_meta) as f:  # noqa: PTH123
             repair_meta = json.load(f)
     else:
         # otherwise, assign None to facilitate checks later
@@ -468,8 +468,8 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             comp_data = repair_df.loc[(comp_id, c_type)]
 
             # and the component-specific metadata - if it exists
-            if repair_meta != None:
-                if comp_id in repair_meta.keys():
+            if repair_meta != None:  # noqa: E711
+                if comp_id in repair_meta.keys():  # noqa: SIM118
                     comp_meta = repair_meta[comp_id]
                 else:
                     comp_meta = None
@@ -503,17 +503,17 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             ]
 
             # check for each limit state
-            for LS in limit_states:
+            for LS in limit_states:  # noqa: N806
                 fields = ['Theta_0', 'Family', 'Theta_1']
 
-                comp_data_LS = comp_data[LS]
+                comp_data_LS = comp_data[LS]  # noqa: N806
 
                 for optional_label in ['Family', 'Theta_1']:
                     if optional_label not in comp_data_LS.index:
                         comp_data_LS[optional_label] = None
 
                 # if any of the fields above is set
-                if np.all(pd.isna(comp_data_LS[fields].values)) == False:
+                if np.all(pd.isna(comp_data_LS[fields].values)) == False:  # noqa: E712
                     # Then we assume that is valuable information that needs to be
                     # shown in the table while the other fields will show 'null'
                     table_vals.append(np.insert(comp_data_LS[fields].values, 0, LS))
@@ -528,44 +528,44 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             for ds_i, val in enumerate(table_vals[1]):
                 if '|' in str(val):
                     table_vals[1][ds_i] = 'varies'
-                elif pd.isna(val) == True:
+                elif pd.isna(val) == True:  # noqa: E712
                     table_vals[1][ds_i] = 'N/A'
                 else:
                     conseq_val = float(val)
                     if conseq_val < 1:
                         table_vals[1][ds_i] = f'{conseq_val:.4g}'
-                    elif conseq_val < 10:
+                    elif conseq_val < 10:  # noqa: PLR2004
                         table_vals[1][ds_i] = f'{conseq_val:.3g}'
-                    elif conseq_val < 1e6:
+                    elif conseq_val < 1e6:  # noqa: PLR2004
                         table_vals[1][ds_i] = f'{conseq_val:.0f}'
                     else:
                         table_vals[1][ds_i] = f'{conseq_val:.3g}'
 
             # round dispersion parameters to 2 digits
             table_vals[-1] = [
-                f'{float(sig):.2f}' if pd.isna(sig) == False else 'N/A'
+                f'{float(sig):.2f}' if pd.isna(sig) == False else 'N/A'  # noqa: E712
                 for sig in table_vals[-1]
             ]
 
             # replace missing distribution labels with N/A
             table_vals[-2] = [
-                family if pd.isna(family) == False else 'N/A'
+                family if pd.isna(family) == False else 'N/A'  # noqa: E712
                 for family in table_vals[-2]
             ]
 
             # converted simultaneous damage models might have a lot of DSs
-            if table_vals.shape[1] > 8:
+            if table_vals.shape[1] > 8:  # noqa: SIM108, PLR2004
                 lots_of_ds = True
             else:
                 lots_of_ds = False
 
             # set the font size
-            font_size = 16 if lots_of_ds == False else 11
+            font_size = 16 if lots_of_ds == False else 11  # noqa: E712
 
             # create the table
 
             # properties shared between consequence types
-            c_pad = (9 - len(c_type)) * ' '
+            c_pad = (9 - len(c_type)) * ' '  # noqa: F841
             table_header = [
                 '<b>Damage<br>  State</b>',
                 '<b>Median<br>Conseq.</b>',
@@ -578,20 +578,20 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             fig.add_trace(
                 go.Table(
                     columnwidth=column_widths,
-                    header=dict(
+                    header=dict(  # noqa: C408
                         values=table_header,
                         align=cell_alignment,
-                        fill=dict(color='rgb(200,200,200)'),
-                        line=dict(color='black'),
-                        font=dict(color='black', size=16),
+                        fill=dict(color='rgb(200,200,200)'),  # noqa: C408
+                        line=dict(color='black'),  # noqa: C408
+                        font=dict(color='black', size=16),  # noqa: C408
                     ),
-                    cells=dict(
+                    cells=dict(  # noqa: C408
                         values=table_vals,
-                        height=30 if lots_of_ds == False else 19,
+                        height=30 if lots_of_ds == False else 19,  # noqa: E712
                         align=cell_alignment,
-                        fill=dict(color='rgba(0,0,0,0)'),
-                        line=dict(color='black'),
-                        font=dict(color='black', size=font_size),
+                        fill=dict(color='rgba(0,0,0,0)'),  # noqa: C408
+                        line=dict(color='black'),  # noqa: C408
+                        font=dict(color='black', size=font_size),  # noqa: C408
                     ),
                 ),
                 row=1,
@@ -622,7 +622,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
 
             if comp_data.loc[('Incomplete', '')] != 1:
                 # set the parameters for displaying uncertainty
-                p_min, p_max = 0.16, 0.84  # +- 1 std
+                p_min, p_max = 0.16, 0.84  # +- 1 std  # noqa: F841
 
                 # initialize quantity limits
                 q_min = 0
@@ -647,13 +647,13 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                     q_max = 1.0
 
                 # anchor locations for annotations providing DS information
-                x_loc = 0.533 if lots_of_ds == False else 0.535
-                y_space = 0.088 if lots_of_ds == False else 0.0543
-                y_loc = 0.784 + y_space if lots_of_ds == False else 0.786 + y_space
-                info_font_size = 10 if lots_of_ds == False else 9
+                x_loc = 0.533 if lots_of_ds == False else 0.535  # noqa: E712
+                y_space = 0.088 if lots_of_ds == False else 0.0543  # noqa: E712
+                y_loc = 0.784 + y_space if lots_of_ds == False else 0.786 + y_space  # noqa: E712
+                info_font_size = 10 if lots_of_ds == False else 9  # noqa: E712
 
                 # x anchor for annotations providing median function data
-                x_loc_func = 0.697 if lots_of_ds == False else 0.689
+                x_loc_func = 0.697 if lots_of_ds == False else 0.689  # noqa: E712
 
                 need_x_axis = False
 
@@ -696,7 +696,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             x=q_vals,
                             y=c_vals,
                             mode='lines',
-                            line=dict(
+                            line=dict(  # noqa: C408
                                 width=3,
                                 color=colors[np.min([len(model_params[1]), 7])][
                                     ds_i % 7
@@ -711,7 +711,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
 
                     # check if dispersion is prescribed for this consequence
                     dispersion = model_params[3][ds_i]
-                    if (pd.isna(dispersion) == False) and (dispersion != 'N/A'):
+                    if (pd.isna(dispersion) == False) and (dispersion != 'N/A'):  # noqa: E712
                         dispersion = float(dispersion)
 
                         if model_params[2][ds_i] == 'normal':
@@ -735,7 +735,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                                 x=q_vals,
                                 y=std_plus,
                                 mode='lines',
-                                line=dict(
+                                line=dict(  # noqa: C408
                                     width=1,
                                     color=colors[np.min([len(model_params[1]), 7])][
                                         ds_i % 7
@@ -755,7 +755,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                                 x=q_vals,
                                 y=std_minus,
                                 mode='lines',
-                                line=dict(
+                                line=dict(  # noqa: C408
                                     width=1,
                                     color=colors[np.min([len(model_params[1]), 7])][
                                         ds_i % 7
@@ -813,7 +813,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                                 x=c_pdf,
                                 y=q_pdf,
                                 mode='lines',
-                                line=dict(
+                                line=dict(  # noqa: C408
                                     width=1,
                                     color=colors[np.min([len(model_params[1]), 7])][
                                         ds_i % 7
@@ -837,7 +837,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             vals.split(',') for vals in mu_capacity.split('|')
                         )
 
-                        func_text = f'<b>Multilinear Function Breakpoints</b><br>Medians: {", ".join(c_vals)}<br>Quantities: {", ".join(q_vals)}'
+                        func_text = f'<b>Multilinear Function Breakpoints</b><br>Medians: {", ".join(c_vals)}<br>Quantities: {", ".join(q_vals)}'  # noqa: E501
 
                         fig.add_annotation(
                             text='<b>*</b>',
@@ -848,7 +848,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             ayref='pixel',
                             xanchor='left',
                             yanchor='bottom',
-                            font=dict(size=info_font_size),
+                            font=dict(size=info_font_size),  # noqa: C408
                             showarrow=False,
                             ax=0,
                             ay=0,
@@ -857,17 +857,17 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                         )
 
                     # check if metadata is available
-                    if comp_meta != None:
+                    if comp_meta != None:  # noqa: E711
                         ds_meta = comp_meta['DamageStates'][f'DS{ds_i+1}']
 
-                        if ds_meta.get('Description', False) != False:
+                        if ds_meta.get('Description', False) != False:  # noqa: E712
                             ds_description = '<br>'.join(
                                 wrap(ds_meta['Description'], width=55)
                             )
                         else:
                             ds_description = ''
 
-                        if ds_meta.get('RepairAction', False) != False:
+                        if ds_meta.get('RepairAction', False) != False:  # noqa: E712
                             ds_repair = '<br>'.join(
                                 wrap(ds_meta['RepairAction'], width=55)
                             )
@@ -875,7 +875,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             ds_repair = ''
 
                         if ds_repair != '':
-                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'
+                            ds_text = f'<b>{model_params[0][ds_i]}</b><br>{ds_description}<br><br><b>Repair Action</b><br>{ds_repair}'  # noqa: E501
                         else:
                             ds_text = (
                                 f'<b>{model_params[0][ds_i]}</b><br>{ds_description}'
@@ -890,7 +890,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             ayref='pixel',
                             xanchor='left',
                             yanchor='bottom',
-                            font=dict(size=info_font_size),
+                            font=dict(size=info_font_size),  # noqa: C408
                             showarrow=False,
                             ax=0,
                             ay=0,
@@ -909,14 +909,14 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                             0,
                         ],
                         mode='lines',
-                        line=dict(width=3, color=colors[1][0]),
+                        line=dict(width=3, color=colors[1][0]),  # noqa: C408
                         name=f'Incomplete Repair {c_type} Consequence Data',
                     ),
                     row=1,
                     col=2,
                 )
 
-            shared_ax_props = dict(
+            shared_ax_props = dict(  # noqa: C408
                 showgrid=True,
                 linecolor='black',
                 gridwidth=0.05,
@@ -938,7 +938,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             # layout settings
             fig.update_layout(
                 # minimize margins
-                margin=dict(b=50, r=5, l=5, t=5),
+                margin=dict(b=50, r=5, l=5, t=5),  # noqa: C408
                 # height and width targets single-column web view
                 height=400,
                 width=950,
@@ -952,24 +952,24 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
                     range=[q_min, q_max],
                     **shared_ax_props,
                 )
-                if need_x_axis == True
-                else dict(showgrid=False, showticklabels=False),
+                if need_x_axis == True  # noqa: E712
+                else dict(showgrid=False, showticklabels=False),  # noqa: C408
                 yaxis1=dict(
                     title_text=f'{c_type} [{dv_unit}]',
                     rangemode='tozero',
                     **shared_ax_props,
                 ),
-                xaxis2=dict(
+                xaxis2=dict(  # noqa: C408
                     showgrid=False,
                     showticklabels=False,
                     title_text='',
                 ),
-                yaxis2=dict(showgrid=False, showticklabels=False),
+                yaxis2=dict(showgrid=False, showticklabels=False),  # noqa: C408
                 # position legend to top of the figure
-                legend=dict(
+                legend=dict(  # noqa: C408
                     yanchor='top',
                     xanchor='right',
-                    font=dict(size=12),
+                    font=dict(size=12),  # noqa: C408
                     orientation='v',
                     y=1.0,
                     x=-0.08,
@@ -977,7 +977,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
             )
 
             # save figure to html
-            with open(f'{output_path}/{comp_id}-{c_type}.html', 'w') as f:
+            with open(f'{output_path}/{comp_id}-{c_type}.html', 'w') as f:  # noqa: PTH123
                 # Minimize size by not saving javascript libraries which means
                 # internet connection is required to view the figure.
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
@@ -991,18 +991,18 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):
     if create_zip == '1':
         files = [f'{output_path}/{file}' for file in os.listdir(output_path)]
 
-        with ZipFile(output_path + '.zip', 'w') as zip:
+        with ZipFile(output_path + '.zip', 'w') as zip:  # noqa: A001
             for file in files:
                 zip.write(file, arcname=Path(file).name)
 
         shutil.rmtree(output_path)
 
-    print('Successfully generated component repair consequence figures.')
+    print('Successfully generated component repair consequence figures.')  # noqa: T201
 
 
-def check_diff(comp_db_path, output_path):
+def check_diff(comp_db_path, output_path):  # noqa: ANN001, ANN201, D103
     # if the output path already exists
-    if os.path.exists(output_path):
+    if os.path.exists(output_path):  # noqa: PTH110
         # check for both the csv and json files
         for ext in ['csv', 'json']:
             comp_db = comp_db_path[:-3] + ext
@@ -1017,7 +1017,7 @@ def check_diff(comp_db_path, output_path):
             # check if a file with the same name exists in the output dir
             if comp_db in os.listdir(output_path):
                 # open the two files and compare them
-                with open(Path(source_path) / comp_db) as f1, open(
+                with open(Path(source_path) / comp_db) as f1, open(  # noqa: PTH123
                     Path(output_path) / comp_db
                 ) as f2:
                     if ext == 'csv':
@@ -1025,12 +1025,12 @@ def check_diff(comp_db_path, output_path):
                         old_file = f2.readlines()
 
                         # compare every line in the new file with the old file
-                        # if every line exists in the old file, continue with the next file
+                        # if every line exists in the old file, continue with the next file  # noqa: E501
                         if new_file == old_file:
                             continue
 
                         # if at least one line does not match, we need to generate
-                        else:
+                        else:  # noqa: RET507
                             return True
 
                     elif ext == 'json':
@@ -1042,7 +1042,7 @@ def check_diff(comp_db_path, output_path):
                             continue
 
                         # otherwise, we need to generate
-                        else:
+                        else:  # noqa: RET507
                             return True
 
             # if there is no db file in the output dir, we need to generate
@@ -1053,11 +1053,11 @@ def check_diff(comp_db_path, output_path):
         return False
 
     # if the output path does not exist, we need to generate
-    else:
+    else:  # noqa: RET505
         return True
 
 
-def main(args):
+def main(args):  # noqa: ANN001, ANN201, D103
     parser = argparse.ArgumentParser()
     parser.add_argument('viz_type')
     parser.add_argument('comp_db_path')
@@ -1074,7 +1074,7 @@ def main(args):
 
         # verify that comp_db_path points to a file
         if not Path(comp_db_path).is_file():
-            raise FileNotFoundError('comp_db_path does not point to a file.')
+            raise FileNotFoundError('comp_db_path does not point to a file.')  # noqa: EM101, TRY003
 
         if check_diff(comp_db_path, output_path):
             if args.viz_type == 'fragility':
@@ -1084,16 +1084,16 @@ def main(args):
                 plot_repair(comp_db_path, output_path, args.zip)
 
         else:
-            print('No need to generate, figures already exist in the output folder.')
+            print('No need to generate, figures already exist in the output folder.')  # noqa: T201
 
     elif args.viz_type == 'query':
         if args.comp_db_path == 'default_db':
-            print(pelicun_path)
+            print(pelicun_path)  # noqa: T201
 
-    # print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))  # noqa: ERA001
 
 
-# python3 DL_visuals.py repair /Users/adamzs/SimCenter/applications/performDL/pelicun3/pelicun/resources/SimCenterDBDL/loss_repair_DB_FEMA_P58_2nd.csv
+# python3 DL_visuals.py repair /Users/adamzs/SimCenter/applications/performDL/pelicun3/pelicun/resources/SimCenterDBDL/loss_repair_DB_FEMA_P58_2nd.csv  # noqa: E501
 
 if __name__ == '__main__':
     main(sys.argv[1:])

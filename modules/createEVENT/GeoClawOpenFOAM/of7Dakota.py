@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -39,7 +39,7 @@ import os
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Dakota:
+class of7Dakota:  # noqa: N801
     """This class includes the methods related to
     dakota for openfoam7.
 
@@ -47,10 +47,10 @@ class of7Dakota:
     -------
             scripts: Generate relevant scripts
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
-    def dakotascripts(self, args):
+    def dakotascripts(self, args):  # noqa: ANN001, ANN201, D417
         """Create the scripts for caserun.sh
 
         Arguments:
@@ -58,7 +58,7 @@ class of7Dakota:
                 data: all the JSON data
                 path: Path where dakota.json file is located
 
-        """
+        """  # noqa: D400, D415
         caseruntext = 'echo Starting Dakota preparation...\n'
         caseruntext = (
             caseruntext
@@ -72,21 +72,21 @@ class of7Dakota:
         caseruntext = caseruntext + 'rm -fr 0\n'
         caseruntext = caseruntext + 'mkdir EVTfiles\n'
         caseruntext = (
-            caseruntext + 'mv 0.org ' + os.path.join('EVTfiles', '0.org') + '\n'
+            caseruntext + 'mv 0.org ' + os.path.join('EVTfiles', '0.org') + '\n'  # noqa: PTH118
         )
         caseruntext = (
             caseruntext
             + 'mv constant '
-            + os.path.join('EVTfiles', 'constant')
+            + os.path.join('EVTfiles', 'constant')  # noqa: PTH118
             + '\n'
         )
         caseruntext = (
-            caseruntext + 'mv system ' + os.path.join('EVTfiles', 'system') + '\n'
+            caseruntext + 'mv system ' + os.path.join('EVTfiles', 'system') + '\n'  # noqa: PTH118
         )
         caseruntext = (
             caseruntext
             + 'mv postProcessing '
-            + os.path.join('EVTfiles', 'postProcessing')
+            + os.path.join('EVTfiles', 'postProcessing')  # noqa: PTH118
             + '\n'
         )
         caseruntext = caseruntext + 'mv *.log EVTfiles\n'
@@ -98,20 +98,20 @@ class of7Dakota:
         caseruntext = caseruntext + 'rm -fr EVTfiles\n\n'
 
         # Write to caserun file
-        scriptfile = open('caserun.sh', 'a')
+        scriptfile = open('caserun.sh', 'a')  # noqa: SIM115, PTH123
         scriptfile.write(caseruntext)
         scriptfile.close()
 
     #############################################################
-    def cleaning(self, args, path):
+    def cleaning(self, args, path):  # noqa: ANN001, ANN201, ARG002, D417
         """Create the scripts for cleaning
 
         Arguments:
         ---------
                 args: all the arguments
 
-        """
-        print('No OF cleaning')
+        """  # noqa: D400, D415
+        print('No OF cleaning')  # noqa: T201
 
 
 # # tar -c -f trial.tar $(readlink -e a b c d)
@@ -121,10 +121,10 @@ class of7Dakota:
 
 # 		# Move all log files
 # 		caseruntext = caseruntext + 'mkdir ./logfiles\n'
-# 		caseruntext = caseruntext + 'find . -name "*.log" -exec mv "{}" ./logfiles \;' + '\n'
+# 		caseruntext = caseruntext + 'find . -name "*.log" -exec mv "{}" ./logfiles \;' + '\n'  # noqa: E501
 
 # 		# Tar all files and folder
-# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles ' + path + ')\n'
+# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles ' + path + ')\n'  # noqa: E501
 
 # 		# Remove all folders
 # 		caseruntext = caseruntext + 'rm -rf ./*/' + '\n'
@@ -133,7 +133,7 @@ class of7Dakota:
 # 		caseruntext = caseruntext + 'tar -xvf Files.tar\n'
 
 # 		# Tar all other EVT files
-# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles)\n'
+# 		caseruntext = caseruntext + 'tar -c -f Files.tar $(cdictpp cdictforce FlumeData.txt sample temp_geometry.txt translate.sh caserun.sh 0 0.org constant system postProcessing logfiles)\n'  # noqa: E501
 
 # 		# Write to caserun file
 # 		scriptfile = open('caserun.sh',"a")

@@ -1,4 +1,4 @@
-import click
+import click  # noqa: EXE002, INP001, D100
 from src.quofemDTOs import Model
 from src.runmodel.RunModelDTOs import RunModelDTO
 
@@ -26,7 +26,7 @@ from src.runmodel.RunModelDTOs import RunModelDTO
     type=click.Choice(['Linux', 'Windows']),
     help='Type of operating system the workflow will run on.',
 )
-def preprocess(workflowinput, driverfile, runtype, ostype):
+def preprocess(workflowinput, driverfile, runtype, ostype):  # noqa: ANN001, ANN201, ARG001, D103
     # 1. Parse the input JSON file
     model = Model.parse_file(workflowinput)
 
@@ -39,7 +39,7 @@ def preprocess(workflowinput, driverfile, runtype, ostype):
     code.append('#\n# Creating the random variable distributions\n#')
     marginals_code = 'marginals = JointIndependent(['
     for distribution in model.randomVariables:
-        (distribution_code, input) = distribution.init_to_text()
+        (distribution_code, input) = distribution.init_to_text()  # noqa: A001
         code.append(distribution_code)
         marginals_code += input + ', '
     marginals_code += '])'
@@ -59,7 +59,7 @@ def preprocess(workflowinput, driverfile, runtype, ostype):
     code.append(uqmethod_code)
 
     # 3. Write code to analysis script
-    with open('UQpyAnalysis.py', 'w') as outfile:
+    with open('UQpyAnalysis.py', 'w') as outfile:  # noqa: PTH123
         outfile.write('\n'.join(code))
 
 

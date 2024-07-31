@@ -1,7 +1,7 @@
 """authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 modified: Aakash Bangalore Satish, NHERI SimCenter, UC Berkeley
-"""
+"""  # noqa: INP001, D205, D400, D415
 
 import csv
 import multiprocessing as mp
@@ -14,14 +14,14 @@ from numpy.random import SeedSequence, default_rng
 from runFEM import runFEM
 
 
-def write_stage_start_info_to_logfile(
-    logfile,
-    stage_number,
-    beta,
-    effective_sample_size,
-    scale_factor_for_proposal_covariance,
-    log_evidence,
-    number_of_samples,
+def write_stage_start_info_to_logfile(  # noqa: ANN201, D103, PLR0913
+    logfile,  # noqa: ANN001
+    stage_number,  # noqa: ANN001
+    beta,  # noqa: ANN001
+    effective_sample_size,  # noqa: ANN001
+    scale_factor_for_proposal_covariance,  # noqa: ANN001
+    log_evidence,  # noqa: ANN001
+    number_of_samples,  # noqa: ANN001
 ):
     logfile.write('\n\n\t\t==========================')
     logfile.write(f'\n\t\tStage number: {stage_number}')
@@ -29,9 +29,9 @@ def write_stage_start_info_to_logfile(
         logfile.write('\n\t\tSampling from prior')
         logfile.write('\n\t\tbeta = 0')
     else:
-        logfile.write('\n\t\tbeta = %9.8g' % beta)
+        logfile.write('\n\t\tbeta = %9.8g' % beta)  # noqa: UP031
     logfile.write('\n\t\tESS = %d' % effective_sample_size)
-    logfile.write('\n\t\tscalem = %.2g' % scale_factor_for_proposal_covariance)
+    logfile.write('\n\t\tscalem = %.2g' % scale_factor_for_proposal_covariance)  # noqa: UP031
     logfile.write(f'\n\t\tlog-evidence = {log_evidence:<9.8g}')
     logfile.write(
         f'\n\n\t\tNumber of model evaluations in this stage: {number_of_samples}'
@@ -40,8 +40,8 @@ def write_stage_start_info_to_logfile(
     os.fsync(logfile.fileno())
 
 
-def write_eval_data_to_logfile(
-    logfile, parallelize_MCMC, run_type, proc_count=1, MPI_size=1, stage_num=0
+def write_eval_data_to_logfile(  # noqa: ANN201, D103, PLR0913
+    logfile, parallelize_MCMC, run_type, proc_count=1, MPI_size=1, stage_num=0  # noqa: ANN001, N803
 ):
     if stage_num == 0:
         logfile.write(f'\n\n\t\tRun type: {run_type}')
@@ -70,13 +70,13 @@ def write_eval_data_to_logfile(
         logfile.write(f'\n\t\t\tNumber of processors being used: {1}')
 
 
-def create_headings(
-    logfile,
-    model_number,
-    model_parameters,
-    edp_names_list,
-    edp_lengths_list,
-    writeOutputs,
+def create_headings(  # noqa: ANN201, D103, PLR0913
+    logfile,  # noqa: ANN001
+    model_number,  # noqa: ANN001
+    model_parameters,  # noqa: ANN001
+    edp_names_list,  # noqa: ANN001
+    edp_lengths_list,  # noqa: ANN001
+    writeOutputs,  # noqa: ANN001, N803
 ):
     # Create the headings, which will be the first line of the file
     headings = 'eval_id\tinterface\t'
@@ -96,27 +96,27 @@ def create_headings(
     return headings
 
 
-def get_prediction_from_workdirs(i, working_directory):
+def get_prediction_from_workdirs(i, working_directory):  # noqa: ANN001, ANN201, D103
     workdir_string = 'workdir.' + str(i + 1)
     prediction = np.atleast_2d(
-        np.genfromtxt(os.path.join(working_directory, workdir_string, 'results.out'))
+        np.genfromtxt(os.path.join(working_directory, workdir_string, 'results.out'))  # noqa: PTH118
     ).reshape((1, -1))
-    return prediction
+    return prediction  # noqa: RET504
 
 
-def write_data_to_tab_files(
-    logfile,
-    working_directory,
-    model_number,
-    model_parameters,
-    edp_names_list,
-    edp_lengths_list,
-    number_of_samples,
-    dataToWrite,
-    tab_file_name,
-    predictions,
+def write_data_to_tab_files(  # noqa: ANN201, D103, PLR0913
+    logfile,  # noqa: ANN001
+    working_directory,  # noqa: ANN001
+    model_number,  # noqa: ANN001
+    model_parameters,  # noqa: ANN001
+    edp_names_list,  # noqa: ANN001
+    edp_lengths_list,  # noqa: ANN001
+    number_of_samples,  # noqa: ANN001
+    dataToWrite,  # noqa: ANN001, N803
+    tab_file_name,  # noqa: ANN001
+    predictions,  # noqa: ANN001
 ):
-    tab_file_full_path = os.path.join(working_directory, tab_file_name)
+    tab_file_full_path = os.path.join(working_directory, tab_file_name)  # noqa: PTH118
     write_outputs = True
     headings = create_headings(
         logfile,
@@ -128,7 +128,7 @@ def write_data_to_tab_files(
     )
 
     logfile.write(f'\n\t\t\tWriting to file {tab_file_full_path}')
-    with open(tab_file_full_path, 'a+') as f:
+    with open(tab_file_full_path, 'a+') as f:  # noqa: PTH123
         if model_number == 0:
             f.write(headings)
         for i in range(number_of_samples):
@@ -149,13 +149,13 @@ def write_data_to_tab_files(
     os.fsync(logfile.fileno())
 
 
-def write_data_to_csvfile(
-    logfile,
-    total_number_of_models_in_ensemble,
-    stage_number,
-    model_number,
-    working_directory,
-    data_to_write,
+def write_data_to_csvfile(  # noqa: ANN201, D103, PLR0913
+    logfile,  # noqa: ANN001
+    total_number_of_models_in_ensemble,  # noqa: ANN001
+    stage_number,  # noqa: ANN001
+    model_number,  # noqa: ANN001
+    working_directory,  # noqa: ANN001
+    data_to_write,  # noqa: ANN001
 ):
     logfile.write(
         f'\n\n\t\tWriting samples from stage {stage_number - 1} to csv file'
@@ -166,54 +166,54 @@ def write_data_to_csvfile(
         )
     else:
         string_to_append = f'resultsStage{stage_number - 1}.csv'
-    resultsFilePath = os.path.join(
-        os.path.abspath(working_directory), string_to_append
+    resultsFilePath = os.path.join(  # noqa: PTH118, N806
+        os.path.abspath(working_directory), string_to_append  # noqa: PTH100
     )
 
-    with open(resultsFilePath, 'w', newline='') as csvfile:
-        csvWriter = csv.writer(csvfile)
+    with open(resultsFilePath, 'w', newline='') as csvfile:  # noqa: PTH123
+        csvWriter = csv.writer(csvfile)  # noqa: N806
         csvWriter.writerows(data_to_write)
     logfile.write(f'\n\t\t\tWrote to file {resultsFilePath}')
     # Finished writing data
 
 
-def run_TMCMC(
-    number_of_samples,
-    number_of_chains,
-    all_distributions_list,
-    number_of_MCMC_steps,
-    max_number_of_MCMC_steps,
-    log_likelihood_function,
-    model_parameters,
-    working_directory,
-    seed,
-    calibration_data,
-    number_of_experiments,
-    covariance_matrix_list,
-    edp_names_list,
-    edp_lengths_list,
-    scale_factors,
-    shift_factors,
-    run_type,
-    logfile,
-    MPI_size,
-    driver_file,
-    parallelize_MCMC=True,
-    model_number=0,
-    total_number_of_models_in_ensemble=1,
+def run_TMCMC(  # noqa: ANN201, N802, PLR0913, PLR0915
+    number_of_samples,  # noqa: ANN001
+    number_of_chains,  # noqa: ANN001
+    all_distributions_list,  # noqa: ANN001
+    number_of_MCMC_steps,  # noqa: ANN001, N803
+    max_number_of_MCMC_steps,  # noqa: ANN001, N803
+    log_likelihood_function,  # noqa: ANN001
+    model_parameters,  # noqa: ANN001
+    working_directory,  # noqa: ANN001
+    seed,  # noqa: ANN001
+    calibration_data,  # noqa: ANN001
+    number_of_experiments,  # noqa: ANN001
+    covariance_matrix_list,  # noqa: ANN001
+    edp_names_list,  # noqa: ANN001
+    edp_lengths_list,  # noqa: ANN001
+    scale_factors,  # noqa: ANN001
+    shift_factors,  # noqa: ANN001
+    run_type,  # noqa: ANN001
+    logfile,  # noqa: ANN001
+    MPI_size,  # noqa: ANN001, N803
+    driver_file,  # noqa: ANN001
+    parallelize_MCMC=True,  # noqa: ANN001, FBT002, N803
+    model_number=0,  # noqa: ANN001
+    total_number_of_models_in_ensemble=1,  # noqa: ANN001
 ):
-    """Runs TMCMC Algorithm"""
+    """Runs TMCMC Algorithm"""  # noqa: D400, D401, D415
     # Initialize (beta, effective sample size)
     beta = 0
     effective_sample_size = number_of_samples
     mytrace = []
 
     # Initialize other TMCMC variables
-    number_of_MCMC_steps = number_of_MCMC_steps
-    adaptively_calculate_num_MCMC_steps = True
+    number_of_MCMC_steps = number_of_MCMC_steps  # noqa: N806, PLW0127
+    adaptively_calculate_num_MCMC_steps = True  # noqa: N806
     adaptively_scale_proposal_covariance = True
     scale_factor_for_proposal_covariance = 1  # cov scale factor
-    # model_evidence = 1  # model evidence
+    # model_evidence = 1  # model evidence  # noqa: ERA001
     stage_number = 0  # stage number of TMCMC
     log_evidence = 0
 
@@ -295,12 +295,12 @@ def run_TMCMC(
 
     total_number_of_model_evaluations = number_of_samples
     logfile.write(
-        f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
+        f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'  # noqa: E501
     )
 
-    # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results
+    # Write the results of the first stage to a file named dakotaTabPrior.out for quoFEM to be able to read the results  # noqa: E501
     logfile.write(
-        "\n\n\t\tWriting prior samples to 'dakotaTabPrior.out' for quoFEM to read the results"
+        "\n\n\t\tWriting prior samples to 'dakotaTabPrior.out' for quoFEM to read the results"  # noqa: E501
     )
     write_data_to_tab_files(
         logfile,
@@ -321,14 +321,14 @@ def run_TMCMC(
         stage_number += 1
         # adaptively compute beta s.t. ESS = N/2 or ESS = 0.95*prev_ESS
         # plausible weights of Sm corresponding to new beta
-        # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)
-        # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)
+        # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.95)  # noqa: ERA001
+        # beta, Wm, ESS = tmcmcFunctions.compute_beta(beta, Lm, ESS, threshold=0.5)  # noqa: ERA001
         beta, log_evidence, weights, effective_sample_size = (
             tmcmcFunctions.compute_beta_evidence(
                 beta, log_likelihood_values, logfile, threshold=1.0
             )
         )
-        # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)
+        # beta, log_evidence, weights, effective_sample_size = tmcmcFunctions.compute_beta_evidence_old(beta, log_likelihood_values, logfile, int(effective_sample_size/2), threshold=1.0)  # noqa: ERA001, E501
 
         total_log_evidence = total_log_evidence + log_evidence
 
@@ -337,17 +337,17 @@ def run_TMCMC(
         child_seeds = ss.spawn(number_of_samples + 1)
 
         # update model evidence
-        # model_evidence = model_evidence * (sum(weights) / number_of_samples)
+        # model_evidence = model_evidence * (sum(weights) / number_of_samples)  # noqa: ERA001
 
         # Calculate covariance matrix using Wm_n
         weighted_sample_covariance_matrix = np.cov(
             sample_values, aweights=weights, rowvar=False
         )
-        # logFile.write("\nCovariance matrix: {}".format(Cm))
+        # logFile.write("\nCovariance matrix: {}".format(Cm))  # noqa: ERA001
 
         # Resample ###################################################
         # Resampling using plausible weights
-        # SmcapIDs = np.random.choice(range(N), N, p=Wm / sum(Wm))
+        # SmcapIDs = np.random.choice(range(N), N, p=Wm / sum(Wm))  # noqa: ERA001
         rng = default_rng(child_seeds[-1])
         resample_ids = rng.choice(
             range(number_of_samples), number_of_samples, p=weights
@@ -363,7 +363,7 @@ def run_TMCMC(
         )
 
         # save to trace
-        # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples
+        # stage m: samples, likelihood, weights, next stage ESS, next stage beta, resampled samples  # noqa: E501
         mytrace.append(
             [
                 sample_values,
@@ -459,7 +459,7 @@ def run_TMCMC(
             posterior_pdf_vals_list,
             num_accepts,
             all_proposals,
-            all_PLP,
+            all_PLP,  # noqa: N806
             preds_list,
         ) = zip(*results)
         # for next beta
@@ -471,17 +471,17 @@ def run_TMCMC(
         num_accepts = np.asarray(num_accepts)
         number_of_accepted_states_in_this_stage = sum(num_accepts)
         all_proposals = np.asarray(all_proposals)
-        all_PLP = np.asarray(all_PLP)
+        all_PLP = np.asarray(all_PLP)  # noqa: N806
 
         total_number_of_model_evaluations += (
             number_of_model_evaluations_in_this_stage
         )
         logfile.write(
-            f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'
+            f'\n\n\t\tTotal number of model evaluations so far: {total_number_of_model_evaluations}'  # noqa: E501
         )
 
         # total observed acceptance rate
-        R = (
+        R = (  # noqa: N806
             number_of_accepted_states_in_this_stage
             / number_of_model_evaluations_in_this_stage
         )
@@ -495,13 +495,13 @@ def run_TMCMC(
             adaptively_calculate_num_MCMC_steps
         ):  # Calculate Nm_steps based on observed acceptance rate
             # increase max Nmcmc with stage number
-            number_of_MCMC_steps = min(
+            number_of_MCMC_steps = min(  # noqa: N806
                 number_of_MCMC_steps + 1, max_number_of_MCMC_steps
             )
             logfile.write('\n\t\tadapted max MCMC steps = %d' % number_of_MCMC_steps)
 
             acc_rate = max(1.0 / number_of_model_evaluations_in_this_stage, R)
-            number_of_MCMC_steps = min(
+            number_of_MCMC_steps = min(  # noqa: N806
                 number_of_MCMC_steps,
                 1 + int(np.log(1 - 0.99) / np.log(1 - acc_rate)),
             )

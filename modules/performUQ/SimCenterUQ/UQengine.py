@@ -1,4 +1,4 @@
-import glob
+import glob  # noqa: INP001, D100
 import json
 import os
 import shutil
@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 
 
-class UQengine:
-    def __init__(self, inputArgs):
+class UQengine:  # noqa: D101
+    def __init__(self, inputArgs):  # noqa: ANN001, ANN204, N803, D107
         self.work_dir = inputArgs[1].replace(os.sep, '/')
         self.inputFile = inputArgs[2]
         self.workflowDriver = inputArgs[3]
@@ -21,80 +21,80 @@ class UQengine:
 
         self.IM_names = []  # used in EEUQ
 
-        jsonPath = self.inputFile
-        if not os.path.isabs(jsonPath):
-            jsonPath = self.work_dir + '/templatedir/' + self.inputFile  # for quoFEM
+        jsonPath = self.inputFile  # noqa: N806
+        if not os.path.isabs(jsonPath):  # noqa: PTH117
+            jsonPath = self.work_dir + '/templatedir/' + self.inputFile  # for quoFEM  # noqa: N806
 
         # temporary for EEUQ....
-        jsonDir, jsonName = os.path.split(jsonPath)
-        eeJsonPath = os.path.join(jsonDir, 'sc_' + jsonName)
+        jsonDir, jsonName = os.path.split(jsonPath)  # noqa: N806
+        eeJsonPath = os.path.join(jsonDir, 'sc_' + jsonName)  # noqa: PTH118, N806
 
-        if os.path.exists(eeJsonPath):
+        if os.path.exists(eeJsonPath):  # noqa: PTH110
             self.inputFile = eeJsonPath
-            jsonPath = eeJsonPath
+            jsonPath = eeJsonPath  # noqa: N806
 
-        with open(jsonPath) as f:
-            dakotaJson = json.load(f)
+        with open(jsonPath) as f:  # noqa: PTH123
+            dakotaJson = json.load(f)  # noqa: N806, F841
 
-        # self.workflowDriver = "workflow_driver"
+        # self.workflowDriver = "workflow_driver"  # noqa: ERA001
         # if self.os_type.lower().startswith('win'):
-        #    self.workflowDriver = "workflow_driver.bat"
+        #    self.workflowDriver = "workflow_driver.bat"  # noqa: ERA001
 
-    def cleanup_workdir(self):
+    def cleanup_workdir(self):  # noqa: ANN201, C901, D102
         # if template dir already contains results.out, give an error
 
         # Cleanup working directory if needed
 
-        del_paths = glob.glob(os.path.join(self.work_dir, 'workdir*'))
+        del_paths = glob.glob(os.path.join(self.work_dir, 'workdir*'))  # noqa: PTH118, PTH207
         for del_path in del_paths:
             # change permission for  workflow_driver.bat
-            self.workflowDriver_path = os.path.join(del_path, self.workflowDriver)
+            self.workflowDriver_path = os.path.join(del_path, self.workflowDriver)  # noqa: PTH118
             # if os.path.exists(self.workflowDriver_path):
-            #     os.chmod(self.workflowDriver_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            #     os.chmod(self.workflowDriver_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # noqa: ERA001, E501
 
             # Change permission
             for root, dirs, files in os.walk(del_path):
                 for d in dirs:
-                    os.chmod(
-                        os.path.join(root, d),
-                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+                    os.chmod(  # noqa: PTH101
+                        os.path.join(root, d),  # noqa: PTH118
+                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,  # noqa: S103
                     )
                 for f in files:
-                    os.chmod(
-                        os.path.join(root, f),
-                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+                    os.chmod(  # noqa: PTH101
+                        os.path.join(root, f),  # noqa: PTH118
+                        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,  # noqa: S103
                     )
 
             try:
                 shutil.rmtree(del_path)
-            except Exception as msg:
+            except Exception as msg:  # noqa: BLE001
                 self.exit(str(msg))
 
-        del_outputs = glob.glob(os.path.join(self.work_dir, '*out'))
+        del_outputs = glob.glob(os.path.join(self.work_dir, '*out'))  # noqa: PTH118, PTH207
         for del_out in del_outputs:
-            os.remove(del_out)
+            os.remove(del_out)  # noqa: PTH107
 
-        del_pkls = glob.glob(os.path.join(self.work_dir, '*pkl'))
+        del_pkls = glob.glob(os.path.join(self.work_dir, '*pkl'))  # noqa: PTH118, PTH207
         for del_pkl in del_pkls:
-            os.remove(del_pkl)
+            os.remove(del_pkl)  # noqa: PTH107
 
         try:
-            del_errs = glob.glob(os.path.join(self.work_dir, '*err'))
+            del_errs = glob.glob(os.path.join(self.work_dir, '*err'))  # noqa: PTH118, PTH207
             for del_err in del_errs:
-                os.remove(del_err)
-        except:
+                os.remove(del_err)  # noqa: PTH107
+        except:  # noqa: S110, E722
             pass
 
-        if glob.glob(os.path.join(self.work_dir, 'templatedir', 'results.out')):
+        if glob.glob(os.path.join(self.work_dir, 'templatedir', 'results.out')):  # noqa: PTH118, PTH207
             try:
-                os.remove(os.path.join(self.work_dir, 'templatedir', 'results.out'))
-            except:
-                msg = 'Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first'
+                os.remove(os.path.join(self.work_dir, 'templatedir', 'results.out'))  # noqa: PTH107, PTH118
+            except:  # noqa: E722
+                msg = 'Your main folder (where the main FEM script is located) already contains results.out. To prevent any confusion, please delete this file first'  # noqa: E501
                 self.exit(msg)
 
-        print('working directory cleared')
+        print('working directory cleared')  # noqa: T201
 
-    def set_FEM(self, rv_name, do_parallel, y_dim, t_init, t_thr):
+    def set_FEM(self, rv_name, do_parallel, y_dim, t_init, t_thr):  # noqa: ANN001, ANN201, N802, D102
         self.rv_name = rv_name
         self.do_parallel = do_parallel
         self.y_dim = y_dim
@@ -102,21 +102,21 @@ class UQengine:
         self.t_thr = t_thr
         self.total_sim_time = 0
 
-    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=[]):
+    def run_FEM_batch(self, X, id_sim, runIdx=0, alterInput=[]):  # noqa: ANN001, ANN201, B006, C901, N802, N803, D102, PLR0912, PLR0915
         if runIdx == -1:
             # dummy run
             return X, np.zeros((0, self.y_dim)), id_sim
-        workflowDriver = self.workflowDriver
+        workflowDriver = self.workflowDriver  # noqa: N806
         #
         # serial run
         #
 
-        X = np.atleast_2d(X)
+        X = np.atleast_2d(X)  # noqa: N806
         nsamp = X.shape[0]
         if not self.do_parallel:
-            Y = np.zeros((nsamp, self.y_dim))
+            Y = np.zeros((nsamp, self.y_dim))  # noqa: N806
             for ns in range(nsamp):
-                Y_tmp, id_sim_current = run_FEM(
+                Y_tmp, id_sim_current = run_FEM(  # noqa: N806
                     X[ns, :],
                     id_sim + ns,
                     self.rv_name,
@@ -125,22 +125,22 @@ class UQengine:
                     runIdx,
                 )
                 if Y_tmp.shape[0] != self.y_dim:
-                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'
+                    msg = f'model output <results.out> in sample {ns} contains {Y_tmp.shape[0]} value(s) while the number of QoIs specified is {y_dim}'  # noqa: E501, F821
 
                     self.exit(msg)
                 Y[ns, :] = Y_tmp
                 if time.time() - self.t_init > self.t_thr:
-                    X = X[:ns, :]
-                    Y = Y[:ns, :]
+                    X = X[:ns, :]  # noqa: N806
+                    Y = Y[:ns, :]  # noqa: N806
                     break
-            Nsim = id_sim_current - id_sim + 1
+            Nsim = id_sim_current - id_sim + 1  # noqa: N806
 
         #
         # parallel run
         #
 
         if self.do_parallel:
-            print(f'Running {nsamp} simulations in parallel')
+            print(f'Running {nsamp} simulations in parallel')  # noqa: T201
             tmp = time.time()
             iterables = (
                 (
@@ -155,93 +155,93 @@ class UQengine:
             )
             try:
                 result_objs = list(self.pool.starmap(run_FEM, iterables))
-                print(f'Simulation time = {time.time() - tmp} s')
+                print(f'Simulation time = {time.time() - tmp} s')  # noqa: T201
             except KeyboardInterrupt:
-                print('Ctrl+c received, terminating and joining pool.')
+                print('Ctrl+c received, terminating and joining pool.')  # noqa: T201
                 try:
                     self.pool.shutdown()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     sys.exit()
 
-            Nsim = len(list(result_objs))
-            Y = np.zeros((Nsim, self.y_dim))
-            for val, id in result_objs:
+            Nsim = len(list(result_objs))  # noqa: N806
+            Y = np.zeros((Nsim, self.y_dim))  # noqa: N806
+            for val, id in result_objs:  # noqa: A001
                 if isinstance(val, str):
                     self.exit(val)
-                elif val.shape[0]:
+                elif val.shape[0]:  # noqa: SIM102
                     if val.shape[0] != self.y_dim:
-                        msg = f'model output <results.out> in sample {id + 1} contains {val.shape[0]} value(s) while the number of QoIs specified is {self.y_dim}'
+                        msg = f'model output <results.out> in sample {id + 1} contains {val.shape[0]} value(s) while the number of QoIs specified is {self.y_dim}'  # noqa: E501
                         self.exit(msg)
 
                 if np.isnan(np.sum(val)):
-                    Nsim = id - id_sim
-                    X = X[:Nsim, :]
-                    Y = Y[:Nsim, :]
+                    Nsim = id - id_sim  # noqa: N806
+                    X = X[:Nsim, :]  # noqa: N806
+                    Y = Y[:Nsim, :]  # noqa: N806
                 else:
                     Y[id - id_sim, :] = val
 
         if len(alterInput) > 0:
             idx = alterInput[0]
-            X = np.hstack([X[:, :idx], X[:, idx + 1 :]])
+            X = np.hstack([X[:, :idx], X[:, idx + 1 :]])  # noqa: N806
 
-            # IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)
-            # IM_list = list(map(str, IM_vals))[1:]
-            # self.IM_names = IM_list
-            # idx = alterInput[0]
-            # X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])
-            # X_new = np.hstack([X_new, X[:,idx+1:]])
-            # X = X_new.astype(np.double)
+            # IM_vals = self.compute_IM(id_sim+1, id_sim + Nsim)  # noqa: ERA001
+            # IM_list = list(map(str, IM_vals))[1:]  # noqa: ERA001
+            # self.IM_names = IM_list  # noqa: ERA001
+            # idx = alterInput[0]  # noqa: ERA001
+            # X_new = np.hstack([X[:,:idx],IM_vals.to_numpy()[:,1:]])  # noqa: ERA001
+            # X_new = np.hstack([X_new, X[:,idx+1:]])  # noqa: ERA001
+            # X = X_new.astype(np.double)  # noqa: ERA001
 
         #
         # In case EEUQ
         #
 
-        IM_vals = self.compute_IM(id_sim + 1, id_sim + Nsim)
+        IM_vals = self.compute_IM(id_sim + 1, id_sim + Nsim)  # noqa: N806
         if IM_vals is None:
-            X = X.astype(np.double)
+            X = X.astype(np.double)  # noqa: N806
         else:
             self.IM_names = list(map(str, IM_vals))[1:]
-            X_new = np.hstack([X, IM_vals.to_numpy()[:, 1:]])
-            X = X_new.astype(np.double)
+            X_new = np.hstack([X, IM_vals.to_numpy()[:, 1:]])  # noqa: N806
+            X = X_new.astype(np.double)  # noqa: N806
 
         return X, Y, id_sim + Nsim
 
-    def compute_IM(self, i_begin, i_end):
+    def compute_IM(self, i_begin, i_end):  # noqa: ANN001, ANN201, N802, D102
         workdir_list = [
-            os.path.join(self.work_dir, f'workdir.{int(i)}')
+            os.path.join(self.work_dir, f'workdir.{int(i)}')  # noqa: PTH118
             for i in range(i_begin, i_end + 1)
         ]
 
         # intensity measure app
-        computeIM = os.path.join(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        computeIM = os.path.join(  # noqa: PTH118, N806
+            os.path.dirname(  # noqa: PTH120
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # noqa: PTH100, PTH120
             ),
             'createEVENT',
             'groundMotionIM',
             'IntensityMeasureComputer.py',
         )
 
-        pythonEXE = sys.executable
+        pythonEXE = sys.executable  # noqa: N806
         # compute IMs
         for cur_workdir in workdir_list:
             os.chdir(cur_workdir)
-            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):
-                os.system(
-                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar'
+            if os.path.exists('EVENT.json') and os.path.exists('AIM.json'):  # noqa: PTH110
+                os.system(  # noqa: S605
+                    f'{pythonEXE} {computeIM} --filenameAIM AIM.json --filenameEVENT EVENT.json --filenameIM IM.json  --geoMeanVar'  # noqa: E501
                 )
             os.chdir(self.work_dir)
 
         # collect IMs from different workdirs
         for i, cur_workdir in enumerate(workdir_list):
             cur_id = int(cur_workdir.split('.')[-1])
-            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):
-                print(f'IM.csv found in wordir.{cur_id}')
+            if os.path.exists(os.path.join(cur_workdir, 'IM.csv')):  # noqa: PTH110, PTH118
+                print(f'IM.csv found in wordir.{cur_id}')  # noqa: T201
                 tmp1 = pd.read_csv(
-                    os.path.join(cur_workdir, 'IM.csv'), index_col=None
+                    os.path.join(cur_workdir, 'IM.csv'), index_col=None  # noqa: PTH118
                 )
                 if tmp1.empty:
-                    print(f'IM.csv in wordir.{cur_id} is empty.')
+                    print(f'IM.csv in wordir.{cur_id} is empty.')  # noqa: T201
                     return None
                 tmp2 = pd.DataFrame(
                     {'%eval_id': [cur_id for x in range(len(tmp1.index))]}
@@ -252,17 +252,17 @@ class UQengine:
                     tmp3 = pd.concat([tmp2, tmp1], axis=1)
                     im_collector = pd.concat([im_collector, tmp3])
             else:
-                print(f'IM.csv NOT found in wordir.{cur_id}')
+                print(f'IM.csv NOT found in wordir.{cur_id}')  # noqa: T201
                 return None
         im_collector = im_collector.sort_values(by=['%eval_id'])
 
-        return im_collector
-        # im_collector.to_csv('IM.csv', index=False)
+        return im_collector  # noqa: RET504
+        # im_collector.to_csv('IM.csv', index=False)  # noqa: ERA001
 
-    def readJson(self):
+    def readJson(self):  # noqa: ANN201, N802, D102
         pass
 
-    def make_pool(
+    def make_pool(  # noqa: ANN201, D102
         self,
     ):
         if self.run_type.lower() == 'runninglocal':
@@ -283,20 +283,20 @@ class UQengine:
     # Someplace to write down error messages
     #
 
-    def create_errLog(self):
-        # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")
+    def create_errLog(self):  # noqa: ANN201, N802, D102
+        # self.errfile = open(os.path.join(self.work_dir, "dakota.err"), "a")  # noqa: ERA001
         pass
 
-    def exit(self, msg):
-        print(msg, file=sys.stderr)
-        print(msg)
-        # sys.stderr.write(msg)
-        # self.errfile.write(msg)
-        # self.errfile.close()
-        exit(-1)
+    def exit(self, msg):  # noqa: ANN001, ANN201, D102
+        print(msg, file=sys.stderr)  # noqa: T201
+        print(msg)  # noqa: T201
+        # sys.stderr.write(msg)  # noqa: ERA001
+        # self.errfile.write(msg)  # noqa: ERA001
+        # self.errfile.close()  # noqa: ERA001
+        exit(-1)  # noqa: PLR1722
 
-    def terminate_errLog(self):
-        # self.errfile.close()
+    def terminate_errLog(self):  # noqa: ANN201, N802, D102
+        # self.errfile.close()  # noqa: ERA001
         pass
 
     #
@@ -304,15 +304,15 @@ class UQengine:
     #
 
 
-def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
+def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: ANN001, ANN201, C901, N802, N803, D103, PLR0912, PLR0913, PLR0915
     if runIdx == 0:
-        templatedirFolder = '/templatedir'
-        workdirFolder = '/workdir.' + str(id_sim + 1)
+        templatedirFolder = '/templatedir'  # noqa: N806
+        workdirFolder = '/workdir.' + str(id_sim + 1)  # noqa: N806
     else:
-        templatedirFolder = '/templatedir.' + str(runIdx)
-        workdirFolder = '/workdir.' + str(runIdx) + '.' + str(id_sim + 1)
+        templatedirFolder = '/templatedir.' + str(runIdx)  # noqa: N806
+        workdirFolder = '/workdir.' + str(runIdx) + '.' + str(id_sim + 1)  # noqa: N806
 
-    X = np.atleast_2d(X)
+    X = np.atleast_2d(X)  # noqa: N806
     x_dim = X.shape[1]
 
     if X.shape[0] > 1:
@@ -325,11 +325,11 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     current_dir_i = work_dir + workdirFolder
     try:
         shutil.copytree(work_dir + templatedirFolder, current_dir_i)
-    except Exception:
+    except Exception:  # noqa: BLE001
         try:
             shutil.copytree(work_dir + templatedirFolder, current_dir_i)
 
-        except Exception as ex:
+        except Exception as ex:  # noqa: BLE001
             msg = 'Error running FEM: ' + str(ex)
             return msg, id_sim
 
@@ -337,16 +337,16 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     # (2) write param.in file
     #
 
-    outF = open(current_dir_i + '/params.in', 'w')
+    outF = open(current_dir_i + '/params.in', 'w')  # noqa: SIM115, PTH123, N806
     outF.write(f'{x_dim}\n')
     for i in range(x_dim):
         outF.write(f'{rv_name[i]} {X[0, i]}\n')
     outF.close()
 
     if runIdx == 0:
-        print(f'RUNNING FEM: working directory {id_sim + 1} created')
+        print(f'RUNNING FEM: working directory {id_sim + 1} created')  # noqa: T201
     else:
-        print(f'RUNNING FEM: working directory {runIdx}-{id_sim + 1} created')
+        print(f'RUNNING FEM: working directory {runIdx}-{id_sim + 1} created')  # noqa: T201
 
     #
     # (3) run workflow_driver.bat
@@ -356,63 +356,63 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
     workflow_run_command = f'{current_dir_i}/{workflowDriver}  1> workflow.log 2>&1'
     # subprocess.check_call(
     #    workflow_run_command,
-    #    shell=True,
-    #    stdout=subprocess.DEVNULL,
-    #    stderr=subprocess.STDOUT,
-    # )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    #    shell=True,  # noqa: ERA001
+    #    stdout=subprocess.DEVNULL,  # noqa: ERA001
+    #    stderr=subprocess.STDOUT,  # noqa: ERA001
+    # )    # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)  # noqa: E501
     # => to end grasefully
-    returnCode = subprocess.call(
+    returnCode = subprocess.call(  # noqa: S602, N806, F841
         workflow_run_command,
         shell=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.STDOUT,
-    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)
+    )  # subprocess.check_call(workflow_run_command, shell=True, stdout=FNULL, stderr=subprocess.STDOUT)  # noqa: E501
 
     #
     # (4) reading results
     #
 
-    if glob.glob('results.out'):
+    if glob.glob('results.out'):  # noqa: PTH207
         g = np.loadtxt('results.out').flatten()
     else:
         msg = 'Error running FEM: results.out missing at ' + current_dir_i
-        if glob.glob('ops.out'):
-            with open('ops.out') as text_file:
-                error_FEM = text_file.read()
+        if glob.glob('ops.out'):  # noqa: PTH207
+            with open('ops.out') as text_file:  # noqa: PTH123
+                error_FEM = text_file.read()  # noqa: N806
 
-            startingCharId = error_FEM.lower().find('error')
+            startingCharId = error_FEM.lower().find('error')  # noqa: N806
 
             if startingCharId > 0:
-                startingCharId = max(0, startingCharId - 20)
-                endingID = max(len(error_FEM), startingCharId + 200)
+                startingCharId = max(0, startingCharId - 20)  # noqa: N806
+                endingID = max(len(error_FEM), startingCharId + 200)  # noqa: N806
                 errmsg = error_FEM[startingCharId:endingID]
                 errmsg = errmsg.split(' ', 1)[1]
                 errmsg = errmsg[0 : errmsg.rfind(' ')]
                 msg += '\n'
                 msg += 'your FEM model says...\n'
                 msg += '........\n' + errmsg + '\n........ \n'
-                msg += 'to read more, see ' + os.path.join(os.getcwd(), 'ops.out')
+                msg += 'to read more, see ' + os.path.join(os.getcwd(), 'ops.out')  # noqa: PTH109, PTH118
 
         return msg, id_sim
 
     if g.shape[0] == 0:
         msg = 'Error running FEM: results.out is empty'
-        if glob.glob('ops.out'):
-            with open('ops.out') as text_file:
-                error_FEM = text_file.read()
+        if glob.glob('ops.out'):  # noqa: PTH207
+            with open('ops.out') as text_file:  # noqa: PTH123
+                error_FEM = text_file.read()  # noqa: N806
 
-            startingCharId = error_FEM.lower().find('error')
+            startingCharId = error_FEM.lower().find('error')  # noqa: N806
 
             if startingCharId > 0:
-                startingCharId = max(0, startingCharId - 20)
-                endingID = max(len(error_FEM), startingCharId + 200)
+                startingCharId = max(0, startingCharId - 20)  # noqa: N806
+                endingID = max(len(error_FEM), startingCharId + 200)  # noqa: N806
                 errmsg = error_FEM[startingCharId:endingID]
                 errmsg = errmsg.split(' ', 1)[1]
                 errmsg = errmsg[0 : errmsg.rfind(' ')]
                 msg += '\n'
                 msg += 'your FEM model says...\n'
                 msg += '........\n' + errmsg + '\n........ \n'
-                msg += 'to read more, see ' + os.path.join(os.getcwd(), 'ops.out')
+                msg += 'to read more, see ' + os.path.join(os.getcwd(), 'ops.out')  # noqa: PTH109, PTH118
 
         return msg, id_sim
 
@@ -426,7 +426,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
 
     # def readCSV(self):
     #     pass
-    #     return
+    #     return  # noqa: ERA001
     # def MCS(self):
     #     pass
     # def makePool(self):
@@ -434,11 +434,11 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
 
 
 #
-# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP
+# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP  # noqa: E501
 #
 
-# def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):
-#     g, id_sim = run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0)
+# def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):  # noqa: E501
+#     g, id_sim = run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0)  # noqa: ERA001
 
 
 #
@@ -456,7 +456,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):
 #     def designExp(self):
 #         # (1) generate samples
 #
-#             Y = self.runFEM()
+#             Y = self.runFEM()  # noqa: ERA001
 #         # (2) calibrat
 #         # loop
 #

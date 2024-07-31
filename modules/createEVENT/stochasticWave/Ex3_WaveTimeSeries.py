@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3  # noqa: EXE001
 
-"""Generate wave time series based on the Jonswap spectrum"""
+"""Generate wave time series based on the Jonswap spectrum"""  # noqa: D400, D415
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,17 +10,17 @@ from numpy.random import seed, uniform
 from welib.tools.figure import defaultRC
 
 defaultRC()
-from welib.hydro.morison import *
-from welib.hydro.spectra import jonswap
-from welib.hydro.wavekin import *
-from welib.hydro.wavekin import elevation2d, wavenumber
-from welib.tools.spectral import fft_wrap
+from welib.hydro.morison import *  # noqa: E402, F403
+from welib.hydro.spectra import jonswap  # noqa: E402
+from welib.hydro.wavekin import *  # noqa: E402, F403
+from welib.hydro.wavekin import elevation2d, wavenumber  # noqa: E402
+from welib.tools.spectral import fft_wrap  # noqa: E402
 
 # --- Random seed
-seed(None)
+seed(None)  # noqa: NPY002
 
 # --- Parameters
-# t  = np.linspace(0,600,601) # time vector  [s]
+# t  = np.linspace(0,600,601) # time vector  [s]  # noqa: ERA001
 t = np.linspace(0, 60.0, 6001)  # time vector  [s]
 Hs = 8.1  # Significant wave height [m]
 Tp = 12.7  # Peak period [s]
@@ -29,8 +29,8 @@ g = 9.80665  # Gravity[m/s2]
 
 # --- Jonswap spectrum
 dt = t[1] - t[0]  # timestep [s]
-df = 1 / np.max(t)  # step size for frequency
-fHighCut = 1 / (dt) / 2.0  # Highest frequency in calculations
+df = 1 / np.max(t)  # step size for frequency  # noqa: PD901
+fHighCut = 1 / (dt) / 2.0  # Highest frequency in calculations  # noqa: N816
 freq = np.arange(df, fHighCut, df)
 S = jonswap(freq, Hs, Tp=Tp, g=9.80665)
 
@@ -38,7 +38,7 @@ S = jonswap(freq, Hs, Tp=Tp, g=9.80665)
 k = wavenumber(freq, h, g)
 
 # --- Compute wave elevation based on amplitudes and random phases
-eps = uniform(0, 2 * np.pi, len(freq))  # random phases between 0 and 2pi
+eps = uniform(0, 2 * np.pi, len(freq))  # random phases between 0 and 2pi  # noqa: NPY002
 a = np.sqrt(2 * S * df)  # wave amplitudes based on spectrum
 x = 0  # longitudinal distance where wave is evaluated [m]
 eta = elevation2d(a, freq, k, eps, t, x)
@@ -70,8 +70,8 @@ ax.set_ylabel(r'Spectral density [m$^2$ s]')
 ax.tick_params(direction='in')
 ax.autoscale(enable=True, axis='both', tight=True)
 fig.savefig('WaveTimeSeries.png')
-# fig.savefig('WaveTimeSeries.webp')
-# plt.show()
+# fig.savefig('WaveTimeSeries.webp')  # noqa: ERA001
+# plt.show()  # noqa: ERA001
 
 if __name__ == '__main__':
     pass

@@ -1,17 +1,17 @@
-# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB
+# written: Michael Gardner @ UNR, Aakash Bangalore Satish @ UCB  # noqa: INP001, D100
 
 # Use the UQpy driver as a starting point if you want to add other UQ capabilities
 
 
-def configureAndRunUQ(
-    uqData,
-    simulationData,
-    randomVarsData,
-    demandParams,
-    workingDir,
-    runType,
-    localAppDir,
-    remoteAppDir,
+def configureAndRunUQ(  # noqa: ANN201, N802, PLR0913
+    uqData,  # noqa: ANN001, N803
+    simulationData,  # noqa: ANN001, N803
+    randomVarsData,  # noqa: ANN001, N803
+    demandParams,  # noqa: ANN001, N803
+    workingDir,  # noqa: ANN001, N803
+    runType,  # noqa: ANN001, N803
+    localAppDir,  # noqa: ANN001, N803
+    remoteAppDir,  # noqa: ANN001, N803
 ):
     """This function configures and runs a UQ simulation based on the input
     UQ driver and its associated inputs, simulation configuration, random
@@ -28,25 +28,25 @@ def configureAndRunUQ(
     runType:        Specifies whether computations are being run locally or on an HPC cluster
     localAppDir:    Directory containing apps for local run
     remoteAppDir:   Directory containing apps for remote run
-    """
-    uqDriverOptions = ['UQpy', 'HeirBayes']
+    """  # noqa: E501, D205, D400, D401, D404, D415
+    uqDriverOptions = ['UQpy', 'HeirBayes']  # noqa: N806
 
     for val in uqData['Parameters']:
         if val['name'] == 'UQ Driver':
-            uqDriver = val['value']
+            uqDriver = val['value']  # noqa: N806
 
     if uqDriver not in uqDriverOptions:
         raise ValueError(
-            'ERROR: configureAndRunUQ.py: UQ driver not recognized.'
+            'ERROR: configureAndRunUQ.py: UQ driver not recognized.'  # noqa: ISC003
             + ' Either input incorrectly or class to run UQ driver not'
             + ' implemented: ',
             uqDriver,
         )
-    else:
+    else:  # noqa: RET506
         if uqDriver in ['UQpy'] or uqDriver in ['HeirBayes']:
             pass
 
-        uqDriverClass = locals()[uqDriver + 'Runner']
+        uqDriverClass = locals()[uqDriver + 'Runner']  # noqa: N806
         uqDriverClass().runUQ(
             uqData,
             simulationData,

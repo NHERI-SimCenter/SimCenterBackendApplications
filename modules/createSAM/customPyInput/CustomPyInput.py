@@ -1,4 +1,4 @@
-#
+#  # noqa: INP001, D100
 # Copyright (c) 2022 Leland Stanford Junior University
 # Copyright (c) 2022 The Regents of the University of California
 #
@@ -42,30 +42,30 @@ import json
 import sys
 
 
-def create_SAM(
-    AIM_file,
-    EVENT_file,
-    SAM_file,
-    model_script,
-    model_path,
-    ndm,
-    dof_map,
-    column_line,
-    getRV,
+def create_SAM(  # noqa: ANN201, N802, D103, PLR0913
+    AIM_file,  # noqa: ANN001, N803
+    EVENT_file,  # noqa: ANN001, ARG001, N803
+    SAM_file,  # noqa: ANN001, N803
+    model_script,  # noqa: ANN001
+    model_path,  # noqa: ANN001
+    ndm,  # noqa: ANN001
+    dof_map,  # noqa: ANN001
+    column_line,  # noqa: ANN001
+    getRV,  # noqa: ANN001, ARG001, N803
 ):
     # KZ: modifying BIM to AIM
-    with open(AIM_file, encoding='utf-8') as f:
-        root_AIM = json.load(f)
-    root_GI = root_AIM['GeneralInformation']
+    with open(AIM_file, encoding='utf-8') as f:  # noqa: PTH123
+        root_AIM = json.load(f)  # noqa: N806
+    root_GI = root_AIM['GeneralInformation']  # noqa: N806
 
     try:
         stories = int(root_GI['NumberOfStories'])
-    except:
-        raise ValueError('number of stories information missing')
+    except:  # noqa: E722
+        raise ValueError('number of stories information missing')  # noqa: B904, EM101, TRY003
 
     if column_line is None:
         # KZ: looking into SAM
-        root_SAM = root_AIM.get('Modeling', {})
+        root_SAM = root_AIM.get('Modeling', {})  # noqa: N806
         nodes = root_SAM.get('centroidNodes', [])
         if len(nodes) == 0:
             nodes = list(range(stories + 1))
@@ -82,7 +82,7 @@ def create_SAM(
         node_entry['floor'] = f'{floor}'
         node_map.append(node_entry)
 
-    root_SAM = {
+    root_SAM = {  # noqa: N806
         'mainScript': model_script,
         'modelPath': model_path,
         'dofMap': dof_map,
@@ -90,21 +90,21 @@ def create_SAM(
         'type': 'CustomPyInput',
         'NodeMapping': node_map,
         'numStory': stories,
-        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
+        # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...  # noqa: E501
         'ndm': int(ndm),
-        # TODO: improve this if we want random vars in the structure
+        # TODO: improve this if we want random vars in the structure  # noqa: FIX002, TD002, TD003
         'randomVar': [],
     }
 
     # pass all other attributes in the AIM GI to SAM
-    for cur_key in root_GI.keys():
+    for cur_key in root_GI.keys():  # noqa: SIM118
         cur_item = root_GI.get(cur_key, None)
-        if cur_key in root_SAM.keys():
+        if cur_key in root_SAM.keys():  # noqa: SIM118
             pass
         else:
             root_SAM[cur_key] = cur_item
 
-    with open(SAM_file, 'w', encoding='utf-8') as f:
+    with open(SAM_file, 'w', encoding='utf-8') as f:  # noqa: PTH123
         json.dump(root_SAM, f, indent=2)
 
 

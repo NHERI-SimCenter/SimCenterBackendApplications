@@ -1,15 +1,15 @@
 """Created on Wed Nov  2 13:25:40 2022
 
 @author: snaeimi
-"""
+"""  # noqa: N999, D400, D415
 
 from PyQt5 import QtWidgets
 
 from .Main_Help_Window import Ui_Main_Help_Window
 
 
-class Main_Help_Designer(Ui_Main_Help_Window):
-    def __init__(self):
+class Main_Help_Designer(Ui_Main_Help_Window):  # noqa: N801, D101
+    def __init__(self):  # noqa: ANN204, D107
         self._window = QtWidgets.QDialog()
         self.setupUi(self._window)
 

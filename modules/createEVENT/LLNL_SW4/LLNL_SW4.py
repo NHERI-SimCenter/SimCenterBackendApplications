@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: INP001, D100
 import json
 import posixpath
 import sys
@@ -6,8 +6,8 @@ import sys
 import numpy as np
 
 
-def write_RV(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file) as f:
+def write_RV(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N802, N803, D103
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_data = json.load(f)
 
     event_file = {'randomVariables': [], 'Events': []}
@@ -35,10 +35,10 @@ def write_RV(BIM_file, EVENT_file, data_dir):
             }
         )
 
-    RV_elements = []
+    RV_elements = []  # noqa: N806
     for event in events:
         if event['EventClassification'] == 'Earthquake':
-            RV_elements.append(event['fileName'])
+            RV_elements.append(event['fileName'])  # noqa: PERF401
 
     event_file['randomVariables'][0]['elements'] = RV_elements
 
@@ -47,14 +47,14 @@ def write_RV(BIM_file, EVENT_file, data_dir):
         load_record(events[0]['fileName'], data_dir, empty=True)
     )
 
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 
-def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
-    fileName = fileName.split('x')[0]
+def load_record(fileName, data_dir, scale_factor=1.0, empty=False):  # noqa: ANN001, ANN201, FBT002, N803, D103
+    fileName = fileName.split('x')[0]  # noqa: N806
 
-    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:
+    with open(posixpath.join(data_dir, f'{fileName}.json')) as f:  # noqa: PTH123
         event_data = json.load(f)
 
     event_dic = {
@@ -69,7 +69,7 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
         for i, (src_label, tar_label) in enumerate(
             zip(['data_x', 'data_y'], ['accel_X', 'accel_Y'])
         ):
-            if src_label in event_data.keys():
+            if src_label in event_data.keys():  # noqa: SIM118
                 event_dic['timeSeries'].append(
                     {
                         'name': tar_label,
@@ -89,16 +89,16 @@ def load_record(fileName, data_dir, scale_factor=1.0, empty=False):
     return event_dic
 
 
-def get_records(BIM_file, EVENT_file, data_dir):
-    with open(BIM_file) as f:
+def get_records(BIM_file, EVENT_file, data_dir):  # noqa: ANN001, ANN201, N803, D103
+    with open(BIM_file) as f:  # noqa: PTH123
         bim_file = json.load(f)
 
-    with open(EVENT_file) as f:
+    with open(EVENT_file) as f:  # noqa: PTH123
         event_file = json.load(f)
 
     event_id = event_file['Events'][0]['event_id']
 
-    scale_factor = dict(
+    scale_factor = dict(  # noqa: C404
         [
             (evt['fileName'], evt.get('factor', 1.0))
             for evt in bim_file['Events']['Events']
@@ -107,7 +107,7 @@ def get_records(BIM_file, EVENT_file, data_dir):
 
     event_file['Events'][0].update(load_record(event_id, data_dir, scale_factor))
 
-    with open(EVENT_file, 'w') as f:
+    with open(EVENT_file, 'w') as f:  # noqa: PTH123
         json.dump(event_file, f, indent=2)
 
 

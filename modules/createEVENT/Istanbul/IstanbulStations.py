@@ -1,4 +1,4 @@
-import json
+import json  # noqa: INP001, D100
 import math
 import os
 
@@ -7,10 +7,10 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-def getStations(information, plot=False, show=False):
-    """This function is used to retreive the information of the Istanbul physics-based simulations"""
-    RegionFlag = information['RegionFlag']
-    LocationFlag = information['LocationFlag']
+def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, PLR0912, PLR0915
+    """This function is used to retreive the information of the Istanbul physics-based simulations"""  # noqa: E501, D400, D401, D404, D415
+    RegionFlag = information['RegionFlag']  # noqa: N806
+    LocationFlag = information['LocationFlag']  # noqa: N806
 
     if LocationFlag:
         # get the location of the site
@@ -32,10 +32,10 @@ def getStations(information, plot=False, show=False):
             radius = information['radius']
 
     # Read the data from the csv file ignore indexing
-    df_allSites = pd.read_csv(
+    df_allSites = pd.read_csv(  # noqa: N806
         'All_Stations_Lat_Lon_Vs30_BedrockDepth.csv', index_col=False
     )
-    df_allSites = df_allSites[['Longitude', 'Latitude', 'Depth (m)']]
+    df_allSites = df_allSites[['Longitude', 'Latitude', 'Depth (m)']]  # noqa: N806
     # add geometry using Lonnitude and Latitude
     gdf = gpd.GeoDataFrame(
         df_allSites,
@@ -52,26 +52,26 @@ def getStations(information, plot=False, show=False):
     del df_allSites
     directory = information['directory']  # directory to save the data
     # create the directory if it does not exist
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    if not os.path.exists(directory):  # noqa: PTH110
+        os.makedirs(directory)  # noqa: PTH103
     # empty the directory
     files = os.listdir(directory)
     for file in files:
-        os.remove(directory + '/' + file)
+        os.remove(directory + '/' + file)  # noqa: PTH107
 
     if LocationFlag:
         # find the nearest site to the location
         gdf['distance'] = gdf.distance(Point(lon, lat))
         gdf = gdf.sort_values('distance')
 
-        # create a coulmn of the distance color and make the first 4 nearest sites red
+        # create a coulmn of the distance color and make the first 4 nearest sites red  # noqa: E501
         gdf['Color'] = 'blue'
         gdf.loc[gdf.index[:4], 'Color'] = 'red'
 
     if RegionFlag:
         if information['RegionShape'] == 'Rectangle':
             # Create a polygton using min_lat, max_lat, min_lon, max_lon
-            RegionofInterset = Polygon(
+            RegionofInterset = Polygon(  # noqa: N806
                 [
                     (min_lon, min_lat),
                     (min_lon, max_lat),
@@ -84,17 +84,17 @@ def getStations(information, plot=False, show=False):
             withinindicies = gdf.within(RegionofInterset)
             gdf['Color'] = 'blue'
             gdf.loc[withinindicies, 'Color'] = 'red'
-            # gdf = gdf[gdf.within(RegionofInterset)]
+            # gdf = gdf[gdf.within(RegionofInterset)]  # noqa: ERA001
 
             # check if the gdf is empty
             if withinindicies.sum() == 0:
-                print(
-                    'No sites are found in the selected region please change the region of interest'
+                print(  # noqa: T201
+                    'No sites are found in the selected region please change the region of interest'  # noqa: E501
                 )
                 return
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # chage the gdf to calculte the distance from the center of the circle in km  # noqa: E501
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -156,7 +156,7 @@ def getStations(information, plot=False, show=False):
         )
 
         # save the html file
-        # fig.write_html("Istanbul.html")
+        # fig.write_html("Istanbul.html")  # noqa: ERA001
         if show:
             fig.show()
 
@@ -169,13 +169,13 @@ def getStations(information, plot=False, show=False):
     gdf.drop(columns=['geometry', 'Color', 'Selected Site']).to_csv(
         'TapisFiles/selectedSites.csv', index=True
     )
-    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)
+    json.dump(information, open('TapisFiles/information.json', 'w'), indent=2)  # noqa: SIM115, PTH123
 
 
-def haversine(lat1, lon1, lat2, lon2):
+def haversine(lat1, lon1, lat2, lon2):  # noqa: ANN001, ANN201
     """Calculate the great circle distance between two points
     on the earth specified in decimal degrees.
-    """
+    """  # noqa: D205
     # Convert decimal degrees to radians
     lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
 
@@ -190,7 +190,7 @@ def haversine(lat1, lon1, lat2, lon2):
     r = 6371  # Radius of the Earth in kilometers
     distance = r * c
 
-    return distance
+    return distance  # noqa: RET504
 
 
 if __name__ == '__main__':
@@ -209,5 +209,5 @@ if __name__ == '__main__':
     }
 
     # change the directory to the file location
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))  # noqa: PTH120
     getStations(information, plot=False, show=False)

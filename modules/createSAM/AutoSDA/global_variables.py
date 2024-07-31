@@ -1,4 +1,4 @@
-# This file is used to declare all global constants.
+# This file is used to declare all global constants.  # noqa: INP001, D100
 # All user input parameters are summarized here.
 # Developed by GUAN, XINGQUAN @ UCLA in Feb 2019
 # Be cautious with line 19 - 25:
@@ -25,7 +25,7 @@ steel = SteelMaterial(
 )  # Unit: ksi
 
 # The path where THIS file is located is the base directory
-baseDirectory = os.path.dirname(os.path.realpath(__file__))
+baseDirectory = os.path.dirname(os.path.realpath(__file__))  # noqa: PTH120, N816
 
 ##########################################################################
 #            User Defined Ratios Involved in Design                      #
@@ -36,38 +36,38 @@ baseDirectory = os.path.dirname(os.path.realpath(__file__))
 
 # Ix ratio between exterior column and interior column
 EXTERIOR_INTERIOR_COLUMN_RATIO = 1.0
-# EXTERIOR_INTERIOR_COLUMN_RATIO = 0.70
+# EXTERIOR_INTERIOR_COLUMN_RATIO = 0.70  # noqa: ERA001
 
 # Zx ratio between beam and interior column
 BEAM_TO_COLUMN_RATIO = 0.80  # Used when SCWB = 1.0
-# BEAM_TO_COLUMN_RATIO = 0.33  # Used when SCWB = 1.5
-# BEAM_TO_COLUMN_RATIO = 0.33  # Try this when SCWB = 2.0
+# BEAM_TO_COLUMN_RATIO = 0.33  # Used when SCWB = 1.5  # noqa: ERA001
+# BEAM_TO_COLUMN_RATIO = 0.33  # Try this when SCWB = 2.0  # noqa: ERA001
 
 # Define the number of stories that have identical member sizes
 # when considering constructabilty
 IDENTICAL_SIZE_PER_STORY = 2
 
 # Define a number that describes a ratio between upper column Zx and lower column Zx
-# When SCWB is not satisfied, we need to use ratio to determine whether we should upscale upper column or lower column.
+# When SCWB is not satisfied, we need to use ratio to determine whether we should upscale upper column or lower column.  # noqa: E501
 UPPER_LOWER_COLUMN_Zx = 0.5
 
 # Define a coefficient that describes the accidental torsion
-# Imagine two special moment frames are symmetrically placed at the building perimeter
+# Imagine two special moment frames are symmetrically placed at the building perimeter  # noqa: E501
 # and the floor plan of the building is a regular shape (rectangle)
-# If the accidental torsion is not considered -> each frame is taken 0.5 of total lateral force
+# If the accidental torsion is not considered -> each frame is taken 0.5 of total lateral force  # noqa: E501
 # Then the ACCIDENTAL_TORSION = 1.0
-# If the accidental torsion is considered -> one frame will take 0.55 of total lateral force
-# since the center is assumed to be deviated from its actual location by 5% of the building dimension
+# If the accidental torsion is considered -> one frame will take 0.55 of total lateral force  # noqa: E501
+# since the center is assumed to be deviated from its actual location by 5% of the building dimension  # noqa: E501
 # Then the ACCIDENTAL_TORSION = 0.55/0.50 = 1.1
 ACCIDENTAL_TORSION = 0.55 / 0.50
 
-# Define a boolean variable to determine whether the Section 12.8.6.2 is enforced or not
+# Define a boolean variable to determine whether the Section 12.8.6.2 is enforced or not  # noqa: E501
 # Section 12.8.6.2:
-# For determining the design story drifts, it is permitted to determine the elastic drifts using
-# seismic design force based on the computed fundamental period without the upper limit (CuTa).
+# For determining the design story drifts, it is permitted to determine the elastic drifts using  # noqa: E501
+# seismic design force based on the computed fundamental period without the upper limit (CuTa).  # noqa: E501
 # True -> Bound by upper limit, i.e., don't impose Section 12.8.6.2
 # False -> Not bound by upper limit, i.e., impose Section 12.8.6.2 requirement
-# Please note this period is only for computing drift, not for computing required strength.
+# Please note this period is only for computing drift, not for computing required strength.  # noqa: E501
 PERIOD_FOR_DRIFT_LIMIT = True
 
 
@@ -79,7 +79,7 @@ PERIOD_FOR_DRIFT_LIMIT = True
 
 # Declare global variables of strong column weak beam ratio for checking
 STRONG_COLUMN_WEAK_BEAM_RATIO = 1.0
-# STRONG_COLUMN_WEAK_BEAM_RATIO = float(sys.argv[4])
+# STRONG_COLUMN_WEAK_BEAM_RATIO = float(sys.argv[4])  # noqa: ERA001
 
 RBS_STIFFNESS_FACTOR = 1.09
 
@@ -87,13 +87,13 @@ RBS_STIFFNESS_FACTOR = 1.09
 #           Open the section database and store it as a global variable   #
 # #########################################################################
 
-# Global constant: SECTION_DATABASE (a panda dataframe read from .csv file) (All sizes)
+# Global constant: SECTION_DATABASE (a panda dataframe read from .csv file) (All sizes)  # noqa: E501
 SECTION_DATABASE = pd.read_csv(baseDirectory + '/AllSectionDatabase.csv', header=0)
 
-# Global constant: COLUMN_DATABASE (only contains the sizes that are feasible for columns)
+# Global constant: COLUMN_DATABASE (only contains the sizes that are feasible for columns)  # noqa: E501
 COLUMN_DATABASE = pd.read_csv(baseDirectory + '/ColumnDatabase.csv', header=0)
 
-# Global constant: BEAM_DATABASE (only contains the sizes that are feasible for beams)
+# Global constant: BEAM_DATABASE (only contains the sizes that are feasible for beams)  # noqa: E501
 BEAM_DATABASE = pd.read_csv(baseDirectory + '/BeamDatabase.csv', header=0)
 
 # #########################################################################

@@ -1,4 +1,4 @@
-####################################################################
+####################################################################  # noqa: INP001
 # LICENSING INFORMATION
 ####################################################################
 """LICENSE INFORMATION:
@@ -21,7 +21,7 @@ The views and conclusions contained in the software and documentation are those 
 
 REGENTS SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
-"""
+"""  # noqa: E501, D400, D415
 ####################################################################
 # AUTHOR INFORMATION
 ####################################################################
@@ -39,7 +39,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 # OpenFOAM7 solver class
 ####################################################################
-class of7Alpboundary:
+class of7Alpboundary:  # noqa: N801
     """This class includes the methods related to
     alpha boundary conditions for openfoam7.
 
@@ -47,58 +47,58 @@ class of7Alpboundary:
     -------
             Alptext: Get all the text for the p_rgh-file
 
-    """
+    """  # noqa: D205, D404
 
     #############################################################
-    def Alptext(self, data, patches):
+    def Alptext(self, data, patches):  # noqa: ANN001, ANN201, N802, D417
         """Creates the necessary text for pressure bc for openfoam7
 
         Arguments:
         ---------
                 data: all the JSON data
 
-        """
+        """  # noqa: D400, D401, D415
         # Create a utilities object
         hydroutil = hydroUtils()
 
         # Get the header text for the U-file
-        Alptext = self.Alpheader()
+        Alptext = self.Alpheader()  # noqa: N806
 
         # Start the outside
-        Alptext = Alptext + 'boundaryField\n{\n'
+        Alptext = Alptext + 'boundaryField\n{\n'  # noqa: N806
 
         # Loop over all patches
         for patchname in patches:
-            Alptext = Alptext + '\t' + patchname + '\n'
+            Alptext = Alptext + '\t' + patchname + '\n'  # noqa: N806
             patch = hydroutil.extract_element_from_json(
                 data, ['Events', 'PressureType_' + patchname]
             )
-            if patch == [None]:
-                Alptype = -1
+            if patch == [None]:  # noqa: SIM108
+                Alptype = -1  # noqa: N806
             else:
-                Alptype = 0
-            Alptext = Alptext + self.Alppatchtext(Alptype, patchname)
+                Alptype = 0  # noqa: N806
+            Alptext = Alptext + self.Alppatchtext(Alptype, patchname)  # noqa: N806
 
         # Check for building and other building
-        Alptext = Alptext + '\tBuilding\n'
-        Alptext = Alptext + self.Alppatchtext(0, 'Building')
-        Alptext = Alptext + '\tOtherBuilding\n'
-        Alptext = Alptext + self.Alppatchtext(0, 'OtherBuilding')
+        Alptext = Alptext + '\tBuilding\n'  # noqa: N806
+        Alptext = Alptext + self.Alppatchtext(0, 'Building')  # noqa: N806
+        Alptext = Alptext + '\tOtherBuilding\n'  # noqa: N806
+        Alptext = Alptext + self.Alppatchtext(0, 'OtherBuilding')  # noqa: N806
 
         # Close the outside
-        Alptext = Alptext + '}\n\n'
+        Alptext = Alptext + '}\n\n'  # noqa: N806
 
         # Return the text for velocity BC
-        return Alptext
+        return Alptext  # noqa: RET504
 
     #############################################################
-    def Alpheader(self):
+    def Alpheader(self):  # noqa: ANN201, N802
         """Creates the text for the header for pressure file
 
         Variable
         -----------
                 header: Header for the p_rgh-file
-        """
+        """  # noqa: D400, D401, D415
         header = """/*--------------------------*- NHERI SimCenter -*----------------------------*\\ 
 |	   | H |
 |	   | Y | HydroUQ: Water-based Natural Hazards Modeling Application
@@ -108,16 +108,16 @@ class of7Alpboundary:
 \\*---------------------------------------------------------------------------*/ 
 FoamFile
 {\n\tversion\t2.0;\n\tformat\tascii;\n\tclass\tvolScalarField;\n\tlocation\t"0";\n\tobject\talpha.water;\n}
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //\n\n"""  # noqa: E501, W291
 
         header = header + 'dimensions\t[0 0 0 0 0 0 0];\n\n'
         header = header + 'internalField\tuniform\t0;\n\n'
 
         # Return the header for U file
-        return header
+        return header  # noqa: RET504
 
     #############################################################
-    def Alppatchtext(self, Alptype, patchname):
+    def Alppatchtext(self, Alptype, patchname):  # noqa: ANN001, ANN201, ARG002, N802, N803, D417
         """Creates the text the pressure boundary condition
 
         Arguments:
@@ -128,16 +128,16 @@ FoamFile
         -----------
                 Alptext: Text for the particular patch
 
-        """
+        """  # noqa: D400, D401, D415
         if patchname == 'Top':
-            Alptext = '\t{\n\t\t'
-            Alptext = Alptext + 'type\tinletOutlet;\n\t\t'
-            Alptext = Alptext + 'inletValue\tuniform 0;\n\t\t'
-            Alptext = Alptext + 'value\tuniform 0;\n\t}\n'
+            Alptext = '\t{\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'type\tinletOutlet;\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'inletValue\tuniform 0;\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'value\tuniform 0;\n\t}\n'  # noqa: N806
 
         else:
-            Alptext = '\t{\n\t\t'
-            Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'
+            Alptext = '\t{\n\t\t'  # noqa: N806
+            Alptext = Alptext + 'type\tzeroGradient;\n\t}\n'  # noqa: N806
 
         # Return the header for U file
         return Alptext
