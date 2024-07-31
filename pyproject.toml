@@ -1,0 +1,13 @@
+[tool.black]
+line-length = 85
+
+[tool.ruff]
+line-length = 85
+
+[tool.ruff.lint]
+# Enable all known categories
+select = ["ALL"]
+ignore = ["D211", "D213", "Q000", "Q003", "COM812", "D203", "ISC001"]
+
+[tool.ruff.format]
+quote-style = "single"
