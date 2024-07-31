@@ -82,7 +82,7 @@
           "ExecutablePath": "applications/createAIM/GeoJSON_to_ASSET/GeoJSON_to_ASSET.py",
         "ApplicationSpecificInputs": [
           {
-            "id": "assetFile",
+            "id": "assetSourceFile",
             "type": "path",
             "description": "path to asset database file"
           },
