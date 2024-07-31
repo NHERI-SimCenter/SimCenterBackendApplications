@@ -1,5 +1,5 @@
 """
-authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte 
+authors: Mukesh Kumar Ramancha, Maitreya Manoj Kurumbhati, and Prof. J.P. Conte
 affiliation: University of California, San Diego
 
 """
@@ -149,9 +149,7 @@ def MCMC_MH_old(
         proposal = current + delta
         prior_proposal = log_prior(proposal, AllPars)
 
-        if np.isfinite(
-            prior_proposal
-        ):  # proposal satisfies the prior constraints
+        if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
             # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
@@ -175,18 +173,14 @@ def MCMC_MH_old(
         else:
             likelihood_proposal = -np.Inf  # dont run the FE model
             posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf*np.ones_like(prediction_current)
+            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
-        all_PLP.append(
-            [prior_proposal, likelihood_proposal, posterior_proposal]
-        )
+        all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
         # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
-        if np.isfinite(log_acceptance) and (
-            np.log(rng.uniform()) < log_acceptance
-        ):
+        if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
             posterior_current = posterior_proposal
@@ -242,9 +236,7 @@ def MCMC_MH(
         proposal = current + delta
         prior_proposal = log_prior(proposal, AllPars)
 
-        if np.isfinite(
-            prior_proposal
-        ):  # proposal satisfies the prior constraints
+        if np.isfinite(prior_proposal):  # proposal satisfies the prior constraints
             # likelihood_proposal = log_likelihood(ParticleNum, proposal, variables, resultsLocation)
             likelihood_proposal, prediction_proposal = runFEM(
                 ParticleNum,
@@ -268,18 +260,14 @@ def MCMC_MH(
         else:
             likelihood_proposal = -np.Inf  # dont run the FE model
             posterior_proposal = -np.Inf
-            prediction_proposal = -np.Inf*np.ones_like(prediction_current)
+            prediction_proposal = -np.Inf * np.ones_like(prediction_current)
 
         log_acceptance = posterior_proposal - posterior_current
         all_proposals.append(proposal)
-        all_PLP.append(
-            [prior_proposal, likelihood_proposal, posterior_proposal]
-        )
+        all_PLP.append([prior_proposal, likelihood_proposal, posterior_proposal])
 
         # if np.isfinite(log_acceptance) and (np.log(np.random.uniform()) < log_acceptance):
-        if np.isfinite(log_acceptance) and (
-            np.log(rng.uniform()) < log_acceptance
-        ):
+        if np.isfinite(log_acceptance) and (np.log(rng.uniform()) < log_acceptance):
             # accept
             current = proposal
             posterior_current = posterior_proposal
@@ -355,9 +343,7 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
     max_beta = 1.0
     dBeta = min(max_beta, 1.0 - beta)
 
-    weights, cov_weights, std_weights = get_weights(
-        dBeta, log_likelihoods
-    )
+    weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     while cov_weights > (threshold) or (std_weights == 0):
         dBeta = dBeta * 0.99
@@ -384,13 +370,9 @@ def compute_beta_evidence(beta, log_likelihoods, logFile, threshold=1.0):
 
         if dBeta < 1e-3:
             dBeta = 1e-3
-            weights, cov_weights, std_weights = get_weights(
-                dBeta, log_likelihoods
-            )
+            weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
             break
-        weights, cov_weights, std_weights = get_weights(
-            dBeta, log_likelihoods
-        )
+        weights, cov_weights, std_weights = get_weights(dBeta, log_likelihoods)
 
     beta = beta + dBeta
     if beta > 0.95:

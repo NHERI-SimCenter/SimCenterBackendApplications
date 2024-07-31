@@ -45,62 +45,66 @@ import numpy as np
 
 from time import gmtime, strftime
 
-def log_msg(msg):
 
+def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
 
     print(formatted_msg)
+
 
 from operator import itemgetter
 
 from CBCitiesMethods import *
 
+
 def run_DL_calc(aim_file_path, saveDir, output_name):
-    
     # Load Data
-    
+
     print('Loading the pipeline json file...')
 
     # Open the AIM file
     with open(aim_file_path, 'r') as f:
         pipe = AIM_data = json.load(f)
-                    
+
     add_failrate2pipe(pipe)
-    
+
     failureRateArray = pipe['fail_prob']
     avgRr = np.average(failureRateArray)
-    
-    df = pd.DataFrame({'DV': "0", 'RepairRate': avgRr}, index=[0])
-    
-    savePath = posixpath.join(saveDir,output_name)
-        
-    df.to_csv(savePath, index = False)
-    
+
+    df = pd.DataFrame({'DV': '0', 'RepairRate': avgRr}, index=[0])
+
+    savePath = posixpath.join(saveDir, output_name)
+
+    df.to_csv(savePath, index=False)
+
     return 0
- 
+
 
 def main(args):
-
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--filenameDL')
-    parser.add_argument('-p', '--demandFile', default = None)
+    parser.add_argument('-p', '--demandFile', default=None)
     parser.add_argument('--outputEDP', default='EDP.csv')
-    parser.add_argument('--outputDM', default = 'DM.csv')
-    parser.add_argument('--outputDV', default = 'DV.csv')
-    parser.add_argument('--resource_dir', default = None)
-    parser.add_argument('--dirnameOutput', default = None)
+    parser.add_argument('--outputDM', default='DM.csv')
+    parser.add_argument('--outputDV', default='DV.csv')
+    parser.add_argument('--resource_dir', default=None)
+    parser.add_argument('--dirnameOutput', default=None)
 
     args = parser.parse_args(args)
 
     log_msg('Initializing CB-Cities calculation...')
 
-    out = run_DL_calc(aim_file_path = args.filenameDL, saveDir = args.dirnameOutput, output_name = args.outputDV)
+    out = run_DL_calc(
+        aim_file_path=args.filenameDL,
+        saveDir=args.dirnameOutput,
+        output_name=args.outputDV,
+    )
 
     if out == -1:
-        log_msg("DL calculation failed.")
+        log_msg('DL calculation failed.')
     else:
         log_msg('DL calculation completed.')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     main(sys.argv[1:])

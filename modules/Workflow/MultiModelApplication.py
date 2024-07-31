@@ -43,25 +43,33 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 import whale.main as whale
-from whale.main import log_msg, log_div, _parse_app_registry, create_command, run_command
+from whale.main import (
+    log_msg,
+    log_div,
+    _parse_app_registry,
+    create_command,
+    run_command,
+)
 
-def main(inputFile,
-         appKey,
-         getRV,
-         samFile,
-         evtFile,
-         edpFile,
-         simFile,
-         registryFile,
-         appDir) :
-    
+
+def main(
+    inputFile,
+    appKey,
+    getRV,
+    samFile,
+    evtFile,
+    edpFile,
+    simFile,
+    registryFile,
+    appDir,
+):
     #
-    # get some dir paths, load input file and get data for app, appKey 
+    # get some dir paths, load input file and get data for app, appKey
     #
 
     inputDir = os.path.dirname(inputFile)
     inputFileName = os.path.basename(inputFile)
-    if inputDir != "":
+    if inputDir != '':
         os.chdir(inputDir)
 
     with open(inputFileName, 'r') as f:
@@ -72,61 +80,63 @@ def main(inputFile,
     else:
         reference_dir = inputDir
 
-    appData={}
+    appData = {}
     if appKey in inputs:
         appData = inputs[appKey]
     else:
-        raise KeyError(f'No data for "{appKey}" application in the input file "{inputFile}"')
+        raise KeyError(
+            f'No data for "{appKey}" application in the input file "{inputFile}"'
+        )
 
-    eventApp = False;
-
-    if appKey == "Events":
-        eventApp = True;
+    eventApp = False
+    if appKey == 'Events':
+        eventApp = True
         appData = appData[0]
-
 
     print('appKEY: ', appKey)
     print('appDATA: ', appData)
-    print('HELLO ')        
-    
+    print('HELLO ')
+
     if 'models' not in appData:
         print('NO models in: ', appData)
-        raise KeyError(f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}')
-        
-    if len(appData['models']) < 2:
-        raise RuntimeError(f"At least two models must be provided if the multimodel {appKey} application is used")
+        raise KeyError(
+            f'"models" not defined in data for "{appKey}" application in the input file "{inputFile}'
+        )
 
+    if len(appData['models']) < 2:
+        raise RuntimeError(
+            f'At least two models must be provided if the multimodel {appKey} application is used'
+        )
 
     models = appData['models']
     modelToRun = appData['modelToRun']
 
     if not getRV:
-
         #
         # make sure not still a string, if so try reading from params.in
-        # 
-        
+        #
+
         if isinstance(modelToRun, str):
-            rvName = "MultiModel-"+appKey
+            rvName = 'MultiModel-' + appKey
             # if not here, try opening params.in and getting var from there
-            with open("params.in", 'r') as params:
+            with open('params.in', 'r') as params:
                 # Read the file line by line
                 for line in params:
                     values = line.strip().split()
                     print(values)
                     if values[0] == rvName:
                         modelToRun = values[1]
-                        
+
         modelToRun = int(float(modelToRun))
-    
-    appsInMultiModel=[]
-    appDataInMultiModel=[]
-    appRunDataInMultiModel=[]    
-    beliefs=[]
+
+    appsInMultiModel = []
+    appDataInMultiModel = []
+    appRunDataInMultiModel = []
+    beliefs = []
     sumBeliefs = 0
-    
+
     numModels = 0
-    
+
     for model in models:
         belief = model['belief']
         appName = model['Application']
@@ -139,50 +149,49 @@ def main(inputFile,
         appRunDataInMultiModel.append(appRunData)
         numModels = numModels + 1
 
-    for i in range(0,numModels):
-        beliefs[i] = beliefs[i]/sumBeliefs
+    for i in range(0, numModels):
+        beliefs[i] = beliefs[i] / sumBeliefs
 
     #
     # parse WorkflowApplications to get possible applications
     # need the 2 ifs, as appKey needs to be Events, but switch in WorkflowApplications needs to be Event!
     #
-    
-    if appKey == "Events":
-        appTypes=["Event"]
-    else:
-        appTypes=[appKey]
 
-    parsedRegistry = (_parse_app_registry(registryFile, appTypes))
-    
-    if appKey == "Events":    
-        appsRegistry = parsedRegistry[0]["Event"]
+    if appKey == 'Events':
+        appTypes = ['Event']
     else:
-        appsRegistry = parsedRegistry[0][appKey]        
+        appTypes = [appKey]
+
+    parsedRegistry = _parse_app_registry(registryFile, appTypes)
+
+    if appKey == 'Events':
+        appsRegistry = parsedRegistry[0]['Event']
+    else:
+        appsRegistry = parsedRegistry[0][appKey]
 
     #
     # now we run the application
     #   if getRV we have to run each & collect the RVs
     #   if !getRV we run the single application chosen
     #
-    
+
     if getRV:
-        
-        print("MultiModel - getRV")
+        print('MultiModel - getRV')
 
         #
         # launch each application with getRV and add any new RandomVariable
         # add randomvariable for MultiModel itself, to launch application
-        # need to create temp inputfile for just that application, 
+        # need to create temp inputfile for just that application,
         #
 
         for i in range(0, numModels):
             appName = appsInMultiModel[i]
             print('appsRegistry:', appsRegistry)
             application = appsRegistry[appName]
-            application.set_pref(appDataInMultiModel[i], reference_dir)            
+            application.set_pref(appDataInMultiModel[i], reference_dir)
 
             asset_command_list = application.get_command_list(appDir)
-            asset_command_list.append(u'--getRV')
+            asset_command_list.append('--getRV')
             command = create_command(asset_command_list)
             # thinking to store aplications commands in a file so don't have to repeat this!
 
@@ -195,20 +204,20 @@ def main(inputFile,
         #
 
         randomVariables = inputs['randomVariables']
-        rvName = "MultiModel-"+appKey
-        rvValue="RV.MultiModel-"+appKey
+        rvName = 'MultiModel-' + appKey
+        rvValue = 'RV.MultiModel-' + appKey
         # nrv = len(randomVariables)
-        
+
         thisRV = {
-            "distribution": "Discrete",
-            "inputType": "Parameters",
-            "name": rvName,
-            "refCount": 1,
-            "value": rvValue,
-            "createdRun": True,            
-            "variableClass": "Uncertain",
-            "Weights":beliefs,
-            "Values":[i+1 for i in range(0,numModels)]
+            'distribution': 'Discrete',
+            'inputType': 'Parameters',
+            'name': rvName,
+            'refCount': 1,
+            'value': rvValue,
+            'createdRun': True,
+            'variableClass': 'Uncertain',
+            'Weights': beliefs,
+            'Values': [i + 1 for i in range(0, numModels)],
         }
         randomVariables.append(thisRV)
 
@@ -223,76 +232,74 @@ def main(inputFile,
         #     newCorrMat[0:nrv,0:nrv] = corrMat
         #     inputs['correlationMatrix'] = newCorrMat.flatten().tolist()
 
-
-        with open(inputFile, "w") as outfile:
-            json.dump(inputs, outfile)        
+        with open(inputFile, 'w') as outfile:
+            json.dump(inputs, outfile)
 
         print('UPDATING INPUT FILE:', inputFile)
-        
+
         #
         # for now just run the last model (works in sWHALE for all apps that don't create RV, i.e. events)
         #
 
         # create input file for application
-        
-        tmpFile = "MultiModel." + appKey + ".json"
-        inputs[appKey] =  appRunDataInMultiModel[numModels-1]
-        
-        with open(tmpFile, "w") as outfile:
+
+        tmpFile = 'MultiModel.' + appKey + '.json'
+        inputs[appKey] = appRunDataInMultiModel[numModels - 1]
+
+        with open(tmpFile, 'w') as outfile:
             json.dump(inputs, outfile)
 
         # run the application
         asset_command_list = application.get_command_list(appDir)
         indexInputFile = asset_command_list.index('--filenameAIM') + 1
         asset_command_list[indexInputFile] = tmpFile
-        asset_command_list.append(u'--getRV')        
+        asset_command_list.append('--getRV')
         command = create_command(asset_command_list)
         run_command(command)
         print('RUNNING --getRV:', command)
-            
+
     else:
-        
-        print("MultiModel - run")
+        print('MultiModel - run')
         modelToRun = modelToRun - 1
         # get app data given model
         appName = appsInMultiModel[modelToRun]
         application = appsRegistry[appName]
-        application.set_pref(appDataInMultiModel[modelToRun], reference_dir)            
+        application.set_pref(appDataInMultiModel[modelToRun], reference_dir)
 
         # create modified input file for app
-        tmpFile = "MultiModel." + appKey + ".json"
+        tmpFile = 'MultiModel.' + appKey + '.json'
 
-        #if appKey == "Events":
+        # if appKey == "Events":
         #    inputs["Events"][0]=appRunDataInMultiModel[modelToRun]
 
-        #else:
+        # else:
         #    inputs[appKey] =  appRunDataInMultiModel[modelToRun]
-        inputs[appKey] =  appRunDataInMultiModel[modelToRun]
+        inputs[appKey] = appRunDataInMultiModel[modelToRun]
 
         print('model to run:', modelToRun)
 
-        with open(tmpFile, "w") as outfile:
+        with open(tmpFile, 'w') as outfile:
             json.dump(inputs, outfile)
 
-        print("INPUTS", inputs)
-        
+        print('INPUTS', inputs)
+
         # run application
         asset_command_list = application.get_command_list(appDir)
         indexInputFile = asset_command_list.index('--filenameAIM') + 1
-        asset_command_list[indexInputFile] = tmpFile     
-        command = create_command(asset_command_list)        
+        asset_command_list[indexInputFile] = tmpFile
+        command = create_command(asset_command_list)
         run_command(command)
-        print('RUNNING:', command)        
+        print('RUNNING:', command)
 
-    print("Finished MultiModelApplication")
+    print('Finished MultiModelApplication')
+
 
 if __name__ == '__main__':
-
-    #Defining the command line arguments
+    # Defining the command line arguments
     parser = argparse.ArgumentParser(
-        "Run the MultiModel application.",
-        allow_abbrev=False)
-    
+        'Run the MultiModel application.', allow_abbrev=False
+    )
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM', default='NA')
@@ -300,29 +307,39 @@ if __name__ == '__main__':
     parser.add_argument('--filenameEDP', default='NA')
     parser.add_argument('--filenameSIM', default='NA')
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
-    parser.add_argument("--appKey", default=None)
-    parser.add_argument("--registry",
-                        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                             "WorkflowApplications.json"),
-                        help="Path to file containing registered workflow applications")
-    parser.add_argument("-a", "--appDir",
-                        default=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                        help="Absolute path to the local application directory.")
-    parser.add_argument("-l", "--logFile",
-                        default='log.txt',
-                        help="Path where the log file will be saved.")
+    parser.add_argument('--appKey', default=None)
+    parser.add_argument(
+        '--registry',
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'
+        ),
+        help='Path to file containing registered workflow applications',
+    )
+    parser.add_argument(
+        '-a',
+        '--appDir',
+        default=os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        ),
+        help='Absolute path to the local application directory.',
+    )
+    parser.add_argument(
+        '-l',
+        '--logFile',
+        default='log.txt',
+        help='Path where the log file will be saved.',
+    )
 
-    args, unknown  = parser.parse_known_args()        
-    
+    args, unknown = parser.parse_known_args()
 
-    main(inputFile = args.filenameAIM,
-         appKey = args.appKey,
-         getRV = args.getRV,
-         samFile = args.filenameSAM,
-         evtFile = args.filenameEVENT,
-         edpFile = args.filenameEDP,
-         simFile = args.filenameSIM,
-         registryFile = args.registry,
-         appDir = args.appDir)
-
-         
+    main(
+        inputFile=args.filenameAIM,
+        appKey=args.appKey,
+        getRV=args.getRV,
+        samFile=args.filenameSAM,
+        evtFile=args.filenameEVENT,
+        edpFile=args.filenameEDP,
+        simFile=args.filenameSIM,
+        registryFile=args.registry,
+        appDir=args.appDir,
+    )

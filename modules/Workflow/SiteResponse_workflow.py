@@ -1,4 +1,4 @@
-# Site response workflow 
+# Site response workflow
 
 import sys, os, json
 import argparse
@@ -13,10 +13,18 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import whale.main as whale
 from whale.main import log_msg, log_div
 
-def main(run_type, input_file, app_registry,
-         force_cleanup, bldg_id_filter, reference_dir,
-         working_dir, app_dir, log_file):
 
+def main(
+    run_type,
+    input_file,
+    app_registry,
+    force_cleanup,
+    bldg_id_filter,
+    reference_dir,
+    working_dir,
+    app_dir,
+    log_file,
+):
     # initialize the log file
     with open(input_file, 'r') as f:
         inputs = json.load(f)
@@ -43,23 +51,35 @@ def main(run_type, input_file, app_registry,
     if force_cleanup:
         log_msg('Forced cleanup turned on.')
 
-    WF = whale.Workflow(run_type, input_file, app_registry,
-        app_type_list = ['Building', 'RegionalEvent', 'RegionalMapping',
-                         'Event', 'Modeling', 'EDP', 'Simulation', 'UQ', 'DL'],
-        reference_dir = reference_dir,
-        working_dir = working_dir,
-        app_dir = app_dir,
-        units = inputs.get('units', None),
-        outputs=inputs.get('outputs', None))
+    WF = whale.Workflow(
+        run_type,
+        input_file,
+        app_registry,
+        app_type_list=[
+            'Building',
+            'RegionalEvent',
+            'RegionalMapping',
+            'Event',
+            'Modeling',
+            'EDP',
+            'Simulation',
+            'UQ',
+            'DL',
+        ],
+        reference_dir=reference_dir,
+        working_dir=working_dir,
+        app_dir=app_dir,
+        units=inputs.get('units', None),
+        outputs=inputs.get('outputs', None),
+    )
 
     if bldg_id_filter is not None:
         print(bldg_id_filter)
-        log_msg(
-            f'Overriding simulation scope; running buildings {bldg_id_filter}')
+        log_msg(f'Overriding simulation scope; running buildings {bldg_id_filter}')
 
         # If a Min or Max attribute is used when calling the script, we need to
         # update the min and max values in the input file.
-        WF.workflow_apps['Building'].pref["filter"] = bldg_id_filter
+        WF.workflow_apps['Building'].pref['filter'] = bldg_id_filter
 
     # initialize the working directory
     WF.init_workdir()
@@ -72,7 +92,7 @@ def main(run_type, input_file, app_registry,
     with open(WF.building_file_path, 'r') as f:
         bldg_data = json.load(f)
 
-    for bldg in bldg_data: #[:1]:
+    for bldg in bldg_data:  # [:1]:
         log_msg(bldg)
 
         # initialize the simulation directory
@@ -80,115 +100,149 @@ def main(run_type, input_file, app_registry,
 
         # prepare the input files for the simulation
         WF.create_RV_files(
-            app_sequence = ['Event', 'Modeling', 'EDP', 'Simulation'],
-            BIM_file = bldg['file'], bldg_id=bldg['id'])
+            app_sequence=['Event', 'Modeling', 'EDP', 'Simulation'],
+            BIM_file=bldg['file'],
+            bldg_id=bldg['id'],
+        )
 
         # create the workflow driver file
         WF.create_driver_file(
-            app_sequence = ['Building', 'Event', 'Modeling', 'EDP', 'Simulation'],
-            bldg_id=bldg['id'])
+            app_sequence=['Building', 'Event', 'Modeling', 'EDP', 'Simulation'],
+            bldg_id=bldg['id'],
+        )
 
         # run uq engine to simulate response
-        WF.simulate_response(BIM_file = bldg['file'], bldg_id=bldg['id'])
+        WF.simulate_response(BIM_file=bldg['file'], bldg_id=bldg['id'])
 
         # run dl engine to estimate losses
-        #WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
+        # WF.estimate_losses(BIM_file = bldg['file'], bldg_id = bldg['id'])
 
         if force_cleanup:
-            #clean up intermediate files from the simulation
+            # clean up intermediate files from the simulation
             WF.cleanup_simdir(bldg['id'])
 
     # aggregate results
-    #WF.aggregate_results(bldg_data = bldg_data)
+    # WF.aggregate_results(bldg_data = bldg_data)
 
     if force_cleanup:
         # clean up intermediate files from the working directory
         WF.cleanup_workdir()
 
-    surfaceMoDir = collect_surface_motion(WF.run_dir,bldg_data)
+    surfaceMoDir = collect_surface_motion(WF.run_dir, bldg_data)
+
 
 def collect_surface_motion(runDir, bldg_data, surfaceMoDir=''):
+    if surfaceMoDir == '':
+        surfaceMoDir = f'{runDir}/surface_motions/'
 
-    if surfaceMoDir == '': surfaceMoDir = f"{runDir}/surface_motions/" 
-
-
-    for bldg in bldg_data: #[:1]:
+    for bldg in bldg_data:  # [:1]:
         log_msg(bldg)
 
-        bldg_id =  bldg['id']
+        bldg_id = bldg['id']
 
         if bldg_id is not None:
+            mPaths = glob(f'{runDir}/{bldg_id}/workdir.*/EVENT.json')
 
-            mPaths = glob(f"{runDir}/{bldg_id}/workdir.*/EVENT.json")
+            surfMoTmpDir = f'{surfaceMoDir}/{bldg_id}/'
 
-
-            surfMoTmpDir = f"{surfaceMoDir}/{bldg_id}/"
-
-            if not os.path.exists(surfMoTmpDir): os.makedirs(surfMoTmpDir) 
+            if not os.path.exists(surfMoTmpDir):
+                os.makedirs(surfMoTmpDir)
 
             for p in mPaths:
                 simID = p.split('/')[-2].split('.')[-1]
-                #shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
+                # shutil.copyfile(p, f"{surfMoTmpDir}/EVENT-{simID}.json")
                 newEVENT = {}
                 # load the event file
                 with open(p, 'r') as f:
                     EVENT_in_All = json.load(f)
-                    
-                    newEVENT['name'] = EVENT_in_All['Events'][0]['event_id'].replace('x','-')
+
+                    newEVENT['name'] = EVENT_in_All['Events'][0]['event_id'].replace(
+                        'x', '-'
+                    )
                     newEVENT['location'] = EVENT_in_All['Events'][0]['location']
                     newEVENT['dT'] = EVENT_in_All['Events'][0]['dT']
-                    
-                    newEVENT['data_x'] = EVENT_in_All['Events'][0]['timeSeries'][0]['data']
+
+                    newEVENT['data_x'] = EVENT_in_All['Events'][0]['timeSeries'][0][
+                        'data'
+                    ]
                     newEVENT['PGA_x'] = max(newEVENT['data_x'])
 
-                    if len(EVENT_in_All['Events'][0]['timeSeries'])>0: # two-way shaking
-                        newEVENT['data_y'] = EVENT_in_All['Events'][0]['timeSeries'][1]['data']
+                    if (
+                        len(EVENT_in_All['Events'][0]['timeSeries']) > 0
+                    ):  # two-way shaking
+                        newEVENT['data_y'] = EVENT_in_All['Events'][0]['timeSeries'][
+                            1
+                        ]['data']
                         newEVENT['PGA_y'] = max(newEVENT['data_y'])
-                    
-                    with open(f"{surfMoTmpDir}/EVENT-{newEVENT['name']}.json", "w") as outfile:
-                        json.dump(newEVENT, outfile)
 
+                    with open(
+                        f"{surfMoTmpDir}/EVENT-{newEVENT['name']}.json", 'w'
+                    ) as outfile:
+                        json.dump(newEVENT, outfile)
 
     return surfaceMoDir
 
 
 if __name__ == '__main__':
-
-    #Defining the command line arguments
+    # Defining the command line arguments
 
     workflowArgParser = argparse.ArgumentParser(
-        "Run the NHERI SimCenter workflow for a set of assets.",
-        allow_abbrev=False)
+        'Run the NHERI SimCenter workflow for a set of assets.', allow_abbrev=False
+    )
 
-    workflowArgParser.add_argument("configuration",
-        help="Configuration file specifying the applications and data to be "
-             "used")
-    workflowArgParser.add_argument("-F", "--filter",
+    workflowArgParser.add_argument(
+        'configuration',
+        help='Configuration file specifying the applications and data to be ' 'used',
+    )
+    workflowArgParser.add_argument(
+        '-F',
+        '--filter',
         default=None,
-        help="Provide a subset of building ids to run")
-    workflowArgParser.add_argument("-c", "--check",
-        help="Check the configuration file")
-    workflowArgParser.add_argument("-r", "--registry",
-        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             "WorkflowApplications.json"),
-        help="Path to file containing registered workflow applications")
-    workflowArgParser.add_argument("-f", "--forceCleanup",
-        action="store_true",
-        help="Remove working directories after the simulation is completed.")
-    workflowArgParser.add_argument("-d", "--referenceDir",
+        help='Provide a subset of building ids to run',
+    )
+    workflowArgParser.add_argument(
+        '-c', '--check', help='Check the configuration file'
+    )
+    workflowArgParser.add_argument(
+        '-r',
+        '--registry',
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), 'WorkflowApplications.json'
+        ),
+        help='Path to file containing registered workflow applications',
+    )
+    workflowArgParser.add_argument(
+        '-f',
+        '--forceCleanup',
+        action='store_true',
+        help='Remove working directories after the simulation is completed.',
+    )
+    workflowArgParser.add_argument(
+        '-d',
+        '--referenceDir',
         default=os.path.join(os.getcwd(), 'input_data'),
-        help="Relative paths in the config file are referenced to this directory.")
-    workflowArgParser.add_argument("-w", "--workDir",
+        help='Relative paths in the config file are referenced to this directory.',
+    )
+    workflowArgParser.add_argument(
+        '-w',
+        '--workDir',
         default=os.path.join(os.getcwd(), 'results'),
-        help="Absolute path to the working directory.")
-    workflowArgParser.add_argument("-a", "--appDir",
+        help='Absolute path to the working directory.',
+    )
+    workflowArgParser.add_argument(
+        '-a',
+        '--appDir',
         default=None,
-        help="Absolute path to the local application directory.")
-    workflowArgParser.add_argument("-l", "--logFile",
+        help='Absolute path to the local application directory.',
+    )
+    workflowArgParser.add_argument(
+        '-l',
+        '--logFile',
         default='log.txt',
-        help="Path where the log file will be saved.")
+        help='Path where the log file will be saved.',
+    )
 
-    #Parsing the command line arguments
+    # Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
 
     # update the local app dir with the default - if needed
@@ -201,13 +255,15 @@ if __name__ == '__main__':
     else:
         run_type = 'run'
 
-    #Calling the main workflow method and passing the parsed arguments
-    main(run_type = run_type,
-         input_file = wfArgs.configuration,
-         app_registry = wfArgs.registry,
-         force_cleanup = wfArgs.forceCleanup,
-         bldg_id_filter = wfArgs.filter,
-         reference_dir = wfArgs.referenceDir,
-         working_dir = wfArgs.workDir,
-         app_dir = wfArgs.appDir,
-         log_file = wfArgs.logFile)
+    # Calling the main workflow method and passing the parsed arguments
+    main(
+        run_type=run_type,
+        input_file=wfArgs.configuration,
+        app_registry=wfArgs.registry,
+        force_cleanup=wfArgs.forceCleanup,
+        bldg_id_filter=wfArgs.filter,
+        reference_dir=wfArgs.referenceDir,
+        working_dir=wfArgs.workDir,
+        app_dir=wfArgs.appDir,
+        log_file=wfArgs.logFile,
+    )

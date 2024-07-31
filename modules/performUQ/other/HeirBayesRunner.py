@@ -18,17 +18,17 @@ class HeirBayesRunner(UqRunner):
         self.seed = 0
 
     def storeUQData(self, uqData):
-        for val in uqData["Parameters"]:
-            if val["name"] == "File To Run":
-                self.file_to_run = val["value"]
-            elif val["name"] == "# Samples":
-                self.n_samples = int(val["value"])
-            elif val["name"] == "# Burn-in":
-                self.n_burn_in = int(val["value"])
-            elif val["name"] == "Tuning Interval":
-                self.tuning_interval = int(val["value"])
-            elif val["name"] == "Seed":
-                self.seed = int(val["value"])
+        for val in uqData['Parameters']:
+            if val['name'] == 'File To Run':
+                self.file_to_run = val['value']
+            elif val['name'] == '# Samples':
+                self.n_samples = int(val['value'])
+            elif val['name'] == '# Burn-in':
+                self.n_burn_in = int(val['value'])
+            elif val['name'] == 'Tuning Interval':
+                self.tuning_interval = int(val['value'])
+            elif val['name'] == 'Seed':
+                self.seed = int(val['value'])
 
     def performHeirBayesSampling(self):
         self.dir_name = os.path.dirname(self.file_to_run)
@@ -37,44 +37,48 @@ class HeirBayesRunner(UqRunner):
         module = importlib.import_module(module_name[:-3])
         self.heir_code = module.HeirBayesSampler()
 
-        self.trace, self.time_taken, self.inf_object, self.num_coupons = self.heir_code.perform_sampling(
-            n_samples=self.n_samples,
-            n_burn_in=self.n_burn_in,
-            tuning_interval=self.tuning_interval,
-            seed=self.seed
+        self.trace, self.time_taken, self.inf_object, self.num_coupons = (
+            self.heir_code.perform_sampling(
+                n_samples=self.n_samples,
+                n_burn_in=self.n_burn_in,
+                tuning_interval=self.tuning_interval,
+                seed=self.seed,
+            )
         )
 
     def saveResultsToPklFile(self):
         self.saved_pickle_filename = self.heir_code.save_results(
-            self.trace, self.time_taken, self.inf_object, prefix="synthetic_data"
+            self.trace, self.time_taken, self.inf_object, prefix='synthetic_data'
         )
 
     def createHeadingStringsList(self):
-        self.params = ["fy", "E", "b", "cR1", "cR2", "a1", "a3"]
+        self.params = ['fy', 'E', 'b', 'cR1', 'cR2', 'a1', 'a3']
         self.num_params = len(self.params)
 
-        self.heading_list = ["Sample#", "interface"]
+        self.heading_list = ['Sample#', 'interface']
         for i in range(self.num_coupons):
             for j in range(self.num_params):
                 self.heading_list.append(
-                    "".join(["Coupon_", str(i + 1), "_", self.params[j]])
+                    ''.join(['Coupon_', str(i + 1), '_', self.params[j]])
                 )
 
         for row in range(self.num_params):
             for col in range(row + 1):
-                self.heading_list.append("".join(["Cov_", str(row + 1), str(col + 1)]))
+                self.heading_list.append(
+                    ''.join(['Cov_', str(row + 1), str(col + 1)])
+                )
 
         for par in self.params:
-            self.heading_list.append("".join(["Mean_", par]))
+            self.heading_list.append(''.join(['Mean_', par]))
 
         for sig in range(self.num_coupons):
-            self.heading_list.append("".join(["ErrorVariance_", str(sig + 1)]))
+            self.heading_list.append(''.join(['ErrorVariance_', str(sig + 1)]))
 
-    def makeHeadingRow(self, separator="\t"):
+    def makeHeadingRow(self, separator='\t'):
         self.headingRow = separator.join([item for item in self.heading_list])
 
-    def makeOneRowString(self, sample_num, sample, separator="\t"):
-        initial_string = separator.join([str(sample_num), "1"])
+    def makeOneRowString(self, sample_num, sample, separator='\t'):
+        initial_string = separator.join([str(sample_num), '1'])
         coupon_string = separator.join(
             [
                 str(sample[i][j])
@@ -103,22 +107,24 @@ class HeirBayesRunner(UqRunner):
         )
         return row_string
 
-    def makeTabularResultsFile(self, save_file_name="tabularResults.out", separator="\t"):
+    def makeTabularResultsFile(
+        self, save_file_name='tabularResults.out', separator='\t'
+    ):
         self.createHeadingStringsList()
         self.makeHeadingRow(separator=separator)
 
         cwd = os.getcwd()
         save_file_dir = os.path.dirname(cwd)
         save_file_full_path = os.path.join(save_file_dir, save_file_name)
-        with open(save_file_full_path, "w") as f:
+        with open(save_file_full_path, 'w') as f:
             f.write(self.headingRow)
-            f.write("\n")
+            f.write('\n')
             for sample_num, sample in enumerate(self.trace):
                 row = self.makeOneRowString(
                     sample_num=sample_num, sample=sample, separator=separator
                 )
                 f.write(row)
-                f.write("\n")
+                f.write('\n')
 
     def startTimer(self):
         self.startingTime = time.time()
@@ -128,7 +134,7 @@ class HeirBayesRunner(UqRunner):
 
     def printTimeElapsed(self):
         self.computeTimeElapsed()
-        print("Time elapsed: {:0.2f} minutes".format(self.timeElapsed / 60))
+        print('Time elapsed: {:0.2f} minutes'.format(self.timeElapsed / 60))
 
     def startSectionTimer(self):
         self.sectionStartingTime = time.time()
@@ -141,11 +147,11 @@ class HeirBayesRunner(UqRunner):
 
     def printSectionTimeElapsed(self):
         self.computeSectionTimeElapsed()
-        print("Time elapsed: {:0.2f} minutes".format(self.sectionTimeElapsed / 60))
+        print('Time elapsed: {:0.2f} minutes'.format(self.sectionTimeElapsed / 60))
 
     @staticmethod
     def printEndMessages():
-        print("Heirarchical Bayesian estimation done!")
+        print('Heirarchical Bayesian estimation done!')
 
     def runUQ(
         self,
@@ -193,19 +199,21 @@ class testRunUQ:
         self.runTest()
 
     def getUQData(self):
-        with open(os.path.abspath(self.json_file_path_string), "r") as f:
+        with open(os.path.abspath(self.json_file_path_string), 'r') as f:
             input_data = json.load(f)
 
-        self.ApplicationData = input_data["Applications"]
-        self.uqData = input_data["UQ"]
-        self.simulationData = self.ApplicationData["FEM"]
-        self.randomVarsData = input_data["randomVariables"]
-        self.demandParams = input_data["EDP"]
-        self.localAppDir = input_data["localAppDir"]
-        self.remoteAppDir = input_data["remoteAppDir"]
-        self.workingDir = input_data["workingDir"]
-        self.workingDir = os.path.join(self.workingDir, "tmp.SimCenter", "templateDir")
-        self.runType = "runningLocal"
+        self.ApplicationData = input_data['Applications']
+        self.uqData = input_data['UQ']
+        self.simulationData = self.ApplicationData['FEM']
+        self.randomVarsData = input_data['randomVariables']
+        self.demandParams = input_data['EDP']
+        self.localAppDir = input_data['localAppDir']
+        self.remoteAppDir = input_data['remoteAppDir']
+        self.workingDir = input_data['workingDir']
+        self.workingDir = os.path.join(
+            self.workingDir, 'tmp.SimCenter', 'templateDir'
+        )
+        self.runType = 'runningLocal'
 
     def createRunner(self):
         self.runner = HeirBayesRunner()
@@ -224,12 +232,17 @@ class testRunUQ:
 
 
 def main():
-    filename = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_CustomUQ/HeirBayesSyntheticData/templatedir/scInput.json"))
+    filename = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            'test_CustomUQ/HeirBayesSyntheticData/templatedir/scInput.json',
+        )
+    )
     if os.path.exists(filename):
         testRunUQ(filename)
     else:
         print(f'Test input json file {filename} not found. Not running the test.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

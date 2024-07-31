@@ -24,32 +24,32 @@ def determine_Fa_coefficient(site_class, Ss):
         if Ss <= 0.5:
             Fa = 1.2
         elif Ss <= 1.0:
-            Fa = 1.2 - 0.4*(Ss - 0.5)
+            Fa = 1.2 - 0.4 * (Ss - 0.5)
         else:
             Fa = 1.0
     elif site_class == 'D':
         if Ss <= 0.25:
             Fa = 1.6
         elif Ss <= 0.75:
-            Fa = 1.6 - 0.8*(Ss - 0.25)
+            Fa = 1.6 - 0.8 * (Ss - 0.25)
         elif Ss <= 1.25:
-            Fa = 1.2 - 0.4*(Ss - 0.75)
+            Fa = 1.2 - 0.4 * (Ss - 0.75)
         else:
             Fa = 1.0
     elif site_class == 'E':
         if Ss <= 0.25:
             Fa = 2.5
         elif Ss <= 0.5:
-            Fa = 2.5 - 3.2*(Ss - 0.25)
+            Fa = 2.5 - 3.2 * (Ss - 0.25)
         elif Ss <= 0.75:
-            Fa = 1.7 - 2.0*(Ss - 0.5)
+            Fa = 1.7 - 2.0 * (Ss - 0.5)
         elif Ss <= 1.0:
-            Fa = 1.2 - 1.2*(Ss - 0.75)
+            Fa = 1.2 - 1.2 * (Ss - 0.75)
         else:
             Fa = 0.9
     else:
         Fa = None
-        print("Site class is entered with an invalid value")
+        print('Site class is entered with an invalid value')
 
     return Fa
 
@@ -69,32 +69,32 @@ def determine_Fv_coefficient(site_class, S1):
         if S1 <= 0.1:
             Fv = 1.7
         elif S1 <= 0.5:
-            Fv = 1.7 - 1.0*(S1 - 0.1)
+            Fv = 1.7 - 1.0 * (S1 - 0.1)
         else:
             Fv = 1.3
     elif site_class == 'D':
         if S1 <= 0.1:
             Fv = 2.4
         elif S1 <= 0.2:
-            Fv = 2.4 - 4*(S1 - 0.1)
+            Fv = 2.4 - 4 * (S1 - 0.1)
         elif S1 <= 0.4:
-            Fv = 2.0 - 2*(S1 - 0.2)
+            Fv = 2.0 - 2 * (S1 - 0.2)
         elif S1 <= 0.5:
-            Fv = 1.6 - 1*(S1 - 0.4)
+            Fv = 1.6 - 1 * (S1 - 0.4)
         else:
             Fv = 1.5
     elif site_class == 'E':
         if S1 <= 0.1:
             Fv = 3.5
         elif S1 <= 0.2:
-            Fv = 3.5 - 3*(S1 - 0.1)
+            Fv = 3.5 - 3 * (S1 - 0.1)
         elif S1 <= 0.4:
-            Fv = 3.2 - 4*(S1 - 0.2)
+            Fv = 3.2 - 4 * (S1 - 0.2)
         else:
             Fv = 2.4
     else:
         Fv = None
-        print("Site class is entered with an invalid value")
+        print('Site class is entered with an invalid value')
 
     return Fv
 
@@ -112,8 +112,8 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):
     """
     SMS = Fa * Ss
     SM1 = Fv * S1
-    SDS = 2/3 * SMS
-    SD1 = 2/3 * SM1
+    SDS = 2 / 3 * SMS
+    SD1 = 2 / 3 * SM1
     return SMS, SM1, SDS, SD1
 
 
@@ -140,7 +140,9 @@ def determine_Cu_coefficient(SD1):
     return Cu
 
 
-def determine_floor_height(number_of_story, first_story_height, typical_story_height):
+def determine_floor_height(
+    number_of_story, first_story_height, typical_story_height
+):
     """
     This function is used to calculate the height for each floor level: from ground floor to roof
     Obviously, the height for ground floor level is zero
@@ -158,7 +160,9 @@ def determine_floor_height(number_of_story, first_story_height, typical_story_he
         elif level == 2:
             floor_height[level - 1] = 0 + first_story_height
         else:
-            floor_height[level - 1] = first_story_height + typical_story_height * (level - 2)
+            floor_height[level - 1] = first_story_height + typical_story_height * (
+                level - 2
+            )
 
     return floor_height
 
@@ -179,13 +183,13 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):
     :return: Cs: seismic response coefficient; determined using Equations 12.8-2 to 12.8-6
     """
     # Equation 12.8-2
-    Cs_initial = SDS/(R/Ie)
+    Cs_initial = SDS / (R / Ie)
 
     # Equation 12.8-3 or 12.8-4, Cs coefficient should not exceed the following value
     if T <= TL:
-        Cs_upper = SD1/(T * (R/Ie))
+        Cs_upper = SD1 / (T * (R / Ie))
     else:
-        Cs_upper = SD1 * TL/(T ** 2 * (R/Ie))
+        Cs_upper = SD1 * TL / (T**2 * (R / Ie))
 
     # Equation 12.8-2 results shall be smaller than upper bound of Cs
     if Cs_initial <= Cs_upper:
@@ -194,7 +198,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):
         Cs = Cs_upper
 
     # Equation 12.8-5, Cs shall not be less than the following value
-    Cs_lower_1 = np.max([0.044*SDS*Ie, 0.01])
+    Cs_lower_1 = np.max([0.044 * SDS * Ie, 0.01])
 
     # Compare the Cs value with lower bound
     if Cs >= Cs_lower_1:
@@ -204,7 +208,7 @@ def calculate_Cs_coefficient(SDS, SD1, S1, T, TL, R, Ie):
 
     # Equation 12.8-6. if S1 is equal to or greater than 0.6g, Cs shall not be less than the following value
     if S1 >= 0.6:
-        Cs_lower_2 = 0.5*S1/(R/Ie)
+        Cs_lower_2 = 0.5 * S1 / (R / Ie)
         if Cs >= Cs_lower_2:
             pass
         else:
@@ -226,7 +230,7 @@ def determine_k_coeficient(period):
     elif period >= 2.5:
         k = 2
     else:
-        k = 1 + 0.5*(period - 0.5)
+        k = 1 + 0.5 * (period - 0.5)
 
     return k
 
@@ -244,14 +248,14 @@ def calculate_seismic_force(base_shear, floor_weight, floor_height, k):
     # Calculate the product of floor weight and floor height
     # Note that floor height includes ground floor, which will not be used in the actual calculation.
     # Ground floor is stored here for completeness.
-    weight_floor_height = floor_weight * floor_height[1:, 0]**k
+    weight_floor_height = floor_weight * floor_height[1:, 0] ** k
     # Equation 12.8-12 in ASCE 7-10
-    Cvx = weight_floor_height/np.sum(weight_floor_height)
+    Cvx = weight_floor_height / np.sum(weight_floor_height)
     # Calculate the seismic story force
     seismic_force = Cvx * base_shear
     # Calculate the shear force for each story: from top story to bottom story
     story_shear = np.zeros([len(floor_weight), 1])
-    for story in range(len(floor_weight)-1, -1, -1):
+    for story in range(len(floor_weight) - 1, -1, -1):
         story_shear[story] = np.sum(seismic_force[story:])
 
     return seismic_force, story_shear
@@ -284,7 +288,11 @@ def search_member_size(target_name, target_quantity, candidate, section_database
     :return: a string which states the member sizes (e.g., W14X730)
     """
     # Find the index for the candidate
-    candidate_index = list(section_database.loc[section_database['section size'].isin(candidate), 'index'])
+    candidate_index = list(
+        section_database.loc[
+            section_database['section size'].isin(candidate), 'index'
+        ]
+    )
     # Calculate the difference between target moment of inertia and moment of inertia of each section
     difference = section_database.loc[candidate_index, target_name] - target_quantity
     # Find the index which gives the minimum difference
@@ -296,7 +304,9 @@ def search_member_size(target_name, target_quantity, candidate, section_database
     if not list(min_index[0]):
         section_size = section_database.loc[candidate_index[0], 'section size']
     else:
-        section_size = section_database.loc[candidate_index[min_index[0][0]], 'section size']
+        section_size = section_database.loc[
+            candidate_index[min_index[0][0]], 'section size'
+        ]
     return section_size
 
 
@@ -317,7 +327,9 @@ def search_section_property(target_size, section_database):
                 section_info = section_database.loc[indx, :]
         return section_info.to_dict()
     except:
-        sys.stderr.write('Error: wrong size nominated!\nNo such size exists in section database!')
+        sys.stderr.write(
+            'Error: wrong size nominated!\nNo such size exists in section database!'
+        )
         sys.exit(1)
 
 
@@ -360,7 +372,9 @@ def extract_weight(size):
     return int(output[0])
 
 
-def constructability_helper(section_size, identical_size_per_story, total_story, sorted_quantity):
+def constructability_helper(
+    section_size, identical_size_per_story, total_story, sorted_quantity
+):
     """
     This function is used to make every adjacent N stories have the same size and ensure that the whole list
     is in a descending order.
@@ -387,21 +401,29 @@ def constructability_helper(section_size, identical_size_per_story, total_story,
     # In this case, simply re-assign size for story N such that it has same depth with M
     # and comparable Ix or Zx with old itself.
     i = 0
-    while (i < total_story - 1):
+    while i < total_story - 1:
         # Find the index [i, j) such that they have same depths (j is exclusive)
         for j in range(i + 1, total_story):
-            if (extract_depth(section_size[j]) != extract_depth(section_size[i])):
+            if extract_depth(section_size[j]) != extract_depth(section_size[i]):
                 break
                 # If the current story chunk (with same depth) is not at the beginning nor end.
-        if (i > 0 and j < total_story):
+        if i > 0 and j < total_story:
             temp_property = []
             # Find the maximum Ix or Zx in current story chunk
             for k in range(i, j):
-                temp_property.append(search_section_property(section_size[k], SECTION_DATABASE)[sorted_quantity])
+                temp_property.append(
+                    search_section_property(section_size[k], SECTION_DATABASE)[
+                        sorted_quantity
+                    ]
+                )
             current_property = max(temp_property)
             # Obtain the Ix or Zx for the stories just below and above the current story chunk.
-            lower_property = search_section_property(section_size[i - 1], SECTION_DATABASE)[sorted_quantity]
-            upper_property = search_section_property(section_size[j], SECTION_DATABASE)[sorted_quantity]
+            lower_property = search_section_property(
+                section_size[i - 1], SECTION_DATABASE
+            )[sorted_quantity]
+            upper_property = search_section_property(
+                section_size[j], SECTION_DATABASE
+            )[sorted_quantity]
             # Obtain the depth for stories in current story chunk, below it, and above it.
             current_depth = extract_depth(section_size[i])
             lower_depth = extract_depth(section_size[i - 1])
@@ -409,15 +431,26 @@ def constructability_helper(section_size, identical_size_per_story, total_story,
             # Current story chunk has higher depth than the stories below and above
             # current Ix or Zx is less than stories below.
             # Stories below current chunk have the same or greater depth than the stories above current chunk.
-            if (current_depth > lower_depth and current_depth > upper_depth and lower_depth >= upper_depth and
-                current_property < lower_property and current_property > upper_property):
+            if (
+                current_depth > lower_depth
+                and current_depth > upper_depth
+                and lower_depth >= upper_depth
+                and current_property < lower_property
+                and current_property > upper_property
+            ):
                 # For this case, re-assign the size such that the current chunk has the same depth
                 # with stories below.
                 # Meanwhile, its Ix or Zx is comparable to the old itself.
-                candidates = find_section_candidate('W' + str(lower_depth), SECTION_DATABASE)
+                candidates = find_section_candidate(
+                    'W' + str(lower_depth), SECTION_DATABASE
+                )
                 for k in range(i, j):
-                    section_size[k] = search_member_size(sorted_quantity, temp_property[k - i], candidates,
-                                                         SECTION_DATABASE)
+                    section_size[k] = search_member_size(
+                        sorted_quantity,
+                        temp_property[k - i],
+                        candidates,
+                        SECTION_DATABASE,
+                    )
         # Update current index to j
         i = j
 
@@ -426,21 +459,25 @@ def constructability_helper(section_size, identical_size_per_story, total_story,
     # It is better to trace the story from top to bottom of the building.
     starting_index = total_story - 1
     ending_index = variation_story[-1]
-    while (starting_index > 0):
+    while starting_index > 0:
         # For stories within "identical story block"
         for indx in range(starting_index, ending_index, -1):
             # Only revise those size that are not identical
             if section_size[indx - 1] != section_size[indx]:
                 # Obtain Ix or Zx for current story and story below.
-                current_property = search_section_property(section_size[indx], SECTION_DATABASE)[sorted_quantity]
-                lower_property = search_section_property(section_size[indx - 1], SECTION_DATABASE)[sorted_quantity]
+                current_property = search_section_property(
+                    section_size[indx], SECTION_DATABASE
+                )[sorted_quantity]
+                lower_property = search_section_property(
+                    section_size[indx - 1], SECTION_DATABASE
+                )[sorted_quantity]
                 # Obtain depth for current story and story below.
                 current_depth = extract_depth(section_size[indx])
                 lower_depth = extract_depth(section_size[indx - 1])
                 # Case 1: two depths are the same or lower depth is greater
-                if (current_depth <= lower_depth):
+                if current_depth <= lower_depth:
                     # Sub-case 1.1: lower member has smaller Ix or Zx ==> change lower size to be equal to current size
-                    if (current_property > lower_property):
+                    if current_property > lower_property:
                         section_size[indx - 1] = section_size[indx]
                     # Sub-case 1.2: lower member has larger Ix or Zx ==> change current size to be equal to lower size
                     else:
@@ -453,15 +490,21 @@ def constructability_helper(section_size, identical_size_per_story, total_story,
                 # Case 2: lower depth is smaller
                 else:
                     # Sub-case 2.1: lower member has smaller Zx
-                    if (current_property > lower_property):
+                    if current_property > lower_property:
                         section_size[indx - 1] = section_size[indx]
                     # Sub-case 2.2: lower member has larger Zx
                     else:
                         # We need to change the lower member size such that it has the same depth with current story
                         # and comparable Ix or Zx with old itself.
-                        candidates = find_section_candidate('W' + str(current_depth), SECTION_DATABASE)
-                        section_size[indx - 1] = search_member_size(sorted_quantity, lower_property, candidates,
-                                                                    SECTION_DATABASE)
+                        candidates = find_section_candidate(
+                            'W' + str(current_depth), SECTION_DATABASE
+                        )
+                        section_size[indx - 1] = search_member_size(
+                            sorted_quantity,
+                            lower_property,
+                            candidates,
+                            SECTION_DATABASE,
+                        )
                         section_size[indx] = section_size[indx - 1]
                         # Don't forget to trace back because you just change the current story size.
                         # If the story above the current story is still within "identical story block".
@@ -474,25 +517,33 @@ def constructability_helper(section_size, identical_size_per_story, total_story,
             break
         # We need to make sure the lower block has heavier sections
         # Compute current and lower member property Ix or Zx
-        current_property = search_section_property(section_size[indx], SECTION_DATABASE)[sorted_quantity]
-        lower_property = search_section_property(section_size[indx - 1], SECTION_DATABASE)[sorted_quantity]
+        current_property = search_section_property(
+            section_size[indx], SECTION_DATABASE
+        )[sorted_quantity]
+        lower_property = search_section_property(
+            section_size[indx - 1], SECTION_DATABASE
+        )[sorted_quantity]
         # Compute the current and lower member depth
         current_depth = extract_depth(section_size[indx])
         lower_depth = extract_depth(section_size[indx - 1])
         # Case 1: lower member has same depth
-        if (lower_depth == current_depth):
+        if lower_depth == current_depth:
             # Case 1.1: lower member less Ix or Zx ==> change the lower size to be equal to current
-            if (lower_property < current_property):
+            if lower_property < current_property:
                 section_size[indx - 1] = section_size[indx]
         # Case 2: lower member has smaller depth
-        elif (lower_depth < current_depth):
+        elif lower_depth < current_depth:
             # Change the lower member such that it has same depth with current and comparable Ix or Zx to old itself.
-            candidates = find_section_candidate('W' + str(current_depth), SECTION_DATABASE)
-            section_size[indx - 1] = search_member_size(sorted_quantity, lower_property, candidates, SECTION_DATABASE)
+            candidates = find_section_candidate(
+                'W' + str(current_depth), SECTION_DATABASE
+            )
+            section_size[indx - 1] = search_member_size(
+                sorted_quantity, lower_property, candidates, SECTION_DATABASE
+            )
         # Case 3: lower member has larger depth
         else:
             # Sub-case 3.1: lower member has smaller Ix or Zx
-            if (lower_property < current_property):
+            if lower_property < current_property:
                 section_size[indx - 1] = section_size[indx]
             # Sub-case 3.2: lower member has larger Ix or Zx
             else:
@@ -557,7 +608,7 @@ def increase_member_size(candidate, current_size):
     """
     # Find the index of current section size in candidate pool and move it to previous one
     candidate_pool_index = candidate.index(current_size)
-    if (candidate_pool_index - 1 < 0):  # Make sure the index does not exceed the bound
+    if candidate_pool_index - 1 < 0:  # Make sure the index does not exceed the bound
         # This means the largest candidate still fails to satisfy the requirement
         sys.stderr.write('The upper bound for depth initialization is too small!\n')
     return candidate[candidate_pool_index - 1]

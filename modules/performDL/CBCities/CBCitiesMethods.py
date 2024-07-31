@@ -47,19 +47,22 @@ import numpy as np
 
 from operator import itemgetter
 
+
 def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):
-    A = np.concatenate(
-        [np.array(geom.coords) for geom in gdfA.geometry.to_list()])
+    A = np.concatenate([np.array(geom.coords) for geom in gdfA.geometry.to_list()])
     B = [np.array(geom.coords) for geom in gdfB.geometry.to_list()]
-    B_ix = tuple(itertools.chain.from_iterable(
-        [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]))
+    B_ix = tuple(
+        itertools.chain.from_iterable(
+            [itertools.repeat(i, x) for i, x in enumerate(list(map(len, B)))]
+        )
+    )
     B = np.concatenate(B)
     ckd_tree = cKDTree(B)
     dist, idx = ckd_tree.query(A, k=1)
     idx = itemgetter(*idx)(B_ix)
-    gdf = pd.concat(
-        [gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
+    gdf = pd.concat([gdfA, gdfB.loc[idx, gdfB_cols].reset_index(drop=True)], axis=1)
     return gdf
+
 
 # def pgv_node2pipe(pipe_info,node_info):
 #     pgvs = []
@@ -70,19 +73,21 @@ def ckdnearest(gdfA, gdfB, gdfB_cols=['pgv']):
 #         pgvs.append(pgv)
 #     return pgvs
 
-def pgv_node2pipe(pipe_info,node_info):
+
+def pgv_node2pipe(pipe_info, node_info):
     res = []
-    
+
     node_ids = np.array(node_info['node_id'])
     pgvs = np.array(node_info['pgv'])
-    
+
     n1s = np.array(pipe_info['node1'])
     n2s = np.array(pipe_info['node2'])
-    
-    for n1,n2 in zip(n1s,n2s):
-        pgv = (pgvs[node_ids == n1]+pgvs[node_ids == n2])[0]/2
+
+    for n1, n2 in zip(n1s, n2s):
+        pgv = (pgvs[node_ids == n1] + pgvs[node_ids == n2])[0] / 2
         res.append(pgv)
     return res
+
 
 def get_prefix(file_path):
     file_name = file_path.split('/')[-1]
@@ -92,47 +97,45 @@ def get_prefix(file_path):
 
 # Get the PGV value for the pipe
 def add_pgv2pipe(pipe):
-
     reg_event = pipe['RegionalEvent']
     events = pipe['Events'][0]
-    
+
     event_folder_path = events['EventFolderPath']
-    
+
     event_array = events['Events']
 
     event_units = reg_event['units']
 
     pgvs = np.array([])
-    
-    for eventFile, scaleFactor  in event_array :
-        
+
+    for eventFile, scaleFactor in event_array:
         # Discard the numbering at the end of the csv file name
-        eventFile = eventFile[:len(eventFile)-8]
+        eventFile = eventFile[: len(eventFile) - 8]
 
         # Get the path to the event file
-        path_Event_File = posixpath.join(event_folder_path,eventFile)
-        
+        path_Event_File = posixpath.join(event_folder_path, eventFile)
+
         # Read in the event file IM List
         eventIMList = pd.read_csv(path_Event_File, header=0)
-        
-        PGVCol = eventIMList.loc[:,'PGV']
-        
-        pgv_unit = event_units['PGV']
-        
-        # Scale the PGVs and account for units - fragility functions are in inch per second
-        if  pgv_unit == 'cmps' :
-            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)
-        elif pgv_unit == 'inps' :
-            continue
-        else :
-            print("Error, only 'cmps' and 'inps' units are supported for PGV")
-                
-        pgvs = np.append(pgvs,PGVCol.values)
 
-        
+        PGVCol = eventIMList.loc[:, 'PGV']
+
+        pgv_unit = event_units['PGV']
+
+        # Scale the PGVs and account for units - fragility functions are in inch per second
+        if pgv_unit == 'cmps':
+            PGVCol = PGVCol.apply(lambda x: cm2inch(x) * scaleFactor)
+        elif pgv_unit == 'inps':
+            continue
+        else:
+            print("Error, only 'cmps' and 'inps' units are supported for PGV")
+
+        pgvs = np.append(pgvs, PGVCol.values)
+
     pipe['pgv'] = pgvs
 
     return pipe
+
 
 #    pgv_info = pd.read_csv(pgv_path)
 #    gd_pgv = gpd.GeoDataFrame(
@@ -142,57 +145,60 @@ def add_pgv2pipe(pipe):
 #    pipe_info['pgv'] = pgvs
 #
 #    return pipe_info
-    
 
-k_dict = {'A':1,
-          'C': 1,
-          'D':0.5,
-          'F':1,
-          'H':1,
-          'K':1,
-          'N':1,
-          None:1,
-          'T':1,
-          'R':1,
-          'L':1,
-          'S':0.6,
-          'W':1}
-          
+
+k_dict = {
+    'A': 1,
+    'C': 1,
+    'D': 0.5,
+    'F': 1,
+    'H': 1,
+    'K': 1,
+    'N': 1,
+    None: 1,
+    'T': 1,
+    'R': 1,
+    'L': 1,
+    'S': 0.6,
+    'W': 1,
+}
+
+
 def cm2inch(cm):
-    return 39.3701*cm/100
+    return 39.3701 * cm / 100
 
-def calculate_fail_repairrate(k,pgv,l):
 
-    rr = k*0.00187*pgv/1000
-    failure_rate = 1- np.power(np.e,-rr*l)
-    
+def calculate_fail_repairrate(k, pgv, l):
+    rr = k * 0.00187 * pgv / 1000
+    failure_rate = 1 - np.power(np.e, -rr * l)
+
     return failure_rate
 
-def get_pipe_failrate(pipe):
 
+def get_pipe_failrate(pipe):
     pipe_GI = pipe['GeneralInformation']
-    
-    m,l,pgv = pipe_GI['material'],pipe_GI['length'],pipe['pgv']
-    
-    pipeRR = calculate_fail_repairrate(k_dict[m],l,pgv)
-            
+
+    m, l, pgv = pipe_GI['material'], pipe_GI['length'], pipe['pgv']
+
+    pipeRR = calculate_fail_repairrate(k_dict[m], l, pgv)
+
     return pipeRR
 
-def add_failrate2pipe(pipe):
 
+def add_failrate2pipe(pipe):
     pipe = add_pgv2pipe(pipe)
-        
+
     pipe['fail_prob'] = get_pipe_failrate(pipe)
-    
+
     return pipe
-    
+
+
 #
 #
 #    pgv_prefix = get_prefix(pgv_path)
 #    save_path = save_folder + 'pipes_'+ pgv_prefix +'.geojson'
 #    pipe_info.to_file(save_path, driver="GeoJSON")
 #    print (f'saved to {save_path}')
-
 
 
 #    pipe_info['fail_prob'] = get_pipe_failrate(pipe_info)
@@ -203,52 +209,59 @@ def add_failrate2pipe(pipe):
 #    pipe_info.to_file(save_path, driver="GeoJSON")
 #    print (f'saved to {save_path}')
 
+
 def get_bar_ranges(space):
     ranges = []
-    for i in range(1,len(space)):
-         ranges.append((space[i-1],space[i]))
+    for i in range(1, len(space)):
+        ranges.append((space[i - 1], space[i]))
     return ranges
 
-def get_failure_groups(fail_probs,min_thre = 1e-3,num_groups = 10):
+
+def get_failure_groups(fail_probs, min_thre=1e-3, num_groups=10):
     valid_fails = [fail_prob for fail_prob in fail_probs if fail_prob > min_thre]
     count, space = np.histogram(valid_fails, num_groups)
     ranges = get_bar_ranges(space)
     return ranges
 
-def get_failed_pipes_mask(pipe_info,groups):
+
+def get_failed_pipes_mask(pipe_info, groups):
     broken_pipes = np.zeros(len(pipe_info))
 
     for r in groups:
-        pipes_mask = list((pipe_info['fail_prob'] > r[0]) & (pipe_info['fail_prob'] < r[1]))
+        pipes_mask = list(
+            (pipe_info['fail_prob'] > r[0]) & (pipe_info['fail_prob'] < r[1])
+        )
 
         valid_indices = np.nonzero(pipes_mask)[0]
         num_fails = int(np.mean(r) * sum(pipes_mask))
-        
-        fail_indices = np.random.choice(valid_indices,num_fails,replace = False)
-        
+
+        fail_indices = np.random.choice(valid_indices, num_fails, replace=False)
+
         broken_pipes[fail_indices] = 1
-        
+
     return broken_pipes
-    
-def generate_leak_diameter(pipe_diam,min_ratio = 0.05, max_ratio = 0.25):
-    r = np.random.uniform(min_ratio,max_ratio)
-    return pipe_diam*r
-    
+
+
+def generate_leak_diameter(pipe_diam, min_ratio=0.05, max_ratio=0.25):
+    r = np.random.uniform(min_ratio, max_ratio)
+    return pipe_diam * r
+
+
 def get_leak_sizes(pipe_info):
     leak_size = np.zeros(len(pipe_info))
     for index, row in pipe_info.iterrows():
-        d,repair = row['diameter'],row['repair']
+        d, repair = row['diameter'], row['repair']
         if repair:
             leak_d = generate_leak_diameter(d)
             leak_size[index] = leak_d
     return leak_size
 
+
 def fail_pipes_number(pipe_info):
-    
     fail_probs = np.array(pipe_info['fail_prob'])
     groups = get_failure_groups(fail_probs)
-    
-    failed_pipes_mask = get_failed_pipes_mask(pipe_info,groups)
+
+    failed_pipes_mask = get_failed_pipes_mask(pipe_info, groups)
     num_failed_pipes = sum(failed_pipes_mask)
-    print (f'number of failed pipes are : {num_failed_pipes}')
+    print(f'number of failed pipes are : {num_failed_pipes}')
     return num_failed_pipes

@@ -38,28 +38,22 @@
 
 import argparse
 
-def main(inputFile,
-         evtFile,
-         getRV) :
 
-    print("Finished GeoClawOpenFOAM application")
+def main(inputFile, evtFile, getRV):
+    print('Finished GeoClawOpenFOAM application')
+
 
 if __name__ == '__main__':
+    # Defining the command line arguments
+    parser = argparse.ArgumentParser(
+        'Run the GeoClawOpenFOAM application.', allow_abbrev=False
+    )
 
-	#Defining the command line arguments
-	parser = argparse.ArgumentParser(
-		"Run the GeoClawOpenFOAM application.",
-		allow_abbrev=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--filenameAIM', default=None)
+    parser.add_argument('--filenameEVENT', default='NA')
+    parser.add_argument('--getRV', nargs='?', const=True, default=False)
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--filenameAIM', default=None)
-	parser.add_argument('--filenameEVENT', default='NA')
-	parser.add_argument('--getRV', nargs='?', const=True, default=False)
+    args = parser.parse_args()
 
-	args = parser.parse_args()        
-
-	main(inputFile = args.filenameAIM,
-			evtFile = args.filenameEVENT,
-			getRV = args.getRV)
-
-         
+    main(inputFile=args.filenameAIM, evtFile=args.filenameEVENT, getRV=args.getRV)

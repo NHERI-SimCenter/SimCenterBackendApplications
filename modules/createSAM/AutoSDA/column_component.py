@@ -13,6 +13,7 @@ from global_variables import SECTION_DATABASE
 #                           Define a class of column                      #
 # #########################################################################
 
+
 class Column(object):
     """
     This class is used to define a column member, which has the following attributes:
@@ -22,7 +23,17 @@ class Column(object):
     (4) Column flag, an integer with value of zero or nonzero. If it's zero, the column is feasible.
     """
 
-    def __init__(self, section_size, axial_demand, shear_demand, moment_demand_bot, moment_demand_top, Lx, Ly, steel):
+    def __init__(
+        self,
+        section_size,
+        axial_demand,
+        shear_demand,
+        moment_demand_bot,
+        moment_demand_top,
+        Lx,
+        Ly,
+        steel,
+    ):
         """
         This function initializes the attributes of class of column.
         :param section_size: a string which specifies the size for column.
@@ -35,8 +46,12 @@ class Column(object):
         """
         # Assign the necessary information for column class
         self.section = search_section_property(section_size, SECTION_DATABASE)
-        self.demand = {'axial': axial_demand, 'shear': shear_demand,
-                       'moment bottom': moment_demand_bot, 'moment top': moment_demand_top}
+        self.demand = {
+            'axial': axial_demand,
+            'shear': shear_demand,
+            'moment bottom': moment_demand_bot,
+            'moment top': moment_demand_top,
+        }
         self.unbraced_length = {'x': Lx, 'y': Ly}
 
         # Initialize the strength dictionary with an empty dictionary
@@ -68,7 +83,7 @@ class Column(object):
         :param steel: a class defined in "steel_material.py" file.
         :return: a boolean variable which denotes the flange check results.
         """
-        flange_limit = 0.30 * np.sqrt(steel.E/steel.Fy)
+        flange_limit = 0.30 * np.sqrt(steel.E / steel.Fy)
         # If flag is still zero after checking the limitation. Then the highly ductile requirement is met.
         # Otherwise, it is not satisfied.
         if self.section['bf to tf ratio'] <= flange_limit:
@@ -85,11 +100,16 @@ class Column(object):
         """
         # Compute the limit for web depth-to-thickness ratio
         phi = 0.9
-        Ca = self.demand['axial'] / (phi*steel.Fy*self.section['A'])
+        Ca = self.demand['axial'] / (phi * steel.Fy * self.section['A'])
         if Ca <= 0.125:
-            web_limit = 2.45 * np.sqrt(steel.E/steel.Fy) * (1-0.93*Ca)
+            web_limit = 2.45 * np.sqrt(steel.E / steel.Fy) * (1 - 0.93 * Ca)
         else:
-            web_limit = np.max([0.77*np.sqrt(steel.E/steel.Fy)*(2.93-Ca), 1.49*np.sqrt(steel.E/steel.Fy)])
+            web_limit = np.max(
+                [
+                    0.77 * np.sqrt(steel.E / steel.Fy) * (2.93 - Ca),
+                    1.49 * np.sqrt(steel.E / steel.Fy),
+                ]
+            )
         # Compare the section depth-to0-thickness ratio with limit
         if self.section['h to tw ratio'] <= web_limit:
             self.is_feasible['web limit'] = True
@@ -106,13 +126,17 @@ class Column(object):
         # Default values for two coefficient
         Kx = 1.0
         Ky = 1.0
-        slenderness_ratio = max([Kx*self.unbraced_length['x']/self.section['rx'],
-                                 Ky*self.unbraced_length['y']/self.section['ry']])
+        slenderness_ratio = max(
+            [
+                Kx * self.unbraced_length['x'] / self.section['rx'],
+                Ky * self.unbraced_length['y'] / self.section['ry'],
+            ]
+        )
         # Compute elastic buckling stress
         Fe = np.pi**2 * steel.E / (slenderness_ratio**2)
         # Calculate critical stress
-        if slenderness_ratio <= (4.71 * np.sqrt(steel.E/steel.Fy)):
-            Fcr = 0.658**(steel.Fy/Fe) * steel.Fy
+        if slenderness_ratio <= (4.71 * np.sqrt(steel.E / steel.Fy)):
+            Fcr = 0.658 ** (steel.Fy / Fe) * steel.Fy
         else:
             Fcr = 0.877 * Fe
         # Compute nominal compressive strength
@@ -160,10 +184,13 @@ class Column(object):
         else:
             c = h0 / 2 * np.sqrt(self.section['Iy'] / self.section['Cw'])
         # Compute Lp and Lr, both of which are necessary to determine flexural strength
-        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E/steel.Fy)
-        temp1 = np.sqrt((self.section['J']*c/(self.section['Sx']*h0))**2 + 6.76*(0.7*steel.Fy/steel.E)**2)
+        Lp = 1.76 * self.section['ry'] * np.sqrt(steel.E / steel.Fy)
+        temp1 = np.sqrt(
+            (self.section['J'] * c / (self.section['Sx'] * h0)) ** 2
+            + 6.76 * (0.7 * steel.Fy / steel.E) ** 2
+        )
         temp2 = np.sqrt(self.section['J'] * c / (self.section['Sx'] * h0) + temp1)
-        Lr = 1.95 * self.section['rts'] * steel.E / (0.7*steel.Fy) * temp2
+        Lr = 1.95 * self.section['rts'] * steel.E / (0.7 * steel.Fy) * temp2
         # Unbraced length
         Lb = min([self.unbraced_length['x'], self.unbraced_length['y']])
         # Compute moment capacity governed by plastic yielding
@@ -171,11 +198,14 @@ class Column(object):
 
         # Compute MA, MB, and MC coefficients, all of which are necessary to compute Cb coefficient
         # See page 16.1-46 in Seismic Design Manual
-        M_max = np.max([abs(self.demand['moment bottom']), abs(self.demand['moment top'])])
-        linear_function = interpolate.interp1d([0, 1],
-                                               [self.demand['moment bottom'], (-1)*self.demand['moment top']])
+        M_max = np.max(
+            [abs(self.demand['moment bottom']), abs(self.demand['moment top'])]
+        )
+        linear_function = interpolate.interp1d(
+            [0, 1], [self.demand['moment bottom'], (-1) * self.demand['moment top']]
+        )
         [MA, MB, MC] = np.abs(linear_function([0.25, 0.50, 0.75]))
-        Cb = 12.5 * M_max / (2.5*M_max + 3*MA + 4*MB + 3*MC)
+        Cb = 12.5 * M_max / (2.5 * M_max + 3 * MA + 4 * MB + 3 * MC)
 
         # Calculate moment capacity based on unbraced length: case-by-case analysis
         # Case I: flexural strength is governed by plastic yielding
@@ -184,17 +214,24 @@ class Column(object):
         if Lb <= Lp:
             Mn = Mp
         elif Lb <= Lr:
-            Mn = Cb * (Mp-(Mp-0.7*steel.Fy*self.section['Sx'])*(Lb-Lp)/(Lr-Lp))
+            Mn = Cb * (
+                Mp
+                - (Mp - 0.7 * steel.Fy * self.section['Sx']) * (Lb - Lp) / (Lr - Lp)
+            )
         else:
-            temp = np.sqrt((1 + 0.078*self.section['J']*c)/(self.section['Sx']*h0)*(Lb/self.section['rts'])**2)
-            Fcr = Cb * np.pi**2 * steel.E/((Lb/self.section['rts'])**2) * temp
+            temp = np.sqrt(
+                (1 + 0.078 * self.section['J'] * c)
+                / (self.section['Sx'] * h0)
+                * (Lb / self.section['rts']) ** 2
+            )
+            Fcr = Cb * np.pi**2 * steel.E / ((Lb / self.section['rts']) ** 2) * temp
             Mn = Fcr * self.section['Sx']
         # Attention no matter which case the column is, the flexural strength cannot exceed plastic moment capacity
         Mn = np.min([Mn, Mp])
 
         # Store the flexural strength into "strength" dictionary
         phi = 0.9
-        self.strength['flexural'] = phi*Mn
+        self.strength['flexural'] = phi * Mn
         # Check whether the flexural strength is sufficient and return it into flag variable
         if self.strength['flexural'] >= M_max:
             self.is_feasible['flexural strength'] = True
@@ -213,14 +250,16 @@ class Column(object):
         Pr = self.demand['axial']
         # Determine the governing moment:
         # Maximum value from moments at two ends
-        Mrx = np.max([abs(self.demand['moment bottom']), abs(self.demand['moment top'])])
+        Mrx = np.max(
+            [abs(self.demand['moment bottom']), abs(self.demand['moment top'])]
+        )
         # Case-by-case analysis:
         # Case I: axial load ratio is less than or equal to 0.2
         # Case II: axial load ratio is greater than 0.2
-        if Pr/Pc <= 0.2:
-            combination = Pr/Pc + 8/9 * (Mrx/Mcx)
+        if Pr / Pc <= 0.2:
+            combination = Pr / Pc + 8 / 9 * (Mrx / Mcx)
         else:
-            combination = Pr/(2*Pc) + (Mrx/Mcx)
+            combination = Pr / (2 * Pc) + (Mrx / Mcx)
         # Check whether the coefficient is less than 1.0 (AISC Specifications Eq. H1-1)
         if combination <= 1.0:
             self.is_feasible['combined strength'] = True
@@ -243,10 +282,16 @@ class Column(object):
         This method is used to calculate the demand to capacity ratios for column components
         :return: a dictionary which includes ratios for axial force, shear force, flexural moment, and combined loading.
         """
-        self.demand_capacity_ratio['axial'] = self.demand['axial'] / self.strength['axial']
-        self.demand_capacity_ratio['shear'] = self.demand['shear'] / self.strength['shear']
-        self.demand_capacity_ratio['flexural'] = max(abs(self.demand['moment bottom']), abs(self.demand['moment top']))\
-                                                 /self.strength['flexural']
+        self.demand_capacity_ratio['axial'] = (
+            self.demand['axial'] / self.strength['axial']
+        )
+        self.demand_capacity_ratio['shear'] = (
+            self.demand['shear'] / self.strength['shear']
+        )
+        self.demand_capacity_ratio['flexural'] = (
+            max(abs(self.demand['moment bottom']), abs(self.demand['moment top']))
+            / self.strength['flexural']
+        )
 
     def calculate_hinge_parameters(self, steel):
         """
@@ -274,53 +319,91 @@ class Column(object):
         # Note that column unbraced length is in feet, remember to convert it to inches
         c1 = 25.4  # c1_unit
         c2 = 6.895  # c2_unit
-        h = self.section['d'] - 2*self.section['tf']  # Web depth
+        h = self.section['d'] - 2 * self.section['tf']  # Web depth
         # Capping moment to yielding moment ratio. Lignos et al. used 1.05 whereas Prof. Burton used 1.11.
-        McMy = 12.5 * (h/self.section['tw'])**(-0.2) \
-               * (self.unbraced_length['x']*12.0/self.section['ry'])**(-0.4) \
-               * (1-self.demand_capacity_ratio['axial']) ** (0.4)
+        McMy = (
+            12.5
+            * (h / self.section['tw']) ** (-0.2)
+            * (self.unbraced_length['x'] * 12.0 / self.section['ry']) ** (-0.4)
+            * (1 - self.demand_capacity_ratio['axial']) ** (0.4)
+        )
         if McMy < 1.0:
             McMy = 1.0
         if McMy > 1.3:
             McMy = 1.3
         # Beam component rotational stiffness
-        self.plastic_hinge['K0'] = 6 * steel.E * self.section['Ix'] / (self.unbraced_length['x']*12.0)
+        self.plastic_hinge['K0'] = (
+            6 * steel.E * self.section['Ix'] / (self.unbraced_length['x'] * 12.0)
+        )
         # Flexual strength
         self.plastic_hinge['Myp'] = self.section['Zx'] * steel.Fy
         # Effective flexural strength
         if self.demand_capacity_ratio['axial'] <= 0.2:
-            self.plastic_hinge['My'] = 1.15 * steel.Ry * self.plastic_hinge['Myp'] \
-                                       * (1-0.5*self.demand_capacity_ratio['axial'])
+            self.plastic_hinge['My'] = (
+                1.15
+                * steel.Ry
+                * self.plastic_hinge['Myp']
+                * (1 - 0.5 * self.demand_capacity_ratio['axial'])
+            )
         else:
-            self.plastic_hinge['My'] = 1.15 * steel.Ry * self.plastic_hinge['Myp'] \
-                                       * 9/8 * (1-self.demand_capacity_ratio['axial'])
+            self.plastic_hinge['My'] = (
+                1.15
+                * steel.Ry
+                * self.plastic_hinge['Myp']
+                * 9
+                / 8
+                * (1 - self.demand_capacity_ratio['axial'])
+            )
         # Reference cumulative plastic rotation:
         if self.demand_capacity_ratio['axial'] <= 0.35:
-            self.plastic_hinge['Lambda'] = 255000 * (h/self.section['tw'])**(-2.14) \
-                                           * (self.unbraced_length['x']/self.section['ry']) ** (-0.53) \
-                                           * (1-self.demand_capacity_ratio['axial'])**4.92
+            self.plastic_hinge['Lambda'] = (
+                255000
+                * (h / self.section['tw']) ** (-2.14)
+                * (self.unbraced_length['x'] / self.section['ry']) ** (-0.53)
+                * (1 - self.demand_capacity_ratio['axial']) ** 4.92
+            )
         else:
-            self.plastic_hinge['Lambda'] = 268000 * (h/self.section['tw'])**(-2.30) \
-                                           * (self.unbraced_length['x']/self.section['ry'])**(-1.30) \
-                                           * (1-self.demand_capacity_ratio['axial'])**1.19
+            self.plastic_hinge['Lambda'] = (
+                268000
+                * (h / self.section['tw']) ** (-2.30)
+                * (self.unbraced_length['x'] / self.section['ry']) ** (-1.30)
+                * (1 - self.demand_capacity_ratio['axial']) ** 1.19
+            )
         # Pre-capping rotation:
-        self.plastic_hinge['theta_p'] = 294 * (h/self.section['tw'])**(-1.7) \
-                                        * (self.unbraced_length['x']/self.section['ry'])**(-0.7) \
-                                        * (1-self.demand_capacity_ratio['axial'])**(1.6)
+        self.plastic_hinge['theta_p'] = (
+            294
+            * (h / self.section['tw']) ** (-1.7)
+            * (self.unbraced_length['x'] / self.section['ry']) ** (-0.7)
+            * (1 - self.demand_capacity_ratio['axial']) ** (1.6)
+        )
         self.plastic_hinge['theta_p'] = min(self.plastic_hinge['theta_p'], 0.20)
         # Pre-capping rotation is further revised to exclude the elastic deformation
-        self.plastic_hinge['theta_p'] = self.plastic_hinge['theta_p'] \
-                                        - (McMy-1.0)*self.plastic_hinge['My'] / self.plastic_hinge['K0']
+        self.plastic_hinge['theta_p'] = (
+            self.plastic_hinge['theta_p']
+            - (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
+        )
         # Post-capping rotation:
-        self.plastic_hinge['theta_pc'] = 90 * (h/self.section['tw'])**(-0.8) \
-                                         * (self.unbraced_length['x']/self.section['ry'])**(-0.8) \
-                                         * (1-self.demand_capacity_ratio['axial'])**2.5
+        self.plastic_hinge['theta_pc'] = (
+            90
+            * (h / self.section['tw']) ** (-0.8)
+            * (self.unbraced_length['x'] / self.section['ry']) ** (-0.8)
+            * (1 - self.demand_capacity_ratio['axial']) ** 2.5
+        )
         # Post-capping rotation is further revised to account for elastic deformation
-        self.plastic_hinge['theta_y'] = self.plastic_hinge['My'] / self.plastic_hinge['K0']
-        self.plastic_hinge['theta_pc'] = self.plastic_hinge['theta_pc'] \
-                                         + self.plastic_hinge['theta_y'] \
-                                         + (McMy-1.0)*self.plastic_hinge['My']/self.plastic_hinge['K0']
-        self.plastic_hinge['as'] = (McMy-1.0)*self.plastic_hinge['My']\
-                                   /(self.plastic_hinge['theta_p']*self.plastic_hinge['K0'])
-        self.plastic_hinge['residual'] = 0.5 - 0.4*self.demand_capacity_ratio['axial']
+        self.plastic_hinge['theta_y'] = (
+            self.plastic_hinge['My'] / self.plastic_hinge['K0']
+        )
+        self.plastic_hinge['theta_pc'] = (
+            self.plastic_hinge['theta_pc']
+            + self.plastic_hinge['theta_y']
+            + (McMy - 1.0) * self.plastic_hinge['My'] / self.plastic_hinge['K0']
+        )
+        self.plastic_hinge['as'] = (
+            (McMy - 1.0)
+            * self.plastic_hinge['My']
+            / (self.plastic_hinge['theta_p'] * self.plastic_hinge['K0'])
+        )
+        self.plastic_hinge['residual'] = (
+            0.5 - 0.4 * self.demand_capacity_ratio['axial']
+        )
         self.plastic_hinge['theta_u'] = 0.15

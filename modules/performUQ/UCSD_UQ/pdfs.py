@@ -15,7 +15,7 @@ class Dist:
         self.data = data
         if (params is None) and (moments is None) and (data is None):
             raise RuntimeError(
-                "Atleast one of parameters, moments, or data must be specified when creating a random variable"
+                'Atleast one of parameters, moments, or data must be specified when creating a random variable'
             )
 
 
@@ -141,7 +141,9 @@ class BetaDist:
         self.beta = beta
         self.lowerbound = lowerbound
         self.upperbound = upperbound
-        self.dist = stats.beta(self.alpha, self.beta, self.lowerbound, self.upperbound)
+        self.dist = stats.beta(
+            self.alpha, self.beta, self.lowerbound, self.upperbound
+        )
 
     def generate_rns(self, N):
         return self.dist.rvs(size=N)
@@ -278,12 +280,13 @@ class DiscreteDist:
             lp[i] = self.log_probabilities[np.where(self.values == x_comp)]
         return lp
 
+
 class ConstantInteger:
     def __init__(self, value) -> None:
         self.value = value
-    
+
     def generate_rns(self, N):
         return np.array([self.value for _ in range(N)], dtype=int)
-    
+
     def log_pdf_eval(self, x):
         return 0.0

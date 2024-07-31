@@ -41,14 +41,14 @@
 import sys
 import argparse, json
 
-def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
+def write_RV(AIM_file, EVENT_file, EDP_file, EDP_specs):
     # We do this to provide an option for different behavior under setup,
     # even though it is unlikely to have random variables for EDPs.
     write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs)
 
-def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
+def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
     with open(AIM_file, 'r') as f:
         bim_file = json.load(f)
 
@@ -68,49 +68,49 @@ def write_EDP(AIM_file, EVENT_file, EDP_file, EDP_specs):
 
     for edp_name, edp_data in EDP_types.items():
         for loc_id, loc_data in edp_data.items():
-            for story in range(stories+1):
-
-
+            for story in range(stories + 1):
                 if edp_name == 'PID':
                     if story > 0:
-                        EDP_list.append({
-                            'type'       : edp_name,
-                            'id'         : int(loc_id) + story,
-                            'cline'      : loc_id,
-                            'floor1'      : story-1,
-                            'floor2'     : story,
-                            'node'       : [EDP_locs[loc_id][s]
-                                            for s in [story-1, story]],
-                            'dofs'       : loc_data,
-                            'scalar_data': []
-                        })
+                        EDP_list.append(
+                            {
+                                'type': edp_name,
+                                'id': int(loc_id) + story,
+                                'cline': loc_id,
+                                'floor1': story - 1,
+                                'floor2': story,
+                                'node': [
+                                    EDP_locs[loc_id][s] for s in [story - 1, story]
+                                ],
+                                'dofs': loc_data,
+                                'scalar_data': [],
+                            }
+                        )
                         total_EDP_num += len(loc_data)
                 else:
-                    EDP_list.append({
-                        'type'       : edp_name,
-                        'id'         : int(loc_id) + story,
-                        'cline'      : loc_id,
-                        'floor'      : story,
-                        'node'       : EDP_locs[loc_id][story],
-                        'dofs'       : loc_data,
-                        'scalar_data': []
-                    })
+                    EDP_list.append(
+                        {
+                            'type': edp_name,
+                            'id': int(loc_id) + story,
+                            'cline': loc_id,
+                            'floor': story,
+                            'node': EDP_locs[loc_id][story],
+                            'dofs': loc_data,
+                            'scalar_data': [],
+                        }
+                    )
                     total_EDP_num += len(loc_data)
 
     edp_file = {
-        "RandomVariables": [],
-        "total_number_edp": total_EDP_num,
-        "EngineeringDemandParameters": [{
-            'name': '...',
-            'responses': EDP_list
-        }]
+        'RandomVariables': [],
+        'total_number_edp': total_EDP_num,
+        'EngineeringDemandParameters': [{'name': '...', 'responses': EDP_list}],
     }
 
     with open(EDP_file, 'w') as f:
         json.dump(edp_file, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
@@ -122,8 +122,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(write_RV(args.filenameAIM, args.filenameEVENT,
-                          args.filenameEDP, args.EDPspecs))
+        sys.exit(
+            write_RV(
+                args.filenameAIM, args.filenameEVENT, args.filenameEDP, args.EDPspecs
+            )
+        )
     else:
-        sys.exit(write_EDP(args.filenameAIM, args.filenameEVENT,
-                           args.filenameEDP, args.EDPspecs))
+        sys.exit(
+            write_EDP(
+                args.filenameAIM, args.filenameEVENT, args.filenameEDP, args.EDPspecs
+            )
+        )

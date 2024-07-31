@@ -49,10 +49,11 @@ from CreateScenario import *
 from ComputeIntensityMeasure import *
 
 if __name__ == '__main__':
-
     logger = logging.getLogger()
     handlerStream = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
     handlerStream.setFormatter(formatter)
     logger.addHandler(handlerStream)
 
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     input_dir = dir_info['Input']
     output_dir = dir_info['Output']
     try:
-        os.mkdir(f"{output_dir}")
+        os.mkdir(f'{output_dir}')
     except:
         print('HurricaneSimulation: output folder already exists.')
 
@@ -76,8 +77,8 @@ if __name__ == '__main__':
     print('HurricaneSimulation: creating stations.')
     site_info = hazard_info['Site']
     if site_info['Type'] == 'From_CSV':
-        input_file = os.path.join(input_dir,site_info['input_file'])
-        output_file = site_info.get('output_file',False)
+        input_file = os.path.join(input_dir, site_info['input_file'])
+        output_file = site_info.get('output_file', False)
         if output_file:
             output_file = os.path.join(output_dir, output_file)
         min_ID = site_info['min_ID']
@@ -87,7 +88,9 @@ if __name__ == '__main__':
     if stations:
         print('HurricaneSimulation: stations created.')
     else:
-        print('HurricaneSimulation: please check the "Input" directory in the configuration json file.')
+        print(
+            'HurricaneSimulation: please check the "Input" directory in the configuration json file.'
+        )
         exit()
 
     # Scenarios
@@ -96,7 +99,9 @@ if __name__ == '__main__':
     if scenario_info['Type'] == 'Wind':
         # Creating wind scenarios
         event_info = hazard_info['Event']
-        scenarios = create_wind_scenarios(scenario_info, event_info, stations, input_dir)
+        scenarios = create_wind_scenarios(
+            scenario_info, event_info, stations, input_dir
+        )
     else:
         print('HurricaneSimulation: currently only supports wind simulations.')
     print('HurricaneSimulation: scenarios created.')
@@ -107,19 +112,31 @@ if __name__ == '__main__':
         if 'Simulation' in scenario_info['Generator']:
             if scenario_info['ModelType'] == 'LinearAnalyticalPy':
                 # simulating storm
-                storm_simu = simulate_storm(scenarios, event_info, 'LinearAnalytical')
+                storm_simu = simulate_storm(
+                    scenarios, event_info, 'LinearAnalytical'
+                )
             elif scenario_info['ModelType'] == 'LinearAnalytical':
                 # simulation storm (c++ binary)
-                storm_simu = simulate_storm_cpp(site_info, scenario_info, scenarios, event_info, 'LinearAnalytical', dir_info)
+                storm_simu = simulate_storm_cpp(
+                    site_info,
+                    scenario_info,
+                    scenarios,
+                    event_info,
+                    'LinearAnalytical',
+                    dir_info,
+                )
             else:
-                print('HurricaneSimulation: currently supporting LinearAnalytical model type.')
+                print(
+                    'HurricaneSimulation: currently supporting LinearAnalytical model type.'
+                )
             # converting peak wind speed
             pws = convert_wind_speed(event_info, storm_simu)
             # saving results
-            export_pws(stations, pws, output_dir, filename = 'EventGrid.csv')
+            export_pws(stations, pws, output_dir, filename='EventGrid.csv')
         else:
             print('HurricaneSimulation: currently only supporting wind simulations.')
     else:
-        print('HurricaneSimulation currently only supports earthquake and wind simulations.')
+        print(
+            'HurricaneSimulation currently only supports earthquake and wind simulations.'
+        )
     print('HurricaneSimulation: intensity measures computed.')
-    

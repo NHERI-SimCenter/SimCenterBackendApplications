@@ -58,29 +58,42 @@ default_oq_version = '3.17.1'
 
 
 def openquake_config(site_info, scen_info, event_info, workDir):
-
-    dir_input = os.path.join(workDir, "Input")
-    dir_output = os.path.join(workDir, "Output")
+    dir_input = os.path.join(workDir, 'Input')
+    dir_output = os.path.join(workDir, 'Output')
     import configparser
+
     cfg = configparser.ConfigParser()
     # general section
-    if scen_info['EqRupture']['Type'] == 'oqSourceXML': #OpenQuakeScenario
-        cfg['general'] = {'description': 'Scenario Hazard Config File',
-                          'calculation_mode': 'scenario'}
+    if scen_info['EqRupture']['Type'] == 'oqSourceXML':  # OpenQuakeScenario
+        cfg['general'] = {
+            'description': 'Scenario Hazard Config File',
+            'calculation_mode': 'scenario',
+        }
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
-        cfg['general'] = {'description': 'Scenario Hazard Config File',
-                          'calculation_mode': 'event_based',
-                          'ses_seed': scen_info['EqRupture'].get('Seed', 24)}
+        cfg['general'] = {
+            'description': 'Scenario Hazard Config File',
+            'calculation_mode': 'event_based',
+            'ses_seed': scen_info['EqRupture'].get('Seed', 24),
+        }
         cfg['logic_tree'] = {'number_of_logic_tree_samples': 0}
     elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
-        cfg['general'] = {'description': 'Scenario Hazard Config File',
-                          'calculation_mode': 'classical',
-                          'random_seed': scen_info['EqRupture'].get('Seed', 24)}
-        cfg['logic_tree'] = {'number_of_logic_tree_samples': 0} # 0 here indicates full logic tree realization
-    elif scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
+        cfg['general'] = {
+            'description': 'Scenario Hazard Config File',
+            'calculation_mode': 'classical',
+            'random_seed': scen_info['EqRupture'].get('Seed', 24),
+        }
+        cfg['logic_tree'] = {
+            'number_of_logic_tree_samples': 0
+        }  # 0 here indicates full logic tree realization
+    elif scen_info['EqRupture']['Type'] in [
+        'OpenQuakeUserConfig',
+        'OpenQuakeClassicalPSHA-User',
+    ]:
         filename_ini = scen_info['EqRupture'].get('ConfigFile', None)
         if filename_ini is None:
-            print('FetchOpenQuake: please specify Scenario[\'EqRupture\'][\'ConfigFile\'].')
+            print(
+                "FetchOpenQuake: please specify Scenario['EqRupture']['ConfigFile']."
+            )
             return 0
         else:
             filename_ini = os.path.join(dir_input, filename_ini)
@@ -88,14 +101,23 @@ def openquake_config(site_info, scen_info, event_info, workDir):
             cfg.read(filename_ini)
             cfg['output']['export_dir'] = dir_output
     else:
-        print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig.')
+        print(
+            "FetchOpenQuake: please specify Scenario['Generator'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig."
+        )
         return 0
 
-    if scen_info['EqRupture']['Type'] in ['OpenQuakeUserConfig','OpenQuakeClassicalPSHA-User']:
+    if scen_info['EqRupture']['Type'] in [
+        'OpenQuakeUserConfig',
+        'OpenQuakeClassicalPSHA-User',
+    ]:
         # sites
-        tmpSites = pd.read_csv(os.path.join(dir_input, site_info['input_file']), header=0, index_col=0)
-        tmpSitesLoc = tmpSites.loc[:, ['Longitude','Latitude']]
-        tmpSitesLoc.loc[site_info['min_ID']:site_info['max_ID']].to_csv(os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False)
+        tmpSites = pd.read_csv(
+            os.path.join(dir_input, site_info['input_file']), header=0, index_col=0
+        )
+        tmpSitesLoc = tmpSites.loc[:, ['Longitude', 'Latitude']]
+        tmpSitesLoc.loc[site_info['min_ID'] : site_info['max_ID']].to_csv(
+            os.path.join(dir_input, 'sites_oq.csv'), header=False, index=False
+        )
         if cfg.has_section('geometry'):
             cfg['geometry']['sites_csv'] = 'sites_oq.csv'
         else:
@@ -105,13 +127,18 @@ def openquake_config(site_info, scen_info, event_info, workDir):
         else:
             cfg['site_params'] = {'site_model_file': site_info['output_file']}
         # copy that file to the rundir
-        shutil.copy(os.path.join(dir_input,site_info['output_file']), os.path.join(dir_output,site_info['output_file']))
+        shutil.copy(
+            os.path.join(dir_input, site_info['output_file']),
+            os.path.join(dir_output, site_info['output_file']),
+        )
 
         # im type and period
-        tmp0 = cfg['calculation'].get('intensity_measure_types_and_levels').split('"')
+        tmp0 = (
+            cfg['calculation'].get('intensity_measure_types_and_levels').split('"')
+        )
         tmp = []
         for jj, cur_tmp in enumerate(tmp0):
-            if jj%2:
+            if jj % 2:
                 tmp.append(cur_tmp)
         im_type = []
         tmp_T = []
@@ -125,8 +152,12 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                 pass
         event_info['IntensityMeasure']['Type'] = im_type
         event_info['IntensityMeasure']['Periods'] = tmp_T
-        cfg['calculation']['source_model_logic_tree_file'] = os.path.join(cfg['calculation'].get('source_model_logic_tree_file'))
-        cfg['calculation']['gsim_logic_tree_file'] = os.path.join(cfg['calculation'].get('gsim_logic_tree_file'))
+        cfg['calculation']['source_model_logic_tree_file'] = os.path.join(
+            cfg['calculation'].get('source_model_logic_tree_file')
+        )
+        cfg['calculation']['gsim_logic_tree_file'] = os.path.join(
+            cfg['calculation'].get('gsim_logic_tree_file')
+        )
     else:
         # sites
         # tmpSites = pd.read_csv(site_info['siteFile'], header=0, index_col=0)
@@ -135,23 +166,28 @@ def openquake_config(site_info, scen_info, event_info, workDir):
         # cfg['geometry'] = {'sites_csv': 'sites_oq.csv'}
         cfg['geometry'] = {'sites_csv': os.path.basename(site_info['siteFile'])}
         # rupture
-        cfg['erf'] = {'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0), 
-                    'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
-                    'area_source_discretization': scen_info['EqRupture'].get('AreaMesh', 10.0)}
+        cfg['erf'] = {
+            'rupture_mesh_spacing': scen_info['EqRupture'].get('RupMesh', 2.0),
+            'width_of_mfd_bin': scen_info['EqRupture'].get('MagFreqDistBin', 0.1),
+            'area_source_discretization': scen_info['EqRupture'].get(
+                'AreaMesh', 10.0
+            ),
+        }
         # site_params (saved in the output_file)
         cfg['site_params'] = {'site_model_file': 'tmp_oq_site_model.csv'}
         # hazard_calculation
-        mapGMPE = {'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
-                'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
-                'Boore, Stewart, Seyhan & Atkinson (2014)': 'BooreEtAl2014',
-                'BooreEtAl2014': 'BooreEtAl2014',
-                'Campbell & Bozorgnia (2014)': 'CampbellBozorgnia2014',
-                'CampbellBozorgnia2014': 'CampbellBozorgnia2014',
-                'Chiou & Youngs (2014)': 'ChiouYoungs2014',
-                'ChiouYoungs2014': 'ChiouYoungs2014'
-                }
-        
-        if scen_info['EqRupture']['Type'] == 'oqSourceXML':#OpenQuakeScenario
+        mapGMPE = {
+            'Abrahamson, Silva & Kamai (2014)': 'AbrahamsonEtAl2014',
+            'AbrahamsonEtAl2014': 'AbrahamsonEtAl2014',
+            'Boore, Stewart, Seyhan & Atkinson (2014)': 'BooreEtAl2014',
+            'BooreEtAl2014': 'BooreEtAl2014',
+            'Campbell & Bozorgnia (2014)': 'CampbellBozorgnia2014',
+            'CampbellBozorgnia2014': 'CampbellBozorgnia2014',
+            'Chiou & Youngs (2014)': 'ChiouYoungs2014',
+            'ChiouYoungs2014': 'ChiouYoungs2014',
+        }
+
+        if scen_info['EqRupture']['Type'] == 'oqSourceXML':  # OpenQuakeScenario
             imt = ''
             if event_info['IntensityMeasure']['Type'] == 'SA':
                 for curT in event_info['IntensityMeasure']['Periods']:
@@ -159,95 +195,188 @@ def openquake_config(site_info, scen_info, event_info, workDir):
                 imt = imt[:-2]
             else:
                 imt = event_info['IntensityMeasure']['Type']
-            cfg['calculation'] = {'rupture_model_file': scen_info['EqRupture']['sourceFile'], 
-                                'gsim': mapGMPE[event_info['GMPE']['Type']],
-                                'intensity_measure_types': imt, 
-                                'random_seed': 42, 
-                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
-                                'number_of_ground_motion_fields': event_info['NumberPerSite']}
+            cfg['calculation'] = {
+                'rupture_model_file': scen_info['EqRupture']['sourceFile'],
+                'gsim': mapGMPE[event_info['GMPE']['Type']],
+                'intensity_measure_types': imt,
+                'random_seed': 42,
+                'truncation_level': event_info['IntensityMeasure'].get(
+                    'Truncation', 3.0
+                ),
+                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+                'number_of_ground_motion_fields': event_info['NumberPerSite'],
+            }
         elif scen_info['EqRupture']['Type'] == 'OpenQuakeEventBased':
             imt = ''
-            imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
+            imt_levels = event_info['IntensityMeasure'].get(
+                'Levels', [0.01, 10, 100]
+            )
             imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
             if event_info['IntensityMeasure']['Type'] == 'SA':
                 for curT in event_info['IntensityMeasure']['Periods']:
-                    #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+                    # imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
                     if imt_scale == 'Log':
-                        imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt = (
+                            imt
+                            + '"SA('
+                            + str(curT)
+                            + ')": logscale({}, {}, {}), '.format(
+                                float(imt_levels[0]),
+                                float(imt_levels[1]),
+                                int(imt_levels[2]),
+                            )
+                        )
                     else:
-                        imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt_values = np.linspace(
+                            float(imt_levels[0]),
+                            float(imt_levels[1]),
+                            int(imt_levels[2]),
+                        )
                         imt_strings = ''
                         for imt_v in imt_values:
-                            imt_strings = imt_strings+str(imt_v)+', '
+                            imt_strings = imt_strings + str(imt_v) + ', '
                         imt_strings = imt_strings[:-2]
-                        imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
+                        imt = (
+                            imt
+                            + '"SA('
+                            + str(curT)
+                            + ')": [{}], '.format(imt_strings)
+                        )
                 imt = imt[:-2]
             elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = '"PGA": logscale({}, {}, {}), '.format(
+                        float(imt_levels[0]),
+                        float(imt_levels[1]),
+                        int(imt_levels[2]),
+                    )
                 else:
-                    imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt_values = np.linspace(
+                        float(imt_levels[0]),
+                        float(imt_levels[1]),
+                        int(imt_levels[2]),
+                    )
                     imt_strings = ''
                     for imt_v in imt_values:
-                        imt_strings = imt_strings+str(imt_v)+', '
+                        imt_strings = imt_strings + str(imt_v) + ', '
                     imt_strings = imt_strings[:-2]
                     imt = 'PGA": [{}], '.format(imt_strings)
             else:
-                imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
-            cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
-                                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
-                                'investigation_time': scen_info['EqRupture']['TimeSpan'],
-                                'intensity_measure_types_and_levels': '{' + imt + '}', 
-                                'random_seed': 42, 
-                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
-                                'number_of_ground_motion_fields': event_info['NumberPerSite']}
+                imt = (
+                    event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
+                )
+            cfg['calculation'] = {
+                'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
+                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
+                'investigation_time': scen_info['EqRupture']['TimeSpan'],
+                'intensity_measure_types_and_levels': '{' + imt + '}',
+                'random_seed': 42,
+                'truncation_level': event_info['IntensityMeasure'].get(
+                    'Truncation', 3.0
+                ),
+                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+                'number_of_ground_motion_fields': event_info['NumberPerSite'],
+            }
         elif scen_info['EqRupture']['Type'] == 'OpenQuakeClassicalPSHA':
             imt = ''
-            imt_levels = event_info['IntensityMeasure'].get('Levels', [0.01,10,100])
+            imt_levels = event_info['IntensityMeasure'].get(
+                'Levels', [0.01, 10, 100]
+            )
             imt_scale = event_info['IntensityMeasure'].get('Scale', 'Log')
             if event_info['IntensityMeasure']['Type'] == 'SA':
                 for curT in event_info['IntensityMeasure']['Periods']:
-                    #imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
+                    # imt = imt + '"SA(' + str(curT) + ')": {}, '.format(imt_levels)
                     if imt_scale == 'Log':
-                        imt = imt + '"SA(' + str(curT) + ')": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt = (
+                            imt
+                            + '"SA('
+                            + str(curT)
+                            + ')": logscale({}, {}, {}), '.format(
+                                float(imt_levels[0]),
+                                float(imt_levels[1]),
+                                int(imt_levels[2]),
+                            )
+                        )
                     else:
-                        imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                        imt_values = np.linspace(
+                            float(imt_levels[0]),
+                            float(imt_levels[1]),
+                            int(imt_levels[2]),
+                        )
                         imt_strings = ''
                         for imt_v in imt_values:
-                            imt_strings = imt_strings+str(imt_v)+', '
+                            imt_strings = imt_strings + str(imt_v) + ', '
                         imt_strings = imt_strings[:-2]
-                        imt = imt + '"SA(' + str(curT) + ')": [{}], '.format(imt_strings)
+                        imt = (
+                            imt
+                            + '"SA('
+                            + str(curT)
+                            + ')": [{}], '.format(imt_strings)
+                        )
                 imt = imt[:-2]
             elif event_info['IntensityMeasure']['Type'] == 'PGA':
                 if imt_scale == 'Log':
-                    imt = '"PGA": logscale({}, {}, {}), '.format(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt = '"PGA": logscale({}, {}, {}), '.format(
+                        float(imt_levels[0]),
+                        float(imt_levels[1]),
+                        int(imt_levels[2]),
+                    )
                 else:
-                    imt_values = np.linspace(float(imt_levels[0]),float(imt_levels[1]),int(imt_levels[2]))
+                    imt_values = np.linspace(
+                        float(imt_levels[0]),
+                        float(imt_levels[1]),
+                        int(imt_levels[2]),
+                    )
                     imt_strings = ''
                     for imt_v in imt_values:
-                        imt_strings = imt_strings+str(imt_v)+', '
+                        imt_strings = imt_strings + str(imt_v) + ', '
                     imt_strings = imt_strings[:-2]
                     imt = '"PGA": [{}], '.format(imt_strings)
             else:
-                imt = event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
-            cfg['calculation'] = {'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
-                                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
-                                'investigation_time': scen_info['EqRupture']['TimeSpan'],
-                                'intensity_measure_types_and_levels': '{' + imt + '}', 
-                                'truncation_level': event_info['IntensityMeasure'].get('Truncation', 3.0), 
-                                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0)}
+                imt = (
+                    event_info['IntensityMeasure']['Type'] + ': logscale(1, 200, 45)'
+                )
+            cfg['calculation'] = {
+                'source_model_logic_tree_file': scen_info['EqRupture']['Filename'],
+                'gsim_logic_tree_file': event_info['GMPE']['Parameters'],
+                'investigation_time': scen_info['EqRupture']['TimeSpan'],
+                'intensity_measure_types_and_levels': '{' + imt + '}',
+                'truncation_level': event_info['IntensityMeasure'].get(
+                    'Truncation', 3.0
+                ),
+                'maximum_distance': scen_info['EqRupture'].get('max_Dist', 500.0),
+            }
             cfg_quan = ''
-            cfg['output'] = {'export_dir': dir_output,
-                            'individual_curves': scen_info['EqRupture'].get('IndivHazCurv', False), 
-                            'mean': scen_info['EqRupture'].get('MeanHazCurv', True),
-                            'quantiles': ' '.join([str(x) for x in scen_info['EqRupture'].get('Quantiles', [0.05, 0.5, 0.95])]),
-                            'hazard_maps': scen_info['EqRupture'].get('HazMap', False),
-                            'uniform_hazard_spectra': scen_info['EqRupture'].get('UHS', False),
-                            'poes': np.round(1-np.exp(-float(scen_info['EqRupture']['TimeSpan'])*1.0/float(scen_info['EqRupture'].get('ReturnPeriod', 100))),decimals=3)}
+            cfg['output'] = {
+                'export_dir': dir_output,
+                'individual_curves': scen_info['EqRupture'].get(
+                    'IndivHazCurv', False
+                ),
+                'mean': scen_info['EqRupture'].get('MeanHazCurv', True),
+                'quantiles': ' '.join(
+                    [
+                        str(x)
+                        for x in scen_info['EqRupture'].get(
+                            'Quantiles', [0.05, 0.5, 0.95]
+                        )
+                    ]
+                ),
+                'hazard_maps': scen_info['EqRupture'].get('HazMap', False),
+                'uniform_hazard_spectra': scen_info['EqRupture'].get('UHS', False),
+                'poes': np.round(
+                    1
+                    - np.exp(
+                        -float(scen_info['EqRupture']['TimeSpan'])
+                        * 1.0
+                        / float(scen_info['EqRupture'].get('ReturnPeriod', 100))
+                    ),
+                    decimals=3,
+                ),
+            }
         else:
-            print('FetchOpenQuake: please specify Scenario[\'Generator\'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig.')
+            print(
+                "FetchOpenQuake: please specify Scenario['Generator'], options: OpenQuakeScenario, OpenQuakeEventBased, OpenQuakeClassicalPSHA, or OpenQuakeUserConfig."
+            )
             return 0
 
     # Write the ini
@@ -261,73 +390,141 @@ def openquake_config(site_info, scen_info, event_info, workDir):
         from importlib_metadata import version
     except:
         from importlib.metadata import version
-    if scen_info['EqRupture'].get('OQLocal',None):
+    if scen_info['EqRupture'].get('OQLocal', None):
         # using user-specific local OQ
         # first to validate the path
         if not os.path.isdir(scen_info['EqRupture'].get('OQLocal')):
-            print('FetchOpenQuake: Local OpenQuake instance {} not found.'.format(scen_info['EqRupture'].get('OQLocal')))
+            print(
+                'FetchOpenQuake: Local OpenQuake instance {} not found.'.format(
+                    scen_info['EqRupture'].get('OQLocal')
+                )
+            )
             return 0
         else:
             # getting version
             try:
                 oq_ver = version('openquake.engine')
                 if oq_ver:
-                    print('FetchOpenQuake: Removing previous installation of OpenQuake {}.'.format(oq_ver))
+                    print(
+                        'FetchOpenQuake: Removing previous installation of OpenQuake {}.'.format(
+                            oq_ver
+                        )
+                    )
                     sys.modules.pop('openquake')
-                    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "openquake.engine"])
+                    subprocess.check_call(
+                        [
+                            sys.executable,
+                            '-m',
+                            'pip',
+                            'uninstall',
+                            '-y',
+                            'openquake.engine',
+                        ]
+                    )
             except:
                 # no installed OQ python package
                 # do nothing
-                print('FetchOpenQuake: No previous installation of OpenQuake python package found.')
+                print(
+                    'FetchOpenQuake: No previous installation of OpenQuake python package found.'
+                )
             # load the local OQ
             try:
                 print('FetchOpenQuake: Setting up the user-specified local OQ.')
-                sys.path.insert(0,os.path.dirname(scen_info['EqRupture'].get('OQLocal')))
-                #owd = os.getcwd()
-                #os.chdir(os.path.dirname(scen_info['EqRupture'].get('OQLocal')))
+                sys.path.insert(
+                    0, os.path.dirname(scen_info['EqRupture'].get('OQLocal'))
+                )
+                # owd = os.getcwd()
+                # os.chdir(os.path.dirname(scen_info['EqRupture'].get('OQLocal')))
                 if 'openquake' in list(sys.modules.keys()):
                     sys.modules.pop('openquake')
                 from openquake import baselib
+
                 oq_ver_loaded = baselib.__version__
-                #sys.modules.pop('openquake')
-                #os.chdir(owd)
+                # sys.modules.pop('openquake')
+                # os.chdir(owd)
             except:
-                print('FetchOpenQuake: {} cannot be loaded.'.format(scen_info['EqRupture'].get('OQLocal')))
+                print(
+                    'FetchOpenQuake: {} cannot be loaded.'.format(
+                        scen_info['EqRupture'].get('OQLocal')
+                    )
+                )
 
     else:
         # using the offical released OQ
         try:
             oq_ver = version('openquake.engine')
-            if oq_ver != scen_info['EqRupture'].get('OQVersion',default_oq_version):
-                print('FetchOpenQuake: Required OpenQuake version is not found and being installed now.')
+            if oq_ver != scen_info['EqRupture'].get('OQVersion', default_oq_version):
+                print(
+                    'FetchOpenQuake: Required OpenQuake version is not found and being installed now.'
+                )
                 if oq_ver:
                     # pop the old version first
                     sys.modules.pop('openquake')
-                    subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "openquake.engine"])
-                
+                    subprocess.check_call(
+                        [
+                            sys.executable,
+                            '-m',
+                            'pip',
+                            'uninstall',
+                            '-y',
+                            'openquake.engine',
+                        ]
+                    )
+
                 # install the required version
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
+                subprocess.check_call(
+                    [
+                        sys.executable,
+                        '-m',
+                        'pip',
+                        'install',
+                        'openquake.engine=='
+                        + scen_info['EqRupture'].get(
+                            'OQVersion', default_oq_version
+                        ),
+                        '--user',
+                    ]
+                )
                 oq_ver_loaded = version('openquake.engine')
 
             else:
                 oq_ver_loaded = oq_ver
 
         except:
-            print('FetchOpenQuake: No OpenQuake is not found and being installed now.')
+            print(
+                'FetchOpenQuake: No OpenQuake is not found and being installed now.'
+            )
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "openquake.engine=="+scen_info['EqRupture'].get('OQVersion',default_oq_version), "--user"])
+                subprocess.check_call(
+                    [
+                        sys.executable,
+                        '-m',
+                        'pip',
+                        'install',
+                        'openquake.engine=='
+                        + scen_info['EqRupture'].get(
+                            'OQVersion', default_oq_version
+                        ),
+                        '--user',
+                    ]
+                )
                 oq_ver_loaded = version('openquake.engine')
             except:
-                print('FetchOpenQuake: Install of OpenQuake {} failed - please check the version.'.format(scen_info['EqRupture'].get('OQVersion',default_oq_version)))
+                print(
+                    'FetchOpenQuake: Install of OpenQuake {} failed - please check the version.'.format(
+                        scen_info['EqRupture'].get('OQVersion', default_oq_version)
+                    )
+                )
 
     print('FetchOpenQuake: OpenQuake configured.')
 
     # return
     return filename_ini, oq_ver_loaded, event_info
 
+
 # this function writes a openquake.cfg for setting global configurations
-# tested while not used so far but might be useful in future if moving to 
-# other os... 
+# tested while not used so far but might be useful in future if moving to
+# other os...
 """
 def get_cfg(job_ini):
     # writing an openquake.cfg
@@ -376,14 +573,17 @@ def get_cfg(job_ini):
     return oq_cfg
 """
 
-def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version, dir_info=None):
+
+def oq_run_classical_psha(
+    job_ini, exports='csv', oq_version=default_oq_version, dir_info=None
+):
     """
     Run a classical PSHA by OpenQuake
 
     :param job_ini:
         Path to configuration file/archive or
         dictionary of parameters with at least a key "calculation_mode"
-    """    
+    """
     # the run() method has been turned into private since v3.11
     # the get_last_calc_id() and get_datadir() have been moved to commonlib.logs since v3.12
     # the datastore has been moved to commonlib since v3.12
@@ -392,17 +592,18 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
     if vtag <= 10:
         try:
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
-            # reloading 
+            # reloading
             from openquake.commands.run import run
             from openquake.calculators.export.hazard import export_realizations
 
-            #run.main([job_ini], exports=exports)
-            # invoke/modify deeper openquake commands here to make it compatible with 
-            # the pylauncher on stampede2 for parallel runs...  
+            # run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with
+            # the pylauncher on stampede2 for parallel runs...
             from openquake.baselib import datastore, performance, general
             from openquake.server import dbserver
             from openquake.calculators import base
             from openquake.commonlib import readinput, logs
+
             dbserver.ensure_on()
             global calc_path
             loglevel = 'info'
@@ -433,11 +634,16 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
                     except IndexError:
                         raise SystemExit(
                             'There are %d old calculations, cannot '
-                            'retrieve the %s' % (len(calc_ids), hc_id))
+                            'retrieve the %s' % (len(calc_ids), hc_id)
+                        )
                 calc = base.calculators(oqparam, calc_id)
-                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb,
-                        exports=exports, hazard_calculation_id=hc_id,
-                        rlz_ids=())
+                calc.run(
+                    concurrent_tasks=concurrent_tasks,
+                    pdb=pdb,
+                    exports=exports,
+                    hazard_calculation_id=hc_id,
+                    rlz_ids=(),
+                )
 
             calc_id = datastore.get_last_calc_id()
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
@@ -449,17 +655,18 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
     elif vtag == 11:
         try:
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
-            # reloading 
+            # reloading
             from openquake.commands import run
             from openquake.calculators.export.hazard import export_realizations
 
-            #run.main([job_ini], exports=exports)
-            # invoke/modify deeper openquake commands here to make it compatible with 
-            # the pylauncher on stampede2 for parallel runs...  
+            # run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with
+            # the pylauncher on stampede2 for parallel runs...
             from openquake.baselib import datastore, performance, general
             from openquake.server import dbserver
             from openquake.calculators import base
             from openquake.commonlib import readinput, logs
+
             dbserver.ensure_on()
             global calc_path
             loglevel = 'info'
@@ -492,34 +699,36 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
                     except IndexError:
                         raise SystemExit(
                             'There are %d old calculations, cannot '
-                            'retrieve the %s' % (len(calc_ids), hc_id))
+                            'retrieve the %s' % (len(calc_ids), hc_id)
+                        )
                 oqparam = readinput.get_oqparam(job_ini, kw=params)
                 calc = base.calculators(oqparam, calc_id)
                 if reuse_input:  # enable caching
                     oqparam.cachedir = datastore.get_datadir()
-                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb,exports=exports)
-            
+                calc.run(concurrent_tasks=concurrent_tasks, pdb=pdb, exports=exports)
+
             calc_id = datastore.get_last_calc_id()
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
             dstore = datastore.read(path)
             export_realizations('realizations', dstore)
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
-            return 1                
+            return 1
     else:
         try:
             print('FetchOpenQuake: running Version {}.'.format(oq_version))
-            # reloading 
+            # reloading
             from openquake.commands import run
             from openquake.commonlib import logs, datastore
             from openquake.calculators.export.hazard import export_realizations
 
-            #run.main([job_ini], exports=exports)
-            # invoke/modify deeper openquake commands here to make it compatible with 
-            # the pylauncher on stampede2 for parallel runs...  
+            # run.main([job_ini], exports=exports)
+            # invoke/modify deeper openquake commands here to make it compatible with
+            # the pylauncher on stampede2 for parallel runs...
             from openquake.baselib import performance, general
             from openquake.server import dbserver
             from openquake.calculators import base
+
             dbserver.ensure_on()
             global calc_path
             loglevel = 'info'
@@ -529,7 +738,9 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             pdb = False
             for i in range(1000):
                 try:
-                    log = logs.init("job", job_ini, getattr(logging, loglevel.upper()))
+                    log = logs.init(
+                        'job', job_ini, getattr(logging, loglevel.upper())
+                    )
                 except:
                     time.sleep(0.01)
                     continue
@@ -538,7 +749,9 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
                     break
             log.params.update(params)
             base.BaseCalculator.gzip_inputs = lambda self: None
-            with log, performance.Monitor('total runtime', measuremem=True) as monitor:
+            with log, performance.Monitor(
+                'total runtime', measuremem=True
+            ) as monitor:
                 calc = base.calculators(log.get_oqparam(), log.calc_id)
                 if reuse_input:  # enable caching
                     calc.oqparam.cachedir = datastore.get_datadir()
@@ -554,7 +767,7 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             export_realizations('realizations', dstore)
         except:
             print('FetchOpenQuake: Classical PSHA failed.')
-            return 1 
+            return 1
 
     # h5 clear for stampede2 (this is somewhat inelegant...)
     if 'stampede2' in socket.gethostname():
@@ -563,7 +776,7 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             print('FetchOpenQuake.oq_run_classical_psha: h5clear completed')
         else:
             print('FetchOpenQuake.oq_run_classical_psha: h5clear failed')
-    
+
     # copy the calc file to output directory
     if dir_info:
         dir_output = dir_info['Output']
@@ -572,21 +785,20 @@ def oq_run_classical_psha(job_ini, exports='csv', oq_version=default_oq_version,
             print('FetchOpenQuake: calc hdf file saved.')
         except:
             print('FetchOpenQuake: failed to copy calc hdf file.')
-    
+
     return 0
 
 
 def oq_h5clear(hdf5_file):
-
-    #h5clear = os.path.join(os.path.dirname(os.path.abspath(__file__)),'lib/hdf5/bin/h5clear')
-    #print(h5clear)
+    # h5clear = os.path.join(os.path.dirname(os.path.abspath(__file__)),'lib/hdf5/bin/h5clear')
+    # print(h5clear)
     print(hdf5_file)
-    #subprocess.run(["chmod", "a+rx", h5clear])
-    subprocess.run(["chmod", "a+rx", hdf5_file])
-    tmp = subprocess.run(["h5clear", "-s", hdf5_file])
+    # subprocess.run(["chmod", "a+rx", h5clear])
+    subprocess.run(['chmod', 'a+rx', hdf5_file])
+    tmp = subprocess.run(['h5clear', '-s', hdf5_file])
     print(tmp)
     run_flag = tmp.returncode
-    return run_flag        
+    return run_flag
 
 
 def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
@@ -595,6 +807,7 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     """
     import glob
     import random
+
     # number of scenario
     num_scen = scen_info['Number']
     if num_scen > 1:
@@ -605,10 +818,10 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
     # directory of the UHS
     res_dir = dir_info['Output']
     # mean UHS
-    cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-mean_*.csv'))[0]
+    cur_uhs_file = glob.glob(os.path.join(res_dir, 'hazard_uhs-mean_*.csv'))[0]
     print(cur_uhs_file)
     # read csv
-    tmp = pd.read_csv(cur_uhs_file,skiprows=1)
+    tmp = pd.read_csv(cur_uhs_file, skiprows=1)
     # number of stations
     num_stn = len(tmp.index)
     # number of IMs
@@ -625,29 +838,39 @@ def oq_read_uhs_classical_psha(scen_info, event_info, dir_info):
         if num_rlz == 1:
             ln_psa[:, :, 0] = np.log(tmp.iloc[:, 2:])
         else:
-            num_r1 = np.min([len(glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))), num_rlz])
+            num_r1 = np.min(
+                [
+                    len(glob.glob(os.path.join(res_dir, 'hazard_uhs-rlz-*.csv'))),
+                    num_rlz,
+                ]
+            )
             for i in range(num_r1):
-                cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))[i]
-                tmp = pd.read_csv(cur_uhs_file,skiprows=1)
+                cur_uhs_file = glob.glob(
+                    os.path.join(res_dir, 'hazard_uhs-rlz-*.csv')
+                )[i]
+                tmp = pd.read_csv(cur_uhs_file, skiprows=1)
                 ln_psa[:, :, i] = np.log(tmp.iloc[:, 2:])
             if num_rlz > num_r1:
                 # randomly resampling available spectra
-                for i in range(num_rlz-num_r1):
+                for i in range(num_rlz - num_r1):
                     rnd_tag = random.randrange(num_r1)
                     print(int(rnd_tag))
-                    cur_uhs_file = glob.glob(os.path.join(res_dir,'hazard_uhs-rlz-*.csv'))[int(rnd_tag)]
-                    tmp = pd.read_csv(cur_uhs_file,skiprows=1)
+                    cur_uhs_file = glob.glob(
+                        os.path.join(res_dir, 'hazard_uhs-rlz-*.csv')
+                    )[int(rnd_tag)]
+                    tmp = pd.read_csv(cur_uhs_file, skiprows=1)
                     ln_psa[:, :, i] = np.log(tmp.iloc[:, 2:])
         ln_psa_mr.append(ln_psa)
-        mag_maf.append([0.0,float(list_IMs[0].split('~')[0]),0.0])
-    
+        mag_maf.append([0.0, float(list_IMs[0].split('~')[0]), 0.0])
+
     # return
     return ln_psa_mr, mag_maf, im_list
-   
+
 
 class OpenQuakeHazardCalc:
-
-    def __init__(self, job_ini, event_info, oq_version, dir_info=None, no_distribute=False):
+    def __init__(
+        self, job_ini, event_info, oq_version, dir_info=None, no_distribute=False
+    ):
         """
         Initialize a calculation (reinvented from openquake.engine.engine)
 
@@ -659,10 +882,18 @@ class OpenQuakeHazardCalc:
         self.vtag = int(oq_version.split('.')[1])
         self.dir_info = dir_info
 
-        from openquake.baselib import config, performance, general, zeromq, hdf5, parallel
+        from openquake.baselib import (
+            config,
+            performance,
+            general,
+            zeromq,
+            hdf5,
+            parallel,
+        )
         from openquake.hazardlib import const, calc, gsim
         from openquake import commonlib
         from openquake.commonlib import readinput, logictree, logs
+
         if self.vtag >= 12:
             from openquake.commonlib import datastore
         else:
@@ -681,29 +912,34 @@ class OpenQuakeHazardCalc:
         if not os.path.exists(datadir):
             os.makedirs(datadir)
 
-        #dbserver.ensure_on()
+        # dbserver.ensure_on()
         if dbserver.get_status() == 'not-running':
             if config.dbserver.multi_user:
-                sys.exit('Please start the DbServer: '
-                        'see the documentation for details')
+                sys.exit(
+                    'Please start the DbServer: ' 'see the documentation for details'
+                )
             # otherwise start the DbServer automatically; NB: I tried to use
             # multiprocessing.Process(target=run_server).start() and apparently
             # it works, but then run-demos.sh hangs after the end of the first
             # calculation, but only if the DbServer is started by oq engine (!?)
             # Here is a trick to activate OpenQuake's dbserver
             # We first cd to the openquake directory and invoke subprocess to open/hold on dbserver
-            # Then, we cd back to the original working directory 
+            # Then, we cd back to the original working directory
             owd = os.getcwd()
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
-            self.prc = subprocess.Popen([sys.executable, '-m', 'openquake.commands', 'dbserver', 'start'])
+            self.prc = subprocess.Popen(
+                [sys.executable, '-m', 'openquake.commands', 'dbserver', 'start']
+            )
             os.chdir(owd)
 
             # wait for the dbserver to start
             waiting_seconds = 30
             while dbserver.get_status() == 'not-running':
                 if waiting_seconds == 0:
-                    sys.exit('The DbServer cannot be started after 30 seconds. '
-                            'Please check the configuration')
+                    sys.exit(
+                        'The DbServer cannot be started after 30 seconds. '
+                        'Please check the configuration'
+                    )
                 time.sleep(1)
                 waiting_seconds -= 1
         else:
@@ -718,12 +954,12 @@ class OpenQuakeHazardCalc:
         self.event_info = event_info
 
         # Create a job
-        #self.job = logs.init("job", job_ini, logging.INFO, None, None, None)
+        # self.job = logs.init("job", job_ini, logging.INFO, None, None, None)
         if self.vtag >= 11:
             dic = readinput.get_params(job_ini)
         else:
             dic = readinput.get_params([job_ini])
-        #dic['hazard_calculation_id'] = self.job.calc_id
+        # dic['hazard_calculation_id'] = self.job.calc_id
 
         if self.vtag >= 12:
             # Create the job log
@@ -750,6 +986,7 @@ class OpenQuakeHazardCalc:
 
         from openquake.calculators import base, getters
         from openquake.baselib import config, performance, zeromq
+
         if self.vtag >= 11:
             from openquake.baselib import version
         else:
@@ -761,34 +998,42 @@ class OpenQuakeHazardCalc:
                 # Pre-execute setups
                 self.calculator.pre_execute()
 
-                #self.calculator.datastore.swmr_on()
+                # self.calculator.datastore.swmr_on()
                 oq = self.calculator.oqparam
                 dstore = self.calculator.datastore
                 self.calculator.set_param()
                 self.calculator.offset = 0
 
                 # Source model
-                #print('self.__dict__ = ')
-                #print(self.calculator.__dict__)
+                # print('self.__dict__ = ')
+                # print(self.calculator.__dict__)
                 if oq.hazard_calculation_id:  # from ruptures
                     dstore.parent = self.calculator.datastore.read(
-                        oq.hazard_calculation_id)
+                        oq.hazard_calculation_id
+                    )
                 elif hasattr(self.calculator, 'csm'):  # from sources
                     self.calculator_build_events_from_sources()
-                    #self.calculator.build_events_from_sources()
-                    if (oq.ground_motion_fields is False and oq.hazard_curves_from_gmfs is False):
+                    # self.calculator.build_events_from_sources()
+                    if (
+                        oq.ground_motion_fields is False
+                        and oq.hazard_curves_from_gmfs is False
+                    ):
                         return {}
                 elif 'rupture_model' not in oq.inputs:
                     logging.warning(
                         'There is no rupture_model, the calculator will just '
-                        'import data without performing any calculation')
+                        'import data without performing any calculation'
+                    )
                     fake = logictree.FullLogicTree.fake()
                     dstore['full_lt'] = fake  # needed to expose the outputs
-                    dstore['weights'] = [1.]
+                    dstore['weights'] = [1.0]
                     return {}
                 else:  # scenario
                     self.calculator._read_scenario_ruptures()
-                    if (oq.ground_motion_fields is False and oq.hazard_curves_from_gmfs is False):
+                    if (
+                        oq.ground_motion_fields is False
+                        and oq.hazard_curves_from_gmfs is False
+                    ):
                         return {}
 
                 # Intensity measure models
@@ -797,18 +1042,28 @@ class OpenQuakeHazardCalc:
                         imts = oq.get_primary_imtls()
                         nrups = len(dstore['ruptures'])
                         base.create_gmf_data(dstore, imts, oq.get_sec_imts())
-                        dstore.create_dset('gmf_data/sigma_epsilon',
-                                        getters.sig_eps_dt(oq.imtls))
-                        dstore.create_dset('gmf_data/time_by_rup',
-                                        getters.time_dt, (nrups,), fillvalue=None)
+                        dstore.create_dset(
+                            'gmf_data/sigma_epsilon', getters.sig_eps_dt(oq.imtls)
+                        )
+                        dstore.create_dset(
+                            'gmf_data/time_by_rup',
+                            getters.time_dt,
+                            (nrups,),
+                            fillvalue=None,
+                        )
                     elif self.vtag == 11:
                         imts = oq.get_primary_imtls()
                         nrups = len(dstore['ruptures'])
                         base.create_gmf_data(dstore, len(imts), oq.get_sec_imts())
-                        dstore.create_dset('gmf_data/sigma_epsilon',
-                                        getters.sig_eps_dt(oq.imtls))
-                        dstore.create_dset('gmf_data/time_by_rup',
-                                        getters.time_dt, (nrups,), fillvalue=None)
+                        dstore.create_dset(
+                            'gmf_data/sigma_epsilon', getters.sig_eps_dt(oq.imtls)
+                        )
+                        dstore.create_dset(
+                            'gmf_data/time_by_rup',
+                            getters.time_dt,
+                            (nrups,),
+                            fillvalue=None,
+                        )
                     else:
                         pass
 
@@ -816,25 +1071,35 @@ class OpenQuakeHazardCalc:
                 nr = len(dstore['ruptures'])
                 logging.info('Reading {:_d} ruptures'.format(nr))
                 if self.vtag >= 12:
-                    rgetters = getters.get_rupture_getters(dstore, oq.concurrent_tasks * 1.25,
-                                                        srcfilter=self.calculator.srcfilter)
+                    rgetters = getters.get_rupture_getters(
+                        dstore,
+                        oq.concurrent_tasks * 1.25,
+                        srcfilter=self.calculator.srcfilter,
+                    )
                 elif self.vtag == 11:
-                    rgetters = getters.gen_rupture_getters(dstore, oq.concurrent_tasks)
+                    rgetters = getters.gen_rupture_getters(
+                        dstore, oq.concurrent_tasks
+                    )
                 else:
-                    rgetters = getters.gen_rupture_getters(dstore, self.calculator.srcfilter, oq.concurrent_tasks)
+                    rgetters = getters.gen_rupture_getters(
+                        dstore, self.calculator.srcfilter, oq.concurrent_tasks
+                    )
 
-                
                 args = [(rgetter, self.calculator.param) for rgetter in rgetters]
                 mon = performance.Monitor()
                 mon.version = version
                 mon.config = config
-                rcvr = 'tcp://%s:%s' % (config.dbserver.listen,
-                                        config.dbserver.receiver_ports)
+                rcvr = 'tcp://%s:%s' % (
+                    config.dbserver.listen,
+                    config.dbserver.receiver_ports,
+                )
                 skt = zeromq.Socket(rcvr, zeromq.zmq.PULL, 'bind').__enter__()
                 mon.backurl = 'tcp://%s:%s' % (config.dbserver.host, skt.port)
                 mon = mon.new(
-                    operation='total ' + self.calculator.core_task.__func__.__name__, measuremem=True)
-                mon.weight = getattr(args[0], 'weight', 1.)  # used in task_info
+                    operation='total ' + self.calculator.core_task.__func__.__name__,
+                    measuremem=True,
+                )
+                mon.weight = getattr(args[0], 'weight', 1.0)  # used in task_info
                 mon.task_no = 1  # initialize the task number
                 args += (mon,)
 
@@ -853,13 +1118,14 @@ class OpenQuakeHazardCalc:
 
         # Define the GmfGetter
 
-        #for args_tag in range(len(self.args)-1):
-            # Looping over all source models (Note: the last attribute in self.args is a monitor - so skipping it)
-        
+        # for args_tag in range(len(self.args)-1):
+        # Looping over all source models (Note: the last attribute in self.args is a monitor - so skipping it)
+
         from openquake.calculators import getters
         from openquake.baselib import general
         from openquake.hazardlib import const, calc, gsim
         from openquake.commands import dbserver as cdbs
+
         if self.vtag >= 12:
             from openquake.hazardlib.const import StdDev
         if self.vtag >= 12:
@@ -867,28 +1133,32 @@ class OpenQuakeHazardCalc:
         else:
             from openquake.baselib import datastore
 
-        cur_getter = getters.GmfGetter(self.args[0][0], calc.filters.SourceFilter(
-            self.dstore['sitecol'], self.dstore['oqparam'].maximum_distance), 
-            self.calculator.param['oqparam'], self.calculator.param['amplifier'], 
-            self.calculator.param['sec_perils'])
+        cur_getter = getters.GmfGetter(
+            self.args[0][0],
+            calc.filters.SourceFilter(
+                self.dstore['sitecol'], self.dstore['oqparam'].maximum_distance
+            ),
+            self.calculator.param['oqparam'],
+            self.calculator.param['amplifier'],
+            self.calculator.param['sec_perils'],
+        )
 
         # Evaluate each computer
         print('FetchOpenQuake: Evaluting ground motion models.')
         for computer in cur_getter.gen_computers(self.mon):
             # Looping over rupture(s) in the current realization
             sids = computer.sids
-            #print('eval_calc: site ID sids = ')
-            #print(sids)
-            eids_by_rlz = computer.ebrupture.get_eids_by_rlz(
-                cur_getter.rlzs_by_gsim)
+            # print('eval_calc: site ID sids = ')
+            # print(sids)
+            eids_by_rlz = computer.ebrupture.get_eids_by_rlz(cur_getter.rlzs_by_gsim)
             mag = computer.ebrupture.rupture.mag
             im_list = []
             data = general.AccumDict(accum=[])
             cur_T = self.event_info['IntensityMeasure'].get('Periods', None)
             for cur_gs, rlzs in cur_getter.rlzs_by_gsim.items():
                 # Looping over GMPE(s)
-                #print('eval_calc: cur_gs = ')
-                #print(cur_gs)
+                # print('eval_calc: cur_gs = ')
+                # print(cur_gs)
                 num_events = sum(len(eids_by_rlz[rlz]) for rlz in rlzs)
                 if num_events == 0:  # it may happen
                     continue
@@ -900,10 +1170,12 @@ class OpenQuakeHazardCalc:
                 tmpstdinter = []
                 tmpstdintra = []
                 if self.vtag >= 12:
-                    mean_stds_all = computer.cmaker.get_mean_stds([computer.ctx], StdDev.EVENT)[0]
-                for imti, imt in enumerate(computer.imts): 
+                    mean_stds_all = computer.cmaker.get_mean_stds(
+                        [computer.ctx], StdDev.EVENT
+                    )[0]
+                for imti, imt in enumerate(computer.imts):
                     # Looping over IM(s)
-                    #print('eval_calc: imt = ', imt)
+                    # print('eval_calc: imt = ', imt)
                     if str(imt) in ['PGA', 'PGV', 'PGD']:
                         cur_T = [0.0]
                         im_list.append(str(imt))
@@ -925,22 +1197,34 @@ class OpenQuakeHazardCalc:
                                 # no standard deviation is available
                                 # for truncation_level = 0 there is only mean, no stds
                                 if computer.correlation_model:
-                                    raise ValueError('truncation_level=0 requires '
-                                                    'no correlation model')
+                                    raise ValueError(
+                                        'truncation_level=0 requires '
+                                        'no correlation model'
+                                    )
                                 mean = mean_stds[0]
                                 stddev_intra = 0
                                 stddev_inter = 0
                                 stddev_total = 0
                                 if imti == 0:
                                     tmpMean = mean
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
                                     tmpstdtot = stddev_total
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=0)
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
-                                    tmpstdtot = np.concatenate((tmpstdtot, stddev_total), axis=0)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
+                                    tmpstdtot = np.concatenate(
+                                        (tmpstdtot, stddev_total), axis=0
+                                    )
                             elif num_stds == 2:
                                 # If the GSIM provides only total standard deviation, we need
                                 # to compute mean and total standard deviation at the sites
@@ -950,148 +1234,274 @@ class OpenQuakeHazardCalc:
 
                                 if self.correlation_model:
                                     raise CorrelationButNoInterIntraStdDevs(
-                                        self.correlation_model, gsim)
+                                        self.correlation_model, gsim
+                                    )
 
                                 mean, stddev_total = mean_stds
-                                stddev_total = stddev_total.reshape(stddev_total.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                stddev_total = stddev_total.reshape(
+                                    stddev_total.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
                                 stddev_inter = stddev_total
                                 stddev_intra = 0
                                 if imti == 0:
                                     tmpMean = mean
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
                                     tmpstdtot = stddev_total
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=0)
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
-                                    tmpstdtot = np.concatenate((tmpstdtot, stddev_total), axis=0)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
+                                    tmpstdtot = np.concatenate(
+                                        (tmpstdtot, stddev_total), axis=0
+                                    )
                             else:
                                 mean, stddev_inter, stddev_intra = mean_stds
-                                stddev_intra = stddev_intra.reshape(stddev_intra.shape + (1, ))
-                                stddev_inter = stddev_inter.reshape(stddev_inter.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                stddev_intra = stddev_intra.reshape(
+                                    stddev_intra.shape + (1,)
+                                )
+                                stddev_inter = stddev_inter.reshape(
+                                    stddev_inter.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
                                 if imti == 0:
                                     tmpMean = mean
                                     tmpstdinter = stddev_inter
                                     tmpstdintra = stddev_intra
-                                    tmpstdtot = np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)
+                                    tmpstdtot = np.sqrt(
+                                        stddev_inter * stddev_inter
+                                        + stddev_intra * stddev_intra
+                                    )
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=1)
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
-                                    tmpstdtot = np.concatenate((tmpstdtot,np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)), axis=1)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
+                                    tmpstdtot = np.concatenate(
+                                        (
+                                            tmpstdtot,
+                                            np.sqrt(
+                                                stddev_inter * stddev_inter
+                                                + stddev_intra * stddev_intra
+                                            ),
+                                        ),
+                                        axis=1,
+                                    )
 
                         elif self.vtag == 11:
                             # v11
-                            dctx = computer.dctx.roundup(
-                                cur_gs.minimum_distance)
+                            dctx = computer.dctx.roundup(cur_gs.minimum_distance)
                             if computer.distribution is None:
                                 if computer.correlation_model:
-                                    raise ValueError('truncation_level=0 requires '
-                                                    'no correlation model')
+                                    raise ValueError(
+                                        'truncation_level=0 requires '
+                                        'no correlation model'
+                                    )
                                 mean, _stddevs = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt, stddev_types=[])
+                                    computer.sctx,
+                                    computer.rctx,
+                                    dctx,
+                                    imt,
+                                    stddev_types=[],
+                                )
                             num_sids = len(computer.sids)
-                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {const.StdDev.TOTAL}:
+                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {
+                                const.StdDev.TOTAL
+                            }:
                                 # If the GSIM provides only total standard deviation, we need
                                 # to compute mean and total standard deviation at the sites
                                 # of interest.
                                 # In this case, we also assume no correlation model is used.
                                 if computer.correlation_model:
                                     raise CorrelationButNoInterIntraStdDevs(
-                                        computer.correlation_model, cur_gs)
+                                        computer.correlation_model, cur_gs
+                                    )
 
                                 mean, [stddev_total] = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt, [const.StdDev.TOTAL])
+                                    computer.sctx,
+                                    computer.rctx,
+                                    dctx,
+                                    imt,
+                                    [const.StdDev.TOTAL],
+                                )
                                 stddev_total = stddev_total.reshape(
-                                    stddev_total.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                    stddev_total.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
                                 if imti == 0:
                                     tmpMean = mean
                                     tmpstdtot = stddev_total
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=0)
-                                    tmpstdtot = np.concatenate((tmpstdtot, stddev_total), axis=0)
+                                    tmpstdtot = np.concatenate(
+                                        (tmpstdtot, stddev_total), axis=0
+                                    )
                             else:
-                                mean, [stddev_inter, stddev_intra] = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt,
-                                    [const.StdDev.INTER_EVENT, const.StdDev.INTRA_EVENT])
+                                mean, [stddev_inter, stddev_intra] = (
+                                    cur_gs.get_mean_and_stddevs(
+                                        computer.sctx,
+                                        computer.rctx,
+                                        dctx,
+                                        imt,
+                                        [
+                                            const.StdDev.INTER_EVENT,
+                                            const.StdDev.INTRA_EVENT,
+                                        ],
+                                    )
+                                )
                                 stddev_intra = stddev_intra.reshape(
-                                    stddev_intra.shape + (1, ))
+                                    stddev_intra.shape + (1,)
+                                )
                                 stddev_inter = stddev_inter.reshape(
-                                    stddev_inter.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                    stddev_inter.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
 
                                 if imti == 0:
                                     tmpMean = mean
                                     tmpstdinter = stddev_inter
                                     tmpstdintra = stddev_intra
-                                    tmpstdtot = np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)
+                                    tmpstdtot = np.sqrt(
+                                        stddev_inter * stddev_inter
+                                        + stddev_intra * stddev_intra
+                                    )
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=1)
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
-                                    tmpstdtot = np.concatenate((tmpstdtot,np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)), axis=1)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
+                                    tmpstdtot = np.concatenate(
+                                        (
+                                            tmpstdtot,
+                                            np.sqrt(
+                                                stddev_inter * stddev_inter
+                                                + stddev_intra * stddev_intra
+                                            ),
+                                        ),
+                                        axis=1,
+                                    )
 
                         else:
                             # v10
-                            dctx = computer.dctx.roundup(
-                                cur_gs.minimum_distance)
+                            dctx = computer.dctx.roundup(cur_gs.minimum_distance)
                             if computer.truncation_level == 0:
                                 if computer.correlation_model:
-                                    raise ValueError('truncation_level=0 requires '
-                                                    'no correlation model')
+                                    raise ValueError(
+                                        'truncation_level=0 requires '
+                                        'no correlation model'
+                                    )
                                 mean, _stddevs = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt, stddev_types=[])
+                                    computer.sctx,
+                                    computer.rctx,
+                                    dctx,
+                                    imt,
+                                    stddev_types=[],
+                                )
                             num_sids = len(computer.sids)
-                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {const.StdDev.TOTAL}:
+                            if cur_gs.DEFINED_FOR_STANDARD_DEVIATION_TYPES == {
+                                const.StdDev.TOTAL
+                            }:
                                 # If the GSIM provides only total standard deviation, we need
                                 # to compute mean and total standard deviation at the sites
                                 # of interest.
                                 # In this case, we also assume no correlation model is used.
                                 if computer.correlation_model:
                                     raise CorrelationButNoInterIntraStdDevs(
-                                        computer.correlation_model, cur_gs)
+                                        computer.correlation_model, cur_gs
+                                    )
 
                                 mean, [stddev_total] = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt, [const.StdDev.TOTAL])
+                                    computer.sctx,
+                                    computer.rctx,
+                                    dctx,
+                                    imt,
+                                    [const.StdDev.TOTAL],
+                                )
                                 stddev_total = stddev_total.reshape(
-                                    stddev_total.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                    stddev_total.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
                                 if imti == 0:
                                     tmpMean = mean
                                     tmpstdtot = stddev_total
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=0)
-                                    tmpstdtot = np.concatenate((tmpstdtot, stddev_total), axis=0)
+                                    tmpstdtot = np.concatenate(
+                                        (tmpstdtot, stddev_total), axis=0
+                                    )
                             else:
-                                mean, [stddev_inter, stddev_intra] = cur_gs.get_mean_and_stddevs(
-                                    computer.sctx, computer.rctx, dctx, imt,
-                                    [const.StdDev.INTER_EVENT, const.StdDev.INTRA_EVENT])
+                                mean, [stddev_inter, stddev_intra] = (
+                                    cur_gs.get_mean_and_stddevs(
+                                        computer.sctx,
+                                        computer.rctx,
+                                        dctx,
+                                        imt,
+                                        [
+                                            const.StdDev.INTER_EVENT,
+                                            const.StdDev.INTRA_EVENT,
+                                        ],
+                                    )
+                                )
                                 stddev_intra = stddev_intra.reshape(
-                                    stddev_intra.shape + (1, ))
+                                    stddev_intra.shape + (1,)
+                                )
                                 stddev_inter = stddev_inter.reshape(
-                                    stddev_inter.shape + (1, ))
-                                mean = mean.reshape(mean.shape + (1, ))
+                                    stddev_inter.shape + (1,)
+                                )
+                                mean = mean.reshape(mean.shape + (1,))
 
                                 if imti == 0:
                                     tmpMean = mean
                                     tmpstdinter = stddev_inter
                                     tmpstdintra = stddev_intra
-                                    tmpstdtot = np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)
+                                    tmpstdtot = np.sqrt(
+                                        stddev_inter * stddev_inter
+                                        + stddev_intra * stddev_intra
+                                    )
                                 else:
                                     tmpMean = np.concatenate((tmpMean, mean), axis=1)
-                                    tmpstdinter = np.concatenate((tmpstdinter, stddev_inter), axis=1)
-                                    tmpstdintra = np.concatenate((tmpstdintra, stddev_intra), axis=1)
-                                    tmpstdtot = np.concatenate((tmpstdtot,np.sqrt(stddev_inter * stddev_inter + stddev_intra * stddev_intra)), axis=1)
+                                    tmpstdinter = np.concatenate(
+                                        (tmpstdinter, stddev_inter), axis=1
+                                    )
+                                    tmpstdintra = np.concatenate(
+                                        (tmpstdintra, stddev_intra), axis=1
+                                    )
+                                    tmpstdtot = np.concatenate(
+                                        (
+                                            tmpstdtot,
+                                            np.sqrt(
+                                                stddev_inter * stddev_inter
+                                                + stddev_intra * stddev_intra
+                                            ),
+                                        ),
+                                        axis=1,
+                                    )
 
                     except Exception as exc:
                         raise RuntimeError(
-                            '(%s, %s, source_id=%r) %s: %s' %
-                            (gs, imt, computer.source_id.decode('utf8'),
-                            exc.__class__.__name__, exc)
+                            '(%s, %s, source_id=%r) %s: %s'
+                            % (
+                                gs,
+                                imt,
+                                computer.source_id.decode('utf8'),
+                                exc.__class__.__name__,
+                                exc,
+                            )
                         ).with_traceback(exc.__traceback__)
 
                 # initialize
@@ -1101,25 +1511,45 @@ class OpenQuakeHazardCalc:
                 for k in range(tmpMean.shape[0]):
                     imResult = {}
                     if len(tmpMean):
-                        imResult.update({'Mean': [float(x) for x in tmpMean[k].tolist()]})
+                        imResult.update(
+                            {'Mean': [float(x) for x in tmpMean[k].tolist()]}
+                        )
                     if len(tmpstdtot):
-                        imResult.update({'TotalStdDev':  [float(x) for x in tmpstdtot[k].tolist()]})
+                        imResult.update(
+                            {
+                                'TotalStdDev': [
+                                    float(x) for x in tmpstdtot[k].tolist()
+                                ]
+                            }
+                        )
                     if len(tmpstdinter):
-                        imResult.update({'InterEvStdDev':  [float(x) for x in tmpstdinter[k].tolist()]})
+                        imResult.update(
+                            {
+                                'InterEvStdDev': [
+                                    float(x) for x in tmpstdinter[k].tolist()
+                                ]
+                            }
+                        )
                     if len(tmpstdintra):
-                        imResult.update({'IntraEvStdDev':  [float(x) for x in tmpstdintra[k].tolist()]})
+                        imResult.update(
+                            {
+                                'IntraEvStdDev': [
+                                    float(x) for x in tmpstdintra[k].tolist()
+                                ]
+                            }
+                        )
                     gm_collector.append({imTag: imResult})
-                #print(gm_collector)
-        
+                # print(gm_collector)
+
         # close datastore instance
         self.calculator.datastore.close()
-        
+
         # stop dbserver
         if self.vtag >= 11:
             cdbs.main('stop')
         else:
             cdbs.dbserver('stop')
-        
+
         # terminate the subprocess
         if self.prc:
             self.prc.kill()
@@ -1129,7 +1559,9 @@ class OpenQuakeHazardCalc:
             calc_id = datastore.get_last_calc_id()
             path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % calc_id)
         else:
-            path = os.path.join(datastore.get_datadir(), 'calc_%d.hdf5' % self.calc_id)
+            path = os.path.join(
+                datastore.get_datadir(), 'calc_%d.hdf5' % self.calc_id
+            )
 
         if self.dir_info:
             dir_output = self.dir_info['Output']
@@ -1140,11 +1572,13 @@ class OpenQuakeHazardCalc:
                 print('FetchOpenQuake: failed to copy calc hdf file.')
 
         # Final results
-        res = {'Magnitude': mag,
-               'Periods': cur_T,
-               'IM': im_list,
-               'GroundMotions': gm_collector}
-        
+        res = {
+            'Magnitude': mag,
+            'Periods': cur_T,
+            'IM': im_list,
+            'GroundMotions': gm_collector,
+        }
+
         # return
         return res
 
@@ -1162,7 +1596,8 @@ class OpenQuakeHazardCalc:
             src.nsites = 1  # avoid 0 weight
             src.num_ruptures = src.count_ruptures()
         maxweight = sum(sg.weight for sg in self.calculator.csm.src_groups) / (
-            self.calculator.oqparam.concurrent_tasks or 1)
+            self.calculator.oqparam.concurrent_tasks or 1
+        )
         print('FetchOpenQuake: weights = ')
         print([sg.weight for sg in self.calculator.csm.src_groups])
         print('FetchOpenQuake: maxweight = ')
@@ -1188,9 +1623,11 @@ class OpenQuakeHazardCalc:
             for src_group in sg.split(maxweight):
                 allargs.append((src_group, srcfilter, par))
 
-        smap = []        
+        smap = []
         for curargs in allargs:
-            smap.append(calc.stochastic.sample_ruptures(curargs[0], curargs[1], curargs[2]))
+            smap.append(
+                calc.stochastic.sample_ruptures(curargs[0], curargs[1], curargs[2])
+            )
 
         print('smap = ')
         print(smap)
@@ -1213,14 +1650,17 @@ class OpenQuakeHazardCalc:
             with mon:
                 n = len(rup_array)
                 rup_array['id'] = np.arange(
-                    self.calculator.nruptures, self.calculator.nruptures + n)
+                    self.calculator.nruptures, self.calculator.nruptures + n
+                )
                 self.calculator.nruptures += n
                 hdf5.extend(self.calculator.datastore['ruptures'], rup_array)
                 hdf5.extend(self.calculator.datastore['rupgeoms'], rup_array.geom)
 
         if len(self.calculator.datastore['ruptures']) == 0:
-            raise RuntimeError('No ruptures were generated, perhaps the '
-                               'investigation time is too short')
+            raise RuntimeError(
+                'No ruptures were generated, perhaps the '
+                'investigation time is too short'
+            )
 
         # must be called before storing the events
         self.calculator.store_rlz_info(eff_ruptures)  # store full_lt
@@ -1229,8 +1669,10 @@ class OpenQuakeHazardCalc:
         print('self.calculator.datastore.getitem(ruptures)')
         print(self.calculator.datastore.getitem('ruptures'))
         with self.calculator.monitor('saving ruptures and events'):
-            imp.import_rups_events(self.calculator.datastore.getitem('ruptures')[()], getters.get_rupture_getters)
-
+            imp.import_rups_events(
+                self.calculator.datastore.getitem('ruptures')[()],
+                getters.get_rupture_getters,
+            )
 
 
 class CorrelationButNoInterIntraStdDevs(Exception):
@@ -1239,12 +1681,14 @@ class CorrelationButNoInterIntraStdDevs(Exception):
         self.gsim = gsim
 
     def __str__(self):
-        return '''\
+        return """\
         You cannot use the correlation model %s with the GSIM %s, \
         that defines only the total standard deviation. If you want to use a \
         correlation model you have to select a GMPE that provides the inter and \
-        intra event standard deviations.''' % (
-            self.corr.__class__.__name__, self.gsim.__class__.__name__)
+        intra event standard deviations.""" % (
+            self.corr.__class__.__name__,
+            self.gsim.__class__.__name__,
+        )
 
 
 def to_imt_unit_values(vals, imt):
@@ -1263,29 +1707,44 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
     from openquake.hazardlib.geo.mesh import Mesh, surface_to_arrays
     from openquake.commonlib import readinput
     import json
-    in_dir = os.path.join(work_dir,'Input')
-    outfile = os.path.join(work_dir,'Output','RupFile.geojson')
-    erf_data = {"type": "FeatureCollection"}
-    oq = readinput.get_oqparam(dict(
-                    calculation_mode='classical',
-                    inputs = {
-                    "site_model":[siteFile]},
-                    intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}", #place holder for initiating oqparam. Not used in ERF
-                    investigation_time=str(scenario_info['EqRupture'].get('investigation_time', '50.0')),
-                    gsim='AbrahamsonEtAl2014', #place holder for initiating oqparam, not used in ERF
-                    truncation_level='99.0', # place holder for initiating oqparam. not used in ERF
-                    maximum_distance=str(scenario_info['EqRupture'].get('maximum_distance', '2000')),
-                    width_of_mfd_bin = str(scenario_info['EqRupture'].get('width_of_mfd_bin', '1.0')),
-                    area_source_discretization=str(scenario_info['EqRupture'].get('area_source_discretization', '10'))
-                    ))
+
+    in_dir = os.path.join(work_dir, 'Input')
+    outfile = os.path.join(work_dir, 'Output', 'RupFile.geojson')
+    erf_data = {'type': 'FeatureCollection'}
+    oq = readinput.get_oqparam(
+        dict(
+            calculation_mode='classical',
+            inputs={'site_model': [siteFile]},
+            intensity_measure_types_and_levels="{'PGA': [0.1], 'SA(0.1)': [0.1]}",  # place holder for initiating oqparam. Not used in ERF
+            investigation_time=str(
+                scenario_info['EqRupture'].get('investigation_time', '50.0')
+            ),
+            gsim='AbrahamsonEtAl2014',  # place holder for initiating oqparam, not used in ERF
+            truncation_level='99.0',  # place holder for initiating oqparam. not used in ERF
+            maximum_distance=str(
+                scenario_info['EqRupture'].get('maximum_distance', '2000')
+            ),
+            width_of_mfd_bin=str(
+                scenario_info['EqRupture'].get('width_of_mfd_bin', '1.0')
+            ),
+            area_source_discretization=str(
+                scenario_info['EqRupture'].get('area_source_discretization', '10')
+            ),
+        )
+    )
     rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
-    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']    
-    [src_nrml] = nrml.read(os.path.join(in_dir, scenario_info['EqRupture']['sourceFile']))
+    rupture_mesh_spacing = scenario_info['EqRupture']['rupture_mesh_spacing']
+    [src_nrml] = nrml.read(
+        os.path.join(in_dir, scenario_info['EqRupture']['sourceFile'])
+    )
     conv = sourceconverter.SourceConverter(
-    scenario_info['EqRupture']['investigation_time'],
-    rupture_mesh_spacing,
-    width_of_mfd_bin=scenario_info['EqRupture']['width_of_mfd_bin'],
-    area_source_discretization=scenario_info['EqRupture']['area_source_discretization'])
+        scenario_info['EqRupture']['investigation_time'],
+        rupture_mesh_spacing,
+        width_of_mfd_bin=scenario_info['EqRupture']['width_of_mfd_bin'],
+        area_source_discretization=scenario_info['EqRupture'][
+            'area_source_discretization'
+        ],
+    )
     src_raw = conv.convert_node(src_nrml)
     sources = []
     sources_dist = []
@@ -1298,13 +1757,24 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
     for i in range(len(src_nrml)):
         subnode = src_nrml[i]
         subSrc = src_raw[i]
-        tag = subnode.tag.rsplit('}')[1] if subnode.tag.startswith('{') else subnode.tag
-        if tag == "sourceGroup":
+        tag = (
+            subnode.tag.rsplit('}')[1]
+            if subnode.tag.startswith('{')
+            else subnode.tag
+        )
+        if tag == 'sourceGroup':
             for j in range(len(subnode)):
                 subsubnode = subnode[j]
                 subsubSrc = subSrc[j]
-                subtag = subsubnode.tag.rsplit('}')[1] if subsubnode.tag.startswith('{') else subsubnode.tag
-                if subtag.endswith('Source') and srcfilter.get_close_sites(subsubSrc) is not None:
+                subtag = (
+                    subsubnode.tag.rsplit('}')[1]
+                    if subsubnode.tag.startswith('{')
+                    else subsubnode.tag
+                )
+                if (
+                    subtag.endswith('Source')
+                    and srcfilter.get_close_sites(subsubSrc) is not None
+                ):
                     subsubSrc.id = id
                     sources_id.append(id)
                     id += 1
@@ -1312,8 +1782,10 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
                     sourceMesh = subsubSrc.polygon.discretize(rupture_mesh_spacing)
                     sourceSurface = BaseSurface(sourceMesh)
                     siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
-                    sources_dist. append(sourceSurface.get_min_distance(siteMesh))
-        elif tag.endswith('Source') and srcfilter.get_close_sites(subSrc) is not None:
+                    sources_dist.append(sourceSurface.get_min_distance(siteMesh))
+        elif (
+            tag.endswith('Source') and srcfilter.get_close_sites(subSrc) is not None
+        ):
             subSrc.id = id
             sources_id.append(id)
             id += 1
@@ -1321,48 +1793,44 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
             sourceMesh = subSrc.polygon.discretize(rupture_mesh_spacing)
             sourceSurface = BaseSurface(sourceMesh)
             siteMesh = Mesh(siteMeanCol.lon, siteMeanCol.lat)
-            sources_dist. append(sourceSurface.get_min_distance(siteMesh))
-    sources_df = pd.DataFrame.from_dict({
-        'source': sources,
-        'sourceDist': sources_dist,
-        'sourceID':sources_id
-    })
-    sources_df = sources_df.sort_values(['sourceDist'], ascending = (True))
+            sources_dist.append(sourceSurface.get_min_distance(siteMesh))
+    sources_df = pd.DataFrame.from_dict(
+        {'source': sources, 'sourceDist': sources_dist, 'sourceID': sources_id}
+    )
+    sources_df = sources_df.sort_values(['sourceDist'], ascending=(True))
     sources_df = sources_df.set_index('sourceID')
     allrups = []
     allrups_rRup = []
     allrups_srcId = []
-    for src in sources_df["source"]:
+    for src in sources_df['source']:
         src_rups = list(src.iter_ruptures())
         for i, rup in enumerate(src_rups):
             rup.rup_id = src.offset + i
             allrups.append(rup)
             allrups_rRup.append(rup.surface.get_min_distance(siteMeanCol))
             allrups_srcId.append(src.id)
-    rups_df = pd.DataFrame.from_dict({
-        'rups':allrups,
-        'rups_rRup':allrups_rRup,
-        'rups_srcId':allrups_srcId
-    })
-    rups_df = rups_df.sort_values(['rups_rRup'], ascending = (True))
+    rups_df = pd.DataFrame.from_dict(
+        {'rups': allrups, 'rups_rRup': allrups_rRup, 'rups_srcId': allrups_srcId}
+    )
+    rups_df = rups_df.sort_values(['rups_rRup'], ascending=(True))
     feature_collection = []
     for ind in rups_df.index:
         cur_dict = {'type': 'Feature'}
-        cur_dist = rups_df.loc[ind, "rups_rRup"]
-        if cur_dist <= 0.:
+        cur_dist = rups_df.loc[ind, 'rups_rRup']
+        if cur_dist <= 0.0:
             # skipping ruptures with distance exceeding the maxDistance
             continue
-        rup = rups_df.loc[ind, "rups"]
+        rup = rups_df.loc[ind, 'rups']
         # s0=number of multi surfaces, s1=number of rows, s2=number of columns
         arrays = surface_to_arrays(rup.surface)  # shape (s0, 3, s1, s2)
-        src_id = rups_df.loc[ind,"rups_srcId"]
+        src_id = rups_df.loc[ind, 'rups_srcId']
         maf = rup.occurrence_rate
-        if maf <= 0.:
+        if maf <= 0.0:
             continue
         ruptureSurface = rup.surface
         # Properties
         cur_dict['properties'] = dict()
-        name = sources_df.loc[src_id, "source"].name
+        name = sources_df.loc[src_id, 'source'].name
         cur_dict['properties'].update({'Name': name})
         Mag = float(rup.mag)
         if (Mag < minMag) or (Mag > maxMag):
@@ -1375,29 +1843,46 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
         cur_dict['properties'].update({'Lat': rup.hypocenter.y})
         cur_dict['properties'].update({'Depth': rup.hypocenter.z})
         cur_dict['properties'].update({'trt': rup.tectonic_region_type})
-        cur_dict['properties'].update({'mesh' : json.dumps(
-            [[[[round(float(z), 5) for z in y] for y in x] for x in array]
-            for array in arrays])})
+        cur_dict['properties'].update(
+            {
+                'mesh': json.dumps(
+                    [
+                        [[[round(float(z), 5) for z in y] for y in x] for x in array]
+                        for array in arrays
+                    ]
+                )
+            }
+        )
         if hasattr(rup, 'probs_occur'):
             cur_dict['properties'].update({'Probability': rup.probs_occur})
         else:
             cur_dict['properties'].update({'MeanAnnualRate': rup.occurrence_rate})
         if hasattr(rup, 'weight'):
             cur_dict['properties'].update({'weight': rup.weight})
-        cur_dict['properties'].update({'Distance': get_distances(rup, siteMeanCol, 'rrup')[0]})
-        cur_dict['properties'].update({'DistanceRup': get_distances(rup, siteMeanCol, 'rrup')[0]})
+        cur_dict['properties'].update(
+            {'Distance': get_distances(rup, siteMeanCol, 'rrup')[0]}
+        )
+        cur_dict['properties'].update(
+            {'DistanceRup': get_distances(rup, siteMeanCol, 'rrup')[0]}
+        )
         # cur_dict['properties'].update({'DistanceSeis': get_distances(rup, siteMeanCol, 'rrup')})
-        cur_dict['properties'].update({'DistanceJB': get_distances(rup, siteMeanCol, 'rjb')[0]})
-        cur_dict['properties'].update({'DistanceX': get_distances(rup, siteMeanCol, 'rx')[0]})
+        cur_dict['properties'].update(
+            {'DistanceJB': get_distances(rup, siteMeanCol, 'rjb')[0]}
+        )
+        cur_dict['properties'].update(
+            {'DistanceX': get_distances(rup, siteMeanCol, 'rx')[0]}
+        )
         cur_dict['geometry'] = dict()
         # if (len(arrays)==1 and arrays[0].shape[1]==1 and arrays[0].shape[2]==1):
         #     # Point Source
         #     cur_dict['geometry'].update({'type': 'Point'})
         #     cur_dict['geometry'].update({'coordinates': [arrays[0][0][0][0], arrays[0][1][0][0]]})
         # elif len(rup.surface.mesh.shape)==1:
-        if len(rup.surface.mesh.shape)==1:
+        if len(rup.surface.mesh.shape) == 1:
             # Point Source or area source
-            top_edge = rup.surface.mesh # See the get_top_edge_depth method of the BaseSurface class
+            top_edge = (
+                rup.surface.mesh
+            )  # See the get_top_edge_depth method of the BaseSurface class
             coordinates = []
             for i in range(len(top_edge.lats)):
                 coordinates.append([top_edge.lons[i], top_edge.lats[i]])
@@ -1405,7 +1890,9 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
             cur_dict['geometry'].update({'coordinates': coordinates})
         else:
             # Line source
-            top_edge = rup.surface.mesh[0:1] # See the get_top_edge_depth method of the BaseSurface class
+            top_edge = rup.surface.mesh[
+                0:1
+            ]  # See the get_top_edge_depth method of the BaseSurface class
             coordinates = []
             for i in range(len(top_edge.lats[0])):
                 coordinates.append([top_edge.lons[0][i], top_edge.lats[0][i]])
@@ -1417,30 +1904,42 @@ def export_rupture_to_json(scenario_info, mlon, mlat, siteFile, work_dir):
     feature_collection_sorted = [feature_collection[i] for i in sort_ids]
     del feature_collection
     erf_data.update({'features': feature_collection_sorted})
-    print('FetchOpenquake: total {} ruptures are collected.'.format(len(feature_collection_sorted)))
+    print(
+        'FetchOpenquake: total {} ruptures are collected.'.format(
+            len(feature_collection_sorted)
+        )
+    )
     # Output
     if outfile is not None:
-        print('The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(outfile))
+        print(
+            'The collected ruptures are sorted by MeanAnnualRate and saved in {}'.format(
+                outfile
+            )
+        )
         with open(outfile, 'w') as f:
             json.dump(erf_data, f, indent=2)
-        
+
+
 def get_site_rup_info_oq(source_info, siteList):
     from openquake.hazardlib import site
     from openquake.hazardlib.calc.filters import get_distances
+
     rup = source_info['rup']
     distToRupture = []
     distJB = []
     distX = []
     for i in range(len(siteList)):
-        siteMeanCol = site.SiteCollection.from_points([siteList[i]['lon']], [siteList[i]['lat']])
-        siteList[i].update({"rRup":get_distances(rup, siteMeanCol, 'rrup')[0]})
-        siteList[i].update({"rJB":get_distances(rup, siteMeanCol, 'rjb')[0]})
-        siteList[i].update({"rX":get_distances(rup, siteMeanCol, 'rx')[0]})
+        siteMeanCol = site.SiteCollection.from_points(
+            [siteList[i]['lon']], [siteList[i]['lat']]
+        )
+        siteList[i].update({'rRup': get_distances(rup, siteMeanCol, 'rrup')[0]})
+        siteList[i].update({'rJB': get_distances(rup, siteMeanCol, 'rjb')[0]})
+        siteList[i].update({'rX': get_distances(rup, siteMeanCol, 'rx')[0]})
     site_rup_info = {
-        "dip" : float(rup.surface.get_dip()),
-        "width" : float(rup.surface.get_width()),
-        "zTop" : float(rup.rake),
-        "zHyp" : float(rup.hypocenter.depth),
-        "aveRake" : float(rup.rake)
-        } 
+        'dip': float(rup.surface.get_dip()),
+        'width': float(rup.surface.get_width()),
+        'zTop': float(rup.rake),
+        'zHyp': float(rup.hypocenter.depth),
+        'aveRake': float(rup.rake),
+    }
     return site_rup_info, siteList

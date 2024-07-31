@@ -21,7 +21,9 @@ from steel_material import SteelMaterial
 # Variables defined in this section is used in "seismic_design.py" file
 
 # Define the current utilized steel type:
-steel = SteelMaterial(yield_stress=50, ultimate_stress=65, elastic_modulus=29000, Ry_value=1.1)  # Unit: ksi
+steel = SteelMaterial(
+    yield_stress=50, ultimate_stress=65, elastic_modulus=29000, Ry_value=1.1
+)  # Unit: ksi
 
 # The path where THIS file is located is the base directory
 baseDirectory = os.path.dirname(os.path.realpath(__file__))
@@ -58,7 +60,7 @@ UPPER_LOWER_COLUMN_Zx = 0.5
 # If the accidental torsion is considered -> one frame will take 0.55 of total lateral force
 # since the center is assumed to be deviated from its actual location by 5% of the building dimension
 # Then the ACCIDENTAL_TORSION = 0.55/0.50 = 1.1
-ACCIDENTAL_TORSION = 0.55/0.50
+ACCIDENTAL_TORSION = 0.55 / 0.50
 
 # Define a boolean variable to determine whether the Section 12.8.6.2 is enforced or not
 # Section 12.8.6.2:

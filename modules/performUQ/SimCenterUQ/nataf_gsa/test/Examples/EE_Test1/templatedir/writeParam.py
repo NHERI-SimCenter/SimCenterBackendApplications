@@ -3,6 +3,7 @@ import os
 from subprocess import Popen, PIPE
 import subprocess
 
+
 def main():
     paramsIn = sys.argv[1]
     paramsOut = sys.argv[2]
@@ -14,7 +15,6 @@ def main():
     outFILE = open(paramsOut, 'w')
 
     with open(paramsIn) as inFILE:
-
         line = inFILE.readline()
         splitLine = line.split()
         numRV = int(splitLine[3])
@@ -27,8 +27,9 @@ def main():
             valueRV = splitLine[3]
             print('{} {}'.format(nameRV, valueRV), file=outFILE)
 
-    outFILE.close 
+    outFILE.close
     inFILE.close
 
+
 if __name__ == '__main__':
-   main()
+    main()

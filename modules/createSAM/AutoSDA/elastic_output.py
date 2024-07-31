@@ -69,32 +69,52 @@ class ElasticOutput(object):
         """
         for load_type in LOAD_TYPE:
             # Define the directory where the column force output is stored
-            path_output = building.directory['building elastic model'] + "/" + load_type+"/GlobalColumnForces"
+            path_output = (
+                building.directory['building elastic model']
+                + '/'
+                + load_type
+                + '/GlobalColumnForces'
+            )
 
             # Make the path if it does not exist
             Path(path_output).mkdir(parents=True, exist_ok=True)
 
             os.chdir(path_output)
             # Initialize a matrix to store all column component forces: axial, shear and moment.
-            column_load = np.zeros([building.geometry['number of story'], (building.geometry['number of X bay']+1)*6])
+            column_load = np.zeros(
+                [
+                    building.geometry['number of story'],
+                    (building.geometry['number of X bay'] + 1) * 6,
+                ]
+            )
             # Read output txt files
             for story in range(0, building.geometry['number of story']):
                 # Define the output txt file name
-                file_name = 'GlobalColumnForcesStory' + str(story+1) + '.out'
+                file_name = 'GlobalColumnForcesStory' + str(story + 1) + '.out'
                 read_data = np.loadtxt(file_name)
                 column_load[story, :] = read_data[-1, 1:]
             # Store column forces into different load cases
             self.raw_column_load[load_type] = column_load
 
             # Define the directory where the beam force is stored
-            path_output = building.directory['building elastic model'] + "/" + load_type + "/GlobalBeamForces"
+            path_output = (
+                building.directory['building elastic model']
+                + '/'
+                + load_type
+                + '/GlobalBeamForces'
+            )
             os.chdir(path_output)
             #  Initialize a matrix to store all beam component forces: axial, shear and moment
-            beam_load = np.zeros([building.geometry['number of story'], building.geometry['number of X bay']*6])
+            beam_load = np.zeros(
+                [
+                    building.geometry['number of story'],
+                    building.geometry['number of X bay'] * 6,
+                ]
+            )
             # Read beam load from output txt files
             for story in range(0, building.geometry['number of story']):
                 # Define output txt file name
-                file_name = 'GlobalXBeamForcesLevel' + str(story+2) + '.out'
+                file_name = 'GlobalXBeamForcesLevel' + str(story + 2) + '.out'
                 read_data = np.loadtxt(file_name)
                 beam_load[story, :] = read_data[-1, 1:]
             # Store beam forces based on load scenario
@@ -104,34 +124,52 @@ class ElasticOutput(object):
         # Extract axial force, shear force, and moment from the variable obtained in the previous step
         # Forces at both ends of columns are stored
         N = self.raw_column_load['DeadLoad'].shape[1]
-        axial_index = range(1, N, 3)  # In column matrix, axial force is in column #2, 5, 8, ...
-        shear_index = range(0, N, 3)  # In column matrix, shear force is in column #1, 4, 7, ...
-        moment_index = range(2, N, 3)  # In column matrix, moment is in column #3, 6, 9, ...
+        axial_index = range(
+            1, N, 3
+        )  # In column matrix, axial force is in column #2, 5, 8, ...
+        shear_index = range(
+            0, N, 3
+        )  # In column matrix, shear force is in column #1, 4, 7, ...
+        moment_index = range(
+            2, N, 3
+        )  # In column matrix, moment is in column #3, 6, 9, ...
 
         for load_type in LOAD_TYPE:
             axial_force = self.raw_column_load[load_type][:, axial_index]
             shear_force = self.raw_column_load[load_type][:, shear_index]
             moment = self.raw_column_load[load_type][:, moment_index]
             if load_type == 'DeadLoad':
-                self.dead_load_case = {'column axial': axial_force,
-                                       'column shear': shear_force,
-                                       'column moment': moment}
+                self.dead_load_case = {
+                    'column axial': axial_force,
+                    'column shear': shear_force,
+                    'column moment': moment,
+                }
             elif load_type == 'LiveLoad':
-                self.live_load_case = {'column axial': axial_force,
-                                       'column shear': shear_force,
-                                       'column moment': moment}
+                self.live_load_case = {
+                    'column axial': axial_force,
+                    'column shear': shear_force,
+                    'column moment': moment,
+                }
             elif load_type == 'EarthquakeLoad':
-                self.earthquake_load_case = {'column axial': axial_force,
-                                             'column shear': shear_force,
-                                             'column moment': moment}
+                self.earthquake_load_case = {
+                    'column axial': axial_force,
+                    'column shear': shear_force,
+                    'column moment': moment,
+                }
 
     def extract_beam_load(self):
         # Extract shear and moment from variables obtained in previous step
         # Forces at both ends of beams are stored
         N = self.raw_beam_load['DeadLoad'].shape[1]
-        axial_index = range(0, N, 3)  # In beam matrix, axial force is in column #1, 4, 7, ...
-        shear_index = range(1, N, 3)  # In beam matrix, shear force is in column #2, 5, 8, ...
-        moment_index = range(2, N, 3)  # In beam matrix, moment is in column #3, 6, 9, ...
+        axial_index = range(
+            0, N, 3
+        )  # In beam matrix, axial force is in column #1, 4, 7, ...
+        shear_index = range(
+            1, N, 3
+        )  # In beam matrix, shear force is in column #2, 5, 8, ...
+        moment_index = range(
+            2, N, 3
+        )  # In beam matrix, moment is in column #3, 6, 9, ...
         # Obtain the forces and store them into existing dictionary
         for load_type in LOAD_TYPE:
             axial_force = self.raw_beam_load[load_type][:, axial_index]
@@ -159,11 +197,13 @@ class ElasticOutput(object):
         """
         # Load combination 1: 1.4*D
         for force in self.dead_load_case:
-            self.load_combination_1[force] = 1.4*self.dead_load_case[force]
+            self.load_combination_1[force] = 1.4 * self.dead_load_case[force]
 
         # Load combination 2: 1.2*D + 1.6*L
         for force in self.dead_load_case:
-            self.load_combination_2[force] = 1.2*self.dead_load_case[force] + 1.6*self.live_load_case[force]
+            self.load_combination_2[force] = (
+                1.2 * self.dead_load_case[force] + 1.6 * self.live_load_case[force]
+            )
 
         # Load combination 3: (1.2*D + 0.2*SDS) + 1.0(0.5)*L + rho*E
         # For Load combination 3 through 6, omega should be used to replace with rho for column axial force
@@ -172,42 +212,62 @@ class ElasticOutput(object):
         omega = 3.0
         for force in self.dead_load_case:
             if force != 'column axial':
-                self.load_combination_3[force] = (1.2+0.2*SDS)*self.dead_load_case[force] \
-                                                 + 0.5*self.live_load_case[force] \
-                                                 + rho*self.earthquake_load_case[force]
+                self.load_combination_3[force] = (
+                    (1.2 + 0.2 * SDS) * self.dead_load_case[force]
+                    + 0.5 * self.live_load_case[force]
+                    + rho * self.earthquake_load_case[force]
+                )
             else:
-                self.load_combination_3[force] = (1.2+0.2*SDS)*self.dead_load_case[force] \
-                                                 + 0.5*self.live_load_case[force] \
-                                                 + omega*self.earthquake_load_case[force]
+                self.load_combination_3[force] = (
+                    (1.2 + 0.2 * SDS) * self.dead_load_case[force]
+                    + 0.5 * self.live_load_case[force]
+                    + omega * self.earthquake_load_case[force]
+                )
 
         # Load combination 4: (1.2*D + 0.2*SDS) + 1.0(0.5)*L - rho*E
         for force in self.dead_load_case:
             if force != 'column axial':
-                self.load_combination_4[force] = (1.2+0.2*SDS)*self.dead_load_case[force] \
-                                                 + 0.5*self.live_load_case[force] \
-                                                 - rho*self.earthquake_load_case[force]
+                self.load_combination_4[force] = (
+                    (1.2 + 0.2 * SDS) * self.dead_load_case[force]
+                    + 0.5 * self.live_load_case[force]
+                    - rho * self.earthquake_load_case[force]
+                )
             else:
-                self.load_combination_4[force] = (1.2+0.2*SDS)*self.dead_load_case[force] \
-                                                 + 0.5*self.live_load_case[force] \
-                                                 - omega*self.earthquake_load_case[force]
+                self.load_combination_4[force] = (
+                    (1.2 + 0.2 * SDS) * self.dead_load_case[force]
+                    + 0.5 * self.live_load_case[force]
+                    - omega * self.earthquake_load_case[force]
+                )
 
         # Load combination 5: (0.9 - 0.2*SDS) + rho * E
         for force in self.dead_load_case:
             if force != 'column axial':
-                self.load_combination_5[force] = (0.9-0.2*SDS)*self.dead_load_case[force] \
-                                                 + rho*self.earthquake_load_case[force]
+                self.load_combination_5[force] = (
+                    0.9 - 0.2 * SDS
+                ) * self.dead_load_case[force] + rho * self.earthquake_load_case[
+                    force
+                ]
             else:
-                self.load_combination_5[force] = (0.9-0.2*SDS)*self.dead_load_case[force] \
-                                                 + omega*self.earthquake_load_case[force]
+                self.load_combination_5[force] = (
+                    0.9 - 0.2 * SDS
+                ) * self.dead_load_case[force] + omega * self.earthquake_load_case[
+                    force
+                ]
 
         # Load combination 6: (0.9 - 0.2*SDS) - rho * E
         for force in self.dead_load_case:
             if force != 'column axial':
-                self.load_combination_6[force] = (0.9-0.2*SDS)*self.dead_load_case[force] \
-                                                 - rho*self.earthquake_load_case[force]
+                self.load_combination_6[force] = (
+                    0.9 - 0.2 * SDS
+                ) * self.dead_load_case[force] - rho * self.earthquake_load_case[
+                    force
+                ]
             else:
-                self.load_combination_6[force] = (0.9-0.2*SDS)*self.dead_load_case[force] \
-                                                 - omega*self.earthquake_load_case[force]
+                self.load_combination_6[force] = (
+                    0.9 - 0.2 * SDS
+                ) * self.dead_load_case[force] - omega * self.earthquake_load_case[
+                    force
+                ]
 
     def determine_dominate_load(self):
         """
@@ -223,15 +283,29 @@ class ElasticOutput(object):
             for m in range(M):
                 for n in range(N):
                     # The demand might be either positive or negative, try to find the one with maximum absolute value
-                    temp_1 = np.max([self.load_combination_1[force][m, n], self.load_combination_2[force][m, n],
-                                     self.load_combination_3[force][m, n], self.load_combination_4[force][m, n],
-                                     self.load_combination_5[force][m, n], self.load_combination_6[force][m, n]])
+                    temp_1 = np.max(
+                        [
+                            self.load_combination_1[force][m, n],
+                            self.load_combination_2[force][m, n],
+                            self.load_combination_3[force][m, n],
+                            self.load_combination_4[force][m, n],
+                            self.load_combination_5[force][m, n],
+                            self.load_combination_6[force][m, n],
+                        ]
+                    )
 
-                    temp_2 = np.min([self.load_combination_1[force][m, n], self.load_combination_2[force][m, n],
-                                     self.load_combination_3[force][m, n], self.load_combination_4[force][m, n],
-                                     self.load_combination_5[force][m, n], self.load_combination_6[force][m, n]])
+                    temp_2 = np.min(
+                        [
+                            self.load_combination_1[force][m, n],
+                            self.load_combination_2[force][m, n],
+                            self.load_combination_3[force][m, n],
+                            self.load_combination_4[force][m, n],
+                            self.load_combination_5[force][m, n],
+                            self.load_combination_6[force][m, n],
+                        ]
+                    )
 
-                    if (abs(temp_1) > abs(temp_2)):
+                    if abs(temp_1) > abs(temp_2):
                         dominate_load[force][m, n] = temp_1
                     else:
                         dominate_load[force][m, n] = temp_2

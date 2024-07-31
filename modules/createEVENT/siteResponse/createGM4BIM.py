@@ -45,28 +45,25 @@ from glob import glob
 import argparse
 import pandas as pd
 
-def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
 
+def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
     if not os.path.isdir(inputDir):
-        print(f"input dir: {inputDir} does not exist")
+        print(f'input dir: {inputDir} does not exist')
         return 0
 
-    
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
-    
-    siteFiles = glob(f"{inputDir}/*BIM.json")
 
-    GP_file	= []
+    siteFiles = glob(f'{inputDir}/*BIM.json')
+
+    GP_file = []
     Longitude = []
     Latitude = []
     id = []
     sites = []
 
     for site in siteFiles:
-
         with open(site, 'r') as f:
-
             All_json = json.load(f)
             generalInfo = All_json['GeneralInformation']
             Longitude.append(generalInfo['Longitude'])
@@ -74,63 +71,66 @@ def createFilesForEventGrid(inputDir, outputDir, removeInputDir):
             siteID = generalInfo['BIM_id']
 
             id.append(siteID)
-            
-            siteFileName = f"Site_{siteID}.csv"
+
+            siteFileName = f'Site_{siteID}.csv'
             sites.append(siteFileName)
-            
-            workdirs = glob(f"{inputDir}/{siteID}/workdir.*")
+
+            workdirs = glob(f'{inputDir}/{siteID}/workdir.*')
             siteEventFiles = []
             siteEventFactors = []
-                        
-            for workdir in workdirs:
 
+            for workdir in workdirs:
                 head, sep, sampleID = workdir.partition('workdir.')
                 print(sampleID)
 
-                eventName = f"Event_{siteID}_{sampleID}.json"
+                eventName = f'Event_{siteID}_{sampleID}.json'
                 print(eventName)
-                shutil.copy(f"{workdir}/fmkEVENT", f"{outputDir}/{eventName}")
+                shutil.copy(f'{workdir}/fmkEVENT', f'{outputDir}/{eventName}')
 
                 siteEventFiles.append(eventName)
                 siteEventFactors.append(1)
 
-            siteDF = pd.DataFrame(list(zip(siteEventFiles, siteEventFactors)), columns =['TH_file', 'factor'])
-            siteDF.to_csv(f"{outputDir}/{siteFileName}", index=False)
-
+            siteDF = pd.DataFrame(
+                list(zip(siteEventFiles, siteEventFactors)),
+                columns=['TH_file', 'factor'],
+            )
+            siteDF.to_csv(f'{outputDir}/{siteFileName}', index=False)
 
     # create the EventFile
-    gridDF = pd.DataFrame(list(zip(sites, Longitude, Latitude)), columns =['GP_file', 'Longitude', 'Latitude'])
+    gridDF = pd.DataFrame(
+        list(zip(sites, Longitude, Latitude)),
+        columns=['GP_file', 'Longitude', 'Latitude'],
+    )
 
-    gridDF.to_csv(f"{outputDir}/EventGrid.csv", index=False)
-    
+    gridDF.to_csv(f'{outputDir}/EventGrid.csv', index=False)
 
     # remove original files
-    if removeInputDir:         
+    if removeInputDir:
         shutil.rmtree(inputDir)
-    
+
     return 0
 
 
-if __name__ == "__main__":
-    #Defining the command line arguments
+if __name__ == '__main__':
+    # Defining the command line arguments
 
     workflowArgParser = argparse.ArgumentParser(
-        "Create ground motions for BIM.",
-        allow_abbrev=False)
+        'Create ground motions for BIM.', allow_abbrev=False
+    )
 
-    workflowArgParser.add_argument("-i", "--inputDir",
-                                   help="Dir containing results of siteResponseWhale.")
+    workflowArgParser.add_argument(
+        '-i', '--inputDir', help='Dir containing results of siteResponseWhale.'
+    )
 
-    workflowArgParser.add_argument("-o", "--outputDir",
-                                   help="Dir where results to be stored.")
+    workflowArgParser.add_argument(
+        '-o', '--outputDir', help='Dir where results to be stored.'
+    )
 
-    workflowArgParser.add_argument("--removeInput", action='store_true')
+    workflowArgParser.add_argument('--removeInput', action='store_true')
 
-    #Parsing the command line arguments
+    # Parsing the command line arguments
     wfArgs = workflowArgParser.parse_args()
 
     print(wfArgs)
-    #Calling the main function
+    # Calling the main function
     createFilesForEventGrid(wfArgs.inputDir, wfArgs.outputDir, wfArgs.removeInput)
-    
-

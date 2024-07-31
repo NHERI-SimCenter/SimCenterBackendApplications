@@ -24,7 +24,12 @@ import pickle
 
 from global_variables import baseDirectory
 from seismic_design import seismic_design
-from global_variables import SECTION_DATABASE, COLUMN_DATABASE, BEAM_DATABASE, RV_ARRAY
+from global_variables import (
+    SECTION_DATABASE,
+    COLUMN_DATABASE,
+    BEAM_DATABASE,
+    RV_ARRAY,
+)
 from model_generation import model_generation
 
 
@@ -42,7 +47,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     try:
         rootSIM = rootBIM['Modeling']
     except:
-        raise ValueError("AutoSDA - structural information missing")
+        raise ValueError('AutoSDA - structural information missing')
 
     # Extract the path for the directory containing the folder with the building data .csv files
     #    pathDataFolder = rootSIM['pathDataFolder']
@@ -54,7 +59,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     try:
         rootRV = rootBIM['randomVariables']
     except:
-        raise ValueError("AutoSDA - randomVariables section missing")
+        raise ValueError('AutoSDA - randomVariables section missing')
 
     # Populate the RV array with name/value pairs.
     # If a random variable is used here, the RV array will contain its current value
@@ -65,7 +70,7 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
         # Check if the current value a realization of a RV, i.e., is not a RV label
         # If so, then set the current value as the mean
-        if "RV" in str(curVal) :
+        if 'RV' in str(curVal):
             curVal = float(rv['mean'])
 
         RV_ARRAY[rvName] = curVal
@@ -75,13 +80,13 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
     if getRV is False:
         # *********************** Design Starts Here *************************
-        print("Starting seismic design")
+        print('Starting seismic design')
         seismic_design(baseDirectory, pathDataFolder, workingDirectory)
-        print("Seismic design complete")
+        print('Seismic design complete')
 
         # ******************* Nonlinear Model Generation Starts Here ******
         # Nonlinear .tcl models are generated for EigenValue, Pushover, and Dynamic Analysis
-        print("Generating nonlinear model")
+        print('Generating nonlinear model')
         model_generation(baseDirectory, pathDataFolder, workingDirectory)
 
         # ******************* Perform Eigen Value Analysis ****************
@@ -98,10 +103,10 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
         # os.chdir(target_model)
         # subprocess.Popen("OpenSees Model.tcl", shell=True).wait()
 
-        print("The design and model construction has been accomplished.")
+        print('The design and model construction has been accomplished.')
 
     end_time = time.time()
-    print("Running time is: %s seconds" % round(end_time - start_time, 2))
+    print('Running time is: %s seconds' % round(end_time - start_time, 2))
 
     # Now create the SAM file for export
     root_SAM = {}
@@ -109,12 +114,12 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     root_SAM['mainScript'] = 'Model.tcl'
     root_SAM['type'] = 'OpenSeesInput'
     root_SAM['units'] = {
-            "force": "kips",
-            "length": "in",
-            "temperature": "C",
-            "time": "sec"
-        }
-    
+        'force': 'kips',
+        'length': 'in',
+        'temperature': 'C',
+        'time': 'sec',
+    }
+
     # Number of dimensions (KZ & AZ: changed to integer)
     root_SAM['ndm'] = 2
 
@@ -130,30 +135,29 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
     # (1, i, 1, 1)      # Node at bottom of current story
     # (1, i + 1, 1, 1)  # Node at top of current story
     for i in range(1, numStories + 2):
-
         nodeTagBot = 0
         if i == 1:
             # Node tag at ground floor is different from those on upper stories (1, i, 1, 0)
-            nodeTagBot = 1010 + 100*i
+            nodeTagBot = 1010 + 100 * i
         else:
             # KZ & AZ: minor patch for story numbers greater than 10
             if i > 9:
-                nodeTagBot = 10011 + 100*i
+                nodeTagBot = 10011 + 100 * i
             else:
-                nodeTagBot = 1011 + 100*i
+                nodeTagBot = 1011 + 100 * i
 
         # Create the node and add it to the node mapping array
         node_entry = {}
         node_entry['node'] = nodeTagBot
         node_entry['cline'] = 'response'
-        node_entry['floor'] = '{}'.format(i-1)
+        node_entry['floor'] = '{}'.format(i - 1)
         node_map.append(node_entry)
 
         ## KZ & AZ: Add centroid for roof drift
         node_entry_c = {}
         node_entry_c['node'] = nodeTagBot
         node_entry_c['cline'] = 'centroid'
-        node_entry_c['floor'] = '{}'.format(i-1)
+        node_entry_c['floor'] = '{}'.format(i - 1)
         node_map.append(node_entry_c)
 
     root_SAM['NodeMapping'] = node_map
@@ -167,9 +171,11 @@ def main(BIM_file, EVENT_file, SAM_file, model_file, filePath, getRV):
 
     # Copy over the .tcl files of the building model into the working directory
     if getRV is False:
-        pathToMainScriptFolder = workingDirectory + "/BuildingNonlinearModels/DynamicAnalysis/"
+        pathToMainScriptFolder = (
+            workingDirectory + '/BuildingNonlinearModels/DynamicAnalysis/'
+        )
 
-        if os.path.isdir(pathToMainScriptFolder) :
+        if os.path.isdir(pathToMainScriptFolder):
             print(pathToMainScriptFolder)
             src_files = os.listdir(pathToMainScriptFolder)
             for file_name in src_files:
@@ -188,5 +194,13 @@ if __name__ == '__main__':
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
-    sys.exit(main(args.filenameAIM, args.filenameEVENT, args.filenameSAM,
-                  args.fileName, args.filePath, args.getRV))
+    sys.exit(
+        main(
+            args.filenameAIM,
+            args.filenameEVENT,
+            args.filenameSAM,
+            args.fileName,
+            args.filePath,
+            args.getRV,
+        )
+    )

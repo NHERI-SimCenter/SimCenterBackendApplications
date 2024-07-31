@@ -36,7 +36,6 @@ class EDPItem(BaseModel):
     type: str
 
 
-
 class SubsetSimulationData(BaseModel):
     conditionalProbability: float
     failureThreshold: int
@@ -47,7 +46,6 @@ class SubsetSimulationData(BaseModel):
 class ReliabilityMethodData(BaseModel):
     method: str
     subsetSimulationData: SubsetSimulationData
-
 
 
 class RandomVariable(BaseModel):

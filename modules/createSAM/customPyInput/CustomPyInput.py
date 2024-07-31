@@ -38,30 +38,39 @@
 # Adam Zsarnóczay
 #
 
-import sys, argparse,json
+import sys, argparse, json
 
-def create_SAM(AIM_file, EVENT_file, SAM_file,
-    model_script, model_path, ndm, dof_map, column_line, getRV):
 
+def create_SAM(
+    AIM_file,
+    EVENT_file,
+    SAM_file,
+    model_script,
+    model_path,
+    ndm,
+    dof_map,
+    column_line,
+    getRV,
+):
     # KZ: modifying BIM to AIM
-    with open(AIM_file, 'r', encoding="utf-8") as f:
+    with open(AIM_file, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
     root_GI = root_AIM['GeneralInformation']
 
     try:
         stories = int(root_GI['NumberOfStories'])
     except:
-        raise ValueError("number of stories information missing")
+        raise ValueError('number of stories information missing')
 
     if column_line is None:
         # KZ: looking into SAM
         root_SAM = root_AIM.get('Modeling', {})
         nodes = root_SAM.get('centroidNodes', [])
         if len(nodes) == 0:
-            nodes = list(range(stories+1))
+            nodes = list(range(stories + 1))
     else:
         nodes = [int(node) for node in column_line.split(',')]
-        nodes = nodes[:stories+1]
+        nodes = nodes[: stories + 1]
 
     node_map = []
     for floor, node in enumerate(nodes):
@@ -83,7 +92,7 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
         # KZ: correcting the ndm format --> this causing standardEarthquakeEDP failure...
         'ndm': int(ndm),
         # TODO: improve this if we want random vars in the structure
-        'randomVar': []
+        'randomVar': [],
     }
 
     # pass all other attributes in the AIM GI to SAM
@@ -94,24 +103,33 @@ def create_SAM(AIM_file, EVENT_file, SAM_file,
         else:
             root_SAM[cur_key] = cur_item
 
-    with open(SAM_file, 'w', encoding="utf-8") as f:
+    with open(SAM_file, 'w', encoding='utf-8') as f:
         json.dump(root_SAM, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
     parser.add_argument('--modelPath', default='')
-    parser.add_argument('--ndm', default="3")
-    parser.add_argument('--dofMap', default="1, 2, 3")
+    parser.add_argument('--ndm', default='3')
+    parser.add_argument('--dofMap', default='1, 2, 3')
     parser.add_argument('--columnLine', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
-    sys.exit(create_SAM(
-        args.filenameAIM, args.filenameEVENT, args.filenameSAM,
-        args.mainScript, args.modelPath, args.ndm,
-        args.dofMap, args.columnLine, args.getRV))
+    sys.exit(
+        create_SAM(
+            args.filenameAIM,
+            args.filenameEVENT,
+            args.filenameSAM,
+            args.mainScript,
+            args.modelPath,
+            args.ndm,
+            args.dofMap,
+            args.columnLine,
+            args.getRV,
+        )
+    )

@@ -3,7 +3,7 @@ from mpi4py.futures import MPIPoolExecutor
 
 
 class ParallelRunnerMPI4PY:
-    def __init__(self, run_type: str = "runningRemote") -> None:
+    def __init__(self, run_type: str = 'runningRemote') -> None:
         self.run_type = run_type
         self.comm = MPI.COMM_WORLD
         self.num_processors = self.get_num_processors()
@@ -15,7 +15,7 @@ class ParallelRunnerMPI4PY:
             num_processors = 1
         if num_processors < 1:
             raise ValueError(
-                "Number of processes must be at least 1. Got {num_processors}"
+                'Number of processes must be at least 1. Got {num_processors}'
             )
         return num_processors
 

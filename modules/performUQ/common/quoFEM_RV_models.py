@@ -6,20 +6,24 @@ from typing_extensions import Annotated
 import numpy as np
 
 
-_supported_distributions = typing.Literal["Beta", "ChiSquared", 
-                                          "Exponential", "Gamma", 
-                                          "Gumbel", "Lognormal", 
-                                          "Normal", "Uniform", 
-                                          "Weibull"]
-_supported_input_types = typing.Literal["Parameters", "Moments", 
-                                        "Dataset"]
-_supported_variable_classes = typing.Literal["Uncertain", "Design", 
-                                             "Uniform", "NA"]
+_supported_distributions = typing.Literal[
+    'Beta',
+    'ChiSquared',
+    'Exponential',
+    'Gamma',
+    'Gumbel',
+    'Lognormal',
+    'Normal',
+    'Uniform',
+    'Weibull',
+]
+_supported_input_types = typing.Literal['Parameters', 'Moments', 'Dataset']
+_supported_variable_classes = typing.Literal['Uncertain', 'Design', 'Uniform', 'NA']
 
 
 def _get_ERADistObjectName(name_from_quoFEM: str) -> str:
     _ERADistNames = {}
-    _ERADistNames["ChiSquared"] = "chisquare"
+    _ERADistNames['ChiSquared'] = 'chisquare'
     try:
         nm = _ERADistNames[name_from_quoFEM].value
     except:
@@ -29,25 +33,25 @@ def _get_ERADistObjectName(name_from_quoFEM: str) -> str:
 
 def _get_ERADistOpt(input_type_from_quoFEM: str) -> str:
     _ERADistOpts = {}
-    _ERADistOpts["Parameters"] = "PAR"
-    _ERADistOpts["Moments"] = "MOM"
-    _ERADistOpts["Dataset"] = "DATA"
+    _ERADistOpts['Parameters'] = 'PAR'
+    _ERADistOpts['Moments'] = 'MOM'
+    _ERADistOpts['Dataset'] = 'DATA'
     try:
         opt = _ERADistOpts[input_type_from_quoFEM].value
     except:
-        opt = "PAR"
+        opt = 'PAR'
     return opt
 
 
 class RVData(pydantic.BaseModel):
     distribution: _supported_distributions
     name: str
-    inputType: _supported_input_types = "Parameters"
+    inputType: _supported_input_types = 'Parameters'
     refCount: int
     value: str
     variableClass: _supported_variable_classes
-    ERAName: str = ""
-    ERAOpt: str = ""
+    ERAName: str = ''
+    ERAOpt: str = ''
     ERAVal: list = []
 
     def model_post_init(self, __context: Any) -> None:
@@ -56,10 +60,11 @@ class RVData(pydantic.BaseModel):
         return super().model_post_init(__context)
 
 
-############################################     
+############################################
 class BetaUncertainData(RVData):
     lowerbound: float = 0.0
     upperbound: float = 1.0
+
     @pydantic.validator('upperbound')
     def upper_bound_not_bigger_than_lower_bound(v, values):
         if 'lowerbound' in values and v <= values['lowerbound']:
@@ -74,8 +79,7 @@ class BetaParameters(BetaUncertainData):
     betas: pydantic.PositiveFloat
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [self.alphas, self.betas, self.lowerbound, 
-                       self.upperbound]
+        self.ERAVal = [self.alphas, self.betas, self.lowerbound, self.upperbound]
         return super().model_post_init(__context)
 
 
@@ -84,8 +88,7 @@ class BetaMoments(BetaUncertainData):
     standardDev: pydantic.PositiveFloat
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [self.mean, self.standardDev, self.lowerbound, 
-                       self.upperbound]
+        self.ERAVal = [self.mean, self.standardDev, self.lowerbound, self.upperbound]
         return super().model_post_init(__context)
 
 
@@ -93,9 +96,12 @@ class BetaDataset(BetaUncertainData):
     dataDir: str
 
     def model_post_init(self, __context: Any) -> None:
-        self.ERAVal = [np.genfromtxt(self.dataDir).tolist(), 
-                       [self.lowerbound, self.upperbound]]
+        self.ERAVal = [
+            np.genfromtxt(self.dataDir).tolist(),
+            [self.lowerbound, self.upperbound],
+        ]
         return super().model_post_init(__context)
+
 
 ############################################
 class ChiSquaredUncertainData(RVData):
@@ -125,18 +131,19 @@ class ChiSquaredDataset(ChiSquaredUncertainData):
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
 
+
 ############################################
 class ExponentialUncertainData(RVData):
     pass
 
 
 class ExponentialParameters(ExponentialUncertainData):
-    lamda: pydantic.PositiveFloat = pydantic.Field(alias="lambda")
+    lamda: pydantic.PositiveFloat = pydantic.Field(alias='lambda')
 
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.lamda]
         return super().model_post_init(__context)
-    
+
 
 class ExponentialMoments(ExponentialUncertainData):
     mean: pydantic.PositiveFloat
@@ -152,7 +159,8 @@ class ExponentialDataset(ExponentialUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
+
 ############################################
 class GammaUncertainData(RVData):
     pass
@@ -160,12 +168,12 @@ class GammaUncertainData(RVData):
 
 class GammaParameters(GammaUncertainData):
     k: pydantic.PositiveFloat
-    lamda: pydantic.PositiveFloat = pydantic.Field(alias="lambda")
+    lamda: pydantic.PositiveFloat = pydantic.Field(alias='lambda')
 
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.lamda, self.k]
         return super().model_post_init(__context)
-    
+
 
 class GammaMoments(GammaUncertainData):
     mean: pydantic.PositiveFloat
@@ -182,7 +190,8 @@ class GammaDataset(GammaUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
+
 ############################################
 class GumbelUncertainData(RVData):
     pass
@@ -195,7 +204,7 @@ class GumbelParameters(GumbelUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.alphaparam, self.betaparam]
         return super().model_post_init(__context)
-    
+
 
 class GumbelMoments(GumbelUncertainData):
     mean: float
@@ -212,7 +221,7 @@ class GumbelDataset(GumbelUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
 
 ############################################
 class LognormalUncertainData(RVData):
@@ -220,13 +229,13 @@ class LognormalUncertainData(RVData):
 
 
 class LognormalParameters(LognormalUncertainData):
-    lamda: float = pydantic.Field(alias="lambda")
+    lamda: float = pydantic.Field(alias='lambda')
     zeta: pydantic.PositiveFloat
 
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.lamda, self.zeta]
         return super().model_post_init(__context)
-    
+
 
 class LognormalMoments(LognormalUncertainData):
     mean: pydantic.PositiveFloat
@@ -243,7 +252,7 @@ class LognormalDataset(LognormalUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
 
 ############################################
 class NormalUncertainData(RVData):
@@ -257,7 +266,7 @@ class NormalParameters(NormalUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.mean, self.stdDev]
         return super().model_post_init(__context)
-    
+
 
 class NormalMoments(NormalUncertainData):
     mean: float
@@ -274,8 +283,9 @@ class NormalDataset(NormalUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
-############################################     
+
+
+############################################
 # class TruncatedExponentialUncertainData(RVData):
 #     a: float
 #     b: float
@@ -299,6 +309,7 @@ class NormalDataset(NormalUncertainData):
 #     inputType: typing.Literal["Dataset"]
 #     dataDir: str
 
+
 ############################################
 class UniformUncertainData(RVData):
     pass
@@ -307,6 +318,7 @@ class UniformUncertainData(RVData):
 class UniformParameters(UniformUncertainData):
     lowerbound: float = 0.0
     upperbound: float = 1.0
+
     @pydantic.validator('upperbound')
     def upper_bound_not_bigger_than_lower_bound(v, values):
         if 'lowerbound' in values and v <= values['lowerbound']:
@@ -314,7 +326,7 @@ class UniformParameters(UniformUncertainData):
                              lower bound {values['lowerbound']}. \
                              Got a value of {v}.")
         return v
-    
+
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.lowerbound, self.upperbound]
         return super().model_post_init(__context)
@@ -335,7 +347,7 @@ class UniformDataset(UniformUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
 
 ############################################
 class WeibullUncertainData(RVData):
@@ -349,7 +361,7 @@ class WeibullParameters(WeibullUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [self.scaleparam, self.shapeparam]
         return super().model_post_init(__context)
-    
+
 
 class WeibullMoments(WeibullUncertainData):
     mean: pydantic.PositiveFloat
@@ -366,5 +378,6 @@ class WeibullDataset(WeibullUncertainData):
     def model_post_init(self, __context: Any) -> None:
         self.ERAVal = [np.genfromtxt(self.dataDir).tolist()]
         return super().model_post_init(__context)
-    
+
+
 ############################################

@@ -38,24 +38,33 @@
 # Adam Zsarn�czay
 #
 
-import sys, argparse,json
+import sys, argparse, json
 
-def create_SAM(BIM_file, EVENT_file, SAM_file,
-    model_script, model_path, ndm, dof_map, column_line, getRV):
 
-    with open(BIM_file, 'r', encoding="utf-8") as f:
+def create_SAM(
+    BIM_file,
+    EVENT_file,
+    SAM_file,
+    model_script,
+    model_path,
+    ndm,
+    dof_map,
+    column_line,
+    getRV,
+):
+    with open(BIM_file, 'r', encoding='utf-8') as f:
         root_BIM = json.load(f)['GeneralInformation']
 
     try:
         stories = root_BIM['NumberOfStories']
     except:
-        raise ValueError("OpenSeesPyInput - structural information missing")
+        raise ValueError('OpenSeesPyInput - structural information missing')
 
     if column_line is None:
-        nodes = list(range(stories+1))
+        nodes = list(range(stories + 1))
     else:
         nodes = [int(node) for node in column_line.split(',')]
-        nodes = nodes[:stories+1]
+        nodes = nodes[: stories + 1]
 
     node_map = []
     for floor, node in enumerate(nodes):
@@ -75,27 +84,36 @@ def create_SAM(BIM_file, EVENT_file, SAM_file,
         'numStory': stories,
         'ndm': ndm,
         # TODO: improve this if we want random vars in the structure
-        'randomVar': []
+        'randomVar': [],
     }
 
-    with open(SAM_file, 'w', encoding="utf-8") as f:
+    with open(SAM_file, 'w', encoding='utf-8') as f:
         json.dump(root_SAM, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
     parser.add_argument('--filenameEVENT')
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
     parser.add_argument('--modelPath')
-    parser.add_argument('--ndm', default="3")
-    parser.add_argument('--dofMap', default="1, 2, 3")
+    parser.add_argument('--ndm', default='3')
+    parser.add_argument('--dofMap', default='1, 2, 3')
     parser.add_argument('--columnLine', default=None)
     parser.add_argument('--getRV', nargs='?', const=True, default=False)
     args = parser.parse_args()
 
-    sys.exit(create_SAM(
-        args.filenameAIM, args.filenameEVENT, args.filenameSAM,
-        args.mainScript, args.modelPath, args.ndm,
-        args.dofMap, args.columnLine, args.getRV))
+    sys.exit(
+        create_SAM(
+            args.filenameAIM,
+            args.filenameEVENT,
+            args.filenameSAM,
+            args.mainScript,
+            args.modelPath,
+            args.ndm,
+            args.dofMap,
+            args.columnLine,
+            args.getRV,
+        )
+    )

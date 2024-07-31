@@ -42,30 +42,28 @@ import sys
 import importlib
 import subprocess
 import argparse, posixpath, json
-  
+
 if __name__ == '__main__':
-     
     print('Pulling census data')
-    
-    
+
     # Get any missing dependencies
     packageInstalled = False
 
     import requests
+
     if not hasattr(requests, 'get'):
         print('Installing the requests package')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", 'requests'])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
         packageInstalled = True
 
-    
     packages = ['geopandas']
     for p in packages:
         if importlib.util.find_spec(p) is None:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", p])
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', p])
             packageInstalled = True
-            print('Installing the ' +p+ ' package')
+            print('Installing the ' + p + ' package')
 
-    if packageInstalled == True :
+    if packageInstalled == True:
         print('New packages were installed. Please restart the process.')
         sys.exit(0)
 
@@ -77,67 +75,84 @@ if __name__ == '__main__':
 
     # Output directory
     output_dir = config_info['OutputDirectory']
-    
+
     try:
-        os.mkdir(f"{output_dir}")
+        os.mkdir(f'{output_dir}')
     except:
         print('Output folder already exists.')
-    
-    
+
     # State counties, e.g., ['01001', '01003']
     state_counties = config_info['CountiesArray']
 
-
     # Population demographics vintage, e.g., "2010"
     popDemoVintage = config_info['PopulationDemographicsVintage']
-    
+
     # Custom census vars
     census_vars = config_info['CensusVariablesArray']
-    
+
     # Custom ACS vars
     acs_vars = config_info['ACSVariablesArray']
-    
-    if popDemoVintage != '2000' and popDemoVintage != '2010' and popDemoVintage != '2020':
 
-        print('Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',popDemoVintage,' is not supported')
-        
+    if (
+        popDemoVintage != '2000'
+        and popDemoVintage != '2010'
+        and popDemoVintage != '2020'
+    ):
+        print(
+            'Only 2000, 2010, and 2020 decennial census data supported. The provided vintage ',
+            popDemoVintage,
+            ' is not supported',
+        )
+
         sys.exit(-1)
-    
+
     # Vintage for household demographics
     houseIncomeVintage = config_info['HouseholdIncomeVintage']
 
-    if houseIncomeVintage != '2010' and houseIncomeVintage != '2015' and houseIncomeVintage != '2020':
-
-        print('Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',houseIncomeVintage,' is not supported')
+    if (
+        houseIncomeVintage != '2010'
+        and houseIncomeVintage != '2015'
+        and houseIncomeVintage != '2020'
+    ):
+        print(
+            'Only 2010, 2015, and 2020 ACS 5-yr data supported. The provided vintage ',
+            houseIncomeVintage,
+            ' is not supported',
+        )
         sys.exit(-1)
 
     from pyincore_data.censusutil import CensusUtil
 
     # Get the population demographics at the block level
-    CensusUtil.get_blockdata_for_demographics(state_counties,
-                                              census_vars,
-                                              popDemoVintage,out_csv=False,
-                                              out_shapefile=True,
-                                              out_geopackage=False,
-                                              out_geojson=False,
-                                              file_name="PopulationDemographicsCensus"+popDemoVintage,
-                                              output_dir=output_dir)
-    
-    #sys.exit(0)
-    
+    CensusUtil.get_blockdata_for_demographics(
+        state_counties,
+        census_vars,
+        popDemoVintage,
+        out_csv=False,
+        out_shapefile=True,
+        out_geopackage=False,
+        out_geojson=False,
+        file_name='PopulationDemographicsCensus' + popDemoVintage,
+        output_dir=output_dir,
+    )
+
+    # sys.exit(0)
+
     print('Done pulling census population demographics data')
 
     # Get the household income at the tract (2010 ACS) or block group level (2015 and 2020 ACS)
-    CensusUtil.get_blockgroupdata_for_income(state_counties,
-                                             acs_vars,
-                                             houseIncomeVintage,
-                                             out_csv=False,
-                                             out_shapefile=True,
-                                             out_geopackage=False,
-                                             out_geojson=False,
-                                             file_name="HouseholdIncomeACS"+houseIncomeVintage,
-                                             output_dir=output_dir)
-   
+    CensusUtil.get_blockgroupdata_for_income(
+        state_counties,
+        acs_vars,
+        houseIncomeVintage,
+        out_csv=False,
+        out_shapefile=True,
+        out_geopackage=False,
+        out_geojson=False,
+        file_name='HouseholdIncomeACS' + houseIncomeVintage,
+        output_dir=output_dir,
+    )
+
     print('Done pulling ACS household income data')
-    
+
     sys.exit(0)

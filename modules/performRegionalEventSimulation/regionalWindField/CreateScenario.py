@@ -45,8 +45,8 @@ import random
 import numpy as np
 import pandas as pd
 
-def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
 
+def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
     # Number of scenarios
     source_num = scenario_info.get('Number', 1)
     # Directly defining earthquake ruptures
@@ -58,24 +58,27 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             lat.append(s['Latitude'])
             lon.append(s['Longitude'])
         # Station list
-        station_list = {
-            'Latitude': lat,
-            'Longitude': lon
-        }
+        station_list = {'Latitude': lat, 'Longitude': lon}
         # Track data
         try:
             track_file = scenario_info['Storm'].get('Track')
-            df = pd.read_csv(os.path.join(data_dir, track_file), header = None, index_col = None)
+            df = pd.read_csv(
+                os.path.join(data_dir, track_file), header=None, index_col=None
+            )
             track = {
                 'Latitude': df.iloc[:, 0].values.tolist(),
-                'Longitude': df.iloc[:, 1].values.tolist()
+                'Longitude': df.iloc[:, 1].values.tolist(),
             }
         except:
-            print('CreateScenario: error - no storm track provided or file format not accepted.')
+            print(
+                'CreateScenario: error - no storm track provided or file format not accepted.'
+            )
         # Save Lat_w.csv
         track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
-        if track_simu_file:         
-            df = pd.read_csv(os.path.join(data_dir, track_simu_file), header = None, index_col = None)
+        if track_simu_file:
+            df = pd.read_csv(
+                os.path.join(data_dir, track_simu_file), header=None, index_col=None
+            )
             track_simu = df.iloc[:, 0].values.tolist()
         else:
             track_simu = track['Latitude']
@@ -98,25 +101,29 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
         except:
             print('CreateScenario: please provide all needed landfall properties.')
         # Monte-Carlo
-        #del_par = [0, 0, 0] # default
+        # del_par = [0, 0, 0] # default
         # Parsing mesh configurations
-        mesh_info = [1000., scenario_info['Mesh']['DivRad'], 1000000.]
-        mesh_info.extend([0., scenario_info['Mesh']['DivDeg'], 360.])
+        mesh_info = [1000.0, scenario_info['Mesh']['DivRad'], 1000000.0]
+        mesh_info.extend([0.0, scenario_info['Mesh']['DivDeg'], 360.0])
         # Wind speed measuring height
         measure_height = event_info['IntensityMeasure']['MeasureHeight']
         # Saving results
         scenario_data = dict()
         for i in range(source_num):
-            scenario_data.update({i: {
-                'Type': 'Wind',
-                'CycloneParam': param,
-                'StormTrack': track,
-                'StormMesh': mesh_info,
-                'Terrain': terrain_data,
-                'TrackSimu': track_simu,
-                'StationList': station_list,
-                'MeasureHeight': measure_height
-            }})
+            scenario_data.update(
+                {
+                    i: {
+                        'Type': 'Wind',
+                        'CycloneParam': param,
+                        'StormTrack': track,
+                        'StormMesh': mesh_info,
+                        'Terrain': terrain_data,
+                        'TrackSimu': track_simu,
+                        'StationList': station_list,
+                        'MeasureHeight': measure_height,
+                    }
+                }
+            )
         # return
         return scenario_data
 
@@ -129,14 +136,16 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             lat.append(s['Latitude'])
             lon.append(s['Longitude'])
         # Station list
-        station_list = {
-            'Latitude': lat,
-            'Longitude': lon
-        }
+        station_list = {'Latitude': lat, 'Longitude': lon}
         # Loading historical storm database
-        df_hs = pd.read_csv(os.path.join(os.path.dirname(__file__), 
-            'database/historical_storm/ibtracs.last3years.list.v04r00.csv'),
-            header = [0,1], index_col = None)
+        df_hs = pd.read_csv(
+            os.path.join(
+                os.path.dirname(__file__),
+                'database/historical_storm/ibtracs.last3years.list.v04r00.csv',
+            ),
+            header=[0, 1],
+            index_col=None,
+        )
         # Storm name and year
         try:
             storm_name = scenario_info['Storm'].get('Name')
@@ -163,7 +172,9 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
                 track_lon.append(float(x))
         # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
         if len(track_lat) == 0:
-            print('CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.')
+            print(
+                'CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.'
+            )
             for x in df_chs[('LAT', 'degrees_north')].values.tolist():
                 if x != ' ':
                     track_lat.append(float(x))
@@ -174,10 +185,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             print('CreateScenario: error - no track data is found.')
             return 1
         # Saving the track
-        track = {
-            'Latitude': track_lat,
-            'Longitude': track_lon
-        }
+        track = {'Latitude': track_lat, 'Longitude': track_lon}
         # Reading Terrain info (if provided)
         terrain_file = scenario_info.get('Terrain', None)
         if terrain_file:
@@ -193,25 +201,37 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
         if len(track_lat) == 0:
             print('CreateScenario: error - no landing information is found.')
             return 1
-        if (0 not in dist2land):
-            print('CreateScenario: warning - no landing fall is found, using the closest location.')
+        if 0 not in dist2land:
+            print(
+                'CreateScenario: warning - no landing fall is found, using the closest location.'
+            )
             tmploc = dist2land.index(min(dist2land))
         else:
-            tmploc = dist2land.index(0) # the first landing point in case the storm sway back and forth
+            tmploc = dist2land.index(
+                0
+            )  # the first landing point in case the storm sway back and forth
         # simulation track
         track_simu_file = scenario_info['Storm'].get('TrackSimu', None)
-        if track_simu_file:         
+        if track_simu_file:
             try:
-                df = pd.read_csv(os.path.join(data_dir, track_simu_file), header = None, index_col = None)
+                df = pd.read_csv(
+                    os.path.join(data_dir, track_simu_file),
+                    header=None,
+                    index_col=None,
+                )
                 track_simu = df.iloc[:, 0].values.tolist()
             except:
-                print('CreateScenario: warning - TrackSimu file not found, using the full track.')
+                print(
+                    'CreateScenario: warning - TrackSimu file not found, using the full track.'
+                )
                 track_simu = track_lat
         else:
-            print('CreateScenario: warning - no truncation defined, using the full track.')
-            #tmp = track_lat
-            #track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
-            #print(track_simu)
+            print(
+                'CreateScenario: warning - no truncation defined, using the full track.'
+            )
+            # tmp = track_lat
+            # track_simu = tmp[max(0, tmploc - 5): len(dist2land) - 1]
+            # print(track_simu)
             track_simu = track_lat
         # Reading data
         try:
@@ -227,19 +247,35 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
             print('CreateScenario: error - no landing angle is found.')
         if landfall_ang > 180.0:
             landfall_ang = landfall_ang - 360.0
-        landfall_prs = 1013.0 - np.min([float(x) for x in df_chs[('USA_PRES', 'mb')].iloc[tmploc - 5: ].values.tolist() if x != ' '])
-        landfall_spd = float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444 # convert knots/s to km/s
+        landfall_prs = 1013.0 - np.min(
+            [
+                float(x)
+                for x in df_chs[('USA_PRES', 'mb')]
+                .iloc[tmploc - 5 :]
+                .values.tolist()
+                if x != ' '
+            ]
+        )
+        landfall_spd = (
+            float(df_chs[('STORM_SPEED', 'kts')].iloc[tmploc]) * 0.51444
+        )  # convert knots/s to km/s
         try:
-            landfall_rad = float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934 # convert nmile to km
+            landfall_rad = (
+                float(df_chs[('USA_RMW', 'nmile')].iloc[tmploc]) * 1.60934
+            )  # convert nmile to km
         except:
             # No available radius of maximum wind is found
             print('CreateScenario: warning - swithcing to REUNION_RMW.')
             try:
                 # If the default option (USA_RMW) is not available, swithcing to REUNION_RMW
-                landfall_rad = float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934 # convert nmile to km
+                landfall_rad = (
+                    float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934
+                )  # convert nmile to km
             except:
                 # No available radius of maximum wind is found
-                print('CreateScenario: warning - no available radius of maximum wind is found, using a default 50 km.')
+                print(
+                    'CreateScenario: warning - no available radius of maximum wind is found, using a default 50 km.'
+                )
                 landfall_rad = 50
         param = []
         param.append(landfall_lat)
@@ -249,27 +285,31 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):
         param.append(landfall_spd)
         param.append(landfall_rad)
         # Monte-Carlo
-        #del_par = [0, 0, 0] # default
+        # del_par = [0, 0, 0] # default
         # Parsing mesh configurations
-        mesh_info = [1000., scenario_info['Mesh']['DivRad'], 1000000.]
-        mesh_info.extend([0., scenario_info['Mesh']['DivDeg'], 360.])
+        mesh_info = [1000.0, scenario_info['Mesh']['DivRad'], 1000000.0]
+        mesh_info.extend([0.0, scenario_info['Mesh']['DivDeg'], 360.0])
         # Wind speed measuring height
         measure_height = event_info['IntensityMeasure']['MeasureHeight']
         # Saving results
         scenario_data = dict()
         for i in range(source_num):
-            scenario_data.update({i: {
-                'Type': 'Wind',
-                'CycloneParam': param,
-                'StormTrack': track,
-                'StormMesh': mesh_info,
-                'Terrain': terrain_data,
-                'TrackSimu': track_simu,
-                'StationList': station_list,
-                'MeasureHeight': measure_height
-            }})
+            scenario_data.update(
+                {
+                    i: {
+                        'Type': 'Wind',
+                        'CycloneParam': param,
+                        'StormTrack': track,
+                        'StormMesh': mesh_info,
+                        'Terrain': terrain_data,
+                        'TrackSimu': track_simu,
+                        'StationList': station_list,
+                        'MeasureHeight': measure_height,
+                    }
+                }
+            )
         # return
         return scenario_data
-        
+
     else:
         print('CreateScenario: currently only supporting Simulation generator.')

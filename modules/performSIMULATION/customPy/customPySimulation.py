@@ -53,29 +53,28 @@ sys.path.insert(0, str(main_dir / 'common'))
 from simcenter_common import *
 
 convert_EDP = {
-    'max_abs_acceleration' : 'PFA',
-    'max_rel_disp' : 'PFD',
-    'max_drift' : 'PID',
+    'max_abs_acceleration': 'PFA',
+    'max_rel_disp': 'PFD',
+    'max_drift': 'PID',
     'max_roof_drift': 'PRD',
     'residual_drift': 'RID',
-    'residual_disp': 'RFD'
+    'residual_disp': 'RFD',
 }
 
-def write_RV():
 
+def write_RV():
     # create an empty SIM file
 
     SIM = {}
 
-    with open('SIM.json', 'w', encoding="utf-8") as f:
+    with open('SIM.json', 'w', encoding='utf-8') as f:
         json.dump(SIM, f, indent=2)
 
     # TODO: check simulation data exists and contains all important fields
     # TODO: get simulation data & write to SIM file
 
-def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
-                   EDP_input_path):
 
+def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path, EDP_input_path):
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import sys
@@ -87,26 +86,26 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
     sys.path.insert(0, os.getcwd())
 
     # load the AIM file
-    with open(AIM_input_path, 'r', encoding="utf-8") as f:
+    with open(AIM_input_path, 'r', encoding='utf-8') as f:
         AIM_in = json.load(f)
 
     # load the SAM file
-    with open(SAM_input_path, 'r', encoding="utf-8") as f:
+    with open(SAM_input_path, 'r', encoding='utf-8') as f:
         SAM_in = json.load(f)
 
     # load the event file
-    with open(EVENT_input_path, 'r', encoding="utf-8") as f:
+    with open(EVENT_input_path, 'r', encoding='utf-8') as f:
         EVENT_in = json.load(f)['Events'][0]
 
     # load the EDP file
-    with open(EDP_input_path, 'r', encoding="utf-8") as f:
+    with open(EDP_input_path, 'r', encoding='utf-8') as f:
         EDP_in = json.load(f)
 
     # KZ: commented out --> we're running at the current workdir
-    #sys.path.insert(0, SAM_in['modelPath'])
-    #os.chdir(SAM_in['modelPath'])
-    #print(os.listdir(os.getcwd()))
-    #print(os.getcwd())
+    # sys.path.insert(0, SAM_in['modelPath'])
+    # os.chdir(SAM_in['modelPath'])
+    # print(os.listdir(os.getcwd()))
+    # print(os.getcwd())
 
     custom_script_path = SAM_in['mainScript']
 
@@ -114,15 +113,26 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
     if os.path.exists(custom_script_path):
         pass
     else:
-        custom_script_dir = SAM_in.get('modelPath',None)
+        custom_script_dir = SAM_in.get('modelPath', None)
         if custom_script_dir is None:
             log_msg('No modelPath found in the SAM file.')
         else:
-            shutil.copytree(custom_script_dir,os.getcwd(),dirs_exist_ok=True)
-            log_msg('Custom scripts copied from {} to {}'.format(custom_script_dir,os.getcwd()))
+            shutil.copytree(custom_script_dir, os.getcwd(), dirs_exist_ok=True)
+            log_msg(
+                'Custom scripts copied from {} to {}'.format(
+                    custom_script_dir, os.getcwd()
+                )
+            )
 
     custom_script = importlib.__import__(
-        custom_script_path[:-3], globals(), locals(), ['custom_analysis',], 0)
+        custom_script_path[:-3],
+        globals(),
+        locals(),
+        [
+            'custom_analysis',
+        ],
+        0,
+    )
 
     custom_analysis = custom_script.custom_analysis
 
@@ -130,7 +140,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
     EDP_res = custom_analysis(AIM=AIM_in, EVENT=EVENT_in, SAM=SAM_in, EDP=EDP_in)
 
     os.chdir(working_dir)
-    results_txt = ""
+    results_txt = ''
 
     EDP_list = EDP_in['EngineeringDemandParameters'][0]['responses']
     # KZ: rewriting the parsing step of EDP_res to EDP_list
@@ -147,7 +157,7 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
                 if edp_name is not None:
                     if 'PID' in edp_name:
                         cur_floor = response['floor2']
-                        dofs = response.get('dofs',[])
+                        dofs = response.get('dofs', [])
                     elif 'PRD' in edp_name:
                         cur_floor = response['floor2']
                         dofs = response['dofs']
@@ -155,11 +165,15 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
                         cur_floor = response['floor']
                         dofs = response['dofs']
                     if len(dofs) == 0:
-                        dofs = [1, 2] #default is bidirection
+                        dofs = [1, 2]  # default is bidirection
                         response['dofs'] = dofs
                     print('dofs = ', dofs)
                     for cur_dof in dofs:
-                        key_name = '1-'+edp_name+'-{}-{}'.format(int(cur_floor), int(cur_dof))
+                        key_name = (
+                            '1-'
+                            + edp_name
+                            + '-{}-{}'.format(int(cur_floor), int(cur_dof))
+                        )
                         print('key_name = ', key_name)
                         res = EDP_res.get(key_name, None)
                         if res is None:
@@ -178,17 +192,17 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
         except:
             response['scalar_data'] = ['NaN']
             results_txt += 'NaN '
-        #edp = EDP_res[response['type']][response['id']]
-        #print(edp)
+        # edp = EDP_res[response['type']][response['id']]
+        # print(edp)
 
-        #response['scalar_data'] = edp # [val for dof, val in edp.items()]
-        #print(response)
+        # response['scalar_data'] = edp # [val for dof, val in edp.items()]
+        # print(response)
     results_txt = results_txt[:-1]
 
-    with open(EDP_input_path, 'w', encoding="utf-8") as f:
+    with open(EDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(EDP_in, f, indent=2)
 
-    with open('results.out', 'w', encoding="utf-8") as f:
+    with open('results.out', 'w', encoding='utf-8') as f:
         f.write(results_txt)
 
     """
@@ -295,27 +309,27 @@ def run_simulation(EVENT_input_path, SAM_input_path, AIM_input_path,
 
     log_msg('Simulation script finished.')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--filenameAIM',
-        default=None)
+    parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM')
     parser.add_argument('--filenameEVENT')
-    parser.add_argument('--filenameEDP',
-        default=None)
-    parser.add_argument('--filenameSIM',
-        default=None)
-    parser.add_argument('--getRV',
-        default=False,
-        nargs='?', const=True)
+    parser.add_argument('--filenameEDP', default=None)
+    parser.add_argument('--filenameSIM', default=None)
+    parser.add_argument('--getRV', default=False, nargs='?', const=True)
 
     args = parser.parse_args()
 
     if args.getRV:
         sys.exit(write_RV())
     else:
-        sys.exit(run_simulation(
-            args.filenameEVENT, args.filenameSAM, args.filenameAIM,
-            args.filenameEDP))
+        sys.exit(
+            run_simulation(
+                args.filenameEVENT,
+                args.filenameSAM,
+                args.filenameAIM,
+                args.filenameEDP,
+            )
+        )

@@ -13,11 +13,12 @@ import pandas as pd
 from collections import OrderedDict
 
 
-ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK','PUMP', 'RESERVOIR']
+ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']
 
 logger = logging.getLogger(__name__)
 
-#the follwing function is borrowed from WNTR
+
+# the follwing function is borrowed from WNTR
 def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
@@ -34,26 +35,27 @@ def _split_line(line):
     return _vals, _cmnt
 
 
-class restoration_data():
+class restoration_data:
     def __init__(self):
-        self.files          = {}
-        self.shift          = {}
-        self.entity         = {}
-        self.entity_rule    = {}
-        self.sequence       = {}
-        self.agents         = []
-        self.group          = {}
-        self.priority       = []
-        self.jobs           = []
-        self.jobs_default   = []
+        self.files = {}
+        self.shift = {}
+        self.entity = {}
+        self.entity_rule = {}
+        self.sequence = {}
+        self.agents = []
+        self.group = {}
+        self.priority = []
+        self.jobs = []
+        self.jobs_default = []
         self.time_overwrite = {}
-        self.final_method   = {}
-        self.once           = {}
-        
+        self.final_method = {}
+        self.once = {}
+
         for el in ELEMENTS:
             self.group[el] = OrderedDict()
 
-class RestorationIO():
+
+class RestorationIO:
     def __init__(self, definition_file_name):
         """
         Needs a file that contains:
@@ -70,24 +72,34 @@ class RestorationIO():
         None.
 
         """
-        
-        #some of the following lines have been addopted from WNTR
+
+        # some of the following lines have been addopted from WNTR
         self.rm = restoration_data()
-        
-        self.crew_data={}
-        
-        expected_sections=['[FILES]','[ENTITIES]', '[JOBS]','[AGENTS]',
-                           '[GROUPS]','[PRIORITIES]', '[SHIFTS]',
-                           '[SEQUENCES]', '[DEFINE]', '[DAMAGE GROUPS]',
-                           '[EFFECTS]', '[CREWS]']
-        
+
+        self.crew_data = {}
+
+        expected_sections = [
+            '[FILES]',
+            '[ENTITIES]',
+            '[JOBS]',
+            '[AGENTS]',
+            '[GROUPS]',
+            '[PRIORITIES]',
+            '[SHIFTS]',
+            '[SEQUENCES]',
+            '[DEFINE]',
+            '[DAMAGE GROUPS]',
+            '[EFFECTS]',
+            '[CREWS]',
+        ]
+
         self.config_file_comment = []
-        self.edata = []       
-        
+        self.edata = []
+
         self.sections = OrderedDict()
         for sec in expected_sections:
             self.sections[sec] = []
-        
+
         section = None
         lnum = 0
         edata = {'fname': definition_file_name}
@@ -108,15 +120,19 @@ class RestorationIO():
                         section = sec
                         continue
                     else:
-                        raise RuntimeError('%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata)
+                        raise RuntimeError(
+                            '%(fname)s:%(lnum)d: Invalid section "%(sec)s"' % edata
+                        )
                 elif section is None and line.startswith(';'):
                     self.config_file_comment.append(line[1:])
                     continue
                 elif section is None:
-                    raise RuntimeError('%(fname)s:%(lnum)d: Non-comment outside of valid section!' % edata)
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)d: Non-comment outside of valid section!'
+                        % edata
+                    )
                 # We have text, and we are in a section
                 self.sections[section].append((lnum, line))
-
 
         # Parse each of the sections
         self._read_files()
@@ -128,12 +144,12 @@ class RestorationIO():
         self._read_priorities()
         self._read_jobs()
         self._read_define()
-        #self._read_config()
-        
+        # self._read_config()
+
     def _read_files(self):
         edata = OrderedDict()
-        self.file_name=[]
-        self._file_data={}
+        self.file_name = []
+        self._file_data = {}
         self._file_handle_address = {}
         for lnum, line in self.sections['[FILES]']:
             edata['lnum'] = lnum
@@ -141,21 +157,24 @@ class RestorationIO():
             if words is not None and len(words) > 0:
                 if len(words) != 2:
                     edata['key'] = words[0]
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
-                file_handle  = words[0]
-                file_address =  words[1]
-                
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
+                        % edata
+                    )
+                file_handle = words[0]
+                file_address = words[1]
+
                 self._file_handle_address[file_handle] = file_address
-                
+
         for file_handle, file_address in self._file_handle_address.items():
             self._file_data[file_handle] = self._read_each_file(file_address)
         self.rm.files = self._file_data
-        
+
     def _read_each_file(self, file_address, method=0):
         lnum = 0
-        iTitle = True 
+        iTitle = True
         data_temp = None
-        if method==0:
+        if method == 0:
             try:
                 raise
                 with io.open(file_address, 'r', encoding='utf-8') as f:
@@ -175,29 +194,30 @@ class RestorationIO():
                                 iTitle = False
                                 data_temp = pd.DataFrame(columns=vals)
                             else:
-                                data_temp.loc[lnum-2] = vals
+                                data_temp.loc[lnum - 2] = vals
             except:
                 data_temp = self._read_each_file(file_address, method=1)
-        elif method==1:
+        elif method == 1:
             data_temp = pd.read_csv(file_address)
         else:
-            raise ValueError('Uknown method: '+str(method))
+            raise ValueError('Uknown method: ' + str(method))
         return data_temp
-    
+
     def _read_shifts(self):
-        
         for lnum, line in self.sections['[SHIFTS]']:
-            #edata['lnum'] = lnum
+            # edata['lnum'] = lnum
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) != 3:
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s')
-                shift_name     = words[0]
-                shift_begining = int(words[1])*3600
-                shift_ending   = int(words[2])*3600
-                
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
+                    )
+                shift_name = words[0]
+                shift_begining = int(words[1]) * 3600
+                shift_ending = int(words[2]) * 3600
+
                 self.rm.shift[shift_name] = (shift_begining, shift_ending)
-                
+
     def _read_entities(self):
         """
         Reads damage group definitions and updates the Restoration Model
@@ -209,520 +229,697 @@ class RestorationIO():
             If the number of damages are not right.
         ValueError
             If the input data is not correctly provided.
-        
+
             If the input data is not correctly provided.
-        
+
         Returns
         -------
         None.
 
         """
-        
+
         # Entities is kept for legacy compatibility with the first version
-        damage_group_data = self.sections.get('[ENTITIES]', self.sections.get('[Damage Group]'))
-        
+        damage_group_data = self.sections.get(
+            '[ENTITIES]', self.sections.get('[Damage Group]')
+        )
+
         for lnum, line in damage_group_data:
             arg1 = None
             arg2 = None
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                if len(words) != 2 and len(words)!=4:
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s')
-                entity_name     = words[0]
-                element         = words[1].upper()
-                
+                if len(words) != 2 and len(words) != 4:
+                    raise RuntimeError(
+                        '%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s'
+                    )
+                entity_name = words[0]
+                element = words[1].upper()
+
                 if element not in ELEMENTS:
                     raise ValueError('Unknown element line number ' + str(lnum))
-                
-                #if entity_name in self.rm.entity:
-                    #raise ValueError('Entity already defined')
-                
+
+                # if entity_name in self.rm.entity:
+                # raise ValueError('Entity already defined')
+
                 if len(words) == 4:
                     arg1 = words[2]
                     arg2 = words[3]
-                    
-                    #if (element=='PIPE' and arg1 not in self.rm._registry._pipe_damage_table.columns and arg1!='FILE' and arg1!='NOT_IN_FILE') and (element=='DISTNODE' and arg1 not in self.rm._registry._node_damage_table.columns):
-                        #raise ValueError('Argument 1('+arg1+') is not recognized in line number: ' + str(lnum))
-                
+
+                    # if (element=='PIPE' and arg1 not in self.rm._registry._pipe_damage_table.columns and arg1!='FILE' and arg1!='NOT_IN_FILE') and (element=='DISTNODE' and arg1 not in self.rm._registry._node_damage_table.columns):
+                    # raise ValueError('Argument 1('+arg1+') is not recognized in line number: ' + str(lnum))
+
                 if arg1 == None:
                     self.rm.entity[entity_name] = element
-                    ent_rule = [('ALL',None, None)]
-                    
+                    ent_rule = [('ALL', None, None)]
+
                     if entity_name not in self.rm.entity_rule:
                         self.rm.entity_rule[entity_name] = ent_rule
                     else:
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
-                    #sina: take care of this in regisry opening                        
-                    #self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
-                
-                elif arg1=='FILE' or arg1=='NOT_IN_FILE':
-                    name_list=self.rm.files[arg2]['ElementID'].unique().tolist()
+                    # sina: take care of this in regisry opening
+                    # self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
+
+                elif arg1 == 'FILE' or arg1 == 'NOT_IN_FILE':
+                    name_list = self.rm.files[arg2]['ElementID'].unique().tolist()
                     ent_rule = [(arg1, None, name_list)]
                     self.rm.entity[entity_name] = element
-                    
+
                     if entity_name not in self.rm.entity_rule:
                         self.rm.entity_rule[entity_name] = ent_rule
-                        #self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
+                        # self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
                     else:
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
-                        
+
                 else:
-                    
                     if ':' in arg2:
                         split_arg = arg2.split(':')
-                        
-                        if len(split_arg)!=2:
-                            raise  ValueError('There must be two parts: PART1:PART2. Now there are '+repr(len(split_arg)+' parts. Line number is '+repr(lnum)))
-                        if split_arg[0]=='':
-                            raise ValueError('The first part is Empty in line '+repr(lnum))
-                        if split_arg[1]=='':
-                            raise ValueError('The second part is Empty in line '+repr(lnum))
+
+                        if len(split_arg) != 2:
+                            raise ValueError(
+                                'There must be two parts: PART1:PART2. Now there are '
+                                + repr(
+                                    len(split_arg)
+                                    + ' parts. Line number is '
+                                    + repr(lnum)
+                                )
+                            )
+                        if split_arg[0] == '':
+                            raise ValueError(
+                                'The first part is Empty in line ' + repr(lnum)
+                            )
+                        if split_arg[1] == '':
+                            raise ValueError(
+                                'The second part is Empty in line ' + repr(lnum)
+                            )
                     else:
-                        raise ValueError('There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '+repr(lnum))
-                        
+                        raise ValueError(
+                            'There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
+                            + repr(lnum)
+                        )
+
                     rest_of_args = arg2.split(':')
-                    arg2=rest_of_args[0]
-                    arg3=rest_of_args[1]
-                    
+                    arg2 = rest_of_args[0]
+                    arg3 = rest_of_args[1]
+
                     try:
                         temp_arg3 = float(arg3)
                     except:
                         temp_arg3 = str(arg3)
-                    
-                    arg3=temp_arg3
+
+                    arg3 = temp_arg3
                     ent_rule = [(arg1, arg2, arg3)]
                     if entity_name not in self.rm.entity:
-                        
                         self.rm.entity[entity_name] = element
                         self.rm.entity_rule[entity_name] = ent_rule
-                        #self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
+                        # self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
                     else:
                         if self.rm.entity[entity_name] != element:
-                            raise ValueError('Element must not chanage in an added condition. Line '+str(lnum))
+                            raise ValueError(
+                                'Element must not chanage in an added condition. Line '
+                                + str(lnum)
+                            )
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
-    
     def _read_sequences(self):
-        #sina: there is a part that you need to add in restroation init
+        # sina: there is a part that you need to add in restroation init
         for lnum, line in self.sections['[SEQUENCES]']:
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                #if len(words) != 2 or len(words)!=4:
-                    #raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
-                element         = words[0].upper()
+                # if len(words) != 2 or len(words)!=4:
+                # raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
+                element = words[0].upper()
                 seq = []
                 for arg in words[1:]:
                     seq.append(arg)
                 if element in self.rm.sequence:
                     raise ValueError('Element already in sequences')
                 if element not in ELEMENTS:
-                    raise ValueError("The Element " + repr(element) + " is not a recognized element")
+                    raise ValueError(
+                        'The Element '
+                        + repr(element)
+                        + ' is not a recognized element'
+                    )
                 self.rm.sequence[element] = seq
-                
-        
+
     def _read_agents(self):
-        agent_file_handle={}
-        group_names  = {}
+        agent_file_handle = {}
+        group_names = {}
         group_column = {}
-        
-        crews_data = self.sections.get('[AGENTS]', self.sections.get('CREWS') )
+
+        crews_data = self.sections.get('[AGENTS]', self.sections.get('CREWS'))
         for lnum, line in crews_data:
-            #edata['lnum'] = lnum
+            # edata['lnum'] = lnum
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                _group_name   = None
+                _group_name = None
                 _group_column = None
-                
+
                 if len(words) < 3:
-                    raise RuntimeError('less than three argument is not valid for crew definition')
+                    raise RuntimeError(
+                        'less than three argument is not valid for crew definition'
+                    )
                 agent_type = words[0]
-                if words[1].upper() == "FILE":
+                if words[1].upper() == 'FILE':
                     agent_file_handle[words[0]] = words[2]
                 else:
-                    raise ValueError("Unknown key")
-                if len(words)>=4:
-                    group_data    = words[3]
-                    _group_name   = group_data.split(':')[0]
+                    raise ValueError('Unknown key')
+                if len(words) >= 4:
+                    group_data = words[3]
+                    _group_name = group_data.split(':')[0]
                     _group_column = group_data.split(':')[1]
-                
-                
-                group_names[agent_type]  = _group_name
+
+                group_names[agent_type] = _group_name
                 group_column[agent_type] = _group_column
-                
+
         for agent_type, file_handle in agent_file_handle.items():
             data = self._file_data[file_handle]
-            
-            #print(file_handle)
-            #print(self._file_data[file_handle])
-            
+
+            # print(file_handle)
+            # print(self._file_data[file_handle])
+
             agent_number = data['Number']
-            j=0
+            j = 0
             for lnum, line in data.iterrows():
-                #try:
+                # try:
                 num = int(agent_number[j])
-                #except :
-                    #print('exception')
-                    #pass
+                # except :
+                # print('exception')
+                # pass
                 _r = range(num)
-               
+
                 for i in _r:
                     agent_name = agent_type + str(j) + str(i)
                     predefinitions = line.to_dict()
                     definitions = {}
-                    definitions['cur_x']      = predefinitions['Curr.-X-Coord']
-                    definitions['cur_y']      = predefinitions['Curr.-Y-Coord']
-                    definitions['base_x']     = predefinitions['Home-X-Coord']
-                    definitions['base_y']     = predefinitions['Home-Y-Coord']
+                    definitions['cur_x'] = predefinitions['Curr.-X-Coord']
+                    definitions['cur_y'] = predefinitions['Curr.-Y-Coord']
+                    definitions['base_x'] = predefinitions['Home-X-Coord']
+                    definitions['base_y'] = predefinitions['Home-Y-Coord']
                     definitions['shift_name'] = predefinitions['Shift']
-                    
-                    group_name_temp=None
-                    if group_names[agent_type] !=None:
-                        definitions['group']  = predefinitions[group_column[agent_type]]
+
+                    group_name_temp = None
+                    if group_names[agent_type] != None:
+                        definitions['group'] = predefinitions[
+                            group_column[agent_type]
+                        ]
                         group_name_temp = group_names[agent_type]
                     else:
                         group_name_temp = 'default'
-                        definitions['group']  = 'Default'
-                        
+                        definitions['group'] = 'Default'
+
                     definitions['group_name'] = group_name_temp
-                    self.rm.agents.append((agent_name ,agent_type, definitions) )
+                    self.rm.agents.append((agent_name, agent_type, definitions))
                 j += 1
-    
+
     def _read_groups(self):
-        
         for lnum, line in self.sections['[GROUPS]']:
             words, comments = _split_line(line)
-            
+
             if words is not None and len(words) > 0:
                 if not len(words) >= 6:
                     raise ValueError('error in line: ' + str(lnum))
-                group_name      = words[0]
-                element_type    = words[1]
-                arguement       = words[2]
-                file_handler    = words[3]
-                element_col_ID  = words[4]
-                pipe_col_ID     = words[5]
-                
+                group_name = words[0]
+                element_type = words[1]
+                arguement = words[2]
+                file_handler = words[3]
+                element_col_ID = words[4]
+                pipe_col_ID = words[5]
+
                 if element_type not in ELEMENTS:
-                    raise ValueError('Unknown element type: '+repr(element_type)+', in line: '+repr(lnum))
-                if arguement!='FILE':
-                    raise ValueError('the Only acceptable argument is FILE. Not: ' + repr(arguement) + '. Line: '+repr(lnum))
-                
+                    raise ValueError(
+                        'Unknown element type: '
+                        + repr(element_type)
+                        + ', in line: '
+                        + repr(lnum)
+                    )
+                if arguement != 'FILE':
+                    raise ValueError(
+                        'the Only acceptable argument is FILE. Not: '
+                        + repr(arguement)
+                        + '. Line: '
+                        + repr(lnum)
+                    )
+
                 data = self.rm.files[file_handler]
-                
+
                 if pipe_col_ID not in data:
-                    raise ValueError(repr(pipe_col_ID) + "not in file handle="+repr(file_handler) )
-                
-                group_list       = data[pipe_col_ID]
+                    raise ValueError(
+                        repr(pipe_col_ID)
+                        + 'not in file handle='
+                        + repr(file_handler)
+                    )
+
+                group_list = data[pipe_col_ID]
                 group_list.index = data[element_col_ID]
-                
+
                 if element_type not in self.rm.group:
-                    raise ValueError('This error must never happen: '+repr(element_type))
-                
+                    raise ValueError(
+                        'This error must never happen: ' + repr(element_type)
+                    )
+
                 if group_name in self.rm.group[element_type]:
-                    raise ValueError('The Group is already identified: '+repr(group_name)+' in line: '+repr(lnum))
-                
+                    raise ValueError(
+                        'The Group is already identified: '
+                        + repr(group_name)
+                        + ' in line: '
+                        + repr(lnum)
+                    )
+
                 self.rm.group[element_type][group_name] = group_list
-               
-                
+
     def _read_priorities(self):
         for lnum, line in self.sections['[PRIORITIES]']:
             words, comments = _split_line(line)
-            
+
             if words is not None and len(words) > 0:
                 if not len(words) >= 3:
                     raise ValueError('error in line: ' + str(lnum))
-                agent_type      = words[0]
-                
-                priority=None
+                agent_type = words[0]
+
+                priority = None
                 try:
-                    priority        = int(words[1])
+                    priority = int(words[1])
                 except:
                     print('exeption handled in _read_priorities')
                 if type(priority) != int:
-                    raise ValueError('Priority casting failed:'+str(priority)+'in line: '+repr(lnum))
-                arg=[]
+                    raise ValueError(
+                        'Priority casting failed:'
+                        + str(priority)
+                        + 'in line: '
+                        + repr(lnum)
+                    )
+                arg = []
                 for word in words[2:]:
                     temp = None
-                    if word.find(':')!=-1:
+                    if word.find(':') != -1:
                         split_temp = word.split(':')
-                        arg.append((split_temp[0],split_temp[1]))
+                        arg.append((split_temp[0], split_temp[1]))
                         if split_temp[1] not in self.rm.entity:
-                            raise ValueError('Entity value is used which is not defined before: '+split_temp[1]+', Line: ' + str(lnum))
-                        if split_temp[0] not in self.rm.sequence[self.rm.entity[split_temp[1]]]:
-                            raise ValueError('There is no action: '+repr(split_temp[0]) +' in element: '+repr(self.rm.entity[split_temp[1]]))
+                            raise ValueError(
+                                'Entity value is used which is not defined before: '
+                                + split_temp[1]
+                                + ', Line: '
+                                + str(lnum)
+                            )
+                        if (
+                            split_temp[0]
+                            not in self.rm.sequence[self.rm.entity[split_temp[1]]]
+                        ):
+                            raise ValueError(
+                                'There is no action: '
+                                + repr(split_temp[0])
+                                + ' in element: '
+                                + repr(self.rm.entity[split_temp[1]])
+                            )
                     else:
                         arg.append(word)
                         if word not in ['EPICENTERDIST', 'WaterSource']:
                             raise ValueError('Unnown value in line: ' + str(lnum))
-                
-                self.rm.priority.append((agent_type, priority, arg) )
-    
+
+                self.rm.priority.append((agent_type, priority, arg))
+
     def _read_jobs(self):
         for lnum, line in self.sections['[JOBS]']:
             words, comments = _split_line(line)
-            
+
             if words is not None and len(words) > 0:
                 if not len(words) >= 3:
-                    raise ValueError('Not enough arguments. error in line: ' + str(lnum))
-                agent_type   = words[0]
-                
+                    raise ValueError(
+                        'Not enough arguments. error in line: ' + str(lnum)
+                    )
+                agent_type = words[0]
+
                 action_entity = words[1]
-                if not action_entity.find(':')!=-1:
-                    raise ValueError('There must be an action and entity seprated by : in line '+str(lnum))
+                if not action_entity.find(':') != -1:
+                    raise ValueError(
+                        'There must be an action and entity seprated by : in line '
+                        + str(lnum)
+                    )
                 split_temp = action_entity.split(':')
                 action = split_temp[0]
                 entity = split_temp[1]
-                
+
                 definer_arg = words[2]
-                if not definer_arg.find(':')!=-1:
-                    raise ValueError('There must be an Time Definer and Argument seprated by : in line '+str(lnum))
+                if not definer_arg.find(':') != -1:
+                    raise ValueError(
+                        'There must be an Time Definer and Argument seprated by : in line '
+                        + str(lnum)
+                    )
                 split_temp = definer_arg.split(':')
-                definer  = split_temp[0]
+                definer = split_temp[0]
                 argument = split_temp[1]
-                
+
                 if definer.upper() == 'FIXED':
                     try:
-                        argument        = int(argument)
+                        argument = int(argument)
                     except:
                         print('exeption handled in _read_jobs')
                 else:
-                    raise ValueError('Definer is not recognized: '+definer)
-                    
+                    raise ValueError('Definer is not recognized: ' + definer)
+
                 effect = None
-                if len(words)>=4:
+                if len(words) >= 4:
                     effect = words[3]
-                                    
-                self.rm.jobs.append((agent_type, entity, action, argument, effect) )
-                
+
+                self.rm.jobs.append((agent_type, entity, action, argument, effect))
+
     def _read_define(self):
-        job={}
-        
+        job = {}
+
         effect_data = self.sections.get('[DEFINE]', self.sections.get('[EFFECTS]'))
         for lnum, line in effect_data:
             words, comments = _split_line(line)
             if words is not None and len(words) > 0:
-                #if not len(words) >= 3:
-                    #raise ValueError('Not enough arguments. error in line: ' + str(lnum))
+                # if not len(words) >= 3:
+                # raise ValueError('Not enough arguments. error in line: ' + str(lnum))
                 job_name = words[0]
 
-                try:    
+                try:
                     method_name = float(words[1])
                 except:
                     method_name = words[1]
-                
-                res_list=[]
-                flag=False
-                
+
+                res_list = []
+                flag = False
+
                 if method_name == 'FILE':
-                   file_data = self._read_file_effect(words[2:], job_name)
-                   self.rm.jobs.append((job_name, 'DATA', file_data) )
-                   continue
-                
+                    file_data = self._read_file_effect(words[2:], job_name)
+                    self.rm.jobs.append((job_name, 'DATA', file_data))
+                    continue
+
                 method_data_list = words[2:]
                 for method_data in method_data_list:
-                    res={}
+                    res = {}
                     definition = method_data.split(':')
-                    
-                    i=0
-                    if len(definition)%2!=1:
-                        raise ValueError('Error in line '+str(lnum))
-                    
+
+                    i = 0
+                    if len(definition) % 2 != 1:
+                        raise ValueError('Error in line ' + str(lnum))
+
                     main_arg = None
-                    
+
                     while i < len(definition):
                         arg = definition[i].upper()
-                        if i==0:
+                        if i == 0:
                             main_arg = arg
                             i += 1
-                            res['EFFECT']=main_arg
+                            res['EFFECT'] = main_arg
                             continue
-                        val = definition[i+1].upper()
-                        
+                        val = definition[i + 1].upper()
+
                         if main_arg == 'RECONNECT':
                             if arg == 'PIPESIZE':
                                 if 'PIPESIZEFACTOR' in res:
-                                    raise ValueError('Either pipe size or pipe size factor can be defined')
+                                    raise ValueError(
+                                        'Either pipe size or pipe size factor can be defined'
+                                    )
                                 res['PIPESIZE'] = float(val)
-                            
+
                             elif arg == 'PIPESIZEFACTOR':
                                 if 'PIPESIZE' in res:
-                                    raise ValueError('Either pipe size or pipe size factor can be defined')
+                                    raise ValueError(
+                                        'Either pipe size or pipe size factor can be defined'
+                                    )
                                 val = float(val)
-                                if val>1 or val<0:
-                                    raise ValueError('Pipe Size Factor must be bigger than 0 and less than or eqal to 1: '+str(val))
+                                if val > 1 or val < 0:
+                                    raise ValueError(
+                                        'Pipe Size Factor must be bigger than 0 and less than or eqal to 1: '
+                                        + str(val)
+                                    )
                                 res['PIPESIZEFACTOR'] = float(val)
                             elif arg == 'CV':
-                                if val=='TRUE' or val=='1':
-                                    val=True
-                                elif val=='FALSE' or val=='0':
-                                    val=False
+                                if val == 'TRUE' or val == '1':
+                                    val = True
+                                elif val == 'FALSE' or val == '0':
+                                    val = False
                                 else:
-                                    raise ValueError('Unrecognized value for CV in line '+str(lnum)+': '+val+('Value for CV must be either True or False'))
-                                res['CV']=val
+                                    raise ValueError(
+                                        'Unrecognized value for CV in line '
+                                        + str(lnum)
+                                        + ': '
+                                        + val
+                                        + (
+                                            'Value for CV must be either True or False'
+                                        )
+                                    )
+                                res['CV'] = val
                             elif arg == 'PIPELENGTH':
                                 try:
                                     val == float(val)
                                 except Exception as e:
-                                    print("The value for PIPELENGTH must be a number")
+                                    print(
+                                        'The value for PIPELENGTH must be a number'
+                                    )
                                     raise e
-                                res['PIPELENGTH']=val
+                                res['PIPELENGTH'] = val
                             elif arg == 'PIPEFRICTION':
                                 try:
                                     val == float(val)
                                 except Exception as e:
-                                    print("The value for PIPEFRICTION must be a number")
+                                    print(
+                                        'The value for PIPEFRICTION must be a number'
+                                    )
                                     raise e
-                                res['PIPEFRICTION']=val
+                                res['PIPEFRICTION'] = val
                             else:
-                                raise ValueError('Unrecognized argument: '+arg+ ', in effect: '+main_arg)
+                                raise ValueError(
+                                    'Unrecognized argument: '
+                                    + arg
+                                    + ', in effect: '
+                                    + main_arg
+                                )
                         elif main_arg == 'ADD_RESERVOIR':
                             if arg == 'PUMP':
                                 res['PUMP'] = float(val)
-                            
+
                             elif arg == 'CV':
-                                if val=='TRUE' or val=='1':
-                                    val=True
-                                elif val=='FALSE' or val=='0':
-                                    val=False
+                                if val == 'TRUE' or val == '1':
+                                    val = True
+                                elif val == 'FALSE' or val == '0':
+                                    val = False
                                 else:
-                                    raise ValueError('Unrecognized value for CV in line '+str(lnum)+': '+val+('Value for CV must be either True or False'))
-                                res['CV']=val
+                                    raise ValueError(
+                                        'Unrecognized value for CV in line '
+                                        + str(lnum)
+                                        + ': '
+                                        + val
+                                        + (
+                                            'Value for CV must be either True or False'
+                                        )
+                                    )
+                                res['CV'] = val
                             elif arg == 'ADDEDELEVATION':
                                 val = float(val)
                                 res['ADDEDELEVATION'] = float(val)
                             else:
-                                raise ValueError('Unrecognized argument: '+arg+ ', in effect: '+main_arg)
+                                raise ValueError(
+                                    'Unrecognized argument: '
+                                    + arg
+                                    + ', in effect: '
+                                    + main_arg
+                                )
                         elif main_arg == 'REMOVE_LEAK':
                             if arg == 'LEAKFACTOR':
                                 val = float(val)
-                                if val>1 or val<=0:
-                                    raise ValueError('Leak factor must be bigger than 0 and less than or eqal to 1: '+str(val))
+                                if val > 1 or val <= 0:
+                                    raise ValueError(
+                                        'Leak factor must be bigger than 0 and less than or eqal to 1: '
+                                        + str(val)
+                                    )
                                 res['LEAKFACTOR'] = val
                             else:
-                                raise ValueError('Unrecognized argument: '+arg+ ', in effect: '+main_arg)
-                        
+                                raise ValueError(
+                                    'Unrecognized argument: '
+                                    + arg
+                                    + ', in effect: '
+                                    + main_arg
+                                )
+
                         elif main_arg == 'COL_CLOSE_PIPE':
-                            raise ValueError('REPAIR at this stage does not accept any argument')
-                           
+                            raise ValueError(
+                                'REPAIR at this stage does not accept any argument'
+                            )
+
                         elif main_arg == 'ISOLATE_DN':
-                            if arg == 'PIDR': #Post Incident Demand Ratio
-                                
-                                if val[0]!='(' or val[-1]!=')' or val.find(',')==-1:
-                                    ValueError("After PIDR the format must be like (CONDIION,VALUE)")
-                                
+                            if arg == 'PIDR':  # Post Incident Demand Ratio
+                                if (
+                                    val[0] != '('
+                                    or val[-1] != ')'
+                                    or val.find(',') == -1
+                                ):
+                                    ValueError(
+                                        'After PIDR the format must be like (CONDIION,VALUE)'
+                                    )
+
                                 val = val.strip('(').strip(')')
-                                val_split=val.split(',')
-                                _con=val_split[0].upper()
-                                _con_val=float(val_split[1])
-                                
-                                if not (_con=='BG' or _con=='EQ' or _con=='LT' or _con=='BG-EQ' or _con=='LT-EQ'):
-                                    raise ValueError('Condition is not recognized:' + str(_con))
-                                    
+                                val_split = val.split(',')
+                                _con = val_split[0].upper()
+                                _con_val = float(val_split[1])
+
+                                if not (
+                                    _con == 'BG'
+                                    or _con == 'EQ'
+                                    or _con == 'LT'
+                                    or _con == 'BG-EQ'
+                                    or _con == 'LT-EQ'
+                                ):
+                                    raise ValueError(
+                                        'Condition is not recognized:' + str(_con)
+                                    )
+
                                 if _con_val < 0:
-                                    raise ValueError('PIDR condition value cannot be less than zero-->'+repr(_con_val))
-                                                                    
-                                res['PIDR']=(_con,_con_val)
-                                
+                                    raise ValueError(
+                                        'PIDR condition value cannot be less than zero-->'
+                                        + repr(_con_val)
+                                    )
+
+                                res['PIDR'] = (_con, _con_val)
+
                         elif main_arg == 'REPAIR':
-                            raise ValueError('REPAIR at this stage does not accept any argument')
-                        
+                            raise ValueError(
+                                'REPAIR at this stage does not accept any argument'
+                            )
+
                         elif method_name.upper() == 'DEFAULT':
-                                                        
                             try:
-                                arg=int(arg)
+                                arg = int(arg)
                             except:
                                 pass
-                            
-                            if main_arg=='METHOD_PROBABILITY':
-                                val=float(val)
-                            
-                                if val<0:
-                                    raise ValueError('Probability cannot be less than zero. '+' In line  '+lnum+' probability: '+val)
-                                elif val>1:
-                                    raise ValueError('Probability cannot be bigger than 1. ' +' In line  '+lnum+' probability: '+val)
-                                temp={'effect_definition_name':job_name, 'method_name':arg,'argument':main_arg,'value':val}
+
+                            if main_arg == 'METHOD_PROBABILITY':
+                                val = float(val)
+
+                                if val < 0:
+                                    raise ValueError(
+                                        'Probability cannot be less than zero. '
+                                        + ' In line  '
+                                        + lnum
+                                        + ' probability: '
+                                        + val
+                                    )
+                                elif val > 1:
+                                    raise ValueError(
+                                        'Probability cannot be bigger than 1. '
+                                        + ' In line  '
+                                        + lnum
+                                        + ' probability: '
+                                        + val
+                                    )
+                                temp = {
+                                    'effect_definition_name': job_name,
+                                    'method_name': arg,
+                                    'argument': main_arg,
+                                    'value': val,
+                                }
                                 self.rm.jobs_default.append(temp)
-                                #temp={'effect_definition_name':effect_name, 'method_name':arg,'argument':'METHOD_PROBABILITY','value':val}
-                            elif main_arg=='FINALLY':
+                                # temp={'effect_definition_name':effect_name, 'method_name':arg,'argument':'METHOD_PROBABILITY','value':val}
+                            elif main_arg == 'FINALLY':
                                 if val.upper() == 'NULL':
                                     val = None
                                 else:
                                     val = None
-                                    print('WARNING: At default line in FINALL section, the third argument is not NULL: ' + str(val) + 'The value is ignored antywhere')
+                                    print(
+                                        'WARNING: At default line in FINALL section, the third argument is not NULL: '
+                                        + str(val)
+                                        + 'The value is ignored antywhere'
+                                    )
                                 self.rm.final_method[job_name] = arg
-                            elif main_arg=='ONLYONCE':
-                                try:    
+                            elif main_arg == 'ONLYONCE':
+                                try:
                                     val = float(val)
                                 except:
                                     pass
-                                
+
                                 if job_name in self.rm.once:
                                     self.rm.once[job_name].append(val)
                                 else:
-                                    self.rm.once[job_name]=[val]
+                                    self.rm.once[job_name] = [val]
                             else:
-                                raise ValueError('Unrecognized argument in line ' + str(lnum) + ': ' + arg)
-                            
-                            flag=True
+                                raise ValueError(
+                                    'Unrecognized argument in line '
+                                    + str(lnum)
+                                    + ': '
+                                    + arg
+                                )
+
+                            flag = True
                         else:
-                            raise ValueError('Unrecognized argument in line ' + str(lnum) + ': ' + arg)
-                                                    
+                            raise ValueError(
+                                'Unrecognized argument in line '
+                                + str(lnum)
+                                + ': '
+                                + arg
+                            )
+
                         i += 2
                     res_list.append(res)
-                if flag==False:
-                    self.rm.jobs.append((job_name, method_name, res_list) )
-                        
-                
-        #for self.rm.effects.pruneData()
-                
+                if flag == False:
+                    self.rm.jobs.append((job_name, method_name, res_list))
+
+        # for self.rm.effects.pruneData()
+
     def _read_file_effect(self, file_info, effect_name):
         res = {}
-        
+
         file_handle = file_info[0]
         file_data = file_info[1:]
-        
-        data   = self.rm.files[file_handle]
-        
-        #columns_to_remove = data.columns.tolist()
+
+        data = self.rm.files[file_handle]
+
+        # columns_to_remove = data.columns.tolist()
         aliases = {}
 
         for pair in file_data:
             if not pair.find(':'):
-                raise ValueError('Error in file info. Not Pair: '+pair)
+                raise ValueError('Error in file info. Not Pair: ' + pair)
             _arg, val = pair.split(':')
             arg = _arg.upper()
-            
+
             if arg in res:
-                raise ValueError('Argument already added: '+_arg)
-            
+                raise ValueError('Argument already added: ' + _arg)
+
             if val not in data.columns:
-                raise ValueError('Value not in file: '+ val)
-            if arg == 'ELEMENT_NAME' or arg == 'METHOD_NAME' or arg == 'METHOD_PROBABILITY':
+                raise ValueError('Value not in file: ' + val)
+            if (
+                arg == 'ELEMENT_NAME'
+                or arg == 'METHOD_NAME'
+                or arg == 'METHOD_PROBABILITY'
+            ):
                 aliases[arg] = val
-                res[arg]= data[val].to_dict()
-                
+                res[arg] = data[val].to_dict()
+
             elif arg == 'FIXED_TIME_OVERWRITE':
                 time_overwrite_data = data[val].to_list()
-                #self.rm.jobs._job_list[self.rm.jobs._job_list['effect']==effect_name]
-                temp_list_for_effect_name = [effect_name]*data[val].size
-                _key = list(zip(temp_list_for_effect_name, data[aliases['METHOD_NAME'] ], data[aliases['ELEMENT_NAME'] ]) )
-                
-                time_overwrite_data = [{'FIXED_TIME_OVERWRITE':int(time_overwrite_data[i]*3600)} for i in range(len(time_overwrite_data))]
-                self.rm.time_overwrite.update(pd.Series(index=_key, data = time_overwrite_data).to_dict())
-                
+                # self.rm.jobs._job_list[self.rm.jobs._job_list['effect']==effect_name]
+                temp_list_for_effect_name = [effect_name] * data[val].size
+                _key = list(
+                    zip(
+                        temp_list_for_effect_name,
+                        data[aliases['METHOD_NAME']],
+                        data[aliases['ELEMENT_NAME']],
+                    )
+                )
+
+                time_overwrite_data = [
+                    {'FIXED_TIME_OVERWRITE': int(time_overwrite_data[i] * 3600)}
+                    for i in range(len(time_overwrite_data))
+                ]
+                self.rm.time_overwrite.update(
+                    pd.Series(index=_key, data=time_overwrite_data).to_dict()
+                )
+
             else:
-                raise ValueError('Unrecognized argument in pair: '+_arg)
+                raise ValueError('Unrecognized argument in pair: ' + _arg)
         res = pd.DataFrame(res)
-        #print(res)
+        # print(res)
         return res
-        
-                    
+
     def _read_demand_nodes(self):
         titles = []
         ntitle = 0
         lnum = 0
-        dtemp=[]
+        dtemp = []
         with io.open(self._demand_Node_file_name, 'r', encoding='utf-8') as f:
             for line in f:
                 lnum += 1
@@ -734,21 +931,27 @@ class RestorationIO():
                     continue
                 elif line.upper().startswith('NODEID'):
                     title = words.copy()
-                    ntitle = len(words) #we need this to confirm that every line has data for every title(column)
+                    ntitle = len(
+                        words
+                    )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
-                    raise ValueError('%{fname}s:%(lnum)d: Number of data does not match number of titles')
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'
+                    )
                 elif nwords == ntitle:
                     dtemp.append(words)
                 else:
-                    raise ValueError('%{fname}s:%(lnum)d:This error must nnever happen')
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d:This error must nnever happen'
+                    )
             self.demand_node = pd.DataFrame(dtemp, columns=title)
-            
+
     def _read_crew(self):
         titles = []
         ntitle = 0
         lnum = 0
-        dtemp=[]
+        dtemp = []
         with io.open(self._crew_file_name[-1], 'r', encoding='utf-8') as f:
             for line in f:
                 lnum += 1
@@ -760,12 +963,20 @@ class RestorationIO():
                     continue
                 elif line.upper().startswith('DISTYARDID'):
                     title = words.copy()
-                    ntitle = len(words) #we need this to confirm that every line has data for every title(column)
+                    ntitle = len(
+                        words
+                    )  # we need this to confirm that every line has data for every title(column)
                     continue
                 elif nwords != ntitle:
-                    raise ValueError('%{fname}s:%(lnum)d: Number of data does not match number of titles')
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d: Number of data does not match number of titles'
+                    )
                 elif nwords == ntitle:
                     dtemp.append(words)
                 else:
-                    raise ValueError('%{fname}s:%(lnum)d:This error must nnever happen')
-            self.crew_data[self._crew_file_type[-1]]=pd.DataFrame(dtemp, columns=title)
+                    raise ValueError(
+                        '%{fname}s:%(lnum)d:This error must nnever happen'
+                    )
+            self.crew_data[self._crew_file_type[-1]] = pd.DataFrame(
+                dtemp, columns=title
+            )

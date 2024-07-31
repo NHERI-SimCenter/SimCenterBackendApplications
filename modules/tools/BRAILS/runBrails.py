@@ -37,74 +37,95 @@
 # Barbaros Cetiner
 #
 # Last updated:
-# 04-01-2024 
+# 04-01-2024
 
 # Import packages required for running the latest version of BRAILS:
 import argparse
 import os
 from time import gmtime, strftime
 import sys
-from brails.InventoryGenerator import InventoryGenerator    
+from brails.InventoryGenerator import InventoryGenerator
+
 
 # Define a standard way of printing program outputs:
 def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)
 
+
 # Define a way to call BRAILS InventoryGenerator:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, lengthUnit, 
-              fpSource, fpAttrMap, invInput, invAttributeMap, attrRequested, 
-              outputFile, seed, numBuildings, getAllBuildings, gKey):    
-            
+def runBrails(
+    latMin,
+    latMax,
+    longMin,
+    longMax,
+    locationStr,
+    lengthUnit,
+    fpSource,
+    fpAttrMap,
+    invInput,
+    invAttributeMap,
+    attrRequested,
+    outputFile,
+    seed,
+    numBuildings,
+    getAllBuildings,
+    gKey,
+):
     # Format location input based on the GUI input:
-    if locationStr == "\"\"":
-        locationStr = ""
+    if locationStr == '""':
+        locationStr = ''
     if 'geojson' in fpSource.lower():
         locationInp = fpSource
         fpSource = 'osm'
-    elif locationStr=="":
-        locationInp = (longMin,latMin,longMax,latMax)
+    elif locationStr == '':
+        locationInp = (longMin, latMin, longMax, latMax)
     else:
         locationInp = locationStr
-    
+
     # Parse baseline inventory input from GUI collected values:
-    if invInput=='None':
+    if invInput == 'None':
         baselineInvInp = ''
-    elif invInput=='NSI':
+    elif invInput == 'NSI':
         baselineInvInp = 'nsi'
     else:
         baselineInvInp = invInput
-       
-    # Get attribute map input by processing the GUI input:        
+
+    # Get attribute map input by processing the GUI input:
     if baselineInvInp and invAttributeMap:
         attrmapInp = invAttributeMap
     else:
         if fpAttrMap:
             attrmapInp = fpAttrMap
         else:
-            attrmapInp = ""
-        
+            attrmapInp = ''
+
     # Format number of buildings and requested attributes inputs by parsing the
     # GUI input:
     if getAllBuildings:
         numBuildings = 'all'
 
-    if attrRequested not in ['all','hazuseq']:
+    if attrRequested not in ['all', 'hazuseq']:
         attrRequested = attrRequested.split(',')
 
     # Initialize InventoryGenerator:
-    invGenerator = InventoryGenerator(location=locationInp,
-                                      fpSource=fpSource,
-                                      baselineInv=baselineInvInp,
-                                      attrmap=attrmapInp,
-                                      lengthUnit=lengthUnit)
+    invGenerator = InventoryGenerator(
+        location=locationInp,
+        fpSource=fpSource,
+        baselineInv=baselineInvInp,
+        attrmap=attrmapInp,
+        lengthUnit=lengthUnit,
+    )
 
     # Run InventoryGenerator to generate an inventory for the entered location:
-    invGenerator.generate(attributes=attrRequested, 
-                          GoogleAPIKey=gKey,
-                          nbldgs=numBuildings,
-                          outputFile=outputFile, 
-                          randomSelection=seed)
+    invGenerator.generate(
+        attributes=attrRequested,
+        GoogleAPIKey=gKey,
+        nbldgs=numBuildings,
+        outputFile=outputFile,
+        randomSelection=seed,
+    )
+
 
 # Define a way to collect GUI input:
 def main(args):
@@ -114,33 +135,49 @@ def main(args):
     parser.add_argument('--longMin', default=None, type=float)
     parser.add_argument('--longMax', default=None, type=float)
     parser.add_argument('--location', default=None, type=str)
-    parser.add_argument('--lengthUnit', default="m", type=str) 
+    parser.add_argument('--lengthUnit', default='m', type=str)
     parser.add_argument('--fpSource', default=None, type=str)
     parser.add_argument('--fpAttrMap', default=None, type=str)
     parser.add_argument('--invInput', default=None, type=str)
     parser.add_argument('--invAttributeMap', default=None, type=str)
-    parser.add_argument('--attrRequested', default=None, type=str)        
+    parser.add_argument('--attrRequested', default=None, type=str)
     parser.add_argument('--outputFile', default=None, type=str)
     parser.add_argument('--seed', default=None, type=int)
-    parser.add_argument('--numBuildings', default=None, type=int)  
-    parser.add_argument('--getAllBuildings', default=None, type=int)  
+    parser.add_argument('--numBuildings', default=None, type=int)
+    parser.add_argument('--getAllBuildings', default=None, type=int)
     parser.add_argument('--googKey', default=None, type=str)
 
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(os.path.split(args.outputFile)[-1],'')
+    outdir = os.path.abspath(args.outputFile).replace(
+        os.path.split(args.outputFile)[-1], ''
+    )
     os.makedirs(outdir, exist_ok=True)
 
     # Run BRAILS InventoryGenerator with the user-defined arguments:
     runBrails(
-        args.latMin, args.latMax, args.longMin, args.longMax, args.location,
-        args.lengthUnit, args.fpSource, args.fpAttrMap, args.invInput, args.invAttributeMap, 
-        args.attrRequested, args.outputFile, args.seed, args.numBuildings, 
-        args.getAllBuildings, args.googKey)
+        args.latMin,
+        args.latMax,
+        args.longMin,
+        args.longMax,
+        args.location,
+        args.lengthUnit,
+        args.fpSource,
+        args.fpAttrMap,
+        args.invInput,
+        args.invAttributeMap,
+        args.attrRequested,
+        args.outputFile,
+        args.seed,
+        args.numBuildings,
+        args.getAllBuildings,
+        args.googKey,
+    )
 
     log_msg('BRAILS successfully generated the requested building inventory')
-    
+
+
 # Run main:
 if __name__ == '__main__':
     main(sys.argv[1:])

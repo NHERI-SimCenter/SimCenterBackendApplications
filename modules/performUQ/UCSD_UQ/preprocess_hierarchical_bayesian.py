@@ -7,14 +7,14 @@ from typing import Literal, Union
 
 import numpy as np
 
-path_to_common_uq = Path(__file__).parent.parent / "common"
+path_to_common_uq = Path(__file__).parent.parent / 'common'
 sys.path.append(str(path_to_common_uq))
 import uq_utilities
 
 InputsType = tuple[
     Path,
     Path,
-    Literal["runningLocal", "runningRemote"],
+    Literal['runningLocal', 'runningRemote'],
     Path,
     dict,
 ]
@@ -23,7 +23,7 @@ InputsType = tuple[
 class CommandLineArguments:
     working_directory_path: Path
     template_directory_path: Path
-    run_type: Union[Literal["runningLocal"], Literal["runningRemote"]]
+    run_type: Union[Literal['runningLocal'], Literal['runningRemote']]
     driver_file: Path
     input_file: Path
 
@@ -36,7 +36,7 @@ def _handle_arguments(
     run_type = command_line_arguments.run_type
     driver_file = command_line_arguments.driver_file
     input_file = command_line_arguments.input_file
-    with open(input_file, "r") as f:
+    with open(input_file, 'r') as f:
         inputs = json.load(f)
     return (
         working_directory_path,
@@ -50,54 +50,53 @@ def _handle_arguments(
 def _create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Preprocess the inputs to the hierarchical Bayesian updating"
-            " algorithm"
+            'Preprocess the inputs to the hierarchical Bayesian updating'
+            ' algorithm'
         )
     )
     parser.add_argument(
-        "working_directory_path",
+        'working_directory_path',
         help=(
-            "path to the working directory where the analysis will be"
-            " conducted"
+            'path to the working directory where the analysis will be' ' conducted'
         ),
         type=Path,
     )
     parser.add_argument(
-        "template_directory_path",
+        'template_directory_path',
         help=(
-            "path to the template directory containing the model, data, and"
-            " any other files required for the analysis"
+            'path to the template directory containing the model, data, and'
+            ' any other files required for the analysis'
         ),
         type=Path,
     )
     parser.add_argument(
-        "run_type",
+        'run_type',
         help=(
-            "string indicating whether the analysis is being run locally or"
+            'string indicating whether the analysis is being run locally or'
             " remotely on DesignSafe's computing infrastructure"
         ),
         type=str,
     )
     parser.add_argument(
-        "driver_file",
+        'driver_file',
         help=(
-            "path to the driver file containing the commands to perform one"
-            " evaluation of the model"
+            'path to the driver file containing the commands to perform one'
+            ' evaluation of the model'
         ),
         type=Path,
     )
     parser.add_argument(
-        "input_file",
+        'input_file',
         help=(
-            "path to the JSON file containing the user provided inputs to run"
-            " the hierarchical Bayesian analysis"
+            'path to the JSON file containing the user provided inputs to run'
+            ' the hierarchical Bayesian analysis'
         ),
         type=Path,
     )
     return parser
 
 
-def _print_start_message(demarcation_string: str = "=", start_space: str = ""):
+def _print_start_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' started running"
     print()
     print(start_space + demarcation_string * len(msg))
@@ -105,7 +104,7 @@ def _print_start_message(demarcation_string: str = "=", start_space: str = ""):
     print()
 
 
-def _print_end_message(demarcation_string: str = "=", start_space: str = ""):
+def _print_end_message(demarcation_string: str = '=', start_space: str = ''):
     msg = f"'{Path(__file__).name}' finished running"
     print()
     print(start_space + msg)
@@ -121,12 +120,12 @@ def main(arguments: InputsType):
         inputs,
     ) = arguments
     # applications_inputs = inputs["Applications"]
-    edp_inputs = inputs["EDP"]
+    edp_inputs = inputs['EDP']
     # fem_inputs = inputs["FEM"]
-    uq_inputs = inputs["UQ"]
-    correlation_matrix_inputs = inputs["correlationMatrix"]
+    uq_inputs = inputs['UQ']
+    correlation_matrix_inputs = inputs['correlationMatrix']
     # local_applications_directory = inputs["localAppDir"]
-    rv_inputs = inputs["randomVariables"]
+    rv_inputs = inputs['randomVariables']
     # remote_applications_directory = inputs["remoteAppDir"]
     # run_type = inputs["runType"]
     # working_directory = inputs["workingDir"]
@@ -145,8 +144,8 @@ def main(arguments: InputsType):
 
     num_rv = len(rv_inputs)
     num_edp = len(edp_inputs)
-    list_of_dataset_subdirs = uq_inputs["List Of Dataset Subdirectories"]
-    calibration_data_file_name = uq_inputs["Calibration Data File Name"]
+    list_of_dataset_subdirs = uq_inputs['List Of Dataset Subdirectories']
+    calibration_data_file_name = uq_inputs['Calibration Data File Name']
 
     list_of_models = []
     list_of_model_evaluation_functions = []
@@ -168,7 +167,7 @@ def main(arguments: InputsType):
             destination_dir_name / calibration_data_file_name, dtype=float
         )
         list_of_datasets.append(data)
-        list_of_dataset_lengths.append(edp_data["length"])
+        list_of_dataset_lengths.append(edp_data['length'])
 
         model = uq_utilities.get_default_model(
             list_of_rv_data=rv_inputs,
@@ -176,7 +175,7 @@ def main(arguments: InputsType):
             list_of_dir_names_to_copy_files_from=list_of_dir_names_to_copy_files_from,
             run_directory=working_directory_path,
             driver_filename=str(driver_file),
-            workdir_prefix=f"{dir_name}.workdir",
+            workdir_prefix=f'{dir_name}.workdir',
         )
 
         list_of_models.append(model)
@@ -188,7 +187,7 @@ def main(arguments: InputsType):
     # parallel_evaluation_function = parallel_pool.run
     function_to_evaluate = uq_utilities.model_evaluation_function
 
-    restart_file_name = Path(uq_inputs["Restart File Name"]).name
+    restart_file_name = Path(uq_inputs['Restart File Name']).name
     restart_file_path = template_directory_path / restart_file_name
     if not restart_file_path.is_file():
         restart_file_path = None
@@ -219,7 +218,7 @@ def preprocess_arguments(args):
     return main(arguments=arguments)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     _print_start_message()
     (
         parallel_evaluation_function,

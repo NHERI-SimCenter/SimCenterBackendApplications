@@ -37,7 +37,7 @@
 # Barbaros Cetiner
 #
 # Last updated:
-# 03-27-2024 
+# 03-27-2024
 
 # Import packages needed for setting up required packages:
 import sys
@@ -60,6 +60,7 @@ for x in importlib_metadata.distributions():
 # If installed packages could not be detected, use importlib_metadata backport:
 if not installed:
     import importlib_metadata
+
     for x in importlib_metadata.distributions():
         try:
             installed.add(x.name)
@@ -71,56 +72,69 @@ missing = required - installed
 python = sys.executable
 if missing:
     print('\nInstalling packages required for running this widget...')
-    subprocess.check_call([python, '-m', 'pip', 'install', *missing], 
-                          stdout=subprocess.DEVNULL)
+    subprocess.check_call(
+        [python, '-m', 'pip', 'install', *missing], stdout=subprocess.DEVNULL
+    )
     print('Successfully installed the required packages')
 
 # If requests and BRAILS were previously installed ensure they are at their latest versions:
-subprocess.check_call([python, '-m', 'pip', 'install', 'requests','-U'],
-                      stdout=subprocess.DEVNULL)
- 
+subprocess.check_call(
+    [python, '-m', 'pip', 'install', 'requests', '-U'], stdout=subprocess.DEVNULL
+)
+
 import requests
-latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()['info']['version']
-if  importlib_metadata.version('BRAILS')!=latestBrailsVersion:
-    print('\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..')    
-    subprocess.check_call([python, '-m', 'pip', 'install', 'BRAILS','-U'],
-                          stdout=subprocess.DEVNULL)
-    print('Successfully installed the latest version of BRAILS')   
- 
+
+latestBrailsVersion = requests.get('https://pypi.org/pypi/BRAILS/json').json()[
+    'info'
+]['version']
+if importlib_metadata.version('BRAILS') != latestBrailsVersion:
+    print(
+        '\nAn older version of BRAILS was detected. Updating to the latest BRAILS version..'
+    )
+    subprocess.check_call(
+        [python, '-m', 'pip', 'install', 'BRAILS', '-U'], stdout=subprocess.DEVNULL
+    )
+    print('Successfully installed the latest version of BRAILS')
+
 # Import packages required for running the latest version of BRAILS:
 import argparse
 import os
 from time import gmtime, strftime
-from brails.EnabledAttributes import BldgAttributes    
+from brails.EnabledAttributes import BldgAttributes
+
 
 # Define a standard way of printing program outputs:
 def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)
 
-# Define a way to call BRAILS BldgAttributes and write them in a file:
-def runBrails(outputfile):      
 
+# Define a way to call BRAILS BldgAttributes and write them in a file:
+def runBrails(outputfile):
     attributes = BldgAttributes()
-    with open(outputfile,'w') as f:
+    with open(outputfile, 'w') as f:
         f.write('\n'.join(attributes))
+
 
 # Define a way to collect GUI input:
 def main(args):
-    parser = argparse.ArgumentParser()      
+    parser = argparse.ArgumentParser()
     parser.add_argument('--outputFile', default=None)
 
     args = parser.parse_args(args)
 
     # Create the folder for the output file, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(os.path.split(args.outputFile)[-1],'')
+    outdir = os.path.abspath(args.outputFile).replace(
+        os.path.split(args.outputFile)[-1], ''
+    )
     os.makedirs(outdir, exist_ok=True)
 
     # Run BRAILS  with the user-defined arguments:
     runBrails(args.outputFile)
 
     log_msg('BRAILS was successfully initialized')
-    
+
+
 # Run main:
 if __name__ == '__main__':
     main(sys.argv[1:])

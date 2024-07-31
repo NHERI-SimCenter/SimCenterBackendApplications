@@ -43,11 +43,11 @@
 # Input files: AIM.json, surrogate.json (user provided)
 # Output files: SAM.json
 
-import sys, argparse,json, os
+import sys, argparse, json, os
+
 
 def create_SAM(AIM_file, SAM_file):
-
-    # 
+    #
     # Find SAM.json info from surrogate model file
     #
 
@@ -56,17 +56,19 @@ def create_SAM(AIM_file, SAM_file):
     with open(AIM_file, 'r') as f:
         root_AIM = json.load(f)
 
-    print("General Information tab is ignored")
+    print('General Information tab is ignored')
     root_SAM = root_AIM['Applications']['Modeling']
 
     # find and load surrogate json
 
     # surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'],root_SAM['ApplicationData']['mainScript'])
-    surrogate_path = os.path.join(os.getcwd(),root_SAM['ApplicationData']['mainScript'])
+    surrogate_path = os.path.join(
+        os.getcwd(), root_SAM['ApplicationData']['mainScript']
+    )
     print(surrogate_path)
 
     with open(surrogate_path, 'r') as f:
-        surrogate_model = json.load(f) 
+        surrogate_model = json.load(f)
 
     # find SAM in surrogate json
 
@@ -74,29 +76,32 @@ def create_SAM(AIM_file, SAM_file):
 
     # sanity check
 
-    if root_AIM["Applications"]["EDP"]["Application"] != "SurrogateEDP":
-            with open("../workflow.err","w") as f:
-                f.write("Please select [None] in the EDP tab.")
-            exit(-1)
+    if root_AIM['Applications']['EDP']['Application'] != 'SurrogateEDP':
+        with open('../workflow.err', 'w') as f:
+            f.write('Please select [None] in the EDP tab.')
+        exit(-1)
 
-    if root_AIM["Applications"]["Simulation"]["Application"] != "SurrogateSimulation":
-            with open("../workflow.err","w") as f:
-                f.write("Please select [None] in the FEM tab.")
-            exit(-1)
+    if (
+        root_AIM['Applications']['Simulation']['Application']
+        != 'SurrogateSimulation'
+    ):
+        with open('../workflow.err', 'w') as f:
+            f.write('Please select [None] in the FEM tab.')
+        exit(-1)
 
     # write SAM.json
 
     with open(SAM_file, 'w') as f:
         json.dump(root_SAM, f, indent=2)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM')
-    parser.add_argument('--filenameEVENT') # not used
+    parser.add_argument('--filenameEVENT')  # not used
     parser.add_argument('--filenameSAM')
     parser.add_argument('--mainScript')
-    parser.add_argument('--getRV', nargs='?', const=True, default=False) # Not used
+    parser.add_argument('--getRV', nargs='?', const=True, default=False)  # Not used
     args = parser.parse_args()
 
     sys.exit(create_SAM(args.filenameAIM, args.filenameSAM))

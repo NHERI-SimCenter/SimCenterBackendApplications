@@ -1,15 +1,16 @@
 from __future__ import division, print_function
 import os, sys
+
 if sys.version.startswith('2'):
-    range=xrange
+    range = xrange
     string_types = basestring
 else:
     string_types = str
 
 import argparse, posixpath, ntpath, json
 
+
 def write_RV(AIM_input_path, EDP_input_path, EDP_type):
-    
     # load the AIM file
     with open(AIM_input_path, 'r', encoding='utf-8') as f:
         root_AIM = json.load(f)
@@ -18,19 +19,27 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
     # Is this the correct application
     #
 
-    if root_AIM["Applications"]["Modeling"]["Application"] != "SurrogateGPBuildingModel":
-            with open("../workflow.err","w") as f:
-                f.write("Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.")
-            exit(-1)
+    if (
+        root_AIM['Applications']['Modeling']['Application']
+        != 'SurrogateGPBuildingModel'
+    ):
+        with open('../workflow.err', 'w') as f:
+            f.write(
+                'Do not select [None] in the EDP tab. [None] is used only when using pre-trained surrogate, i.e. when [Surrogate] is selected in the SIM Tab.'
+            )
+        exit(-1)
 
     #
     # Get EDP info from surrogate model file
     #
 
-    print("General Information tab is ignored")
+    print('General Information tab is ignored')
     root_SAM = root_AIM['Applications']['Modeling']
 
-    surrogate_path = os.path.join(root_SAM['ApplicationData']['MS_Path'], root_SAM['ApplicationData']['mainScript'])
+    surrogate_path = os.path.join(
+        root_SAM['ApplicationData']['MS_Path'],
+        root_SAM['ApplicationData']['mainScript'],
+    )
     print(surrogate_path)
 
     with open(surrogate_path, 'r', encoding='utf-8') as f:
@@ -38,11 +47,9 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
 
     root_EDP = surrogate_model['EDP']
 
-
-
     # if it is surrogate,
     # Save Load EDP.json from standard surrogate models and write it to EDP
-    '''
+    """
     EDP_list = []
     if "EDP" in AIM_in.keys():
         for edp in AIM_in["EDP"]:
@@ -69,15 +76,16 @@ def write_RV(AIM_input_path, EDP_input_path, EDP_type):
             "responses": EDP_list
         },]
     }
-    '''
+    """
     with open(EDP_input_path, 'w', encoding='utf-8') as f:
         json.dump(root_EDP, f, indent=2)
 
+
 def create_EDP(AIM_input_path, EDP_input_path, EDP_type):
-    pass   
+    pass
+
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--filenameAIM', default=None)
     parser.add_argument('--filenameSAM', default=None)

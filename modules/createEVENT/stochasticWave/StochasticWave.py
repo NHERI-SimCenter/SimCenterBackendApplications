@@ -12,7 +12,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-from welib.tools.figure import defaultRC; defaultRC();
+from welib.tools.figure import defaultRC
+
+defaultRC()
 from welib.tools.colors import python_colors
 from welib.hydro.wavekin import *
 from welib.hydro.morison import *
@@ -23,10 +25,13 @@ import Ex2_Jonswap_spectrum
 import Ex3_WaveTimeSeries
 import Ex4_WaveLoads
 
+
 class FloorForces:
     def __init__(self, recorderID=-1):
         if recorderID < 0:
-            print("No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.")
+            print(
+                'No recorder ID, or a negative ID, provided, defaulting to 0 for all forces.'
+            )
             self.X = [0.0]
             self.Y = [0.0]
             self.Z = [0.0]
@@ -40,12 +45,12 @@ class FloorForces:
                 self.X.append(float(0.0))
                 self.Y.append(float(0.0))
                 self.Z.append(float(0.0))
-          
+
             # Read in forces.[out or evt] file and add to EVENT.json
-            # now using intermediary forces.evt for output of preceeding Python calcs, 
+            # now using intermediary forces.evt for output of preceeding Python calcs,
             # prevents confusion with forces.out made by FEM tab
-            with open("forces.evt", "r") as file:
-                print("Reading forces from forces.evt to EVENT.json")
+            with open('forces.evt', 'r') as file:
+                print('Reading forces from forces.evt to EVENT.json')
                 lines = file.readlines()
                 j = 0
                 for line in lines:
@@ -56,7 +61,7 @@ class FloorForces:
                         continue
                     # Assume there is no header in the file
                     # Assume recorder IDs are sequential, starting from 1
-                    if ((j+1) == recorderID):
+                    if (j + 1) == recorderID:
                         # Strip away leading / trailing white-space,
                         # Delimit by regex to capture " ", \s, "  ", tabs, etc.
                         # Each value should be a number, rep. the force on recorder j at a time-step i
@@ -70,31 +75,47 @@ class FloorForces:
                             self.Y.append(float(0.0))
                             self.Z.append(float(0.0))
                     j = j + 1
-                    
+
                 # must not have empty lists for max and min
                 if len(self.X) == 0:
-                    print("No forces found in the file for recorder ", recorderID, ", defaulting to 0.0 for all forces.")
+                    print(
+                        'No forces found in the file for recorder ',
+                        recorderID,
+                        ', defaulting to 0.0 for all forces.',
+                    )
                     self.X = [0.0]
                     self.Y = [0.0]
                     self.Z = [0.0]
                 else:
                     # for a timeSeries with N elements, we append an element at N+1 to represent the max force of the series
-                    self.X.append( max(self.X) )
-                    self.Y.append( max(self.Y) )
-                    self.Z.append( max(self.Z) )
-                    
-                    print("Length: " , len(self.X), ", Max force: ", max(self.X), max(self.Y), max(self.Z), ", Min force: ", min(self.X), min(self.Y), min(self.Z), ", Last force: ", self.X[-1], self.Y[-1], self.Z[-1])
+                    self.X.append(max(self.X))
+                    self.Y.append(max(self.Y))
+                    self.Z.append(max(self.Z))
+
+                    print(
+                        'Length: ',
+                        len(self.X),
+                        ', Max force: ',
+                        max(self.X),
+                        max(self.Y),
+                        max(self.Z),
+                        ', Min force: ',
+                        min(self.X),
+                        min(self.Y),
+                        min(self.Z),
+                        ', Last force: ',
+                        self.X[-1],
+                        self.Y[-1],
+                        self.Z[-1],
+                    )
             file.close()
+
 
 def directionToDof(direction):
     """
     Converts direction to degree of freedom
     """
-    directioMap = {
-        "X": 1,
-        "Y": 2,
-        "Z": 3
-    }
+    directioMap = {'X': 1, 'Y': 2, 'Z': 3}
 
     return directioMap[direction]
 
@@ -104,104 +125,97 @@ def addFloorForceToEvent(patternsList, timeSeriesList, force, direction, floor):
     Add force (one component) time series and pattern in the event file
     Use of Wind is just a placeholder for now, since its more developed than Hydro
     """
-    
-    seriesName = "1"
-    patternName = "1"
-    seriesName = "WindForceSeries_" + str(floor) + direction
-    patternName = "WindForcePattern_" + str(floor) + direction
-    
+
+    seriesName = '1'
+    patternName = '1'
+    seriesName = 'WindForceSeries_' + str(floor) + direction
+    patternName = 'WindForcePattern_' + str(floor) + direction
+
     pattern = {
-        "name": patternName,
-        "timeSeries": seriesName,
-        "numSteps": len(force.X),
-        "dT": 0.01,
-        "type": "WindFloorLoad",
-        "floor": str(floor),
-        "story": str(floor),
-        "dof": directionToDof(direction),
-        "units": {
-            "force": "Newton",
-            "length": "Meter",
-            "time": "Sec"
-        }
+        'name': patternName,
+        'timeSeries': seriesName,
+        'numSteps': len(force.X),
+        'dT': 0.01,
+        'type': 'WindFloorLoad',
+        'floor': str(floor),
+        'story': str(floor),
+        'dof': directionToDof(direction),
+        'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
     sensorData = {
-        "name": seriesName,
-        "pattern": patternName,
-        "type": "Value",
-        "dof": directionToDof(direction),
-        "floor": str(floor),
-        "story": str(floor),
-        "dT": 0.01,
-        "dt": 0.01,
-        "numSteps": len(force.X),
-        "data": force.X
+        'name': seriesName,
+        'pattern': patternName,
+        'type': 'Value',
+        'dof': directionToDof(direction),
+        'floor': str(floor),
+        'story': str(floor),
+        'dT': 0.01,
+        'dt': 0.01,
+        'numSteps': len(force.X),
+        'data': force.X,
     }
-    
+
     patternsList.append(pattern)
     timeSeriesList.append(sensorData)
 
 
-
-def writeEVENT(forces, eventFilePath="EVENT.json", floorsCount=1):
+def writeEVENT(forces, eventFilePath='EVENT.json', floorsCount=1):
     """
     This method writes the EVENT.json file
     """
-    #Adding floor forces
+    # Adding floor forces
     patternsArray = []
     timeSeriesArray = []
     # timeSeriesType = "Value" # ? saw in old evt files
-    
+
     # pressure = [{"pressure": [0.0, 0.0], "story": 1}]
     pressure = []
 
     for it in range(floorsCount):
         floorForces = forces[it]
-        addFloorForceToEvent(patternsArray, timeSeriesArray, floorForces, "X", it+1)
+        addFloorForceToEvent(
+            patternsArray, timeSeriesArray, floorForces, 'X', it + 1
+        )
 
     # subtype = "StochasticWindModel-KwonKareem2006"
-    eventClassification = "Hydro"
-    eventType = "StochasticWave"
-    eventSubtype = "StochasticWaveJonswap"
+    eventClassification = 'Hydro'
+    eventType = 'StochasticWave'
+    eventSubtype = 'StochasticWaveJonswap'
     # subtype = "StochasticWaveJonswap" # ?
     # timeSeriesName = "HydroForceSeries_1X"
     # patternName = "HydroForcePattern_1X"
-    
+
     hydroEventJson = {
-        "type" : eventClassification,
-        "subtype": eventType,
-        "eventClassification": eventClassification,
-        "pattern": patternsArray,
-        "timeSeries": timeSeriesArray,
-        "pressure": pressure,
-        "numSteps": len(forces[0].X),
-        "dT": 0.01,
-        "dt": 0.01,
-        "units": {
-            "force": "Newton",
-            "length": "Meter",
-            "time": "Sec"
-        }
+        'type': eventClassification,
+        'subtype': eventType,
+        'eventClassification': eventClassification,
+        'pattern': patternsArray,
+        'timeSeries': timeSeriesArray,
+        'pressure': pressure,
+        'numSteps': len(forces[0].X),
+        'dT': 0.01,
+        'dt': 0.01,
+        'units': {'force': 'Newton', 'length': 'Meter', 'time': 'Sec'},
     }
 
-    #Creating the event dictionary that will be used to export the EVENT json file
-    eventDict = {"randomVariables":[], "Events": [hydroEventJson]}
-
+    # Creating the event dictionary that will be used to export the EVENT json file
+    eventDict = {'randomVariables': [], 'Events': [hydroEventJson]}
 
     filePath = eventFilePath
-    with open(filePath, "w", encoding='utf-8') as file:
+    with open(filePath, 'w', encoding='utf-8') as file:
         json.dump(eventDict, file)
     file.close()
-    
+
 
 def GetFloorsCount(BIMFilePath):
     filePath = BIMFilePath
-    with open(filePath,'r', encoding='utf-8') as file:
-        bim = json.load(file) 
+    with open(filePath, 'r', encoding='utf-8') as file:
+        bim = json.load(file)
     file.close
-        
-    return int(bim["GeneralInformation"]["stories"])
-	
+
+    return int(bim['GeneralInformation']['stories'])
+
+
 def main():
     return 0
     # """
@@ -221,12 +235,10 @@ def main():
     # exec(open("Ex3_WaveTimeSeries.py").read())
     # # exec(open("Ex4_WaveLoads.py").read())
 
-
     # # Run Ex4_WaveLoads.py with the given parameters
     # # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
     # import subprocess
-    # result = subprocess.run(["python", "Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", GetFloorsCount(arguments.filenameAIM), "-t", 10.0], stdout=subprocess.PIPE)     
-
+    # result = subprocess.run(["python", "Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", GetFloorsCount(arguments.filenameAIM), "-t", 10.0], stdout=subprocess.PIPE)
 
     # if arguments.getRV == True:
     #     #Read the number of floors
@@ -237,63 +249,69 @@ def main():
 
     #     #write the event file
     #     writeEVENT(forces, arguments.filenameEVENT)
-    
- 
-if __name__ == "__main__":
+
+
+if __name__ == '__main__':
     """
     Entry point to generate event file using Stochastic Waves
     """
-    #CLI parser
-    parser = argparse.ArgumentParser(description="Get sample EVENT file produced by StochasticWave")
-    parser.add_argument('-b', '--filenameAIM', help="BIM File", required=True, default="AIM.json")
-    parser.add_argument('-e', '--filenameEVENT', help= "Event File", required=True, default="EVENT.json")
-    parser.add_argument('--getRV', help= "getRV", required=False, action='store_true')
+    # CLI parser
+    parser = argparse.ArgumentParser(
+        description='Get sample EVENT file produced by StochasticWave'
+    )
+    parser.add_argument(
+        '-b', '--filenameAIM', help='BIM File', required=True, default='AIM.json'
+    )
+    parser.add_argument(
+        '-e',
+        '--filenameEVENT',
+        help='Event File',
+        required=True,
+        default='EVENT.json',
+    )
+    parser.add_argument('--getRV', help='getRV', required=False, action='store_true')
     # parser.add_argument('--filenameSAM', default=None)
 
-    #parsing arguments
+    # parsing arguments
     arguments, unknowns = parser.parse_known_args()
 
     # Run Ex4_WaveLoads.py with the given parameters
     # result = Ex4_WaveLoads.main(arguments.water_depth, arguments.peak_period, arguments.significant_wave_height, arguments.pile_diameter, arguments.drag_coefficient, arguments.mass_coefficient, arguments.number_of_recorders_z, arguments.time)
 
     # import subprocess
-    # result = subprocess.run(["python", f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", floorsCount, "-t", 10.0], stdout=subprocess.PIPE)   
-
+    # result = subprocess.run(["python", f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py", "-hw", 30.0, "-Tp", 12.7, "-Hs", 5.0, "-Dp", 1.0, "-Cd", 2.1, "-Cm", 2.1, "-nz", floorsCount, "-t", 10.0], stdout=subprocess.PIPE)
 
     if arguments.getRV == True:
-        print("RVs requested in StochasticWave.py")
-        #Read the number of floors
+        print('RVs requested in StochasticWave.py')
+        # Read the number of floors
         floorsCount = GetFloorsCount(arguments.filenameAIM)
         filenameEVENT = arguments.filenameEVENT
-        
+
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex1_WaveKinematics.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex2_Jonswap_spectrum.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex3_WaveTimeSeries.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py").read())
-        
+
         forces = []
         for i in range(floorsCount):
-            forces.append(FloorForces(recorderID=(i+1)))
+            forces.append(FloorForces(recorderID=(i + 1)))
 
-        #write the event file
+        # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount)
-        
+
     else:
-        print("No RVs requested in StochasticWave.py")
+        print('No RVs requested in StochasticWave.py')
         filenameEVENT = arguments.filenameEVENT
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex1_WaveKinematics.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex2_Jonswap_spectrum.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex3_WaveTimeSeries.py").read())
         # exec(open(f"{os.path.realpath(os.path.dirname(__file__))}"+"/Ex4_WaveLoads.py").read())
-    
+
         forces = []
         floorsCount = 1
         for i in range(floorsCount):
-            forces.append(FloorForces(recorderID=(i+1)))
-            
-        #write the event file
+            forces.append(FloorForces(recorderID=(i + 1)))
+
+        # write the event file
         writeEVENT(forces, filenameEVENT, floorsCount=floorsCount)
         # writeEVENT(forces, arguments.filenameEVENT)
-    
-    
-    

@@ -44,17 +44,16 @@ import pandas as pd
 
 
 def get_label(options, labels, label_name):
+    for option in options:
+        if option in labels:
+            labels = labels[labels != option]
+            return option, labels
 
-	for option in options:
-		if option in labels:
-			labels = labels[labels != option]
-			return option, labels
-
-	print(f'WARNING: Could not identify the label for the {label_name}')
+    print(f'WARNING: Could not identify the label for the {label_name}')
 
 
 def create_stations(input_file, output_file, min_id, max_id):
-	"""
+    """
     Reading input csv file for stations and saving data to output json file
     Input:
         input_file: the filename of the station csv file
@@ -64,42 +63,39 @@ def create_stations(input_file, output_file, min_id, max_id):
     Output:
         run_tag: 0 - success, 1 - input failure, 2 - outupt failure
     """
-	# Reading csv data
-	run_tag = 1
-	try:
-		stn_df = pd.read_csv(input_file, header=0, index_col=0)
-	except:
-		run_tag = 0
-		return run_tag
-	# Max and Min IDs
-	stn_ids_min = np.min(stn_df.index.values)
-	stn_ids_max = np.max(stn_df.index.values)
-	if min_id is None:
-		min_id = stn_ids_min
-	if max_id is None:
-		max_id = stn_ids_max
-	min_id = np.max([stn_ids_min, min_id])
-	max_id = np.min([stn_ids_max, max_id])
-	selected_stn = stn_df.loc[min_id:max_id, :]
-	# Extracting data
-	labels = selected_stn.columns.values
-	lon_label, labels = get_label(['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude')
-	lat_label, labels = get_label(['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude')
-	stn_file = {
-	    'Stations': []
-	}
-	for stn_id, stn in selected_stn.iterrows():
-		# Collecting station data
-		tmp = {
-		    'ID': stn_id,
-			'Longitude': stn[lon_label],
-			'Latitude': stn[lat_label]
-		}
-		stn_file['Stations'].append(tmp)
-	# Saving data to the output file
-	if output_file:
-		with open(output_file, 'w') as f:
-			json.dump(stn_file, f, indent=2)
-	# Returning the final run state
-	return stn_file
-
+    # Reading csv data
+    run_tag = 1
+    try:
+        stn_df = pd.read_csv(input_file, header=0, index_col=0)
+    except:
+        run_tag = 0
+        return run_tag
+    # Max and Min IDs
+    stn_ids_min = np.min(stn_df.index.values)
+    stn_ids_max = np.max(stn_df.index.values)
+    if min_id is None:
+        min_id = stn_ids_min
+    if max_id is None:
+        max_id = stn_ids_max
+    min_id = np.max([stn_ids_min, min_id])
+    max_id = np.min([stn_ids_max, max_id])
+    selected_stn = stn_df.loc[min_id:max_id, :]
+    # Extracting data
+    labels = selected_stn.columns.values
+    lon_label, labels = get_label(
+        ['Longitude', 'longitude', 'lon', 'Lon'], labels, 'longitude'
+    )
+    lat_label, labels = get_label(
+        ['Latitude', 'latitude', 'lat', 'Lat'], labels, 'latitude'
+    )
+    stn_file = {'Stations': []}
+    for stn_id, stn in selected_stn.iterrows():
+        # Collecting station data
+        tmp = {'ID': stn_id, 'Longitude': stn[lon_label], 'Latitude': stn[lat_label]}
+        stn_file['Stations'].append(tmp)
+    # Saving data to the output file
+    if output_file:
+        with open(output_file, 'w') as f:
+            json.dump(stn_file, f, indent=2)
+    # Returning the final run state
+    return stn_file

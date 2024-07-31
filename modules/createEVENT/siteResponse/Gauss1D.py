@@ -2,9 +2,9 @@ from cmath import pi, exp, sqrt
 import numpy as np
 import sys
 
-class gauss1D:
 
-    def __init__(self, Ly, Ny, sigma = 1.0, d = 1.0):
+class gauss1D:
+    def __init__(self, Ly, Ny, sigma=1.0, d=1.0):
         # overall length in x-direction
         self.Lx = 1
         # overall length in y-direction
@@ -49,9 +49,14 @@ class gauss1D:
                     f1[kk] = exp(1j * kxk * xp)
                     for ll in range(0, self.My):
                         kyl = ll * self.dky
-                        kappa = sqrt(kxk ** 2 + kyl ** 2)
-                        Sgg = self.sigma ** 2 * self.d ** 2 * exp(-self.d ** 2 *
-                        abs(kappa) ** 2 / 4.0) / 4.0 / pi
+                        kappa = sqrt(kxk**2 + kyl**2)
+                        Sgg = (
+                            self.sigma**2
+                            * self.d**2
+                            * exp(-(self.d**2) * abs(kappa) ** 2 / 4.0)
+                            / 4.0
+                            / pi
+                        )
                         Akl = sqrt(2 * Sgg * self.dkx * self.dky)
                         f2[ll] = Akl * exp(1j * phi[kk, ll]) * exp(1j * kyl * yq)
                     f2sum = np.sum(f2)
@@ -62,9 +67,14 @@ class gauss1D:
                     f3[kk] = exp(1j * kxk * xp)
                     for ll in range(0, self.My):
                         kyl = ll * self.dky
-                        kappa = sqrt(kxk ** 2 + kyl ** 2)
-                        Sgg = self.sigma ** 2 * self.d ** 2 * exp(-self.d ** 2 *
-                        abs(kappa) ** 2 / 4.0) / 4.0 / pi
+                        kappa = sqrt(kxk**2 + kyl**2)
+                        Sgg = (
+                            self.sigma**2
+                            * self.d**2
+                            * exp(-(self.d**2) * abs(kappa) ** 2 / 4.0)
+                            / 4.0
+                            / pi
+                        )
                         Akl = sqrt(2 * Sgg * self.dkx * self.dky)
                         f4[ll] = Akl * exp(1j * psi[kk, ll]) * exp(-1j * kyl * yq)
                     f4sum = np.sum(f4)
@@ -76,16 +86,13 @@ class gauss1D:
 def printField(self):
     print(self.f)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     Ly = 6.0
     Ny = 6.0
     sigma = 1.0
     d = 1.0
     a = gauss1D(Ly, Ny, sigma, d)
     a.calculate()
-    F = a.f.reshape((-1,1))
+    F = a.f.reshape((-1, 1))
     Y = np.linspace(0, a.Ly, a.My)
-
-
-
-

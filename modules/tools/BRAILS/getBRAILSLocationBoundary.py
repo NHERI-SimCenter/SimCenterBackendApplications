@@ -37,32 +37,36 @@
 # Barbaros Cetiner
 #
 # Last updated:
-# 03-27-2024 
- 
+# 03-27-2024
+
 # Import packages required for running the latest version of BRAILS:
 import sys
 import argparse
 import os
 from time import gmtime, strftime
-from brails.workflow.FootprintHandler import FootprintHandler    
+from brails.workflow.FootprintHandler import FootprintHandler
+
 
 # Define a standard way of printing program outputs:
 def log_msg(msg):
     formatted_msg = '{} {}'.format(strftime('%Y-%m-%dT%H:%M:%SZ', gmtime()), msg)
     print(formatted_msg)
 
+
 # Define a way to call BRAILS FootprintHandler:
-def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):      
+def runBrails(latMin, latMax, longMin, longMax, locationStr, outputfile):
     # Initialize FootprintHandler:
     fpHandler = FootprintHandler()
-    if locationStr == "\"\"":
-        locationStr = ""
+    if locationStr == '""':
+        locationStr = ''
     # Run FootprintHandler to generate the boundary GeoJSON file for the entered location:
-    if locationStr=="":
-        fpHandler._FootprintHandler__bbox2poly((longMin,latMin,longMax,latMax),
-                                          outfile = outputfile)
+    if locationStr == '':
+        fpHandler._FootprintHandler__bbox2poly(
+            (longMin, latMin, longMax, latMax), outfile=outputfile
+        )
     else:
-        fpHandler._FootprintHandler__fetch_roi(locationStr, outfile = outputfile)        
+        fpHandler._FootprintHandler__fetch_roi(locationStr, outfile=outputfile)
+
 
 # Define a way to collect GUI input:
 def main(args):
@@ -73,19 +77,28 @@ def main(args):
     parser.add_argument('--longMax', default=None, type=float)
     parser.add_argument('--location', default=None, type=str)
     parser.add_argument('--outputFile', default=None)
-    
+
     args = parser.parse_args(args)
 
     # Create the folder for the user-defined output directory, if it does not exist:
-    outdir = os.path.abspath(args.outputFile).replace(os.path.split(args.outputFile)[-1],'')
+    outdir = os.path.abspath(args.outputFile).replace(
+        os.path.split(args.outputFile)[-1], ''
+    )
     os.makedirs(outdir, exist_ok=True)
 
     # Run BRAILS FootprintHandler with the user-defined arguments:
     runBrails(
-        args.latMin, args.latMax, args.longMin, args.longMax, args.location, args.outputFile)
+        args.latMin,
+        args.latMax,
+        args.longMin,
+        args.longMax,
+        args.location,
+        args.outputFile,
+    )
 
     log_msg('BRAILS successfully generated the requested boundary polygon')
-    
+
+
 # Run main:
 if __name__ == '__main__':
     main(sys.argv[1:])

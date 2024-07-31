@@ -42,12 +42,10 @@ import argparse
 
 
 def simulate_event(in1, in2):
-
     print(f'SIMULATING EVENT: {in1}, {in2}')
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--appSpecInput1')
     parser.add_argument('--appSpecInput2', type=int)

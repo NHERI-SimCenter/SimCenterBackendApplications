@@ -8,11 +8,12 @@ inputs and the mail code.
 @author: snaeimi
 """
 
-class input():
+
+class input:
     def __init__(self, settings, registry):
         pass
-    
+
     def convertShiftFromDictToPandasTable(self, dict_data):
-        shift_name_list      = list(shift_data )
-        shift_begining_list  = [shift_data[i][0] for i in shift_name_list]
-        shift_end_list       = [shift_data[i][1] for i in shift_name_list]
+        shift_name_list = list(shift_data)
+        shift_begining_list = [shift_data[i][0] for i in shift_name_list]
+        shift_end_list = [shift_data[i][1] for i in shift_name_list]

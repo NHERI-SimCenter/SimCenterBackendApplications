@@ -14,12 +14,16 @@ class SamplingDTO(ModuleBaseDTO):
     def generate_code(self):
         pass
 
+
 class SurrogatesDTO(ModuleBaseDTO):
     uqType: Literal['Surrogates'] = 'Surrogates'
+
 
 class ReliabilityDTO(ModuleBaseDTO):
     uqType: Literal['Reliability Analysis'] = 'Reliability Analysis'
     methodData: ReliabilityMethod
 
 
-ModuleDTO = Annotated[Union[ReliabilityDTO, SamplingDTO], Field(discriminator='uqType')]
+ModuleDTO = Annotated[
+    Union[ReliabilityDTO, SamplingDTO], Field(discriminator='uqType')
+]

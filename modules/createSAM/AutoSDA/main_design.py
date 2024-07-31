@@ -38,11 +38,11 @@ start_time = time.time()
 IDs = [11]
 for id in IDs:
     building_id = 'Test' + str(id)
-    print("Design for Building ID = ", building_id)
+    print('Design for Building ID = ', building_id)
     seismic_design(building_id, baseDirectory)
 
 # ********************* Single Building Case Ends Here *******************
 
 end_time = time.time()
 
-print("Running time is: %s seconds" % round(end_time - start_time, 2))
+print('Running time is: %s seconds' % round(end_time - start_time, 2))

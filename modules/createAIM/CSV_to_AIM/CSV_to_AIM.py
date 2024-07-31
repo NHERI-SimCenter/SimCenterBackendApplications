@@ -42,8 +42,8 @@
 
 import argparse, sys, os
 
-def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):
 
+def create_asset_files(output_file, asset_source_file, asset_filter, doParallel):
     # these imports are here to save time when the app is called without
     # the -getRV flag
     import json
@@ -56,36 +56,37 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
     procID = 0
     runParallel = False
 
-    if doParallel == "True":
-        mpi_spec = importlib.util.find_spec("mpi4py")
+    if doParallel == 'True':
+        mpi_spec = importlib.util.find_spec('mpi4py')
         found = mpi_spec is not None
         if found:
             import mpi4py
             from mpi4py import MPI
+
             runParallel = True
             comm = MPI.COMM_WORLD
             numP = comm.Get_size()
-            procID = comm.Get_rank();
+            procID = comm.Get_rank()
             if numP < 2:
-                doParallel = "False"
+                doParallel = 'False'
                 runParallel = False
                 numP = 1
                 procID = 0
 
     # Get the out dir, may not always be in the results folder if multiple assets are used
     outDir = os.path.dirname(output_file)
-    
+
     # check if a filter is provided
     if asset_filter is not None:
         assets_requested = []
         for assets in asset_filter.split(','):
-            if "-" in assets:
-                asset_low, asset_high = assets.split("-")
-                assets_requested += list(range(int(asset_low), int(asset_high)+1))
+            if '-' in assets:
+                asset_low, asset_high = assets.split('-')
+                assets_requested += list(range(int(asset_low), int(asset_high) + 1))
             else:
                 assets_requested.append(int(assets))
         assets_requested = np.array(assets_requested)
-        
+
     # load the CSV file with the asset information
     assets_df = pd.read_csv(asset_source_file, header=0, index_col=0)
 
@@ -93,7 +94,8 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
     if asset_filter is not None:
         assets_available = assets_df.index.values
         assets_to_run = assets_requested[
-            np.where(np.in1d(assets_requested, assets_available))[0]]
+            np.where(np.in1d(assets_requested, assets_available))[0]
+        ]
         selected_assets = assets_df.loc[assets_to_run]
     else:
         selected_assets = assets_df
@@ -106,30 +108,28 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
     # for each asset...
     count = 0
     for asset_id, asset in selected_assets.iterrows():
-
         if runParallel == False or (count % numP) == procID:
-
             # initialize the AIM file
             AIM_i = {
-                "RandomVariables": [],
-                "GeneralInformation": dict(
-                    AIM_id = str(int(asset_id)),
-                    location = {
-                        'latitude': asset["Latitude"],
-                        'longitude': asset["Longitude"]
-                    }
-                )
+                'RandomVariables': [],
+                'GeneralInformation': dict(
+                    AIM_id=str(int(asset_id)),
+                    location={
+                        'latitude': asset['Latitude'],
+                        'longitude': asset['Longitude'],
+                    },
+                ),
             }
 
             # save every label as-is
             for label in labels:
-                AIM_i["GeneralInformation"].update({label: asset[label]})
+                AIM_i['GeneralInformation'].update({label: asset[label]})
 
-            AIM_file_name = "{}-AIM.json".format(asset_id)
-        
-            AIM_file_name = os.path.join(outDir,AIM_file_name)
-            
-            with open(AIM_file_name, 'w', encoding="utf-8") as f:
+            AIM_file_name = '{}-AIM.json'.format(asset_id)
+
+            AIM_file_name = os.path.join(outDir, AIM_file_name)
+
+            with open(AIM_file_name, 'w', encoding='utf-8') as f:
                 json.dump(AIM_i, f, indent=2)
 
             assets_array.append(dict(id=str(asset_id), file=AIM_file_name))
@@ -137,61 +137,67 @@ def create_asset_files(output_file, asset_source_file, asset_filter, doParallel)
         count = count + 1
 
     if procID != 0:
-
         # if not P0, write data to output file with procID in name and barrier
 
-        output_file = os.path.join(outDir,f'tmp_{procID}.json')
+        output_file = os.path.join(outDir, f'tmp_{procID}.json')
 
-        with open(output_file, 'w', encoding="utf-8") as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(assets_array, f, indent=0)
-    
-        comm.Barrier()        
+
+        comm.Barrier()
 
     else:
-
         if runParallel == True:
-
             # if parallel & P0, barrier so that all files written above, then loop over other processor files: open, load data and append
-            comm.Barrier()        
+            comm.Barrier()
 
             for i in range(1, numP):
-                fileToAppend = os.path.join(outDir,f'tmp_{i}.json')
-                with open(fileToAppend, 'r', encoding="utf-8") as data_file:
+                fileToAppend = os.path.join(outDir, f'tmp_{i}.json')
+                with open(fileToAppend, 'r', encoding='utf-8') as data_file:
                     json_data = data_file.read()
                 assetsToAppend = json.loads(json_data)
                 assets_array += assetsToAppend
 
-        with open(output_file, 'w', encoding="utf-8") as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(assets_array, f, indent=2)
 
 
-
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--assetFile',
-        help = "Path to the file that will contain a list of asset ids and "
-               "corresponding AIM filenames")
-    parser.add_argument('--assetSourceFile',
-        help = "Path to the CSV file with the asset inventory")
-    parser.add_argument('--filter',
-        help = "Filter applied to select a subset of assets from the "
-               "inventory",
-        default=None)
-    parser.add_argument('--doParallel', default="False")    
-    parser.add_argument("-n", "--numP", default='8')
-    parser.add_argument("-m", "--mpiExec", default='mpiexec')
-    parser.add_argument('--getRV',
-        help = "Identifies the preparational stage of the workflow. This app "
-               "is only used in that stage, so it does not do anything if "
-               "called without this flag.",
+    parser.add_argument(
+        '--assetFile',
+        help='Path to the file that will contain a list of asset ids and '
+        'corresponding AIM filenames',
+    )
+    parser.add_argument(
+        '--assetSourceFile', help='Path to the CSV file with the asset inventory'
+    )
+    parser.add_argument(
+        '--filter',
+        help='Filter applied to select a subset of assets from the ' 'inventory',
+        default=None,
+    )
+    parser.add_argument('--doParallel', default='False')
+    parser.add_argument('-n', '--numP', default='8')
+    parser.add_argument('-m', '--mpiExec', default='mpiexec')
+    parser.add_argument(
+        '--getRV',
+        help='Identifies the preparational stage of the workflow. This app '
+        'is only used in that stage, so it does not do anything if '
+        'called without this flag.',
         default=False,
-        nargs='?', const=True)
+        nargs='?',
+        const=True,
+    )
 
     args = parser.parse_args()
 
     if args.getRV:
-        sys.exit(create_asset_files(args.assetFile, args.assetSourceFile, args.filter, args.doParallel))
+        sys.exit(
+            create_asset_files(
+                args.assetFile, args.assetSourceFile, args.filter, args.doParallel
+            )
+        )
     else:
-        pass # not used
+        pass  # not used

@@ -36,14 +36,16 @@
 #
 # Contributors:
 # Kuanshi Zhong
-# Based on the script by Baker Research Group: https://www.jackwbaker.com/GMMs_archive.html 
+# Based on the script by Baker Research Group: https://www.jackwbaker.com/GMMs_archive.html
 
 import numpy as np
 
-def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type='DS575H'):
-    
+
+def abrahamson_silva_ds_1999(
+    magnitude=7.0, distance=10.0, soil=True, duration_type='DS575H'
+):
     """
-    Significant duration model by Abrahamson and Silva (1996) Empirical ground motion 
+    Significant duration model by Abrahamson and Silva (1996) Empirical ground motion
     models, report prepared for Brookhaven National Laboratory.
     Input
     magnitude: earthquake magnitude
@@ -56,15 +58,13 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     ds_sigma: logarithmic standard deviation of the prediction
     """
 
-
     # map the duration_type to integer key
-    dur_map = {'DS575H': 0,
-               'DS575V': 1,
-               'DS595H': 2,
-               'DS595V': 3}
-    dur_tag = dur_map.get(duration_type.upper(),None)
+    dur_map = {'DS575H': 0, 'DS575V': 1, 'DS595H': 2, 'DS595V': 3}
+    dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
-        print("SignificantDurationModel.abrahamson_silva_ds_1999: duration_type='DS575H','DS575V','DS595H','DS595V'?")
+        print(
+            "SignificantDurationModel.abrahamson_silva_ds_1999: duration_type='DS575H','DS575V','DS595H','DS595V'?"
+        )
         return None, None
     # modeling coefficients
     beta = [3.2, 3.2, 3.2, 3.2]
@@ -78,15 +78,32 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     sigma = [0.55, 0.46, 0.49, 0.45]
     # median
     if distance > rc[dur_tag]:
-        ds_median = np.exp(np.log((np.exp(b1[dur_tag]+b2[dur_tag]* \
-                    (magnitude-m_star[dur_tag]))/(10**(1.5*magnitude+ \
-                    16.05)))**(-1/3)/(4.9e6*beta[dur_tag])+soil* \
-                    c1[dur_tag]+c2[dur_tag]*(distance-rc[dur_tag]))+Drat[dur_tag])
+        ds_median = np.exp(
+            np.log(
+                (
+                    np.exp(b1[dur_tag] + b2[dur_tag] * (magnitude - m_star[dur_tag]))
+                    / (10 ** (1.5 * magnitude + 16.05))
+                )
+                ** (-1 / 3)
+                / (4.9e6 * beta[dur_tag])
+                + soil * c1[dur_tag]
+                + c2[dur_tag] * (distance - rc[dur_tag])
+            )
+            + Drat[dur_tag]
+        )
     else:
-        ds_median = np.exp(np.log((np.exp(b1[dur_tag]+b2[dur_tag]* \
-                    (magnitude-m_star[dur_tag]))/(10**(1.5*magnitude+ \
-                    16.05)))**(-1/3)/(4.9e6*beta[dur_tag])+soil* \
-                    c1[dur_tag])+Drat[dur_tag])
+        ds_median = np.exp(
+            np.log(
+                (
+                    np.exp(b1[dur_tag] + b2[dur_tag] * (magnitude - m_star[dur_tag]))
+                    / (10 ** (1.5 * magnitude + 16.05))
+                )
+                ** (-1 / 3)
+                / (4.9e6 * beta[dur_tag])
+                + soil * c1[dur_tag]
+            )
+            + Drat[dur_tag]
+        )
     # sigma
     ds_sigma = sigma[dur_tag]
 
@@ -94,10 +111,12 @@ def abrahamson_silva_ds_1999(magnitude=7.0,distance=10.0,soil=True,duration_type
     return np.log(ds_median), ds_sigma
 
 
-def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, ztor=0.0, duration_type='DS575H'):
+def bommer_stafford_alarcon_ds_2009(
+    magnitude=7.0, distance=10.0, vs30=760.0, ztor=0.0, duration_type='DS575H'
+):
     """
-    Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical 
-    Equations for the Prediction of the Significant, Bracketed, and Uniform 
+    Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical
+    Equations for the Prediction of the Significant, Bracketed, and Uniform
     Duration of Earthquake Ground Motion
     Input
     magnitude: earthquake magnitude
@@ -113,12 +132,14 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
     """
 
     # duration type map
-    dur_map = {'DS575H':0, 'DS595H': 1}
+    dur_map = {'DS575H': 0, 'DS595H': 1}
     dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
-        print("SignificantDurationModel.bommer_stafford_alarcon_ds_2009: duration_type='DS575H','DS595H'?")
+        print(
+            "SignificantDurationModel.bommer_stafford_alarcon_ds_2009: duration_type='DS575H','DS595H'?"
+        )
         return None, None, None, None
-    
+
     # modeling coefficients
     c0 = [-5.6298, -2.2393]
     m1 = [1.2619, 0.9368]
@@ -133,9 +154,14 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
     sigma_Tgm = [0.5289, 0.4616]
 
     # median
-    ds_median = np.exp(c0[dur_tag]+m1[dur_tag]*magnitude+(r1[dur_tag]+ \
-                r2[dur_tag]*magnitude)*np.log(np.sqrt(distance**2+h1[dur_tag]**2))+ \
-                v1[dur_tag]*np.log(vs30)+z1[dur_tag]*ztor)
+    ds_median = np.exp(
+        c0[dur_tag]
+        + m1[dur_tag] * magnitude
+        + (r1[dur_tag] + r2[dur_tag] * magnitude)
+        * np.log(np.sqrt(distance**2 + h1[dur_tag] ** 2))
+        + v1[dur_tag] * np.log(vs30)
+        + z1[dur_tag] * ztor
+    )
     # standard deviations
     ds_sigma = sigma_Tgm[dur_tag]
     ds_tau = tauCoeff[dur_tag]
@@ -145,8 +171,15 @@ def bommer_stafford_alarcon_ds_2009(magnitude=7.0, distance=10.0, vs30=760.0, zt
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi
 
 
-def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism='unknown', 
-                            z1=None, region='california', duration_type='DS575H'):
+def afshari_stewart_ds_2016(
+    magnitude=7.0,
+    distance=10.0,
+    vs30=760.0,
+    mechanism='unknown',
+    z1=None,
+    region='california',
+    duration_type='DS575H',
+):
     """
     Significant duration model by Afshari and Stewart (2016) hysically Parameterized
     Prediction Equations for Significant Duration in Active Crustal Regions
@@ -166,35 +199,45 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
     """
 
     # mechanism map
-    mech_map = {'unknown':0, 'normal': 1, 'reverse': 2, 'strike-slip': 3}
+    mech_map = {'unknown': 0, 'normal': 1, 'reverse': 2, 'strike-slip': 3}
     mech_tag = mech_map.get(mechanism.lower(), None)
     if mech_tag is None:
-        print("SignificantDurationModel.afshari_stewart_ds_2016: mechanism='unknown','normal','reverse','strike-slip'?")
+        print(
+            "SignificantDurationModel.afshari_stewart_ds_2016: mechanism='unknown','normal','reverse','strike-slip'?"
+        )
         return None, None, None, None
     # region map
-    reg_map = {'california':0, 'japan': 1, 'other': 2}
+    reg_map = {'california': 0, 'japan': 1, 'other': 2}
     reg_tag = reg_map.get(region.lower(), None)
     if reg_tag is None:
-        print("SignificantDurationModel.afshari_stewart_ds_2016: region='california', 'japan', 'other'?")
+        print(
+            "SignificantDurationModel.afshari_stewart_ds_2016: region='california', 'japan', 'other'?"
+        )
         return None, None, None, None
     # duration type map
-    dur_map = {'DS575H':0, 'DS595H': 1, 'DS2080H': 2}
+    dur_map = {'DS575H': 0, 'DS595H': 1, 'DS2080H': 2}
     dur_tag = dur_map.get(duration_type.upper(), None)
     if dur_tag is None:
-        print("SignificantDurationModel.afshari_stewart_ds_2016: duration_type='DS575H','DS595H','DS2080H'?")
+        print(
+            "SignificantDurationModel.afshari_stewart_ds_2016: duration_type='DS575H','DS595H','DS2080H'?"
+        )
         return None, None, None, None
-    
+
     # source coefficients
     M1 = [5.35, 5.20, 5.20]
     M2 = [7.15, 7.40, 7.40]
-    b0 = [[1.2800, 2.1820, 0.8822],
-          [1.5550, 2.5410, 1.4090],
-          [0.7806, 1.6120, 0.7729],
-          [1.2790, 2.3020, 0.8804]]
-    b1 = [[5.576, 3.628, 6.182],
-          [4.992, 3.170, 4.778],
-          [7.061, 4.536, 6.579],
-          [5.578, 3.467, 6.188]]
+    b0 = [
+        [1.2800, 2.1820, 0.8822],
+        [1.5550, 2.5410, 1.4090],
+        [0.7806, 1.6120, 0.7729],
+        [1.2790, 2.3020, 0.8804],
+    ]
+    b1 = [
+        [5.576, 3.628, 6.182],
+        [4.992, 3.170, 4.778],
+        [7.061, 4.536, 6.579],
+        [5.578, 3.467, 6.188],
+    ]
     b2 = [0.9011, 0.9443, 0.7414]
     b3 = [-1.684, -3.911, -3.164]
     Mstar = [6, 6, 6]
@@ -218,69 +261,82 @@ def afshari_stewart_ds_2016(magnitude=7.0, distance=10.0, vs30=760.0, mechanism=
 
     # basin depth
     if reg_tag == 0:
-        mu_z1 = np.exp(-7.15/4*np.log((vs30**4+570.94**4)/(1360**4+570.94**4)))
+        mu_z1 = np.exp(
+            -7.15 / 4 * np.log((vs30**4 + 570.94**4) / (1360**4 + 570.94**4))
+        )
     else:
-        mu_z1 = np.exp(-5.23/4*np.log((vs30**4+412.39**4)/(1360**4+412.39**4)))
+        mu_z1 = np.exp(
+            -5.23 / 4 * np.log((vs30**4 + 412.39**4) / (1360**4 + 412.39**4))
+        )
     # differential basin depth
     if z1 is None or z1 < 0 or reg_tag == 2:
         dz1 = 0
     else:
-        dz1 = z1-mu_z1
+        dz1 = z1 - mu_z1
 
     # source term
     if magnitude < M1[dur_tag]:
         F_E = b0[mech_tag][dur_tag]
     else:
         if magnitude < M2[dur_tag]:
-            deltaSigma = np.exp(b1[mech_tag][dur_tag]+b2[dur_tag]*(magnitude-Mstar[dur_tag]))
+            deltaSigma = np.exp(
+                b1[mech_tag][dur_tag] + b2[dur_tag] * (magnitude - Mstar[dur_tag])
+            )
         else:
-            deltaSigma = np.exp(b1[mech_tag][dur_tag]+b2[dur_tag]*(M2[dur_tag]-Mstar[dur_tag])+ \
-                         b3[dur_tag]*(magnitude-M2[dur_tag]))
-        
-        M_0 = 10**(1.5*magnitude+16.05)
-        f_0 = 4.9e6*3.2*(deltaSigma/M_0)**(1/3)
-        F_E = 1/f_0
+            deltaSigma = np.exp(
+                b1[mech_tag][dur_tag]
+                + b2[dur_tag] * (M2[dur_tag] - Mstar[dur_tag])
+                + b3[dur_tag] * (magnitude - M2[dur_tag])
+            )
+
+        M_0 = 10 ** (1.5 * magnitude + 16.05)
+        f_0 = 4.9e6 * 3.2 * (deltaSigma / M_0) ** (1 / 3)
+        F_E = 1 / f_0
     # path term
     if distance < RR1[dur_tag]:
-        F_P = c1[dur_tag]*distance
+        F_P = c1[dur_tag] * distance
     elif distance < RR2[dur_tag]:
-        F_P = c1[dur_tag]*RR1[dur_tag]+c2[dur_tag]*(distance-RR1[dur_tag])
+        F_P = c1[dur_tag] * RR1[dur_tag] + c2[dur_tag] * (distance - RR1[dur_tag])
     else:
-        F_P = c1[dur_tag]*RR1[dur_tag]+c2[dur_tag]*(RR2[dur_tag]-RR1[dur_tag])+c3[dur_tag]*(distance-RR2[dur_tag])    
+        F_P = (
+            c1[dur_tag] * RR1[dur_tag]
+            + c2[dur_tag] * (RR2[dur_tag] - RR1[dur_tag])
+            + c3[dur_tag] * (distance - RR2[dur_tag])
+        )
     # F_deltaz term
     if dz1 <= dz1ref[dur_tag]:
-        F_deltaz = c5[dur_tag]*dz1
+        F_deltaz = c5[dur_tag] * dz1
     else:
-        F_deltaz = c5[dur_tag]*dz1ref[dur_tag]
+        F_deltaz = c5[dur_tag] * dz1ref[dur_tag]
     # site term
     if vs30 < V1[dur_tag]:
-        F_S = c4[dur_tag]*np.log(vs30/Vref[dur_tag])+F_deltaz
+        F_S = c4[dur_tag] * np.log(vs30 / Vref[dur_tag]) + F_deltaz
     else:
-        F_S = c4[dur_tag]*np.log(V1[dur_tag]/Vref[dur_tag])+F_deltaz
+        F_S = c4[dur_tag] * np.log(V1[dur_tag] / Vref[dur_tag]) + F_deltaz
 
     # median
-    ds_median = np.exp(np.log(F_E+F_P)+F_S)
+    ds_median = np.exp(np.log(F_E + F_P) + F_S)
     # standard deviations
     # between event
     if magnitude < 5.5:
         ds_phi = phi1[dur_tag]
     elif magnitude < 5.75:
-        ds_phi = phi1[dur_tag]+(phi2[dur_tag]-phi1[dur_tag])*(magnitude-5.5)/(5.75-5.5)
+        ds_phi = phi1[dur_tag] + (phi2[dur_tag] - phi1[dur_tag]) * (
+            magnitude - 5.5
+        ) / (5.75 - 5.5)
     else:
         ds_phi = phi2[dur_tag]
     # within event
     if magnitude < 6.5:
         ds_tau = tau1[dur_tag]
     elif magnitude < 7:
-        ds_tau = tau1[dur_tag]+(tau2[dur_tag]-tau1[dur_tag])*(magnitude-6.5)/(7-6.5)
+        ds_tau = tau1[dur_tag] + (tau2[dur_tag] - tau1[dur_tag]) * (
+            magnitude - 6.5
+        ) / (7 - 6.5)
     else:
         ds_tau = tau2[dur_tag]
     # total
-    ds_sigma = np.sqrt(ds_phi**2+ds_tau**2)
+    ds_sigma = np.sqrt(ds_phi**2 + ds_tau**2)
 
     # return
     return np.log(ds_median), ds_sigma, ds_tau, ds_phi
-    
-    
-
-

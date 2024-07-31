@@ -34,32 +34,28 @@ def _copytree(src, dst, symlinks=False, ignore=None):
                 ):
                     shutil.copy2(s, d)
             except Exception as ex:
-                msg = (
-                    f"Could not copy {s}. The following error occurred: \n{ex}"
-                )
+                msg = f'Could not copy {s}. The following error occurred: \n{ex}'
                 return msg
-    return "0"
+    return '0'
 
 
-def _append_msg_in_out_file(msg, out_file_name: str = "ops.out"):
+def _append_msg_in_out_file(msg, out_file_name: str = 'ops.out'):
     if glob.glob(out_file_name):
-        with open(out_file_name, "r") as text_file:
+        with open(out_file_name, 'r') as text_file:
             error_FEM = text_file.read()
 
-        startingCharId = error_FEM.lower().find("error")
+        startingCharId = error_FEM.lower().find('error')
 
         if startingCharId > 0:
             startingCharId = max(0, startingCharId - 20)
             endingID = max(len(error_FEM), startingCharId + 200)
             errmsg = error_FEM[startingCharId:endingID]
-            errmsg = errmsg.split(" ", 1)[1]
-            errmsg = errmsg[0 : errmsg.rfind(" ")]
-            msg += "\n"
-            msg += "your model says...\n"
-            msg += "........\n" + errmsg + "\n........ \n"
-            msg += "to read more, see " + os.path.join(
-                os.getcwd(), out_file_name
-            )
+            errmsg = errmsg.split(' ', 1)[1]
+            errmsg = errmsg[0 : errmsg.rfind(' ')]
+            msg += '\n'
+            msg += 'your model says...\n'
+            msg += '........\n' + errmsg + '\n........ \n'
+            msg += 'to read more, see ' + os.path.join(os.getcwd(), out_file_name)
 
     return msg
 
@@ -77,7 +73,7 @@ class SimCenterWorkflowDriver:
         list_of_rv_names: list[str],
         driver_filename: str,
         length_of_results: int,
-        workdir_prefix: str = "workdir",
+        workdir_prefix: str = 'workdir',
         ignore_nans: bool = True,
     ) -> None:
         self.full_path_of_tmpSimCenter_dir = full_path_of_tmpSimCenter_dir
@@ -96,9 +92,9 @@ class SimCenterWorkflowDriver:
         num_samples = len(sample_values)
         if num_samples > 1:
             msg = (
-                f"Do one simulation at a time. There were {num_samples}       "
-                "          samples provided in the sample value"
-                f" {sample_values}."
+                f'Do one simulation at a time. There were {num_samples}       '
+                '          samples provided in the sample value'
+                f' {sample_values}.'
             )
             raise ModelEvaluationError(msg)
 
@@ -106,16 +102,16 @@ class SimCenterWorkflowDriver:
             num_values_in_each_sample = len(sample_values[i])
             if num_values_in_each_sample != self.num_rv:
                 msg = (
-                    f"Expected {self.num_rv} values in each sample, found     "
-                    f"                {num_values_in_each_sample} in"
-                    f" {sample_values}."
+                    f'Expected {self.num_rv} values in each sample, found     '
+                    f'                {num_values_in_each_sample} in'
+                    f' {sample_values}.'
                 )
                 raise ModelEvaluationError(msg)
 
     def _create_workdir(self, simulation_number: int) -> str:
         workdir = os.path.join(
             self.full_path_of_tmpSimCenter_dir,
-            f"{self.workdir_prefix}.{simulation_number + 1}",
+            f'{self.workdir_prefix}.{simulation_number + 1}',
         )
         if os.path.exists(workdir):
             for root, dirs, files in os.walk(workdir):
@@ -124,85 +120,83 @@ class SimCenterWorkflowDriver:
                         os.chmod(os.path.join(root, file), 0o777)
                         os.unlink(os.path.join(root, file))
                     except:
-                        msg = f"Could not remove file {file} from {workdir}."
+                        msg = f'Could not remove file {file} from {workdir}.'
                         raise ModelEvaluationError(msg)
                 for dir in dirs:
                     try:
                         shutil.rmtree(os.path.join(root, dir))
                     except:
                         msg = (
-                            f"Could not remove directory {dir}                "
-                            f"             from {workdir}."
+                            f'Could not remove directory {dir}                '
+                            f'             from {workdir}.'
                         )
                         raise ModelEvaluationError(msg)
 
         for src_dir in self.list_of_dir_names_to_copy_files_from:
             src = os.path.join(self.full_path_of_tmpSimCenter_dir, src_dir)
             msg = _copytree(src, workdir)
-            if msg != "0":
+            if msg != '0':
                 raise ModelEvaluationError(msg)
         return workdir
 
-    def _create_params_file(
-        self, sample_values: NDArray, workdir: str
-    ) -> None:
+    def _create_params_file(self, sample_values: NDArray, workdir: str) -> None:
         list_of_strings_to_write = []
-        list_of_strings_to_write.append(f"{self.num_rv}")
+        list_of_strings_to_write.append(f'{self.num_rv}')
         for i, rv in enumerate(self.list_of_rv_names):
-            list_of_strings_to_write.append(f"{rv} {sample_values[0][i]}")
+            list_of_strings_to_write.append(f'{rv} {sample_values[0][i]}')
         try:
-            with open(os.path.join(workdir, "params.in"), "w") as f:
-                f.write("\n".join(list_of_strings_to_write))
+            with open(os.path.join(workdir, 'params.in'), 'w') as f:
+                f.write('\n'.join(list_of_strings_to_write))
         except Exception as ex:
             raise ModelEvaluationError(
-                "Failed to create params.in file in                        "
-                f" {workdir}. The following error occurred: \n{ex}"
+                'Failed to create params.in file in                        '
+                f' {workdir}. The following error occurred: \n{ex}'
             )
 
     def _execute_driver_file(self, workdir: str) -> None:
         command = (
-            f"{os.path.join(workdir, self.driver_filename)}                   "
-            "   1> model_eval.log 2>&1"
+            f'{os.path.join(workdir, self.driver_filename)}                   '
+            '   1> model_eval.log 2>&1'
         )
         os.chdir(workdir)
         completed_process = subprocess.run(command, shell=True)
         try:
             completed_process.check_returncode()
         except subprocess.CalledProcessError as ex:
-            returnStringList = ["Failed to run the model."]
+            returnStringList = ['Failed to run the model.']
             returnStringList.append(
-                "The command to run the model was                            "
-                f"         {ex.cmd}"
+                'The command to run the model was                            '
+                f'         {ex.cmd}'
             )
-            returnStringList.append(f"The return code was {ex.returncode}")
-            returnStringList.append(f"The following error occurred: \n{ex}")
-            raise ModelEvaluationError(f"\n\n".join(returnStringList))
+            returnStringList.append(f'The return code was {ex.returncode}')
+            returnStringList.append(f'The following error occurred: \n{ex}')
+            raise ModelEvaluationError(f'\n\n'.join(returnStringList))
 
     def _read_outputs_from_results_file(self, workdir: str) -> NDArray:
-        if glob.glob("results.out"):
-            outputs = np.loadtxt("results.out", dtype=float).flatten()
+        if glob.glob('results.out'):
+            outputs = np.loadtxt('results.out', dtype=float).flatten()
         else:
             msg = f"Error running FEM: 'results.out' missing at {workdir}\n"
-            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] == 0:
             msg = "Error running FEM: 'results.out' is empty\n"
-            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if outputs.shape[0] != self.length_of_results:
             msg = (
                 "Error running FEM: 'results.out' contains                "
-                f" {outputs.shape[0]} values, expected to get                "
-                f" {self.length_of_results} values\n"
+                f' {outputs.shape[0]} values, expected to get                '
+                f' {self.length_of_results} values\n'
             )
-            msg = _append_msg_in_out_file(msg, out_file_name="ops.out")
+            msg = _append_msg_in_out_file(msg, out_file_name='ops.out')
             raise ModelEvaluationError(msg)
 
         if not self.ignore_nans:
             if np.isnan(np.sum(outputs)):
-                msg = f"Error running FEM: Response value in {workdir} is NaN"
+                msg = f'Error running FEM: Response value in {workdir} is NaN'
                 raise ModelEvaluationError(msg)
 
         return outputs
@@ -210,7 +204,7 @@ class SimCenterWorkflowDriver:
     def evaluate_model_once(
         self, simulation_number: int, sample_values: NDArray
     ) -> Union[str, NDArray]:
-        outputs = ""
+        outputs = ''
         try:
             sample_values = np.atleast_2d(sample_values)
             self._check_size_of_sample(sample_values)
@@ -221,10 +215,10 @@ class SimCenterWorkflowDriver:
         except Exception:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             outputs = (
-                f"\nSimulation number: {simulation_number}\n"
-                + f"Samples values: {sample_values}\n"
+                f'\nSimulation number: {simulation_number}\n'
+                + f'Samples values: {sample_values}\n'
             )
-            outputs += "".join(
+            outputs += ''.join(
                 traceback.format_exception(exc_type, exc_value, exc_traceback)
             )
         finally:
@@ -233,7 +227,7 @@ class SimCenterWorkflowDriver:
 
 
 class ParallelRunnerMultiprocessing:
-    def __init__(self, run_type: str = "runningLocal") -> None:
+    def __init__(self, run_type: str = 'runningLocal') -> None:
         self.run_type = run_type
         self.num_processors = self.get_num_processors()
         self.pool = self.get_pool()
@@ -244,8 +238,8 @@ class ParallelRunnerMultiprocessing:
             num_processors = 1
         if num_processors < 1:
             raise ValueError(
-                "Number of processes must be at least 1.                     "
-                f"         Got {num_processors}"
+                'Number of processes must be at least 1.                     '
+                f'         Got {num_processors}'
             )
         return num_processors
 
@@ -303,9 +297,7 @@ class ERANatafJointDistribution:
             self.correlation_matrix_data, self.num_rvs
         )
         self.marginal_ERAdistribution_objects_list = (
-            make_list_of_marginal_distributions(
-                self.list_of_random_variables_data
-            )
+            make_list_of_marginal_distributions(self.list_of_random_variables_data)
         )
         self.ERANataf_object = make_ERANataf_object(
             self.marginal_ERAdistribution_objects_list, self.correlation_matrix
@@ -316,7 +308,9 @@ class ERANatafJointDistribution:
     ) -> Union[tuple[NDArray[np.float64], Any], NDArray[np.float64]]:
         return self.ERANataf_object.U2X(U=u, Jacobian=jacobian)
 
-    def x_to_u(self, x: NDArray, jacobian: bool = False) -> Union[
+    def x_to_u(
+        self, x: NDArray, jacobian: bool = False
+    ) -> Union[
         tuple[NDArray[np.floating[Any]], NDArray[np.floating[Any]]],
         NDArray[np.floating[Any]],
     ]:
@@ -347,14 +341,12 @@ class ERANatafJointDistribution:
 
 def get_list_of_pseudo_random_number_generators(entropy, num_spawn):
     seed_sequence = np.random.SeedSequence(entropy=entropy).spawn(num_spawn)
-    prngs = [
-        np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence
-    ]
+    prngs = [np.random.Generator(np.random.PCG64DXSM(s)) for s in seed_sequence]
     return prngs
 
 
 def get_parallel_pool_instance(run_type: str):
-    if run_type == "runningRemote":
+    if run_type == 'runningRemote':
         from parallel_runner_mpi4py import ParallelRunnerMPI4PY
 
         return ParallelRunnerMPI4PY(run_type)
@@ -365,14 +357,14 @@ def get_parallel_pool_instance(run_type: str):
 def make_list_of_rv_names(all_rv_data):
     list_of_rv_names = []
     for rv_data in all_rv_data:
-        list_of_rv_names.append(rv_data["name"])
+        list_of_rv_names.append(rv_data['name'])
     return list_of_rv_names
 
 
 def get_length_of_results(edp_data):
     length_of_results = 0
     for edp in edp_data:
-        length_of_results += int(float(edp["length"]))
+        length_of_results += int(float(edp['length']))
     return length_of_results
 
 
@@ -418,8 +410,8 @@ def get_default_model(
     edp_data,
     list_of_dir_names_to_copy_files_from,
     run_directory,
-    driver_filename="driver",
-    workdir_prefix="workdir",
+    driver_filename='driver',
+    workdir_prefix='workdir',
 ):
     list_of_rv_names = make_list_of_rv_names(list_of_rv_data)
     length_of_results = get_length_of_results(edp_data)
@@ -454,9 +446,7 @@ def get_standard_normal_random_variates(list_of_prngs, size=1):
 
 
 def get_inverse_gamma_random_variate(prng, shape, scale, size=1):
-    return scipy.stats.invgamma.rvs(
-        shape, scale=scale, size=size, random_state=prng
-    )
+    return scipy.stats.invgamma.rvs(shape, scale=scale, size=size, random_state=prng)
 
 
 def multivariate_normal_logpdf(x, mean, cov):
@@ -497,11 +487,11 @@ def _get_tabular_results_file_name_for_dataset(
 
     tabular_results_file = (
         tabular_results_parent
-        / f"{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}"
+        / f'{tabular_results_stem}_dataset_{dataset_number+1}{tabular_results_extension}'
     )
     return tabular_results_file
 
 
 def _write_to_tabular_results_file(tabular_results_file, string_to_write):
-    with tabular_results_file.open("a") as f:
+    with tabular_results_file.open('a') as f:
         f.write(string_to_write)

@@ -41,6 +41,7 @@
 import warnings
 from datetime import datetime
 
+
 # Monkeypatch warnings to get prettier messages
 def _warning(message, category, filename, lineno, file=None, line=None):
     if '\\' in filename:
@@ -49,10 +50,14 @@ def _warning(message, category, filename, lineno, file=None, line=None):
         file_path = filename.split('/')
     python_file = '/'.join(file_path[-3:])
     print('WARNING in {} at line {}\n{}\n'.format(python_file, lineno, message))
+
+
 warnings.showwarning = _warning
+
 
 def show_warning(warning_msg):
     warnings.warn(UserWarning(warning_msg))
+
 
 def log_msg(msg='', prepend_timestamp=True):
     """
@@ -67,8 +72,9 @@ def log_msg(msg='', prepend_timestamp=True):
 
     """
     if prepend_timestamp:
-        formatted_msg = '{} {}'.format(datetime.utcnow().strftime(
-            '%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg)
+        formatted_msg = '{} {}'.format(
+            datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S:%fZ')[:-4], msg
+        )
     else:
         formatted_msg = msg
 
@@ -76,63 +82,64 @@ def log_msg(msg='', prepend_timestamp=True):
 
     if globals().get('log_file', None) is not None:
         with open(globals()['log_file'], 'a') as f:
-            f.write('\n'+formatted_msg)
+            f.write('\n' + formatted_msg)
+
 
 # Constants for unit conversion to standard units
 
 unit_types = {
-    'time'         : ['sec', 'minute', 'h', 'day'],
-    'length'       : ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
-    'area'         : ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
-    'volume'       : ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
-    'speed'        : ['cmps', 'mps', 'mph', 'inchps', 'ftps', 'kph', 'fps', 'kts'],
-    'acceleration' : ['mps2', 'cmps2', 'inchps2', 'ftps2', 'g'],
-    'mass'         : ['kg', 'ton', 'lb'],
-    'force'        : ['N', 'kN', 'lbf', 'kip', 'kips'],
-    'pressure'     : ['Pa', 'kPa', 'MPa', 'GPa', 'psi', 'ksi', 'Mpsi']
+    'time': ['sec', 'minute', 'h', 'day'],
+    'length': ['m', 'mm', 'cm', 'km', 'inch', 'ft', 'mile'],
+    'area': ['m2', 'mm2', 'cm2', 'km2', 'inch2', 'ft2', 'mile2'],
+    'volume': ['m3', 'mm3', 'cm3', 'km3', 'inch3', 'ft3', 'mile3'],
+    'speed': ['cmps', 'mps', 'mph', 'inchps', 'ftps', 'kph', 'fps', 'kts'],
+    'acceleration': ['mps2', 'cmps2', 'inchps2', 'ftps2', 'g'],
+    'mass': ['kg', 'ton', 'lb'],
+    'force': ['N', 'kN', 'lbf', 'kip', 'kips'],
+    'pressure': ['Pa', 'kPa', 'MPa', 'GPa', 'psi', 'ksi', 'Mpsi'],
 }
 
 # time
-sec = 1.
+sec = 1.0
 
-minute = 60. * sec
-h = 60. * minute
-day = 24. * h
+minute = 60.0 * sec
+h = 60.0 * minute
+day = 24.0 * h
 
-sec2 = sec**2.
+sec2 = sec**2.0
 
 # distance, area, volume
-m = 1.
+m = 1.0
 
 mm = 0.001 * m
 cm = 0.01 * m
-km = 1000. * m
+km = 1000.0 * m
 
 inch = 0.0254
-ft = 12. * inch
-mile = 5280. * ft
+ft = 12.0 * inch
+mile = 5280.0 * ft
 
 # area
-m2 = m**2.
+m2 = m**2.0
 
-mm2 = mm**2.
-cm2 = cm**2.
-km2 = km**2.
+mm2 = mm**2.0
+cm2 = cm**2.0
+km2 = km**2.0
 
-inch2 = inch**2.
-ft2 = ft**2.
-mile2 = mile**2.
+inch2 = inch**2.0
+ft2 = ft**2.0
+mile2 = mile**2.0
 
 # volume
-m3 = m**3.
+m3 = m**3.0
 
-mm3 = mm**3.
-cm3 = cm**3.
-km3 = km**3.
+mm3 = mm**3.0
+cm3 = cm**3.0
+km3 = km**3.0
 
-inch3 = inch**3.
-ft3 = ft**3.
-mile3 = mile**3.
+inch3 = inch**3.0
+ft3 = ft**3.0
+mile3 = mile**3.0
 
 # speed / velocity
 cmps = cm / sec
@@ -154,9 +161,9 @@ ftps2 = ft / sec2
 g = 9.80665 * mps2
 
 # mass
-kg = 1.
+kg = 1.0
 
-ton = 1000. * kg
+ton = 1000.0 * kg
 
 lb = 0.453592 * kg
 
@@ -166,7 +173,7 @@ N = kg * m / sec2
 kN = 1e3 * N
 
 lbf = lb * g
-kip = 1000. * lbf
+kip = 1000.0 * lbf
 kips = kip
 
 # pressure / stress
@@ -182,14 +189,14 @@ Mpsi = 1e6 * psi
 
 # KZ: unit bases decouple
 unit_bases = {
-    'm2' :{'length': 'm'},
+    'm2': {'length': 'm'},
     'mm2': {'length': 'mm'},
     'cm2': {'length': 'cm'},
     'km2': {'length': 'km'},
     'inch2': {'length': 'in'},
     'ft2': {'length': 'ft'},
     'mile2': {'length': 'mile'},
-    'm3' :{'length': 'm'},
+    'm3': {'length': 'm'},
     'mm3': {'length': 'mm'},
     'cm3': {'length': 'cm'},
     'km3': {'length': 'km'},
@@ -205,9 +212,10 @@ unit_bases = {
     'cmps2': {'length': 'cm', 'time': 'sec'},
     'inchps2': {'length': 'in', 'time': 'sec'},
     'ftps2': {'length': 'ft', 'time': 'sec'},
-    'g': {}
+    'g': {},
 }
 unit_decoupling_type_list = ['TH_file']
+
 
 def get_scale_factors(input_units, output_units):
     """
@@ -217,11 +225,9 @@ def get_scale_factors(input_units, output_units):
 
     # special case: if the input unit is not specified then do not do any scaling
     if input_units is None:
-
         scale_factors = {'ALL': 1.0}
 
     else:
-
         # parse output units:
 
         # if no length unit is specified, 'inch' is assumed
@@ -230,34 +236,31 @@ def get_scale_factors(input_units, output_units):
             unit_length = 'inch'
         f_length = globals().get(unit_length, None)
         if f_length is None:
-            raise ValueError(
-                f"Specified length unit not recognized: {unit_length}")
+            raise ValueError(f'Specified length unit not recognized: {unit_length}')
 
         # if no time unit is specified, 'sec' is assumed
         unit_time = output_units.get('time', 'sec')
         f_time = globals().get(unit_time, None)
         if f_time is None:
-            raise ValueError(
-                f"Specified time unit not recognized: {unit_time}")
+            raise ValueError(f'Specified time unit not recognized: {unit_time}')
 
         scale_factors = {}
 
         for input_name, input_unit in input_units.items():
-
             # exceptions
-            if input_name in ['factor', ]:
+            if input_name in [
+                'factor',
+            ]:
                 f_scale = 1.0
 
             else:
-
                 # get the scale factor to standard units
                 if input_unit == 'in':
                     input_unit = 'inch'
 
                 f_in = globals().get(input_unit, None)
                 if f_in is None:
-                    raise ValueError(
-                        f"Input unit not recognized: {input_unit}")
+                    raise ValueError(f'Input unit not recognized: {input_unit}')
 
                 unit_type = None
                 for base_unit_type, unit_set in globals()['unit_types'].items():
@@ -265,11 +268,11 @@ def get_scale_factors(input_units, output_units):
                         unit_type = base_unit_type
 
                 if unit_type is None:
-                    raise ValueError(f"Failed to identify unit type: {input_unit}")
+                    raise ValueError(f'Failed to identify unit type: {input_unit}')
 
                 # the output unit depends on the unit type
                 if unit_type == 'acceleration':
-                    f_out = f_time ** 2.0 / f_length
+                    f_out = f_time**2.0 / f_length
 
                 elif unit_type == 'speed':
                     f_out = f_time / f_length
@@ -278,7 +281,9 @@ def get_scale_factors(input_units, output_units):
                     f_out = 1.0 / f_length
 
                 else:
-                    raise ValueError(f"Unexpected unit type in workflow: {unit_type}")
+                    raise ValueError(
+                        f'Unexpected unit type in workflow: {unit_type}'
+                    )
 
                 # the scale factor is the product of input and output scaling
                 f_scale = f_in * f_out
@@ -296,7 +301,6 @@ def get_unit_bases(input_units):
 
     # special case: if the input unit is not specified then do nothing
     if input_units is None:
-
         input_unit_bases = {}
 
     else:
@@ -304,9 +308,7 @@ def get_unit_bases(input_units):
         unit_bases_dict = globals()['unit_bases']
         for unit_type, input_unit in input_units.items():
             if unit_type in globals()['unit_decoupling_type_list']:
-                cur_unit_bases = {"length": "m", 
-                                  "force": "N",
-                                  "time": "sec"}
+                cur_unit_bases = {'length': 'm', 'force': 'N', 'time': 'sec'}
                 for unit_name, unit_bases in unit_bases_dict.items():
                     if unit_name == input_unit:
                         for x, y in unit_bases.items():
