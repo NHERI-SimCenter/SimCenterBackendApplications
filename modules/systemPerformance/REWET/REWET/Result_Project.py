@@ -364,7 +364,7 @@ class Project_Result(Map, Raw_Data, Curve, Crew_Report, Result_Time):  # noqa: N
 
     def getRequiredDemandForAllNodesandtime(self, scn_name):  # noqa: ANN001, ANN201, N802
         """**********
-        ATTENTION: We Assume that all scnearios have teh same time indexing
+        ATTENTION: We Assume that all scenarios have the same time indexing
         **********
 
         Calculates and return required demands for all nodes in all the times steps

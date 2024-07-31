@@ -142,7 +142,7 @@ class ERANataf:
         weights2d = first * second
         w2d = weights2d.flatten()
 
-        #  check is X the identiy
+        #  check is X the identity
         self.Rho_Z = np.identity(n=n_dist)
         if np.linalg.norm(self.Rho_X - np.identity(n=n_dist)) > 10 ** (-5):
             for i in range(n_dist):

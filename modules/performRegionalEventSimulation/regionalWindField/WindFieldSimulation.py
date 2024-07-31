@@ -126,7 +126,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
         self.mesh_info = []
 
     def set_delta_path(self, delta_path):  # noqa: ANN001, ANN201
-        """set_delta_path: perturbing the path coordiates and heading angle of the storm track"""  # noqa: D400, D415
+        """set_delta_path: perturbing the path coordinates and heading angle of the storm track"""  # noqa: D400, D415
         if len(delta_path) == 3:  # noqa: PLR2004
             self.delta_path = delta_path
         else:
@@ -182,7 +182,7 @@ class LinearAnalyticalModel_SnaikiWu_2017:  # noqa: N801, D101
 
     def set_cyclone_mesh(self, mesh_info):  # noqa: ANN001, ANN201
         """set_cyclone_meesh: meshing the cyclone in radius and cycle
-        mesh_info[0]: interal R
+        mesh_info[0]: interval R
         mesh_info[1]: interval delta_R
         mesh_info[2]: external R
         mesh_info[3]: starting angle (usually 0)

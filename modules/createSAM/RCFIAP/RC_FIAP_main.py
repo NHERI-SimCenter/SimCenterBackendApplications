@@ -6,7 +6,7 @@
 ##       Carlos A. Arteta (carteta@uninorte.edu.co                 ##
 ## RC_FIAP_main.py : this is the main script that calls            ##
 ## GUIFrameNonLinearACI.py : graphical environment                 ##
-## mplwidget.py : cript to help plot the plastic hinge projector   ##
+## mplwidget.py : script to help plot the plastic hinge projector  ##
 ## ############################################################### ##
 
 # Modified by Dr. Stevan Gavrilovic @ SimCenter, UC Berkeley
@@ -1049,7 +1049,7 @@ class RCFIAP:  # noqa: D101
         np.set_printoptions(precision=6)
         np.set_printoptions(suppress=True)
 
-        # Story drift caculations
+        # Story drift calculations
         DriftMax = 0.02  # noqa: N806
         nodesDisp = []  # noqa: N806
         Id_Node_Drift = ListNodesDrift[:, 0]  # noqa: N806
@@ -1072,10 +1072,10 @@ class RCFIAP:  # noqa: D101
         cover = 4 * cm
         dst = 3 / 8 * inch
         Ast = pi * dst**2 / 4.0  # area de la barra del estribo  # noqa: N806
-        ro_max_b = 0.85 * Beta1B * fcB * 3.0 / fy / 8.0  # maximun steel percentage
+        ro_max_b = 0.85 * Beta1B * fcB * 3.0 / fy / 8.0  # maximum steel percentage
         ro_min_b = max(
             0.25 * sqrt(fcB / MPa) * MPa / fy, 1.4 * MPa / fy
-        )  # minimun steel percentage
+        )  # minimum steel percentage
         DataBeamDesing = []
         for Ele, EleForceD, EleForceDL, EleForceDLE in zip(  # noqa: N806
             Elements, ElemnsForceD, ElemnsForceDL, ElemnsForceDLE
@@ -1389,15 +1389,15 @@ class RCFIAP:  # noqa: D101
             sly = bcy / (nsH - 1)
             k2x = min(0.26 * sqrt((bcx / sst) * (bcx / slx) * (1000.0 / flx)), 1)
             k2y = min(0.26 * sqrt((bcy / sst) * (bcy / sly) * (1000.0 / fly)), 1)
-            flex = k2x * flx
-            fley = k2y * fly
-            fle = (flex * bcx + fley * bcy) / (bcx + bcy)
-            k1 = 6.7 * (fle / 1000.0) ** (-0.17)
-            fcc = fc + k1 * fle
+            fl_ex = k2x * flx
+            fl_ey = k2y * fly
+            fl_e = (fl_ex * bcx + fl_ey * bcy) / (bcx + bcy)
+            k1 = 6.7 * (fl_e / 1000.0) ** (-0.17)
+            fcc = fc + k1 * fl_e
             fpcc = -fcc
             Ecc = Ec  # noqa: N806
             Gfc = max(2.0 * (-fpc / MPa) * N / mm, 25.0 * N / mm)  # noqa: N806
-            K = k1 * fle / fc  # noqa: N806
+            K = k1 * fl_e / fc  # noqa: N806
             epscc0 = eo1 * (1.0 + 5.0 * K)
             Gfcc = 1.7 * Gfc  # noqa: N806
             epsccu = Gfcc / (0.6 * fpcc * phl) - 0.8 * fpcc / Ecc + epscc0
@@ -1419,9 +1419,9 @@ class RCFIAP:  # noqa: D101
             #            print("**** sly",sly)
             #            print("**** k2x",k2x)
             #            print("**** k2y",k2y)
-            #            print("**** flex",flex)
-            #            print("**** fley",fley)
-            #            print("**** fle",fle)
+            #            print("**** fl_ex",fl_ex)
+            #            print("**** fl_ey",fl_ey)
+            #            print("**** fl_e",fl_e)
             #            print("**** k1",k1)
             #            print("**** fcc",fcc)
             #            print("**** fpcc",fpcc)
@@ -1575,13 +1575,13 @@ class RCFIAP:  # noqa: D101
             sly = bcy / (nsH - 1)
             k2x = min(0.26 * sqrt((bcx / sst) * (bcx / slx) * (1000.0 / flx)), 1)
             k2y = min(0.26 * sqrt((bcy / sst) * (bcy / sly) * (1000.0 / fly)), 1)
-            flex = k2x * flx
-            fley = k2y * fly
-            fle = (flex * bcx + fley * bcy) / (bcx + bcy)
-            k1 = 6.7 * (fle / 1000.0) ** (-0.17)
-            fcc = fc + k1 * fle
+            fl_ex = k2x * flx
+            fl_ey = k2y * fly
+            fl_e = (fl_ex * bcx + fl_ey * bcy) / (bcx + bcy)
+            k1 = 6.7 * (fl_e / 1000.0) ** (-0.17)
+            fcc = fc + k1 * fl_e
             fpcc = -fcc
-            K = k1 * fle / fc  # noqa: N806
+            K = k1 * fl_e / fc  # noqa: N806
             epscc0 = eo1 * (1.0 + 5.0 * K)
             rov = Asvt / sst / (bcx + bcy)
             e85 = 260 * rov * epscc0 + eo85

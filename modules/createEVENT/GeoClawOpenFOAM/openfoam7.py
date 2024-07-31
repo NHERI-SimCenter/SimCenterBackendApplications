@@ -269,7 +269,7 @@ class openfoam7:  # noqa: N801
             shmfile.write(shmtext)
             shmfile.close()
 
-            # Mesh files from other softwares (1)
+            # Mesh files from other software (1)
             # Do nothing here. Add to caserun.sh
 
             # User mesh dictionaries (2)
@@ -372,9 +372,9 @@ class openfoam7:  # noqa: N801
         prtext = Prboundary.Prtext(data, patches)
         fname = 'p_rgh'
         filepath = os.path.join(path, '0.org', fname)  # noqa: PTH118
-        prfile = open(filepath, 'w')  # noqa: SIM115, PTH123
-        prfile.write(prtext)
-        prfile.close()
+        pr_file = open(filepath, 'w')  # noqa: SIM115, PTH123
+        pr_file.write(prtext)
+        pr_file.close()
 
         # Create object for alpha boundary condition
         # Get the text for the alpha boundary
@@ -498,7 +498,7 @@ class openfoam7:  # noqa: N801
 
     #############################################################
     def others(self, data, path):  # noqa: ANN001, ANN201
-        """Creates the other auxillary files for openfoam7
+        """Creates the other auxiliary files for openfoam7
 
         Arguments:
         ---------
@@ -506,7 +506,7 @@ class openfoam7:  # noqa: N801
                 path: Path where the geometry files (STL) needs to be created
 
         """  # noqa: D400, D401, D415
-        # Create the auxillary files
+        # Create the auxiliary files
         Others = of7Others()  # noqa: N806
         # g-file
         gfiletext = Others.gfiletext(data)

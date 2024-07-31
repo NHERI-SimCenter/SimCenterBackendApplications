@@ -67,7 +67,7 @@ class NonlinearAnalysis:
             and analysis_type != 'DynamicAnalysis'
         ):
             sys.stderr.write(
-                'Wrong analysis type input. Please input one of the followings:\n'
+                'Wrong analysis type input. Please input one of the following:\n'
             )
             sys.stderr.write('EigenValueAnalys, PushoverAnalysis, DynamicAnalysis')
             sys.exit(99)
@@ -258,7 +258,7 @@ class NonlinearAnalysis:
                     tclfile.write(
                         'node\t%i%i%i'
                         % (building.geometry['number of X bay'] + 2, i, 4)
-                    )  # Nodel label
+                    )  # Model label
                     tclfile.write(
                         '\t[expr %i*$BayWidth]'
                         % (building.geometry['number of X bay'] + 1)
@@ -719,7 +719,7 @@ class NonlinearAnalysis:
         :return: a .tcl file
         """  # noqa: D205, D400, D415
         with open('DefineColumnHinges2DModel.tcl', 'w') as tclfile:  # noqa: PTH123
-            tclfile.write('# This file wil be used to define column hinges\n\n\n')
+            tclfile.write('# This file will be used to define column hinges\n\n\n')
             for i in range(
                 1, building.geometry['number of story'] + 1
             ):  # i refers the story number

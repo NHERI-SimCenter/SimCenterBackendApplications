@@ -268,7 +268,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
                     nover,
                     nfft,
                     fp,
-                )  # -1 becuase tab1 is at column 0
+                )  # -1 because tab1 is at column 0
                 # cpsd_all[kk,ll] = s
                 s_target[d[i - 1] : d[i], d[j - 1] : d[j]] = s
 
@@ -425,7 +425,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     seeds = np.arange(seed, Nsim + seed)  # Set seeds for reproducibility
 
     #
-    # Creating Gaussian Relizations
+    # Creating Gaussian Realizations
     #
 
     print('Creating Gaussian Realizations')  # noqa: T201
@@ -459,7 +459,7 @@ def main(aimName, evtName, getRV):  # noqa: ANN001, ANN201, C901, N803, D103, PL
     print(f' - Elapsed time: {time.time() - t_init:.1f} seconds.\n')  # noqa: T201
 
     #
-    # Creating Non-Gaussian Relizations
+    # Creating Non-Gaussian Realizations
     #
 
     print('Creating NonGaussian Realizations')  # noqa: T201
@@ -670,7 +670,7 @@ def genCP(Cp_temp, Cp_sim_temp, nl, nu, my_cdf_vect, my_cdf_x_range):  # noqa: A
     stdCp = np.std(Cp_sim_temp)  # noqa: N806
     F_vvv = (Cp_sim_temp - meanCp) / stdCp  # noqa: N806
 
-    # cdf points from gaussian distribuition
+    # CDF points from Gaussian distribution
     cdf_vvv = norm.cdf(F_vvv, 0, 1)
     # force the data being bounded in due to numerical errors that can happen in Matlab when CDF ~0 or ~1;
 

@@ -307,7 +307,7 @@ def download_ground_motion(gm_id, user_name, user_password, output_dir, spectra_
         chromedriver = os.path.dirname(__file__) + '/bin/chromedriver/chromedriver_mac'
         os.chmod(chromedriver, 755)
     else:
-        print('Currently supoorting win32, linux, and mac.')
+        print('Currently supporting win32, linux, and mac.')
     chromeOptions = webdriver.ChromeOptions()
     output_dir = os.path.join(os.path.dirname(Path(output_dir)),
                               os.path.basename(Path(output_dir)))

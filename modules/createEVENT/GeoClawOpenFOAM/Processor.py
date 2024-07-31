@@ -308,13 +308,13 @@ def main():  # noqa: ANN201, C901, PLR0912, PLR0915
     logID += 1  # noqa: N806
     if ecode < 0:
         hydroutil.flog.write(
-            '%d (%s): Error with creating auxillary files in EVT.\n'
+            '%d (%s): Error with creating auxiliary files in EVT.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
-        sys.exit('Error with creating auxillary files in EVT.')
+        sys.exit('Error with creating auxiliary files in EVT.')
     else:
         hydroutil.flog.write(
-            '%d (%s): Auxillary files required successfully created.\n'
+            '%d (%s): Auxiliary files required successfully created.\n'
             % (logID, datetime.datetime.now())  # noqa: DTZ005
         )
 

@@ -172,7 +172,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
         for x in df_chs[('USA_LON', 'degrees_east')].values.tolist():  # noqa: PD011
             if x != ' ':
                 track_lon.append(float(x))  # noqa: PERF401
-        # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
+        # If the default option (USA_LAT and USA_LON) is not available, switching to LAT and LON
         if len(track_lat) == 0:
             print(  # noqa: T201
                 'CreateScenario: warning - the USA_LAT and USA_LON are not available, switching to LAT and LON.'
@@ -240,7 +240,7 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             landfall_lat = float(df_chs[('USA_LAT', 'degrees_north')].iloc[tmploc])
             landfall_lon = float(df_chs[('USA_LON', 'degrees_east')].iloc[tmploc])
         except:  # noqa: E722
-            # If the default option (USA_LAT and USA_LON) is not available, swithcing to LAT and LON
+            # If the default option (USA_LAT and USA_LON) is not available, switching to LAT and LON
             landfall_lat = float(df_chs[('LAT', 'degrees_north')].iloc[tmploc])
             landfall_lon = float(df_chs[('LON', 'degrees_east')].iloc[tmploc])
         try:
@@ -270,9 +270,9 @@ def create_wind_scenarios(scenario_info, event_info, stations, data_dir):  # noq
             )  # convert nmile to km
         except:  # noqa: E722
             # No available radius of maximum wind is found
-            print('CreateScenario: warning - swithcing to REUNION_RMW.')  # noqa: T201
+            print('CreateScenario: warning - switching to REUNION_RMW.')  # noqa: T201
             try:
-                # If the default option (USA_RMW) is not available, swithcing to REUNION_RMW
+                # If the default option (USA_RMW) is not available, switching to REUNION_RMW
                 landfall_rad = (
                     float(df_chs[('REUNION_RMW', 'nmile')].iloc[tmploc]) * 1.60934
                 )  # convert nmile to km

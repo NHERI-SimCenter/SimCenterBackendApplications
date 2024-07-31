@@ -41,7 +41,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         self.damage_pipe_model_reviewed = False
 
         """
-        ui value assigments.
+        ui value assignments.
         """
         self.setDamageUI()
 
@@ -116,7 +116,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
             probability = float(probability)
 
             if len(scenario_name) < 1:
-                self.errorMSG('Empty Scneario Name', 'Please enter a scenario name')
+                self.errorMSG('Empty Scenario Name', 'Please enter a scenario name')
                 error = True
 
             if len(pipe_damage_name) < 1:
@@ -145,7 +145,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
 
             if (self.scenario_list['Scenario Name'] == scenario_name).any():
                 self.errorMSG(
-                    'Duplicate Scneario Name',
+                    'Duplicate Scenario Name',
                     'Please Have the Scenario Name changed',
                 )
                 error = True
@@ -272,28 +272,28 @@ class Damage_Tab_Designer:  # noqa: N801, D101
 
         if len(damage_pipe_not_exist_List) > 0:
             text_output += (
-                'The follwing pipe damage files could not be found.\n'
+                'The following pipe damage files could not be found.\n'
                 + repr(damage_pipe_not_exist_List)
                 + '\n'
             )
             if_validate_successful = False
         if len(damage_nodal_not_exist_List) > 0:
             text_output += (
-                'The follwing node damage files could not be found.\n'
+                'The following node damage files could not be found.\n'
                 + repr(damage_nodal_not_exist_List)
                 + '\n'
             )
             if_validate_successful = False
         if len(damage_pump_not_exist_List) > 0:
             text_output += (
-                'The follwing pump damage files could not be found.\n'
+                'The following pump damage files could not be found.\n'
                 + repr(damage_pump_not_exist_List)
                 + '\n'
             )
             if_validate_successful = False
         if len(damage_tank_not_exist_List) > 0:
             text_output += (
-                'The follwing tank damage files could not be found.\n'
+                'The following tank damage files could not be found.\n'
                 + repr(damage_tank_not_exist_List)
                 + '\n'
             )
@@ -481,7 +481,7 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         if self.scneraio_validated == False:  # noqa: E712
             self.errorMSG(
                 'REWET',
-                'You must validate damage scenarios sucessfully before reviewing pipe damage models.',
+                'You must validate damage scenarios successfully before reviewing pipe damage models.',
             )
             return
         pipe_designer = Pipe_Damage_Model_Designer(self.pipe_damage_model)
@@ -525,12 +525,12 @@ class Damage_Tab_Designer:  # noqa: N801, D101
         not_available_headers = set(must_be_headers) - set(available_headers)
         if len(not_available_headers) > 1:
             self.status_text.setText(
-                'failed to open the scenario file. the folowing columns are missing and need to be in teh file: '
+                'failed to open the scenario file. the following columns are missing and need to be in the file: '
                 + repr(not_available_headers)
             )
             return None
         else:  # noqa: RET505
-            self.status_text.setText('Opened file Sucessfully.')
+            self.status_text.setText('Opened file Successfully.')
         scn_list = scn_list[must_be_headers]
 
         return scn_list  # noqa: RET504

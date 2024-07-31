@@ -436,7 +436,7 @@ def run_FEM(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0):  # noqa: AN
 
 
 #
-# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indicies, but we use IM as input of GP
+# When sampled X is different from surrogate input X. e.g. we sample ground motion parameters or indices, but we use IM as input of GP
 #
 
 # def run_FEM_alterX(X, id_sim, rv_name, work_dir, workflowDriver, runIdx=0, alterIdx, alterFiles):

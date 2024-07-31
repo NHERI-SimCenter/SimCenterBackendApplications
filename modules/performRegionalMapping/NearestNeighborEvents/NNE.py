@@ -210,7 +210,7 @@ def find_neighbors(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
         # get the pre-defined number of samples for each neighbor
         nbr_samples = np.where(rng.multinomial(1, weights, samples) == 1)[1]
 
-        # this is the preferred behavior, the else caluse is left for legacy inputs
+        # this is the preferred behavior, the else clause is left for legacy inputs
         if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
             # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and

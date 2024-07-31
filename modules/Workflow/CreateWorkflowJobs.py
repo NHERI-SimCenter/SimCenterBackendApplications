@@ -328,7 +328,7 @@ def generate_workflow_tasks_regionalsiteresponse(  # noqa: ANN201, C901, D103, P
 ):
     jobId = os.getenv('SLURM_JOB_ID')  # We might need this later  # noqa: N806, F841
 
-    # KZ@220324: currently only EDP is valid output as it's jsut soil column response in this step
+    # KZ@220324: currently only EDP is valid output as it's just soil column response in this step
     output_valid = ['IM']
 
     # get the type of outputs requested

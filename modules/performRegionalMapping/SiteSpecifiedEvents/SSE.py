@@ -148,7 +148,7 @@ def create_event(asset_file, event_grid_file, multipleEvents, doParallel):  # no
         with open(asset_file, encoding='utf-8') as f:  # noqa: PTH123
             asset_data = json.load(f)
 
-        # this is the preferred behavior, the else caluse is left for legacy inputs
+        # this is the preferred behavior, the else clause is left for legacy inputs
         if grid_df.iloc[0]['GP_file'][-3:] == 'csv':
             # We assume that every grid point has the same type and number of
             # event data. That is, you cannot mix ground motion records and

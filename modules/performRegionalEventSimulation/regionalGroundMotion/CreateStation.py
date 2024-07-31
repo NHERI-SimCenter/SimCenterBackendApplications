@@ -596,7 +596,7 @@ def create_gridded_stations(  # noqa: ANN201, PLR0913
         delta_lon: delta degree along longitude
         delta_lat: delta degree along latitude
     Output:
-        run_tag: 0 - success, 1 - input failure, 2 - outupt failure
+        run_tag: 0 - success, 1 - input failure, 2 - output failure
     """  # noqa: D205, D400, D401, D415
     # Reading csv data
     run_tag = 0
@@ -748,7 +748,7 @@ def export_site_prop(stn_file, output_dir, filename):  # noqa: ANN001, ANN201
         output_path: output directory
         filename: output filename
     Output:
-        run_tag: 0 - success, 1 - outupt failure
+        run_tag: 0 - success, 1 - output failure
     """  # noqa: D205, D400, D401, D415
     import os
     from pathlib import Path
@@ -896,7 +896,7 @@ def get_vs30_ncm(lat, lon):  # noqa: ANN001, ANN201
 def get_soil_model_ba(param=None):  # noqa: ANN001, ANN201
     """Get modeling parameters for Borja and Amies 1994 J2 model
     Currently just assign default values
-    Can be extended to have input soil properties to predict this pararmeters
+    Can be extended to have input soil properties to predict this parameters
     """  # noqa: D205, D400, D415
     su_rat = 0.26
     density = 2.0
@@ -926,7 +926,7 @@ def get_soil_model_ba(param=None):  # noqa: ANN001, ANN201
 def get_soil_model_ei(param=None):  # noqa: ANN001, ANN201
     """Get modeling parameters for elastic isotropic
     Currently just assign default values
-    Can be extended to have input soil properties to predict this pararmeters
+    Can be extended to have input soil properties to predict this parameter
     """  # noqa: D205, D400, D415
     density = 2.0
 

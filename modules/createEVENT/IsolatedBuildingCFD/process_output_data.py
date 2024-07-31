@@ -41,24 +41,24 @@ def write_wind_profiles(case_path):  # noqa: ANN001, ANN201, D103
     # U, v, w in at roof height
     Uh = inf.U[H_loc, :, :].T  # noqa: N806
 
-    Suh = []  # noqa: N806
+    s_uh = []  # noqa: N806
 
     for i in range(3):
         f, s = cwe.psd(Uh[:, i], 0.0025, 8)
-        Suh.append(np.abs(s))
+        s_uh.append(np.abs(s))
 
-    Suh.insert(0, f)
+    s_uh.insert(0, f)
 
-    Suhout = np.asarray(Suh, dtype=np.float32).T  # noqa: N806
+    Suhout = np.asarray(s_uh, dtype=np.float32).T  # noqa: N806
 
     write_precision = 6
     fmt = f'%.{write_precision}e'
 
     prof_path = case_path + '/constant/simCenter/output/windProfiles.txt'
-    Suh_path = case_path + '/constant/simCenter/output/Suh.txt'  # noqa: N806
+    s_uh_path = case_path + '/constant/simCenter/output/Suh.txt'  # noqa: N806
 
     np.savetxt(prof_path, prof, fmt=fmt)
-    np.savetxt(Suh_path, Suhout, fmt=fmt)
+    np.savetxt(s_uh_path, Suhout, fmt=fmt)
 
 
 def write_wind_loads(case_path):  # noqa: ANN001, ANN201, D103

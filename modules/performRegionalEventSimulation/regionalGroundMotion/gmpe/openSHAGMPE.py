@@ -35,7 +35,7 @@
 #
 # Contributors:
 # Jinyan Zhao
-# Transfered from openSHA to achieve better performance in r2d
+# Transferred from openSHA to achieve better performance in r2d
 
 import os
 import sys
@@ -538,7 +538,7 @@ class abrahamson_silva_kamai_2014:  # noqa: N801, D101
         tauB = self.getTauA(Mw, self.s3, self.s4)  # noqa: N806
         # Intra-event term with site amp variability removed -- Equation 27
         phiBsq = phiAsq - self.PHI_AMP_SQ  # noqa: N806
-        # Parital deriv. of ln(soil amp) w.r.t. ln(SA1180) -- Equation 30
+        # Partial deriv. of ln(soil amp) w.r.t. ln(SA1180) -- Equation 30
         # saRock subject to same vs30 < Vlin test as in mean model
         dAmp_p1 = self.get_dAmp(self.b, self.c, self.Vlin, vs30, saRock) + 1.0  # noqa: N806
         # phi squared, with non-linear effects -- Equation 28

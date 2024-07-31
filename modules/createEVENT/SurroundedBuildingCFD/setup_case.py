@@ -1506,7 +1506,7 @@ def write_base_forces_file(input_json_path, template_dict_path, case_path):  # n
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{base_load_write_interval};\n'
 
-    # Write patch name to intergrate forces on
+    # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
     dict_lines[start_index] = 'patches \t({});\n'.format('building')
 
@@ -1558,7 +1558,7 @@ def write_story_forces_file(input_json_path, template_dict_path, case_path):  # 
     start_index = foam.find_keyword_line(dict_lines, 'writeInterval')
     dict_lines[start_index] = f'writeInterval \t{story_load_write_interval};\n'
 
-    # Write patch name to intergrate forces on
+    # Write patch name to integrate forces on
     start_index = foam.find_keyword_line(dict_lines, 'patches')
     dict_lines[start_index] = 'patches \t({});\n'.format('building')
 
@@ -2011,7 +2011,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'decomposer')
     dict_lines[start_index] = 'decomposer\t\t{};\n'.format('scotch')
 
-    # Write method of decomposition for OF-V9 and lower compatability
+    # Write method of decomposition for OF-V9 and lower compatibility
     start_index = foam.find_keyword_line(dict_lines, 'method')
     dict_lines[start_index] = 'method\t\t{};\n'.format('scotch')
 

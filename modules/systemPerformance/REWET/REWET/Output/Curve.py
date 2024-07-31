@@ -139,7 +139,7 @@ class Curve:  # noqa: D101
         not_known_tank = set(tank_name_list) - set(self.wn.tank_name_list)
         if len(not_known_tank) > 0:
             raise ValueError(
-                'The folliwng tanks in the input are not known in the water network'
+                'The following tanks in the input are not known in the water network'
                 + repr(tank_name_list)
             )
 
@@ -151,7 +151,7 @@ class Curve:  # noqa: D101
         )
         if len(not_known_reservoir) > 0:
             raise ValueError(
-                'The folliwng reservoirs in the input are not known in the water network'
+                'The following reservoirs in the input are not known in the water network'
                 + repr(reservoir_name_list)
             )
 

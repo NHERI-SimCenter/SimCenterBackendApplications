@@ -200,7 +200,7 @@ class Beam:
         :return: a dictionary including each parameters required for nonlinear modeling in OpenSees.
         """  # noqa: D205, D401, D404
         # Following content is based on the following reference:
-        # [1] Hysteretic models tha incorporate strength and stiffness deterioration
+        # [1] Hysteretic models that incorporate strength and stiffness deterioration
         # [2] Deterioration modeling of steel components in support of collapse prediction of steel moment frames under
         #     earthquake loading
         # [3] Global collapse of frame structures under seismic excitations

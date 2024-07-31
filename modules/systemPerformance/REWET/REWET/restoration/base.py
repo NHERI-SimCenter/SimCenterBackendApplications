@@ -189,7 +189,7 @@ class AgentData:  # noqa: D101
         iOnGoing,  # noqa: ANN001, N803
     ):
         if self.isWorking == True:  # noqa: E712
-            raise ValueError('The curent agent is working')  # noqa: EM101, TRY003
+            raise ValueError('The current agent is working')  # noqa: EM101, TRY003
 
         self.isWorking = True
         self.cur_job_location = node_name
@@ -306,7 +306,7 @@ class Agents:  # noqa: D101
             if self._agents.loc[name, 'data'].isOnShift(time):
                 if (  # noqa: SIM102
                     self._agents.loc[name, 'active'] == False  # noqa: E712
-                ):  # if agent is active already and is on shift, it means that the agent has been active before teh shift change event
+                ):  # if agent is active already and is on shift, it means that the agent has been active before the shift change event
                     if self._agents.loc[name, 'available'] == True:  # noqa: E712
                         self._agents.loc[name, 'active'] = True
                         self._agents.loc[name, 'ready'] = True
@@ -574,15 +574,15 @@ class Shifting:  # noqa: D101
         self._all_agent_shift_data = {}
         self._shift_data = pd.DataFrame(columns=['begining', 'end'])
 
-    def addShift(self, name, begining, ending):  # noqa: ANN001, ANN201, N802
+    def addShift(self, name, beginning, ending):  # noqa: ANN001, ANN201, N802
         """Adds a shift to shift registry
 
         Parameters
         ----------
         name : str
             Shift's name.
-        begining : int
-            shift's begining time.
+        beginning : int
+            shift's beginning time.
         ending : int
             shifts ending time.
 
@@ -591,9 +591,9 @@ class Shifting:  # noqa: D101
         ValueError
             if shift name is already in the registry,
             if the name is not string,
-            if the begining time is not int,
+            if the beginning time is not int,
             if the ending time is not int,
-            if begining time is bigger than 24*3600,
+            if beginning time is bigger than 24*3600,
             if ending time is bigger than 24*3600.
 
         Returns
@@ -603,18 +603,18 @@ class Shifting:  # noqa: D101
         """  # noqa: D400, D401, D415
         if name in self._shift_data:
             raise ValueError('Shift name already registered')  # noqa: EM101, TRY003
-        if type(begining) != int and type(begining) != float:  # noqa: E721
-            raise ValueError('Begining time must be integer: ' + str(type(begining)))
+        if type(beginning) != int and type(beginning) != float:  # noqa: E721
+            raise ValueError('Beginning time must be integer: ' + str(type(beginning)))
         if type(ending) != int and type(ending) != float:  # noqa: E721
             raise ValueError('Ending time must be integer: ' + str(type(ending)))
-        if begining > 24 * 3600:
-            raise ValueError('begining time is bigger than 24*3600' + str(begining))
+        if beginning > 24 * 3600:
+            raise ValueError('beginning time is bigger than 24*3600' + str(beginning))
         if ending > 24 * 3600:
             raise ValueError('Ending time is bigger than 24*3600' + str(ending))
-        begining = int(begining)
+        beginning = int(beginning)
         ending = int(ending)
 
-        self._shift_data.loc[name] = [begining, ending]
+        self._shift_data.loc[name] = [beginning, ending]
 
     def getShiftTimes(self, name):  # noqa: ANN001, ANN201, N802, D102
         return (
@@ -650,19 +650,19 @@ class Shifting:  # noqa: D101
         return change_shift_time  # noqa: RET504
 
     def assignShiftToAgent(self, agent_ID, shift_name):  # noqa: ANN001, ANN201, N802, N803
-        """Assigns shoft to agent
+        """Assigns shift to agent
 
         Parameters
         ----------
         agent_ID : str
             Agent's ID.
         shift_name : str
-            Shoft's name
+            Shift's name
 
         Raises
         ------
         ValueError
-            if agent_ID is already in agent's shoft data(probably already assigned,
+            if agent_ID is already in agent's shift data(probably already assigned,
             if shift name does not exist in shift registry.
 
         Returns
@@ -1047,7 +1047,7 @@ class Priority:  # noqa: D101
             temp = self._data[agent_type]
             if priority in temp.index:
                 raise ValueError(
-                    'Prority redefiend. type: '
+                    'Prority redefined. type: '
                     + agent_type
                     + ' & priority: '
                     + str(priority)
@@ -1117,7 +1117,7 @@ class Priority:  # noqa: D101
             Proximity_list = self._rm.proximity_points[target_priority]  # noqa: N806
             node_name_list = list(entity_data.index)
             for node_name in node_name_list:
-                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time
+                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and dropping them each time
                 node_name_vir = get_node_name(node_name, entity_data)
                 coord = wn.get_node(node_name_vir).coordinates
                 entity_data.loc[node_name, 'X_COORD'] = coord[0]
@@ -1142,9 +1142,9 @@ class Priority:  # noqa: D101
             entity_data.drop(columns=columns_to_drop, inplace=True)  # noqa: PD002
 
         # Sina: It does nothing. When there are less damage location within
-        # the priority definition for the crew type, thsi works fine, but
-        # when there are more damage location within the priority definiton,
-        # it does not gurantee that only teh cloest damage locations to the
+        # the priority definition for the crew type, this works fine, but
+        # when there are more damage location within the priority definition,
+        # it does not guarantee that only the closet damage locations to the
         # crew-type agents are matched to jobs
         elif target_priority.upper() == 'CLOSEST':
             pass
@@ -1193,7 +1193,7 @@ class Priority:  # noqa: D101
             Proximity_list = self._rm.proximity_points[target_priority]  # noqa: N806
             node_name_list = list(entity_data.index)
             for node_name in node_name_list:
-                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and droping them each time
+                # Sina: you can enhance the run time speed with having x, y coordinates in the damage table and not producing and dropping them each time
                 node_name_vir = get_node_name(node_name, entity_data)
                 coord = wn.get_node(node_name_vir).coordinates
                 entity_data.loc[node_name, 'X_COORD'] = coord[0]
@@ -1307,9 +1307,9 @@ class Priority:  # noqa: D101
             # print("+++++++++++++++++++++++++++++++++++++++")
 
         # Sina: It does nothing. When there are less damage location within
-        # the priority definition for the crew type, thsi works fine, but
-        # when there are more damage location within the priority definiton,
-        # it does not gurantee that only teh cloest damage locations to the
+        # the priority definition for the crew type, this works fine, but
+        # when there are more damage location within the priority definition,
+        # it does not guarantee that only the closet damage locations to the
         # crew-type agents are matched to jobs
 
         elif target_priority.upper() == 'HYDSIG':
@@ -1334,14 +1334,14 @@ class Priority:  # noqa: D101
                 entity_data.drop(columns=name_sugest, inplace=True)  # noqa: PD002
 
         # If element type is not leakable, it does nothing. IF nodes are not
-        # Checked (i.e. check is not at the sequnce before the current action)
+        # Checked (i.e. check is not at the sequence before the current action)
         # the leak data is real time leak for the damage location.
         elif target_priority.upper() == 'MOSTLEAKATCHECK':
             # real_node_name_list = []
             node_name_list = list(entity_data.index)
             name_sugest = (
                 'Priority_' + str(target_priority_index) + '_leak_sina'
-            )  # added sina so the possibility of a conflic of name is minimized
+            )  # added Sina so the possibility of a conflict of name is minimized
             # for node_name in node_name_list:
             # node_name_vir = get_node_name(node_name, entity_data)
             # real_node_name_list.append(node_name_vir)

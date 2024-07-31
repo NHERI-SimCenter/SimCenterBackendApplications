@@ -530,7 +530,7 @@ class Registry:  # noqa: D101
 
         if i_leak_not_zero_length and i_break_not_zero_length:
             raise ValueError(  # noqa: TRY003
-                'There are more than 1 damage with orginal pipe name in pipe A. it does not make sense'  # noqa: EM101
+                'There are more than 1 damage with original pipe name in pipe A. it does not make sense'  # noqa: EM101
             )
         if i_leak_not_zero_length:
             temp_node_name = leaking_pipe_with_pipeA_orginal_pipe.index[0]
@@ -667,7 +667,7 @@ class Registry:  # noqa: D101
                 raise ValueError(
                     'The element: '
                     + repr(element_name)
-                    + ' does not exist in elemet type: '
+                    + ' does not exist in element type: '
                     + repr(element_type)
                 )
 
@@ -707,7 +707,7 @@ class Registry:  # noqa: D101
                 raise ValueError(
                     'The element: '
                     + repr(not_available_list)
-                    + ' does not exist in elemet type: '
+                    + ' does not exist in element type: '
                     + repr(element_type)
                 )
 
@@ -1311,7 +1311,7 @@ class Registry:  # noqa: D101
         temp = self._occupancy[self._occupancy == occupier_name]
 
         if len(temp) == 0:
-            raise ValueError('there is no node occupied with thsi occupier name')  # noqa: EM101, TRY003
+            raise ValueError('there is no node occupied with this occupier name')  # noqa: EM101, TRY003
 
         ind = temp.index.tolist()
         self._occupancy = self._occupancy.drop(ind)
@@ -1333,7 +1333,7 @@ class Registry:  # noqa: D101
         return self._occupancy[node_name]
 
     def whereIsOccupiedByName(self, occupier_name):  # noqa: ANN001, ANN201, N802
-        """Get's node(s) occupied by occupier
+        """Gets node(s) occupied by occupier
 
         Parameters
         ----------
@@ -1373,7 +1373,7 @@ class Registry:  # noqa: D101
 
     def coupleTwoBreakNodes(self, break_point_1_name, break_point_2_name):  # noqa: ANN001, ANN201, N802
         """Couples two nodes in registry for the time which we have a break.
-        PLEASE NOTE THAT THE FIRST NODE MUST BE TEH ONE CONNECTED TO THE
+        PLEASE NOTE THAT THE FIRST NODE MUST BE THE ONE CONNECTED TO THE
         MAIN(ORIGINAL) PIPE THAT IS BROKEN NOW.
 
         Parameters
@@ -1406,7 +1406,7 @@ class Registry:  # noqa: D101
         out1 : str
             the other coupled node name
         is_breakPoint_1_attacjedToMainPipe : bool
-            If teh given (first node) is the one coonected to the main(orginal)
+            If the given (first node) is the one connected to the main(original)
             pipe
 
         """  # noqa: D205, D401
@@ -1434,7 +1434,7 @@ class Registry:  # noqa: D101
         return self._pipe_break_node_coupling[node_name]
 
     def removeCoupledBreakNodes(self, break_point_name):  # noqa: ANN001, ANN201, N802
-        """Removes tghe coupled
+        """Removes the coupled
 
         Parameters
         ----------

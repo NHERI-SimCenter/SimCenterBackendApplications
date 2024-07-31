@@ -53,7 +53,7 @@ def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # 
     unique_time = ss.groupby(['pipe_id']).time.unique()
     if 1 in [
         0 if len(i) <= 1 else 1 for i in unique_time
-    ]:  # checks if there are any pipe id with more than two unqiue time values
+    ]:  # checks if there are any pipe id with more than two unique time values
         raise ValueError(  # noqa: TRY003
             'All damage location for one pipe should happen at the same time'  # noqa: EM101
         )

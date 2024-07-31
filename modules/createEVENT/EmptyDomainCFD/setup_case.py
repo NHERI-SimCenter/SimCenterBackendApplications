@@ -1418,7 +1418,7 @@ def write_decomposeParDict_file(input_json_path, template_dict_path, case_path):
     start_index = foam.find_keyword_line(dict_lines, 'decomposer')
     dict_lines[start_index] = 'decomposer\t\t{};\n'.format('scotch')
 
-    # Write method of decomposition for OF-V9 and lower compatability
+    # Write method of decomposition for OF-V9 and lower compatibility
     start_index = foam.find_keyword_line(dict_lines, 'method')
     dict_lines[start_index] = 'method\t\t{};\n'.format('scotch')
 

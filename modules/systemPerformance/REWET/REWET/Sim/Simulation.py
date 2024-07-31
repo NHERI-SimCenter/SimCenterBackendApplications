@@ -96,7 +96,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
             for pipe_name in new_c_altered:
                 if (
                     pipe_name not in orginal_c_dict
-                ):  # in order not tohange orginal C to something very new in the last oteration
+                ):  # in order not tohange original C to something very new in the last oteration
                     orginal_c_dict[pipe_name] = new_closed_pipes[pipe_name]
         return orginal_c_dict
 
@@ -247,7 +247,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
                 break
 
         if last_valid_time == -1:
-            raise ValueError('Last reliabale tiem is not found')  # noqa: EM101, TRY003
+            raise ValueError('Last reliabale time is not found')  # noqa: EM101, TRY003
 
         time_step = min(
             self.wn.options.time.hydraulic_timestep,
@@ -374,7 +374,7 @@ class Hydraulic_Simulation:  # noqa: N801, D101
         pressure,  # noqa: ANN001
         sim_time,  # noqa: ANN001
         time_step,  # noqa: ANN001
-    ):  # Addapted from the latest version of wntrfr. Courtessy of WNTR: https://github.com/USEPA/WNTR
+    ):  # Adapted from the latest version of wntrfr. Courtessy of WNTR: https://github.com/USEPA/WNTR
         """Parameters
         ----------
         wn: wntrfr.network.WaterNetworkModel

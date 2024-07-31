@@ -78,7 +78,7 @@ GenCube<eT, gen_type>::apply(Cube<eT>& out) const
   arma_extra_debug_sigprint();
   
   // NOTE: we're assuming that the cube has already been set to the correct size;
-  // this is done by either the Cube contructor or operator=()
+  // this is done by either the Cube constructor or operator=()
   
        if(is_same_type<gen_type, gen_ones >::yes) { out.ones();  }
   else if(is_same_type<gen_type, gen_zeros>::yes) { out.zeros(); }

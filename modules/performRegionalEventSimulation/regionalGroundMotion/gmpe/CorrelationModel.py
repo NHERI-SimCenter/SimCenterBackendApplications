@@ -76,23 +76,23 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: ANN001, 
     # Compute Tmin and Tmax (lower bounds 0.01 for T < 0.01)
     Tmin = max(min([T1, T2]), 0.01)  # noqa: N806
     Tmax = max(max([T1, T2]), 0.01)  # noqa: N806, PLW3301
-    # Cofficient C1
+    # Coefficient C1
     C1 = 1.0 - np.cos(np.pi / 2.0 - 0.366 * np.log(Tmax / max([Tmin, 0.109])))  # noqa: N806
-    # Cofficient C2
+    # Coefficient C2
     if Tmax < 0.2:  # noqa: PLR2004
         C2 = 1.0 - 0.105 * (1.0 - 1.0 / (1.0 + np.exp(100.0 * Tmax - 5.0))) * (  # noqa: N806
             Tmax - Tmin
         ) / (Tmax - 0.0099)
     else:
         C2 = 0.0  # noqa: N806
-    # Cofficient C3
+    # Coefficient C3
     if Tmax < 0.109:  # noqa: SIM108, PLR2004
         C3 = C2  # noqa: N806
     else:
         C3 = C1  # noqa: N806
-    # Cofficient C4
+    # Coefficient C4
     C4 = C1 + 0.5 * (np.sqrt(C3) - C3) * (1.0 + np.cos(np.pi * Tmin / 0.109))  # noqa: N806
-    # rho for a singe component
+    # rho for a single component
     if Tmax <= 0.109:  # noqa: PLR2004
         rho = C2
     elif Tmin > 0.109:  # noqa: PLR2004
@@ -101,7 +101,7 @@ def baker_jayaram_correlation_2008(im1, im2, flag_orth=False):  # noqa: ANN001, 
         rho = min([C2, C4])
     else:
         rho = C4
-    # rho for orthogonal components Cofficient C1
+    # rho for orthogonal components Coefficient C1
     if flag_orth:
         rho = rho * (0.79 - 0.023 * np.log(np.sqrt(Tmin * Tmax)))
 
@@ -588,7 +588,7 @@ def du_ning_correlation_2021(stations, im_name_list, num_simu, num_pc=23):  # no
     a2 = a2[a2.keys()[1:]]
     b2 = DN_model.loc[DN_model['Type'] == 'b2']
     b2 = b2[b2.keys()[1:]]
-    # model_periods is pseduo periods and PGA, PGV, Ia, CAV, DS575H, DS595H
+    # model_periods is pseudo periods and PGA, PGV, Ia, CAV, DS575H, DS595H
     model_periods = DN_pca['Period&IM']
     model_ims_list = ['PGA', 'PGV', 'Ia', 'CAV', 'DS575H', 'DS595H']
     ims_map = {'PGA': 11, 'PGV': 12, 'Ia': 13, 'CAV': 14, 'DS575H': 15, 'DS595H': 16}
@@ -769,7 +769,7 @@ def get_distance_from_lat_lon(site_loc1, site_loc2):  # noqa: ANN001, ANN201, D1
     # site lat and lon
     lat1, lon1 = site_loc1
     lat2, lon2 = site_loc2
-    # covert to radians
+    # convert to radians
     lat1 = np.radians(lat1)
     lon1 = np.radians(lon1)
     lat2 = np.radians(lat2)

@@ -423,7 +423,7 @@ class CensusUtil:
             shp_block, cen_block, left_on=merge_id, right_on='blockid', how='left'
         )
 
-        # Set paramaters for file save
+        # Set parameters for file save
         save_columns = [
             'blockid',
             'blockidstr',
@@ -512,7 +512,7 @@ class CensusUtil:
 
         # Use the default vars if none provided by the user
         if not acs_vars:
-            # Income data varaible tags for 2010, 2015, and 2020 5-year ACS
+            # Income data variable tags for 2010, 2015, and 2020 5-year ACS
             # B19001_001E - Estimate!!Total
             # B19001_002E - Estimate!!Total!!Less than $10,000
             # B19001_003E - Estimate!!Total!!$10,000 to $14,999
@@ -812,7 +812,7 @@ B19001_016E,B19001_017E,B19013_001E'
             how='left',
         )
 
-        # Set paramaters for file save
+        # Set parameters for file save
         if vintage == '2010':
             save_columns = [
                 'tractid',

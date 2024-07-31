@@ -56,7 +56,7 @@ def get_velocity_displacement(  # noqa: ANN201
     velocity=None,  # noqa: ANN001
     displacement=None,  # noqa: ANN001
 ):
-    """Returns the velocity and displacment time series using simple integration
+    """Returns the velocity and displacement time series using simple integration
     :param float time_step:
         Time-series time-step (s)
     :param numpy.ndarray acceleration:
@@ -93,7 +93,7 @@ class NewmarkBeta:
         :param float damping:
             Fractional coefficient of damping
         :param float dt_disc:
-            Sampling rate of the acceleartion
+            Sampling rate of the acceleration
         :param str units:
             Units of the acceleration time history {"g", "m/s", "cm/s/s"}
         """  # noqa: D205, D400, D401, D415

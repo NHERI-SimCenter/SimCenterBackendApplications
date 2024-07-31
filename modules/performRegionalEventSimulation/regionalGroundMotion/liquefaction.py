@@ -210,7 +210,7 @@ class ZhuEtal2017(Liquefaction):
     pga: float, np.ndarray or list
         [g] peak ground acceleration, only to check threshold where prob_liq(pga<0.1g)=0
     stations: list
-        a list of dict containing the site infomation. Keys in the dict are 'ID',
+        a list of dict containing the site information. Keys in the dict are 'ID',
         'lon', 'lat', 'vs30', 'z1pt0', 'z2pt5', 'vsInferred', 'rRup', 'rJB', 'rX'
 
     Geotechnical/geologic:
@@ -347,7 +347,7 @@ class ZhuEtal2017(Liquefaction):
                 item = getattr(self, key, None)
                 if item is None:
                     warnings.warn(  # noqa: B028
-                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'ZhuEtal2017'."
+                        f"Additional output {key} is not available in the liquefaction trigging model 'ZhuEtal2017'."
                     )
                 else:
                     additional_output.update({key: item})
@@ -564,7 +564,7 @@ class Hazus2020(Liquefaction):
                 item = getattr(self, key, None)
                 if item is None:
                     warnings.warn(  # noqa: B028
-                        f"Additional output {key} is not avaliable in the liquefaction trigging model 'Hazus2020'."
+                        f"Additional output {key} is not available in the liquefaction trigging model 'Hazus2020'."
                     )
                 else:
                     additional_output.update({key: item})

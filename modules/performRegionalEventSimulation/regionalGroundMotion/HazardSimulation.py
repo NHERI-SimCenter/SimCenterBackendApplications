@@ -134,7 +134,7 @@ def hazard_job(hazard_info):  # noqa: ANN001, ANN201, C901, D103, PLR0912, PLR09
         min_ID = site_info.get('min_ID', None)  # noqa: N806
         max_ID = site_info.get('max_ID', None)  # noqa: N806
         filterIDs = site_info.get('filterIDs', None)  # noqa: N806
-        # backward compability. Deleter after new frontend releases
+        # backward compatibility. Deleter after new frontend releases
         if min_ID is not None and max_ID is not None:
             filterIDs = str(min_ID) + '-' + str(max_ID)  # noqa: N806
         # Creating stations from the csv input file
@@ -565,7 +565,7 @@ if __name__ == '__main__':
         print('HazardSimulation: local OQ_DATADIR = ' + os.environ.get('OQ_DATADIR'))  # noqa: T201
         if os.path.exists(os.environ.get('OQ_DATADIR')):  # noqa: PTH110
             print(  # noqa: T201
-                'HazardSimulation: local OQ folder already exists, overwiting it now...'
+                'HazardSimulation: local OQ folder already exists, overwriting it now...'
             )
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103

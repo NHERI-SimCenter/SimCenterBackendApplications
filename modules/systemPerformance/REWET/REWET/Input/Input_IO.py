@@ -11,7 +11,7 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
 
     Args:
     ----
-        directory (path): damage scnearios path
+        directory (path): damage scenarios path
         pipe_file_name (str): pipe damage file name
 
     Raises:
@@ -33,7 +33,7 @@ def read_pipe_damage_seperate_json_file(directory, pipe_file_name):  # noqa: ANN
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in PIPE damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PIPE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pipe_time.append(each_damage.get('time'))
@@ -55,7 +55,7 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
 
     Args:
     ----
-        directory (path): damage scnearios path
+        directory (path): damage scenarios path
         pipe_file_name (str): node damage file name
 
     Raises:
@@ -77,7 +77,7 @@ def read_node_damage_seperate_json_file(directory, node_file_name):  # noqa: ANN
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in NODE damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in NODE damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         node_time.append(each_damage.get('time'))
@@ -98,7 +98,7 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
 
     Args:
     ----
-        directory (path): tank scnearios path
+        directory (path): tank scenarios path
         pipe_file_name (str): tank damage file name
 
     Raises:
@@ -120,7 +120,7 @@ def read_tank_damage_seperate_json_file(directory, tank_file_name):  # noqa: ANN
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in TANK damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in TANK damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         tank_time.append(each_damage.get('time'))
@@ -140,7 +140,7 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
 
     Args:
     ----
-        directory (path): pump scnearios path
+        directory (path): pump scenarios path
         pipe_file_name (str): pump damage file name
 
     Raises:
@@ -162,7 +162,7 @@ def read_pump_damage_seperate_json_file(directory, pump_file_name):  # noqa: ANN
         read_file = json.load(f)
 
     if not isinstance(read_file, list):
-        raise ValueError('Wrong inpout in PUMP damage file')  # noqa: EM101, TRY003, TRY004
+        raise ValueError('Wrong input in PUMP damage file')  # noqa: EM101, TRY003, TRY004
 
     for each_damage in read_file:
         pump_time.append(each_damage.get('time'))
@@ -226,7 +226,7 @@ def read_pipe_damage_seperate_EXCEL_file(directory, pipe_damages_file_name):  # 
     unique_time = ss.groupby(['pipe_id']).time.unique()
     if 1 in [
         0 if len(i) <= 1 else 1 for i in unique_time
-    ]:  # checks if there are any pipe id with more than two unqiue time values
+    ]:  # checks if there are any pipe id with more than two unique time values
         raise ValueError(  # noqa: TRY003
             'All damage location for one pipe should happen at the same time'  # noqa: EM101
         )
@@ -266,7 +266,7 @@ def read_pump_damage_seperate_EXCEL_file(directory, pump_damages_file_name):  # 
 
 
 def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN001, ANN201, FBT002, ARG001, N803
-    """Reads damage sceanrio list.
+    """Reads damage scenario list.
 
     Parameters
     ----------
@@ -307,7 +307,7 @@ def read_damage_list(list_file_addr, file_directory, iCheck=False):  # noqa: ANN
 
     if iError:
         raise RuntimeError(
-            'The Follwoing files could not be found: ' + repr(error_file_name)
+            'The Following files could not be found: ' + repr(error_file_name)
         )
     return damage_list
 

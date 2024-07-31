@@ -506,8 +506,8 @@ class gmCluster:  # noqa: N801, D101
         my_results['gm_RSN'] = [int(RSN[int(flat_gm_ID[myid])]) for myid in idx]
         my_results['gm_scale'] = [flat_gm_scale[myid] for myid in idx]
 
-        with open('gridIM_output.json', 'w') as fo:  # noqa: PTH123
-            fo.write(json.dumps(my_results))
+        with open('gridIM_output.json', 'w') as f:  # noqa: PTH123
+            f.write(json.dumps(my_results))
 
         #
         # Drawing starts

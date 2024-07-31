@@ -328,7 +328,7 @@ def main(params_dir, surrogate_dir, json_dir, result_file, input_json):  # noqa:
                 .replace('+', '', 1)
                 .isdigit()
             ):
-                # surrogate model does not accept descrete
+                # surrogate model does not accept discrete
                 continue
 
             # = atleast_2d because there may be multiple samples

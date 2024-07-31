@@ -11,3 +11,7 @@ ignore = ["D211", "D213", "Q000", "Q003", "COM812", "D203", "ISC001", "E501", "E
 
 [tool.ruff.format]
 quote-style = "single"
+
+[tool.codespell]
+ignore-words = ["ignore_words.txt"]
+skip = ["*.html", "NGAWest2.csv", "./applications/*"]

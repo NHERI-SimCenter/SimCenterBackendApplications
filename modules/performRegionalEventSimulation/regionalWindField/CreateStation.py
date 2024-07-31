@@ -60,7 +60,7 @@ def create_stations(input_file, output_file, min_id, max_id):  # noqa: ANN001, A
         min_id: the min ID to start
         max_id: the max ID to end
     Output:
-        run_tag: 0 - success, 1 - input failure, 2 - outupt failure
+        run_tag: 0 - success, 1 - input failure, 2 - output failure
     """  # noqa: D205, D400, D401, D415
     # Reading csv data
     run_tag = 1

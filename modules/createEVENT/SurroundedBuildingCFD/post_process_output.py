@@ -129,7 +129,7 @@ def read_pressure_data(file_names):  # noqa: ANN001, ANN201, D417
                 # index += 1
 
             except:  # noqa: E722
-                # sys.exit('Fatal Error!: the pressure filese have time gap')
+                # sys.exit('Fatal Error!: the pressure files have time gap')
                 index = 0  # Joint them even if they have a time gap
 
             connected_time = np.concatenate((connected_time, time2[index:]))
@@ -686,7 +686,7 @@ def copy_vtk_planes_and_order(input_path, output_path, field):  # noqa: ANN001, 
 
     n_times = len(times)
 
-    print(f'\tNumber of time direcories: {n_times} ')  # noqa: T201
+    print(f'\tNumber of time directories: {n_times} ')  # noqa: T201
     print(f'\tTime step: {np.mean(np.diff(times)):.4f} s')  # noqa: T201
     print(  # noqa: T201
         f'\tTotal duration: {times[sorted_index[-1]] - times[sorted_index[0]]:.4f} s'

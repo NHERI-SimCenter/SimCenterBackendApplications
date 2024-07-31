@@ -24,7 +24,7 @@ class Restoration_Tab_Designer:  # noqa: N801, D101
         self.current_policy_directory = os.getcwd()  # noqa: PTH109
 
         """
-        ui value assigments.
+        ui value assignments.
         """
         self.setRestorationUI()
 

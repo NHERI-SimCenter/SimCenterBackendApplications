@@ -358,7 +358,7 @@ class IM_Calculator:  # noqa: N801, D101
                 f'ComputeIntensityMeasure.get_im_from_local: error - IM type {im_type} not supported'
             )
             return res
-        # get availabel gmpe list
+        # get available gmpe list
         avail_gmpe = LOCAL_IM_GMPE.get(im_type)
         # back compatibility for now (useful if other local GMPEs for SA is included)
         cur_T = im_info.get('Periods', None)  # noqa: N806
@@ -1063,7 +1063,7 @@ def export_im(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             os.path.dirname(Path(output_dir)),  # noqa: PTH120
             os.path.basename(Path(output_dir)),  # noqa: PTH119
         )
-        # seperate directory for IM
+        # separate directory for IM
         output_dir = os.path.join(output_dir, 'IMs')  # noqa: PTH118
         try:
             os.makedirs(output_dir)  # noqa: PTH103
@@ -1253,7 +1253,7 @@ def compute_weighted_res(res_list, gmpe_weights):  # noqa: ANN001, ANN201, C901,
                 if cur_im not in ['Location', 'SiteData']:
                     # get components
                     comp_keys = list(cur_gmResults[cur_im].keys())
-                    # loop over differen components
+                    # loop over different components
                     for cur_comp in comp_keys:
                         if cur_comp not in list(tmp_res[cur_im].keys()):
                             tmp_res[cur_im].update({cur_comp: []})

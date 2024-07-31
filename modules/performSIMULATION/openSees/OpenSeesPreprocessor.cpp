@@ -46,7 +46,7 @@ OpenSeesPreprocessor::writeRV(const char *AIM,
 
   //
   // TO DO .. check simulation data exists and contains all fields
-  //  .. would stop dakota from runnning
+  //  .. would stop dakota from running
   //
 
   //
@@ -981,7 +981,7 @@ OpenSeesPreprocessor::processEvents(ofstream &s){
 }
 
 
-// seperate for multi events
+// separate for multi events
 int 
 OpenSeesPreprocessor::processEvent(ofstream &s, 
 				   json_t *event, 

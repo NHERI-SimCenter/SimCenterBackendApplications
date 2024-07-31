@@ -175,8 +175,8 @@ def update_scenario_table(scenario_table, cur_damage_file_name_list, scn_number)
 
 
 def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN001, ANN201, D417
-    """Saves the scneario data including scneario table and damaghe data acording
-    to the table data/
+    """Saves the scenario data including scenario table and damage data according
+    to the table data
 
     Parameters
     ----------
@@ -203,7 +203,7 @@ def save_scenario_table(scenario_table, scenario_table_file_path):  # noqa: ANN0
 
 
 def saveSettingsFile(REWET_input_data, save_directory, prefix):  # noqa: ANN001, ANN201, N802, N803, D417
-    """Saves seetings data that REWET NEEDs.
+    """Saves settings data that REWET NEEDs.
 
     Parameters
     ----------

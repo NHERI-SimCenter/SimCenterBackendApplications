@@ -77,7 +77,7 @@ def run_surrogateGP(AIM_input_path, EDP_input_path):  # noqa: ANN001, ANN201, AR
     #     surrogate_model = json.load(f)
 
     #
-    # Let's call GPdriver creater
+    # Let's call GPdriver creator?
     #
     pythonEXE = sys.executable  # noqa: N806
 

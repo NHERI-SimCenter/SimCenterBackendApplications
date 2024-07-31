@@ -480,8 +480,8 @@ class InpFile:
         units : str, int or FlowUnits
             Name of the units for the EPANET INP file to be written in.
         version : float, {2.0, **2.2**}
-            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDD mode
-            and supress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a
+            Defaults to 2.2; use 2.0 to guarantee backward comparability, but this will turn off PDD mode
+            and suppress the writing of other EPANET 2.2-specific options. If PDD mode is specified, a
             warning will be issued.
         force_coordinates : bool
             This only applies if `self.options.graphics.map_filename` is not `None`,
@@ -1218,7 +1218,7 @@ class InpFile:
                 for i in current[1:]:
                     _patterns[pattern_name].append(float(i))
         for pattern_name, pattern in _patterns.items():
-            # add the patterns to the water newtork model
+            # add the patterns to the water network model
             self.wn.add_pattern(pattern_name, pattern)
         if not self.wn.options.hydraulic.pattern and '1' in _patterns.keys():  # noqa: SIM118
             # If there is a pattern called "1", then it is the default pattern if no other is supplied
@@ -1603,7 +1603,7 @@ class InpFile:
         for text, all_control in wn.controls():
             entry = '{}\n'
             if all_control.epanet_control_type == _ControlType.rule:
-                # Sina added thsi begin
+                # Sina added this begin
                 try:
                     if all_control._then_actions[0]._target_obj._is_isolated == True:  # noqa: SLF001, E712
                         continue
@@ -1616,7 +1616,7 @@ class InpFile:
                 except:  # noqa: S110, E722
                     pass
 
-                # Sina added thsi end
+                # Sina added this end
 
                 if all_control.name == '':
                     all_control._name = text  # noqa: SLF001
@@ -2570,7 +2570,7 @@ class InpFile:
 
         hrs, mm, sec = _sec_to_string(time.start_clocktime)
 
-        # Sina added this to WNTR-1: thsi adds the abikity to run corerctly for
+        # Sina added this to WNTR-1: this adds the ability to run correctly for
         # time steps that are more than the first day
         day = int(hrs / 24)
         hrs -= day * 24

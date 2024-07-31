@@ -17,7 +17,7 @@
 # 
 # Subroutines called:
 # MaxDriftTester: Checks after loss of convergence the drifts 
-#                 and garantees convergence for collapse
+#                 and guarantees convergence for collapse
 # Sequence of Algorithms used:
 # 1. Newton with dt
 # 2. Newton with initial tangent and original dt

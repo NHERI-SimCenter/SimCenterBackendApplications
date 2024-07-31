@@ -92,10 +92,10 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
     # changing realizations order
-    indicies = list(range(maxnumSiteGM))
+    indices = list(range(maxnumSiteGM))
     if randomFLag:
-        np.random.shuffle(indicies)  # noqa: NPY002
-    indicies = indicies[:numSiteGM]
+        np.random.shuffle(indices)  # noqa: NPY002
+    indices = indices[:numSiteGM]
 
     directory = information['directory']  # directory to save the data
     # create the directory if it does not exist
@@ -118,7 +118,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
         geometry=gpd.points_from_xy(df_allSites.Longitude, df_allSites.Latitude),
     )
 
-    # deelte the df_allSites to save memory
+    # delete the df_allSites to save memory
     del df_allSites
 
     # limitation of each grid type (minx, miny, maxx, maxy)
@@ -206,7 +206,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
                 gdf = gdf[gdf.within(RegionofInterset)]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # change the gdf to calculate the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,
@@ -242,7 +242,7 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
 
             if res_success:
                 gmData = res.json()  # noqa: N806
-                for i in indicies:
+                for i in indices:
                     write_motion(site_name, directory, i, gmData[i], APIFLAG)
                     gdf['filename'] = f'{site_name}_{i}'
 
@@ -258,15 +258,15 @@ def M9(information):  # noqa: ANN001, ANN201, C901, N802, PLR0912, PLR0915
                 print('Please check your internet connection or try again later')  # noqa: T201
 
     if not (APIFLAG):
-        indicies = ['030']
-        for i in indicies:
+        indices = ['030']
+        for i in indices:
             for _, site in gdf.iterrows():
                 # find the first Letter of the site name
                 site_name = site['Station Name']
                 lat = site['Latitude']
                 lon = site['Longitude']
                 firstLetter = site_name[0]  # noqa: N806
-                filename = f'./csz{indicies[0]}/{firstLetter}/Xarray.nc'
+                filename = f'./csz{indices[0]}/{firstLetter}/Xarray.nc'
 
                 # reading the nc file
                 data = xr.open_dataset(filename)  # noqa: F821

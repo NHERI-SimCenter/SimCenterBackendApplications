@@ -421,7 +421,7 @@ if __name__ == '__main__':
         '--number',
         '-n',
         default=None,
-        help='If specified, indicates realization number, otherwise, all scnearios are run on all CPUS.',
+        help='If specified, indicates realization number, otherwise, all scenarios are run on all CPUS.',
     )
 
     argParser.add_argument(
@@ -429,12 +429,12 @@ if __name__ == '__main__':
         '-p',
         default=False,
         action='store_true',
-        help='if speciied, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',
+        help='if specified, uses all CPUS. 2 or more CPUs are not available, it will revert back to serial run.',
     )
 
     parser_data = argParser.parse_args()
 
-    # learnign about paralell or serial settings
+    # learning about parallel or serial settings
 
     numP = 1  # noqa: N816
     procID = 0  # noqa: N816
@@ -453,7 +453,7 @@ if __name__ == '__main__':
             numP = 1  # noqa: N816
             procID = 0  # noqa: N816
             print(  # noqa: T201
-                'Parallel running is not possible. Numebr of CPUS are are not enough.'
+                'Parallel running is not possible. Number of CPUS are are not enough.'
             )
         else:
             doParallel = True  # noqa: N816
@@ -470,7 +470,7 @@ if __name__ == '__main__':
         'eventTime'
     ]
 
-    # Set R2D enviroment and parameters
+    # Set R2D environment and parameters
     water_asset_data = rwhale_input_Data['Applications']['Assets'][
         'WaterDistributionNetwork'
     ]
@@ -514,7 +514,7 @@ if __name__ == '__main__':
         damage_save_path
     )
 
-    # Add Single Scneario or mutiple scenario
+    # Add Single Scenario or multiple scenario
     Damage_file_name = []
 
     if doParallel and procID > 0:
@@ -627,7 +627,7 @@ if __name__ == '__main__':
         temp_realization_in_each_time_series = dict(
             zip(range(scneario_size), [None] * scneario_size)
         )
-        # create a dictionary for stroing tiems series, each BSC metric (requested_result) is a key and each key has the dictioanry created in line before
+        # create a dictionary for storing times series, each BSC metric (requested_result) is a key and each key has the dictionary created in line before
         time_series_result = dict(
             zip(
                 requested_result,
@@ -642,7 +642,7 @@ if __name__ == '__main__':
                     single_requested_result == 'DL'  # noqa: PLR1714
                     or single_requested_result == 'QN'
                 ):
-                    # Running Output module's method to get DL tiem series status
+                    # Running Output module's method to get DL time series status
                     time_series_result[single_requested_result][
                         realization_number
                     ] = p.getBSCIndexPopulation_4(

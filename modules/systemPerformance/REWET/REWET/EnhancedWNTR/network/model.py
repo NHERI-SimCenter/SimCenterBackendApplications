@@ -49,13 +49,13 @@ class WaterNetworkModel(WaterNetworkModel):
         registry,  # noqa: ANN001, ARG002
         latest_simulation_time=None,  # noqa: ANN001
     ):
-        """Updates Water Netwrok Model consistent with result model. must be only
+        """Updates Water Network Model consistent with result model. must be only
         used with EPANET solver or just in case you really know what you are
         doing.
 
         Parameters
         ----------
-        result : Water Netwrok Result
+        result : Water Network Result
 
         latest_simulation_time : int
             latest time of simulation(duration of the latest run), to be
@@ -80,7 +80,7 @@ class WaterNetworkModel(WaterNetworkModel):
             latest_simulation_time = max_time
         elif latest_simulation_time != max_time:
             raise ValueError(  # noqa: TRY003
-                'Provided LATEST SIMULATION TIME id not consistnt with teh latest time in RESULT'  # noqa: EM101
+                'Provided LATEST SIMULATION TIME id not consistent with the latest time in RESULT'  # noqa: EM101
             )
 
         avilable_tank_name_list = set(self.tank_name_list).intersection(

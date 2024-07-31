@@ -146,7 +146,7 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
     for keys in baseInputs:
         baseInputs[keys] = inputParameters[keys]
 
-    # calcualte random field
+    # calculate random field
     # size of mesh
     thickness = variables['thickness']
     waveLength = variables['Ly']  # noqa: N806
@@ -189,7 +189,7 @@ def calibration(variables, inputParameters, fn):  # noqa: ANN001, ANN201, C901, 
                     + (N160 / 25.4) ** 4
                     - 2.8
                 )
-                # Implementaion, Verification, and Validation of PM4Sand in OpenSees, Long Chen and Pedro Arduino, PEER Report, 2020
+                # Implementation, Verification, and Validation of PM4Sand in OpenSees, Long Chen and Pedro Arduino, PEER Report, 2020
                 # Based on a parametric study using quoFEM
                 a = -0.06438
                 b = 0.079598 + 0.12406 * Dr

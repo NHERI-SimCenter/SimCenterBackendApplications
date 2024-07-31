@@ -34,7 +34,7 @@ class Connection:
     (3) Compute the probable maximum moment at the center of RBS
     (4) Calculate shear force at the center of RBS
     (5) Compute probable moment at column face
-    (6) Compute plastic moment of beam based on expeced yield stress
+    (6) Compute plastic moment of beam based on expected yield stress
     (7) Check moment capacity at column face
     (8) Check shear strength of beam
     (9) Check whether strong column weak beam is satisfied

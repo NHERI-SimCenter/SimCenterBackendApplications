@@ -117,7 +117,7 @@ def calculate_DBE_acceleration(Ss, S1, Fa, Fv):  # noqa: ANN001, ANN201, N802, N
 def determine_Cu_coefficient(SD1):  # noqa: ANN001, ANN201, N802, N803
     """This function is used to determine Cu coefficient, which is based on ASCE 7-10 Table 12.8-1
     Note: All notations for these variables can be found in ASCE 7-10.
-    :param SD1: a scalar calculated from funtion determine_DBE_acceleration
+    :param SD1: a scalar calculated from function determine_DBE_acceleration
     :return: Cu: a scalar
     """  # noqa: D205, D400, D401, D404, D415
     if SD1 <= 0.1:  # noqa: PLR2004

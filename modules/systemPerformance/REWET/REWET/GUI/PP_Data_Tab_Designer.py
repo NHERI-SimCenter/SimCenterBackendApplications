@@ -62,7 +62,7 @@ class PP_Data_Tab:  # noqa: N801, D101
                 try:
                     self.project_result.loadScneariodata(scenario_name)
                 except Exception:  # noqa: BLE001, PERF203
-                    self.errorMSG('Error', 'Error occured in reading data')
+                    self.errorMSG('Error', 'Error occurred in reading data')
                     self.clearResultData()
                     raise Exception  # noqa: B904, TRY002
                     return

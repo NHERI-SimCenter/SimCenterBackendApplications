@@ -77,7 +77,7 @@ class ERACond:
 
     The following distribution types are available:
 
-    opt = "PAR", if you want to specify the distibution by its parameters:
+    opt = "PAR", if you want to specify the distribution by its parameters:
       Beta:                       Obj = ERADist('beta','PAR',lambda ... :[r,s,a,b])
       Binomial:                   Obj = ERADist('binomial','PAR',lambda ... :[n,p])
       Chi-squared:                Obj = ERADist('chisquare','PAR',lambda ... :[k])
@@ -101,7 +101,7 @@ class ERACond:
       Weibull:                    Obj = ERADist('weibull','PAR',lambda ... :[a_n,k])
 
 
-    opt = "MOM", if you want to specify the distibution by its moments:
+    opt = "MOM", if you want to specify the distribution by its moments:
       Beta:                       Obj = ERADist('beta','MOM',lambda ... :[mean,std,a,b])
       Binomial:                   Obj = ERADist('binomial','MOM',lambda ... :[mean,std])
       Chi-squared:                Obj = ERADist('chisquare','MOM',lambda ... :[mean])

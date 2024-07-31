@@ -5,7 +5,7 @@
 
 def prepareUQ(paramsFile, inputFile, outputFile, rvSpecifier):  # noqa: ANN001, ANN201, C901, N802, N803, D103
     # These are the delimiter choices, which can expanded as more UQ programs are added. Remember to also
-    # extend the factory in rvDelimiter to handle addtional cases
+    # extend the factory in rvDelimiter to handle additional cases
     rvDelimiterChoices = ['SimCenterDelimiter', 'UQpyDelimiter']  # noqa: N806
 
     if rvSpecifier not in rvDelimiterChoices:

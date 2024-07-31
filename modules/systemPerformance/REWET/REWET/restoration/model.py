@@ -95,7 +95,7 @@ class Restoration:  # noqa: D101
         if not self._isHardEvent(stop_time):
             raise RuntimeError('stop time is not a hard event')  # noqa: EM101, TRY003
 
-        # gets the latest damage revealed and reported to the damage board registery
+        # gets the latest damage revealed and reported to the damage board registry
         self.dispatch.updateDiscovery(stop_time)
 
         if self._isHardEvent(stop_time, 'pump'):
@@ -219,7 +219,7 @@ class Restoration:  # noqa: D101
                 else:
                     self._registry.assignAgenttoLongJob(
                         damaged_node_name, action, entity, None
-                    )  # potential bug... When there is a long job availible but not a suitable agent to take crae of teh jiob, teh job will be forgotten
+                    )  # potential bug... When there is a long job available but not a suitable agent to take care of the job, the job will be forgotten
 
                 self.agents.releaseAgent(r_agent)
 
@@ -348,7 +348,7 @@ class Restoration:  # noqa: D101
         if len(entity_data) == 0:
             if flag == True:  # noqa: E712
                 raise RuntimeError(  # noqa: TRY003
-                    'Ongoing and zero-length emtity data does must never appen together.'  # noqa: EM101
+                    'Ongoing and zero-length emtity data does must never appended together.'  # noqa: EM101
                 )
             return 'continue'
         entity_data = self.priority.sortDamageTable(
@@ -601,7 +601,8 @@ class Restoration:  # noqa: D101
     ):
         if not len(typed_ready_agent) > 0:
             raise RuntimeError(  # noqa: TRY003
-                'This should not happen. We have a condition before in performe action'  # noqa: EM101
+                # JVM: Not sure what we're saying here.
+                'This should not happen. We have a condition before in perform action'  # noqa: EM101
             )
         if not len(vacant_job_list) > 0:
             return
@@ -1339,7 +1340,7 @@ class Restoration:  # noqa: D101
             for org_file_name in condition_value:
                 # not_included = set(org_file_name) - set(wn.node_name_list)
                 if org_file_name not in node_damage_list.index:
-                    # Sina out it back. Suppressed for runing in cluster
+                    # Sina out it back. Suppressed for ruining in cluster
                     continue
 
                 if 'virtual_of' in node_damage_list.columns:
@@ -1566,7 +1567,7 @@ class Restoration:  # noqa: D101
                     'When current time is provided, detail cannot be None'  # noqa: EM101
                 )
             if minimum_time_devision < 0:
-                raise ValueError('Minimum time devision cannot be negative')  # noqa: EM101, TRY003
+                raise ValueError('Minimum time division cannot be negative')  # noqa: EM101, TRY003
 
             name = requester + '-' + detail
 
@@ -1651,7 +1652,7 @@ class Restoration:  # noqa: D101
     def getNextSequence(self, element_type, cur_seq):  # noqa: ANN001, ANN201, N802, D102
         seq_list = self.sequence[element_type]
         if cur_seq not in seq_list:
-            raise ValueError('Seqence was not in sequnce list: ' + str(cur_seq))
+            raise ValueError('Sequence was not in sequence list: ' + str(cur_seq))
         i = 0
         for seq in seq_list:
             if cur_seq == seq:

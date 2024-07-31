@@ -74,7 +74,7 @@ class of7Meshing:  # noqa: N801
         if int(mesher[0]) == 0:
             return 0
 
-        # Other mesh softwares
+        # Other mesh software
         elif int(mesher[0]) == 1:  # noqa: RET505
             meshfile = hydroutil.extract_element_from_json(
                 data, ['Events', 'MeshFile']
@@ -448,7 +448,7 @@ FoamFile
         shmtext = shmtext + '\tallowFreeStandingZoneFaces\tfalse;\n'
         shmtext = shmtext + '}\n\n'
 
-        # Snaping settings
+        # Snapping settings
         shmtext = shmtext + 'snapControls\n{\n\t'
         shmtext = shmtext + 'nSmoothPatch\t3;\n\t'
         shmtext = shmtext + 'tolerance\t4.0;\n\t'

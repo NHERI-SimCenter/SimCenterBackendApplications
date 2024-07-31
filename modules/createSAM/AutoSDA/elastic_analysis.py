@@ -177,7 +177,7 @@ class ElasticAnalysis:
                     tclfile.write(
                         'node\t%i%i%i'
                         % (building.geometry['number of X bay'] + 2, i, 4)
-                    )  # Nodel label
+                    )  # Model label
                     tclfile.write(
                         '\t[expr %i*$BayWidth]'
                         % (building.geometry['number of X bay'] + 1)

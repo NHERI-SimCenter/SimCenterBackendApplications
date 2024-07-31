@@ -94,7 +94,7 @@ class USGS_HazardCurve:  # noqa: N801, D101
             self.vs30 = self._check_vs30(vs30)
         else:
             print(  # noqa: T201
-                f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and reigon {self.region}.'
+                f'USGS_HazardCurve.__init__: vs30 {vs30} is not supported by edition {self.edition} and region {self.region}.'
             )
             return
 

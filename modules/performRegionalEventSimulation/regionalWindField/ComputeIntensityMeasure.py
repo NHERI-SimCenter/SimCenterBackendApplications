@@ -366,7 +366,7 @@ def simulate_storm_cpp(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
 def convert_wind_speed(event_info, simu_res):  # noqa: ANN001, ANN201, D103
     print(  # noqa: T201
-        'ComputeIntensityMeasure: converting peak wind speed to specificed exposure, measuring height, and gust duration.'
+        'ComputeIntensityMeasure: converting peak wind speed to specified exposure, measuring height, and gust duration.'
     )
 
     if 'HAZUS' in event_info['IntensityMeasure']['Type']:

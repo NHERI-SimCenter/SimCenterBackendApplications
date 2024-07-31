@@ -256,7 +256,7 @@ class GM_Simulator:  # noqa: N801, D101
         # default is no correlation model and uncorrelated motions if generated
         self.inter_cm = None
         self.intra_cm = None
-        # parse correlation infomation if any
+        # parse correlation information if any
         if correlation_info is None:
             print(  # noqa: T201
                 'GM_Simulator: warning - correlation information not found - results will be uncorrelated motions.'

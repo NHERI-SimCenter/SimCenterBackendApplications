@@ -212,7 +212,7 @@ FoamFile
                 PtDtext: Text for the particular patch
 
         """  # noqa: D400, D401, D415
-        # Get hte normal of the patch
+        # Get the normal of the patch
         normal = self.getNormal(patchname)
 
         # For each patch / type provide the text

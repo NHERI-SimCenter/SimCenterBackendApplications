@@ -89,7 +89,7 @@ class Process_Settings(base):  # noqa: N801, D101
             True  # needs to be implemented in the code
         )
         self.settings['tank_damage_relative_time'] = (
-            True  # needs to be implemented in teh code
+            True  # needs to be implemented in the code
         )
 
         """
@@ -131,7 +131,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
         """
         self.settings['minimum_pressure'] = 8
         self.settings['required_pressure'] = 25
-        self.settings['pressure_exponent'] = 0.75  # sina add it to teh code and GUI
+        self.settings['pressure_exponent'] = 0.75  # sina add it to the code and GUI
         # Sina also take care of the nodal damage formula in terms of exponents [Urgent]
         self.settings['hydraulic_time_step'] = 900
 
@@ -201,7 +201,7 @@ class Scenario_Settings(base):  # noqa: N801, D101
             'ff2': 0,
             'damage_node_model': 'equal_diameter_emitter',
         }  # sina needs to be implemented
-        # Sina, there is no x in the GUI. Impelment it
+        # Sina, there is no x in the GUI. Implement it
         """
         Restoration settings 
         """  # noqa: W291
@@ -232,11 +232,11 @@ class Scenario_Settings(base):  # noqa: N801, D101
         self.settings['Gnode_damage_discovery_model'] = {
             'method': 'time_based',
             'time_discovery_ratio': pd.Series([1], index=[3600 * n for n in [0]]),
-        }  # Sina GNode Discovery is not here! Must be appleid in teh GUI
+        }  # Sina GNode Discovery is not here! Must be appleid in the GUI
         self.settings['reservoir_damage_discovery_model'] = {
             'method': 'time_based',
             'time_discovery_ratio': pd.Series([1], index=[3600 * n for n in [0]]),
-        }  # Sina GNode Discovery is not here! Must be appleid in teh GUI
+        }  # Sina GNode Discovery is not here! Must be appleid in the GUI
         self.settings['crew_out_of_zone_travel'] = (
             False  # sina needs to be implemented in the code
         )
@@ -267,7 +267,7 @@ class Settings:  # noqa: D101
             if self.scenario != None:  # noqa: SIM102, E711
                 if key in self.scenario.settings:
                     raise ValueError(
-                        str(key) + ' in the both process and scneario settings.'
+                        str(key) + ' in both the process and scenario settings.'
                     )
 
             return self.process.settings[key]
@@ -275,7 +275,7 @@ class Settings:  # noqa: D101
             if key in self.scenario.settings:
                 return self.scenario.settings[key]
 
-        raise ValueError(str(key) + ' NOT in either process and scneario settings.')
+        raise ValueError(str(key) + ' NOT in either process and scenario settings.')
 
     def __contains__(self, key):  # noqa: ANN001, ANN204, D105
         if key in self.process.settings:
@@ -299,7 +299,7 @@ class Settings:  # noqa: D101
 
         if not isinstance(settings_data, dict):
             raise ValueError(  # noqa: TRY003, TRY004
-                'Wrong JSON file type for teh settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
+                'Wrong JSON file type for the settings. The settings JSOn file must be an OBJECT file type.'  # noqa: EM101
             )
 
         for key, val in settings_data.items():
@@ -345,7 +345,7 @@ class Settings:  # noqa: D101
         parametrs_list = columns.drop(list_default_headers)
 
         for parameter_name in parametrs_list:
-            # to prevent unnamed collumns apear in the warnings
+            # to prevent unnamed columns appearing in the warnings
             if 'Unnamed' in parameter_name:
                 continue
             override_value = list_file.loc[scenario_index, parameter_name]
@@ -448,7 +448,7 @@ class Settings:  # noqa: D101
                             'REWET Input ERROR in scenario: '
                             + repr(scenario_name)
                             + '\n'
-                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name missmatch, it may not take any efffect'
+                            + 'You should provide a Points Group Name for POINTS override key. WARNING: If POINTS Group Name mismatch, it may not take any effect'
                             + '\n'
                         )
 

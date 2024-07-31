@@ -21,7 +21,7 @@ class Simulation_Tab_Designer:  # noqa: N801, D101
         self.temp_folder_addr = tempfile.mkdtemp()
 
         """
-        ui value assigments.
+        ui value assignments.
         """
         self.setSimulationUI()
 

@@ -17,7 +17,7 @@ from Input.Settings import Settings
 from Project import Project
 from restoration.model import Restoration
 
-# from wntrfr.network.model         import WaterNetworkModel #INote: chanaged from enhanced wntr to wntr 1. It may break EPANET compatibility
+# from wntrfr.network.model         import WaterNetworkModel #INote: changed from enhanced wntr to wntr 1. It may break EPANET compatibility
 from restoration.registry import Registry
 
 logging.basicConfig(level=50)
@@ -84,7 +84,7 @@ class Starter:  # noqa: D101
                     print(i, flush=True)  # noqa: T201
                     settings.initializeScenarioSettings(
                         i
-                    )  # initialize scenario-specific settings for each list/usefule for sensitivity analysis
+                    )  # initialize scenario-specific settings for each list/useful for sensitivity analysis
                     scenario_name = damage_list.loc[i, 'Scenario Name']
                     pipe_damage_name = damage_list.loc[i, 'Pipe Damage']
                     tank_damage_name = damage_list.loc[i, 'Tank Damage']
@@ -121,8 +121,8 @@ class Starter:  # noqa: D101
         elif settings.process['number_of_proccessor'] > 1:
             self.run_mpi(settings)
         else:
-            raise ValueError('Number of proccessor must be equal to or more than 1')  # noqa: EM101, TRY003
-
+            raise ValueError('Number of processor must be equal to or more than 1')  # noqa: EM101, TRY003
+        
     def run_local_single(  # noqa: ANN201, C901, PLR0912, PLR0913
         self,
         file_name,  # noqa: ANN001
@@ -140,11 +140,11 @@ class Starter:  # noqa: D101
         file_name : str
             File damage file name.
         scenario_name : str
-            scneario name.
+            scenario name.
         settings : Settings
             Settings object.
         worker_rank : int, optional
-            Specifies the rank of the currnet woker. If the scneario is being run as single or multiple-serial mode, the can be anything. It  is used for naming temp files. The default is None.
+            Specifies the rank of the current worker. If the scenario is being run as single or multiple-serial mode, the can be anything. It  is used for naming temp files. The default is None.
         nodal_damage_file_name : str, optional
             nodal damages file name. The default is None.
         pump_damage_file_name : TYPE, optional
@@ -174,7 +174,7 @@ class Starter:  # noqa: D101
         )
         if settings.process['number_of_proccessor'] > 1 and worker_rank == None:  # noqa: E711
             raise ValueError(  # noqa: TRY003
-                'for multiple proccessor analysis, worker_rank_must be provided'  # noqa: EM101
+                'for multiple processor analysis, worker_rank_must be provided'  # noqa: EM101
             )
 
         if type(file_name) != str:  # noqa: E721
@@ -363,7 +363,7 @@ class Starter:  # noqa: D101
                 if (time.time() - time_jobs_saved) > 120:  # noqa: PLR2004
                     jobs.to_excel(
                         'temp-jobs.xlsx'
-                    )  # only for more informaton about the latest job status for the user in teh real time
+                    )  # only for more information about the latest job status for the user in the real time
                     time_jobs_saved = time.time()
 
                 if comm.iprobe():
@@ -382,7 +382,7 @@ class Starter:  # noqa: D101
                             msg_interpretation = 'exception happened'
 
                         print(  # noqa: T201
-                            'messaged recieved= '
+                            'messaged received= '
                             + repr(msg_interpretation)
                             + ' rank recivied= '
                             + repr(worker_rank)
@@ -421,7 +421,7 @@ class Starter:  # noqa: D101
                     )
                     with open(  # noqa: PTH123
                         'done.csv', 'a', encoding='utf-8', buffering=1000000
-                    ) as f:  # shows teh order of done jobs
+                    ) as f:  # shows the order of done jobs
                         f.write(
                             jobs.loc[jobs_index, 'scenario_name']
                             + ','
@@ -509,7 +509,7 @@ class Starter:  # noqa: D101
                 if comm.iprobe(source=0):
                     status = MPI.Status()
                     print(  # noqa: T201
-                        'trying to recieve msg. -> rank= ' + repr(comm.rank),
+                        'trying to receive msg. -> rank= ' + repr(comm.rank),
                         flush=True,
                     )
                     scenario_index = comm.recv(source=0, status=status)
@@ -569,7 +569,7 @@ class Starter:  # noqa: D101
                         last_time_message_recv = time.time()
 
                     else:
-                        worker_exit_flag = 'Death message recieved!'
+                        worker_exit_flag = 'Death message received!'  # oh my God!
                         break
 
                     if (time.time() - last_time_message_recv) > settings.process[

@@ -75,7 +75,7 @@ def main(args):  # noqa: ANN001, ANN201, D103
     if (platform.system() == 'Windows') and (runDakota == 'run'):  # noqa: F821
         workflowDriverName = 'workflow_driver.bat'  # noqa: N806
 
-    # Change permision of workflow driver
+    # Change permission of workflow driver
     st = os.stat(workflowDriverName)  # noqa: PTH116
     os.chmod(workflowDriverName, st.st_mode | stat.S_IEXEC)  # noqa: PTH101
 

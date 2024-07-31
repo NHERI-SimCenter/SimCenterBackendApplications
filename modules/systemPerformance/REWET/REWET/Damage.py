@@ -1,6 +1,6 @@
 """Created on Mon Mar 23 13:54:21 2020
-This module is responsble for calculating damage to t=different componenst of
-teh system, including pipe lines. pupmo and so.
+This module is responsible for calculating damage to t=different componenst of
+the system, including pipe lines. pupmo and so.
 @author: snaeimi
 """  # noqa: N999, D205, D400, D415
 
@@ -62,14 +62,14 @@ class Damage:  # noqa: D101
         csv_file_name,  # noqa: ANN001
         csv_index=None,  # noqa: ANN001
     ):
-        """This function is only for teh sake of reading picke file that nafiseg gives to me
+        """This function is only for the sake of reading picke file that nafiseg gives to me
         This function shall not be in any distribution that we release
 
         Parameters
         ----------
         pickle_file_name : string
-            name file ot path + name file of the pickle file
-        csv_file_name : name file ot path + name file of the csv file
+            name file of path + name file of the pickle file
+        csv_file_name : name file of path + name file of the csv file
 
         Returns
         -------
@@ -230,7 +230,7 @@ class Damage:  # noqa: D101
                     )
                 )
             else:
-                raise ValueError('There is an unknow damage type')  # noqa: EM101, TRY003
+                raise ValueError('There is an unknown damage type')  # noqa: EM101, TRY003
 
     def readDamageFromTextFile(self, path):  # noqa: ANN001, ANN201, N802, D417
         """Reads a damage from scenario from a text file and add the information
@@ -257,7 +257,7 @@ class Damage:  # noqa: D101
                 temp_leak = {}
                 if line_length < 4:  # noqa: PLR2004
                     raise OSError(
-                        'There must be at least 4 arguement in line' + repr(line_cnt)
+                        'There must be at least 4 arguments in line' + repr(line_cnt)
                     )
                     # print('Probelm 1')
                 temp_leak['pipe_id'] = sline[1]
@@ -275,7 +275,7 @@ class Damage:  # noqa: D101
 
             elif sline[0].lower() == 'break':
                 if line_length < 3:  # noqa: PLR2004
-                    raise OSError('There most be at least 3 arguement in line')  # noqa: EM101, TRY003
+                    raise OSError('Line cannot have more than three arguments')  # noqa: EM101, TRY003
                 # print('Probelm 2')
                 temp_break = {}
                 temp_break['pipe_id'] = sline[1]
@@ -720,7 +720,7 @@ class Damage:  # noqa: D101
         Parameters
         ----------
         WaterNetwork : wntrfr.network.model.WaterNetworkModel
-            water network model ro be modified accroding to the damage
+            water network model to be modified according to the damage
 
         registry : Registry object
 
@@ -1031,10 +1031,10 @@ class Damage:  # noqa: D101
         Raises
         ------
         ValueError
-            If teh file name is not provided, a valueError will be returned
+            If the file name is not provided, a valueError will be returned
         IOError
             If the information inside the text file is not valid, then IOError
-            will be retuned
+            will be returned
 
         Returns
         -------
@@ -1053,7 +1053,7 @@ class Damage:  # noqa: D101
             line_length = len(sline)
             if line_length != 5:  # noqa: PLR2004
                 raise OSError(
-                    'there should be 5 valie in line '
+                    'there should be 5 values in line '
                     + repr(ct)
                     + '\n M[SPACE]depth[SPACE]X coordinate[SPACE]Y coordinate{SPACE]Time'
                 )
@@ -1087,10 +1087,10 @@ class Damage:  # noqa: D101
         Parameters
         ----------
         wn : wntrfr.network.model.WaterNetworkModel
-            Water Netwrok Model to be used to model the damages
+            Water Network Model to be used to model the damages
         clear : TYPE, optional
             Boolian value, determining if the leak and break list must be
-            cleared before prediciting and adding. The default is False.
+            cleared before predicting and adding. The default is False.
 
         Returns
         -------
@@ -1146,7 +1146,7 @@ class Damage:  # noqa: D101
         Returns
         -------
         damage_time_list : list
-            Distict time for all kind of damages
+            Distinct time for all kind of damages
 
         """  # noqa: D400, D415
         pipe_damage_unique_time = self.pipe_all_damages.index.unique().tolist()
@@ -1169,7 +1169,7 @@ class Damage:  # noqa: D101
 
     def get_earthquake_distict_time(self):  # noqa: ANN201
         """Checks if the earthquake time are in order. Then the it will get
-        distict earthquake time sand return it
+        distinct earthquake time sand return it
 
         Raises
         ------

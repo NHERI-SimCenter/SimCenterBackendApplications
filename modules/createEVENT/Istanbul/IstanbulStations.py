@@ -8,7 +8,7 @@ from shapely.geometry import Point, Polygon
 
 
 def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, FBT002, C901, N802, PLR0912, PLR0915
-    """This function is used to retreive the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404, D415
+    """This function is used to retrieve the information of the Istanbul physics-based simulations"""  # noqa: D400, D401, D404, D415
     RegionFlag = information['RegionFlag']  # noqa: N806
     LocationFlag = information['LocationFlag']  # noqa: N806
 
@@ -48,7 +48,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
     else:
         gdf = gdf[gdf['Depth (m)'] > 0 + 1e-5]
 
-    # delte the df_allSites to save memory
+    # delete the df_allSites to save memory
     del df_allSites
     directory = information['directory']  # directory to save the data
     # create the directory if it does not exist
@@ -64,7 +64,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         gdf['distance'] = gdf.distance(Point(lon, lat))
         gdf = gdf.sort_values('distance')
 
-        # create a coulmn of the distance color and make the first 4 nearest sites red
+        # create a column of the distance color and make the first 4 nearest sites red
         gdf['Color'] = 'blue'
         gdf.loc[gdf.index[:4], 'Color'] = 'red'
 
@@ -94,7 +94,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
                 return
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # change the gdf to calculate the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,

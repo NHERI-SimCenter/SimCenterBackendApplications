@@ -799,7 +799,7 @@ class Workflow:
         self._parse_inputs()
 
     def __del__(self):  # noqa: ANN204, D105
-        # if parallel setup, add command to run this scipt with parellel option
+        # if parallel setup, add command to run this script with parallel option
         if self.parType == 'parSETUP':
             inputArgs = sys.argv  # noqa: N806
             length = len(inputArgs)
@@ -1507,7 +1507,7 @@ class Workflow:
         return assetFilesList
 
     def perform_system_performance_assessment(self, asset_type):  # noqa: ANN001, ANN201
-        """For an asset type run the system level performance assesment application
+        """For an asset type run the system level performance assessment application
 
         Longer description
 

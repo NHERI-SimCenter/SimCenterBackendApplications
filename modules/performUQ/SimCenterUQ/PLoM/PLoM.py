@@ -629,9 +629,9 @@ class PLoM:  # noqa: D101
                 msg_type='RUNNING',
                 msg_level=0,
             )
-        # intializing the task list
+        # initializing the task list
         self.task_list = TaskList()  # noqa: F405
-        # intializing individual tasks and refreshing status
+        # initializing individual tasks and refreshing status
         self._init_indv_tasks()
         for cur_task in FULL_TASK_LIST:  # noqa: F405
             self.__getattribute__('task_' + cur_task).full_var_list = TASK_ITEM_MAP[  # noqa: F405
@@ -687,7 +687,7 @@ class PLoM:  # noqa: D101
     ):
         """Running the PLoM algorithm to train the model and generate new realizations
         - n_mc: realization/sample size ratio
-        - epsilon_pca: tolerance for selecting the number of considered componenets in PCA
+        - epsilon_pca: tolerance for selecting the number of considered components in PCA
         - epsilon_kde: smoothing parameter in the kernel density estimation
         - tol: tolerance in the PLoM iterations
         - max_iter: maximum number of iterations of the PLoM algorithm

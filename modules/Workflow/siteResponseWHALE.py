@@ -335,7 +335,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
 
         # aggregate results
         # WF.aggregate_results(bldg_data = bldg_data)
-        # KZ: 10/19/2022, chaning bldg_data to asst_data
+        # KZ: 10/19/2022, chaining bldg_data to asst_data
         WF.aggregate_results(asst_data=asst_data)
 
     if doParallel == True:  # noqa: E712

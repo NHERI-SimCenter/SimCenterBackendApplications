@@ -26,10 +26,10 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
         os.makedirs(directory)  # noqa: PTH103
 
     # changing realizations order
-    indicies = list(range(1, maxnumSiteGM + 1))
+    indices = list(range(1, maxnumSiteGM + 1))
     if randomFLag:
-        np.random.shuffle(indicies)  # noqa: NPY002
-    indicies = indicies[:numSiteGM]
+        np.random.shuffle(indices)  # noqa: NPY002
+    indices = indices[:numSiteGM]
 
     gdf = pd.read_csv('selectedSites.csv', index_col=0)
 
@@ -42,7 +42,7 @@ def Istanbul(information):  # noqa: ANN001, ANN201, N802, D103
 
     # print number of cites
     print(f'Number of sites: {len(gdf)}')  # noqa: T201
-    for realization in indicies:
+    for realization in indices:
         # load the data frame from the hdf file
         if TopoFlag:
             df = pd.HDFStore(  # noqa: PD901

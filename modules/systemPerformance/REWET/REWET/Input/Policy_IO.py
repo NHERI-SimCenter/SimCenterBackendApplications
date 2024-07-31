@@ -15,7 +15,7 @@ ELEMENTS = ['PIPE', 'DISTNODE', 'GNODE', 'TANK', 'PUMP', 'RESERVOIR']
 logger = logging.getLogger(__name__)
 
 
-# the follwing function is borrowed from WNTR
+# the following function is borrowed from WNTR
 def _split_line(line):  # noqa: ANN001, ANN202
     _vc = line.split(';', 1)
     _cmnt = None
@@ -68,7 +68,7 @@ class RestorationIO:  # noqa: D101
         None.
 
         """  # noqa: D400, D415
-        # some of the following lines have been addopted from WNTR
+        # some of the following lines have been adopted from WNTR
         self.rm = restoration_data()
 
         self.crew_data = {}
@@ -270,7 +270,7 @@ class RestorationIO:  # noqa: D101
                     else:
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
 
-                    # sina: take care of this in regisry opening
+                    # sina: take care of this in registry opening
                     # self.rm._registry.addAttrToElementDamageTable(element ,entity_name , True)
 
                 elif arg1 == 'FILE' or arg1 == 'NOT_IN_FILE':  # noqa: PLR1714
@@ -307,7 +307,7 @@ class RestorationIO:  # noqa: D101
                             )
                     else:
                         raise ValueError(
-                            'There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
+                            'There must be two parts as a condition, separated with ":". Example: PART1:PART2 \nPart1 can be one of the following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
                             + repr(lnum)
                         )
 
@@ -329,7 +329,7 @@ class RestorationIO:  # noqa: D101
                     else:
                         if self.rm.entity[entity_name] != element:
                             raise ValueError(
-                                'Element must not chanage in an added condition. Line '
+                                'Element must not change in an added condition. Line '
                                 + str(lnum)
                             )
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
@@ -434,7 +434,7 @@ class RestorationIO:  # noqa: D101
                     raise ValueError('error in line: ' + str(lnum))
                 group_name = words[0]
                 element_type = words[1]
-                arguement = words[2]
+                argument = words[2]
                 file_handler = words[3]
                 element_col_ID = words[4]  # noqa: N806
                 pipe_col_ID = words[5]  # noqa: N806
@@ -446,10 +446,10 @@ class RestorationIO:  # noqa: D101
                         + ', in line: '
                         + repr(lnum)
                     )
-                if arguement != 'FILE':
+                if argument != 'FILE':
                     raise ValueError(
                         'the Only acceptable argument is FILE. Not: '
-                        + repr(arguement)
+                        + repr(argument)
                         + '. Line: '
                         + repr(lnum)
                     )
@@ -546,7 +546,7 @@ class RestorationIO:  # noqa: D101
                 action_entity = words[1]
                 if not action_entity.find(':') != -1:
                     raise ValueError(
-                        'There must be an action and entity seprated by : in line '
+                        'There must be an action and entity separated by : in line '
                         + str(lnum)
                     )
                 split_temp = action_entity.split(':')
@@ -556,7 +556,7 @@ class RestorationIO:  # noqa: D101
                 definer_arg = words[2]
                 if not definer_arg.find(':') != -1:
                     raise ValueError(
-                        'There must be an Time Definer and Argument seprated by : in line '
+                        'There must be an Time Definer and Argument separated by : in line '
                         + str(lnum)
                     )
                 split_temp = definer_arg.split(':')
@@ -813,7 +813,7 @@ class RestorationIO:  # noqa: D101
                                 else:
                                     val = None
                                     print(  # noqa: T201
-                                        'WARNING: At default line in FINALL section, the third argument is not NULL: '
+                                        'WARNING: At default line in FINAL section, the third argument is not NULL: '
                                         + str(val)
                                         + 'The value is ignored antywhere'
                                     )

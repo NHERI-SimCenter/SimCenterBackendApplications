@@ -66,7 +66,7 @@ if __name__ == '__main__':
         + str(sys.argv[0])
     )
     print(  # noqa: T201
-        'post_process_sensors.py - Backend-script post_process_sensors.py recieved input args: '
+        'post_process_sensors.py - Backend-script post_process_sensors.py received input args: '
         + str(input_args)
     )
 
@@ -75,8 +75,8 @@ if __name__ == '__main__':
     # parser.add_argument('-o', '--output_directory', help="Sensor Plot Output Directory", required=True)
     # parser.add_argument('-f', '--files', help="Sensor Measurement Files", required=True)
     # arguments, unknowns = parser.parse_known_args()
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(arguments))
-    # print("post_process_sensors.py - Backend-script post_process_sensors.py recieved: " + str(unknowns))
+    # print("post_process_sensors.py - Backend-script post_process_sensors.py received: " + str(arguments))
+    # print("post_process_sensors.py - Backend-script post_process_sensors.py received: " + str(unknowns))
 
     # Get the directory of the sensor data
     # Get the directory to save the plots
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     # json_path =  os.path.join(case_path, "constant", "simCenter", "input", "MPM.json")
     # with open(json_path) as json_file:
     #     json_data =  json.load(json_file)
-    # print("Backend-script post_process_sensors.py recieved: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3] "")
+    # print("Backend-script post_process_sensors.py received: " + sys.argv[1] + " " + sys.argv[2] + " " + sys.argv[3] "")
 
     # Get the list of sensor names
     sensor_names = [

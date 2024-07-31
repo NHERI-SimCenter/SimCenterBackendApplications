@@ -118,7 +118,7 @@ def bommer_stafford_alarcon_ds_2009(  # noqa: ANN201
     ztor=0.0,  # noqa: ANN001
     duration_type='DS575H',  # noqa: ANN001
 ):
-    """Singificant duration model by Bommer, Stafford, Alarcon (2009) Empirical
+    """Significant duration model by Bommer, Stafford, Alarcon (2009) Empirical
     Equations for the Prediction of the Significant, Bracketed, and Uniform
     Duration of Earthquake Ground Motion
     Input

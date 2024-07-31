@@ -25,12 +25,12 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     numSiteGM = min(numSiteGM, maxnumSiteGM)  # number of realizations  # noqa: N806
 
     # changing realizations order
-    # indicies = list(range(maxnumSiteGM));
+    # indices = list(range(maxnumSiteGM));
     Realizations = [f'{i:03}' for i in range(1, 33)]  # noqa: N806
-    indicies = np.arange(32)
+    indices = np.arange(32)
     if randomFLag:
-        np.random.shuffle(indicies)  # noqa: NPY002
-    indicies = indicies[:numSiteGM]
+        np.random.shuffle(indices)  # noqa: NPY002
+    indices = indices[:numSiteGM]
 
     M9Path = '/home/jovyan/work/projects/PRJ-4603'  # noqa: N806
 
@@ -45,7 +45,7 @@ def M9(information):  # noqa: ANN001, ANN201, N802
     ]  # if the APIFLAG is True, we use M9 API to get the motion data
 
     if not (APIFLAG):
-        for i in indicies:
+        for i in indices:
             for _, site in gdf.iterrows():
                 # find the first Letter of the site name
                 site_name = site['Station Name']

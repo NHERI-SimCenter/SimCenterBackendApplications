@@ -93,7 +93,7 @@ def configure_hazard_occurrence(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, 
             cur_imt = im_type + f'{period:.1f}'.replace('.', 'P')
         else:
             cur_imt = im_type
-        # fecthing hazard curve from usgs
+        # fetching hazard curve from usgs
         cur_edition = hzo_config.get('Edition', 'E2014')
         hazard_curve_collector = []
         for site_id in range(len(site_config)):
@@ -693,7 +693,7 @@ class OccurrenceModel_ManzourDavidson2016:  # noqa: N801, D101
                 return False
 
     def _opt_initialization(self):  # noqa: ANN202
-        """_opt_initialization: intialization of optimization problem"""  # noqa: D400, D415
+        """_opt_initialization: initialization of optimization problem"""  # noqa: D400, D415
         # the problem is mixed integer program
         self.prob = pulp.LpProblem('MIP', pulp.LpMinimize)
 
@@ -892,7 +892,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
                 return False
 
     def _opt_initialization(self):  # noqa: ANN202
-        """_opt_initialization: intialization of LASSO regression"""  # noqa: D400, D415
+        """_opt_initialization: initialization of LASSO regression"""  # noqa: D400, D415
         # define X
         self.X_P = (
             self.im_exceedance_probs.transpose(1, 0, 2)
@@ -957,7 +957,7 @@ class OccurrenceModel_Wangetal2023:  # noqa: N801, D101
             sys.exit(
                 'ERROR: Zero scenarios/ground motions are selected in Wang et al. (2023).\n'  # noqa: ISC003
                 + f'The tunnling parameter used is {self.alphas[self.selected_alpha_ind]}.\n'
-                + 'Try using a smaller tunning parameter.'
+                + 'Try using a smaller tuning parameter.'
             )
         self.Rate_selected = (
             self.coefs[:, self.selected_alpha_ind] * self.occurence_rate_origin

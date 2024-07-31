@@ -41,7 +41,7 @@ from hydroUtils import hydroUtils
 ####################################################################
 class of7Others:  # noqa: N801
     """This class includes the methods related to
-    auxillary files for openfoam7.
+    auxiliary files for openfoam7.
 
     Methods
     -------

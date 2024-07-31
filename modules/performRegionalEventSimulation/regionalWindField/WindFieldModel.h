@@ -28,12 +28,12 @@ private:
     // delta_p file
     // delta_p(0): inner radius of the meshed storm cycle
     // delta_p(1): division size along radius
-    // delta_p(2): outter radius of the meshed storm cycle
+    // delta_p(2): outer radius of the meshed storm cycle
     // delta_p(3): starting angle of the meshed storm cycle
     // delta_p(4): angle interval
     // delta_p(5): ending angle of the meshed storm cycle
     // delta_p(6): wind speed evaluation height (bottom)
-    // delta_p(7): heigth interval
+    // delta_p(7): height interval
     // delta_p(8): wind speed evaluation height (top)
     Eigen::ArrayXd delta_p;
 

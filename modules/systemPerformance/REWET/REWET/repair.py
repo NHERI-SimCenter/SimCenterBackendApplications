@@ -128,7 +128,7 @@ class Repair:  # noqa: D101
             history = OrderedDict()
             if middle_pipe_size > 0:
                 history['BYPASS_PIPE'] = (
-                    new_pipe_name  # Bypass pipe doesn't get removed unless all damages in the orginal pipe is removed
+                    new_pipe_name  # Bypass pipe doesn't get removed unless all damages in the original pipe is removed
                 )
 
             cur_damage_type = cur_damage['damage_type']

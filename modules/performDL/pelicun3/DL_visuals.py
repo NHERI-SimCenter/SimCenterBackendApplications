@@ -462,7 +462,7 @@ def plot_repair(comp_db_path, output_path, create_zip='0'):  # noqa: ANN001, ANN
 
     # perform the plotting for each component independently
     for comp_id in repair_df.index.unique(level=0):  # [410:418]:
-        # perform plotting for each repair consequence type indepdendently
+        # perform plotting for each repair consequence type independently
         for c_type in repair_df.loc[comp_id].index:
             # load the component-specific part of the database
             comp_data = repair_df.loc[(comp_id, c_type)]

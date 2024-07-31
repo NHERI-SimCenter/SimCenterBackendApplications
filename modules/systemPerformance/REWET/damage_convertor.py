@@ -373,7 +373,7 @@ def getTankRetsoreTime(tank_type, damage_state):  # noqa: ANN001, ANN201, ARG001
     Parameters
     ----------
     tank_type : STR
-        Tank type based on the data schema. The parametr is not used for now.
+        Tank type based on the data schema. The parameter is not used for now.
     damage_state : Int
         Specifies the damage state (1 for slightly damages, 2 for moderate,
         3 etensive, and 4 complete.
@@ -403,7 +403,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001,
     file_addr : path
         PELICUN damage file in JSON format.
     REWET_input_data : dict
-        REWET input data, whcih is updated in the function.
+        REWET input data, which is updated in the function.
     scn_number : dict
         JSON FILE.
 
@@ -413,7 +413,7 @@ def readDamagefile(file_addr, run_dir, event_time, sc_geojson):  # noqa: ANN001,
         Damage data in PELICUN dict format.
 
     """  # noqa: D205, D400, D401, D415
-    # TODO: Make reading once for each scneario  # noqa: FIX002, TD002, TD003
+    # TODO: Make reading once for each scenario  # noqa: FIX002, TD002, TD003
 
     # wn = wntrfr.network.WaterNetworkModel(REWET_input_data["inp_file"] )
 

@@ -293,7 +293,7 @@ class Building:
         (1) Determine the floor level height and save it in a list (array)
         (2) Determine the correct period between first mode period and CuTa
         (3) Determine the Cs coefficient
-        (4) Determine the lateral force at each floor level (ground to roof) and save it in an arrary
+        (4) Determine the lateral force at each floor level (ground to roof) and save it in an array
         """  # noqa: D205, D400, D401, D404, D415
         # Please note that the period for computing the required strength should be bounded by CuTa
         period_for_strength = min(
@@ -587,10 +587,10 @@ class Building:
     #     """
     #     This method is used to update the member size by considering the constructability (ease of construction)
     #     :return: a dictionary which includes the member sizes after consideration of constructability.
-    #              Those siezes are considered to be the actual final design.
+    #              Those sizes are considered to be the actual final design.
     #     """
     #     # Make a deep copy of the member sizes and stored them in a new dictionary named construction_size
-    #     # Use deep copy to avoid changing the varaiables stored in member size
+    #     # Use deep copy to avoid changing the variables stored in member size
     #     temp_size = copy.deepcopy(self.member_size)
     #     # Update interior and exterior column size
     #     member = ['interior column', 'exterior column']

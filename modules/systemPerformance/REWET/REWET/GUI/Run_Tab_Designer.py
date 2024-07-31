@@ -74,7 +74,7 @@ class Run_Tab_Designer:  # noqa: N801, D101
 
         self.ouput_textedit.appendPlainText(string)
 
-        # running code for teh project
+        # running code for the project
 
     def endSimulation(self):  # noqa: ANN201, N802, D102
         end_message = (
@@ -85,7 +85,7 @@ class Run_Tab_Designer:  # noqa: N801, D101
         self.ouput_textedit.appendPlainText(end_message)
 
     def errorInSimulation(self):  # noqa: ANN201, N802, D102
-        end_message = '\n-------------\nERROR OCCURED\n-------------\n'
+        end_message = '\n-------------\nERROR OCCURRED\n-------------\n'
         self.setAllTabsEnabled(True)
         self.if_run_in_progress = False
         self.errorMSG(

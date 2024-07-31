@@ -225,7 +225,7 @@ class StochasticModel:  # noqa: D101
                     current_stop_time
                 )
             # =============================================================================
-            #           runing the model
+            #           running the model
             next_event_time = self.timeline.getNextTime()
             logger.debug('next event time is: ' + repr(next_event_time))  # noqa: G003
 
@@ -256,7 +256,7 @@ class StochasticModel:  # noqa: D101
             except Exception as epa_err_1:
                 if epa_err_1.args[0] == 'EPANET Error 110':
                     print('Method 1 failed. Performing method 2')  # noqa: T201
-                    try:  # Remove Non-Demand Node by Python-Side iterative algorythm with closing
+                    try:  # Remove Non-Demand Node by Python-Side iterative algorithm with closing
                         # self.wn.options.time.duration        = duration
                         # self.wn.options.time.report_timestep = report_time_step
                         # hyd_sim.removeNonDemandNegativeNodeByPythonClose(1000)
@@ -265,7 +265,7 @@ class StochasticModel:  # noqa: D101
                         raise
                     except Exception as epa_err_2:
                         if True:  # epa_err_2.args[0] == 'EPANET Error 110':
-                            try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
+                            try:  # Extend result from the result at the begning of the time step with modified EPANET V2.2
                                 # print("Method 2 failed. Performing method 3")
                                 self.wn.options.time.duration = duration
                                 self.wn.options.time.report_timestep = (
@@ -279,7 +279,7 @@ class StochasticModel:  # noqa: D101
                             except Exception as epa_err_3:
                                 if epa_err_3.args[0] == 'EPANET Error 110':
                                     print('Method 3 failed. Performing method 4')  # noqa: T201
-                                    try:  # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
+                                    try:  # Extend result from the result at the beginning of the time step with modified EPANET V2.2
                                         self.wn.options.time.duration = duration
                                         self.wn.options.time.report_timestep = (
                                             report_time_step
@@ -300,7 +300,7 @@ class StochasticModel:  # noqa: D101
                                                 print(  # noqa: T201
                                                     'Method 4 failed. Performing method 5'
                                                 )
-                                                # Extend result from teh reult at the begining of teh time step with modified EPANET V2.2
+                                                # Extend result from the result at the beginning of the time step with modified EPANET V2.2
                                                 rr, i_run_successful = (
                                                     hyd_sim.estimateRun(
                                                         next_event_time,
@@ -430,7 +430,7 @@ class StochasticModel:  # noqa: D101
         if len(temp_active) > 0:
             # this must be here in the case that a node that is not isolated at
             # this step does not have a result. This can happen if the result is
-            # simulated without run.. For example, in the latest vallid result
+            # simulated without run.. For example, in the latest valid result
             # some nodes were isolated, but not in the current run.
             available_nodes_in_current_result = result.node[
                 'demand'
@@ -473,7 +473,7 @@ class StochasticModel:  # noqa: D101
         if len(temp_active) > 0:
             # this must be here in the case that a node that is not isolated at
             # this step has not result. This can happen if the result is being
-            # simulated without run.. For example, in the latest vallid result
+            # simulated without run.. For example, in the latest valid result
             # some nodes were isolated, but not in the current run.
             available_nodes_in_current_result = result.node[
                 'demand'

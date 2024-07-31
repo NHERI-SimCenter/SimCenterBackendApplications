@@ -14,7 +14,7 @@ class Hydraulic_Tab_Designer:  # noqa: N801, D101
         self.setHydraulicSettings(self.settings)
 
         """
-        ui value assigments.
+        ui value assignments.
         """
         self.setHydraulicUI()
         """

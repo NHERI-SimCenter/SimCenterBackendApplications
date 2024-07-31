@@ -423,7 +423,7 @@ def openquake_config(site_info, scen_info, event_info, workDir):  # noqa: ANN001
                 )
 
     else:
-        # using the offical released OQ
+        # using the official released OQ
         try:
             oq_ver = version('openquake.engine')
             if oq_ver != scen_info['EqRupture'].get('OQVersion', default_oq_version):
@@ -1100,7 +1100,7 @@ class OpenQuakeHazardCalc:  # noqa: D101
         )
 
         # Evaluate each computer
-        print('FetchOpenQuake: Evaluting ground motion models.')  # noqa: T201
+        print('FetchOpenQuake: Evaluating ground motion models.')  # noqa: T201
         for computer in cur_getter.gen_computers(self.mon):
             # Looping over rupture(s) in the current realization
             sids = computer.sids  # noqa: F841

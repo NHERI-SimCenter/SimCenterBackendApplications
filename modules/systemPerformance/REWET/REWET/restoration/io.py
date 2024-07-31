@@ -12,7 +12,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-# the follwing function is borrowed from WNTR
+# the following function is borrowed from WNTR
 def _split_line(line):  # noqa: ANN001, ANN202
     _vc = line.split(';', 1)
     _cmnt = None
@@ -45,7 +45,7 @@ class RestorationIO:  # noqa: D101
         None.
 
         """  # noqa: D400, D415
-        # some of the following lines have been addopted from WNTR
+        # some of the following lines have been adopted from WNTR
         self.rm = restoration_model
         self.crew_data = {}
 
@@ -293,7 +293,7 @@ class RestorationIO:  # noqa: D101
                             )
                     else:
                         raise ValueError(
-                            'There must be two parts as a conditio, separted with ":". Example: PART1:PART2 \nPart1 can be one of teh following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
+                            'There must be two parts as a condition, separated with ":". Example: PART1:PART2 \nPart1 can be one of the following: EQ, BG, LT, BG-EQ, and LT-EQ. Line number: '
                             + repr(lnum)
                         )
 
@@ -319,7 +319,7 @@ class RestorationIO:  # noqa: D101
                     else:
                         if self.rm.entity[entity_name] != element:
                             raise ValueError(
-                                'Element must not chanage in an added condition. Line '
+                                'Element must not change in an added condition. Line '
                                 + str(lnum)
                             )
                         self.rm.entity_rule[entity_name].append(ent_rule[0])
@@ -439,7 +439,7 @@ class RestorationIO:  # noqa: D101
                     )
                 group_name = words[0]
                 element_type = words[1]
-                arguement = words[2]
+                argument = words[2]
                 file_handler = words[3]
                 element_col_ID = words[4]  # noqa: N806
                 pipe_col_ID = words[5]  # noqa: N806
@@ -451,7 +451,7 @@ class RestorationIO:  # noqa: D101
                         + ', in line: '
                         + repr(lnum)
                     )
-                if arguement != 'FILE':
+                if argument != 'FILE':
                     raise ValueError(
                         'the Only acceptable argument is  FILE. Line: ' + repr(lnum)
                     )
@@ -502,7 +502,7 @@ class RestorationIO:  # noqa: D101
                     'Syntax error in line: '
                     + str(lnum)
                     + '\n'
-                    + "Each Point Group must have at least one name and one point coordinate sperated by a ':'"
+                    + "Each Point Group must have at least one name and one point coordinate operated by a ':'"
                     + '\n'
                     + "Example= 'PointGroupName X1:Y1 [X2:Y2 ...]'"
                 )
@@ -534,7 +534,7 @@ class RestorationIO:  # noqa: D101
                         + "'"
                         + word
                         + "'"
-                        + " is not an accpetable point coordinate. It must be point coordinate sperated by a ':'"
+                        + " is not an acceptable point coordinate. It must be point coordinate separated by a ':'"
                         + '\n'
                         + "Example= 'X1:Y1'"
                     )
@@ -545,11 +545,11 @@ class RestorationIO:  # noqa: D101
                         'Syntax error in line: '
                         + str(lnum)
                         + '\n'
-                        + "Multiple devider (':') in "
+                        + "Multiple divider (':') in "
                         + "'"
                         + word
                         + "'"
-                        + "It must be point coordinate sperated by a ':'"
+                        + "It must be point coordinate separated by a ':'"
                         + '\n'
                         + "Example= 'X1:Y1'"
                     )
@@ -590,7 +590,7 @@ class RestorationIO:  # noqa: D101
             # print(words[1:])
             if (
                 group_name in self.rm.proximity_points
-            ):  # To Support mutiple line assigment of the same group
+            ):  # To Support multiple line assignment of the same group
                 self.rm.proximity_points[group_name].extend(current_group_point_list)
             else:
                 self.rm.proximity_points[group_name] = current_group_point_list
@@ -608,7 +608,7 @@ class RestorationIO:  # noqa: D101
                     'Syntax error in line: '
                     + str(lnum)
                     + '\n'
-                    + 'Inadequate parametrs to define priority. There must be at least three parametrs, '
+                    + 'Inadequate parameters to define priority. There must be at least three parameters, '
                     + repr(len(words))
                     + ' is given.'
                     + '\n'
@@ -626,7 +626,7 @@ class RestorationIO:  # noqa: D101
                     + "'"
                     + agent_type
                     + "'"
-                    + ' is not defiend in the crew section.'
+                    + ' is not defined in the crew section.'
                 )
 
             try:
@@ -642,7 +642,7 @@ class RestorationIO:  # noqa: D101
                         + "'"
                         + priority_type
                         + "'"
-                        + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'
+                        + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary priority consecutively.'
                         + '\n'
                         + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"
                     )
@@ -655,7 +655,7 @@ class RestorationIO:  # noqa: D101
                     + "'"
                     + priority_type
                     + "'"
-                    + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary prioirty consecutively.'
+                    + ' is not an acceptable priority type. Priority type must be either 1 or 2 to define the first or secondary priority consecutively.'
                     + '\n'
                     + "Example= 'CREW TYPE   Prioritytype[1 or 2], Action:DamageGroup"
                 )
@@ -668,7 +668,7 @@ class RestorationIO:  # noqa: D101
                             'Syntax error in line: '
                             + str(lnum)
                             + '\n'
-                            + "The devider (':') is lacking. The primary priority "
+                            + "The divider (':') is lacking. The primary priority "
                             + "'"
                             + word
                             + "'"
@@ -683,7 +683,7 @@ class RestorationIO:  # noqa: D101
                             'Syntax error in line: '
                             + str(lnum)
                             + '\n'
-                            + "More than one devider (':') In the Primary Priority. The primary priority "
+                            + "More than one divider (':') In the Primary Priority. The primary priority "
                             + "'"
                             + word
                             + "'"
@@ -756,7 +756,7 @@ class RestorationIO:  # noqa: D101
                 secondary_priority_order_list
             ):
                 raise ValueError(
-                    'Logical error. The number of Primary Priority and Secondary Primary does not match for Crew Trye: '
+                    'Logical error. The number of Primary Priority and Secondary Primary does not match for Crew Type: '
                     + repr(crew_type)
                 )
 
@@ -767,7 +767,7 @@ class RestorationIO:  # noqa: D101
 
         if len(not_defined) > 0:
             raise ValueError(
-                'Logical error. The following agent types are not defined in the prioirty sections:\n'
+                'Logical error. The following agent types are not defined in the priority sections:\n'
                 + repr(not_defined)
             )
 
@@ -787,7 +787,7 @@ class RestorationIO:  # noqa: D101
                 action_entity = words[1]
                 if not action_entity.find(':') != -1:
                     raise ValueError(
-                        'There must be an action and entity seprated by : in line '
+                        'There must be an action and entity separated by : in line '
                         + str(lnum)
                     )
                 split_temp = action_entity.split(':')
@@ -797,7 +797,7 @@ class RestorationIO:  # noqa: D101
                 definer_arg = words[2]
                 if not definer_arg.find(':') != -1:
                     raise ValueError(
-                        'There must be an Time Definer and Argument seprated by : in line '
+                        'There must be an Time Definer and Argument separated by : in line '
                         + str(lnum)
                     )
                 split_temp = definer_arg.split(':')
@@ -1072,7 +1072,7 @@ class RestorationIO:  # noqa: D101
                                 else:
                                     val = None
                                     print(  # noqa: T201
-                                        'WARNING: At default line in FINALL section, the third argument is not NULL: '
+                                        'WARNING: At default line in FINAL section, the third argument is not NULL: '
                                         + str(val)
                                         + 'The value is ignored antywhere'
                                     )

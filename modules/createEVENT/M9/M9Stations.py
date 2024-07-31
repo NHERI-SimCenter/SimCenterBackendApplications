@@ -44,7 +44,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
         geometry=gpd.points_from_xy(df_allSites.Longitude, df_allSites.Latitude),
     )
 
-    # deelte the df_allSites to save memory
+    # delete the df_allSites to save memory
     del df_allSites
 
     # limitation of each grid type (minx, miny, maxx, maxy)
@@ -131,7 +131,7 @@ def getStations(information, plot=False, show=False):  # noqa: ANN001, ANN201, F
                 ]
 
         if information['RegionShape'] == 'Circle':
-            # chage the gdf to calculte the distance from the center of the circle in km
+            # change the gdf to calculate the distance from the center of the circle in km
             gdf['distance'] = gdf.apply(
                 lambda row: haversine(lat, lon, row['Latitude'], row['Longitude']),
                 axis=1,

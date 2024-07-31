@@ -135,7 +135,7 @@ def runSWhale(  # noqa: ANN201, N802, D103, PLR0913
             copy_resources=copy_resources,
         )
 
-    # When used in rWhale, delete the origional AIM since it is the same with asset_id/templatedir/AIM
+    # When used in rWhale, delete the original AIM since it is the same with asset_id/templatedir/AIM
     if assetAIM != 'AIM.json':
         os.remove(assetAIM)  # noqa: PTH107
     if force_cleanup:

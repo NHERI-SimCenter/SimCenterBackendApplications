@@ -15,7 +15,7 @@ EVENT_TYPE = ['dmg', 'rpr', 'rst']  # event types are defined here
 
 class Timeline:  # noqa: D101
     # =============================================================================
-    # This classs has many functions that can make a lot of exceptions.
+    # This class has many functions that can make a lot of exceptions.
     # We need to modify their codes, so their usage be safe and bug-free.
     # =============================================================================
 
@@ -25,7 +25,7 @@ class Timeline:  # noqa: D101
         self._current_time = 0
         self._event_time_register = pd.DataFrame(
             dtype='bool'
-        )  # craete event at time 0 with No event marked as True
+        )  # create event at time 0 with No event marked as True
         # print(type(self._event_time_register))
         self._event_time_register.loc[0, EVENT_TYPE] = [
             False for i in range(len(EVENT_TYPE))
@@ -117,8 +117,8 @@ class Timeline:  # noqa: D101
 
     def addEventTime(self, event_distinct_time, event_type='dmg'):  # noqa: ANN001, ANN201, N802
         """This function is a low-level function to add event type in an already-
-        existing event_time in event_time_register. FOR NOW TEH DISTICT TIMES
-        CAN BE A LIST OR A LIST. MAYBE IN THE FUTURE WE CAN DECIDE WETHER IT
+        existing event_time in event_time_register. FOR NOW THE DISTINCT TIMES
+        CAN BE A LIST OR A LIST. MAYBE IN THE FUTURE WE CAN DECIDE WEATHER IT
         SHOULD BE LEFT THE WAY IT IS OR IT SHOULD BE MODIFIED IN A SINGLE
         VARIABLE OR LIST VARIABLE.
 
@@ -189,7 +189,7 @@ class Timeline:  # noqa: D101
         """Checks if an event type is in event registry at the time of begin_time
         ----------
         begin_time : int
-            begining time
+            beginning time
         event_type : str
             damage type
 
@@ -230,9 +230,9 @@ class Timeline:  # noqa: D101
                 + 'amended'
             )
 
-        # Sina: I removed teh following code at the tiem for immegration to
+        # Sina: I removed the following code at the time for immigration to
         # Pandas 1.5.2. Not only it is not efficient piece of code, but also
-        # this nto required. The end time event is already made when teh event
+        # this not required. The end time event is already made when the event
         # table is created.
         # if self._event_time_register[self._event_time_register.index==self._simulation_end_time].empty==True:
         # self._event_time_register=self._event_time_register.append(pd.DataFrame(data = False , index = [self._simulation_end_time], columns = EVENT_TYPE))
@@ -268,7 +268,7 @@ class Timeline:  # noqa: D101
             demand_met = demand_met.loc[demand_met.index > begining_time_window]
 
             """
-            calcualting requried demand for each dmeand node
+            calculating required demand for each demand node
             """
 
             # demand_ratio      = self.registry.settings['demand_ratio']

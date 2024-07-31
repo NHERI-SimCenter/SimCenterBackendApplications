@@ -34,7 +34,7 @@
 # this file. If not, see <http://www.opensource.org/licenses/>.
 #
 # This module is modified from the surrogateBuild.py to use PLoM for surrogate
-# modeling while maintaining similar input/output formats compatable with the current workflow
+# modeling while maintaining similar input/output formats compatible with the current workflow
 #
 # Contributors:
 # Kuanshi Zhong
@@ -196,7 +196,7 @@ class runPLoM:  # noqa: N801
 
         print('dakotaScript = ', dakotaScript)  # noqa: T201
 
-        # write a new dakota.json for forward propogation
+        # write a new dakota.json for forward propagation
         ## KZ modified 0331
         with open(self.input_file, encoding='utf-8') as f:  # noqa: PTH123
             tmp = json.load(f)
@@ -476,7 +476,7 @@ class runPLoM:  # noqa: N801
         input:
             surrogateInfo: surrogate information dictionary
         output:
-            run_flag: 0 - sucess, 1: failure
+            run_flag: 0 - success, 1: failure
         """  # noqa: D205, D400, D415
         run_flag = 0
         try:
@@ -569,7 +569,7 @@ class runPLoM:  # noqa: N801
         input:
             none
         output:
-            run_flag: 0 - sucess, 1 - failure
+            run_flag: 0 - success, 1 - failure
         """  # noqa: D205, D400, D415
         run_flag = 0
         try:
@@ -601,7 +601,7 @@ class runPLoM:  # noqa: N801
             do_simulation: simulation flag
             job_config: job configuration dictionary
         output:
-            run_flag: 0 - sucess, 1 - failure
+            run_flag: 0 - success, 1 - failure
         """  # noqa: D205, D400, D415
         job_config = self.job_config
 
@@ -1015,7 +1015,7 @@ if __name__ == '__main__':
 
     # collect arguments
     inputArgs = sys.argv  # noqa: N816
-    # working diretory
+    # working directory
     work_dir = inputArgs[1].replace(os.sep, '/')
     print(f'work_dir = {work_dir}')  # noqa: T201
     # print the work_dir

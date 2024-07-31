@@ -1,6 +1,6 @@
 100, Workflow Application Failed
 101, Workflow Application failed to open input file
-102, Workflow Application Failed to find approprate application
+102, Workflow Application Failed to find appropriate application
 103, Workflow Application failed to launch a workflow application
 200, BIM application Failed
 300, EVENT application failed

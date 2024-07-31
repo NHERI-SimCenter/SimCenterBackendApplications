@@ -23,7 +23,7 @@ def find_keyword_line(dict_lines, keyword):  # noqa: ANN001, ANN201, D103
 
 def write_foam_field(field, file_name):  # noqa: ANN001, ANN201
     """Writes a given numpy two dimensional array to OpenFOAM
-    field format. It can handel the following formats:
+        field format. It can handle the following formats:
         pointField,
         vectorField,
         tensorField,

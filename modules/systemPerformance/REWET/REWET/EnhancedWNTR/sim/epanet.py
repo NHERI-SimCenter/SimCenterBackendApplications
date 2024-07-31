@@ -41,8 +41,8 @@ class EpanetSimulator(EpanetSimulator):
     wn : WaterNetworkModel
         Water network model
     mode: DD or PDD with default None value(read mode from InpFile, if there is no mode
-        provided in inpdile wither, it will be DD) If there is a condlict between mode in
-        the class aregument and inpfile, the agument will supperseed the InpFile
+        provided in inpdile either, it will be DD) If there is a conflict between mode in
+        the class argument and inpfile, the augment will supersede the InpFile
     reader : wntrfr.epanet.io.BinFile derived object
         Defaults to None, which will create a new wntrfr.epanet.io.BinFile object with
         the results_types specified as an init option. Otherwise, a fully

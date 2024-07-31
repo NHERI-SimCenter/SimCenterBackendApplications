@@ -705,7 +705,7 @@ class InpFile(wntrfr.epanet.InpFile):
         for text, all_control in wn.controls():  # noqa: B007
             entry = '{}\n'
             if all_control.epanet_control_type == _ControlType.rule:
-                # Sina added thsi begin
+                # Sina added this begin
                 try:
                     if all_control._then_actions[0]._target_obj._is_isolated == True:  # noqa: SLF001, E712
                         continue
@@ -718,7 +718,7 @@ class InpFile(wntrfr.epanet.InpFile):
                 except:  # noqa: S110, E722
                     pass
 
-                # Sina added thsi end
+                # Sina added this end
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)  # noqa: F821
                 rule.from_if_then_else(all_control)
                 f.write(entry.format(str(rule)).encode('ascii'))

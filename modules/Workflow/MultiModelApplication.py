@@ -190,7 +190,7 @@ def main(  # noqa: ANN201, C901, D103, PLR0912, PLR0913, PLR0915
             asset_command_list = application.get_command_list(appDir)
             asset_command_list.append('--getRV')
             command = create_command(asset_command_list)
-            # thinking to store aplications commands in a file so don't have to repeat this!
+            # thinking to store applications commands in a file so don't have to repeat this!
 
         #
         # update input file

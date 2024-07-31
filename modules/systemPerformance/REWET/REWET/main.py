@@ -2,7 +2,7 @@
 
 @author: snaeimi
 
-This is the main final to run REWET. This file superscedes intital.py to run
+This is the main final to run REWET. This file supersedes initial.py to run
 REWET. In order to keep the backward compatibility, the initial.py is kepy,
 so one can run initial.py to run REWET. currently, REWET's GUI still works with
 initial.py. Main.py is going to be the most developed tool.
@@ -18,7 +18,7 @@ from initial import Starter
 if __name__ == '__main__':
     argParser = argparse.ArgumentParser(  # noqa: N816
         prog='REWET V0.2',
-        description='REstoration tool for Restoration of Water after Event Tool is a package for modeling damages and restoration in water network. You can specify settings in with providing a JSON. An exampel JSON file is provided in example folder. Modify the exampel folder and provide its path as an input. If not provided, the default settings valeus from the input/settings.py will be ran. thus, you can alterbatively modify values in settings for a single run.',
+        description='REstoration tool for Restoration of Water after Event Tool is a package for modeling damages and restoration in water network. You can specify settings in with providing a JSON. An example JSON file is provided in example folder. Modify the example folder and provide its path as an input. If not provided, the default settings values from the input/settings.py will be ran. thus, you can alternatively modify values in settings for a single run.',
     )
 
     argParser.add_argument('--json', '-j', default=None, help='json settings file')
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parse_namespace = argParser.parse_args()
 
     starter = Starter()
-    # No file is pecified, so the default values in settinsg file is going to
+    # No file is pacified, so the default values in settings file is going to
     # be ran.
 
     if parse_namespace.json == None and parse_namespace.project == None:  # noqa: E711

@@ -566,7 +566,7 @@ if __name__ == '__main__':
         print('HazardSimulation: local OQ_DATADIR = ' + os.environ.get('OQ_DATADIR'))  # noqa: T201
         if os.path.exists(os.environ.get('OQ_DATADIR')):  # noqa: PTH110
             print(  # noqa: T201
-                'HazardSimulation: local OQ folder already exists, overwiting it now...'
+                'HazardSimulation: local OQ folder already exists, overwriting it now...'
             )
             shutil.rmtree(os.environ.get('OQ_DATADIR'))
         os.makedirs(f"{os.environ.get('OQ_DATADIR')}")  # noqa: PTH103
